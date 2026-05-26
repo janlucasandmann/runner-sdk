@@ -98,6 +98,8 @@ for public_file in \
 done
 mkdir -p "${TMP_BUILD_DIR}/web/hosting/public/img/empty-state"
 rsync -a "repos/runner-web-sdk/img/empty-state/" "${TMP_BUILD_DIR}/web/hosting/public/img/empty-state/"
+mkdir -p "${TMP_BUILD_DIR}/web/hosting/public/img/imagine"
+rsync -a "repos/runner-web-sdk/img/imagine/" "${TMP_BUILD_DIR}/web/hosting/public/img/imagine/"
 
 cat > "${TMP_BUILD_DIR}/.gcloudignore" <<'EOF'
 .gcloudignore

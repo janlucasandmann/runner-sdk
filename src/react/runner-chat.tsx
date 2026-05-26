@@ -83,6 +83,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
+import type { RunnerImageMaskStroke, RunnerImageNaturalSize } from "./runner-image-edit-overlays.js";
 import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, collectRunnerLogFileChangePreviews, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 
@@ -116,6 +117,15 @@ export interface RunnerAttachment {
   [key: string]: unknown;
 }
 
+export interface RunnerChatImplicitAttachment {
+  url: string;
+  filename: string;
+  mimeType?: string;
+  type?: RunnerAttachment["type"];
+  hiddenFromTurnDisplay?: boolean;
+  runnerAttachmentRole?: string;
+}
+
 type RunnerTurnAttachment = RunnerPreviewAttachment;
 
 interface LocalAttachment {
@@ -124,6 +134,8 @@ interface LocalAttachment {
   type: RunnerAttachment["type"];
   previewUrl?: string;
   source: "local" | "workspace" | "integration";
+  hiddenFromTurnDisplay?: boolean;
+  runnerAttachmentRole?: string;
   sourceEnvironmentId?: string | null;
   integrationSource?: "google-drive" | "one-drive" | "github";
   githubRepoFullName?: string;
@@ -216,9 +228,26 @@ function CollapsibleRunnerUserPrompt({
 }
 
 type RunnerTurnStatus = "queued" | "running" | "permission_asked" | "completed" | "failed" | "cancelled";
-type RunnerFileBrowserSource = "workspace" | "google-drive" | "one-drive" | "github" | "notion";
+export type RunnerFileBrowserSource = "workspace" | "google-drive" | "one-drive" | "github" | "notion";
 type RunnerQuotedSelectionSource = "working_log" | "run_summary" | "deep_research_report";
 type RunnerThinkingStatusPhase = "visible" | "fading" | "hidden";
+
+function normalizeRunnerFileBrowserSource(source: unknown): RunnerFileBrowserSource {
+  const normalized = String(source || "").trim().toLowerCase();
+  if (normalized === "google-drive" || normalized === "google_drive" || normalized === "drive") {
+    return "google-drive";
+  }
+  if (normalized === "one-drive" || normalized === "onedrive" || normalized === "one_drive") {
+    return "one-drive";
+  }
+  if (normalized === "github") {
+    return "github";
+  }
+  if (normalized === "notion") {
+    return "notion";
+  }
+  return "workspace";
+}
 
 interface RunnerQuotedSelection {
   text: string;
@@ -283,7 +312,9 @@ interface PendingRunnerMessage {
   id: string;
   turnId: string;
   prompt: string;
+  displayPrompt?: string | null;
   attachments: LocalAttachment[];
+  extraResolvedAttachments?: RunnerAttachment[] | null;
   quotedSelection?: RunnerQuotedSelection | null;
   backlogCommand?: StagedBacklogCommand | null;
   resourceCreationCommand?: StagedResourceCreationCommand | null;
@@ -294,6 +325,12 @@ interface PendingRunnerMessage {
   scrapeCreationCommand?: StagedScrapeCreationCommand | null;
   parseCreationCommand?: StagedParseCreationCommand | null;
   adCreationCommand?: StagedAdCreationCommand | null;
+}
+
+interface RunnerImagePreviewSelectionState {
+  attachmentId: string;
+  naturalSize: RunnerImageNaturalSize;
+  strokes: RunnerImageMaskStroke[];
 }
 
 interface BaseStagedBacklogCommand {
@@ -1425,6 +1462,9 @@ function isAttachmentDocumentPreviewable(attachment: RunnerTurnAttachment): bool
   if (isGithubAttachmentSelection(attachment)) {
     return false;
   }
+  if (attachment.type === "image" || String(attachment.mimeType || "").toLowerCase().startsWith("image/")) {
+    return true;
+  }
   return isRunnerDocumentPreviewable(attachment);
 }
 
@@ -1744,6 +1784,11 @@ export interface RunnerChatExternalRunRequest {
   adCreationCommand?: StagedAdCreationCommand | null;
 }
 
+export interface RunnerChatExternalFileBrowserRequest {
+  token: string | number;
+  source?: RunnerFileBrowserSource | string | null;
+}
+
 export interface RunnerChatProjectTaskSubmitPayload {
   prompt: string;
   taskPreview: RunnerTaskPreview;
@@ -1893,6 +1938,7 @@ export interface RunnerChatProps {
   disabled?: boolean;
   autoCreateThread?: boolean;
   maxAttachments?: number;
+  implicitAttachments?: RunnerChatImplicitAttachment[];
   showUsageInStatus?: boolean;
   inputMode?: RunnerChatInputMode;
   agents?: RunnerChatOption[];
@@ -1934,9 +1980,12 @@ export interface RunnerChatProps {
   onSummaryWorkspacePathClick?: (payload: RunnerChatSummaryWorkspacePathClickPayload) => void;
   documentPreviewPortalTarget?: Element | null;
   documentPreviewPortalOnly?: boolean;
+  initialDocumentPreviewAttachment?: RunnerTurnAttachment | RunnerAttachment | null;
+  initialDocumentPreviewToken?: string | number | null;
   subagentDetailPortalTarget?: Element | null;
   disableSubagentDetailDrawer?: boolean;
   externalRunRequest?: RunnerChatExternalRunRequest | null;
+  externalFileBrowserRequest?: RunnerChatExternalFileBrowserRequest | null;
   onExternalRunRequestHandled?: (token: string | number) => void;
   onExternalRunRequestCreate?: (request: RunnerChatExternalRunRequest) => boolean | void;
   autoFocusComposer?: boolean;
@@ -6439,7 +6488,13 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
     githubRef?: unknown;
     githubItemPath?: unknown;
     githubSelectionType?: unknown;
+    hiddenFromTurnDisplay?: unknown;
+    runnerAttachmentRole?: unknown;
+    purpose?: unknown;
   };
+  if (isRunnerTurnDisplayHiddenAttachment(candidate)) {
+    return null;
+  }
   const attachmentId = typeof candidate.id === "string" && candidate.id.trim() ? candidate.id.trim() : generateId("att");
   const filename =
     typeof candidate.filename === "string" && candidate.filename.trim()
@@ -6557,10 +6612,11 @@ function buildTurnAttachmentsFromRunnerAttachments(
 }
 
 function buildTurnAttachmentsFromLocalAttachments(attachments: LocalAttachment[]): RunnerTurnAttachment[] | null {
-  if (attachments.length === 0) {
+  const visibleAttachments = attachments.filter((attachment) => !isRunnerTurnDisplayHiddenAttachment(attachment));
+  if (visibleAttachments.length === 0) {
     return null;
   }
-  return attachments.map((attachment) => ({
+  return visibleAttachments.map((attachment) => ({
     id: attachment.id,
     filename: attachment.file.name,
     mimeType: attachment.file.type || "application/octet-stream",
@@ -6579,23 +6635,69 @@ function turnAttachmentMatchKey(filename: string, mimeType: string, type: Runner
   return `${filename}\u0000${mimeType}\u0000${type}`;
 }
 
+function isRunnerTurnDisplayHiddenAttachment(value: unknown): boolean {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const candidate = value as {
+    file?: File;
+    filename?: unknown;
+    name?: unknown;
+    mimeType?: unknown;
+    hiddenFromTurnDisplay?: unknown;
+    runnerAttachmentRole?: unknown;
+    purpose?: unknown;
+  };
+  if (candidate.hiddenFromTurnDisplay === true) {
+    return true;
+  }
+  const role = String(candidate.runnerAttachmentRole || candidate.purpose || "").trim().toLowerCase();
+  if (role === "image_edit_mask" || role === "image-edit-mask") {
+    return true;
+  }
+  const filename = String(
+    typeof candidate.filename === "string"
+      ? candidate.filename
+      : typeof candidate.name === "string"
+        ? candidate.name
+        : candidate.file?.name || ""
+  ).trim().toLowerCase();
+  const mimeType = String(
+    typeof candidate.mimeType === "string"
+      ? candidate.mimeType
+      : candidate.file?.type || ""
+  ).trim().toLowerCase();
+  return filename.endsWith("-selected-region-mask.png") && (!mimeType || mimeType === "image/png");
+}
+
 function buildTurnAttachmentsForExecution(
   attachmentEntries: LocalAttachment[],
   resolvedAttachments: RunnerAttachment[] | undefined,
   backendUrl?: string
 ): RunnerTurnAttachment[] | null {
   const localTurnAttachments = buildTurnAttachmentsFromLocalAttachments(attachmentEntries);
-  const resolvedTurnAttachments = buildTurnAttachmentsFromRunnerAttachments(resolvedAttachments, backendUrl);
+  const hiddenDisplayKeys = new Set(
+    attachmentEntries
+      .filter((attachment) => isRunnerTurnDisplayHiddenAttachment(attachment))
+      .map((attachment) => turnAttachmentMatchKey(
+        attachment.file.name,
+        attachment.file.type || "application/octet-stream",
+        attachment.type
+      ))
+  );
+  const resolvedTurnAttachments = (buildTurnAttachmentsFromRunnerAttachments(resolvedAttachments, backendUrl) || [])
+    .filter((attachment) => !hiddenDisplayKeys.has(turnAttachmentMatchKey(attachment.filename, attachment.mimeType, attachment.type)));
+  const visibleResolvedTurnAttachments = resolvedTurnAttachments.length ? resolvedTurnAttachments : null;
 
-  if (!resolvedTurnAttachments || resolvedTurnAttachments.length === 0) {
+  if (!visibleResolvedTurnAttachments || visibleResolvedTurnAttachments.length === 0) {
     return localTurnAttachments;
   }
   if (!localTurnAttachments || localTurnAttachments.length === 0) {
-    return resolvedTurnAttachments;
+    return visibleResolvedTurnAttachments;
   }
 
   const resolvedBuckets = new Map<string, RunnerTurnAttachment[]>();
-  for (const attachment of resolvedTurnAttachments) {
+  for (const attachment of visibleResolvedTurnAttachments) {
     const key = turnAttachmentMatchKey(attachment.filename, attachment.mimeType, attachment.type);
     const bucket = resolvedBuckets.get(key);
     if (bucket) {
@@ -6639,6 +6741,189 @@ function pickTurnAttachments(
     return fallback;
   }
   return null;
+}
+
+function mergeRunnerTurnAttachments(
+  ...attachmentLists: Array<RunnerTurnAttachment[] | null | undefined>
+): RunnerTurnAttachment[] | null {
+  const merged: RunnerTurnAttachment[] = [];
+  const seen = new Set<string>();
+  for (const attachmentList of attachmentLists) {
+    if (!attachmentList || attachmentList.length === 0) {
+      continue;
+    }
+    for (const attachment of attachmentList) {
+      const key = [
+        attachment.id,
+        attachment.workspacePath,
+        attachment.url,
+        attachment.previewUrl,
+        attachment.filename,
+        attachment.mimeType,
+      ].map((value) => String(value || "")).join("\u0000");
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      merged.push(attachment);
+    }
+  }
+  return merged.length > 0 ? merged : null;
+}
+
+function mergeRunnerAttachments(
+  ...attachmentLists: Array<RunnerAttachment[] | null | undefined>
+): RunnerAttachment[] | undefined {
+  const merged: RunnerAttachment[] = [];
+  const seen = new Set<string>();
+  for (const attachmentList of attachmentLists) {
+    if (!attachmentList || attachmentList.length === 0) {
+      continue;
+    }
+    for (const attachment of attachmentList) {
+      const key = [
+        attachment.id,
+        attachment.workspacePath,
+        attachment.url,
+        attachment.filename,
+        attachment.mimeType,
+      ].map((value) => String(value || "")).join("\u0000");
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      merged.push(attachment);
+    }
+  }
+  return merged.length > 0 ? merged : undefined;
+}
+
+function isRunnerImagePreviewAttachment(
+  attachment?: RunnerPreviewAttachment | null
+): attachment is RunnerPreviewAttachment {
+  if (!attachment) {
+    return false;
+  }
+  const mimeType = String(attachment.mimeType || "").toLowerCase();
+  return attachment.type === "image" || mimeType.startsWith("image/");
+}
+
+function buildRunnerAttachmentFromPreviewAttachment(
+  attachment?: RunnerPreviewAttachment | null
+): RunnerAttachment | null {
+  if (!isRunnerImagePreviewAttachment(attachment)) {
+    return null;
+  }
+  const filename = String(attachment.filename || "image").trim() || "image";
+  const mimeType = String(attachment.mimeType || "image/png").trim() || "image/png";
+  const url = String(attachment.url || attachment.previewUrl || "").trim();
+  return {
+    id: String(attachment.id || attachment.workspacePath || filename),
+    filename,
+    mimeType,
+    size: Number((attachment as RunnerAttachment).size || 0),
+    type: "image",
+    uploadedAt: String((attachment as RunnerAttachment).uploadedAt || new Date().toISOString()),
+    ...(url ? { url } : {}),
+    ...(attachment.previewUrl ? { previewUrl: attachment.previewUrl } : {}),
+    ...(attachment.workspacePath ? { workspacePath: attachment.workspacePath } : {}),
+    ...(attachment.environmentId ? { environmentId: attachment.environmentId } : {}),
+    ...(attachment.integrationSource ? { integrationSource: attachment.integrationSource } : {}),
+    ...(attachment.githubRepoFullName ? { githubRepoFullName: attachment.githubRepoFullName } : {}),
+    ...(attachment.githubRef !== undefined ? { githubRef: attachment.githubRef } : {}),
+    ...(attachment.githubItemPath ? { githubItemPath: attachment.githubItemPath } : {}),
+    ...(attachment.githubSelectionType ? { githubSelectionType: attachment.githubSelectionType } : {}),
+  };
+}
+
+function drawRunnerImageSelectionMaskStroke(
+  ctx: CanvasRenderingContext2D,
+  stroke: RunnerImageMaskStroke
+) {
+  const points = Array.isArray(stroke.points) ? stroke.points : [];
+  if (!points.length) {
+    return;
+  }
+  const lineWidth = Math.max(2, Number(stroke.brushSize || 1));
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = lineWidth;
+  ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+  ctx.fillStyle = "rgba(0, 0, 0, 1)";
+  if (points.length === 1) {
+    const point = points[0];
+    ctx.beginPath();
+    ctx.arc(Number(point?.x || 0), Number(point?.y || 0), lineWidth / 2, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+  ctx.beginPath();
+  ctx.moveTo(Number(points[0]?.x || 0), Number(points[0]?.y || 0));
+  for (let index = 1; index < points.length; index += 1) {
+    ctx.lineTo(Number(points[index]?.x || 0), Number(points[index]?.y || 0));
+  }
+  ctx.stroke();
+}
+
+function createRunnerImageSelectionMaskFile(
+  selection: RunnerImagePreviewSelectionState,
+  sourceAttachment: RunnerAttachment
+): Promise<File | null> {
+  return new Promise((resolve, reject) => {
+    const width = Math.round(Number(selection.naturalSize?.width || 0));
+    const height = Math.round(Number(selection.naturalSize?.height || 0));
+    const strokes = Array.isArray(selection.strokes) ? selection.strokes : [];
+    if (!width || !height || !strokes.length || typeof document === "undefined" || typeof globalThis.File !== "function") {
+      resolve(null);
+      return;
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      resolve(null);
+      return;
+    }
+    ctx.fillStyle = "rgba(0, 0, 0, 1)";
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalCompositeOperation = "destination-out";
+    strokes.forEach((stroke) => drawRunnerImageSelectionMaskStroke(ctx, stroke));
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Failed to create image edit mask."));
+        return;
+      }
+      const rawBaseName = String(sourceAttachment.filename || "image");
+      const lastDotIndex = rawBaseName.lastIndexOf(".");
+      const baseNameWithoutExtension = lastDotIndex > 0 ? rawBaseName.slice(0, lastDotIndex) : rawBaseName;
+      const normalizedBaseName = baseNameWithoutExtension
+        .replace(/[^a-zA-Z0-9._-]+/g, "_")
+        .replace(/^_+|_+$/g, "")
+        || "image";
+      resolve(new globalThis.File([blob], `${normalizedBaseName}-selected-region-mask.png`, { type: "image/png" }));
+    }, "image/png");
+  });
+}
+
+function buildRunnerImageSelectionInpaintPrompt(
+  sourceAttachment: RunnerAttachment,
+  maskFilename: string
+): string {
+  const sourceWorkspacePath = normalizeRunnerPreviewWorkspacePath(sourceAttachment.workspacePath);
+  return [
+    "<system>",
+    "The user painted a selected region on the source image before submitting this prompt.",
+    "Treat the request as an image editing/inpainting task and use the Image Generation skill.",
+    "Use the source image with --input and the selected-region mask with --mask.",
+    "Source image filename: " + String(sourceAttachment.filename || "image").trim(),
+    sourceWorkspacePath ? "Source image workspace path: /workspace/" + sourceWorkspacePath : "",
+    maskFilename ? "Mask attachment filename: " + maskFilename : "",
+    maskFilename ? "The mask attachment is available in the thread attachments alongside the source image." : "",
+    "The mask is an OpenAI edit mask: transparent pixels mark exactly the selected area to change, and opaque pixels must be preserved.",
+    "Only change the masked region. Preserve everything outside the selected region unless the user explicitly asks otherwise.",
+    "</system>",
+  ].filter(Boolean).join("\n");
 }
 
 function requiresAuthenticatedAttachmentPreview(url: string | undefined, backendUrl?: string): boolean {
@@ -8279,6 +8564,7 @@ export function RunnerChat({
   disabled = false,
   autoCreateThread = true,
   maxAttachments = 20,
+  implicitAttachments = [],
   showUsageInStatus = true,
   inputMode = "minimal",
   agents = [],
@@ -8316,9 +8602,12 @@ export function RunnerChat({
   onSummaryWorkspacePathClick,
   documentPreviewPortalTarget = null,
   documentPreviewPortalOnly = false,
+  initialDocumentPreviewAttachment = null,
+  initialDocumentPreviewToken = null,
   subagentDetailPortalTarget = null,
   disableSubagentDetailDrawer = false,
   externalRunRequest = null,
+  externalFileBrowserRequest = null,
   onExternalRunRequestHandled,
   onExternalRunRequestCreate,
   autoFocusComposer = false,
@@ -8355,6 +8644,7 @@ export function RunnerChat({
   const [localThreadId, setLocalThreadId] = useState<string | null>(threadId ?? null);
   const [attachments, setAttachments] = useState<LocalAttachment[]>([]);
   const [previewedDocumentAttachment, setPreviewedDocumentAttachment] = useState<RunnerTurnAttachment | null>(null);
+  const [previewImageSelectionState, setPreviewImageSelectionState] = useState<RunnerImagePreviewSelectionState | null>(null);
   const [isDocumentPreviewMaximized, setIsDocumentPreviewMaximized] = useState(false);
   const [documentPreviewActionMenuOpen, setDocumentPreviewActionMenuOpen] = useState(false);
   const [selectedSubagentDetail, setSelectedSubagentDetail] = useState<RunnerSelectedSubagentDetail | null>(null);
@@ -8413,6 +8703,7 @@ export function RunnerChat({
   const [isFileBrowserAttaching, setIsFileBrowserAttaching] = useState(false);
   const [fileBrowserHistory, setFileBrowserHistory] = useState<Array<{ source: RunnerFileBrowserSource; folderId: string | null }>>([]);
   const [fileBrowserHistoryIndex, setFileBrowserHistoryIndex] = useState(-1);
+  const lastExternalFileBrowserRequestTokenRef = useRef("");
   const [remoteWorkspaceItems, setRemoteWorkspaceItems] = useState<RunnerChatFileNode[]>([]);
   const [loadedWorkspaceFolderIds, setLoadedWorkspaceFolderIds] = useState<string[]>([]);
   const [loadingWorkspaceFolderIds, setLoadingWorkspaceFolderIds] = useState<string[]>([]);
@@ -8575,6 +8866,7 @@ export function RunnerChat({
   const appliedAgentCreationCommandTokenRef = useRef<string | number | null>(null);
   const appliedSkillCreationCommandTokenRef = useRef<string | number | null>(null);
   const handledExternalRunRequestTokenRef = useRef<string | number | null>(null);
+  const handledInitialDocumentPreviewTokenRef = useRef<string | number | null>(null);
   const workspacePreferenceAppliedRef = useRef(false);
   const lastAppliedControlledProjectIdRef = useRef<string | null>(null);
   const stopRequestedThreadIdRef = useRef<string | null>(null);
@@ -9492,6 +9784,7 @@ export function RunnerChat({
 
   function closeDocumentAttachmentPreview() {
     setPreviewedDocumentAttachment(null);
+    setPreviewImageSelectionState(null);
     setIsDocumentPreviewMaximized(false);
     setDocumentPreviewActionMenuOpen(false);
   }
@@ -11221,6 +11514,7 @@ export function RunnerChat({
       parseCreationCommand?: StagedParseCreationCommand | null;
       adCreationCommand?: StagedAdCreationCommand | null;
       resolvedAttachmentsOverride?: RunnerAttachment[] | null;
+      extraResolvedAttachments?: RunnerAttachment[] | null;
       githubRepoOverride?: {
         repoFullName: string;
         repoName: string;
@@ -11312,10 +11606,11 @@ export function RunnerChat({
       && !currentThreadId;
 
     if (shouldHandoffExternalRun) {
-      const resolvedAttachments =
+      const baseResolvedAttachments =
         options?.resolvedAttachmentsOverride !== undefined
           ? options.resolvedAttachmentsOverride || undefined
           : await resolveAttachmentPayload(attachmentEntries, runEnvironmentId);
+      const resolvedAttachments = mergeRunnerAttachments(baseResolvedAttachments, options?.extraResolvedAttachments);
       const didHandleExternalRunRequest = onExternalRunRequestCreate?.({
         token: generateId("runreq"),
         threadId,
@@ -11349,7 +11644,10 @@ export function RunnerChat({
 
     locallyOwnedExecutionThreadIdRef.current = threadId;
 
-    const initialTurnAttachments = buildTurnAttachmentsFromLocalAttachments(attachmentEntries);
+    const initialTurnAttachments = mergeRunnerTurnAttachments(
+      buildTurnAttachmentsFromLocalAttachments(attachmentEntries),
+      buildTurnAttachmentsFromRunnerAttachments(options?.extraResolvedAttachments || undefined, normalizedBackendUrl)
+    );
     const turnId = options?.turnId || generateId("turn");
     const slideCreationCommand = options?.slideCreationCommand || null;
     const researchCreationCommand = options?.researchCreationCommand || null;
@@ -11449,10 +11747,11 @@ export function RunnerChat({
         }
       }
 
-      const resolvedAttachments =
+      const baseResolvedAttachments =
         options?.resolvedAttachmentsOverride !== undefined
           ? options.resolvedAttachmentsOverride || undefined
           : await resolveAttachmentPayload(attachmentEntries, runEnvironmentId);
+      const resolvedAttachments = mergeRunnerAttachments(baseResolvedAttachments, options?.extraResolvedAttachments);
       const turnAttachments = buildTurnAttachmentsForExecution(attachmentEntries, resolvedAttachments, normalizedBackendUrl);
       if (turnAttachments) {
         updateTurn(turnId, (turn) => ({
@@ -11893,7 +12192,43 @@ export function RunnerChat({
     setDocumentPreviewDrawerWidth(null);
     documentPreviewResizeStateRef.current = null;
     setDocumentPreviewActionMenuOpen(false);
+    setPreviewImageSelectionState(null);
   }, [previewedDocumentAttachment?.id]);
+
+  useEffect(() => {
+    if (!initialDocumentPreviewAttachment) {
+      return;
+    }
+
+    const attachmentRecord = typeof initialDocumentPreviewAttachment === "object"
+      ? initialDocumentPreviewAttachment as Record<string, unknown>
+      : {};
+    const requestToken =
+      initialDocumentPreviewToken ??
+      String(
+        attachmentRecord.id ||
+        attachmentRecord.workspacePath ||
+        attachmentRecord.filename ||
+        ""
+      ).trim();
+
+    if (requestToken === null || requestToken === "" || handledInitialDocumentPreviewTokenRef.current === requestToken) {
+      return;
+    }
+
+    const normalizedAttachment = normalizeTurnAttachment(initialDocumentPreviewAttachment, normalizedBackendUrl);
+    if (!normalizedAttachment || !isAttachmentDocumentPreviewable(normalizedAttachment)) {
+      return;
+    }
+
+    handledInitialDocumentPreviewTokenRef.current = requestToken;
+    closeDeepResearchDetailDrawer();
+    closeSubagentDetailDrawer();
+    closeComputerUseDetailDrawer();
+    setDocumentPreviewActionMenuOpen(false);
+    setIsDocumentPreviewMaximized(false);
+    setPreviewedDocumentAttachment(normalizedAttachment);
+  }, [initialDocumentPreviewAttachment, initialDocumentPreviewToken, normalizedBackendUrl]);
 
   useEffect(() => {
     if (!documentPreviewActionMenuOpen || typeof document === "undefined") {
@@ -13548,6 +13883,57 @@ export function RunnerChat({
     };
   }
 
+  async function createImplicitAttachment(item: RunnerChatImplicitAttachment): Promise<LocalAttachment> {
+    const sourceUrl = String(item.url || "").trim();
+    const filename = String(item.filename || "").trim() || "attachment";
+    if (!sourceUrl) {
+      throw new Error(`Failed to prepare ${filename}: missing attachment URL.`);
+    }
+
+    const response = await fetch(sourceUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to load ${filename} (${response.status}).`);
+    }
+
+    const blob = await response.blob();
+    const mimeType = String(item.mimeType || blob.type || "application/octet-stream").trim() || "application/octet-stream";
+    const file = new File([blob], filename, { type: mimeType });
+    const type =
+      item.type === "image" || item.type === "document"
+        ? item.type
+        : attachmentTypeForFile(mimeType, filename);
+
+    return {
+      id: generateId("implicit"),
+      file,
+      type,
+      previewUrl: type === "image" ? sourceUrl : undefined,
+      source: "local",
+      hiddenFromTurnDisplay: Boolean(item.hiddenFromTurnDisplay),
+      runnerAttachmentRole: item.runnerAttachmentRole,
+      uploadStatus: "idle",
+      uploadError: null,
+    };
+  }
+
+  async function createImplicitRunAttachments(): Promise<LocalAttachment[]> {
+    const normalizedImplicitAttachments = implicitAttachments
+      .filter((attachment) => attachment && String(attachment.url || "").trim())
+      .map((attachment) => ({
+        ...attachment,
+        filename: String(attachment.filename || "").trim() || "attachment",
+      }));
+
+    if (!normalizedImplicitAttachments.length) {
+      return [];
+    }
+
+    const preparedAttachments = await Promise.all(
+      normalizedImplicitAttachments.map((attachment) => createImplicitAttachment(attachment))
+    );
+    return preparedAttachments;
+  }
+
   async function createIntegrationAttachment(
     item: RunnerChatFileNode,
     source: "google-drive" | "one-drive" | "github",
@@ -13716,6 +14102,15 @@ export function RunnerChat({
     setFileBrowserHistoryIndex(0);
     setShowFileBrowserModal(true);
   }
+
+  useEffect(() => {
+    const token = String(externalFileBrowserRequest?.token || "").trim();
+    if (!token || token === lastExternalFileBrowserRequestTokenRef.current) {
+      return;
+    }
+    lastExternalFileBrowserRequestTokenRef.current = token;
+    openFileBrowserModal(normalizeRunnerFileBrowserSource(externalFileBrowserRequest?.source));
+  }, [externalFileBrowserRequest]);
 
   function closeFileBrowserModal() {
     setShowFileBrowserModal(false);
@@ -14907,8 +15302,10 @@ export function RunnerChat({
       }
 
       const taskText = trimmedInput;
-      const attachmentEntries = attachments;
-      const queuedTurnAttachments = buildTurnAttachmentsFromLocalAttachments(attachmentEntries);
+      const composerAttachmentEntries = attachments;
+      let attachmentEntries = composerAttachmentEntries;
+      const previewImageRunAttachment = buildRunnerAttachmentFromPreviewAttachment(previewedDocumentAttachment);
+      const previewImageRunAttachments = previewImageRunAttachment ? [previewImageRunAttachment] : null;
       const quotedSelection = composerQuotedSelection;
       const backlogCommand = stagedBacklogCommand;
       const resourceCreationCommand = stagedResourceCreationCommand;
@@ -14924,7 +15321,7 @@ export function RunnerChat({
         const shouldPreserveComposerState = stagedThreadContextCommand === "fork";
         if (!shouldPreserveComposerState) {
           clearComposerDraft();
-          clearComposerAttachments(attachmentEntries);
+          clearComposerAttachments(composerAttachmentEntries);
         }
         await handleThreadContextCommand(
           {
@@ -14942,11 +15339,17 @@ export function RunnerChat({
         const shouldPreserveComposerState = threadContextCommand.action === "fork";
         if (!shouldPreserveComposerState) {
           clearComposerDraft();
-          clearComposerAttachments(attachmentEntries);
+          clearComposerAttachments(composerAttachmentEntries);
         }
         await handleThreadContextCommand(threadContextCommand);
         return;
       }
+
+      const implicitAttachmentEntries = await createImplicitRunAttachments();
+      attachmentEntries = implicitAttachmentEntries.length > 0
+        ? [...implicitAttachmentEntries, ...composerAttachmentEntries]
+        : composerAttachmentEntries;
+
       if (selectedComposerProjectTask && onComposerProjectTaskSubmit && taskText) {
         setIsPreparingRun(true);
         const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
@@ -14965,7 +15368,7 @@ export function RunnerChat({
         });
         if (didHandleProjectTask !== false) {
           clearComposerDraft();
-          clearComposerAttachments(attachmentEntries, {
+          clearComposerAttachments(composerAttachmentEntries, {
             revokePreviews: false,
           });
           if (keepFocusOnSubmit) {
@@ -14980,7 +15383,7 @@ export function RunnerChat({
         const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
         const githubRepo = buildSelectedGithubRepoReference(attachmentEntries);
         clearComposerDraft();
-        clearComposerAttachments(attachmentEntries, {
+        clearComposerAttachments(composerAttachmentEntries, {
           revokePreviews: false,
         });
         if (keepFocusOnSubmit) {
@@ -15007,8 +15410,45 @@ export function RunnerChat({
         return;
       }
 
+      let executionTaskText = taskText;
+      let executionAttachmentEntries = attachmentEntries;
+      let shouldClosePreviewAfterSubmit = false;
+      if (
+        previewImageRunAttachment
+        && previewImageSelectionState
+        && previewImageSelectionState.attachmentId === String(previewedDocumentAttachment?.id || previewedDocumentAttachment?.workspacePath || previewedDocumentAttachment?.filename || "")
+        && Array.isArray(previewImageSelectionState.strokes)
+        && previewImageSelectionState.strokes.length > 0
+      ) {
+        const maskFile = await createRunnerImageSelectionMaskFile(previewImageSelectionState, previewImageRunAttachment);
+        if (maskFile) {
+          const maskLocalAttachment: LocalAttachment = {
+            id: generateId("attachment"),
+            file: maskFile,
+            type: "image",
+            previewUrl: URL.createObjectURL(maskFile),
+            source: "local",
+            hiddenFromTurnDisplay: true,
+            runnerAttachmentRole: "image_edit_mask",
+          };
+          executionAttachmentEntries = [...attachmentEntries, maskLocalAttachment];
+          executionTaskText = [
+            buildRunnerImageSelectionInpaintPrompt(previewImageRunAttachment, maskFile.name),
+            taskText,
+          ].filter(Boolean).join("\n\n");
+          shouldClosePreviewAfterSubmit = true;
+        }
+      }
+      const queuedTurnAttachments = mergeRunnerTurnAttachments(
+        buildTurnAttachmentsFromLocalAttachments(executionAttachmentEntries),
+        buildTurnAttachmentsFromRunnerAttachments(previewImageRunAttachments || undefined, normalizedBackendUrl)
+      );
+
+      if (shouldClosePreviewAfterSubmit) {
+        closeDocumentAttachmentPreview();
+      }
       clearComposerDraft();
-      clearComposerAttachments(attachmentEntries, {
+      clearComposerAttachments(composerAttachmentEntries, {
         revokePreviews: false,
       });
       if (keepFocusOnSubmit) {
@@ -15043,8 +15483,10 @@ export function RunnerChat({
           {
             id: generateId("queue"),
             turnId: queuedTurnId,
-            prompt: taskText,
-            attachments: attachmentEntries,
+            prompt: executionTaskText,
+            displayPrompt: taskText,
+            attachments: executionAttachmentEntries,
+            extraResolvedAttachments: previewImageRunAttachments,
             quotedSelection,
             backlogCommand,
             resourceCreationCommand,
@@ -15061,7 +15503,7 @@ export function RunnerChat({
       }
 
       setIsPreparingRun(true);
-        const execution = await executeThreadRun(taskText, attachmentEntries, {
+        const execution = await executeThreadRun(executionTaskText, executionAttachmentEntries, {
           quotedSelection,
           backlogCommand,
           resourceCreationCommand,
@@ -15072,6 +15514,8 @@ export function RunnerChat({
           scrapeCreationCommand,
           parseCreationCommand,
           adCreationCommand,
+          extraResolvedAttachments: previewImageRunAttachments,
+          displayPromptOverride: executionTaskText === taskText ? undefined : taskText,
         });
       ensuredThreadId = execution.threadId;
     } catch (error) {
@@ -15117,6 +15561,8 @@ export function RunnerChat({
           scrapeCreationCommand: nextQueuedMessage.scrapeCreationCommand,
           parseCreationCommand: nextQueuedMessage.parseCreationCommand,
           adCreationCommand: nextQueuedMessage.adCreationCommand,
+          extraResolvedAttachments: nextQueuedMessage.extraResolvedAttachments,
+          displayPromptOverride: nextQueuedMessage.displayPrompt,
         });
       } catch (error) {
         const normalizedError = error instanceof Error ? error : new Error(String(error));
@@ -16330,18 +16776,30 @@ export function RunnerChat({
     const isImage = attachment.type === "image";
     const isGithubAttachment = isGithubAttachmentSelection(attachment);
     const isUploading = attachment.uploadStatus === "uploading";
-    const isDocumentPreviewable =
-      !isImage && !isGithubAttachment && !options?.removable && !isLocalAttachmentRecord(attachment) && isAttachmentDocumentPreviewable(attachment);
+    const isAttachmentPreviewable =
+      !isGithubAttachment && !options?.removable && !isLocalAttachmentRecord(attachment) && isAttachmentDocumentPreviewable(attachment);
+    const isDocumentPreviewable = !isImage && isAttachmentPreviewable;
+    const isImagePreviewable = isImage && isAttachmentPreviewable;
     const isDocumentPreviewActive =
-      isDocumentPreviewable && previewedDocumentAttachment?.id === attachment.id;
+      isAttachmentPreviewable && previewedDocumentAttachment?.id === attachment.id;
     const imageFetchHeaders =
       isImage && !isLocalAttachmentRecord(attachment) && requiresAuthenticatedAttachmentPreview(previewUrl, normalizedBackendUrl)
         ? authenticatedAttachmentFetchHeaders
         : undefined;
+    const openAttachmentPreview = () => {
+      if (isLocalAttachmentRecord(attachment) || !isAttachmentPreviewable) {
+        return;
+      }
+      if (options?.onPreview) {
+        options.onPreview(attachment);
+        return;
+      }
+      toggleDocumentAttachmentPreview(attachment);
+    };
 
     return (
       <div
-        className={`runner-attachment ${isImage ? "runner-attachment-image" : "runner-attachment-file"} ${isGithubAttachment ? "runner-attachment-github" : ""} ${isUploading ? "runner-attachment-uploading" : ""} ${options?.removable ? "runner-attachment-removable" : "runner-attachment-readonly"} ${isDocumentPreviewable ? "runner-attachment-document-previewable" : ""} ${isDocumentPreviewActive ? "runner-attachment-document-active" : ""}`.trim()}
+        className={`runner-attachment ${isImage ? "runner-attachment-image" : "runner-attachment-file"} ${isGithubAttachment ? "runner-attachment-github" : ""} ${isUploading ? "runner-attachment-uploading" : ""} ${options?.removable ? "runner-attachment-removable" : "runner-attachment-readonly"} ${isAttachmentPreviewable ? "runner-attachment-document-previewable" : ""} ${isDocumentPreviewActive ? "runner-attachment-document-active" : ""}`.trim()}
         key={attachment.id}
       >
         {isImage ? (
@@ -16352,9 +16810,11 @@ export function RunnerChat({
                   src={previewUrl}
                   alt={filename}
                   mimeType={isLocalAttachmentRecord(attachment) ? attachment.file.type : attachment.mimeType}
-                  className={`runner-attachment-image-button ${previewUrl ? "is-clickable" : ""}`.trim()}
+                  className={`runner-attachment-image-button ${previewUrl && isImagePreviewable ? "is-clickable" : ""}`.trim()}
                   imageClassName="runner-attachment-image-preview"
                   fetchHeaders={imageFetchHeaders}
+                  interactive={Boolean(previewUrl && isImagePreviewable)}
+                  onActivate={previewUrl && isImagePreviewable ? openAttachmentPreview : undefined}
                 />
               ) : (
                 <span className="runner-attachment-image-placeholder" aria-hidden="true">
@@ -17237,6 +17697,7 @@ export function RunnerChat({
   const showSchedulePopup = renderedSidePopup === "schedule";
   const showAttachFilesPopup = renderedSidePopup === "attach-files";
   const hasPortalDocumentPreview = Boolean(documentPreviewPortalTarget);
+  const isPreviewedDocumentImage = isRunnerImagePreviewAttachment(previewedDocumentAttachment);
   const shouldReserveDocumentPreviewWidth = Boolean(previewedDocumentAttachment && !hasPortalDocumentPreview);
   const previewedDocumentWorkspacePath = normalizeRunnerPreviewWorkspacePath(
     previewedDocumentAttachment?.workspacePath || previewedDocumentAttachment?.id || ""
@@ -17318,6 +17779,11 @@ export function RunnerChat({
       onResizeStart={startDocumentPreviewResize}
       headerActionsAfterPreviewToggle={documentPreviewHeaderActions}
       showResizeHandle={!documentPreviewPortalTarget}
+      enableImageWheelZoom
+      enableImagePreviewTools
+      imagePreviewReservedBottom={isPreviewedDocumentImage && isDocumentPreviewMaximized ? 132 : 0}
+      imagePreviewFullscreen={isPreviewedDocumentImage && isDocumentPreviewMaximized}
+      onImageSelectionChange={isPreviewedDocumentImage ? setPreviewImageSelectionState : undefined}
     />
   ) : null;
   const documentAttachmentPreviewDrawer =
@@ -18523,24 +18989,34 @@ export function RunnerChat({
   const hasCustomEmptyState = turns.length === 0 && emptyState !== undefined && emptyState !== null;
   const shouldRenderInlineComposerWithEmptyState =
     hasCustomEmptyState && emptyStateAfterComposer !== undefined && emptyStateAfterComposer !== null;
+  const documentPreviewWidthStyleValue = previewedDocumentAttachment
+    ? shouldReserveDocumentPreviewWidth && documentPreviewDrawerWidth !== null
+      ? `${documentPreviewDrawerWidth}px`
+      : shouldReserveDocumentPreviewWidth
+        ? "var(--tb-document-preview-max-width)"
+        : "0px"
+    : "0px";
+  const imagePreviewComposerWidthStyleValue =
+    isPreviewedDocumentImage
+      ? isDocumentPreviewMaximized
+        ? "100vw"
+        : shouldReserveDocumentPreviewWidth
+          ? documentPreviewWidthStyleValue
+          : "var(--tb-image-preview-side-width, var(--tb-document-preview-max-width))"
+      : documentPreviewWidthStyleValue;
 
   return (
     <div
       ref={rootRef}
-      className={`tb-runner-chat ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${previewedDocumentAttachment && isDocumentPreviewMaximized ? "tb-runner-chat-document-preview-maximized" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${className || ""}`.trim()}
+      className={`tb-runner-chat ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${isPreviewedDocumentImage ? "tb-runner-chat-image-preview-open" : ""} ${isPreviewedDocumentImage && hasPortalDocumentPreview ? "tb-runner-chat-image-preview-portal-open" : ""} ${isPreviewedDocumentImage && !hasPortalDocumentPreview ? "tb-runner-chat-image-preview-local-open" : ""} ${previewedDocumentAttachment && isDocumentPreviewMaximized ? "tb-runner-chat-document-preview-maximized" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${className || ""}`.trim()}
       onDragEnterCapture={handleRootFileDragEnter}
       onDragOverCapture={handleRootFileDragOver}
       onDragLeaveCapture={handleRootFileDragLeave}
       onDropCapture={handleRootFileDrop}
       style={
         {
-          "--tb-document-preview-width": previewedDocumentAttachment
-            ? shouldReserveDocumentPreviewWidth && documentPreviewDrawerWidth !== null
-              ? `${documentPreviewDrawerWidth}px`
-              : shouldReserveDocumentPreviewWidth
-                ? "var(--tb-document-preview-max-width)"
-                : "0px"
-            : "0px",
+          "--tb-document-preview-width": documentPreviewWidthStyleValue,
+          "--tb-image-preview-composer-width": imagePreviewComposerWidthStyleValue,
         } as CSSProperties
       }
     >

@@ -1,10 +1,14 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode, type WheelEvent as ReactWheelEvent } from "react";
 import {
   ChevronDown as LucideChevronDown,
   ChevronLeft as LucideChevronLeft,
   ChevronRight as LucideChevronRight,
   Code2 as LucideCode2,
+  Crop as LucideCrop,
+  Eye as LucideEye,
   FileText as LucideFileText,
+  Check as LucideCheck,
+  LassoSelect as LucideLassoSelect,
   LoaderCircle as LucideLoaderCircle,
   Minus as LucideMinus,
   Plus as LucidePlus,
@@ -25,6 +29,15 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
+import {
+  RunnerImageCropOverlay,
+  RunnerImageSelectionMaskOverlay,
+  type RunnerImageCropRect,
+  type RunnerImageCropTarget,
+  type RunnerImageMaskStroke,
+  type RunnerImageNaturalSize,
+  type RunnerImagePoint,
+} from "./runner-image-edit-overlays.js";
 import { RunnerCodeViewer } from "./runner-log-boxes.js";
 import { RunnerMarkdown } from "./runner-markdown.js";
 
@@ -64,7 +77,16 @@ export interface RunnerDocumentPreviewDrawerProps {
   showPreviewCodeToggle?: boolean;
   imagePreviewInteractive?: boolean;
   imagePreviewOverlay?: ReactNode;
+  imagePreviewReservedBottom?: number;
+  imagePreviewFullscreen?: boolean;
+  enableImageWheelZoom?: boolean;
+  enableImagePreviewTools?: boolean;
   onImagePreviewLoad?: (dimensions: { naturalWidth: number; naturalHeight: number }) => void;
+  onImageSelectionChange?: (selection: {
+    attachmentId: string;
+    naturalSize: RunnerImageNaturalSize;
+    strokes: RunnerImageMaskStroke[];
+  } | null) => void;
   showCloseButton?: boolean;
   showResizeHandle?: boolean;
   onWorkspacePathOpen?: (path: string, options?: { isFolder?: boolean }) => void;
@@ -142,7 +164,12 @@ export function RunnerDocumentPreviewDrawer({
   showPreviewCodeToggle = true,
   imagePreviewInteractive = true,
   imagePreviewOverlay,
+  imagePreviewReservedBottom = 0,
+  imagePreviewFullscreen = false,
+  enableImageWheelZoom = false,
+  enableImagePreviewTools = false,
   onImagePreviewLoad,
+  onImageSelectionChange,
   showCloseButton = true,
   showResizeHandle = false,
   onWorkspacePathOpen,
@@ -167,6 +194,21 @@ export function RunnerDocumentPreviewDrawer({
   const [isPdfPreviewRendering, setIsPdfPreviewRendering] = useState(false);
   const [pdfPreviewError, setPdfPreviewError] = useState<string | null>(null);
   const [markdownPreviewMode, setMarkdownPreviewMode] = useState<"rendered" | "code">("rendered");
+  const [imagePreviewZoom, setImagePreviewZoom] = useState(1);
+  const [imagePreviewToolMode, setImagePreviewToolMode] = useState<"idle" | "select" | "crop">("idle");
+  const [imageNaturalSize, setImageNaturalSize] = useState<RunnerImageNaturalSize>({ width: 0, height: 0 });
+  const [imageMaskStrokes, setImageMaskStrokes] = useState<RunnerImageMaskStroke[]>([]);
+  const [imageMaskRedoStrokes, setImageMaskRedoStrokes] = useState<RunnerImageMaskStroke[]>([]);
+  const [imageMaskDraftStroke, setImageMaskDraftStroke] = useState<RunnerImageMaskStroke | null>(null);
+  const [imageCropRect, setImageCropRect] = useState<RunnerImageCropRect | null>(null);
+  const [imageCropDraftRect, setImageCropDraftRect] = useState<RunnerImageCropRect | null>(null);
+  const [imageCropDragTarget, setImageCropDragTarget] = useState<RunnerImageCropTarget>("new");
+  const [imageCropHistory, setImageCropHistory] = useState<Array<{ blob: Blob; url: string; width: number; height: number }>>([]);
+  const [imageCropHistoryIndex, setImageCropHistoryIndex] = useState(0);
+  const [isCroppingImage, setIsCroppingImage] = useState(false);
+  const [isSavingImageCrop, setIsSavingImageCrop] = useState(false);
+  const [imagePreviewCacheBuster, setImagePreviewCacheBuster] = useState("");
+  const imageCropHistoryRef = useRef<Array<{ blob: Blob; url: string; width: number; height: number }>>([]);
   const initialDirectoryPath = normalizeRunnerPreviewWorkspacePath(attachment.workspacePath || attachment.id);
   const [directoryPreviewPath, setDirectoryPreviewPath] = useState(initialDirectoryPath);
   const [directoryPreviewState, setDirectoryPreviewState] = useState<AttachmentDirectoryPreviewState>({
@@ -178,11 +220,23 @@ export function RunnerDocumentPreviewDrawer({
   const [directoryLoadingPaths, setDirectoryLoadingPaths] = useState<string[]>([]);
   const [directoryErrorByPath, setDirectoryErrorByPath] = useState<Record<string, string>>({});
   const [expandedDirectoryPaths, setExpandedDirectoryPaths] = useState<string[]>([]);
+  const imagePreviewWheelRegionRef = useRef<HTMLDivElement | null>(null);
+  const imageMaskStrokeIdRef = useRef(0);
+  const imageCropDraftRectRef = useRef<RunnerImageCropRect | null>(null);
+  const imageCropDragStateRef = useRef<{
+    mode: RunnerImageCropTarget;
+    startPoint: RunnerImagePoint;
+    startRect: RunnerImageCropRect | null;
+  } | null>(null);
 
   const isImageAttachment = isRunnerPreviewImageAttachment(attachment);
   const attachmentPreviewKind = !isImageAttachment
     ? attachment.previewKindOverride ?? getRunnerDocumentPreviewKind(attachment)
     : null;
+
+  useEffect(() => {
+    imageCropHistoryRef.current = imageCropHistory;
+  }, [imageCropHistory]);
   const resolvedEnvironmentId = getRunnerPreviewAttachmentEnvironmentId(attachment, environmentId);
   const resolvedWorkspacePath = getRunnerPreviewAttachmentWorkspacePath(attachment);
   const isExplicitDirectoryAttachment = Boolean(attachment.isFolder || attachmentPreviewKind === "directory");
@@ -215,6 +269,49 @@ export function RunnerDocumentPreviewDrawer({
       "",
     [attachment.id, attachment.previewUrl, attachment.url, backendUrl]
   );
+  const activeImageCropHistoryEntry = imagePreviewToolMode === "crop" && imageCropHistoryIndex > 0
+    ? (imageCropHistory[imageCropHistoryIndex - 1] || null)
+    : null;
+  const effectiveImagePreviewUrl = useMemo(() => {
+    if (activeImageCropHistoryEntry?.url) {
+      return activeImageCropHistoryEntry.url;
+    }
+    if (!imagePreviewCacheBuster || !resolvedImagePreviewUrl || /^(?:blob:|data:)/i.test(resolvedImagePreviewUrl)) {
+      return resolvedImagePreviewUrl;
+    }
+    return `${resolvedImagePreviewUrl}${resolvedImagePreviewUrl.includes("?") ? "&" : "?"}v=${encodeURIComponent(imagePreviewCacheBuster)}`;
+  }, [activeImageCropHistoryEntry?.url, imagePreviewCacheBuster, resolvedImagePreviewUrl]);
+
+  useEffect(() => {
+    if (!onImageSelectionChange) {
+      return;
+    }
+    if (
+      !isImageAttachment
+      || !effectiveImagePreviewUrl
+      || !imageNaturalSize.width
+      || !imageNaturalSize.height
+      || imageMaskStrokes.length === 0
+    ) {
+      onImageSelectionChange(null);
+      return;
+    }
+    onImageSelectionChange({
+      attachmentId: String(attachment.id || attachment.workspacePath || attachment.filename || ""),
+      naturalSize: imageNaturalSize,
+      strokes: imageMaskStrokes,
+    });
+  }, [
+    attachment.filename,
+    attachment.id,
+    attachment.workspacePath,
+    effectiveImagePreviewUrl,
+    imageMaskStrokes,
+    imageNaturalSize,
+    isImageAttachment,
+    onImageSelectionChange,
+  ]);
+
   const resolvedDirectHtmlPreviewUrl = useMemo(
     () => {
       if (typeof attachment.htmlPreviewUrl !== "string" || !attachment.htmlPreviewUrl.trim()) {
@@ -260,6 +357,29 @@ export function RunnerDocumentPreviewDrawer({
     setPdfPreviewError(null);
     setIsPdfPreviewRendering(false);
     setMarkdownPreviewMode("rendered");
+    setImagePreviewZoom(1);
+    setImagePreviewToolMode("idle");
+    setImageNaturalSize({ width: 0, height: 0 });
+    setImageMaskStrokes([]);
+    setImageMaskRedoStrokes([]);
+    setImageMaskDraftStroke(null);
+    setImageCropRect(null);
+    setImageCropDraftRect(null);
+    setImageCropDragTarget("new");
+    setImageCropHistory((current) => {
+      current.forEach((entry) => {
+        try {
+          URL.revokeObjectURL(entry.url);
+        } catch {}
+      });
+      return [];
+    });
+    setImageCropHistoryIndex(0);
+    setIsCroppingImage(false);
+    setIsSavingImageCrop(false);
+    setImagePreviewCacheBuster("");
+    imageCropDraftRectRef.current = null;
+    imageCropDragStateRef.current = null;
     setDirectoryPreviewPath(initialDirectoryPath);
     setDirectoryPreviewState({
       status: "idle",
@@ -760,6 +880,11 @@ export function RunnerDocumentPreviewDrawer({
       if (documentPreviewObjectUrlRef.current) {
         URL.revokeObjectURL(documentPreviewObjectUrlRef.current);
       }
+      imageCropHistoryRef.current.forEach((entry) => {
+        try {
+          URL.revokeObjectURL(entry.url);
+        } catch {}
+      });
       for (const task of pdfPreviewRenderTasksRef.current) {
         if (task?.cancel) {
           try {
@@ -772,6 +897,477 @@ export function RunnerDocumentPreviewDrawer({
       }
     };
   }, []);
+
+  function applyImagePreviewWheelDelta(deltaY: number, options?: { modified?: boolean }) {
+    if (!enableImageWheelZoom || imagePreviewToolMode !== "idle" || !isImageAttachment || !effectiveImagePreviewUrl) {
+      return;
+    }
+    if (!Number.isFinite(deltaY) || deltaY === 0) {
+      return;
+    }
+    const sensitivity = options?.modified ? 0.004 : 0.0022;
+    const nextFactor = Math.exp(-deltaY * sensitivity);
+    setImagePreviewZoom((current) => {
+      const base = Number.isFinite(current) && current > 0 ? current : 1;
+      const next = Math.max(0.35, Math.min(5, base * nextFactor));
+      return Math.abs(next - 1) < 0.025 ? 1 : next;
+    });
+  }
+
+  function handleImagePreviewWheel(event: ReactWheelEvent<HTMLElement>) {
+    if (!enableImageWheelZoom || imagePreviewToolMode !== "idle" || !isImageAttachment || !effectiveImagePreviewUrl) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    applyImagePreviewWheelDelta(Number(event.deltaY || 0), { modified: event.ctrlKey || event.metaKey });
+  }
+
+  function applyImagePreviewZoomStep(direction: -1 | 1) {
+    if (!isImageAttachment || !effectiveImagePreviewUrl) {
+      return;
+    }
+    const step = direction > 0 ? 1.2 : 1 / 1.2;
+    setImagePreviewZoom((current) => {
+      const base = Number.isFinite(current) && current > 0 ? current : 1;
+      const next = Math.max(0.35, Math.min(5, base * step));
+      return Math.abs(next - 1) < 0.025 ? 1 : next;
+    });
+  }
+
+  useEffect(() => {
+    const node = imagePreviewWheelRegionRef.current;
+    if (!node || !enableImageWheelZoom || !isImageAttachment || !effectiveImagePreviewUrl) {
+      return;
+    }
+    const handleNativeWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (imagePreviewToolMode === "idle") {
+        applyImagePreviewWheelDelta(Number(event.deltaY || 0), { modified: event.ctrlKey || event.metaKey });
+      }
+    };
+    const preventGesture = (event: Event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    node.addEventListener("wheel", handleNativeWheel, { passive: false, capture: true });
+    node.addEventListener("gesturestart", preventGesture, { passive: false } as AddEventListenerOptions);
+    node.addEventListener("gesturechange", preventGesture, { passive: false } as AddEventListenerOptions);
+    return () => {
+      node.removeEventListener("wheel", handleNativeWheel, { capture: true } as EventListenerOptions);
+      node.removeEventListener("gesturestart", preventGesture);
+      node.removeEventListener("gesturechange", preventGesture);
+    };
+  }, [effectiveImagePreviewUrl, enableImageWheelZoom, imagePreviewToolMode, isImageAttachment]);
+
+  function resetImageSelectionTool() {
+    setImagePreviewToolMode("idle");
+    setImageMaskStrokes([]);
+    setImageMaskRedoStrokes([]);
+    setImageMaskDraftStroke(null);
+  }
+
+  function resetImageCropTool() {
+    setImagePreviewToolMode("idle");
+    setImageCropRect(null);
+    setImageCropDraftRect(null);
+    setImageCropDragTarget("new");
+    setImageCropHistory((current) => {
+      current.forEach((entry) => {
+        try {
+          URL.revokeObjectURL(entry.url);
+        } catch {}
+      });
+      return [];
+    });
+    setImageCropHistoryIndex(0);
+    setIsCroppingImage(false);
+    setIsSavingImageCrop(false);
+    imageCropDraftRectRef.current = null;
+    imageCropDragStateRef.current = null;
+  }
+
+  function beginImageSelectionTool() {
+    if (!enableImagePreviewTools || !isImageAttachment) return;
+    resetImageCropTool();
+    setImagePreviewZoom(1);
+    setImagePreviewToolMode("select");
+    setImageMaskRedoStrokes([]);
+  }
+
+  function beginImageCropTool() {
+    if (!enableImagePreviewTools || !isImageAttachment) return;
+    resetImageSelectionTool();
+    setImagePreviewZoom(1);
+    setImagePreviewToolMode("crop");
+    setImageCropRect(null);
+    setImageCropDraftRect(null);
+    setImageCropDragTarget("new");
+    setImageCropHistory((current) => {
+      current.forEach((entry) => {
+        try {
+          URL.revokeObjectURL(entry.url);
+        } catch {}
+      });
+      return [];
+    });
+    setImageCropHistoryIndex(0);
+    imageCropDraftRectRef.current = null;
+    imageCropDragStateRef.current = null;
+  }
+
+  function undoImageSelectionStroke() {
+    setImageMaskStrokes((current) => {
+      if (!current.length) return current;
+      const next = current.slice(0, -1);
+      const removed = current[current.length - 1];
+      setImageMaskRedoStrokes((redoCurrent) => [removed, ...redoCurrent]);
+      return next;
+    });
+    setImageMaskDraftStroke(null);
+  }
+
+  function redoImageSelectionStroke() {
+    setImageMaskRedoStrokes((current) => {
+      if (!current.length) return current;
+      const [restored, ...remaining] = current;
+      setImageMaskStrokes((strokeCurrent) => [...strokeCurrent, restored]);
+      return remaining;
+    });
+    setImageMaskDraftStroke(null);
+  }
+
+  function handleImageMaskPointerStart(point: RunnerImagePoint) {
+    const nextStroke: RunnerImageMaskStroke = {
+      id: `image-mask-stroke-${++imageMaskStrokeIdRef.current}`,
+      brushSize: Number(point.brushSize || 44),
+      points: [{ x: point.x, y: point.y }],
+    };
+    setImageMaskDraftStroke(nextStroke);
+    setImageMaskRedoStrokes([]);
+  }
+
+  function handleImageMaskPointerMove(point: RunnerImagePoint) {
+    setImageMaskDraftStroke((current) => {
+      if (!current) return current;
+      const previousPoint = current.points[current.points.length - 1];
+      const distance = previousPoint
+        ? Math.hypot(Number(point.x) - Number(previousPoint.x), Number(point.y) - Number(previousPoint.y))
+        : Number.POSITIVE_INFINITY;
+      if (distance < Math.max(1.5, Number(current.brushSize || 1) * 0.04)) {
+        return current;
+      }
+      return {
+        ...current,
+        points: [...current.points, { x: point.x, y: point.y }],
+      };
+    });
+  }
+
+  function handleImageMaskPointerEnd() {
+    setImageMaskDraftStroke((current) => {
+      if (!current || !Array.isArray(current.points) || current.points.length === 0) {
+        return null;
+      }
+      setImageMaskStrokes((strokesCurrent) => [...strokesCurrent, current]);
+      return null;
+    });
+  }
+
+  function buildImageCropRect(startPoint: RunnerImagePoint, endPoint: RunnerImagePoint): RunnerImageCropRect {
+    const width = Math.max(1, Number(imageNaturalSize.width || 1));
+    const height = Math.max(1, Number(imageNaturalSize.height || 1));
+    const startX = Math.max(0, Math.min(width, Number(startPoint?.x || 0)));
+    const startY = Math.max(0, Math.min(height, Number(startPoint?.y || 0)));
+    const endX = Math.max(0, Math.min(width, Number(endPoint?.x || 0)));
+    const endY = Math.max(0, Math.min(height, Number(endPoint?.y || 0)));
+    const x = Math.min(startX, endX);
+    const y = Math.min(startY, endY);
+    return {
+      x,
+      y,
+      width: Math.max(0, Math.abs(endX - startX)),
+      height: Math.max(0, Math.abs(endY - startY)),
+    };
+  }
+
+  function buildImageCropRectFromDrag(point: RunnerImagePoint): RunnerImageCropRect | null {
+    const dragState = imageCropDragStateRef.current;
+    if (!dragState) return null;
+    if (dragState.mode === "new") {
+      return buildImageCropRect(dragState.startPoint, point);
+    }
+
+    const imageWidth = Math.max(1, Number(imageNaturalSize.width || 1));
+    const imageHeight = Math.max(1, Number(imageNaturalSize.height || 1));
+    const minSize = 8;
+    const startRect = dragState.startRect || { x: 0, y: 0, width: 0, height: 0 };
+    let left = Number(startRect.x || 0);
+    let top = Number(startRect.y || 0);
+    let right = left + Number(startRect.width || 0);
+    let bottom = top + Number(startRect.height || 0);
+    const target = String(dragState.mode || "new");
+
+    if (target.includes("w")) left = Math.max(0, Math.min(right - minSize, Number(point.x || 0)));
+    if (target.includes("e")) right = Math.min(imageWidth, Math.max(left + minSize, Number(point.x || 0)));
+    if (target.includes("n")) top = Math.max(0, Math.min(bottom - minSize, Number(point.y || 0)));
+    if (target.includes("s")) bottom = Math.min(imageHeight, Math.max(top + minSize, Number(point.y || 0)));
+
+    const clampedLeft = Math.max(0, Math.min(imageWidth, left));
+    const clampedTop = Math.max(0, Math.min(imageHeight, top));
+    const clampedRight = Math.max(0, Math.min(imageWidth, right));
+    const clampedBottom = Math.max(0, Math.min(imageHeight, bottom));
+    return {
+      x: clampedLeft,
+      y: clampedTop,
+      width: Math.max(0, clampedRight - clampedLeft),
+      height: Math.max(0, clampedBottom - clampedTop),
+    };
+  }
+
+  function handleImageCropPointerStart(point: RunnerImagePoint, target: RunnerImageCropTarget = "new") {
+    const normalizedTarget = target && target !== "new" && imageCropRect ? target : "new";
+    const currentCropRect: RunnerImageCropRect | null = normalizedTarget === "new" || !imageCropRect
+      ? null
+      : {
+          x: Number(imageCropRect.x || 0),
+          y: Number(imageCropRect.y || 0),
+          width: Number(imageCropRect.width || 0),
+          height: Number(imageCropRect.height || 0),
+        };
+    imageCropDragStateRef.current = {
+      mode: normalizedTarget,
+      startPoint: point,
+      startRect: currentCropRect,
+    };
+    setImageCropDragTarget(normalizedTarget);
+    const nextRect = normalizedTarget === "new"
+      ? buildImageCropRect(point, point)
+      : currentCropRect;
+    imageCropDraftRectRef.current = nextRect;
+    setImageCropDraftRect(nextRect);
+    if (normalizedTarget === "new") {
+      setImageCropRect(null);
+    }
+  }
+
+  function handleImageCropPointerMove(point: RunnerImagePoint) {
+    if (!imageCropDragStateRef.current) return;
+    const nextRect = buildImageCropRectFromDrag(point);
+    if (!nextRect) return;
+    imageCropDraftRectRef.current = nextRect;
+    setImageCropDraftRect(nextRect);
+  }
+
+  function handleImageCropPointerEnd() {
+    const draftRect = imageCropDraftRectRef.current || imageCropDraftRect;
+    const dragState = imageCropDragStateRef.current;
+    imageCropDraftRectRef.current = null;
+    imageCropDragStateRef.current = null;
+    setImageCropDragTarget("new");
+    setImageCropDraftRect(null);
+    if (!draftRect || Number(draftRect.width || 0) < 8 || Number(draftRect.height || 0) < 8) {
+      if (!dragState || dragState.mode === "new") {
+        setImageCropRect(null);
+      }
+      return;
+    }
+    setImageCropRect({
+      x: Math.round(Number(draftRect.x || 0)),
+      y: Math.round(Number(draftRect.y || 0)),
+      width: Math.round(Number(draftRect.width || 0)),
+      height: Math.round(Number(draftRect.height || 0)),
+    });
+  }
+
+  async function loadImageForCrop(sourceUrl: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("Failed to load image for cropping."));
+      image.src = sourceUrl;
+    });
+  }
+
+  async function getImageCropSourceBlob(): Promise<Blob> {
+    if (activeImageCropHistoryEntry?.blob) {
+      return activeImageCropHistoryEntry.blob;
+    }
+    if (!resolvedImagePreviewUrl) {
+      throw new Error("No source image is available for cropping.");
+    }
+    const response = await fetch(resolvedImagePreviewUrl, {
+      headers: requestHeadersWithApiKey,
+      credentials: "same-origin",
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to load image for cropping (${response.status}).`);
+    }
+    return response.blob();
+  }
+
+  async function createCroppedImageBlob(sourceBlob: Blob, cropRect: RunnerImageCropRect): Promise<Blob> {
+    const imageSourceUrl = URL.createObjectURL(sourceBlob);
+    try {
+      const imageSource = await loadImageForCrop(imageSourceUrl);
+      const rect = {
+        x: Math.max(0, Math.round(Number(cropRect.x || 0))),
+        y: Math.max(0, Math.round(Number(cropRect.y || 0))),
+        width: Math.max(1, Math.round(Number(cropRect.width || 0))),
+        height: Math.max(1, Math.round(Number(cropRect.height || 0))),
+      };
+      const sourceWidth = Math.max(1, Number(imageSource.width || imageSource.naturalWidth || imageNaturalSize.width || rect.width));
+      const sourceHeight = Math.max(1, Number(imageSource.height || imageSource.naturalHeight || imageNaturalSize.height || rect.height));
+      const safeRect = {
+        x: Math.max(0, Math.min(sourceWidth - 1, rect.x)),
+        y: Math.max(0, Math.min(sourceHeight - 1, rect.y)),
+        width: Math.max(1, Math.min(sourceWidth - Math.max(0, rect.x), rect.width)),
+        height: Math.max(1, Math.min(sourceHeight - Math.max(0, rect.y), rect.height)),
+      };
+      const canvas = document.createElement("canvas");
+      canvas.width = safeRect.width;
+      canvas.height = safeRect.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("Image crop canvas is unavailable.");
+      }
+      ctx.drawImage(
+        imageSource,
+        safeRect.x,
+        safeRect.y,
+        safeRect.width,
+        safeRect.height,
+        0,
+        0,
+        safeRect.width,
+        safeRect.height,
+      );
+      const mimeType = sourceBlob.type || attachment.mimeType || "image/png";
+      return await new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Failed to create cropped image."));
+        }, mimeType);
+      });
+    } finally {
+      URL.revokeObjectURL(imageSourceUrl);
+    }
+  }
+
+  async function applyImageCropToPreview() {
+    if (!imageCropRect || isCroppingImage || isSavingImageCrop) return;
+    setIsCroppingImage(true);
+    try {
+      const sourceBlob = await getImageCropSourceBlob();
+      const croppedBlob = await createCroppedImageBlob(sourceBlob, imageCropRect);
+      const croppedUrl = URL.createObjectURL(croppedBlob);
+      const nextIndex = imageCropHistoryIndex + 1;
+      setImageCropHistory((current) => {
+        const kept = current.slice(0, imageCropHistoryIndex);
+        current.slice(imageCropHistoryIndex).forEach((entry) => {
+          try {
+            URL.revokeObjectURL(entry.url);
+          } catch {}
+        });
+        return [
+          ...kept,
+          {
+            blob: croppedBlob,
+            url: croppedUrl,
+            width: Math.round(Number(imageCropRect.width || 0)),
+            height: Math.round(Number(imageCropRect.height || 0)),
+          },
+        ];
+      });
+      setImageCropHistoryIndex(nextIndex);
+      setImageCropRect(null);
+      setImageCropDraftRect(null);
+    } catch {
+      try {
+        // The crop UI should fail quietly instead of breaking preview controls.
+      } catch {}
+    } finally {
+      setIsCroppingImage(false);
+    }
+  }
+
+  useEffect(() => {
+    if (imagePreviewToolMode !== "crop" || !imageCropRect || isCroppingImage || isSavingImageCrop) {
+      return;
+    }
+
+    function handleImageCropEnterKey(event: KeyboardEvent) {
+      if (event.key !== "Enter" || event.shiftKey || event.altKey || event.metaKey || event.ctrlKey || event.repeat || event.isComposing) {
+        return;
+      }
+      const target = event.target;
+      const editableTarget = target instanceof HTMLElement
+        && (
+          target.tagName === "INPUT"
+          || target.tagName === "TEXTAREA"
+          || target.tagName === "SELECT"
+          || target.isContentEditable
+        );
+      if (editableTarget) {
+        return;
+      }
+      event.preventDefault();
+      void applyImageCropToPreview();
+    }
+
+    window.addEventListener("keydown", handleImageCropEnterKey);
+    return () => window.removeEventListener("keydown", handleImageCropEnterKey);
+  }, [imageCropRect, imagePreviewToolMode, isCroppingImage, isSavingImageCrop]);
+
+  async function saveImageCropToPreview() {
+    if (!activeImageCropHistoryEntry?.blob || isCroppingImage || isSavingImageCrop) return;
+    const normalizedBackendUrl = String(backendUrl || "").replace(/\/+$/, "");
+    const normalizedEnvironmentId = String(resolvedEnvironmentId || "").trim();
+    const normalizedWorkspacePath = normalizeRunnerPreviewWorkspacePath(resolvedWorkspacePath);
+    if (!normalizedBackendUrl || !normalizedEnvironmentId || !normalizedWorkspacePath) return;
+    setIsSavingImageCrop(true);
+    try {
+      const pathParts = normalizedWorkspacePath.split("/").filter(Boolean);
+      const filename = pathParts.pop() || attachment.filename || "image.png";
+      const parentPath = pathParts.join("/");
+      const formData = new FormData();
+      formData.append("file", activeImageCropHistoryEntry.blob, filename);
+      formData.append("path", parentPath);
+      const uploadResponse = await fetch(
+        `${normalizedBackendUrl}/environments/${encodeURIComponent(normalizedEnvironmentId)}/files/upload`,
+        {
+          method: "POST",
+          headers: requestHeadersWithApiKey,
+          body: formData,
+        },
+      );
+      if (!uploadResponse.ok) {
+        return;
+      }
+      setImagePreviewCacheBuster(Date.now().toString(36));
+      resetImageCropTool();
+    } finally {
+      setIsSavingImageCrop(false);
+    }
+  }
+
+  function undoImageCropHistory() {
+    setImageCropHistoryIndex((current) => Math.max(0, current - 1));
+    setImageCropRect(null);
+    setImageCropDraftRect(null);
+    imageCropDraftRectRef.current = null;
+    imageCropDragStateRef.current = null;
+  }
+
+  function redoImageCropHistory() {
+    setImageCropHistoryIndex((current) => Math.min(imageCropHistory.length, current + 1));
+    setImageCropRect(null);
+    setImageCropDraftRect(null);
+    imageCropDraftRectRef.current = null;
+    imageCropDragStateRef.current = null;
+  }
 
   function scrollToPdfPage(pageNumber: number) {
     const viewport = documentPreviewPdfViewportRef.current;
@@ -1044,9 +1640,168 @@ export function RunnerDocumentPreviewDrawer({
     );
   }
 
+  const imagePreviewRootClassName = isImageAttachment ? " tb-attachment-preview-image-drawer" : "";
   const previewRootClassName = surface
-    ? `tb-attachment-preview-surface${inline ? " tb-attachment-preview-surface-inline" : ""}${className ? ` ${className}` : ""}`
-    : `tb-attachment-preview-drawer${inline ? " tb-attachment-preview-drawer-inline" : ""}${className ? ` ${className}` : ""}`;
+    ? `tb-attachment-preview-surface${inline ? " tb-attachment-preview-surface-inline" : ""}${imagePreviewRootClassName}${className ? ` ${className}` : ""}`
+    : `tb-attachment-preview-drawer${inline ? " tb-attachment-preview-drawer-inline" : ""}${imagePreviewRootClassName}${className ? ` ${className}` : ""}`;
+  const canUseBuiltInImageTools = Boolean(enableImagePreviewTools && isImageAttachment && effectiveImagePreviewUrl);
+  const isBuiltInImageToolModeActive = canUseBuiltInImageTools && imagePreviewToolMode !== "idle";
+  const canSaveImageCrop = Boolean(
+    activeImageCropHistoryEntry?.blob
+    && backendUrl
+    && resolvedEnvironmentId
+    && normalizeRunnerPreviewWorkspacePath(resolvedWorkspacePath)
+  );
+  const builtInImagePreviewOverlay = canUseBuiltInImageTools && imagePreviewToolMode === "select"
+    ? (
+      <RunnerImageSelectionMaskOverlay
+        active
+        naturalSize={imageNaturalSize}
+        strokes={imageMaskStrokes}
+        draftStroke={imageMaskDraftStroke}
+        brushSize={44}
+        onPointerStart={handleImageMaskPointerStart}
+        onPointerMove={handleImageMaskPointerMove}
+        onPointerEnd={handleImageMaskPointerEnd}
+      />
+    )
+    : canUseBuiltInImageTools && imagePreviewToolMode === "crop"
+      ? (
+        <RunnerImageCropOverlay
+          active
+          naturalSize={imageNaturalSize}
+          cropRect={imageCropRect}
+          draftRect={imageCropDraftRect}
+          dragTarget={imageCropDragTarget}
+          onPointerStart={handleImageCropPointerStart}
+          onPointerMove={handleImageCropPointerMove}
+          onPointerEnd={handleImageCropPointerEnd}
+        />
+      )
+      : null;
+  const builtInImagePreviewHeaderActions = canUseBuiltInImageTools
+    ? imagePreviewToolMode === "select"
+      ? (
+        <div className="tb-image-preview-selection-controls">
+          <button
+            type="button"
+            className="tb-image-preview-selection-button is-icon is-plain"
+            onClick={undoImageSelectionStroke}
+            disabled={imageMaskStrokes.length === 0}
+            title="Undo selection stroke"
+            aria-label="Undo selection stroke"
+          >
+            <LucideChevronLeft width={16} height={16} strokeWidth={1.9} />
+          </button>
+          <button
+            type="button"
+            className="tb-image-preview-selection-button is-icon is-plain"
+            onClick={redoImageSelectionStroke}
+            disabled={imageMaskRedoStrokes.length === 0}
+            title="Redo selection stroke"
+            aria-label="Redo selection stroke"
+          >
+            <LucideChevronRight width={16} height={16} strokeWidth={1.9} />
+          </button>
+          <button
+            type="button"
+            className="tb-image-preview-selection-button is-plain"
+            onClick={resetImageSelectionTool}
+          >
+            Cancel
+          </button>
+        </div>
+      )
+      : imagePreviewToolMode === "crop"
+        ? (
+          <div className="tb-image-preview-selection-controls">
+            <button
+              type="button"
+              className="tb-image-preview-selection-button is-icon is-plain"
+              onClick={undoImageCropHistory}
+              disabled={imageCropHistoryIndex <= 0 || isCroppingImage || isSavingImageCrop}
+              title="Undo crop"
+              aria-label="Undo crop"
+            >
+              <LucideChevronLeft width={16} height={16} strokeWidth={1.9} />
+            </button>
+            <button
+              type="button"
+              className="tb-image-preview-selection-button is-icon is-plain"
+              onClick={redoImageCropHistory}
+              disabled={imageCropHistoryIndex >= imageCropHistory.length || isCroppingImage || isSavingImageCrop}
+              title="Redo crop"
+              aria-label="Redo crop"
+            >
+              <LucideChevronRight width={16} height={16} strokeWidth={1.9} />
+            </button>
+            <button
+              type="button"
+              className="tb-image-preview-selection-button is-plain"
+              onClick={resetImageCropTool}
+              disabled={isCroppingImage || isSavingImageCrop}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="tb-image-preview-selection-button"
+              onClick={() => void applyImageCropToPreview()}
+              disabled={!imageCropRect || isCroppingImage || isSavingImageCrop}
+            >
+              {isCroppingImage ? (
+                <LucideLoaderCircle className="tb-context-action-notice-icon-spinner" width={14} height={14} strokeWidth={1.9} />
+              ) : (
+                <LucideCrop width={14} height={14} strokeWidth={1.9} />
+              )}
+              <span>{isCroppingImage ? "Cropping..." : "Apply Crop"}</span>
+            </button>
+            <button
+              type="button"
+              className="tb-image-preview-selection-button"
+              onClick={() => void saveImageCropToPreview()}
+              disabled={!canSaveImageCrop || isCroppingImage || isSavingImageCrop}
+            >
+              {isSavingImageCrop ? (
+                <LucideLoaderCircle className="tb-context-action-notice-icon-spinner" width={14} height={14} strokeWidth={1.9} />
+              ) : (
+                <LucideCheck width={14} height={14} strokeWidth={1.9} />
+              )}
+              <span>{isSavingImageCrop ? "Saving..." : "Save"}</span>
+            </button>
+          </div>
+        )
+        : (
+          <>
+            <button
+              type="button"
+              className="tb-image-preview-select-button"
+              onClick={beginImageSelectionTool}
+              title="Select image area"
+            >
+              <LucideLassoSelect width={14} height={14} strokeWidth={1.9} />
+              <span>Select</span>
+            </button>
+            <button
+              type="button"
+              className="tb-image-preview-select-button is-crop"
+              onClick={beginImageCropTool}
+              title="Crop image"
+            >
+              <LucideCrop width={14} height={14} strokeWidth={1.9} />
+              <span>Crop</span>
+            </button>
+            <span className="tb-image-preview-header-divider" aria-hidden="true" />
+          </>
+        )
+    : null;
+  const hasDrawerHeaderActions = Boolean(
+    (isBuiltInImageToolModeActive ? builtInImagePreviewHeaderActions : (
+      headerActions || builtInImagePreviewHeaderActions || canTogglePreviewCode || headerActionsAfterPreviewToggle || (showCloseButton && onClose)
+    ))
+  );
+  const shouldRenderImagePreviewZoomControl = Boolean(imagePreviewFullscreen && isImageAttachment && effectiveImagePreviewUrl);
+  const imagePreviewZoomPercent = `${Math.round(Math.max(0.35, Math.min(5, imagePreviewZoom)) * 100)}%`;
 
   return (
     <div className={`tb-runner-document-preview-host${inline ? " tb-runner-document-preview-host-inline" : ""}`}>
@@ -1094,54 +1849,113 @@ export function RunnerDocumentPreviewDrawer({
               </div>
             </div>
           )}
-          {headerActions || canTogglePreviewCode || headerActionsAfterPreviewToggle || (showCloseButton && onClose) ? (
+          {shouldRenderImagePreviewZoomControl ? (
+            <div className="tb-attachment-preview-drawer-header-center">
+              <div className="tb-image-preview-zoom-control" aria-label="Image zoom controls">
+                <button
+                  type="button"
+                  className="tb-image-preview-zoom-button"
+                  onClick={() => applyImagePreviewZoomStep(-1)}
+                  disabled={imagePreviewZoom <= 0.351}
+                  aria-label="Zoom out"
+                  title="Zoom out"
+                >
+                  <LucideMinus width={14} height={14} strokeWidth={1.9} />
+                </button>
+                <span className="tb-image-preview-zoom-label">{imagePreviewZoomPercent}</span>
+                <button
+                  type="button"
+                  className="tb-image-preview-zoom-button"
+                  onClick={() => applyImagePreviewZoomStep(1)}
+                  disabled={imagePreviewZoom >= 4.99}
+                  aria-label="Zoom in"
+                  title="Zoom in"
+                >
+                  <LucidePlus width={14} height={14} strokeWidth={1.9} />
+                </button>
+              </div>
+            </div>
+          ) : null}
+          {hasDrawerHeaderActions ? (
             <div className="tb-attachment-preview-drawer-header-actions">
-              {headerActions}
-              {canTogglePreviewCode ? (
-                <button
-                  type="button"
-                  className={`tb-attachment-preview-drawer-action${markdownPreviewMode === "code" ? " is-active" : ""}`}
-                  onClick={() => setMarkdownPreviewMode((current) => current === "code" ? "rendered" : "code")}
-                  aria-label={markdownPreviewMode === "code" ? "Show preview" : "Show code"}
-                  aria-pressed={markdownPreviewMode === "code"}
-                  title={markdownPreviewMode === "code" ? "Show preview" : "Show code"}
-                >
-                  {markdownPreviewMode === "code" ? (
-                    <LucideFileText className="tb-attachment-preview-drawer-action-icon" strokeWidth={2} />
-                  ) : (
-                    <LucideCode2 className="tb-attachment-preview-drawer-action-icon" strokeWidth={2} />
-                  )}
-                </button>
-              ) : null}
-              {headerActionsAfterPreviewToggle}
-              {showCloseButton && onClose ? (
-                <button
-                  type="button"
-                  className="tb-attachment-preview-drawer-action"
-                  onClick={onClose}
-                  aria-label="Close file preview"
-                >
-                  <LucideX className="tb-attachment-preview-drawer-action-icon" strokeWidth={2} />
-                </button>
-              ) : null}
+              {isBuiltInImageToolModeActive ? (
+                builtInImagePreviewHeaderActions
+              ) : (
+                <>
+                  {headerActions}
+                  {builtInImagePreviewHeaderActions}
+                  {canTogglePreviewCode ? (
+                    <button
+                      type="button"
+                      className={`tb-image-preview-select-button tb-document-preview-mode-toggle${markdownPreviewMode === "code" ? " is-active" : ""}`}
+                      onClick={() => setMarkdownPreviewMode((current) => current === "code" ? "rendered" : "code")}
+                      aria-label={markdownPreviewMode === "code" ? "Show preview" : "Show code"}
+                      aria-pressed={markdownPreviewMode === "code"}
+                      title={markdownPreviewMode === "code" ? "Show preview" : "Show code"}
+                    >
+                      {markdownPreviewMode === "code" ? (
+                        <LucideEye width={14} height={14} strokeWidth={1.9} />
+                      ) : (
+                        <LucideCode2 width={14} height={14} strokeWidth={1.9} />
+                      )}
+                      <span>{markdownPreviewMode === "code" ? "Preview" : "Code"}</span>
+                    </button>
+                  ) : null}
+                  {headerActionsAfterPreviewToggle && !builtInImagePreviewHeaderActions ? (
+                    <span className="tb-image-preview-header-divider" aria-hidden="true" />
+                  ) : null}
+                  {headerActionsAfterPreviewToggle}
+                  {showCloseButton && onClose ? (
+                    <button
+                      type="button"
+                      className="tb-attachment-preview-drawer-action"
+                      onClick={onClose}
+                      aria-label="Close file preview"
+                    >
+                      <LucideX className="tb-attachment-preview-drawer-action-icon" strokeWidth={2} />
+                    </button>
+                  ) : null}
+                </>
+              )}
             </div>
           ) : null}
         </div>
         <div className="tb-attachment-preview-drawer-body">
           {shouldRenderDirectoryPreview ? (
             renderDirectoryPreview()
-          ) : isImageAttachment && resolvedImagePreviewUrl ? (
-            <RunnerImagePreviewSurface
-              src={resolvedImagePreviewUrl}
-              alt={attachment.filename}
-              mimeType={attachment.mimeType}
-              fetchHeaders={requestHeadersWithApiKey}
-              className={inline ? "tb-attachment-preview-image-surface" : undefined}
-              imageClassName={inline ? "tb-attachment-preview-image" : undefined}
-              interactive={imagePreviewInteractive}
-              onImageLoad={onImagePreviewLoad}
-              overlay={imagePreviewOverlay}
-            />
+          ) : isImageAttachment && effectiveImagePreviewUrl ? (
+            <div ref={imagePreviewWheelRegionRef} className="tb-attachment-preview-image-zoom-region">
+              <RunnerImagePreviewSurface
+                src={effectiveImagePreviewUrl}
+                alt={attachment.filename}
+                mimeType={attachment.mimeType}
+                fetchHeaders={requestHeadersWithApiKey}
+                className={inline ? "tb-attachment-preview-image-surface" : undefined}
+                imageClassName={inline ? "tb-attachment-preview-image" : undefined}
+                interactive={imagePreviewInteractive && !isBuiltInImageToolModeActive}
+                onWheel={enableImageWheelZoom && imagePreviewToolMode === "idle" ? handleImagePreviewWheel : undefined}
+                onImageLoad={(dimensions) => {
+                  setImageNaturalSize({
+                    width: Math.round(Number(dimensions?.naturalWidth || 0)),
+                    height: Math.round(Number(dimensions?.naturalHeight || 0)),
+                  });
+                  onImagePreviewLoad?.(dimensions);
+                }}
+                overlay={imagePreviewOverlay || builtInImagePreviewOverlay}
+                style={imagePreviewReservedBottom > 0
+                  ? ({
+                      "--tb-attachment-preview-image-reserved-bottom": `${imagePreviewReservedBottom}px`,
+                    } as CSSProperties)
+                  : undefined}
+                imageStyle={imagePreviewZoom !== 1
+                  ? ({
+                      transform: imagePreviewZoom === 1 ? undefined : `scale(${imagePreviewZoom})`,
+                      transformOrigin: "center center",
+                      transition: "transform 140ms ease",
+                    } as CSSProperties)
+                  : undefined}
+              />
+            </div>
           ) : documentPreviewState.status === "loading" ? (
             <div className="tb-attachment-preview-state">
               <LucideLoaderCircle className="tb-attachment-preview-state-icon tb-context-action-notice-icon-spinner" strokeWidth={1.8} />

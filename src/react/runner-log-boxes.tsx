@@ -18,6 +18,9 @@ import {
   Code2,
   Copy,
   Cpu,
+  Clock,
+  Circle,
+  CircleCheckBig,
   Ellipsis,
   Equal,
   Eye,
@@ -3985,6 +3988,18 @@ function isReadFileCommand(command?: string): boolean {
   ].some((pattern) => pattern.test(command));
 }
 
+function tryParseRunnerJson(value: string): unknown {
+  const trimmed = String(value || "").trim();
+  if (!trimmed || (!trimmed.startsWith("{") && !trimmed.startsWith("["))) {
+    return null;
+  }
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return null;
+  }
+}
+
 function isMkdirCommand(command?: string): boolean {
   if (!command) return false;
   return /(?:^|\n|[;&|]\s*)\$?\s*mkdir\b/i.test(command);
@@ -4029,6 +4044,124 @@ function isMkdirLog(log?: RunnerLog): boolean {
   return isMkdirCommand(command);
 }
 
+function extractWaitDurationMsFromValue(value: unknown): number | null {
+  const visit = (entry: unknown): number | null => {
+    if (entry == null) return null;
+    if (Array.isArray(entry)) {
+      for (const nested of entry) {
+        const result = visit(nested);
+        if (result != null) return result;
+      }
+      return null;
+    }
+    if (typeof entry === "string") {
+      const parsed = tryParseRunnerJson(entry);
+      if (parsed) {
+        const result = visit(parsed);
+        if (result != null) return result;
+      }
+      const sleptMatch = entry.match(/\bSlept\s+for\s+(\d+(?:\.\d+)?)\s*ms\b/i);
+      if (sleptMatch) {
+        const milliseconds = Number(sleptMatch[1]);
+        return Number.isFinite(milliseconds) ? milliseconds : null;
+      }
+      return null;
+    }
+    if (typeof entry !== "object") return null;
+
+    const record = entry as Record<string, unknown>;
+    const directDuration =
+      typeof record.duration_ms === "number" ? record.duration_ms :
+      typeof record.durationMs === "number" ? record.durationMs :
+      typeof record.duration === "number" && String(record.unit || "").toLowerCase() === "ms" ? record.duration :
+      null;
+    const message = typeof record.message === "string" ? record.message : "";
+    if (directDuration != null && Number.isFinite(directDuration) && /\bSlept\b|\bWaited\b/i.test(message)) {
+      return directDuration;
+    }
+
+    const nestedCandidates = [
+      record.result,
+      record.payload,
+      record.data,
+      record.structuredContent,
+      record.structured_content,
+      record.output,
+      record.stdout,
+    ];
+    for (const candidate of nestedCandidates) {
+      const result = visit(candidate);
+      if (result != null) return result;
+    }
+    return null;
+  };
+
+  return visit(value);
+}
+
+function extractWaitDurationSeconds(log?: RunnerLog): number | null {
+  if (!log || (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")) {
+    return null;
+  }
+
+  const command = stripRunnerSystemTags([log.metadata?.command, log.message]
+    .filter((value) => typeof value === "string" && value.trim().length > 0)
+    .join("\n"));
+  const commandDurationMatch =
+    command.match(/(?:^|\n|[;&|]\s*)\$?\s*sleep\s+(\d+(?:\.\d+)?)(ms|s|m)?\b/i) ||
+    command.match(/(?:^|\n)\s*\$?\s*Sleep(?:\s+(\d+(?:\.\d+)?)(ms|s|m)?)?\s*$/i);
+  const structuredOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const outputDurationMs = [
+    log.metadata,
+    log.metadata?.output,
+    log.metadata?.result,
+    structuredOutput?.stdout,
+    structuredOutput?.stderr,
+    resolveCommandOutputText(log.metadata?.output, "stdout"),
+  ]
+    .map(extractWaitDurationMsFromValue)
+    .find((value): value is number => value != null);
+
+  if (outputDurationMs != null) {
+    return Math.max(0, Math.round(outputDurationMs / 1000));
+  }
+
+  if (commandDurationMatch) {
+    const amount = Number(commandDurationMatch[1] || "");
+    if (Number.isFinite(amount)) {
+      const unit = String(commandDurationMatch[2] || "s").toLowerCase();
+      if (unit === "ms") return Math.max(0, Math.round(amount / 1000));
+      if (unit === "m") return Math.max(0, Math.round(amount * 60));
+      return Math.max(0, Math.round(amount));
+    }
+  }
+
+  return null;
+}
+
+function isWaitLog(log?: RunnerLog): boolean {
+  return extractWaitDurationSeconds(log) != null;
+}
+
+function WaitLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+  const seconds = extractWaitDurationSeconds(log) || 0;
+  return (
+    <div className="tb-log-card tb-log-card-wait">
+      <div className="tb-log-card-header tb-log-card-header-static">
+        <span className="tb-log-card-icon">
+          <Clock className="tb-log-card-small-icon" strokeWidth={1.5} />
+        </span>
+        <div className="tb-log-card-header-copy">
+          <span className="tb-log-card-label">{`Waited for ${seconds.toLocaleString()} ${seconds === 1 ? "second" : "seconds"}`}</span>
+        </div>
+        <div className="tb-log-card-header-right">
+          {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function isReadFileLog(log?: RunnerLog): boolean {
   if (!log) return false;
   const command = [log.metadata?.command, log.message]
@@ -4045,6 +4178,76 @@ export function isReadFileLog(log?: RunnerLog): boolean {
     /"filePath"\s*:/.test(output) ||
     /"content"\s*:/.test(output)
   );
+}
+
+function isNoopReadFileSentinelPayload(value: unknown): boolean {
+  const visit = (entry: unknown): boolean => {
+    if (entry == null) return false;
+    if (Array.isArray(entry)) return entry.some(visit);
+    if (typeof entry === "string") {
+      const parsed = tryParseRunnerJson(entry);
+      return parsed ? visit(parsed) : false;
+    }
+    if (typeof entry !== "object") return false;
+
+    const record = entry as Record<string, unknown>;
+    const hasReadSentinelShape =
+      Object.prototype.hasOwnProperty.call(record, "numFiles") &&
+      Object.prototype.hasOwnProperty.call(record, "filenames") &&
+      Object.prototype.hasOwnProperty.call(record, "content");
+    if (
+      hasReadSentinelShape &&
+      Number(record.numFiles) === 0 &&
+      Array.isArray(record.filenames) &&
+      record.filenames.length === 0 &&
+      record.content == null
+    ) {
+      return true;
+    }
+
+    return [
+      record.result,
+      record.payload,
+      record.data,
+      record.structuredContent,
+      record.structured_content,
+      record.output,
+      record.stdout,
+    ].some(visit);
+  };
+
+  return visit(value);
+}
+
+function shouldHideNoopReadFileLog(log?: RunnerLog): boolean {
+  if (!log || (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")) {
+    return false;
+  }
+
+  const command = [log.metadata?.command, log.message]
+    .filter((value) => typeof value === "string" && value.trim().length > 0)
+    .join("\n");
+  const readPath =
+    normalizeRunnerFilePath((log.metadata as { file_path?: string; path?: string } | undefined)?.file_path) ||
+    normalizeRunnerFilePath((log.metadata as { file_path?: string; path?: string } | undefined)?.path) ||
+    normalizeRunnerFilePath(extractReadFilePath(command));
+  const basename = readPath ? getFileName(readPath) : "";
+  const readsGenericFileTarget = !readPath || basename.toLowerCase() === "file";
+  if (!readsGenericFileTarget && !isReadFileCommand(command)) {
+    return false;
+  }
+
+  const structuredOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const candidates: unknown[] = [
+    log.metadata,
+    log.metadata?.output,
+    log.metadata?.result,
+    structuredOutput?.stdout,
+    structuredOutput?.stderr,
+    resolveCommandOutputText(log.metadata?.output, "stdout"),
+  ];
+
+  return candidates.some(isNoopReadFileSentinelPayload);
 }
 
 function extractReadFilePath(command?: string): string | null {
@@ -5849,7 +6052,20 @@ function isNoFilesFoundListOutput(output: string): boolean {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
-  return lines.length > 0 && lines.every((line) => /^No files found\.?$/i.test(line));
+  return lines.length > 0 && lines.every((line) => /^(?:No files found|Folder is empty)\.?$/i.test(line));
+}
+
+function formatEmptyListFilesTitle(directoryPath: string | null): string {
+  const normalizedPath = String(directoryPath || "").trim();
+  if (!normalizedPath) {
+    return "No files found.";
+  }
+  const displayPath = normalizedPath.startsWith("/workspace/")
+    ? normalizedPath.slice("/workspace/".length)
+    : normalizedPath === "/workspace"
+      ? "workspace"
+      : normalizedPath;
+  return `${displayPath || normalizedPath} - No files found.`;
 }
 
 function fileKind(name: string): "image" | "video" | "audio" | "code" | "text" {
@@ -5952,7 +6168,6 @@ function ListFilesLogBox({
   const isFindingFiles = isFindingFilesCommand(command);
   const directoryPath = extractDirectoryPath(command);
   const allItems = useMemo(() => parseListOutput(output), [output]);
-  const isNoFilesFoundOutput = useMemo(() => isNoFilesFoundListOutput(output), [output]);
   const normalizedSearchQuery = normalizeListFileSearchText(searchQuery);
   const filteredItems = useMemo(() => {
     const matchingFilter = filterListFiles(allItems, filterMode);
@@ -6059,8 +6274,8 @@ function ListFilesLogBox({
     onWorkspacePathClick(location);
   }
 
-  if (!isError && allItems.length === 0 && (isNoFilesFoundOutput || isFindingFiles)) {
-    const emptyTitle = directoryPath ? `${directoryPath} - No files found.` : "No files found.";
+  if (!isError && allItems.length === 0) {
+    const emptyTitle = formatEmptyListFilesTitle(directoryPath);
     return (
       <div className="tb-log-card tb-log-card-agent-list tb-log-card-file-list">
         <div className="tb-log-card-header tb-log-card-header-static">
@@ -10780,21 +10995,25 @@ function TodoListLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string
     : [];
   const completedCount = todos.filter((todo) => todo.completed).length;
   return (
-    <div className="tb-log-card">
+    <div className="tb-log-card tb-log-card-task-list">
       <LogHeader
         icon={<ListTodo className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Task Progress"
+        label="Task List"
         title={todos.length > 0 ? `${completedCount}/${todos.length} completed` : log.message}
         timeLabel={timeLabel}
         collapsed={collapsed}
         onToggle={() => setCollapsed((value) => !value)}
       />
       <LogPanel collapsed={collapsed}>
+        <div className="tb-log-checklist-header">
+          <span className="tb-log-checklist-heading">Task List</span>
+          {todos.length > 0 ? <span className="tb-log-checklist-count">{completedCount}/{todos.length} completed</span> : null}
+        </div>
         {todos.length > 0 ? (
           <div className="tb-log-checklist">
             {todos.map((todo, index) => (
               <div key={`${todo.text}-${index}`} className="tb-log-checklist-item">
-                {todo.completed ? <CheckCircle2 className="tb-log-checklist-icon tb-log-status-icon-success" strokeWidth={1.5} /> : <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />}
+                {todo.completed ? <CircleCheckBig className="tb-log-checklist-icon tb-log-status-icon-success" strokeWidth={1.5} /> : <Circle className="tb-log-checklist-icon" strokeWidth={1.5} />}
                 <span className={`tb-log-checklist-text ${todo.completed ? "is-complete" : ""}`}>{todo.text}</span>
               </div>
             ))}
@@ -11449,6 +11668,8 @@ export function RunnerWorkLogEntry({
   if (log.eventType === "command_execution") {
     const command = log.metadata?.command || "";
     const output = String(log.metadata?.output || "");
+    if (shouldHideNoopReadFileLog(log)) return null;
+    if (isWaitLog(log)) return <WaitLogBox log={log} timeLabel={timeLabel} />;
     if (isWebScrapeCommand(command) || isWebScrapeOutput(output)) {
       return isWebScrapeJsonCommand(command) || parseWebScrapeLog(log)?.mode === "json"
         ? <WebScrapeJsonLogBox log={log} timeLabel={timeLabel} />
@@ -11612,6 +11833,8 @@ export function RunnerWorkLogEntry({
   }
 
   if (log.eventType === "mcp_tool_call") {
+    if (shouldHideNoopReadFileLog(log)) return null;
+    if (isWaitLog(log)) return <WaitLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderComputerAgentsCreateLog(log)) {
       return <ComputerAgentsCreateLogBox log={log} timeLabel={timeLabel} />;
     }

@@ -130,6 +130,85 @@ const html = `<!doctype html>
         -webkit-backdrop-filter: blur(50px);
       }
 
+      #app {
+        min-height: 100vh;
+        background: #000;
+      }
+
+      .playground-static-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        color: #fff;
+        overflow: hidden;
+      }
+
+      .playground-static-boot-card {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        text-align: center;
+      }
+
+      .playground-static-boot-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+      }
+
+      .playground-static-boot-dots {
+        display: grid;
+        grid-template-columns: repeat(3, 4px);
+        gap: 3px;
+      }
+
+      .playground-static-boot-dots span {
+        width: 4px;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+        animation: playground-static-boot-pulse 900ms ease-in-out infinite;
+      }
+
+      .playground-static-boot-dots span:nth-child(2) { animation-delay: 80ms; }
+      .playground-static-boot-dots span:nth-child(3) { animation-delay: 160ms; }
+      .playground-static-boot-dots span:nth-child(4) { animation-delay: 240ms; }
+      .playground-static-boot-dots span:nth-child(5) { animation-delay: 320ms; }
+      .playground-static-boot-dots span:nth-child(6) { animation-delay: 400ms; }
+      .playground-static-boot-dots span:nth-child(7) { animation-delay: 480ms; }
+      .playground-static-boot-dots span:nth-child(8) { animation-delay: 560ms; }
+      .playground-static-boot-dots span:nth-child(9) { animation-delay: 640ms; }
+
+      .playground-static-boot-title {
+        font-size: 18px;
+        line-height: 1;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .playground-static-boot-copy {
+        max-width: 280px;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        line-height: 1.55;
+        font-weight: 400;
+      }
+
+      @keyframes playground-static-boot-pulse {
+        0%, 100% { background: rgba(255, 255, 255, 0.18); }
+        35% { background: rgba(255, 255, 255, 1); }
+        65% { background: rgba(255, 255, 255, 0.45); }
+      }
+
       .page {
         width: 100vw;
         height: 100vh;
@@ -211,7 +290,7 @@ const html = `<!doctype html>
         border: 1px solid rgba(255,255,255,0.1);
         background: rgba(255,255,255,0.02);
         color: #fff;
-        min-height: 34px;
+        min-height: 30px;
         padding: 8px 10px;
         font-size: 12px;
         line-height: 1.3;
@@ -2129,6 +2208,13 @@ const html = `<!doctype html>
         text-overflow: ellipsis;
       }
 
+      .playground-content-nav-left {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
       .playground-configure-home {
         width: 100%;
         min-height: 100%;
@@ -3955,6 +4041,106 @@ const html = `<!doctype html>
         gap: 6px;
       }
 
+      .playground-top-nav-search-divider {
+        flex: 0 0 1px;
+        width: 1px;
+        height: 22px;
+        margin: 0 2px 0 6px;
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      .playground-top-nav-private-chat-button {
+        --playground-top-nav-private-chat-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        min-height: 30px;
+        height: 30px;
+        overflow: hidden;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        padding: 0 14px;
+        color: rgba(255, 255, 255, 0.92);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        cursor: pointer;
+        transition: color 160ms ease, background 160ms ease;
+      }
+
+      .playground-top-nav-private-chat-button.is-active,
+      .playground-top-nav-private-chat-button:hover,
+      .playground-top-nav-private-chat-button:focus-visible {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.98);
+        outline: none;
+      }
+
+      .playground-top-nav-private-chat-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-top-nav-private-chat-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-top-nav-private-chat-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-top-nav-private-chat-button svg {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+      }
+
+      .playground-top-nav-sidebar-toggle {
+        flex: 0 0 auto;
+        width: 30px;
+        height: 30px;
+        border: 0;
+        border-radius: 999px;
+        padding: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: color 160ms ease, background 160ms ease;
+      }
+
+      .playground-top-nav-sidebar-toggle:hover,
+      .playground-top-nav-sidebar-toggle:focus-visible {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.95);
+        outline: none;
+      }
+
+      .playground-top-nav-sidebar-toggle-icon {
+        width: 16px;
+        height: 16px;
+      }
+
       .playground-unified-top-navbar .playground-environments-editor-navbar-copy {
         flex-direction: row;
         align-items: center;
@@ -4014,6 +4200,7 @@ const html = `<!doctype html>
       .playground-top-nav-account-button {
         width: 32px;
         height: 32px;
+        margin-left: 4px;
         padding: 0;
         border: 0;
         border-radius: 999px;
@@ -4024,11 +4211,14 @@ const html = `<!doctype html>
         cursor: pointer;
       }
 
-      .playground-top-nav-account-button:hover {
-        background: rgba(255, 255, 255, 0.08);
-      }
-
       .playground-top-nav-avatar {
+        --playground-top-nav-avatar-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
         position: relative;
         overflow: hidden;
         flex-shrink: 0;
@@ -4038,10 +4228,26 @@ const html = `<!doctype html>
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 24px;
-        height: 24px;
+        width: 30px;
+        height: 30px;
         font-size: 10px;
-        font-weight: 600;
+        font-weight: 400;
+      }
+
+      .playground-top-nav-avatar:has(> .playground-top-nav-avatar-fallback)::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-top-nav-avatar-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .playground-top-nav-avatar-image {
@@ -4059,6 +4265,8 @@ const html = `<!doctype html>
         line-height: 1;
         letter-spacing: 0;
         text-transform: uppercase;
+        position: relative;
+        z-index: 1;
       }
 
       .playground-content-shell.is-thread-task-detail-open > .playground-content-nav > .playground-content-nav-center,
@@ -4825,8 +5033,11 @@ const html = `<!doctype html>
 
       .content-mode-switch {
         display: flex;
+        align-items: center;
         gap: 8px;
+        height: 30px;
         padding: 2px;
+        box-sizing: border-box;
         border: 1px solid rgba(255, 255, 255, 0.10);
         border-radius: 20px;
         background: rgba(255, 255, 255, 0.1);
@@ -5041,7 +5252,9 @@ const html = `<!doctype html>
       }
 
       body.tb-runner-document-preview-maximized .playground-content-body.is-thread-side-detail-open {
-        margin-right: 0;
+        margin-right: calc(var(--playground-thread-task-detail-width) + 6px);
+        contain: none;
+        overflow: visible;
       }
 
       body.tb-runner-document-preview-maximized .playground-thread-subagent-drawer {
@@ -5347,6 +5560,14 @@ const html = `<!doctype html>
         background: rgba(255, 255, 255, 0.05);
         -webkit-backdrop-filter: none;
         backdrop-filter: none;
+      }
+
+      .playground-thread-runner.tb-runner-chat {
+        --tb-image-preview-side-width: var(--playground-thread-task-detail-width);
+      }
+
+      body.tb-runner-document-preview-maximized .playground-thread-runner.tb-runner-chat {
+        --tb-image-preview-side-width: 100vw;
       }
 
       .playground-thread-runner.is-project-wallpaper-active .tb-log-file-preview-frame,
@@ -8542,6 +8763,41 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.48);
       }
 
+      .notification-menu-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+      }
+
+      .notification-menu-action-button {
+        min-height: 28px;
+        padding: 0 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.9);
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .notification-menu-action-button:hover:not(:disabled) {
+        border-color: rgba(255, 255, 255, 0.22);
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .notification-menu-action-button.is-primary {
+        border-color: #fff;
+        background: #fff;
+        color: #000;
+      }
+
+      .notification-menu-action-button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+
       .notification-menu-product-html {
         min-width: 0;
       }
@@ -8590,6 +8846,663 @@ const html = `<!doctype html>
       .notification-menu-mark-read:disabled {
         opacity: 0.45;
         cursor: default;
+      }
+
+      .playground-team-page {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        scrollbar-width: none;
+      }
+
+      .playground-team-page::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-team-shell {
+        width: min(1180px, calc(100% - 48px));
+        margin: 0 auto;
+        padding: 24px 0 56px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        box-sizing: border-box;
+      }
+
+      .playground-team-hero,
+      .playground-team-card {
+        position: relative;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        overflow: hidden;
+      }
+
+      .playground-team-hero::before,
+      .playground-team-card::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-team-hero > *,
+      .playground-team-card > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .playground-team-hero {
+        min-height: 170px;
+        padding: 24px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        box-sizing: border-box;
+      }
+
+      .playground-team-eyebrow {
+        margin-bottom: 10px;
+        color: rgba(255, 255, 255, 0.54);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .playground-team-title {
+        max-width: 760px;
+        margin: 0;
+        color: #fff;
+        font-size: 32px;
+        line-height: 1.08;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+
+      .playground-team-muted {
+        margin: 8px 0 0;
+        max-width: 660px;
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 13px;
+        line-height: 1.45;
+        font-weight: 400;
+      }
+
+      .playground-team-hero-meta {
+        min-width: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+      }
+
+      .playground-team-hero-meta strong {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      .playground-team-error {
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: rgba(255, 82, 82, 0.12);
+        color: #ffb3b3;
+        font-size: 12px;
+      }
+
+      .playground-team-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .playground-team-card {
+        padding: 18px;
+        box-sizing: border-box;
+      }
+
+      .playground-team-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+
+      .playground-team-card-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .playground-team-form {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-team-form.is-stacked {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .playground-team-form-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .playground-team-input,
+      .playground-team-select {
+        min-width: 0;
+        width: 100%;
+        height: 38px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.22);
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 400;
+        outline: none;
+        box-sizing: border-box;
+      }
+
+      .playground-team-input {
+        padding: 0 12px;
+      }
+
+      .playground-team-select {
+        padding: 0 34px 0 12px;
+      }
+
+      .playground-team-team-select {
+        max-width: 280px;
+      }
+
+      .playground-team-input::placeholder {
+        color: rgba(255, 255, 255, 0.36);
+      }
+
+      .playground-team-input:focus,
+      .playground-team-select:focus {
+        border-color: rgba(102, 166, 255, 0.7);
+      }
+
+      .playground-team-button,
+      .playground-team-icon-button {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-team-button {
+        height: 38px;
+        padding: 0 16px;
+        white-space: nowrap;
+      }
+
+      .playground-team-button:hover:not(:disabled),
+      .playground-team-icon-button:hover:not(:disabled) {
+        border-color: rgba(255, 255, 255, 0.24);
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .playground-team-button.is-primary {
+        border-color: #fff;
+        background: #fff;
+        color: #000;
+      }
+
+      .playground-team-button:disabled,
+      .playground-team-icon-button:disabled {
+        opacity: 0.48;
+        cursor: default;
+      }
+
+      .playground-team-list {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-team-row {
+        min-height: 56px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 140px auto;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-team-row:first-child {
+        border-top: 0;
+      }
+
+      .playground-team-row-main {
+        min-width: 0;
+      }
+
+      .playground-team-row-title {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.35;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-team-row-meta {
+        margin-top: 3px;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 12px;
+        line-height: 1.35;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-team-badge {
+        justify-self: start;
+        min-height: 26px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.76);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-team-icon-button {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-team-empty {
+        min-height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 13px;
+      }
+
+      .playground-team-page-header {
+        align-items: flex-end;
+        margin: 0 0 12px;
+        padding: 0;
+      }
+
+      .playground-team-page-title {
+        margin: 0;
+      }
+
+      .playground-team-page-subtitle {
+        margin: 8px 0 0;
+        max-width: 620px;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      .playground-team-overview-layout {
+        display: block;
+        align-items: start;
+      }
+
+      .playground-team-table-panel,
+      .playground-team-side-panel,
+      .playground-team-detail-panel {
+        position: relative;
+        border-radius: 0;
+        background: transparent;
+        overflow: visible;
+      }
+
+      .playground-team-table-panel::before,
+      .playground-team-side-panel::before,
+      .playground-team-detail-panel::before {
+        display: none;
+      }
+
+      .playground-team-table-panel > *,
+      .playground-team-side-panel > *,
+      .playground-team-detail-panel > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .playground-team-side-panel {
+        min-height: 190px;
+        padding: 18px;
+        box-sizing: border-box;
+      }
+
+      .playground-team-side-title {
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .playground-team-detail-navbar {
+        margin-bottom: 12px;
+      }
+
+      .playground-team-detail-title {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 32px;
+        font-weight: 500;
+        line-height: 1.08;
+      }
+
+      .playground-team-detail-meta {
+        margin-top: 6px;
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-team-detail-tabs {
+        margin-bottom: 12px;
+      }
+
+      .playground-team-detail-panel {
+        padding: 0;
+      }
+
+      .playground-team-inline-editor {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) 160px auto;
+        gap: 10px;
+        align-items: center;
+        padding: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        box-sizing: border-box;
+      }
+
+      .playground-team-inline-editor.is-resource-share {
+        grid-template-columns: 160px minmax(220px, 1fr) 140px auto;
+      }
+
+      .playground-team-table-shell {
+        overflow-x: auto;
+      }
+
+      .playground-auth-users-table.is-secrets-table .playground-team-table-col-main {
+        width: 45%;
+      }
+
+      .playground-auth-users-table.is-secrets-table .playground-team-table-col-role {
+        width: 22%;
+      }
+
+      .playground-auth-users-table.is-secrets-table .playground-team-table-col-meta {
+        width: 23%;
+      }
+
+      .playground-auth-users-table.is-secrets-table .playground-team-table-col-actions {
+        width: 56px;
+      }
+
+      .playground-team-table-title,
+      .playground-team-table-meta {
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-team-table-title {
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.35;
+      }
+
+      .playground-team-table-meta {
+        margin-top: 2px;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.4;
+      }
+
+      .playground-team-table .playground-team-select {
+        height: 30px;
+        max-width: 150px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        font-size: 12px;
+      }
+
+      .playground-team-back-button {
+        align-self: flex-start;
+        margin-bottom: 24px;
+      }
+
+      .playground-team-action-button {
+        --playground-team-action-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-team-action-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-team-action-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-team-action-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-team-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(0, 0, 0, 0.58);
+        box-sizing: border-box;
+      }
+
+      .playground-team-modal {
+        position: relative;
+        width: min(520px, 100%);
+        border-radius: 15px;
+        background: rgba(18, 18, 19, 0.94);
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+        padding: 18px;
+        box-sizing: border-box;
+        color: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
+      }
+
+      .playground-team-modal::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-team-modal > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-team-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .playground-team-modal-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .playground-team-modal-subtitle {
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      .playground-team-modal-close {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.62);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .playground-team-modal-close:hover {
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-team-modal-form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-team-modal-field {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+
+      .playground-team-modal-label {
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-team-textarea {
+        height: auto;
+        min-height: 96px;
+        resize: vertical;
+        padding: 10px 12px;
+        line-height: 1.45;
+      }
+
+      .playground-team-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 4px;
+      }
+
+      @media (max-width: 900px) {
+        .playground-team-shell {
+          width: min(100% - 24px, 1180px);
+        }
+
+        .playground-team-hero,
+        .playground-team-form,
+        .playground-team-grid,
+        .playground-team-overview-layout,
+        .playground-team-inline-editor,
+        .playground-team-inline-editor.is-resource-share {
+          grid-template-columns: 1fr;
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .playground-team-hero-meta {
+          align-items: flex-start;
+        }
+
+        .playground-team-row {
+          grid-template-columns: minmax(0, 1fr);
+          align-items: stretch;
+        }
       }
 
       .account-menu.is-sidebar-open {
@@ -18345,6 +19258,7 @@ const html = `<!doctype html>
       }
 
       .playground-files-image-thread-shell {
+        --playground-files-preview-composer-bottom: 0px;
         min-width: 0;
         min-height: 0;
         flex: 1;
@@ -18363,10 +19277,15 @@ const html = `<!doctype html>
         min-height: 0;
       }
 
+      .playground-files-image-thread-shell .tb-attachment-preview-image-surface {
+        padding: 20px 20px 132px;
+        overflow: hidden;
+      }
+
       .playground-files-image-thread-shell > .tb-runner-chat.playground-files-image-thread-composer {
         position: absolute;
         left: 50%;
-        bottom: 10px;
+        bottom: var(--playground-files-preview-composer-bottom);
         z-index: 12;
         width: min(760px, calc(100% - 32px));
         height: auto;
@@ -18395,6 +19314,10 @@ const html = `<!doctype html>
       }
 
       .playground-files-image-thread-composer .tb-input-shell {
+        position: relative;
+        left: auto;
+        right: auto;
+        bottom: auto;
         width: 100%;
         min-height: 0;
         padding: 0;
@@ -18403,8 +19326,9 @@ const html = `<!doctype html>
       }
 
       .playground-files-image-thread-composer .task-input-box {
-        --tb-task-input-base-bg: rgba(15, 15, 15, 0.86);
+        --tb-task-input-base-bg: transparent;
         --tb-task-input-overlay: transparent;
+        background: transparent;
       }
 
       .playground-files-image-thread-composer .sidebar-textarea {
@@ -18450,7 +19374,8 @@ const html = `<!doctype html>
           rgba(255, 255, 255, 0.15),
           rgba(255, 255, 255, 0.375)
         );
-        min-height: 34px;
+        height: 30px;
+        min-height: 30px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -18948,7 +19873,7 @@ const html = `<!doctype html>
       }
 
       .playground-code-preview-header .tb-attachment-preview-drawer-action:disabled {
-        opacity: 0.44;
+        opacity: 0.5;
         cursor: default;
       }
 
@@ -36931,6 +37856,7 @@ ${IMAGINE_PAGE_CSS}
         justify-content: space-between;
         gap: 12px;
         padding: 14px 16px 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .playground-thread-task-list-popup-title {
@@ -36964,6 +37890,7 @@ ${IMAGINE_PAGE_CSS}
         color: rgba(255, 255, 255, 0.9);
         font-size: 12px;
         line-height: 1.35;
+        min-width: 0;
       }
 
       .playground-thread-task-list-popup-item-icon {
@@ -36980,7 +37907,11 @@ ${IMAGINE_PAGE_CSS}
 
       .playground-thread-task-list-popup-item-text {
         min-width: 0;
+        flex: 1 1 auto;
+        max-width: 100%;
+        white-space: normal;
         overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .playground-thread-task-list-popup-item-text.is-complete {
@@ -40161,7 +41092,21 @@ ${IMAGINE_PAGE_CSS}
     </script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div class="playground-static-boot" role="status" aria-live="polite">
+        <div class="playground-static-boot-card">
+          <div class="playground-static-boot-row">
+            <span class="playground-static-boot-dots" aria-hidden="true">
+              <span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+            </span>
+            <span class="playground-static-boot-title">Agentic Compute Platform</span>
+          </div>
+          <p class="playground-static-boot-copy">Opening your workspace and preparing your agents.</p>
+        </div>
+      </div>
+    </div>
 
     <script type="module">
       import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -40177,7 +41122,7 @@ ${IMAGINE_PAGE_CSS}
       import { visit as unistVisit } from "unist-util-visit";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, Paperclip, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, Paperclip, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -40348,6 +41293,7 @@ ${IMAGINE_PAGE_CSS}
       const PLAYGROUND_ONBOARDING_QUERY_PARAM = "showOnboarding";
       const PLAYGROUND_ONBOARDING_STEP_QUERY_PARAM = "onboardingStep";
       const PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM = "showSubscriptionSuccess";
+      const PLAYGROUND_INITIAL_PROMPT_QUERY_PARAM = "initialPrompt";
       const PLAYGROUND_ONBOARDING_STATE_KEY = "runner_demo_playground_onboarding_v1";
       const PLAYGROUND_AUTH_REDIRECT_STATE_KEY = "runner_demo_auth_redirect_v1";
       const PLAYGROUND_AUTH_SESSION_MARKER_KEY = "runner_demo_auth_session_marker_v1";
@@ -40741,6 +41687,27 @@ ${IMAGINE_PAGE_CSS}
         };
       }
 
+      function normalizeTeamInvitationNotificationRecord(value) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          return null;
+        }
+        const id = String(value.id || value.invitationId || "").trim();
+        if (!id) {
+          return null;
+        }
+        const teamName = String(value.teamName || value.team_name || "Team").trim() || "Team";
+        return {
+          id,
+          teamId: String(value.teamId || value.team_id || "").trim(),
+          teamName,
+          role: String(value.role || "create").trim() || "create",
+          invitedByName: String(value.invitedByName || value.invited_by_name || "").trim(),
+          invitedByEmail: String(value.invitedByEmail || value.invited_by_email || "").trim(),
+          createdAt: value.createdAt || value.created_at || "",
+          expiresAt: value.expiresAt || value.expires_at || "",
+        };
+      }
+
       function readCachedIntegrationStatuses() {
         try {
           const raw = localStorage.getItem(INTEGRATION_STATUS_STORAGE_KEY);
@@ -40785,6 +41752,14 @@ ${IMAGINE_PAGE_CSS}
         } catch {
           return "";
         }
+      }
+
+      function normalizePlaygroundInitialPrompt(value) {
+        return String(value || "")
+          .split(String.fromCharCode(13) + String.fromCharCode(10))
+          .join(String.fromCharCode(10))
+          .trim()
+          .slice(0, 5000);
       }
 
       function readPlaygroundOnboardingState() {
@@ -44982,6 +45957,51 @@ ${IMAGINE_PAGE_CSS}
           createdAt: typeof server.createdAt === "string" && server.createdAt ? server.createdAt : draft.createdAt,
           updatedAt: typeof server.updatedAt === "string" && server.updatedAt ? server.updatedAt : draft.updatedAt,
         };
+      }
+
+      function getPlaygroundPaymentsMetadata(server) {
+        const normalized = normalizePlaygroundServerRecord(server);
+        const metadata = normalized?.metadata && typeof normalized.metadata === "object" && !Array.isArray(normalized.metadata)
+          ? normalized.metadata
+          : null;
+        const payments = metadata?.payments && typeof metadata.payments === "object" && !Array.isArray(metadata.payments)
+          ? metadata.payments
+          : null;
+        return payments || {};
+      }
+
+      function formatPlaygroundPaymentMoney(cents, currency = "usd") {
+        const normalizedCurrency = String(currency || "usd").trim().toUpperCase() || "USD";
+        const amount = Math.max(0, Number(cents || 0)) / 100;
+        try {
+          return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: normalizedCurrency,
+            maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+          }).format(amount);
+        } catch {
+          return "$" + amount.toFixed(amount % 1 === 0 ? 0 : 2);
+        }
+      }
+
+      function formatPlaygroundPaymentsStatus(metadata) {
+        const status = String(metadata?.onboardingStatus || "").trim().toLowerCase();
+        if (status === "active" || (metadata?.chargesEnabled && metadata?.payoutsEnabled)) {
+          return "Active";
+        }
+        if (status === "review") {
+          return "In review";
+        }
+        if (status === "restricted") {
+          return "Restricted";
+        }
+        if (metadata?.detailsSubmitted) {
+          return "In review";
+        }
+        if (metadata?.stripeAccountId) {
+          return "Setup incomplete";
+        }
+        return "Not connected";
       }
 
       function getPlaygroundServerDatabaseBinding(server) {
@@ -50059,6 +51079,16 @@ ${IMAGINE_PAGE_CSS}
         return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/bindings/" + encodeURIComponent(targetType);
       }
 
+      function buildPlaygroundServerPaymentsConnectUrl(backendUrl, serverId) {
+        if (!backendUrl || !serverId) return "";
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/payments/connect-account";
+      }
+
+      function buildPlaygroundServerPaymentsSyncUrl(backendUrl, serverId) {
+        if (!backendUrl || !serverId) return "";
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/payments/sync";
+      }
+
       function buildPlaygroundServerAuthUsersUrl(backendUrl, serverId, limit = 200) {
         if (!backendUrl || !serverId) return "";
         const params = new URLSearchParams();
@@ -50177,6 +51207,7 @@ ${IMAGINE_PAGE_CSS}
         if (normalizedKind === "agent runtime") return "agent_runtime";
         if (normalizedKind === "agent_runtime") return "agent_runtime";
         if (normalizedKind === "secrets") return "secrets";
+        if (normalizedKind === "payments" || normalizedKind === "payment") return "payments";
         return "web_app";
       }
 
@@ -50188,6 +51219,7 @@ ${IMAGINE_PAGE_CSS}
 	        if (normalizedKind === "auth") return "Authentication";
 	        if (normalizedKind === "agent_runtime") return "Agent Runtime";
 	        if (normalizedKind === "secrets") return "Secrets";
+	        if (normalizedKind === "payments") return "Payments";
 	        return "Web App";
 	      }
 
@@ -50197,11 +51229,11 @@ ${IMAGINE_PAGE_CSS}
           return "";
         }
         const normalizedRawKind = rawKind.toLowerCase();
-        if (!["web_app", "web app", "website", "function", "database", "api", "auth", "agent_runtime", "agent runtime", "secrets"].includes(normalizedRawKind)) {
+        if (!["web_app", "web app", "website", "function", "database", "api", "auth", "agent_runtime", "agent runtime", "secrets", "payments", "payment"].includes(normalizedRawKind)) {
           return "";
         }
         const normalizedKind = canonicalizePlaygroundServerKind(rawKind);
-        return ["web_app", "function", "database", "api", "auth", "agent_runtime", "secrets"].includes(normalizedKind)
+        return ["web_app", "function", "database", "api", "auth", "agent_runtime", "secrets", "payments"].includes(normalizedKind)
           ? normalizedKind
           : "";
       }
@@ -50213,6 +51245,7 @@ ${IMAGINE_PAGE_CSS}
 	        if (normalizedKind === "auth") return "Authentication";
 	        if (normalizedKind === "agent_runtime") return "Agent Runtime";
 	        if (normalizedKind === "secrets") return "Secrets";
+	        if (normalizedKind === "payments") return "Payments";
 	        return formatPlaygroundServerKindLabel(normalizedKind) + "s";
 	      }
 
@@ -50221,7 +51254,7 @@ ${IMAGINE_PAGE_CSS}
           return null;
         }
         const targetType = String(binding.targetType || "").trim().toLowerCase();
-        if (!["database", "auth", "agent_runtime", "secrets"].includes(targetType)) {
+        if (!["database", "auth", "agent_runtime", "secrets", "payments"].includes(targetType)) {
           return null;
         }
         const resource = binding.resource && typeof binding.resource === "object" && !Array.isArray(binding.resource)
@@ -56249,6 +57282,18 @@ ${IMAGINE_PAGE_CSS}
         const [saveError, setSaveError] = useState("");
         const [saveMessage, setSaveMessage] = useState("");
         const [wordWrap, setWordWrap] = useState(true);
+        const editorInstanceRef = useRef(null);
+        const textareaRef = useRef(null);
+        const editorHistoryRef = useRef({
+          past: [],
+          future: [],
+          current: "",
+          isApplying: false,
+        });
+        const [editorHistoryAvailability, setEditorHistoryAvailability] = useState({
+          canUndo: false,
+          canRedo: false,
+        });
 
         const MonacoEditorComponent = editorModule?.default || null;
         const downloadUrl = useMemo(() => {
@@ -56268,6 +57313,64 @@ ${IMAGINE_PAGE_CSS}
           if (typeof navigator === "undefined") return "Ctrl+S";
           return /mac|iphone|ipad/i.test(String(navigator.platform || "")) ? "Cmd+S" : "Ctrl+S";
         }, []);
+
+        function updateEditorHistoryAvailability() {
+          const history = editorHistoryRef.current;
+          setEditorHistoryAvailability({
+            canUndo: history.past.length > 0,
+            canRedo: history.future.length > 0,
+          });
+        }
+
+        function resetEditorHistory(value) {
+          editorHistoryRef.current = {
+            past: [],
+            future: [],
+            current: String(value || ""),
+            isApplying: false,
+          };
+          setEditorHistoryAvailability({
+            canUndo: false,
+            canRedo: false,
+          });
+        }
+
+        function recordEditorHistoryValue(nextValue) {
+          const normalizedNextValue = String(nextValue || "");
+          const history = editorHistoryRef.current;
+          if (history.isApplying || history.current === normalizedNextValue) {
+            return;
+          }
+          history.past = [...history.past, history.current].slice(-200);
+          history.future = [];
+          history.current = normalizedNextValue;
+          updateEditorHistoryAvailability();
+        }
+
+        function applyEditorHistoryValue(nextValue) {
+          const normalizedNextValue = String(nextValue || "");
+          const history = editorHistoryRef.current;
+          history.current = normalizedNextValue;
+          history.isApplying = true;
+          setLoadState((current) => current.status === "ready"
+            ? {
+                ...current,
+                value: normalizedNextValue,
+              }
+            : current
+          );
+          const editor = editorInstanceRef.current;
+          if (editor?.setValue && editor.getValue?.() !== normalizedNextValue) {
+            editor.setValue(normalizedNextValue);
+          }
+          if (textareaRef.current && textareaRef.current.value !== normalizedNextValue) {
+            textareaRef.current.value = normalizedNextValue;
+          }
+          window.requestAnimationFrame(() => {
+            history.isApplying = false;
+            updateEditorHistoryAvailability();
+          });
+        }
 
         useEffect(() => {
           let cancelled = false;
@@ -56312,6 +57415,7 @@ ${IMAGINE_PAGE_CSS}
             initialValue: "",
             error: "",
           });
+          resetEditorHistory("");
           setSaveError("");
           setSaveMessage("");
 
@@ -56325,6 +57429,7 @@ ${IMAGINE_PAGE_CSS}
                 throw new Error("Failed to load file (" + response.status + ")");
               }
               const text = await response.text();
+              resetEditorHistory(text);
               setLoadState({
                 status: "ready",
                 value: text,
@@ -56411,6 +57516,7 @@ ${IMAGINE_PAGE_CSS}
 
         function handleEditorChange(nextValue) {
           const normalizedValue = typeof nextValue === "string" ? nextValue : "";
+          recordEditorHistoryValue(normalizedValue);
           setLoadState((current) => current.status === "ready"
             ? {
                 ...current,
@@ -56426,19 +57532,36 @@ ${IMAGINE_PAGE_CSS}
           }
         }
 
-        function handleRevert() {
-          if (loadState.status !== "ready") {
+        function handleEditorUndo() {
+          if (loadState.status !== "ready" || isSaving || !editorHistoryAvailability.canUndo) {
             return;
           }
-          setLoadState((current) => current.status === "ready"
-            ? {
-                ...current,
-                value: current.initialValue,
-              }
-            : current
-          );
-          setSaveError("");
-          setSaveMessage("");
+          const history = editorHistoryRef.current;
+          const previousValue = history.past.pop();
+          if (typeof previousValue !== "string") {
+            updateEditorHistoryAvailability();
+            return;
+          }
+          history.future.push(history.current);
+          applyEditorHistoryValue(previousValue);
+          editorInstanceRef.current?.focus?.();
+          textareaRef.current?.focus?.();
+        }
+
+        function handleEditorRedo() {
+          if (loadState.status !== "ready" || isSaving || !editorHistoryAvailability.canRedo) {
+            return;
+          }
+          const history = editorHistoryRef.current;
+          const nextValue = history.future.pop();
+          if (typeof nextValue !== "string") {
+            updateEditorHistoryAvailability();
+            return;
+          }
+          history.past.push(history.current);
+          applyEditorHistoryValue(nextValue);
+          editorInstanceRef.current?.focus?.();
+          textareaRef.current?.focus?.();
         }
 
         function renderEditorBody() {
@@ -56463,6 +57586,7 @@ ${IMAGINE_PAGE_CSS}
               onChange: handleEditorChange,
               beforeMount: ensurePlaygroundCodeEditorTheme,
               onMount: (editor) => {
+                editorInstanceRef.current = editor || null;
                 if (!autoFocus) {
                   return;
                 }
@@ -56504,6 +57628,7 @@ ${IMAGINE_PAGE_CSS}
           }
 
           return React.createElement("textarea", {
+            ref: textareaRef,
             className: "playground-code-preview-textarea",
             value: loadState.value,
             onChange: (event) => handleEditorChange(event.target.value),
@@ -56516,11 +57641,19 @@ ${IMAGINE_PAGE_CSS}
           React.createElement("button", {
             type: "button",
             className: "tb-attachment-preview-drawer-action",
-            onClick: handleRevert,
-            disabled: !isDirty || isSaving || loadState.status !== "ready",
-            title: "Revert changes",
-            "aria-label": "Revert changes",
+            onClick: handleEditorUndo,
+            disabled: isSaving || loadState.status !== "ready" || !editorHistoryAvailability.canUndo,
+            title: "Undo change",
+            "aria-label": "Undo change",
           }, React.createElement(RotateCcw, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })),
+          React.createElement("button", {
+            type: "button",
+            className: "tb-attachment-preview-drawer-action",
+            onClick: handleEditorRedo,
+            disabled: isSaving || loadState.status !== "ready" || !editorHistoryAvailability.canRedo,
+            title: "Redo change",
+            "aria-label": "Redo change",
+          }, React.createElement(RotateCw, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })),
           React.createElement("button", {
             type: "button",
             className: "playground-code-preview-header-save-button",
@@ -58006,13 +59139,16 @@ ${IMAGINE_PAGE_SCRIPT}
             filename: activePreviewEntry.name,
             mimeType: getPlaygroundPreviewMimeType(activePreviewEntry),
             type: fileKind === "image" ? "image" : "document",
+            environmentId: selectedEnvironmentId,
+            workspacePath: normalizeHistoryPath(activePreviewEntry.path),
+            sourcePath: normalizeHistoryPath(activePreviewEntry.path),
             url: effectivePreviewUrl,
             previewUrl: effectivePreviewUrl,
             htmlPreviewUrl,
           };
         }, [activeImageCropHistoryEntry?.url, activePreviewEntry, backendUrl, selectedEnvironmentId, singleSelectedEntryDownloadUrl]);
         const hasSingleFilePreview = contentMode === "files" && Boolean(singleSelectedEntryPreviewAttachment && activePreviewEntry && !activePreviewEntry.isFolder);
-        const hasFileChatPanel = hasPreviewPanel && hasSingleFilePreview && isFileChatOpen;
+        const hasFileChatPanel = false;
         const showBrowserMinimizeButton = hasPreviewPanel && hasSingleFilePreview;
         const isBrowserMinimized = browserPaneMode !== "expanded";
         const isSearchInventoryLoading = Boolean(searchInventoryLoadingByEnvironmentId[selectedEnvironmentId]);
@@ -59061,9 +60197,16 @@ ${IMAGINE_PAGE_SCRIPT}
             || "image";
           const maskFilename = normalizedBaseName + "-selected-region-mask.png";
           const maskFile = new globalThis.File([maskBlob], maskFilename, { type: "image/png" });
-          return uploadFilesPageAttachment(maskFile, {
+          const maskAttachment = await uploadFilesPageAttachment(maskFile, {
             environmentId,
           });
+          return maskAttachment
+            ? {
+                ...maskAttachment,
+                hiddenFromTurnDisplay: true,
+                runnerAttachmentRole: "image_edit_mask",
+              }
+            : null;
         }
 
         function buildImageSelectionInpaintPrompt(entry, maskAttachment) {
@@ -59211,6 +60354,34 @@ ${IMAGINE_PAGE_SCRIPT}
           }
         }
 
+        useEffect(() => {
+          if (!isImageCropMode || !imageCropRect || isCroppingImage || isSavingImageCrop) {
+            return;
+          }
+
+          function handleImageCropEnterKey(event) {
+            if (event.key !== "Enter" || event.shiftKey || event.altKey || event.metaKey || event.ctrlKey || event.repeat || event.isComposing) {
+              return;
+            }
+            const target = event.target;
+            const editableTarget = target instanceof HTMLElement
+              && (
+                target.tagName === "INPUT"
+                || target.tagName === "TEXTAREA"
+                || target.tagName === "SELECT"
+                || target.isContentEditable
+              );
+            if (editableTarget) {
+              return;
+            }
+            event.preventDefault();
+            void applyImageCropToActivePreview();
+          }
+
+          window.addEventListener("keydown", handleImageCropEnterKey);
+          return () => window.removeEventListener("keydown", handleImageCropEnterKey);
+        }, [imageCropRect, isCroppingImage, isImageCropMode, isSavingImageCrop]);
+
         async function saveImageCropToActivePreview() {
           if (!activePreviewEntry || activePreviewEntry.isFolder || !selectedEnvironmentId || !activeImageCropHistoryEntry?.blob || isCroppingImage || isSavingImageCrop) {
             return;
@@ -59346,7 +60517,7 @@ ${IMAGINE_PAGE_SCRIPT}
           return generatedTitle;
         }
 
-        async function handleImagePreviewExternalRunRequest(entry, runRequest, sourceEnvironmentId = selectedEnvironmentId) {
+        async function handleFilePreviewExternalRunRequest(entry, runRequest, sourceEnvironmentId = selectedEnvironmentId) {
           const normalizedThreadId = String(runRequest?.threadId || "").trim();
           const normalizedPrompt = String(runRequest?.prompt || runRequest?.displayPrompt || "").trim();
           const normalizedRunEnvironmentId = String(runRequest?.environmentId || selectedEnvironmentId || "").trim();
@@ -59366,7 +60537,10 @@ ${IMAGINE_PAGE_SCRIPT}
             const attachment = await buildThreadAttachmentForFileEntry(entry, {
               environmentId: normalizedSourceEnvironmentId,
             });
-            const maskAttachment = await buildImageSelectionMaskAttachment(entry, normalizedSourceEnvironmentId);
+            const isImagePreviewRequest = getPlaygroundFileKind(entry) === "image";
+            const maskAttachment = isImagePreviewRequest
+              ? await buildImageSelectionMaskAttachment(entry, normalizedSourceEnvironmentId)
+              : null;
             const selectionPrompt = maskAttachment
               ? buildImageSelectionInpaintPrompt(entry, maskAttachment)
               : "";
@@ -59374,12 +60548,17 @@ ${IMAGINE_PAGE_SCRIPT}
               ? selectionPrompt + "\\n\\n" + (runRequest?.prompt || normalizedPrompt)
               : (runRequest?.prompt || normalizedPrompt);
             const displayPrompt = runRequest?.displayPrompt || normalizedPrompt;
-            const fallbackThreadTitle = "Chat with " + (String(entry?.name || "").trim() || "image");
+            const fallbackThreadTitle = "Chat with " + (String(entry?.name || "").trim() || "file");
             const generatedThreadRecord = {
               id: normalizedThreadId,
               title: fallbackThreadTitle,
               updatedAt: new Date().toISOString(),
             };
+            const previewAttachment = buildPlaygroundThreadPreviewAttachment(
+              backendUrl,
+              normalizedSourceEnvironmentId,
+              normalizeHistoryPath(entry.path || "")
+            );
             if (typeof onFileChatThreadMutated === "function") {
               onFileChatThreadMutated();
             }
@@ -59402,10 +60581,16 @@ ${IMAGINE_PAGE_SCRIPT}
                   environmentId: normalizedRunEnvironmentId,
                   executionStarted: false,
                 },
+                documentPreviewAttachment: previewAttachment || attachment,
+                documentPreviewToken: "file-preview:" + normalizedThreadId + ":" + normalizeHistoryPath(entry.path || ""),
               });
             } else {
               didRequestNavigation = true;
-              onThreadOpen(normalizedThreadId, generatedThreadRecord ? { threadRecord: generatedThreadRecord } : {});
+              onThreadOpen(normalizedThreadId, {
+                ...(generatedThreadRecord ? { threadRecord: generatedThreadRecord } : {}),
+                documentPreviewAttachment: previewAttachment || attachment,
+                documentPreviewToken: "file-preview:" + normalizedThreadId + ":" + normalizeHistoryPath(entry.path || ""),
+              });
             }
             void generateFilesPageThreadTitle(normalizedThreadId, displayPrompt)
               .then((generatedTitle) => {
@@ -59414,14 +60599,14 @@ ${IMAGINE_PAGE_SCRIPT}
                 }
               })
               .catch((titleError) => {
-                console.warn("[PlaygroundFilesPage] Failed to generate image chat title", titleError);
+                console.warn("[PlaygroundFilesPage] Failed to generate file chat title", titleError);
               });
             if (maskAttachment) {
               resetImageSelectionMode();
             }
           } catch (error) {
             didRequestNavigation = false;
-            setActionError(error instanceof Error ? error.message : "Failed to start image chat.");
+            setActionError(error instanceof Error ? error.message : "Failed to start file chat.");
           } finally {
             if (didRequestNavigation && typeof window !== "undefined") {
               window.setTimeout(() => setIsStartingImagePreviewThread(false), 10000);
@@ -61205,11 +62390,12 @@ ${IMAGINE_PAGE_SCRIPT}
           }, React.createElement(PreviewSizeIcon, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 }));
         }
 
-        function renderImagePreviewThreadComposer(entry) {
-          if (!entry || entry.isFolder || singleSelectedEntryFileKind !== "image") {
+        function renderFilePreviewThreadComposer(entry) {
+          if (!entry || entry.isFolder) {
             return null;
           }
           const sourceEnvironmentId = String(selectedEnvironmentId || "").trim();
+          const fileKind = getPlaygroundFileKind(entry);
           const composerAgents = (Array.isArray(agents) ? agents : [])
             .map((agent) => ({
               id: String(agent?.id || "").trim(),
@@ -61227,7 +62413,7 @@ ${IMAGINE_PAGE_SCRIPT}
             }))
             .filter((environment) => environment.id);
           return React.createElement(RunnerChat, {
-            key: "files-image-preview-composer:" + sourceEnvironmentId + ":" + normalizeHistoryPath(entry.path || entry.name || ""),
+            key: "files-preview-composer:" + sourceEnvironmentId + ":" + normalizeHistoryPath(entry.path || entry.name || ""),
             className: "playground-files-image-thread-composer" + (isStartingImagePreviewThread ? " is-starting-thread" : ""),
             backendUrl,
             apiKey,
@@ -61238,7 +62424,7 @@ ${IMAGINE_PAGE_SCRIPT}
             agents: composerAgents,
             environments: composerEnvironments,
             inputMode: "computer-agents",
-            placeholder: "Ask about this image",
+            placeholder: fileKind === "image" ? "Ask about this image" : "Ask about this file",
             autoCreateThread: true,
             autoFocusComposer: false,
             keepFocusOnSubmit: false,
@@ -61257,11 +62443,11 @@ ${IMAGINE_PAGE_SCRIPT}
               }
             },
             onExternalRunRequestCreate: (runRequest) => {
-              void handleImagePreviewExternalRunRequest(entry, runRequest, sourceEnvironmentId);
+              void handleFilePreviewExternalRunRequest(entry, runRequest, sourceEnvironmentId);
               return true;
             },
             onRunError: (error) => {
-              setActionError(error instanceof Error ? error.message : "Failed to start image chat.");
+              setActionError(error instanceof Error ? error.message : "Failed to start file chat.");
             },
           });
         }
@@ -61408,26 +62594,33 @@ ${IMAGINE_PAGE_SCRIPT}
                       ),
                       React.createElement("button", {
                         type: "button",
-                        className: "tb-attachment-preview-drawer-action",
+                        className: "playground-files-preview-select-button is-crop",
                         onClick: beginImageCropMode,
                         title: "Crop image",
-                        "aria-label": "Crop image",
-                      }, React.createElement(Crop, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 }))
+                      },
+                        React.createElement(Crop, { width: 14, height: 14, strokeWidth: 1.9 }),
+                        React.createElement("span", null, "Crop")
+                      ),
+                      React.createElement("span", { className: "tb-image-preview-header-divider", "aria-hidden": "true" })
                     )
                   : null,
                 canToggleDocumentPreviewMode
                   ? React.createElement("button", {
                       type: "button",
-                      className: "tb-attachment-preview-drawer-action" + (documentPreviewMode === "code" ? " is-active" : ""),
+                      className: "playground-files-preview-select-button playground-files-preview-mode-toggle" + (documentPreviewMode === "code" ? " is-active" : ""),
                       onClick: () => setDocumentPreviewMode((current) => current === "code" ? "preview" : "code"),
                       title: documentPreviewMode === "code" ? "Switch to preview mode" : "Switch to code view",
                       "aria-label": documentPreviewMode === "code" ? "Switch to preview mode" : "Switch to code view",
                       "aria-pressed": documentPreviewMode === "code" ? "true" : "false",
                     },
                       documentPreviewMode === "code"
-                        ? React.createElement(Eye, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })
-                        : React.createElement(Code, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })
+                        ? React.createElement(Eye, { width: 14, height: 14, strokeWidth: 1.9 })
+                        : React.createElement(Code, { width: 14, height: 14, strokeWidth: 1.9 }),
+                      React.createElement("span", null, documentPreviewMode === "code" ? "Preview" : "Code")
                     )
+                  : null,
+                singleSelectedEntryFileKind !== "image"
+                  ? React.createElement("span", { className: "tb-image-preview-header-divider", "aria-hidden": "true" })
                   : null,
                 React.createElement("button", {
                   type: "button",
@@ -61446,7 +62639,7 @@ ${IMAGINE_PAGE_SCRIPT}
               || (canToggleDocumentPreviewMode && documentPreviewMode === "code")
             )
           ) {
-            return React.createElement(PlaygroundCodeEditorPreview, {
+            const codePreview = React.createElement(PlaygroundCodeEditorPreview, {
               key: selectedEnvironmentId + ":" + activePreviewEntry.path,
               entry: activePreviewEntry,
               environmentId: selectedEnvironmentId,
@@ -61465,6 +62658,16 @@ ${IMAGINE_PAGE_SCRIPT}
               showCloseButton: true,
               showResizeHandle: !isPreviewMaximized,
             });
+            return React.createElement("div", { className: "playground-files-image-thread-shell" },
+              codePreview,
+              renderFilePreviewThreadComposer(activePreviewEntry),
+              isStartingImagePreviewThread
+                ? React.createElement("div", { className: "playground-files-image-thread-loading", "aria-live": "polite" },
+                    React.createElement(Loader2, { className: "is-spinning", strokeWidth: 1.85 }),
+                    React.createElement("span", null, "Opening thread...")
+                  )
+                : null
+            );
           }
 
           if (!activePreviewEntry.isFolder && singleSelectedEntryPreviewAttachment) {
@@ -61476,6 +62679,9 @@ ${IMAGINE_PAGE_SCRIPT}
               headerActions: previewHeaderActions,
               showPreviewCodeToggle: false,
               imagePreviewInteractive: !isPreviewMaximized && !isImageSelectionMode && !isImageCropMode,
+              enableImageWheelZoom: singleSelectedEntryFileKind === "image" && !isImageSelectionMode && !isImageCropMode,
+              imagePreviewReservedBottom: 132,
+              imagePreviewFullscreen: singleSelectedEntryFileKind === "image" && isPreviewMaximized,
               imagePreviewOverlay: singleSelectedEntryFileKind === "image" && isImageSelectionMode
                 ? React.createElement(PlaygroundImageSelectionMaskOverlay, {
                     active: true,
@@ -61511,18 +62717,16 @@ ${IMAGINE_PAGE_SCRIPT}
               showCloseButton: !isImageSelectionMode && !isImageCropMode,
               showResizeHandle: !isPreviewMaximized,
             });
-            return singleSelectedEntryFileKind === "image"
-              ? React.createElement("div", { className: "playground-files-image-thread-shell" + (isImageSelectionMode ? " is-selecting-region" : "") + (isImageCropMode ? " is-cropping-image" : "") },
-                  previewDrawer,
-                  renderImagePreviewThreadComposer(activePreviewEntry),
-                  isStartingImagePreviewThread
-                    ? React.createElement("div", { className: "playground-files-image-thread-loading", "aria-live": "polite" },
-                        React.createElement(Loader2, { className: "is-spinning", strokeWidth: 1.85 }),
-                        React.createElement("span", null, "Opening thread...")
-                      )
-                    : null
-                )
-              : previewDrawer;
+            return React.createElement("div", { className: "playground-files-image-thread-shell" + (isImageSelectionMode ? " is-selecting-region" : "") + (isImageCropMode ? " is-cropping-image" : "") },
+              previewDrawer,
+              renderFilePreviewThreadComposer(activePreviewEntry),
+              isStartingImagePreviewThread
+                ? React.createElement("div", { className: "playground-files-image-thread-loading", "aria-live": "polite" },
+                    React.createElement(Loader2, { className: "is-spinning", strokeWidth: 1.85 }),
+                    React.createElement("span", null, "Opening thread...")
+                  )
+                : null
+            );
           }
 
           const isFolderSelection = Boolean(activePreviewEntry.isFolder);
@@ -61538,7 +62742,7 @@ ${IMAGINE_PAGE_SCRIPT}
             ["Location", "/" + (getPlaygroundEntryParentPath(activePreviewEntry.path) || "")],
           ];
 
-          return React.createElement("div", { className: "playground-files-preview-shell" },
+          const fallbackPreview = React.createElement("div", { className: "playground-files-preview-shell" },
             React.createElement("div", { className: "playground-files-preview-top" },
               React.createElement("div", { className: "playground-files-preview-top-actions" },
                 renderFilePreviewMaximizeButton(),
@@ -61610,6 +62814,18 @@ ${IMAGINE_PAGE_SCRIPT}
               )
             )
           );
+          return isFolderSelection
+            ? fallbackPreview
+            : React.createElement("div", { className: "playground-files-image-thread-shell" },
+                fallbackPreview,
+                renderFilePreviewThreadComposer(activePreviewEntry),
+                isStartingImagePreviewThread
+                  ? React.createElement("div", { className: "playground-files-image-thread-loading", "aria-live": "polite" },
+                      React.createElement(Loader2, { className: "is-spinning", strokeWidth: 1.85 }),
+                      React.createElement("span", null, "Opening thread...")
+                    )
+                  : null
+              );
         }
 
         function renderFileChatEmptyState() {
@@ -61724,14 +62940,6 @@ ${IMAGINE_PAGE_SCRIPT}
                     React.createElement("button", {
                       type: "button",
                       className: "playground-files-context-item",
-                      onClick: () => void handleStartChatForEntries(contextSelectedFileEntries),
-                    },
-                      React.createElement(MessageCircle, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Start Chat")
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-context-item",
                       onClick: () => void handleDownloadEntries(contextSelectedFileEntries),
                     },
                       React.createElement(Download, { width: 13, height: 13, strokeWidth: 1.8 }),
@@ -61792,14 +63000,6 @@ ${IMAGINE_PAGE_SCRIPT}
                         : null
                     ),
                     React.createElement("div", { className: "playground-files-context-divider" }),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-context-item",
-                      onClick: () => startFileChatForEntry(contextTargetEntry),
-                    },
-                      React.createElement(MessageCircle, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Start Chat")
-                    ),
                     React.createElement("button", {
                       type: "button",
                       className: "playground-files-context-item",
@@ -62838,11 +64038,7 @@ ${IMAGINE_PAGE_SCRIPT}
             React.createElement("aside", {
               className: "playground-files-preview",
               "aria-hidden": hasPreviewPanel ? "false" : "true",
-            }, hasPreviewPanel ? renderPreviewPanel() : null),
-            React.createElement("aside", {
-              className: "playground-files-chat-sidebar",
-              "aria-hidden": hasFileChatPanel ? "false" : "true",
-            }, hasFileChatPanel ? renderFileChatSidebar() : null)
+            }, hasPreviewPanel ? renderPreviewPanel() : null)
           ),
           renderContextMenu(),
           renderFileProjectPickerModal()
@@ -63663,8 +64859,9 @@ ${IMAGINE_PAGE_SCRIPT}
           const authCount = orderedServers.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === "auth").length;
           const agentRuntimeCount = orderedServers.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === "agent_runtime").length;
           const secretsCount = orderedServers.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === "secrets").length;
+          const paymentsCount = orderedServers.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === "payments").length;
           const databaseCount = orderedDatabases.length;
-          const managedResourceCount = databaseCount + authCount + agentRuntimeCount + secretsCount;
+          const managedResourceCount = databaseCount + authCount + agentRuntimeCount + secretsCount + paymentsCount;
           return {
             computers: orderedEnvironments.length,
             webApps: webAppCount,
@@ -63673,6 +64870,7 @@ ${IMAGINE_PAGE_SCRIPT}
             auth: authCount,
             agentRuntimes: agentRuntimeCount,
             secrets: secretsCount,
+            payments: paymentsCount,
             databases: databaseCount,
             managedResources: managedResourceCount,
             totalResources: webAppCount + functionCount + apiCount + managedResourceCount,
@@ -66310,7 +67508,7 @@ ${IMAGINE_PAGE_SCRIPT}
           setDraftServer(seedServer ? normalizePlaygroundServerRecord(seedServer) : null);
           void loadServerDetails(selectedServerId);
           const seedServerKind = canonicalizePlaygroundServerKind(seedServer?.kind);
-          if (!["auth", "agent_runtime", "secrets"].includes(seedServerKind)) {
+          if (!["auth", "agent_runtime", "secrets", "payments"].includes(seedServerKind)) {
             void loadServerFiles(selectedServerId);
           }
           if (seedServerKind === "secrets") {
@@ -66386,7 +67584,7 @@ ${IMAGINE_PAGE_SCRIPT}
           if (!activeServer?.id) {
             return;
           }
-          if (["auth", "agent_runtime", "secrets"].includes(canonicalizePlaygroundServerKind(activeServer.kind))) {
+          if (["auth", "agent_runtime", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(activeServer.kind))) {
             return;
           }
           if (!activeServer.cloudRunServiceName && !activeServer.serviceUrl) {
@@ -66423,7 +67621,7 @@ ${IMAGINE_PAGE_SCRIPT}
             return;
           }
           const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
-          if (["auth", "agent_runtime", "secrets"].includes(canonicalizePlaygroundServerKind(activeServer?.kind))) {
+          if (["auth", "agent_runtime", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(activeServer?.kind))) {
             return;
           }
           void loadServerAnalytics(selectedServerId);
@@ -68329,6 +69527,157 @@ ${IMAGINE_PAGE_SCRIPT}
             setServerBindingState({
               savingKey: "",
               error: error instanceof Error ? error.message : "Failed to create secrets connection.",
+            });
+            return null;
+          }
+        }
+
+        async function createAndConnectPayments() {
+          setServerBindingState({
+            savingKey: "payments:create",
+            error: "",
+          });
+          try {
+            const normalizedServer = normalizePlaygroundServerRecord(draftServer);
+            const nextPayments = await persistServerRecord(normalizePlaygroundServerRecord({
+              ...buildPlaygroundDefaultServerDraft(),
+              projectId: normalizedServer.projectId,
+              name: (String(normalizedServer.name || "").trim() || "New Resource") + " Payments",
+              description: "Stripe payments for " + (String(normalizedServer.name || "").trim() || "this server") + ".",
+              kind: "payments",
+              status: "deployed",
+              metadata: {
+                payments: {
+                  version: 1,
+                  provider: "stripe",
+                  mode: "test",
+                  onboardingStatus: "not_started",
+                  chargesEnabled: false,
+                  payoutsEnabled: false,
+                  currency: "usd",
+                  totalEarnedCents: 0,
+                  totalPaymentCount: 0,
+                },
+              },
+            }));
+            if (!nextPayments?.id) {
+              throw new Error("Payments resource creation failed.");
+            }
+            upsertLocalServerRecord(nextPayments);
+            await upsertServerConnection("payments", nextPayments.id);
+            return nextPayments;
+          } catch (error) {
+            setServerBindingState({
+              savingKey: "",
+              error: error instanceof Error ? error.message : "Failed to create payments connection.",
+            });
+            return null;
+          }
+        }
+
+        async function syncPaymentsResource(serverId) {
+          const normalizedServerId = String(serverId || draftServer?.id || "").trim();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return null;
+          }
+
+          setServerSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const response = await fetch(
+              buildPlaygroundServerPaymentsSyncUrl(backendUrl, normalizedServerId),
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({}),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to sync payments.");
+            }
+            const updatedServer = getPlaygroundServerResponseRecord(data);
+            if (updatedServer) {
+              upsertLocalServerRecord(updatedServer);
+              if (selectedServerIdRef.current === updatedServer.id) {
+                setDraftServer(updatedServer);
+                serverEditorDirtyRef.current = false;
+              }
+            }
+            setServerSaveState({
+              isSaving: false,
+              error: "",
+              message: "Payments status synced.",
+            });
+            return updatedServer;
+          } catch (error) {
+            setServerSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to sync payments.",
+              message: "",
+            });
+            return null;
+          }
+        }
+
+        async function connectPaymentsResource(serverId) {
+          const normalizedServerId = String(serverId || draftServer?.id || "").trim();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return null;
+          }
+
+          setServerSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const response = await fetch(
+              buildPlaygroundServerPaymentsConnectUrl(backendUrl, normalizedServerId),
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({}),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to connect Stripe.");
+            }
+            const updatedServer = getPlaygroundServerResponseRecord(data);
+            if (updatedServer) {
+              upsertLocalServerRecord(updatedServer);
+              if (selectedServerIdRef.current === updatedServer.id) {
+                setDraftServer(updatedServer);
+                serverEditorDirtyRef.current = false;
+              }
+            }
+            if (typeof data?.onboardingUrl === "string" && data.onboardingUrl.trim()) {
+              window.location.href = data.onboardingUrl;
+              return updatedServer;
+            }
+            setServerSaveState({
+              isSaving: false,
+              error: "",
+              message: "Stripe account connected.",
+            });
+            return updatedServer;
+          } catch (error) {
+            setServerSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to connect Stripe.",
+              message: "",
             });
             return null;
           }
@@ -73417,6 +74766,15 @@ ${IMAGINE_PAGE_SCRIPT}
 	              submitLabel: "Create Secrets",
 	            };
 	          }
+	          if (normalizedKind === "payments") {
+	            return {
+	              title: "Create a new Payments Resource",
+	              subtitle: "Payments resources connect Stripe accounts to web apps and functions so products can accept money.",
+	              namePlaceholder: "Payments resource name",
+	              descriptionPlaceholder: "Describe what this payments resource will monetize.",
+	              submitLabel: "Create Payments",
+	            };
+	          }
 	          return {
 	            title: "Create a new Web App",
 	            subtitle: "Web apps publish hosted user interfaces from project workspaces with preview URLs and custom domains.",
@@ -73489,6 +74847,7 @@ ${IMAGINE_PAGE_SCRIPT}
 	          const isAuthComposer = composerKind === "auth";
 	          const isAgentRuntimeComposer = composerKind === "agent_runtime";
 	          const isSecretsComposer = composerKind === "secrets";
+	          const isPaymentsComposer = composerKind === "payments";
 	          const isAiChatAppTemplate = composerKind === "web_app" && composerDraft.template === "ai_chat_app";
 	          const orderedComposerAgentOptions = [...serverAgentOptions].sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
 	          const renderServerCreationFactRow = (key, label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key },
@@ -73567,7 +74926,7 @@ ${IMAGINE_PAGE_SCRIPT}
 	                placeholder: "eur3",
 	              })
 	            ));
-		          } else if (!isAuthComposer && !isAgentRuntimeComposer && !isSecretsComposer) {
+		          } else if (!isAuthComposer && !isAgentRuntimeComposer && !isSecretsComposer && !isPaymentsComposer) {
 	            settingRows.push(renderServerCreationFactRow(
 	              "auth",
 	              "Auth",
@@ -73598,7 +74957,7 @@ ${IMAGINE_PAGE_SCRIPT}
 	            ));
 	          }
 
-	          if (!isDatabaseComposer && !isAuthComposer && !isAgentRuntimeComposer && !isSecretsComposer) {
+	          if (!isDatabaseComposer && !isAuthComposer && !isAgentRuntimeComposer && !isSecretsComposer && !isPaymentsComposer) {
 	            settingRows.push(renderServerCreationFactRow(
 	              "region",
 	              "Region",
@@ -73695,9 +75054,20 @@ ${IMAGINE_PAGE_SCRIPT}
           const isAuthComposer = composerKind === "auth";
           const isAgentRuntimeComposer = composerKind === "agent_runtime";
           const isSecretsComposer = composerKind === "secrets";
+          const isPaymentsComposer = composerKind === "payments";
           const isAiChatAppTemplate = composerKind === "web_app" && composerDraft.template === "ai_chat_app";
           const orderedComposerAgentOptions = [...serverAgentOptions].sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
-          const composerNamePlaceholder = isDatabaseComposer ? "Database name" : isAuthComposer ? "Auth name" : isAgentRuntimeComposer ? "Agent runtime name" : isSecretsComposer ? "Secrets vault name" : "Server name";
+          const composerNamePlaceholder = isDatabaseComposer
+            ? "Database name"
+            : isAuthComposer
+              ? "Auth name"
+            : isAgentRuntimeComposer
+              ? "Agent runtime name"
+            : isSecretsComposer
+              ? "Secrets vault name"
+            : isPaymentsComposer
+              ? "Payments resource name"
+            : "Server name";
           const composerDescriptionPlaceholder = isDatabaseComposer
             ? "Describe what this database will store."
             : isAuthComposer
@@ -73706,6 +75076,8 @@ ${IMAGINE_PAGE_SCRIPT}
               ? "Describe what this agent runtime will execute."
             : isSecretsComposer
               ? "Describe which secrets this vault will store."
+            : isPaymentsComposer
+              ? "Describe what this payments resource will monetize."
             : "Describe what this server will publish.";
 
           return React.createElement("div", {
@@ -73736,6 +75108,8 @@ ${IMAGINE_PAGE_SCRIPT}
                           ? React.createElement(Bot, { width: 18, height: 18, strokeWidth: 1.9 })
                         : isSecretsComposer
                           ? React.createElement(Key, { width: 18, height: 18, strokeWidth: 1.9 })
+                        : isPaymentsComposer
+                          ? React.createElement(ReceiptText, { width: 18, height: 18, strokeWidth: 1.9 })
                         : React.createElement(Server, { width: 18, height: 18, strokeWidth: 1.9 })
                     ),
                     React.createElement("input", {
@@ -73826,7 +75200,8 @@ ${IMAGINE_PAGE_SCRIPT}
                               React.createElement("option", { value: "api" }, "API"),
                               React.createElement("option", { value: "auth" }, "Auth"),
                               React.createElement("option", { value: "agent_runtime" }, "Agent Runtime"),
-                              React.createElement("option", { value: "secrets" }, "Secrets")
+                              React.createElement("option", { value: "secrets" }, "Secrets"),
+                              React.createElement("option", { value: "payments" }, "Payments")
                             )
                           )
                         ),
@@ -73896,7 +75271,7 @@ ${IMAGINE_PAGE_SCRIPT}
                                 })
                               )
                             )
-	                          : !isAuthComposer && !isAgentRuntimeComposer && !isSecretsComposer
+	                          : !isAuthComposer && !isAgentRuntimeComposer && !isSecretsComposer && !isPaymentsComposer
                             ? React.createElement("div", { className: "playground-tasks-detail-fact" },
                                 React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Auth"),
                                 React.createElement("div", { className: "playground-tasks-detail-fact-control" },
@@ -73931,6 +75306,7 @@ ${IMAGINE_PAGE_SCRIPT}
                           && !isAuthComposer
                           && !isAgentRuntimeComposer
                           && !isSecretsComposer
+                          && !isPaymentsComposer
                           ? React.createElement("div", { className: "playground-tasks-detail-fact" },
                               React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Region"),
                               React.createElement("div", { className: "playground-tasks-detail-fact-control" },
@@ -73963,7 +75339,15 @@ ${IMAGINE_PAGE_SCRIPT}
                     type: "submit",
                     className: "playground-environments-action-button is-primary",
                     disabled: serverComposerSaveState.isSaving || !String(composerDraft.name || "").trim() || (isAiChatAppTemplate && (!String(composerDraft.templateAgentId || "").trim() || !String(composerDraft.templateEnvironmentId || "").trim())),
-                  }, serverComposerSaveState.isSaving ? "Creating..." : (isDatabaseComposer ? "Create Database" : isSecretsComposer ? "Create Secrets" : (isAiChatAppTemplate ? "Create AI Chat App" : "Create")))
+                  }, serverComposerSaveState.isSaving ? "Creating..." : (
+                    isDatabaseComposer
+                      ? "Create Database"
+                      : isSecretsComposer
+                        ? "Create Secrets"
+                      : isPaymentsComposer
+                        ? "Create Payments"
+                      : (isAiChatAppTemplate ? "Create AI Chat App" : "Create")
+                  ))
                 )
               )
             );
@@ -73983,7 +75367,8 @@ ${IMAGINE_PAGE_SCRIPT}
           const isAuthServer = normalizedServerKind === "auth";
           const isAgentRuntimeServer = normalizedServerKind === "agent_runtime";
           const isSecretsServer = normalizedServerKind === "secrets";
-	          const isTitlelessServerDescription = isSourceDeployableServer || isAuthServer || isSecretsServer;
+          const isPaymentsServer = normalizedServerKind === "payments";
+	          const isTitlelessServerDescription = isSourceDeployableServer || isAuthServer || isSecretsServer || isPaymentsServer;
           const shouldRenderTitlelessServerDescription = isTitlelessServerDescription && !isFunctionServer;
           const ServerPreviewEditorComponent = serverPreviewEditorModule?.default || null;
           const renderServerFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
@@ -75428,6 +76813,7 @@ ${IMAGINE_PAGE_SCRIPT}
           const activeAuthBinding = getCurrentServerBindingByType("auth");
           const activeAgentRuntimeBinding = getCurrentServerBindingByType("agent_runtime");
           const activeSecretsBinding = getCurrentServerBindingByType("secrets");
+          const activePaymentsBinding = getCurrentServerBindingByType("payments");
           const activeServerContext = draftServer.id ? (serverContextsById[draftServer.id] || currentServerContext || null) : null;
           const activeServerRuntimeDiagnostics = activeServerContext?.diagnostics || null;
           const activeServerRuntimeWarnings = Array.isArray(activeServerRuntimeDiagnostics?.warnings)
@@ -75445,10 +76831,14 @@ ${IMAGINE_PAGE_SCRIPT}
           const availableSecretsVaults = orderedServers.filter((server) =>
             canonicalizePlaygroundServerKind(server.kind) === "secrets" && server.id !== draftServer.id
           );
+          const availablePaymentsResources = orderedServers.filter((server) =>
+            canonicalizePlaygroundServerKind(server.kind) === "payments" && server.id !== draftServer.id
+          );
           const isSavingDatabaseConnection = serverBindingState.savingKey.startsWith("database");
           const isSavingAuthConnection = serverBindingState.savingKey.startsWith("auth");
           const isSavingAgentRuntimeConnection = serverBindingState.savingKey.startsWith("agent_runtime");
           const isSavingSecretsConnection = serverBindingState.savingKey.startsWith("secrets");
+          const isSavingPaymentsConnection = serverBindingState.savingKey.startsWith("payments");
           const isLoadingServerRuntimeContext = loadingServerContextId === draftServer.id;
           const renderRuntimePreviewButton = (label, target) => React.createElement("button", {
               type: "button",
@@ -75639,6 +77029,49 @@ ${IMAGINE_PAGE_SCRIPT}
                             onClick: () => {
                               setServerDetailSelectPopover("");
                               void createAndConnectSecrets();
+                            },
+                          }),
+                        ],
+                      })
+                    ),
+                    renderServerFactRow("Payments",
+                      renderServerDetailSelectControl({
+                        popoverId: "server-connection-payments",
+                        valueLabel: isSavingPaymentsConnection
+                          ? "Connecting..."
+                          : (activePaymentsBinding?.resource?.name || activePaymentsBinding?.targetId || "None"),
+                        isEmpty: !activePaymentsBinding,
+                        disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSavingPaymentsConnection,
+                        children: [
+                          renderServerDetailSelectOptionRow({
+                            key: "payments:none",
+                            label: "None",
+                            selected: !activePaymentsBinding,
+                            onClick: () => {
+                              setServerDetailSelectPopover("");
+                              void removeServerConnection("payments");
+                            },
+                          }),
+                          ...availablePaymentsResources.map((server) =>
+                            renderServerDetailSelectOptionRow({
+                              key: "payments:" + server.id,
+                              label: server.name || "Untitled Payments",
+                              description: "Stripe payments",
+                              selected: activePaymentsBinding?.targetId === server.id,
+                              onClick: () => {
+                                setServerDetailSelectPopover("");
+                                void upsertServerConnection("payments", server.id);
+                              },
+                            })
+                          ),
+                          renderServerDetailSelectOptionRow({
+                            key: "payments:create",
+                            label: "Create And Connect New",
+                            description: "Creates a Stripe payments resource for this app.",
+                            selected: false,
+                            onClick: () => {
+                              setServerDetailSelectPopover("");
+                              void createAndConnectPayments();
                             },
                           }),
                         ],
@@ -76693,7 +78126,7 @@ ${IMAGINE_PAGE_SCRIPT}
                 )
               )
             : null;
-	          const serverDangerSection = isSourceDeployableServer || isAgentRuntimeServer
+	          const serverDangerSection = isSourceDeployableServer || isAgentRuntimeServer || isPaymentsServer
 	            ? React.createElement("section", { className: "playground-server-danger-section playground-server-details-card" },
                 React.createElement("div", { className: "playground-server-danger-copy-row" },
                   React.createElement("span", { className: "playground-server-danger-icon", "aria-hidden": "true" },
@@ -76859,7 +78292,32 @@ ${IMAGINE_PAGE_SCRIPT}
             ),
             React.createElement("div", { className: "playground-content-nav-center" }),
             React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-              isSourceDeployableServer
+              isPaymentsServer
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: () => void syncPaymentsResource(draftServer.id),
+                      disabled: serverSaveState.isSaving || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                    },
+                      serverSaveState.isSaving
+                        ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                        : React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Sync Status")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button is-primary",
+                      onClick: () => void connectPaymentsResource(draftServer.id),
+                      disabled: serverSaveState.isSaving || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                    },
+                      serverSaveState.isSaving
+                        ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                        : React.createElement(ReceiptText, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, getPlaygroundPaymentsMetadata(draftServer).stripeAccountId ? "Continue Setup" : "Connect Stripe")
+                    )
+                  )
+                : isSourceDeployableServer
                 ? React.createElement(React.Fragment, null,
                     React.createElement("button", {
                       type: "button",
@@ -76900,6 +78358,90 @@ ${IMAGINE_PAGE_SCRIPT}
                 : null
             )
           );
+
+          if (isPaymentsServer) {
+            const paymentsMetadata = getPlaygroundPaymentsMetadata(draftServer);
+            const paymentsCurrency = String(paymentsMetadata.currency || paymentsMetadata.defaultCurrency || "usd").toUpperCase();
+            const paymentsStatus = formatPlaygroundPaymentsStatus(paymentsMetadata);
+            const paymentsDetailsSection = React.createElement("section", { className: "playground-server-details-card playground-server-runtime-card" },
+              React.createElement("div", { className: "playground-server-details-card-header" },
+                React.createElement("div", null,
+                  React.createElement("h2", { className: "playground-server-details-card-title" }, "Stripe payments"),
+                  React.createElement("p", { className: "playground-server-details-card-copy" },
+                    "Connect one Stripe account and bind it to web apps, functions, and agent runtimes without exposing Stripe keys."
+                  )
+                ),
+                React.createElement("span", { className: "playground-server-status-pill" }, paymentsStatus)
+              ),
+              React.createElement("div", { className: "playground-server-runtime-grid" },
+                renderServerFactRow("Provider",
+                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, "Stripe")
+                ),
+                renderServerFactRow("Mode",
+                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, String(paymentsMetadata.mode || "test").toUpperCase())
+                ),
+                renderServerFactRow("Charges",
+                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, paymentsMetadata.chargesEnabled ? "Enabled" : "Not enabled")
+                ),
+                renderServerFactRow("Payouts",
+                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, paymentsMetadata.payoutsEnabled ? "Enabled" : "Not enabled")
+                ),
+                renderServerFactRow("Earned",
+                  React.createElement("span", { className: "playground-environments-editor-fact-value" },
+                    formatPlaygroundPaymentMoney(paymentsMetadata.totalEarnedCents, paymentsCurrency)
+                  )
+                ),
+                renderServerFactRow("Payments",
+                  React.createElement("span", { className: "playground-environments-editor-fact-value" },
+                    String(Math.max(0, Number(paymentsMetadata.totalPaymentCount || 0)))
+                  )
+                ),
+                renderServerFactRow("Stripe Account",
+                  React.createElement("span", {
+                    className: "playground-environments-editor-fact-value is-id",
+                    title: String(paymentsMetadata.stripeAccountId || "None"),
+                  }, String(paymentsMetadata.stripeAccountId || "None"))
+                )
+              )
+            );
+            const paymentsRuntimeSection = React.createElement("section", { className: "playground-server-details-card playground-server-runtime-card" },
+              React.createElement("div", { className: "playground-server-details-card-header" },
+                React.createElement("div", null,
+                  React.createElement("h2", { className: "playground-server-details-card-title" }, "Runtime checkout API"),
+                  React.createElement("p", { className: "playground-server-details-card-copy" },
+                    "Connected workloads can create Stripe Checkout Sessions through the Computer Agents runtime SDK. Stripe credentials stay in the control plane."
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-server-runtime-grid" },
+                renderServerFactRow("Node.js",
+                  React.createElement("span", { className: "playground-environments-editor-fact-value is-id" }, "await computerAgents.payments.createCheckoutSession(...)")
+                ),
+                renderServerFactRow("Browser",
+                  React.createElement("span", { className: "playground-environments-editor-fact-value is-id" }, "await client.payments.createCheckoutSession(...)")
+                )
+              )
+            );
+
+            return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
+              serverMainTopbar,
+              React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+                React.createElement("div", { className: "playground-server-detail-content" },
+                  serverSaveState.error
+                    ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
+                    : null,
+                  serverSaveState.message
+                    ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, serverSaveState.message)
+                    : null,
+                  descriptionSection,
+                  paymentsDetailsSection,
+                  connectionsSection,
+                  paymentsRuntimeSection,
+                  serverDangerSection
+                )
+              )
+            );
+          }
 
           if (isSecretsServer) {
             const secrets = Array.isArray(currentServerSecrets) ? currentServerSecrets : [];
@@ -81566,8 +83108,10 @@ ${IMAGINE_PAGE_SCRIPT}
 	            web_app: "/developers/libraries/web-apps",
 	            function: "/developers/libraries/functions",
 	            database: "/developers/libraries/databases",
-		            agent_runtime: "/developers/libraries/agent-runtimes",
+	            auth: "/developers/libraries/authentication",
+	            agent_runtime: "/developers/libraries/agent-runtimes",
 	            secrets: "/developers/libraries/secrets",
+	            payments: "/developers/libraries/payments",
 	          };
 	          const developServerKindDocumentationUrl = ${JSON.stringify(aiosOrigin)} + (developServerKindDocumentationPathByKind[normalizedEmbeddedServerKind] || "/developers");
 	          const developConfigureTitle = isDevelopServerKindHome ? developServerKindTitle : "Computers";
@@ -81748,6 +83292,40 @@ ${IMAGINE_PAGE_SCRIPT}
 		                ...buildDevelopServerKindSharedMetricTabs("auth", "Authentication"),
 		              ];
 		            }
+	            if (normalizedEmbeddedServerKind === "payments") {
+	              return [
+	                {
+	                  id: "payment-checkouts",
+	                  key: "paymentCheckoutSessions",
+	                  label: "Checkout Sessions",
+	                  title: "Checkout Sessions",
+	                  tone: "success",
+	                  legend: "Payments",
+	                  resourceCountKey: "payments",
+	                  emptyText: "No checkout sessions in the last 24 hours",
+	                },
+	                {
+	                  id: "resources",
+	                  key: "resources",
+	                  label: "Payments",
+	                  title: "Payments",
+	                  tone: "resources",
+	                  legend: "Payments",
+	                  resourceCountKey: "payments",
+	                  emptyText: "No payments resources in the last 24 hours",
+	                },
+	                {
+	                  id: "errors",
+	                  key: "errors",
+	                  label: "Errors",
+	                  title: "Errors",
+	                  tone: "errors",
+	                  legend: "Errors",
+	                  resourceCountKey: "payments",
+	                  emptyText: "No errors in the last 24 hours",
+	                },
+	              ];
+	            }
 	            return [
 	              {
 	                id: "api-requests",
@@ -82042,13 +83620,18 @@ ${IMAGINE_PAGE_SCRIPT}
 	            && normalizedEmbeddedServerKind === "secrets"
 	            && developConfigureCount === 0
 	            && !normalizedResourcesSearchQuery;
+	          const shouldShowDevelopPaymentsEmptyLanding = isDevelopServerKindHome
+	            && normalizedEmbeddedServerKind === "payments"
+	            && developConfigureCount === 0
+	            && !normalizedResourcesSearchQuery;
 	          const shouldShowDevelopServerKindEmptyLanding =
 	            shouldShowDevelopFunctionsEmptyLanding
 	            || shouldShowDevelopWebAppsEmptyLanding
 	            || shouldShowDevelopDatabasesEmptyLanding
 	            || shouldShowDevelopAuthEmptyLanding
 	            || shouldShowDevelopAgentRuntimesEmptyLanding
-	            || shouldShowDevelopSecretsEmptyLanding;
+	            || shouldShowDevelopSecretsEmptyLanding
+	            || shouldShowDevelopPaymentsEmptyLanding;
 	          const functionEmptyFeatures = [
 	            {
 	              title: "Fully managed",
@@ -82239,6 +83822,28 @@ ${IMAGINE_PAGE_SCRIPT}
 	              title: "Rotation control",
 	              description: "Update values centrally and redeploy connected resources when providers require it.",
 	              Icon: RefreshCw,
+	            },
+	          ];
+	          const paymentsEmptyFeatures = [
+	            {
+	              title: "Stripe Connect",
+	              description: "Connect one Stripe account and reuse it across apps, functions, and agent runtimes.",
+	              Icon: ReceiptText,
+	            },
+	            {
+	              title: "Runtime checkout",
+	              description: "Create checkout sessions from deployed workloads without exposing Stripe credentials.",
+	              Icon: Link2,
+	            },
+	            {
+	              title: "Revenue visibility",
+	              description: "Track onboarding, payment counts, and earned revenue from the resource detail page.",
+	              Icon: DollarSign,
+	            },
+	            {
+	              title: "Connected products",
+	              description: "Bind payments to products that humans or agents deploy inside Computer Agents.",
+	              Icon: Rocket,
 	            },
 	          ];
 	          const scrollDevelopServerExamples = (direction) => {
@@ -82531,6 +84136,15 @@ ${IMAGINE_PAGE_SCRIPT}
 	              features: secretsEmptyFeatures,
 	              resourceKind: "secrets",
 	            });
+	          const renderDevelopPaymentsEmptyLanding = () =>
+	            renderDevelopBasicResourceEmptyLanding({
+	              className: "playground-payments-empty-landing",
+	              title: "Accept payments from agent-built products.",
+	              copy: "Create a Stripe-backed payments resource that humans and agents can bind to deployed apps, functions, and runtimes.",
+	              imageSrc: "/dist/react/assets/server-runtime.webp",
+	              features: paymentsEmptyFeatures,
+	              resourceKind: "payments",
+	            });
 
 	          const environmentsHomeHero = isDevelopConfigureHome
 	            ? React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero" },
@@ -82580,6 +84194,8 @@ ${IMAGINE_PAGE_SCRIPT}
 	                          ? renderDevelopAgentRuntimesEmptyLanding()
 	                          : shouldShowDevelopSecretsEmptyLanding
 	                            ? renderDevelopSecretsEmptyLanding()
+	                            : shouldShowDevelopPaymentsEmptyLanding
+	                              ? renderDevelopPaymentsEmptyLanding()
 	                  : React.createElement(React.Fragment, null,
 	                      environmentOverviewMetricsSection,
 	                      overviewListContent
@@ -82627,6 +84243,9 @@ ${IMAGINE_PAGE_SCRIPT}
           if (item?.kind === "secrets") {
             return "Secrets";
           }
+          if (item?.kind === "payments") {
+            return "Payments";
+          }
           return "Web App";
         };
         const renderCurrentResourceSettingsControl = (buttonClassName) => {
@@ -82647,6 +84266,7 @@ ${IMAGINE_PAGE_SCRIPT}
             const isAuthResource = normalizedKind === "auth";
             const isAgentRuntimeResource = normalizedKind === "agent_runtime";
             const isSecretsResource = normalizedKind === "secrets";
+            const isPaymentsResource = normalizedKind === "payments";
             return React.createElement("div", {
                 className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
                 ref: serverActionsPopoverRef,
@@ -82675,7 +84295,7 @@ ${IMAGINE_PAGE_SCRIPT}
                         React.createElement("span", null, "Rename")
                       )
                     ),
-                    !isAuthResource && !isAgentRuntimeResource && !isSecretsResource
+                    !isAuthResource && !isAgentRuntimeResource && !isSecretsResource && !isPaymentsResource
                       ? React.createElement("button", {
                           type: "button",
                           className: "tb-popup-row",
@@ -82804,7 +84424,7 @@ ${IMAGINE_PAGE_SCRIPT}
                 { id: "web_app", label: "Web Apps", description: "Only show deployed app services" },
                 { id: "function", label: "Functions", description: "Only show serverless function resources" },
                 { id: "api", label: "API", description: "Only show API resources" },
-                { id: "managed", label: "Managed", description: "Only show databases, auth, runtimes, and secrets" },
+                { id: "managed", label: "Managed", description: "Only show databases, auth, runtimes, secrets, and payments" },
               ])
             : [
                 { id: "all", label: "All Computers", description: "Show running and stopped computers together" },
@@ -82845,7 +84465,7 @@ ${IMAGINE_PAGE_SCRIPT}
                 ? "managed"
                 : canonicalizePlaygroundServerKind(item?.kind);
               if (resourcesOverviewFilter === "managed") {
-                return normalizedKind === "managed" || normalizedKind === "auth" || normalizedKind === "agent_runtime" || normalizedKind === "secrets";
+                return normalizedKind === "managed" || normalizedKind === "auth" || normalizedKind === "agent_runtime" || normalizedKind === "secrets" || normalizedKind === "payments";
               }
               return normalizedKind === resourcesOverviewFilter;
             })
@@ -82932,6 +84552,9 @@ ${IMAGINE_PAGE_SCRIPT}
             }
             if (normalizedKind === "secrets") {
               return React.createElement(Key, { width: 17, height: 17, strokeWidth: 1.8 });
+            }
+            if (normalizedKind === "payments") {
+              return React.createElement(ReceiptText, { width: 17, height: 17, strokeWidth: 1.8 });
             }
             return React.createElement(Globe, { width: 17, height: 17, strokeWidth: 1.8 });
           };
@@ -83804,6 +85427,8 @@ ${IMAGINE_PAGE_SCRIPT}
                                                         ? React.createElement(Users, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
                                                       : canonicalizePlaygroundServerKind(item.kind) === "secrets"
                                                         ? React.createElement(Key, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
+                                                      : canonicalizePlaygroundServerKind(item.kind) === "payments"
+                                                        ? React.createElement(ReceiptText, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
                                                         : React.createElement(Globe, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
                                                 )
                                               : React.createElement(HardDrive, { className: "playground-files-entry-icon", strokeWidth: 1.8 }),
@@ -83850,7 +85475,7 @@ ${IMAGINE_PAGE_SCRIPT}
                             const isDatabaseResource = resource.resourceType === "database";
                             const isActive = !shouldShowEnvironmentHome && (isDatabaseResource ? (!selectedServerId && selectedDatabaseId === resource.id) : selectedServerId === resource.id);
                             const normalizedKind = canonicalizePlaygroundServerKind(resource.kind);
-                            const serverListMetaLabel = normalizedKind === "web_app" || normalizedKind === "function" || normalizedKind === "database" || normalizedKind === "api" || normalizedKind === "auth" || normalizedKind === "agent_runtime" || normalizedKind === "secrets"
+                            const serverListMetaLabel = normalizedKind === "web_app" || normalizedKind === "function" || normalizedKind === "database" || normalizedKind === "api" || normalizedKind === "auth" || normalizedKind === "agent_runtime" || normalizedKind === "secrets" || normalizedKind === "payments"
                                 ? ""
                                 : String(resource.kind || "").replace(/_/g, " ");
                             return React.createElement("div", {
@@ -83874,6 +85499,8 @@ ${IMAGINE_PAGE_SCRIPT}
                                         ? React.createElement(Users, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
                                       : normalizedKind === "secrets"
                                         ? React.createElement(Key, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
+                                      : normalizedKind === "payments"
+                                        ? React.createElement(ReceiptText, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
                                         : normalizedKind === "web_app"
                                           ? React.createElement(Globe, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
                                           : React.createElement(Server, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
@@ -83888,7 +85515,7 @@ ${IMAGINE_PAGE_SCRIPT}
                           })
                         : React.createElement("div", { className: "playground-environments-empty-state" },
                             React.createElement("div", { className: "playground-environments-empty-title" }, "No " + currentServerResourcesLabel.toLowerCase()),
-                            React.createElement("div", { className: "playground-environments-empty-copy" }, normalizedEmbeddedServerKind ? "Create your first " + currentServerResourcesLabel.toLowerCase() + " resource." : "Create your first web app, function, auth module, agent runtime, secrets vault, API, or database."),
+                            React.createElement("div", { className: "playground-environments-empty-copy" }, normalizedEmbeddedServerKind ? "Create your first " + currentServerResourcesLabel.toLowerCase() + " resource." : "Create your first web app, function, auth module, agent runtime, secrets vault, payments resource, API, or database."),
                             React.createElement("button", {
                               type: "button",
                               className: "playground-environments-action-button is-primary",
@@ -119332,6 +120959,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [threadListMode, setThreadListMode] = useState("threads");
         const [threadsSectionCollapsed, setThreadsSectionCollapsed] = useState(false);
         const [runnerRenderKey, setRunnerRenderKey] = useState(0);
+        const [initialLandingPrompt, setInitialLandingPrompt] = useState(() => (
+          normalizePlaygroundInitialPrompt(readCurrentSearchParam(PLAYGROUND_INITIAL_PROMPT_QUERY_PARAM))
+        ));
         const [threadDisplayCount, setThreadDisplayCount] = useState(10);
         const [threadActionMenuState, setThreadActionMenuState] = useState(null);
         const [threadNavMenuOpen, setThreadNavMenuOpen] = useState(false);
@@ -119431,6 +121061,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [privateThreadIds, setPrivateThreadIds] = useState([]);
         const privateThreadIdsRef = useRef(new Set());
         const [pendingThreadRunRequest, setPendingThreadRunRequest] = useState(null);
+        const [pendingThreadDocumentPreviewRequest, setPendingThreadDocumentPreviewRequest] = useState(null);
         const [threadTaskPreviewOverrides, setThreadTaskPreviewOverrides] = useState({});
         const [threadProjectRecordsById, setThreadProjectRecordsById] = useState({});
         const [threadProjectContextById, setThreadProjectContextById] = useState({});
@@ -119447,6 +121078,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [tasksPageNavigationRequest, setTasksPageNavigationRequest] = useState(null);
         const [filesPageNavigationRequest, setFilesPageNavigationRequest] = useState(null);
         const [filesPageTopNav, setFilesPageTopNav] = useState(null);
+        const [imagineActiveView, setImagineActiveView] = useState("explore");
+        const [imagineToolbarPopover, setImagineToolbarPopover] = useState("");
+        const [imagineFilterMode, setImagineFilterMode] = useState("all");
+        const [imagineSortMode, setImagineSortMode] = useState("featured");
         const [welcomeWidgetsState, setWelcomeWidgetsState] = useState(() => (
           isDemoMode
             ? buildDemoWelcomeWidgetsState()
@@ -119543,6 +121178,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [notificationsOpen, setNotificationsOpen] = useState(false);
         const [productNotifications, setProductNotifications] = useState([]);
         const [readProductNotificationIds, setReadProductNotificationIds] = useState([]);
+        const [teamInvitationNotifications, setTeamInvitationNotifications] = useState([]);
+        const [readTeamInvitationNotificationIds, setReadTeamInvitationNotificationIds] = useState([]);
         const [permissionNotifications, setPermissionNotifications] = useState([]);
 	        const [readPermissionNotificationIds, setReadPermissionNotificationIds] = useState(() => (
 	          readStoredNotificationIds(PLAYGROUND_PERMISSION_NOTIFICATION_READ_STORAGE_KEY, "session")
@@ -119611,6 +121248,25 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [developServerOperationalMetrics, setDevelopServerOperationalMetrics] = useState(null);
         const [developServerOperationalMetricsLoading, setDevelopServerOperationalMetricsLoading] = useState(false);
         const [developServerOperationalMetricsError, setDevelopServerOperationalMetricsError] = useState("");
+        const [teamPageLoading, setTeamPageLoading] = useState(false);
+        const [teamPageError, setTeamPageError] = useState("");
+        const [teamPageRequiresPlan, setTeamPageRequiresPlan] = useState(false);
+        const [teamPageTeams, setTeamPageTeams] = useState([]);
+        const [teamPageSelectedTeamId, setTeamPageSelectedTeamId] = useState("");
+        const [teamPageActiveTab, setTeamPageActiveTab] = useState("members");
+        const [teamPageMembers, setTeamPageMembers] = useState([]);
+        const [teamPageInvitations, setTeamPageInvitations] = useState([]);
+        const [teamPageShares, setTeamPageShares] = useState([]);
+        const [teamPageCreateName, setTeamPageCreateName] = useState("");
+        const [teamPageCreateModalOpen, setTeamPageCreateModalOpen] = useState(false);
+        const [teamPageCreateInviteEmails, setTeamPageCreateInviteEmails] = useState("");
+        const [teamPageCreateInviteRole, setTeamPageCreateInviteRole] = useState("create");
+        const [teamPageInviteEmail, setTeamPageInviteEmail] = useState("");
+        const [teamPageInviteRole, setTeamPageInviteRole] = useState("create");
+        const [teamPageShareResourceType, setTeamPageShareResourceType] = useState("project");
+        const [teamPageShareResourceId, setTeamPageShareResourceId] = useState("");
+        const [teamPageShareAccessLevel, setTeamPageShareAccessLevel] = useState("use");
+        const [teamPageActionId, setTeamPageActionId] = useState("");
         const [sidebarWorkspaceMode, setSidebarWorkspaceMode] = useState(initialSidebarWorkspaceMode);
         const [sidebarWorkspaceMenuOpen, setSidebarWorkspaceMenuOpen] = useState(false);
         const [agentsOverviewTabRequest, setAgentsOverviewTabRequest] = useState(null);
@@ -119995,6 +121651,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          const readProducts = new Set(readProductNotificationIds);
 	          const readPermissions = new Set(readPermissionNotificationIds);
 	          const readHumanTasks = new Set(readHumanTaskNotificationIds);
+	          const readTeamInvitations = new Set(readTeamInvitationNotificationIds);
 	          const items = [];
 
           permissionNotificationItems.forEach((notification) => {
@@ -120025,6 +121682,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            items.push(notification);
 	          });
 
+	          teamInvitationNotifications.forEach((invitation) => {
+            const id = String(invitation?.id || "").trim();
+            if (!id || readTeamInvitations.has(id)) {
+              return;
+            }
+            items.push({
+              ...invitation,
+              id,
+              kind: "team_invitation",
+            });
+          });
+
 	          productNotifications.forEach((notification) => {
             const id = typeof notification?.id === "string" ? notification.id.trim() : "";
             if (!id || readProducts.has(id)) {
@@ -120048,7 +121717,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          readHumanTaskNotificationIds,
 	          readPermissionNotificationIds,
           readProductNotificationIds,
+          readTeamInvitationNotificationIds,
           sessionState.emailVerified,
+          teamInvitationNotifications,
         ]);
         const hasVisibleNotifications = notificationItems.length > 0;
         const permissionAttentionThreadIds = useMemo(() => {
@@ -120253,6 +121924,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         useEffect(() => {
           if (!canFetchNotificationCenter) {
             setProductNotifications([]);
+            setTeamInvitationNotifications([]);
             return;
           }
 
@@ -120269,6 +121941,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               if (!response.ok) {
                 if (!cancelled) {
                   setProductNotifications([]);
+                  setTeamInvitationNotifications([]);
                 }
                 return;
               }
@@ -120278,12 +121951,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   ? data.notifications
                   : [];
               const normalizedItems = items.map(normalizeInAppNotificationRecord).filter(Boolean);
+              const teamInvitationItems = Array.isArray(data?.teamInvitations)
+                ? data.teamInvitations
+                : [];
+              const normalizedTeamInvitations = teamInvitationItems
+                .map(normalizeTeamInvitationNotificationRecord)
+                .filter(Boolean);
               if (!cancelled) {
                 setProductNotifications(normalizedItems);
+                setTeamInvitationNotifications(normalizedTeamInvitations);
               }
             } catch {
               if (!cancelled) {
                 setProductNotifications([]);
+                setTeamInvitationNotifications([]);
               }
             }
           };
@@ -120294,7 +121975,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             cancelled = true;
             window.clearInterval(intervalId);
           };
-        }, [canFetchNotificationCenter, proxyBackendBase, requestHeaders]);
+        }, [canFetchNotificationCenter, notificationsOpen, proxyBackendBase, requestHeaders]);
 
         useEffect(() => {
           if (!canFetchNotificationCenter) {
@@ -120879,11 +122560,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
           function syncPlaygroundOnboardingFromUrl() {
             setShowPlaygroundOnboarding(readCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM) === "true");
             setShowSubscriptionSuccessModal(readCurrentSearchParam(PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM) === "true");
+            setInitialLandingPrompt(normalizePlaygroundInitialPrompt(readCurrentSearchParam(PLAYGROUND_INITIAL_PROMPT_QUERY_PARAM)));
           }
 
           window.addEventListener("popstate", syncPlaygroundOnboardingFromUrl);
           return () => window.removeEventListener("popstate", syncPlaygroundOnboardingFromUrl);
         }, []);
+
+        useEffect(() => {
+          if (!initialLandingPrompt) {
+            return;
+          }
+          removeCurrentSearchParam(PLAYGROUND_INITIAL_PROMPT_QUERY_PARAM);
+        }, [initialLandingPrompt]);
 
         useEffect(() => {
           if (!showPlaygroundOnboarding) {
@@ -120976,11 +122665,392 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setSettingsSection(normalizedSectionId === "password" || normalizedSectionId === "delete" ? "profile" : normalizedSectionId);
         }
 
+        function openTeamPage() {
+          setAccountMenuOpen(false);
+          setNotificationsOpen(false);
+          setSidebarWorkspaceMode("configure");
+          setActivePage("team");
+        }
+
+        function getTeamPageApiErrorMessage(data, fallback = "Failed to load teams.") {
+          const rawMessage = String(data?.message || data?.error || fallback || "").trim();
+          const normalizedMessage = rawMessage.toLowerCase();
+          const isHtmlRouteError = normalizedMessage.includes("<!doctype html")
+            || normalizedMessage.includes("<html")
+            || ["get", "post", "patch", "put", "delete"].some((method) =>
+              normalizedMessage.includes("cannot " + method + " /teams")
+            );
+          if (isHtmlRouteError) {
+            return "Team workspace API is not available on this backend yet. Redeploy the backend, then refresh this page.";
+          }
+          return rawMessage || fallback;
+        }
+
+        async function loadTeamPageData(options = {}) {
+          if (!hasRealAccess) {
+            return;
+          }
+          const requestedTeamId = String(options?.selectedTeamId || teamPageSelectedTeamId || "").trim();
+          setTeamPageLoading(true);
+          setTeamPageError("");
+          setTeamPageRequiresPlan(false);
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders,
+            }, 8000);
+            if (!response.ok) {
+              if (response.status === 402 || data?.requiredPlan === "team") {
+                setTeamPageRequiresPlan(true);
+                setTeamPageTeams([]);
+                setTeamPageMembers([]);
+                setTeamPageInvitations([]);
+                setTeamPageShares([]);
+                return;
+              }
+              throw new Error(getTeamPageApiErrorMessage(data));
+            }
+            const teams = Array.isArray(data?.data) ? data.data : Array.isArray(data?.teams) ? data.teams : [];
+            setTeamPageTeams(teams);
+            const selectedTeam = requestedTeamId
+              ? teams.find((team) => team.id === requestedTeamId) || null
+              : null;
+            const selectedTeamId = selectedTeam?.id || "";
+            setTeamPageSelectedTeamId(selectedTeamId);
+            if (!selectedTeamId) {
+              setTeamPageMembers([]);
+              setTeamPageInvitations([]);
+              setTeamPageShares([]);
+              return;
+            }
+            const [membersResult, invitationsResult, sharesResult] = await Promise.all([
+              fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(selectedTeamId) + "/members", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              }, 8000),
+              fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(selectedTeamId) + "/invitations", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              }, 8000),
+              fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(selectedTeamId) + "/resource-shares", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              }, 8000),
+            ]);
+            setTeamPageMembers(Array.isArray(membersResult.data?.data) ? membersResult.data.data : []);
+            setTeamPageInvitations(Array.isArray(invitationsResult.data?.data) ? invitationsResult.data.data : []);
+            setTeamPageShares(Array.isArray(sharesResult.data?.data) ? sharesResult.data.data : []);
+          } catch (error) {
+            setTeamPageError(getTeamPageApiErrorMessage({ message: error instanceof Error ? error.message : "" }));
+          } finally {
+            setTeamPageLoading(false);
+          }
+        }
+
+        async function handleCreateTeam() {
+          const name = String(teamPageCreateName || "").trim();
+          if (!name) {
+            return;
+          }
+          const inviteEmails = String(teamPageCreateInviteEmails || "")
+            .split(/[\s,;]+/)
+            .map((email) => email.trim())
+            .filter(Boolean);
+          setTeamPageActionId("create-team");
+          setTeamPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name }),
+            }, 8000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create team.");
+            }
+            setTeamPageCreateName("");
+            setTeamPageCreateInviteEmails("");
+            setTeamPageCreateInviteRole("create");
+            setTeamPageCreateModalOpen(false);
+            const team = data?.data || data?.team || null;
+            const teamId = String(team?.id || "").trim();
+            let invitationErrorMessage = "";
+            if (teamId && inviteEmails.length > 0) {
+              const invitationResults = await Promise.allSettled(inviteEmails.map((email) =>
+                fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/invitations", {
+                  method: "POST",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: {
+                    ...requestHeaders,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ email, role: teamPageCreateInviteRole }),
+                }, 8000)
+              ));
+              const failedInvitation = invitationResults.find((result) =>
+                result.status === "rejected" || (result.value && !result.value.response?.ok)
+              );
+              if (failedInvitation) {
+                invitationErrorMessage = "Team created, but one or more invitations could not be sent.";
+              }
+            }
+            if (team?.id) {
+              setTeamPageSelectedTeamId(team.id);
+            }
+            await loadTeamPageData({ selectedTeamId: team?.id || "" });
+            if (invitationErrorMessage) {
+              setTeamPageError(invitationErrorMessage);
+            }
+          } catch (error) {
+            setTeamPageError(error instanceof Error ? error.message : "Failed to create team.");
+          } finally {
+            setTeamPageActionId("");
+          }
+        }
+
+        async function handleSendTeamInvite() {
+          const email = String(teamPageInviteEmail || "").trim();
+          const teamId = String(teamPageSelectedTeamId || "").trim();
+          if (!email || !teamId) {
+            return;
+          }
+          setTeamPageActionId("invite");
+          setTeamPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/invitations", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email, role: teamPageInviteRole }),
+            }, 8000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to invite team member.");
+            }
+            setTeamPageInviteEmail("");
+            await loadTeamPageData();
+          } catch (error) {
+            setTeamPageError(error instanceof Error ? error.message : "Failed to invite team member.");
+          } finally {
+            setTeamPageActionId("");
+          }
+        }
+
+        async function handleRevokeTeamInvitation(invitationId) {
+          const teamId = String(teamPageSelectedTeamId || "").trim();
+          const normalizedInvitationId = String(invitationId || "").trim();
+          if (!teamId || !normalizedInvitationId) {
+            return;
+          }
+          setTeamPageActionId("revoke:" + normalizedInvitationId);
+          setTeamPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/invitations/" + encodeURIComponent(normalizedInvitationId) + "/revoke", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: "{}",
+            }, 8000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to revoke invitation.");
+            }
+            await loadTeamPageData();
+          } catch (error) {
+            setTeamPageError(error instanceof Error ? error.message : "Failed to revoke invitation.");
+          } finally {
+            setTeamPageActionId("");
+          }
+        }
+
+        async function handleUpdateTeamMemberRole(memberId, role) {
+          const teamId = String(teamPageSelectedTeamId || "").trim();
+          const normalizedMemberId = String(memberId || "").trim();
+          const normalizedRole = String(role || "").trim();
+          if (!teamId || !normalizedMemberId || !normalizedRole) {
+            return;
+          }
+          setTeamPageActionId("member-role:" + normalizedMemberId);
+          setTeamPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/members/" + encodeURIComponent(normalizedMemberId), {
+              method: "PATCH",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ role: normalizedRole }),
+            }, 8000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to update team member.");
+            }
+            await loadTeamPageData();
+          } catch (error) {
+            setTeamPageError(error instanceof Error ? error.message : "Failed to update team member.");
+          } finally {
+            setTeamPageActionId("");
+          }
+        }
+
+        async function handleRemoveTeamMember(memberId) {
+          const teamId = String(teamPageSelectedTeamId || "").trim();
+          const normalizedMemberId = String(memberId || "").trim();
+          if (!teamId || !normalizedMemberId) {
+            return;
+          }
+          const confirmed = window.confirm("Remove this member from the team?");
+          if (!confirmed) {
+            return;
+          }
+          setTeamPageActionId("member-remove:" + normalizedMemberId);
+          setTeamPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/members/" + encodeURIComponent(normalizedMemberId), {
+              method: "DELETE",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders,
+            }, 8000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to remove team member.");
+            }
+            await loadTeamPageData();
+          } catch (error) {
+            setTeamPageError(error instanceof Error ? error.message : "Failed to remove team member.");
+          } finally {
+            setTeamPageActionId("");
+          }
+        }
+
+        async function handleCreateTeamResourceShare() {
+          const teamId = String(teamPageSelectedTeamId || "").trim();
+          const resourceType = String(teamPageShareResourceType || "").trim();
+          const resourceId = String(teamPageShareResourceId || "").trim();
+          const accessLevel = String(teamPageShareAccessLevel || "").trim() || "use";
+          if (!teamId || !resourceType || !resourceId) {
+            return;
+          }
+          setTeamPageActionId("share");
+          setTeamPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/resource-shares", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ resourceType, resourceId, accessLevel }),
+            }, 8000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to share resource.");
+            }
+            setTeamPageShareResourceId("");
+            await loadTeamPageData();
+          } catch (error) {
+            setTeamPageError(error instanceof Error ? error.message : "Failed to share resource.");
+          } finally {
+            setTeamPageActionId("");
+          }
+        }
+
+        async function handleUpdateTeamResourceShareAccess(share, accessLevel) {
+          const safeShare = share || {};
+          const teamId = String(teamPageSelectedTeamId || "").trim();
+          const resourceType = String(safeShare.resourceType || "").trim();
+          const resourceId = String(safeShare.resourceId || "").trim();
+          const normalizedAccessLevel = String(accessLevel || "").trim() || "use";
+          if (!teamId || !resourceType || !resourceId) {
+            return;
+          }
+          setTeamPageActionId("share-access:" + String(safeShare.id || resourceType + ":" + resourceId));
+          setTeamPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/resource-shares", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ resourceType, resourceId, accessLevel: normalizedAccessLevel }),
+            }, 8000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to update shared resource.");
+            }
+            await loadTeamPageData();
+          } catch (error) {
+            setTeamPageError(error instanceof Error ? error.message : "Failed to update shared resource.");
+          } finally {
+            setTeamPageActionId("");
+          }
+        }
+
+        async function handleDeleteTeamResourceShare(shareId) {
+          const teamId = String(teamPageSelectedTeamId || "").trim();
+          const normalizedShareId = String(shareId || "").trim();
+          if (!teamId || !normalizedShareId) {
+            return;
+          }
+          setTeamPageActionId("share-delete:" + normalizedShareId);
+          setTeamPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/resource-shares/" + encodeURIComponent(normalizedShareId), {
+              method: "DELETE",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders,
+            }, 8000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to remove shared resource.");
+            }
+            await loadTeamPageData();
+          } catch (error) {
+            setTeamPageError(error instanceof Error ? error.message : "Failed to remove shared resource.");
+          } finally {
+            setTeamPageActionId("");
+          }
+        }
+
         useEffect(() => {
-          if (activePage === "settings" && sidebarWorkspaceMode !== "configure") {
+          if ((activePage === "settings" || activePage === "team") && sidebarWorkspaceMode !== "configure") {
             setSidebarWorkspaceMode("configure");
           }
         }, [activePage, sidebarWorkspaceMode]);
+
+        useEffect(() => {
+          if (activePage !== "team" || !hasRealAccess) {
+            return;
+          }
+          void loadTeamPageData();
+        }, [activePage, hasRealAccess, teamPageSelectedTeamId, proxyBackendBase, requestHeaders]);
+
+        useEffect(() => {
+          setImagineToolbarPopover("");
+        }, [activePage, imagineActiveView]);
 
         function openPluginsPage() {
           setAccountMenuOpen(false);
@@ -127779,6 +129849,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 agentRuntimeRuns: 0,
                 secretReads: 0,
                 authEvents: 0,
+                paymentCheckoutSessions: 0,
                 computeTokens: 0,
                 errors: 0,
               };
@@ -127847,6 +129918,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               agentRuntimeRuns: [],
               secretReads: [],
               authEvents: [],
+              paymentCheckoutSessions: [],
               computeTokens: [],
               errors: [],
             };
@@ -127955,6 +130027,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 } else if (kind === "auth") {
                   addToBucket(entry, "authEvents", total);
                   addToMetricValues(entry, requestValues, total);
+                } else if (kind === "payments") {
+                  addToBucket(entry, "paymentCheckoutSessions", total);
+                  addToMetricValues(entry, requestValues, total);
                 }
                 addToBucket(entry, "errors", errors);
                 addToBucket(entry, "computeTokens", computeTokens);
@@ -127973,6 +130048,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	              pushResourceMetricSeries("secretReads", server, requestValues, "Secrets");
 	            } else if (kind === "auth") {
 	              pushResourceMetricSeries("authEvents", server, requestValues, "Authentication");
+	            } else if (kind === "payments") {
+	              pushResourceMetricSeries("paymentCheckoutSessions", server, requestValues, "Payments");
 	            }
               pushResourceMetricSeries("errors", server, errorValues, "Resource");
               pushResourceMetricSeries("computeTokens", server, computeTokenValues, "Resource");
@@ -128063,6 +130140,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 agentRuntimes: activeServerKindCounts.agent_runtime || 0,
                 secrets: activeServerKindCounts.secrets || 0,
                 auth: activeServerKindCounts.auth || 0,
+                payments: activeServerKindCounts.payments || 0,
               },
               series: {
                 hostingRequests: buildSeries("hostingRequests"),
@@ -128073,6 +130151,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 agentRuntimeRuns: buildSeries("agentRuntimeRuns"),
                 secretReads: buildSeries("secretReads"),
                 authEvents: buildSeries("authEvents"),
+                paymentCheckoutSessions: buildSeries("paymentCheckoutSessions"),
                 computeTokens: buildSeries("computeTokens"),
                 resources: resourceCountSeries,
                 errors: buildSeries("errors"),
@@ -128087,6 +130166,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 agentRuntimeRuns: buckets.reduce((sum, bucket) => sum + bucket.agentRuntimeRuns, 0),
                 secretReads: buckets.reduce((sum, bucket) => sum + bucket.secretReads, 0),
                 authEvents: buckets.reduce((sum, bucket) => sum + bucket.authEvents, 0),
+                paymentCheckoutSessions: buckets.reduce((sum, bucket) => sum + bucket.paymentCheckoutSessions, 0),
                 computeTokens: buckets.reduce((sum, bucket) => sum + bucket.computeTokens, 0),
                 resources: scopedResourceCount,
                 errors: buckets.reduce((sum, bucket) => sum + bucket.errors, 0),
@@ -128691,9 +130771,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            { id: "apis", kind: "api", label: "APIs", Icon: Code2 },
 	            { id: "functions", kind: "function", label: "Functions", Icon: FunctionSquare },
 	            { id: "databases", kind: "database", label: "Databases", Icon: Database },
-		            { id: "authentication", kind: "auth", label: "Authentication", Icon: UsersRound },
+	            { id: "authentication", kind: "auth", label: "Authentication", Icon: UsersRound },
 	            { id: "agent-runtime", kind: "agent_runtime", label: "Agent Runtime", Icon: Bot },
 	            { id: "secrets", kind: "secrets", label: "Secrets", Icon: Shield },
+	            { id: "payments", kind: "payments", label: "Payments", Icon: ReceiptText },
 	          ];
 	        }
 
@@ -135142,6 +137223,535 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          );
 	        }
 
+        function renderTeamPage() {
+          const roleOptions = [
+            { value: "create", label: "Create", description: "Create-mode pages and personal work." },
+            { value: "configure", label: "Configure", description: "Create plus agents, computers, projects, and skills." },
+            { value: "develop", label: "Develop", description: "Configure plus servers, functions, databases, and API keys." },
+            { value: "admin", label: "Admin", description: "Full team management and sharing controls." },
+          ];
+          const accessOptions = [
+            { value: "use", label: "Use" },
+            { value: "edit", label: "Edit" },
+            { value: "manage", label: "Manage" },
+          ];
+          const resourceTypeOptions = [
+            { value: "project", label: "Projects" },
+            { value: "environment", label: "Computers" },
+            { value: "agent", label: "Agents" },
+            { value: "imagine_template", label: "Imagine templates" },
+          ];
+          const teamPageImagineTemplateOptions = [
+            { id: "product-ads", label: "Product ads" },
+            { id: "luxury-watch-ads", label: "Luxury watch ads" },
+            { id: "fragrance-ads", label: "Fragrance ads" },
+            { id: "coffee-ads", label: "Coffee ads" },
+            { id: "beauty-ads", label: "Beauty ads" },
+            { id: "furniture-campaigns", label: "Furniture campaigns" },
+            { id: "sneaker-campaigns", label: "Sneaker campaigns" },
+            { id: "brand-campaigns", label: "Brand campaigns" },
+            { id: "infographics", label: "Infographics" },
+            { id: "technical-drawings", label: "Technical drawings" },
+            { id: "app-screens", label: "App screens" },
+            { id: "editorial", label: "Editorial images" },
+            { id: "social-posts", label: "Social posts" },
+            { id: "restaurant-ads", label: "Restaurant ads" },
+            { id: "comparison-ads", label: "Comparison ads" },
+            { id: "data-visuals", label: "Data visuals" },
+            { id: "fashion-campaigns", label: "Fashion campaigns" },
+            { id: "portrait-studio", label: "Portrait studio" },
+          ];
+          const selectedTeam = teamPageTeams.find((team) => team.id === teamPageSelectedTeamId) || null;
+          const selectedTeamId = selectedTeam?.id || "";
+          const currentMember = teamPageMembers.find((member) => member.userId === sessionState.userId) || null;
+          const canManageTeam = selectedTeam?.role === "admin" || currentMember?.role === "admin";
+          const currentRoleLabel = roleOptions.find((option) => option.value === (currentMember?.role || selectedTeam?.role))?.label || "Member";
+          const resourceOptionsByType = {
+            project: realProjects.map((project) => ({
+              id: project.id,
+              label: project.name || project.title || "Untitled project",
+            })).filter((item) => item.id),
+            environment: realEnvironments.map((environment) => ({
+              id: environment.id,
+              label: environment.name || environment.title || "Untitled computer",
+            })).filter((item) => item.id),
+            agent: runtimeAgents.map((agent) => ({
+              id: agent.id,
+              label: agent.name || agent.title || "Untitled agent",
+            })).filter((item) => item.id),
+            imagine_template: teamPageImagineTemplateOptions,
+          };
+          const selectedResourceOptions = resourceOptionsByType[teamPageShareResourceType] || [];
+          const resourceNameByKey = new Map();
+          resourceTypeOptions.forEach((typeOption) => {
+            (resourceOptionsByType[typeOption.value] || []).forEach((resource) => {
+              resourceNameByKey.set(typeOption.value + ":" + resource.id, resource.label);
+            });
+          });
+          const formatRole = (role) => roleOptions.find((option) => option.value === role)?.label || String(role || "Create");
+          const formatAccess = (accessLevel) => accessOptions.find((option) => option.value === accessLevel)?.label || String(accessLevel || "Use");
+          const formatResourceType = (resourceType) => resourceTypeOptions.find((option) => option.value === resourceType)?.label || String(resourceType || "Resource");
+          const formatDate = (value) => {
+            if (!value) return "";
+            try {
+              return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value));
+            } catch {
+              return String(value || "");
+            }
+          };
+
+          const renderRoleSelect = (props) => React.createElement("select", {
+            className: "playground-team-select",
+            ...props,
+          }, roleOptions.map((option) =>
+            React.createElement("option", { key: option.value, value: option.value }, option.label)
+          ));
+
+          const renderEmpty = (text) => React.createElement("div", { className: "playground-team-empty" }, text);
+
+          if (teamPageRequiresPlan) {
+            return React.createElement("div", { className: "playground-team-page" },
+              React.createElement("div", { className: "playground-team-shell" },
+                React.createElement("div", { className: "playground-team-hero" },
+                  React.createElement("div", null,
+                    React.createElement("div", { className: "playground-team-eyebrow" }, "Team plan required"),
+                    React.createElement("h1", { className: "playground-team-title" }, "Collaborate with humans and agents in one workspace."),
+                    React.createElement("p", { className: "playground-team-muted" }, "Team workspaces are available on the Team plan. Upgrade to invite people, assign permissions, and share projects, computers, and agents.")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-team-button is-primary",
+                    onClick: () => openSettingsPage("costs-plans"),
+                  }, "View plans")
+                )
+              )
+            );
+          }
+
+          const openTeamDetail = (teamId) => {
+            const normalizedTeamId = String(teamId || "").trim();
+            if (!normalizedTeamId) {
+              return;
+            }
+            setTeamPageActiveTab("members");
+            setTeamPageSelectedTeamId(normalizedTeamId);
+            setTeamPageMembers([]);
+            setTeamPageInvitations([]);
+            setTeamPageShares([]);
+          };
+
+          const renderTeamActionButton = (label, onClick, options = {}) => React.createElement("button", {
+            type: "button",
+            className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-team-action-button" + (options.primary ? " is-primary" : ""),
+            onClick,
+            disabled: Boolean(options.disabled),
+          }, options.icon || null, label);
+
+          const closeCreateTeamModal = () => {
+            if (teamPageActionId === "create-team") {
+              return;
+            }
+            setTeamPageCreateModalOpen(false);
+          };
+
+          const renderCreateTeamModal = () => teamPageCreateModalOpen
+            ? React.createElement("div", {
+                className: "playground-team-modal-backdrop",
+                onMouseDown: (event) => {
+                  if (event.target === event.currentTarget) {
+                    closeCreateTeamModal();
+                  }
+                },
+              },
+                React.createElement("div", {
+                  className: "playground-team-modal",
+                  role: "dialog",
+                  "aria-modal": "true",
+                  "aria-labelledby": "team-create-modal-title",
+                },
+                  React.createElement("div", { className: "playground-team-modal-header" },
+                    React.createElement("div", null,
+                      React.createElement("h2", { id: "team-create-modal-title", className: "playground-team-modal-title" }, "Create team"),
+                      React.createElement("p", { className: "playground-team-modal-subtitle" }, "Create a workspace and invite the first people in one step.")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-team-modal-close",
+                      onClick: closeCreateTeamModal,
+                      "aria-label": "Close create team modal",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-team-modal-form" },
+                    React.createElement("div", { className: "playground-team-modal-field" },
+                      React.createElement("label", { className: "playground-team-modal-label", htmlFor: "team-create-name" }, "Team name"),
+                      React.createElement("input", {
+                        id: "team-create-name",
+                        className: "playground-team-input",
+                        value: teamPageCreateName,
+                        onChange: (event) => setTeamPageCreateName(event.target.value),
+                        placeholder: "Acme product team",
+                        disabled: teamPageActionId === "create-team",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-team-modal-field" },
+                      React.createElement("label", { className: "playground-team-modal-label", htmlFor: "team-create-invites" }, "Invite emails"),
+                      React.createElement("textarea", {
+                        id: "team-create-invites",
+                        className: "playground-team-input playground-team-textarea",
+                        value: teamPageCreateInviteEmails,
+                        onChange: (event) => setTeamPageCreateInviteEmails(event.target.value),
+                        placeholder: "jan@company.com, sarah@company.com",
+                        disabled: teamPageActionId === "create-team",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-team-modal-field" },
+                      React.createElement("label", { className: "playground-team-modal-label" }, "Initial permission"),
+                      renderRoleSelect({
+                        value: teamPageCreateInviteRole,
+                        onChange: (event) => setTeamPageCreateInviteRole(event.target.value),
+                        disabled: teamPageActionId === "create-team",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-team-modal-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button",
+                        onClick: closeCreateTeamModal,
+                        disabled: teamPageActionId === "create-team",
+                      }, "Cancel"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button is-primary",
+                        onClick: handleCreateTeam,
+                        disabled: teamPageActionId === "create-team" || !String(teamPageCreateName || "").trim(),
+                      }, teamPageActionId === "create-team" ? "Creating..." : "Create team")
+                    )
+                  )
+                )
+              )
+            : null;
+
+          const renderTeamOverview = () => React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-team-page-header" },
+              React.createElement("div", null,
+                React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-team-page-title" }, "Teams"),
+                React.createElement("p", { className: "playground-team-page-subtitle" }, "Workspaces where humans can share agents, computers, projects, and Imagine templates.")
+              ),
+              renderTeamActionButton("Create team", () => setTeamPageCreateModalOpen(true), {
+                icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+              })
+            ),
+            teamPageError
+              ? React.createElement("div", { className: "playground-team-error" }, teamPageError)
+              : null,
+            React.createElement("div", { className: "playground-team-overview-layout" },
+              React.createElement("div", { className: "playground-team-table-panel" },
+                teamPageTeams.length > 0
+                  ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
+                      React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table" },
+                        React.createElement("colgroup", null,
+                          React.createElement("col", { className: "playground-team-table-col-main" }),
+                          React.createElement("col", { className: "playground-team-table-col-role" }),
+                          React.createElement("col", { className: "playground-team-table-col-meta" }),
+                          React.createElement("col", { className: "playground-team-table-col-actions" })
+                        ),
+                        React.createElement("thead", null,
+                          React.createElement("tr", null,
+                            React.createElement("th", null, "Team"),
+                            React.createElement("th", null, "Permission"),
+                            React.createElement("th", null, "Created"),
+                            React.createElement("th", { className: "is-actions" }, "")
+                          )
+                        ),
+                        React.createElement("tbody", null,
+                          teamPageTeams.map((team) =>
+                            React.createElement("tr", {
+                              key: team.id,
+                              className: "is-clickable",
+                              tabIndex: 0,
+                              onClick: () => openTeamDetail(team.id),
+                              onKeyDown: (event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  openTeamDetail(team.id);
+                                }
+                              },
+                            },
+                              React.createElement("td", null,
+                                React.createElement("div", { className: "playground-team-table-title" }, team.name || "Untitled team"),
+                                React.createElement("div", { className: "playground-team-table-meta" }, team.ownerUserId === sessionState.userId ? "Owned by you" : "Member workspace")
+                              ),
+                              React.createElement("td", { className: "playground-auth-users-cell" }, formatRole(team.role)),
+                              React.createElement("td", { className: "playground-auth-users-cell" }, formatDate(team.createdAt) || "—"),
+                              React.createElement("td", { className: "is-actions" },
+                                React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 })
+                              )
+                            )
+                          )
+                        )
+                      )
+                    )
+                  : renderEmpty(teamPageLoading ? "Loading teams..." : "No teams yet.")
+              )
+            ),
+            renderCreateTeamModal()
+          );
+
+          const memberRows = [
+            ...teamPageMembers.map((member) => ({ kind: "member", id: member.id, item: member })),
+            ...teamPageInvitations.map((invitation) => ({ kind: "invitation", id: invitation.id, item: invitation })),
+          ];
+
+          const renderMembersTab = () => React.createElement("div", { className: "playground-team-detail-panel" },
+            canManageTeam
+              ? React.createElement("div", { className: "playground-team-inline-editor" },
+                  React.createElement("input", {
+                    className: "playground-team-input",
+                    type: "email",
+                    value: teamPageInviteEmail,
+                    onChange: (event) => setTeamPageInviteEmail(event.target.value),
+                    placeholder: "name@company.com",
+                    disabled: teamPageActionId === "invite",
+                  }),
+                  renderRoleSelect({
+                    value: teamPageInviteRole,
+                    onChange: (event) => setTeamPageInviteRole(event.target.value),
+                    disabled: teamPageActionId === "invite",
+                  }),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-team-button is-primary",
+                    onClick: handleSendTeamInvite,
+                    disabled: teamPageActionId === "invite" || !String(teamPageInviteEmail || "").trim(),
+                  }, teamPageActionId === "invite" ? "Sending..." : "Invite member")
+                )
+              : null,
+            memberRows.length > 0
+              ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
+                  React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table" },
+                    React.createElement("colgroup", null,
+                      React.createElement("col", { className: "playground-team-table-col-main" }),
+                      React.createElement("col", { className: "playground-team-table-col-role" }),
+                      React.createElement("col", { className: "playground-team-table-col-meta" }),
+                      React.createElement("col", { className: "playground-team-table-col-actions" })
+                    ),
+                    React.createElement("thead", null,
+                      React.createElement("tr", null,
+                        React.createElement("th", null, "User"),
+                        React.createElement("th", null, "Permission"),
+                        React.createElement("th", null, "Status"),
+                        React.createElement("th", { className: "is-actions" }, "")
+                      )
+                    ),
+                    React.createElement("tbody", null,
+                      memberRows.map((row) => {
+                        const item = row.item || {};
+                        const isInvitation = row.kind === "invitation";
+                        const displayName = isInvitation
+                          ? (item.email || "Invitation")
+                          : (item.name || item.email || item.userId || "Team member");
+                        const detail = isInvitation
+                          ? [formatRole(item.role), item.expiresAt ? ("Expires " + formatDate(item.expiresAt)) : ""].filter(Boolean).join(" · ")
+                          : [item.email && item.name ? item.email : "", item.joinedAt ? ("Joined " + formatDate(item.joinedAt)) : ""].filter(Boolean).join(" · ");
+                        return React.createElement("tr", { key: row.kind + ":" + row.id },
+                          React.createElement("td", null,
+                            React.createElement("div", { className: "playground-team-table-title" }, displayName),
+                            detail ? React.createElement("div", { className: "playground-team-table-meta" }, detail) : null
+                          ),
+                          React.createElement("td", null,
+                            !isInvitation && canManageTeam
+                              ? renderRoleSelect({
+                                  value: item.role || "create",
+                                  onChange: (event) => handleUpdateTeamMemberRole(item.id, event.target.value),
+                                  disabled: teamPageActionId === "member-role:" + item.id,
+                                })
+                              : React.createElement("span", { className: "playground-team-badge" }, formatRole(item.role))
+                          ),
+                          React.createElement("td", { className: "playground-auth-users-cell" }, isInvitation ? (item.status || "pending") : (item.status || "active")),
+                          React.createElement("td", { className: "is-actions" },
+                            isInvitation && item.status === "pending" && canManageTeam
+                              ? React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-team-icon-button",
+                                  onClick: () => handleRevokeTeamInvitation(item.id),
+                                  disabled: teamPageActionId === "revoke:" + item.id,
+                                  "aria-label": "Revoke invitation",
+                                }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                              : !isInvitation && canManageTeam
+                                ? React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-team-icon-button",
+                                    onClick: () => handleRemoveTeamMember(item.id),
+                                    disabled: teamPageActionId === "member-remove:" + item.id,
+                                    "aria-label": "Remove member",
+                                  }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                                : null
+                          )
+                        );
+                      })
+                    )
+                  )
+                )
+              : renderEmpty(teamPageLoading ? "Loading members..." : "No members yet.")
+          );
+
+          const renderResourcesTab = () => React.createElement("div", { className: "playground-team-detail-panel" },
+            canManageTeam
+              ? React.createElement("div", { className: "playground-team-inline-editor is-resource-share" },
+                  React.createElement("select", {
+                    className: "playground-team-select",
+                    value: teamPageShareResourceType,
+                    onChange: (event) => {
+                      setTeamPageShareResourceType(event.target.value);
+                      setTeamPageShareResourceId("");
+                    },
+                    disabled: teamPageActionId === "share",
+                  }, resourceTypeOptions.map((option) =>
+                    React.createElement("option", { key: option.value, value: option.value }, option.label)
+                  )),
+                  React.createElement("select", {
+                    className: "playground-team-select",
+                    value: teamPageShareResourceId,
+                    onChange: (event) => setTeamPageShareResourceId(event.target.value),
+                    disabled: teamPageActionId === "share" || selectedResourceOptions.length === 0,
+                  },
+                    React.createElement("option", { value: "" }, selectedResourceOptions.length === 0 ? "No resources available" : "Select resource"),
+                    selectedResourceOptions.map((resource) =>
+                      React.createElement("option", { key: resource.id, value: resource.id }, resource.label)
+                    )
+                  ),
+                  React.createElement("select", {
+                    className: "playground-team-select",
+                    value: teamPageShareAccessLevel,
+                    onChange: (event) => setTeamPageShareAccessLevel(event.target.value),
+                    disabled: teamPageActionId === "share",
+                  }, accessOptions.map((option) =>
+                    React.createElement("option", { key: option.value, value: option.value }, option.label)
+                  )),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-team-button is-primary",
+                    onClick: handleCreateTeamResourceShare,
+                    disabled: teamPageActionId === "share" || !teamPageShareResourceId,
+                  }, teamPageActionId === "share" ? "Sharing..." : "Share resource")
+                )
+              : null,
+            teamPageShares.length > 0
+              ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
+                  React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table" },
+                    React.createElement("colgroup", null,
+                      React.createElement("col", { className: "playground-team-table-col-main" }),
+                      React.createElement("col", { className: "playground-team-table-col-role" }),
+                      React.createElement("col", { className: "playground-team-table-col-meta" }),
+                      React.createElement("col", { className: "playground-team-table-col-actions" })
+                    ),
+                    React.createElement("thead", null,
+                      React.createElement("tr", null,
+                        React.createElement("th", null, "Resource"),
+                        React.createElement("th", null, "Access"),
+                        React.createElement("th", null, "Type"),
+                        React.createElement("th", { className: "is-actions" }, "")
+                      )
+                    ),
+                    React.createElement("tbody", null,
+                      teamPageShares.map((share) =>
+                        React.createElement("tr", { key: share.id },
+                          React.createElement("td", null,
+                            React.createElement("div", { className: "playground-team-table-title" }, resourceNameByKey.get(share.resourceType + ":" + share.resourceId) || share.resourceId),
+                            React.createElement("div", { className: "playground-team-table-meta" }, share.updatedAt ? ("Updated " + formatDate(share.updatedAt)) : "")
+                          ),
+                          React.createElement("td", null,
+                            canManageTeam
+                              ? React.createElement("select", {
+                                  className: "playground-team-select",
+                                  value: share.accessLevel || "use",
+                                  onChange: (event) => handleUpdateTeamResourceShareAccess(share, event.target.value),
+                                  disabled: teamPageActionId === "share-access:" + share.id,
+                                }, accessOptions.map((option) =>
+                                  React.createElement("option", { key: option.value, value: option.value }, option.label)
+                                ))
+                              : React.createElement("span", { className: "playground-team-badge" }, formatAccess(share.accessLevel))
+                          ),
+                          React.createElement("td", { className: "playground-auth-users-cell" }, formatResourceType(share.resourceType)),
+                          React.createElement("td", { className: "is-actions" },
+                            canManageTeam
+                              ? React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-team-icon-button",
+                                  onClick: () => handleDeleteTeamResourceShare(share.id),
+                                  disabled: teamPageActionId === "share-delete:" + share.id,
+                                  "aria-label": "Remove shared resource",
+                                }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                              : null
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              : renderEmpty("No resources shared yet.")
+          );
+
+          return React.createElement("div", { className: "playground-team-page" },
+            React.createElement("div", { className: "playground-team-shell" },
+              selectedTeam
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-resource-detail-back-button playground-team-back-button",
+                      onClick: () => {
+                        setTeamPageSelectedTeamId("");
+                        setTeamPageMembers([]);
+                        setTeamPageInvitations([]);
+                        setTeamPageShares([]);
+                      },
+                    }, React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }), "Teams"),
+                    React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar playground-team-detail-navbar" },
+                      React.createElement("div", { className: "playground-environments-editor-title-wrap" },
+                        React.createElement("div", { className: "playground-environments-editor-title-input playground-team-detail-title" }, selectedTeam.name || "Team"),
+                        React.createElement("div", { className: "playground-team-detail-meta" }, currentRoleLabel + " · " + teamPageMembers.length + " members · " + teamPageShares.length + " resources")
+                      ),
+                      React.createElement("div", { className: "playground-environments-editor-navbar-actions playground-team-detail-actions" },
+                        canManageTeam && teamPageActiveTab === "members"
+                          ? renderTeamActionButton("Invite member", () => {
+                              const input = document.querySelector(".playground-team-inline-editor input");
+                              if (input && typeof input.focus === "function") input.focus();
+                            }, { icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }) })
+                          : null,
+                        canManageTeam && teamPageActiveTab === "resources"
+                          ? renderTeamActionButton("Share resource", () => {
+                              const select = document.querySelector(".playground-team-inline-editor select");
+                              if (select && typeof select.focus === "function") select.focus();
+                            }, { icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }) })
+                          : null
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs playground-develop-tabs playground-develop-server-kind-tabs playground-team-detail-tabs" },
+                      React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+                        [
+                          { id: "members", label: "Team members" },
+                          { id: "resources", label: "Resources" },
+                        ].map((tab) =>
+                          React.createElement("button", {
+                            key: tab.id,
+                            type: "button",
+                            className: "playground-project-overview-chart-tab playground-develop-tab" + (teamPageActiveTab === tab.id ? " is-active" : ""),
+                            "aria-pressed": teamPageActiveTab === tab.id ? "true" : "false",
+                            onClick: () => setTeamPageActiveTab(tab.id),
+                          }, tab.label)
+                        )
+                      )
+                    ),
+                    teamPageError
+                      ? React.createElement("div", { className: "playground-team-error" }, teamPageError)
+                      : null,
+                    teamPageActiveTab === "resources" ? renderResourcesTab() : renderMembersTab()
+                  )
+                : renderTeamOverview()
+            )
+          );
+        }
+
         useEffect(() => {
           if (!hasRealAccess) {
             setRealEnvironments([]);
@@ -138793,6 +141403,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          const humanTaskIds = notificationItems
 	            .filter((item) => item.kind === "human_task" && item.id)
 	            .map((item) => item.id);
+	          const teamInvitationIds = notificationItems
+	            .filter((item) => item.kind === "team_invitation" && item.id)
+	            .map((item) => item.id);
 
           if (productIds.length > 0) {
             setReadProductNotificationIds((current) => {
@@ -138816,6 +141429,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
               writeStoredNotificationIds(PLAYGROUND_HUMAN_TASK_NOTIFICATION_READ_STORAGE_KEY, next);
               return next;
 	            });
+	          }
+
+	          if (teamInvitationIds.length > 0) {
+	            setReadTeamInvitationNotificationIds((current) => (
+              Array.from(new Set([...current, ...teamInvitationIds]))
+	            ));
 	          }
 
 	          setEmailVerificationNotificationDismissed(true);
@@ -138842,6 +141461,55 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          setNotificationsOpen(false);
 	          handleOpenWelcomeWidgetTaskDetail(taskRecord);
 	        }
+
+        async function handleTeamInvitationDecision(item, action) {
+          const invitationId = String(item?.id || "").trim();
+          const normalizedAction = action === "accept" ? "accept" : "decline";
+          if (!invitationId) {
+            return;
+          }
+          if (normalizedAction === "accept") {
+            const confirmed = window.confirm("Join " + (item.teamName || "this team") + "?");
+            if (!confirmed) {
+              return;
+            }
+          }
+          setTeamPageActionId(invitationId + ":" + normalizedAction);
+          try {
+            const { response, data } = await fetchJsonWithTimeout(
+              proxyBackendBase + "/teams/invitations/" + encodeURIComponent(invitationId) + "/" + normalizedAction,
+              {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: "{}",
+              },
+              8000
+            );
+            if (!response.ok) {
+              if (response.status === 402 || data?.requiredPlan === "team") {
+                setNotificationsOpen(false);
+                openSettingsPage("costs-plan-options");
+                return;
+              }
+              throw new Error(data?.message || data?.error || "Failed to update team invitation.");
+            }
+            setTeamInvitationNotifications((current) => current.filter((invitation) => invitation.id !== invitationId));
+            setReadTeamInvitationNotificationIds((current) => Array.from(new Set([...current, invitationId])));
+            setNotificationsOpen(false);
+            if (normalizedAction === "accept") {
+              openTeamPage();
+            }
+          } catch (error) {
+            window.alert(error instanceof Error ? error.message : "Failed to update team invitation.");
+          } finally {
+            setTeamPageActionId("");
+          }
+        }
 
         function renderProductNotificationHtml(html) {
           const sanitizedHtml = DOMPurify.sanitize(String(html || ""), {
@@ -138909,6 +141577,43 @@ ${PROJECT_OVERVIEW_SCRIPT}
             );
           }
 
+          if (item.kind === "team_invitation") {
+            const metaText = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "";
+            const isAccepting = teamPageActionId === item.id + ":accept";
+            const isDeclining = teamPageActionId === item.id + ":decline";
+            return React.createElement("div", {
+              key: item.id,
+              className: "notification-menu-item notification-menu-team-invitation",
+            },
+              React.createElement(UsersRound, { className: "notification-menu-icon", strokeWidth: 1.8 }),
+              React.createElement("div", { className: "notification-menu-copy" },
+                React.createElement("div", { className: "notification-menu-label" }, "Team invitation"),
+                React.createElement("div", { className: "notification-menu-text" }, item.teamName || "Team"),
+                React.createElement("div", { className: "notification-menu-meta" },
+                  [
+                    item.role ? ("Role: " + item.role) : "",
+                    item.invitedByEmail ? ("From " + item.invitedByEmail) : "",
+                    metaText,
+                  ].filter(Boolean).join(" · ")
+                ),
+                React.createElement("div", { className: "notification-menu-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "notification-menu-action-button is-primary",
+                    onClick: () => handleTeamInvitationDecision(item, "accept"),
+                    disabled: Boolean(teamPageActionId),
+                  }, isAccepting ? "Accepting..." : "Accept"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "notification-menu-action-button",
+                    onClick: () => handleTeamInvitationDecision(item, "decline"),
+                    disabled: Boolean(teamPageActionId),
+                  }, isDeclining ? "Declining..." : "Decline")
+                )
+              )
+            );
+          }
+
           const metaText = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "";
           return React.createElement("div", {
             key: item.id,
@@ -138963,6 +141668,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            pathItems: [{ label: "Configure" }, { label: "Settings" }],
 	          });
 	        }
+
+        function renderTeamPageNav() {
+          return renderUnifiedTopNav({
+            className: "playground-settings-top-navbar",
+            pathItems: [{ label: "Configure" }, { label: "Team" }],
+          });
+        }
 
         function renderConfigureHomeNav() {
           return renderUnifiedTopNav({
@@ -139039,6 +141751,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           return renderUnifiedTopNav({
             className: "playground-tasks-unified-navbar",
+            includeSearchDivider: true,
             pathItems: isProjectDetailView
               ? [
                   { label: "Create" },
@@ -139097,11 +141810,91 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
+        function renderImagineModeSwitch() {
+          return React.createElement("div", { className: "content-mode-switch playground-thread-mode-switch playground-imagine-top-nav-switch", role: "tablist", "aria-label": "Imagine views" },
+            [
+              { id: "explore", label: "Explore" },
+              { id: "my-templates", label: "My Templates" },
+              { id: "favourites", label: "Favourites" },
+            ].map((tab) => {
+              const isActiveImagineTab = imagineActiveView === tab.id || (tab.id === "my-templates" && imagineActiveView === "create-template");
+              return React.createElement("button", {
+                key: tab.id,
+                type: "button",
+                role: "tab",
+                className: "content-mode-button" + (isActiveImagineTab ? " is-active" : ""),
+                "aria-selected": isActiveImagineTab ? "true" : "false",
+                onClick: () => setImagineActiveView(tab.id),
+              }, tab.label);
+            })
+          );
+        }
+
+        function renderImagineTopNavControls() {
+          const filterOptions = [
+            { id: "all", label: "All templates", description: "Show every image template" },
+            { id: "campaign", label: "Campaigns", description: "Ads, launches, and social visuals" },
+            { id: "product", label: "Product", description: "Product ads, apps, dashboards, and data visuals" },
+            { id: "editorial", label: "Editorial", description: "Stories, blogs, and fashion campaigns" },
+            { id: "concept", label: "Concepts", description: "Explainers, concept art, and worlds" },
+          ];
+          return React.createElement("div", { className: "playground-imagine-top-nav-controls" },
+            React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-imagine-filter-shell" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-control-button is-backlog-filter" + (imagineToolbarPopover === "filter" || imagineFilterMode !== "all" ? " is-active" : ""),
+                onClick: () => setImagineToolbarPopover((current) => current === "filter" ? "" : "filter"),
+              },
+                React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Filter")
+              ),
+              imagineToolbarPopover === "filter"
+                ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                    filterOptions.map((option) =>
+                      React.createElement("button", {
+                          key: option.id,
+                          type: "button",
+                          className: "tb-popup-row tb-popup-row-select" + (imagineFilterMode === option.id ? " selected" : ""),
+                          onClick: () => {
+                            setImagineFilterMode(option.id);
+                            setImagineToolbarPopover("");
+                          },
+                        },
+                        React.createElement("span", { className: "tb-popup-check-slot" },
+                          imagineFilterMode === option.id
+                            ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                            : null
+                        ),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, option.label)
+                        )
+                      )
+                    )
+                  )
+                : null
+            ),
+            React.createElement("button", {
+              type: "button",
+              className: "playground-files-control-button is-backlog-sort",
+              onClick: () => {
+                setImagineToolbarPopover("");
+                setImagineActiveView("create-template");
+              },
+            },
+              React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+              React.createElement("span", null, "Template")
+            ),
+            React.createElement("span", { className: "tb-image-preview-header-divider playground-imagine-top-nav-divider", "aria-hidden": "true" })
+          );
+        }
+
         function renderInitialThreadWelcomeNav() {
           return renderUnifiedTopNav({
             className: "playground-thread-welcome-navbar",
             pathItems: [{ label: "Create" }, { label: "Home" }],
             includeGhost: true,
+            ghostVariant: "private-chat",
+            includeSearchDivider: true,
           });
         }
 
@@ -139112,6 +141905,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               : activePage === "imagine"
                 ? [{ label: "Create" }, { label: "Imagine" }]
               : [{ label: selectedThreadTitle || "Home" }],
+            center: activePage === "imagine" ? renderImagineModeSwitch() : null,
+            extraActions: activePage === "imagine" ? renderImagineTopNavControls() : null,
           });
         }
 
@@ -140768,16 +143563,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
         }
 
-        function renderTopNavGhostButton() {
+        function renderTopNavGhostButton(options = {}) {
+          const isPrivateChatVariant = options.variant === "private-chat";
           return React.createElement("button", {
             type: "button",
-            className: "playground-content-menu-button" + (runnerComposerPrivateMode ? " is-private-active" : ""),
-            "aria-label": "Ghost mode",
+            className: isPrivateChatVariant
+              ? "playground-top-nav-private-chat-button" + (runnerComposerPrivateMode ? " is-active" : "")
+              : "playground-content-menu-button" + (runnerComposerPrivateMode ? " is-private-active" : ""),
+            "aria-label": isPrivateChatVariant ? "Private Chat" : "Ghost mode",
             "aria-pressed": runnerComposerPrivateMode ? "true" : "false",
             title: runnerComposerPrivateMode ? "Private mode active" : "Private mode",
             onClick: handleGhostModeToggle,
           },
-            React.createElement(Ghost, { className: "playground-content-menu-icon", strokeWidth: 1.8 })
+            React.createElement(Ghost, { className: isPrivateChatVariant ? "" : "playground-content-menu-icon", strokeWidth: 1.8 }),
+            isPrivateChatVariant ? React.createElement("span", null, "Private Chat") : null
           );
         }
 
@@ -140796,10 +143595,24 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function renderTopNavCommonActions(options = {}) {
           return React.createElement(React.Fragment, null,
-            options.includeGhost ? renderTopNavGhostButton() : null,
+            options.includeGhost ? renderTopNavGhostButton({ variant: options.ghostVariant || "" }) : null,
+            options.includeSearchDivider ? React.createElement("span", { className: "playground-top-nav-search-divider", "aria-hidden": "true" }) : null,
             renderTopNavSearchButton(),
             renderTopNavNotificationButton(),
             renderTopNavAccountButton()
+          );
+        }
+
+        function renderTopNavSidebarToggle() {
+          return React.createElement("button", {
+            type: "button",
+            className: "playground-top-nav-sidebar-toggle",
+            "aria-label": sidebarOpen ? "Collapse sidebar" : "Expand sidebar",
+            "aria-pressed": sidebarOpen ? "false" : "true",
+            title: sidebarOpen ? "Collapse sidebar" : "Expand sidebar",
+            onClick: () => setSidebarOpen((current) => !current),
+          },
+            React.createElement(PanelLeft, { className: "playground-top-nav-sidebar-toggle-icon", strokeWidth: 1.7 })
           );
         }
 
@@ -140853,6 +143666,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             },
             React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tools-navbar-title" },
               React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                renderTopNavSidebarToggle(),
                 renderTopNavPath(options.pathItems),
                 options.leftExtra
                   ? React.createElement(React.Fragment, null,
@@ -140868,7 +143682,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ref: options.rightRef || null,
               },
               ...extraActions,
-              renderTopNavCommonActions({ includeGhost: options.includeGhost === true })
+              renderTopNavCommonActions({
+                includeGhost: options.includeGhost === true,
+                ghostVariant: options.ghostVariant || "",
+                includeSearchDivider: options.includeSearchDivider === true,
+              })
             )
           );
         }
@@ -140940,6 +143758,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 Icon: Settings2,
                 active: activePage === "settings",
                 onClick: () => openSettingsPage(),
+              },
+              {
+                id: "team",
+                label: "Team",
+                Icon: UsersRound,
+                active: activePage === "team",
+                onClick: () => openTeamPage(),
               },
               {
                 id: "configure-resources-label",
@@ -141493,6 +144318,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      ? renderResourcesPageNav()
 	                    : activePage === "settings"
 	                      ? renderSettingsPageNav()
+	                    : activePage === "team"
+	                      ? renderTeamPageNav()
 	                    : showInitialThreadWelcome
 	                      ? renderInitialThreadWelcomeNav()
 	                    : activePage === "tasks"
@@ -141504,7 +144331,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                    : activePage === "calendar"
 	                      ? renderGenericPageNav()
                     : React.createElement("div", { className: "playground-content-nav" },
-                        React.createElement("div", { className: "playground-content-title" }, selectedThreadTitle),
+                        React.createElement("div", { className: "playground-content-nav-left" },
+                          renderTopNavSidebarToggle(),
+                          React.createElement("div", { className: "playground-content-title" }, selectedThreadTitle)
+                        ),
                         React.createElement("div", { className: "playground-content-nav-center" },
                           activePage === "thread" && !isThreadSideDetailOpen
                             ? React.createElement("div", { className: "content-mode-switch playground-thread-mode-switch" },
@@ -141570,8 +144400,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                                       className: "playground-thread-task-list-popup-item",
                                                     },
                                                       todo?.completed
-                                                        ? React.createElement(Check, { className: "playground-thread-task-list-popup-item-icon is-complete", strokeWidth: 1.8 })
-                                                        : React.createElement(ChevronRight, { className: "playground-thread-task-list-popup-item-icon", strokeWidth: 1.8 }),
+                                                        ? React.createElement(CircleCheckBig, { className: "playground-thread-task-list-popup-item-icon is-complete", strokeWidth: 1.8 })
+                                                        : React.createElement(Circle, { className: "playground-thread-task-list-popup-item-icon", strokeWidth: 1.8 }),
                                                       React.createElement("span", {
                                                         className: "playground-thread-task-list-popup-item-text" + (todo?.completed ? " is-complete" : ""),
                                                       }, todo?.text || "Untitled task")
@@ -141740,7 +144570,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     )
                                   : null
                                 ),
-                                renderTopNavCommonActions()
+                                renderTopNavCommonActions({ includeSearchDivider: true })
                               )
                             : null
                         )
@@ -141748,6 +144578,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (activePage === "files" ? " is-files-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
 	                    activePage === "settings"
 	                      ? renderSettingsPage()
+	                      : activePage === "team"
+	                        ? hasRealAccess
+	                          ? renderTeamPage()
+	                          : hasDemoAccess
+	                            ? renderDemoFeaturePage("team")
+	                            : renderAuthGate()
 	                      : activePage === "configure"
 	                        ? hasRealAccess
 	                          ? renderConfigureHomePage()
@@ -141789,6 +144625,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 }
                                 setThreadAgentSelectionOverride(null);
                                 setPendingThreadRunRequest(null);
+                                setPendingThreadDocumentPreviewRequest(options?.documentPreviewAttachment ? {
+                                  threadId: normalizedThreadId,
+                                  token: options.documentPreviewToken || ("file-preview:" + normalizedThreadId + ":" + Date.now().toString(36)),
+                                  attachment: options.documentPreviewAttachment,
+                                } : null);
                                 setThreadTaskOpenRequest(null);
                                 setActivePage("thread");
                                 setCurrentThreadId(normalizedThreadId);
@@ -141807,6 +144648,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                   upsertRealThreadRecord(options.threadRecord);
                                 }
                                 setThreadAgentSelectionOverride(null);
+                                setPendingThreadDocumentPreviewRequest(options?.documentPreviewAttachment ? {
+                                  threadId: normalizedThreadId,
+                                  token: options.documentPreviewToken || ("file-preview:" + normalizedThreadId + ":" + Date.now().toString(36)),
+                                  attachment: options.documentPreviewAttachment,
+                                } : null);
                                 if (options?.taskRunRequest?.prompt) {
                                   setPendingThreadRunRequest({
                                     token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
@@ -141905,6 +144751,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 }
                               },
                               onRequireAuth: handleSignInWithComputerAgents,
+                              activeView: imagineActiveView,
+                              filterMode: imagineFilterMode,
+                              sortMode: imagineSortMode,
+                              onActiveViewChange: setImagineActiveView,
                               onOpenPlansBudget: () => {
                                 setSidebarWorkspaceMode("configure");
                                 setActivePage("settings");
@@ -141951,6 +144801,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 setChangesNavigationTarget(null);
                                 setRunnerRenderKey((current) => current + 1);
                                 void refreshThreads(undefined, normalizedThreadId);
+                              },
+                              onThreadTitleGenerated: (threadId, nextTitle) => {
+                                upsertRealThreadTitle(threadId, nextTitle);
                               },
                             })
                           : hasDemoAccess
@@ -142141,6 +144994,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     keepFocusOnSubmit: true,
                                     showUsageInStatus: false,
                                     placeholder: "Ask anything",
+                                    initialTask: showInitialThreadWelcome ? initialLandingPrompt : "",
 	                                    privateMode: runnerComposerPrivateMode,
 	                                    hiddenSystemPrompt: pendingThreadRunRequest && pendingThreadRunRequest.threadId === activeRunnerThreadId
 	                                      ? ""
@@ -142178,6 +145032,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     followUpActions: selectedThreadFollowUpActions,
                                     followUpError: threadFollowUpActionState.error || "",
                                     activeTaskPreviewId: threadTaskOpenRequest?.taskId || null,
+                                    initialDocumentPreviewAttachment: pendingThreadDocumentPreviewRequest && pendingThreadDocumentPreviewRequest.threadId === activeRunnerThreadId
+                                      ? pendingThreadDocumentPreviewRequest.attachment
+                                      : null,
+                                    initialDocumentPreviewToken: pendingThreadDocumentPreviewRequest && pendingThreadDocumentPreviewRequest.threadId === activeRunnerThreadId
+                                      ? pendingThreadDocumentPreviewRequest.token
+                                      : null,
                                     externalRunRequest: pendingThreadRunRequest && pendingThreadRunRequest.threadId === activeRunnerThreadId
                                       ? pendingThreadRunRequest
                                       : null,
@@ -142260,6 +145120,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     onSummaryWorkspacePathClick: handleThreadSummaryWorkspacePathClick,
                                     onThreadIdChange: (threadId) => {
                                       const normalizedThreadId = String(threadId || "").trim();
+                                      setInitialLandingPrompt("");
                                       const isPrivateRun = initialThreadPrivateMode || isPrivateThreadId(normalizedThreadId);
                                       if (isPrivateRun) {
                                         registerPrivateThreadId(normalizedThreadId);
@@ -142282,6 +145143,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     },
                                     onRunStart: (threadId) => {
                                       const normalizedThreadId = String(threadId || "").trim();
+                                      setInitialLandingPrompt("");
                                       const isPrivateRun = initialThreadPrivateMode || isPrivateThreadId(normalizedThreadId);
                                       if (isPrivateRun) {
                                         registerPrivateThreadId(normalizedThreadId);
@@ -142334,6 +145196,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     },
                                     onDocumentPreviewOpenChange: (isOpen) => {
                                       setThreadDocumentPreviewOpen(isOpen);
+                                      if (isOpen) {
+                                        setPendingThreadDocumentPreviewRequest((current) => (
+                                          current && current.threadId === activeRunnerThreadId ? null : current
+                                        ));
+                                      }
                                     },
                                     onDeepResearchDetailOpenChange: (isOpen) => {
                                       setThreadDeepResearchDetailOpen(isOpen);
@@ -143894,6 +146761,7 @@ function normalizePlaygroundOverviewServerKind(kind) {
   if (normalizedKind === "auth") return "auth";
   if (normalizedKind === "agent_runtime") return "agent_runtime";
   if (normalizedKind === "secrets") return "secrets";
+  if (normalizedKind === "payments" || normalizedKind === "payment") return "payments";
   return "web_app";
 }
 
@@ -144099,7 +146967,7 @@ async function sendEnvironmentOverviewAnalytics(req, res) {
           return;
         }
 
-        if (normalizedKind === "secrets") {
+        if (normalizedKind === "secrets" || normalizedKind === "payments") {
           return;
         }
 
@@ -147906,6 +150774,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === "GET" && url.pathname === "/api/aios/user/imagine-preferences") {
+    void proxyAiosJsonRequest(req, res, "/api/user/imagine-preferences", "GET");
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/api/aios/user/streaming-key") {
     void proxyAiosJsonRequest(req, res, "/api/user/streaming-key", "GET");
     return;
@@ -147993,6 +150866,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "PATCH" && url.pathname === "/api/aios/user/profile") {
     void proxyAiosJsonRequest(req, res, "/api/user/profile", "PATCH");
+    return;
+  }
+
+  if (req.method === "PATCH" && url.pathname === "/api/aios/user/imagine-preferences") {
+    void proxyAiosJsonRequest(req, res, "/api/user/imagine-preferences", "PATCH");
     return;
   }
 
@@ -148101,6 +150979,19 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/real/notifications/in-app") {
     void proxyUpstreamGet(req, res, "/notifications/in-app", { emptyOn404: true });
+    return;
+  }
+
+  const teamsProxyMatch = url.pathname.match(/^\/api\/real\/teams(?:\/(.*))?$/);
+  if (teamsProxyMatch && ["GET", "POST", "PATCH", "PUT", "DELETE"].includes(req.method || "")) {
+    const suffix = teamsProxyMatch[1]
+      ? "/" + teamsProxyMatch[1].split("/").map((segment) => encodeURIComponent(decodeURIComponent(segment))).join("/")
+      : "";
+    if (req.method === "GET") {
+      void proxyUpstreamGet(req, res, "/teams" + suffix);
+    } else {
+      void proxyUpstreamJsonRequest(req, res, "/teams" + suffix, req.method);
+    }
     return;
   }
 
@@ -148622,6 +151513,28 @@ const server = http.createServer((req, res) => {
       req,
       res,
       `/servers/${encodeURIComponent(decodeURIComponent(serverCustomDomainCheckMatch[1]))}/custom-domain/check`,
+      "POST",
+    );
+    return;
+  }
+
+  const serverPaymentsConnectMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/payments\/connect-account$/);
+  if (req.method === "POST" && serverPaymentsConnectMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverPaymentsConnectMatch[1]))}/payments/connect-account`,
+      "POST",
+    );
+    return;
+  }
+
+  const serverPaymentsSyncMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/payments\/sync$/);
+  if (req.method === "POST" && serverPaymentsSyncMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverPaymentsSyncMatch[1]))}/payments/sync`,
       "POST",
     );
     return;

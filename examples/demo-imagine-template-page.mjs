@@ -396,6 +396,146 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
         white-space: nowrap;
       }
 
+      .playground-imagine-template-style-picker {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin: 6px 0;
+      }
+
+      .playground-imagine-template-style-picker-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-imagine-template-style-manage-button {
+        border: 0;
+        background: transparent;
+        color: #66a6ff;
+        padding: 0;
+        font: inherit;
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-imagine-template-style-manage-button:hover {
+        color: #8dc5ff;
+      }
+
+      .playground-imagine-template-style-pill-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .playground-imagine-template-style-pill {
+        min-width: 0;
+        min-height: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.84);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 8px 0 10px;
+        box-sizing: border-box;
+        font: inherit;
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .playground-imagine-template-style-pill.is-empty {
+        cursor: default;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-imagine-template-style-pill.is-selected {
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-imagine-template-style-pill-icon {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.68);
+      }
+
+      .playground-imagine-template-style-pill-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-imagine-template-style-pill-remove {
+        width: 18px;
+        height: 18px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.58);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .playground-imagine-template-style-pill-remove:hover {
+        color: rgba(255, 255, 255, 0.92);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-imagine-template-style-picker-options {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 8px);
+        z-index: 80;
+        max-height: 232px;
+        overflow: auto;
+        scrollbar-width: none;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        background: rgba(31, 31, 32, 0.98);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.32);
+        padding: 8px;
+        box-sizing: border-box;
+      }
+
+      .playground-imagine-template-style-picker-options::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-imagine-template-style-picker-options .playground-imagine-template-style-pill {
+        width: 100%;
+        min-height: 34px;
+        border: 0;
+        border-radius: 8px;
+        justify-content: flex-start;
+        padding: 0 10px;
+      }
+
+      .playground-imagine-template-style-picker-options .playground-imagine-template-style-pill:hover,
+      .playground-imagine-template-style-picker-options .playground-imagine-template-style-pill.is-selected {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-imagine-template-style-picker-options .tb-popup-check-slot {
+        margin-left: auto;
+      }
+
       .playground-imagine-template-project-select,
       .playground-imagine-template-aspect-select {
         position: relative;
@@ -924,7 +1064,7 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 20px 18px 22px;
+        padding: 0;
         box-sizing: border-box;
       }
 
@@ -981,17 +1121,20 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
 
       .playground-imagine-template-main {
         position: relative;
-        width: min(49vw, 710px);
-        max-width: calc(100vw - 300px);
-        min-width: 320px;
+        width: var(--imagine-template-main-width, min(56rem, calc(100% - 144px)));
+        height: var(--imagine-template-main-height, min(68vh, calc(100% - 170px)));
+        max-width: none;
+        min-width: 0;
         display: flex;
         align-items: center;
         justify-content: center;
+        aspect-ratio: var(--imagine-template-detail-aspect-ratio, 4 / 3);
       }
 
       .playground-imagine-template-preview-frame {
         position: relative;
         width: 100%;
+        height: 100%;
         max-height: none;
         display: flex;
         align-items: center;
@@ -1001,8 +1144,9 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
       .playground-imagine-template-preview-stage {
         position: relative;
         width: 100%;
-        max-height: calc(100vh - 174px);
-        aspect-ratio: 4 / 5;
+        height: 100%;
+        max-height: none;
+        aspect-ratio: var(--imagine-template-detail-aspect-ratio, 4 / 3);
         overflow: hidden;
         background: transparent;
         border-radius: 10px;
@@ -1024,7 +1168,12 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
 
       .playground-imagine-template-slide-shell.is-current {
         z-index: 2;
-        animation: playgroundImagineTemplateSlideIn 360ms cubic-bezier(0.2, 0.85, 0.22, 1) both;
+        animation: playgroundImagineTemplateSlideIn 460ms cubic-bezier(0.2, 0.85, 0.22, 1) both;
+      }
+
+      .playground-imagine-template-slide-shell.is-static {
+        z-index: 2;
+        animation: none;
       }
 
       .playground-imagine-template-slide-shell.is-previous {
@@ -1032,7 +1181,7 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
         inset: 0;
         z-index: 1;
         pointer-events: none;
-        animation: playgroundImagineTemplateSlideOut 360ms cubic-bezier(0.2, 0.85, 0.22, 1) both;
+        animation: playgroundImagineTemplateSlideOut 460ms cubic-bezier(0.2, 0.85, 0.22, 1) both;
       }
 
       .playground-imagine-template-slide-shell .playground-imagine-template-preview-image.is-current,
@@ -1045,7 +1194,7 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
       @keyframes playgroundImagineTemplateSlideIn {
         from {
           opacity: 0;
-          transform: translateX(calc(var(--imagine-template-transition-direction, 1) * min(54vw, 920px)));
+          transform: translateX(calc(var(--imagine-template-transition-direction, 1) * min(46vw, 780px)));
         }
         to {
           opacity: 1;
@@ -1060,7 +1209,7 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
         }
         to {
           opacity: 0;
-          transform: translateX(calc(var(--imagine-template-transition-direction, 1) * min(-54vw, -920px)));
+          transform: translateX(calc(var(--imagine-template-transition-direction, 1) * min(-46vw, -780px)));
         }
       }
 
@@ -1077,7 +1226,7 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
         width: 100%;
         height: 100%;
         display: block;
-        object-fit: cover;
+        object-fit: contain;
         border-radius: inherit;
       }
 
@@ -1222,7 +1371,19 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
       }
 
       .playground-imagine-template-action-button.is-liked {
-        color: #ff6f9b;
+        color: #fff;
+      }
+
+      .playground-imagine-template-action-button.is-liked svg {
+        fill: #fff;
+      }
+
+      .playground-imagine-template-action-button.is-delete {
+        color: rgba(255, 150, 150, 0.9);
+      }
+
+      .playground-imagine-template-action-button.is-delete:hover {
+        color: rgba(255, 190, 190, 0.98);
       }
 
       .playground-imagine-template-action-rail.is-ghost .playground-imagine-template-action-button {
@@ -1370,24 +1531,29 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
       }
 
       .playground-imagine-template-detail {
-        padding: 24px 18px 144px;
+        padding: 0;
       }
 
       .playground-imagine-template-main {
-        width: auto;
-        height: min(72vh, calc(100vh - 178px));
-        max-height: calc(100vh - 178px);
-        aspect-ratio: 4 / 5;
-        max-width: min(72vw, 760px);
+        position: absolute;
+        top: var(--imagine-template-main-top, 24px);
+        left: 50%;
+        z-index: 4;
+        width: var(--imagine-template-main-width, min(56rem, calc(100% - 144px)));
+        height: var(--imagine-template-main-height, min(68vh, calc(100% - 170px)));
+        max-height: none;
+        aspect-ratio: var(--imagine-template-detail-aspect-ratio, 4 / 3);
+        max-width: none;
         min-width: 0;
+        transform: translateX(-50%);
       }
 
       .playground-imagine-template-preview-frame,
       .playground-imagine-template-flip-card,
       .playground-imagine-template-flip-inner {
-        width: auto;
+        width: 100%;
         height: 100%;
-        aspect-ratio: 4 / 5;
+        aspect-ratio: var(--imagine-template-detail-aspect-ratio, 4 / 3);
       }
 
       .playground-imagine-template-flip-card {
@@ -1435,7 +1601,7 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
       }
 
       .playground-imagine-template-settings-back::-webkit-scrollbar {
@@ -1443,16 +1609,22 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
       }
 
       .playground-imagine-template-settings-back-title {
+        width: 100%;
+        flex: 0 0 auto;
+        box-sizing: border-box;
         margin: 0;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.94);
-        font-size: 14px;
+        font-size: 18px;
         line-height: 1.2;
-        font-weight: 500;
+        font-weight: 400;
         letter-spacing: -0.01em;
       }
 
-      .playground-imagine-template-settings-back .playground-imagine-template-description-area {
-        margin-top: 0;
+      .playground-imagine-template-settings-back .playground-imagine-template-attachments-toolbar {
+        margin-top: 12px;
+        margin-bottom: 12px;
       }
 
       .playground-imagine-template-settings-back .playground-imagine-template-attachments-surface,
@@ -1465,7 +1637,7 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
       }
 
       .playground-imagine-template-action-button.is-editing {
-        background: transparent;
+        background: rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.98);
       }
 
@@ -1482,12 +1654,11 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
       }
 
       @media (max-width: 960px) {
-        .playground-imagine-template-detail {
-          padding-left: 64px;
-          padding-right: 64px;
+        .playground-imagine-template-main {
+          width: var(--imagine-template-main-width, min(82vw, 640px));
+          max-width: none;
         }
 
-        .playground-imagine-template-main,
         .playground-imagine-template-composer-wrap {
           width: min(82vw, 640px);
           max-width: 100%;
@@ -1504,10 +1675,14 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
 
       @media (max-width: 640px) {
         .playground-imagine-template-detail {
-          padding: 62px 48px 18px;
+          padding: 0;
         }
 
-        .playground-imagine-template-main,
+        .playground-imagine-template-main {
+          width: var(--imagine-template-main-width, calc(100% - 96px));
+          max-width: none;
+        }
+
         .playground-imagine-template-composer-wrap {
           width: 100%;
           min-width: 0;
@@ -1539,6 +1714,10 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
           onAgentChange,
           onEnvironmentChange,
           onOpenPlansBudget,
+          onEditTemplate,
+          onDeleteTemplate,
+          favouriteTemplateIds,
+          onToggleFavouriteTemplate,
           onBack,
         }) {
           const normalizedTemplates = useMemo(() => Array.isArray(templates) ? templates : [], [templates]);
@@ -1546,6 +1725,7 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
           const [templateWindowStart, setTemplateWindowStart] = useState(0);
           const [imageName, setImageName] = useState("");
           const [selectedConnectors, setSelectedConnectors] = useState([]);
+          const [fileBrowserRequest, setFileBrowserRequest] = useState(null);
           const [attachedFiles, setAttachedFiles] = useState([]);
           const [isAttachmentDragging, setIsAttachmentDragging] = useState(false);
           const [selectedProjectId, setSelectedProjectId] = useState("");
@@ -1557,14 +1737,19 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             token: 0,
           });
           const [aspectRatio, setAspectRatio] = useState("");
-          const [styleDirection, setStyleDirection] = useState("Editorial");
+          const [selectedStyleIds, setSelectedStyleIds] = useState([]);
           const [activeActionPopup, setActiveActionPopup] = useState("");
-          const [likedTemplateIds, setLikedTemplateIds] = useState([]);
+          const [localLikedTemplateIds, setLocalLikedTemplateIds] = useState([]);
           const [settingsFlipped, setSettingsFlipped] = useState(false);
+          const [stylePickerOpen, setStylePickerOpen] = useState(false);
           const fileInputRef = useRef(null);
           const projectSelectorRef = useRef(null);
           const aspectRatioSelectorRef = useRef(null);
+          const stylePickerRef = useRef(null);
           const previewTransitionTimeoutRef = useRef(null);
+          const detailRef = useRef(null);
+          const composerWrapRef = useRef(null);
+          const [previewSize, setPreviewSize] = useState({ width: 0, height: 0, top: 24 });
 
           useEffect(() => {
             const nextTemplateId = String(initialTemplateId || "").trim();
@@ -1576,6 +1761,17 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
           const activeTemplate = useMemo(() => {
             return normalizedTemplates.find((template) => template.id === activeTemplateId) || normalizedTemplates[0] || null;
           }, [activeTemplateId, normalizedTemplates]);
+
+          const normalizedFavouriteTemplateIds = useMemo(() => {
+            if (!Array.isArray(favouriteTemplateIds)) {
+              return [];
+            }
+            return Array.from(new Set(favouriteTemplateIds.map((id) => String(id || "").trim()).filter(Boolean)));
+          }, [favouriteTemplateIds]);
+
+          const likedTemplateIds = typeof onToggleFavouriteTemplate === "function"
+            ? normalizedFavouriteTemplateIds
+            : localLikedTemplateIds;
 
           useEffect(() => {
             return () => {
@@ -1696,6 +1892,21 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             };
           }, [aspectRatioSelectorOpen]);
 
+          useEffect(() => {
+            if (!stylePickerOpen) {
+              return undefined;
+            }
+            const handlePointerDown = (event) => {
+              if (stylePickerRef.current && !stylePickerRef.current.contains(event.target)) {
+                setStylePickerOpen(false);
+              }
+            };
+            document.addEventListener("mousedown", handlePointerDown);
+            return () => {
+              document.removeEventListener("mousedown", handlePointerDown);
+            };
+          }, [stylePickerOpen]);
+
           const renderImagineConnectorIcon = (connector) => {
             if (typeof renderTaskConnectorServiceIcon === "function") {
               return renderTaskConnectorServiceIcon(connector.source || connector.id, "playground-tasks-connector-service-icon");
@@ -1712,7 +1923,26 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             return React.createElement(ConnectorIcon, { className: "playground-tasks-connector-service-icon", strokeWidth: 1.8 });
           };
 
-          const styleDirections = useMemo(() => ["Editorial", "Studio", "Outdoor", "Minimal"], []);
+          const styleOptions = useMemo(() => [
+            { id: "professional", label: "Professional", Icon: Award },
+            { id: "editorial", label: "Editorial", Icon: Camera },
+            { id: "premium", label: "Premium", Icon: Sparkles },
+            { id: "minimal", label: "Minimal", Icon: Minus },
+            { id: "cinematic", label: "Cinematic", Icon: Film },
+            { id: "studio", label: "Studio", Icon: Crop },
+            { id: "lifestyle", label: "Lifestyle", Icon: User },
+            { id: "bold", label: "Bold", Icon: Flame },
+            { id: "playful", label: "Playful", Icon: Wand2 },
+            { id: "technical", label: "Technical", Icon: Code2 },
+            { id: "data-driven", label: "Data-driven", Icon: ChartNoAxesColumnIncreasing },
+            { id: "product", label: "Product", Icon: Package },
+            { id: "social", label: "Social", Icon: MessageCircle },
+            { id: "exploratory", label: "Exploratory", Icon: Telescope },
+          ], []);
+          const selectedStyleOptions = useMemo(() => {
+            const selectedSet = new Set(selectedStyleIds);
+            return styleOptions.filter((option) => selectedSet.has(option.id));
+          }, [selectedStyleIds, styleOptions]);
           const aspectRatioOptions = useMemo(() => [
             { value: "", label: "No preference", description: "Let the agent choose the best format" },
             { value: "1:1", label: "1:1", description: "Square composition" },
@@ -1727,29 +1957,172 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             return availableProjects.find((project) => project.id === selectedProjectId) || null;
           }, [availableProjects, selectedProjectId]);
 
+          useEffect(() => {
+            if (!activeTemplate) {
+              return;
+            }
+            const knownStyleIds = new Set(styleOptions.map((option) => option.id));
+            const templateDefaults = Array.isArray(activeTemplate.defaultStyles)
+              ? activeTemplate.defaultStyles
+                  .map((styleId) => String(styleId || "").trim())
+                  .filter((styleId) => knownStyleIds.has(styleId))
+              : [];
+            setSelectedStyleIds(templateDefaults.length ? templateDefaults : ["professional"]);
+            const knownAspectRatios = new Set(aspectRatioOptions.map((option) => option.value));
+            const templateDefaultAspectRatio = String(activeTemplate.defaultAspectRatio || "").trim();
+            setAspectRatio(knownAspectRatios.has(templateDefaultAspectRatio) ? templateDefaultAspectRatio : "");
+            setStylePickerOpen(false);
+            setAspectRatioSelectorOpen(false);
+          }, [activeTemplate?.id, aspectRatioOptions, styleOptions]);
+
           const activeTemplateBackground = activeTemplate?.imageUrl
             ? "url('" + activeTemplate.imageUrl + "') center / cover no-repeat"
             : (activeTemplate?.tone || "linear-gradient(135deg, #141414, #333)");
+          const activeTemplateAspectRatio = String(activeTemplate?.aspectRatio || "4 / 3").replace(":", " / ");
+          const activeTemplateAspectRatioNumber = useMemo(() => {
+            const ratioText = String(activeTemplateAspectRatio || "4 / 3");
+            const parts = ratioText.split("/").map((part) => Number(String(part || "").trim()));
+            const width = parts[0];
+            const height = parts[1];
+            if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
+              return width / height;
+            }
+            return 4 / 3;
+          }, [activeTemplateAspectRatio]);
+
+          useLayoutEffect(() => {
+            const detailNode = detailRef.current;
+            const composerNode = composerWrapRef.current;
+            if (!detailNode || !composerNode) {
+              return undefined;
+            }
+
+            let frameId = 0;
+            const updatePreviewSize = () => {
+              if (frameId) {
+                window.cancelAnimationFrame(frameId);
+              }
+              frameId = window.requestAnimationFrame(() => {
+                const detailRect = detailNode.getBoundingClientRect();
+                const composerRect = composerNode.getBoundingClientRect();
+                if (!detailRect.width || !detailRect.height) {
+                  return;
+                }
+
+                const topMargin = 24;
+                const bottomGap = 24;
+                const composerTop = Math.max(0, composerRect.top - detailRect.top);
+                const availableHeight = Math.max(180, composerTop - topMargin - bottomGap);
+                const composerWidth = composerRect.width || Math.min(896, Math.max(0, detailRect.width - 64));
+                const availableWidth = Math.max(180, Math.min(composerWidth, detailRect.width - 132));
+                const safeRatio = Number.isFinite(activeTemplateAspectRatioNumber) && activeTemplateAspectRatioNumber > 0
+                  ? activeTemplateAspectRatioNumber
+                  : 4 / 3;
+                let nextWidth = Math.min(availableWidth, availableHeight * safeRatio);
+                let nextHeight = nextWidth / safeRatio;
+                if (nextHeight > availableHeight) {
+                  nextHeight = availableHeight;
+                  nextWidth = nextHeight * safeRatio;
+                }
+
+                nextWidth = Math.max(180, Math.floor(nextWidth));
+                nextHeight = Math.max(180, Math.floor(nextHeight));
+                const nextTop = Math.max(topMargin, Math.floor(topMargin + ((availableHeight - nextHeight) / 2)));
+                setPreviewSize((current) => (
+                  Math.abs(current.width - nextWidth) > 1 || Math.abs(current.height - nextHeight) > 1 || Math.abs(current.top - nextTop) > 1
+                    ? { width: nextWidth, height: nextHeight, top: nextTop }
+                    : current
+                ));
+              });
+            };
+
+            updatePreviewSize();
+            window.addEventListener("resize", updatePreviewSize);
+            let detailObserver = null;
+            let composerObserver = null;
+            if (typeof ResizeObserver !== "undefined") {
+              detailObserver = new ResizeObserver(updatePreviewSize);
+              composerObserver = new ResizeObserver(updatePreviewSize);
+              detailObserver.observe(detailNode);
+              composerObserver.observe(composerNode);
+            }
+
+            return () => {
+              if (frameId) {
+                window.cancelAnimationFrame(frameId);
+              }
+              window.removeEventListener("resize", updatePreviewSize);
+              if (detailObserver) {
+                detailObserver.disconnect();
+              }
+              if (composerObserver) {
+                composerObserver.disconnect();
+              }
+            };
+          }, [activeTemplateAspectRatioNumber]);
 
           const selectedConnectorLabels = connectors
             .filter((connector) => selectedConnectors.includes(connector.id))
             .map((connector) => connector.label);
 
+          const imagineTemplateReferenceAttachments = useMemo(() => {
+            const imageUrl = String(activeTemplate?.imageUrl || "").trim();
+            if (!activeTemplate || !imageUrl) {
+              return [];
+            }
+            const extensionMatch = imageUrl.match(/\.([a-z0-9]+)(?:[?#].*)?$/i);
+            const rawExtension = String(extensionMatch?.[1] || "webp").toLowerCase();
+            const normalizedExtension = rawExtension === "jpg" ? "jpeg" : rawExtension;
+            const mimeType =
+              normalizedExtension === "jpeg" || normalizedExtension === "png" || normalizedExtension === "webp" || normalizedExtension === "avif"
+                ? "image/" + normalizedExtension
+                : "image/webp";
+            const fileExtension = normalizedExtension === "jpeg" ? "jpg" : normalizedExtension;
+            const safeTitle = String(activeTemplate.title || "template")
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-+|-+$/g, "") || "template";
+            return [{
+              url: imageUrl,
+              filename: "imagine-template-" + safeTitle + "." + fileExtension,
+              mimeType,
+              type: "image",
+              runnerAttachmentRole: "imagine_template_reference",
+            }];
+          }, [activeTemplate?.id, activeTemplate?.imageUrl, activeTemplate?.title]);
+
+          const imagineTemplateReferenceFilename = imagineTemplateReferenceAttachments[0]?.filename || "the selected template image";
+          const selectedAspectRatioLabel = aspectRatio || "No fixed aspect ratio";
+          const preferredGenerationAspectRatio = aspectRatio || String(activeTemplate?.aspectRatio || "").trim() || "infer from the template image";
+          const outputName = String(imageName || "").trim() || (activeTemplate?.title || "Generated image");
+          const safeOutputSlug = outputName
+            .replace(/[^a-z0-9]+/gi, "-")
+            .replace(/^-+|-+$/g, "")
+            .toLowerCase() || "generated-image";
+          const selectedStyleLabels = selectedStyleOptions.map((option) => option.label).join(", ");
+
           const hiddenSystemPrompt = [
-            "You are running inside Computer Agents Imagine template mode.",
+            "You are running inside Computer Agents Imagine template mode. Treat this as an image creation workflow, not a general chat.",
+            "The selected Imagine template image is attached to this turn as \"" + imagineTemplateReferenceFilename + "\". It is the primary visual reference and must appear above the user message as a normal image attachment.",
+            "Use the exact /workspace/uploads/... path listed for \"" + imagineTemplateReferenceFilename + "\" in the attachment system prompt. Do not guess the uploaded path.",
             "The user is creating images only. Do not produce video unless the user explicitly asks to leave Imagine mode.",
             activeTemplate ? "Selected template: " + activeTemplate.title + "." : "",
-            activeTemplate ? "Template direction: " + activeTemplate.prompt : "",
-            "Image name: " + (String(imageName || "").trim() || (activeTemplate?.title || "Generated image")) + ".",
-            aspectRatio
-              ? "Aspect ratio: " + aspectRatio + "."
-              : "Aspect ratio: no preference; choose the strongest format for the selected template and prompt.",
-            "Style direction: " + styleDirection + ".",
+            activeTemplate ? "Template direction: " + activeTemplate.prompt + "." : "",
+            activeTemplate?.description ? "Template description: " + activeTemplate.description : "",
+            "Image name: " + outputName + ".",
+            "Aspect ratio setting: " + selectedAspectRatioLabel + ". Generation aspect ratio: " + preferredGenerationAspectRatio + ".",
+            selectedStyleOptions.length
+              ? "Style direction: " + selectedStyleLabels + "."
+              : "Style direction: no explicit style selected.",
             selectedConnectorLabels.length ? "User selected connector context: " + selectedConnectorLabels.join(", ") + "." : "",
             attachedFiles.length ? "User attached local context filenames: " + attachedFiles.join(", ") + "." : "",
             selectedProject ? "Project context: attach this image generation thread to project " + selectedProject.name + " (" + selectedProject.id + ") and use that project's strategy, tasks, files, and history as relevant context." : "",
-            "Use the selected template image as the visual direction and reference for composition, mood, and quality.",
-            "Use the available image generation skill when possible. Create the image and summarize the output concisely.",
+            "Workflow:",
+            "1. Run exactly one image-understanding command for this Imagine request. Use this form: python3 /workspace/.claude/skills/image-understanding/scripts/view-image.py --image \"<exact uploaded template path>\" \"Analyze the selected Imagine template and any additional user reference images in one pass. Extract the template subject, composition, framing, camera angle, lighting, palette, typography/text treatment if any, brand/editorial mood, aspect ratio, and visual constraints that must stay consistent. If user references are present, identify what they should contribute to subject identity, layout, materials, colors, or style.\" If the user attached additional reference images, append one extra --image \"<exact uploaded user image path>\" argument per reference before the prompt. Do not run a separate template-only analysis and a separate comparison analysis. If this command succeeds, do not call view-image.py again; reuse this analysis for generation.",
+            "2. Create the final image with the image generation skill using GPT Image 2 edit mode, always passing the template image as the first input. Run: python3 /workspace/.claude/skills/image-generation/scripts/generate-image.py \"<final concise generation prompt that includes the user's request, the single image-understanding analysis, template style constraints, selected styles, and output goal>\" --model gpt-image-2 --input \"<exact uploaded template path>\" --input \"<exact uploaded user image path>\" --aspect-ratio \"<chosen aspect ratio>\" --quality high --output \"/workspace/generated_images/" + safeOutputSlug + ".png\" Add one --input argument for each additional uploaded user reference image. If there are no additional user reference images, pass only the template as --input.",
+            "If no explicit aspect ratio is selected, infer the closest supported aspect ratio from the template and pass that value so the output keeps the template shape.",
+            "Do not read image files as text. Do not answer with only a plan. Generate the image, then summarize the result briefly with the output file path.",
           ].filter(Boolean).join("\\n");
 
           const handleProjectSelect = (nextProjectId) => {
@@ -1818,13 +2191,14 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             setImageName(nextTemplate.title || "");
             setActiveActionPopup("");
             setSettingsFlipped(false);
+            setStylePickerOpen(false);
             previewTransitionTimeoutRef.current = setTimeout(() => {
               setPreviewTransition((current) => (
                 current.token === transitionToken
                   ? { ...current, previousTemplate: null }
                   : current
               ));
-            }, 320);
+            }, 520);
           };
 
           const handleTemplatePrevious = () => {
@@ -1874,6 +2248,47 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                 ? current.filter((id) => id !== connectorId)
                 : [...current, connectorId]
             ));
+          };
+
+          const requestFileBrowser = (source) => {
+            const normalizedSource = String(source || "").trim() || "workspace";
+            setActiveActionPopup("");
+            setFileBrowserRequest({
+              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              source: normalizedSource,
+            });
+          };
+
+          const handleConnectorBrowse = (connector) => {
+            const connectorId = String(connector?.id || "").trim();
+            const connectorSource = String(connector?.source || connectorId).trim();
+            if (connectorSource) {
+              requestFileBrowser(connectorSource);
+              return;
+            }
+            if (connectorId) {
+              toggleConnector(connectorId);
+            }
+          };
+
+          const toggleStyleOption = (styleId) => {
+            const normalizedStyleId = String(styleId || "").trim();
+            if (!normalizedStyleId) {
+              return;
+            }
+            setSelectedStyleIds((current) => (
+              current.includes(normalizedStyleId)
+                ? current.filter((id) => id !== normalizedStyleId)
+                : [...current, normalizedStyleId]
+            ));
+          };
+
+          const removeStyleOption = (styleId) => {
+            const normalizedStyleId = String(styleId || "").trim();
+            if (!normalizedStyleId) {
+              return;
+            }
+            setSelectedStyleIds((current) => current.filter((id) => id !== normalizedStyleId));
           };
 
           const renderTemplatePreview = (template) => {
@@ -1987,34 +2402,63 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
           );
 
           const renderSettingsBackside = () => React.createElement("div", { className: "playground-imagine-template-settings-back" },
-            React.createElement("h3", { className: "playground-imagine-template-settings-back-title" }, "Image settings"),
-            React.createElement("label", { className: "playground-imagine-template-field" },
-              React.createElement("span", { className: "playground-imagine-template-label" }, "Image name"),
-              React.createElement("input", {
-                className: "playground-imagine-template-input",
-                value: imageName,
-                onChange: (event) => setImageName(event.target.value),
-                placeholder: activeTemplate?.title || "Untitled image",
-              })
-            ),
-            React.createElement("div", { className: "playground-imagine-template-description-area" },
-              activeTemplate?.longDescription || activeTemplate?.description || "Use this template as a visual starting point and add precise direction in the composer."
-            ),
+            React.createElement("h3", { className: "playground-imagine-template-settings-back-title" }, "Personalization Settings"),
             renderProjectSelector(),
             renderAspectRatioSelector(),
-            React.createElement("section", { className: "playground-imagine-template-section" },
-              React.createElement("div", { className: "playground-imagine-template-section-title" }, "Style"),
-              React.createElement("div", { className: "playground-imagine-template-style-cards" },
-                styleDirections.map((style) => React.createElement("button", {
-                  key: style,
+            React.createElement("section", { ref: stylePickerRef, className: "playground-imagine-template-style-picker" },
+              React.createElement("div", { className: "playground-imagine-template-style-picker-header" },
+                React.createElement("div", { className: "playground-imagine-template-section-title" }, "Style"),
+                React.createElement("button", {
                   type: "button",
-                  className: "playground-imagine-template-style-card" + (styleDirection === style ? " is-selected" : ""),
-                  onClick: () => setStyleDirection(style),
-                },
-                  React.createElement(Paintbrush, { width: 13, height: 13, strokeWidth: 1.8 }),
-                  React.createElement("span", null, style)
-                ))
-              )
+                  className: "playground-imagine-template-style-manage-button" + (stylePickerOpen ? " is-active" : ""),
+                  onClick: () => setStylePickerOpen((current) => !current),
+                }, "Manage Styles")
+              ),
+              React.createElement("div", { className: "playground-imagine-template-style-pill-list" },
+                selectedStyleOptions.length
+                  ? selectedStyleOptions.map((style) => {
+                      const StyleIcon = style.Icon || Paintbrush;
+                      return React.createElement("span", { key: "selected-style:" + style.id, className: "playground-imagine-template-style-pill is-selected" },
+                        React.createElement(StyleIcon, { className: "playground-imagine-template-style-pill-icon", strokeWidth: 1.8 }),
+                        React.createElement("span", { className: "playground-imagine-template-style-pill-label" }, style.label),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-imagine-template-style-pill-remove",
+                          "aria-label": "Remove " + style.label,
+                          onClick: (event) => {
+                            event.stopPropagation();
+                            removeStyleOption(style.id);
+                          },
+                        }, React.createElement(X, { width: 12, height: 12, strokeWidth: 1.8 }))
+                      );
+                    })
+                  : React.createElement("span", { className: "playground-imagine-template-style-pill is-empty" },
+                      React.createElement(Paintbrush, { className: "playground-imagine-template-style-pill-icon", strokeWidth: 1.8 }),
+                      React.createElement("span", { className: "playground-imagine-template-style-pill-label" }, "No style selected")
+                    )
+              ),
+              stylePickerOpen
+                ? React.createElement("div", { className: "playground-imagine-template-style-picker-options" },
+                    styleOptions.map((style) => {
+                      const StyleIcon = style.Icon || Paintbrush;
+                      const isSelected = selectedStyleIds.includes(style.id);
+                      return React.createElement("button", {
+                        key: style.id,
+                        type: "button",
+                        className: "playground-imagine-template-style-pill" + (isSelected ? " is-selected" : ""),
+                        onClick: () => toggleStyleOption(style.id),
+                      },
+                        React.createElement(StyleIcon, { className: "playground-imagine-template-style-pill-icon", strokeWidth: 1.8 }),
+                        React.createElement("span", { className: "playground-imagine-template-style-pill-label" }, style.label),
+                        React.createElement("span", { className: "tb-popup-check-slot" },
+                          isSelected
+                            ? React.createElement(Check, { className: "tb-popup-check", width: 13, height: 13, strokeWidth: 1.8 })
+                            : null
+                        )
+                      );
+                    })
+                  )
+                : null
             ),
             React.createElement("section", { className: "playground-imagine-template-section is-attachments" },
               React.createElement("div", { className: "playground-imagine-template-attachments-toolbar" },
@@ -2022,7 +2466,7 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                 React.createElement("button", {
                   type: "button",
                   className: "playground-imagine-template-from-computer",
-                  onClick: () => fileInputRef.current?.click(),
+                  onClick: () => requestFileBrowser("workspace"),
                 }, "From Computer")
               ),
               React.createElement("div", { className: "playground-imagine-template-attachments-surface" },
@@ -2064,13 +2508,13 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                     key: connector.id,
                     type: "button",
                     className: "playground-imagine-template-connector-row" + (isSelected ? " is-selected" : ""),
-                    onClick: () => toggleConnector(connector.id),
+                    onClick: () => handleConnectorBrowse(connector),
                   },
                     React.createElement("span", { className: "playground-imagine-template-connector-service" },
                       renderImagineConnectorIcon(connector),
                       React.createElement("span", null, connector.label)
                     ),
-                    React.createElement("span", { className: "playground-imagine-template-connector-value" }, isSelected ? "Connected" : "None")
+                    React.createElement("span", { className: "playground-imagine-template-connector-value" }, "Browse")
                   );
                 })
               )
@@ -2124,7 +2568,7 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
               return React.createElement("div", { className: "playground-imagine-template-action-popup" },
                 React.createElement("h3", { className: "playground-imagine-template-action-popup-title" }, activeTemplate?.title || "Template"),
                 React.createElement("p", { className: "playground-imagine-template-action-popup-copy" },
-                  activeTemplate?.longDescription || activeTemplate?.description || "Use this template as visual direction for the generated image."
+                  activeTemplate?.description || "Use this template as visual direction for the generated image."
                 )
               );
             }
@@ -2207,7 +2651,7 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                       key: connector.id,
                       type: "button",
                       className: "playground-imagine-template-popup-row" + (isSelected ? " is-selected" : ""),
-                      onClick: () => toggleConnector(connector.id),
+                      onClick: () => handleConnectorBrowse(connector),
                     },
                       React.createElement("span", { className: "tb-popup-check-slot" },
                         isSelected
@@ -2216,7 +2660,7 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                       ),
                       React.createElement("span", { className: "playground-imagine-template-popup-row-copy" },
                         React.createElement("span", { className: "playground-imagine-template-popup-row-label" }, connector.label),
-                        React.createElement("span", { className: "playground-imagine-template-popup-row-description" }, isSelected ? "Connected" : "Use as context")
+                        React.createElement("span", { className: "playground-imagine-template-popup-row-description" }, "Open file explorer")
                       )
                     );
                   })
@@ -2236,12 +2680,13 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
           }, React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.8 }));
 
           const activeTemplateLiked = activeTemplate?.id ? likedTemplateIds.includes(activeTemplate.id) : false;
+          const canManageCustomTemplate = Boolean(activeTemplate?.isCustom);
           const renderGhostActionRail = () => React.createElement("div", {
             className: "playground-imagine-template-action-rail is-ghost",
             "aria-hidden": "true",
           },
             React.createElement("span", { className: "playground-imagine-template-action-button" },
-              React.createElement(Heart, { width: 16, height: 16, strokeWidth: 1.8 })
+              React.createElement(canManageCustomTemplate ? SquarePen : Heart, { width: 16, height: 16, strokeWidth: 1.8 })
             ),
             React.createElement("span", { className: "playground-imagine-template-action-button" },
               React.createElement(Info, { width: 16, height: 16, strokeWidth: 1.8 })
@@ -2253,7 +2698,7 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
 
           const templatePageElement = React.createElement("div", { className: "playground-imagine-template-page" },
             React.createElement("div", { className: "playground-imagine-template-shell" },
-              React.createElement("main", { className: "playground-imagine-template-detail" },
+              React.createElement("main", { className: "playground-imagine-template-detail", ref: detailRef },
                 React.createElement("button", {
                   type: "button",
                   className: "playground-imagine-template-back is-icon-only",
@@ -2290,12 +2735,23 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                   multiple: true,
                   onChange: handleFilesSelected,
                 }),
-                React.createElement("div", { className: "playground-imagine-template-main" },
+                React.createElement("div", {
+                  className: "playground-imagine-template-main",
+                  style: {
+                    "--imagine-template-detail-aspect-ratio": activeTemplateAspectRatio,
+                    "--imagine-template-main-width": previewSize.width ? previewSize.width + "px" : undefined,
+                    "--imagine-template-main-height": previewSize.height ? previewSize.height + "px" : undefined,
+                    "--imagine-template-main-top": previewSize.top ? previewSize.top + "px" : undefined,
+                  },
+                },
                   previewTransition.previousTemplate
                     ? React.createElement("div", {
                         key: "previous:" + previewTransition.token,
                         className: "playground-imagine-template-slide-shell is-previous",
-                        style: { "--imagine-template-transition-direction": previewTransition.direction },
+                        style: {
+                          "--imagine-template-transition-direction": previewTransition.direction,
+                          "--imagine-template-detail-aspect-ratio": String(previewTransition.previousTemplate?.aspectRatio || activeTemplateAspectRatio || "4 / 3").replace(":", " / "),
+                        },
                       },
                         React.createElement("div", { className: "playground-imagine-template-preview-frame" },
                           React.createElement("div", {
@@ -2315,8 +2771,11 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                     : null,
                   React.createElement("div", {
                     key: "current:" + (activeTemplate?.id || "") + ":" + previewTransition.token,
-                    className: "playground-imagine-template-slide-shell is-current",
-                    style: { "--imagine-template-transition-direction": previewTransition.direction },
+                    className: "playground-imagine-template-slide-shell " + (previewTransition.token ? "is-current" : "is-static"),
+                    style: {
+                      "--imagine-template-transition-direction": previewTransition.direction,
+                      "--imagine-template-detail-aspect-ratio": activeTemplateAspectRatio,
+                    },
                   },
                     React.createElement("div", { className: "playground-imagine-template-preview-frame" },
                       React.createElement("div", { className: "playground-imagine-template-flip-card" + (settingsFlipped ? " is-flipped" : "") },
@@ -2341,22 +2800,43 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                       )
                     ),
                     React.createElement("div", { className: "playground-imagine-template-action-rail" },
-                      renderActionButton({
-                        id: "like",
-                        label: "Like",
-                        Icon: Heart,
-                        className: activeTemplateLiked ? "is-liked" : "",
-                        onClick: () => {
-                          if (!activeTemplate?.id) {
-                            return;
-                          }
-                          setLikedTemplateIds((current) => (
-                            current.includes(activeTemplate.id)
-                              ? current.filter((id) => id !== activeTemplate.id)
-                              : [...current, activeTemplate.id]
-                          ));
-                        },
-                      }),
+                      canManageCustomTemplate
+                        ? renderActionButton({
+                            id: "edit-template",
+                            label: "Edit template",
+                            Icon: SquarePen,
+                            onClick: () => {
+                              setActiveActionPopup("");
+                              setSettingsFlipped(false);
+                              if (typeof onEditTemplate === "function") {
+                                onEditTemplate(activeTemplate);
+                              }
+                            },
+                          })
+                        : renderActionButton({
+                            id: "like",
+                            label: "Like",
+                            Icon: Heart,
+                            className: activeTemplateLiked ? "is-liked" : "",
+                            onClick: () => {
+                              const normalizedTemplateId = String(activeTemplate?.id || "").trim();
+                              if (!normalizedTemplateId) {
+                                return;
+                              }
+                              if (typeof onToggleFavouriteTemplate === "function") {
+                                onToggleFavouriteTemplate(normalizedTemplateId);
+                                return;
+                              }
+                              setLocalLikedTemplateIds((current) => {
+                                const currentIds = Array.isArray(current)
+                                  ? current.map((id) => String(id || "").trim()).filter(Boolean)
+                                  : [];
+                                return currentIds.includes(normalizedTemplateId)
+                                  ? currentIds.filter((id) => id !== normalizedTemplateId)
+                                  : currentIds.concat(normalizedTemplateId);
+                              });
+                            },
+                          }),
                       renderActionButton({ id: "info", label: "Template info", Icon: Info }),
                       React.createElement("div", { className: "playground-imagine-template-action-spacer" }),
                       renderActionButton({
@@ -2369,11 +2849,26 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                           setSettingsFlipped((current) => !current);
                         },
                       }),
+                      canManageCustomTemplate
+                        ? renderActionButton({
+                            id: "delete-template",
+                            label: "Delete template",
+                            Icon: Trash2,
+                            className: "is-delete",
+                            onClick: () => {
+                              setActiveActionPopup("");
+                              setSettingsFlipped(false);
+                              if (typeof onDeleteTemplate === "function") {
+                                onDeleteTemplate(activeTemplate);
+                              }
+                            },
+                          })
+                        : null,
                       renderActionPopup()
                     )
                   )
                 ),
-                React.createElement("div", { className: "playground-imagine-template-composer-wrap" },
+                React.createElement("div", { className: "playground-imagine-template-composer-wrap", ref: composerWrapRef },
                   React.createElement("div", { className: "playground-imagine-template-composer-shell" },
                     React.createElement(RunnerChat, {
                       key: "imagine-template-runner",
@@ -2398,6 +2893,8 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                       showUsageInStatus: false,
                       placeholder: activeTemplate?.placeholder || activeTemplate?.title || "Describe an image",
                       hiddenSystemPrompt,
+                      implicitAttachments: imagineTemplateReferenceAttachments,
+                      externalFileBrowserRequest: fileBrowserRequest,
                       onThreadIdChange: () => {},
                       onExternalRunRequestCreate: (request) => {
                         const normalizedThreadId = String(request?.threadId || "").trim();

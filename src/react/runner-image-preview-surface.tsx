@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
-import { LoaderCircle, X as LucideX } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type WheelEventHandler } from "react";
+import { LoaderCircle } from "lucide-react";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
 
 const RUNNER_IMAGE_PREVIEW_OBJECT_URL_CACHE_LIMIT = 80;
@@ -17,8 +16,11 @@ export interface RunnerImagePreviewSurfaceProps {
   fetchCredentials?: RequestCredentials;
   interactive?: boolean;
   onActivate?: () => void;
+  onWheel?: WheelEventHandler<HTMLElement>;
   onImageLoad?: (dimensions: { naturalWidth: number; naturalHeight: number }) => void;
   overlay?: ReactNode;
+  imageStyle?: CSSProperties;
+  style?: CSSProperties;
   loadStrategy?: "immediate" | "visible";
   referrerPolicy?: ReferrerPolicy;
 }
@@ -100,8 +102,11 @@ export function RunnerImagePreviewSurface({
   fetchCredentials = "same-origin",
   interactive = true,
   onActivate,
+  onWheel,
   onImageLoad,
   overlay,
+  imageStyle,
+  style,
   loadStrategy = "immediate",
   referrerPolicy,
 }: RunnerImagePreviewSurfaceProps) {
@@ -109,7 +114,6 @@ export function RunnerImagePreviewSurface({
 
   const [resolvedSrc, setResolvedSrc] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(Boolean(src));
-  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(loadStrategy !== "visible");
   const [shouldForceFetchFallback, setShouldForceFetchFallback] = useState(false);
   const surfaceRef = useRef<HTMLElement | null>(null);
@@ -238,23 +242,6 @@ export function RunnerImagePreviewSurface({
     };
   }, [fetchCredentials, hasCustomFetchHeaders, headersSignature, objectUrlCacheKey, resolvedMimeType, shouldForceFetchFallback, src, shouldResolvePreview]);
 
-  useEffect(() => {
-    if (!lightboxOpen) {
-      return;
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setLightboxOpen(false);
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [lightboxOpen]);
-
   if (!src) {
     return null;
   }
@@ -268,7 +255,7 @@ export function RunnerImagePreviewSurface({
       src={resolvedSrc}
       alt={normalizedAlt}
       className={joinClassNames("tb-runner-image-preview-surface-image", imageClassName)}
-      style={{ maxHeight }}
+      style={{ maxHeight, ...imageStyle }}
       loading={loadStrategy === "visible" ? "lazy" : undefined}
       referrerPolicy={referrerPolicy}
       onLoad={(event) => {
@@ -302,23 +289,22 @@ export function RunnerImagePreviewSurface({
     }
     if (typeof onActivate === "function") {
       onActivate();
-      return;
-    }
-    if (interactive) {
-      setLightboxOpen(true);
     }
   };
 
-  const previewSurface = interactive ? (
+  const canActivate = interactive && typeof onActivate === "function";
+  const previewSurface = canActivate ? (
     <button
       type="button"
       className={joinClassNames("tb-runner-image-preview-surface", className)}
       onClick={handleActivate}
+      onWheel={onWheel}
       disabled={!resolvedSrc}
       aria-label={normalizedAlt}
       ref={(node) => {
         surfaceRef.current = node;
       }}
+      style={style}
     >
       {previewContent}
       {overlay ? <span className="tb-runner-image-preview-surface-overlay">{overlay}</span> : null}
@@ -327,41 +313,15 @@ export function RunnerImagePreviewSurface({
     <div
       className={joinClassNames("tb-runner-image-preview-surface", "is-static", className)}
       aria-label={normalizedAlt}
+      onWheel={onWheel}
       ref={(node) => {
         surfaceRef.current = node;
       }}
+      style={style}
     >
       {previewContent}
       {overlay ? <span className="tb-runner-image-preview-surface-overlay">{overlay}</span> : null}
     </div>
   );
-
-  if (!interactive || !lightboxOpen || !resolvedSrc || typeof document === "undefined") {
-    return previewSurface;
-  }
-
-  return (
-    <>
-      {previewSurface}
-      {createPortal(
-        <div className="runner-attachment-lightbox" onClick={() => setLightboxOpen(false)}>
-          <button
-            type="button"
-            className="runner-attachment-lightbox-close"
-            onClick={(event) => {
-              event.stopPropagation();
-              setLightboxOpen(false);
-            }}
-            aria-label="Close image preview"
-          >
-            <LucideX className="runner-attachment-lightbox-close-icon" strokeWidth={2} />
-          </button>
-          <div className="runner-attachment-lightbox-dialog" onClick={(event) => event.stopPropagation()}>
-            <img src={resolvedSrc} alt={normalizedAlt} className="runner-attachment-lightbox-image" referrerPolicy={referrerPolicy} />
-          </div>
-        </div>,
-        document.body,
-      )}
-    </>
-  );
+  return previewSurface;
 }

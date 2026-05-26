@@ -25,6 +25,7 @@
   --tb-runner-accent: linear-gradient(to top, #0151a8, #016bdf, #4190e7);
   --tb-document-preview-width: 0px;
   --tb-document-preview-max-width: min(42vw, 620px);
+  --tb-image-preview-composer-width: var(--tb-document-preview-width);
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   width: 100%;
@@ -43,6 +44,56 @@
   --tb-document-preview-width: var(--tb-document-preview-max-width);
 }
 
+.tb-runner-chat.tb-runner-chat-image-preview-local-open .tb-input-shell {
+  position: fixed;
+  left: auto;
+  right: max(16px, calc((var(--tb-image-preview-composer-width) - min(760px, calc(var(--tb-image-preview-composer-width) - 32px))) / 2));
+  bottom: 15px;
+  z-index: 1450;
+  width: min(760px, calc(var(--tb-image-preview-composer-width) - 32px));
+  padding: 0;
+  transition:
+    right 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    width 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tb-runner-chat.tb-runner-chat-image-preview-local-open .tb-input-width {
+  width: 100%;
+  max-width: 100%;
+}
+
+.tb-runner-chat.tb-runner-chat-image-preview-local-open .task-input-box {
+  --tb-task-input-base-bg: transparent;
+  --tb-task-input-overlay: transparent;
+  background: transparent;
+}
+
+body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-preview-portal-open .tb-input-shell {
+  position: fixed;
+  left: var(--playground-shell-sidebar-width, 0px);
+  right: 0;
+  bottom: 15px;
+  z-index: 1450;
+  width: auto;
+  padding: 0 16px;
+  transition:
+    left 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    right 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    width 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-preview-portal-open .tb-input-width {
+  width: min(860px, calc(100vw - var(--playground-shell-sidebar-width, 0px) - 32px));
+  max-width: none;
+  margin: 0 auto;
+}
+
+body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-preview-portal-open .task-input-box {
+  --tb-task-input-base-bg: transparent;
+  --tb-task-input-overlay: transparent;
+  background: transparent;
+}
+
 .tb-runner-chat * {
   box-sizing: border-box;
 }
@@ -51,7 +102,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 34px;
+  min-height: 30px;
   padding: 6px 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -5748,6 +5799,31 @@
   margin-bottom: 12px;
 }
 
+.tb-runner-chat .tb-log-checklist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -2px -12px 12px;
+  padding: 0 12px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tb-runner-chat .tb-log-checklist-heading {
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.tb-runner-chat .tb-log-checklist-count {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
 .tb-runner-chat .tb-log-file-row,
 .tb-runner-chat .tb-log-list-item,
 .tb-runner-chat .tb-log-checklist-item {
@@ -5755,6 +5831,10 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
+}
+
+.tb-runner-chat .tb-log-checklist-item {
+  align-items: flex-start;
 }
 
 .tb-runner-chat .tb-log-list-item-column {
@@ -5785,6 +5865,11 @@
   color: rgba(255, 255, 255, 0.86);
   font-size: 12px;
   line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.tb-runner-chat .tb-log-checklist-text {
+  flex: 1 1 auto;
 }
 
 .tb-runner-chat .tb-log-file-name,
@@ -7320,6 +7405,10 @@
   pointer-events: auto;
 }
 
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-image-drawer {
+  background: transparent !important;
+}
+
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-surface {
   position: relative;
   top: auto;
@@ -7363,6 +7452,7 @@
   padding: 0 12px;
   box-sizing: border-box;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
 }
 
 .tb-runner-document-preview-host-inline .tb-attachment-preview-drawer-header {
@@ -7381,6 +7471,17 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-header-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
 }
 
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-header-icon-asset {
@@ -7547,20 +7648,231 @@
 
 .tb-runner-document-preview-host-inline .tb-attachment-preview-image-surface {
   width: 100%;
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: 20px 20px calc(20px + var(--tb-attachment-preview-image-reserved-bottom, 0px));
   box-sizing: border-box;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-image-zoom-region {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  min-width: 0;
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
+.tb-runner-document-preview-host-inline .tb-attachment-preview-image-zoom-region > .tb-runner-image-preview-surface {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .tb-runner-document-preview-host-inline .tb-attachment-preview-image {
   width: auto;
   max-width: 100%;
-  max-height: 100% !important;
+  max-height: var(--tb-attachment-preview-image-max-height, 100%) !important;
   height: auto;
-  border-radius: 10px;
+  border-radius: 0;
+}
+
+.tb-image-preview-select-button,
+.tb-image-preview-selection-button {
+  --tb-image-preview-control-button-border: linear-gradient(
+    -10deg,
+    rgba(200, 200, 200, 0.25),
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.375)
+  );
+  height: 30px;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.tb-image-preview-select-button::before,
+.tb-image-preview-selection-button::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--tb-image-preview-control-button-border);
+  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  mask-origin: content-box, border-box;
+  mask-repeat: repeat, repeat;
+  mask-size: auto, auto;
+}
+
+.tb-image-preview-selection-button.is-plain::before {
+  content: none;
+}
+
+.tb-image-preview-select-button > *,
+.tb-image-preview-selection-button > * {
+  position: relative;
+  z-index: 1;
+}
+
+.tb-image-preview-header-divider {
+  flex: 0 0 1px;
+  width: 1px;
+  height: 22px;
+  margin: 0 2px 0 6px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.tb-image-preview-zoom-control {
+  --tb-image-preview-control-button-border: linear-gradient(
+    -10deg,
+    rgba(200, 200, 200, 0.25),
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.375)
+  );
+  width: 120px;
+  height: 30px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 4px;
+  padding: 2px;
+  border: 0;
+  border-radius: 20px;
+  background: transparent;
+  line-height: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.tb-image-preview-zoom-control::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--tb-image-preview-control-button-border);
+  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  mask-origin: content-box, border-box;
+  mask-repeat: repeat, repeat;
+  mask-size: auto, auto;
+}
+
+.tb-image-preview-zoom-button,
+.tb-image-preview-zoom-label {
+  position: relative;
+  z-index: 1;
+}
+
+.tb-image-preview-zoom-button {
+  width: 100%;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.74);
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+.tb-image-preview-zoom-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.tb-image-preview-zoom-button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.tb-image-preview-zoom-button:disabled:hover {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.tb-image-preview-zoom-label {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.tb-image-preview-selection-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tb-image-preview-selection-button.is-icon {
+  width: 34px;
+  padding: 0;
+}
+
+.tb-image-preview-selection-button:disabled {
+  cursor: default;
+  color: rgba(255, 255, 255, 0.34);
+}
+
+.tb-image-preview-mask-overlay,
+.tb-image-preview-crop-overlay {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.tb-image-preview-mask-overlay {
+  cursor: pointer;
+}
+
+.tb-image-preview-crop-overlay {
+  cursor: crosshair;
+}
+
+.tb-image-preview-mask-canvas,
+.tb-image-preview-crop-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-state {
@@ -7916,59 +8228,6 @@
 
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-docx-stage .tb-attachment-docx {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
-}
-
-.runner-attachment-lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 1400;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-  background: rgba(0, 0, 0, 0.54);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-}
-
-.runner-attachment-lightbox-dialog {
-  position: relative;
-  max-width: min(78vw, 980px);
-  max-height: min(78vh, 820px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.runner-attachment-lightbox-image {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: 18px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
-}
-
-.runner-attachment-lightbox-close {
-  position: fixed;
-  top: 22px;
-  right: 22px;
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: none;
-}
-
-.runner-attachment-lightbox-close-icon {
-  width: 17px;
-  height: 17px;
 }
 
 .tb-runner-chat .tb-composer-textarea-shell {
