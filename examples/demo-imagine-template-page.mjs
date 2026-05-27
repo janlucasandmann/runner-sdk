@@ -1378,14 +1378,6 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
         fill: #fff;
       }
 
-      .playground-imagine-template-action-button.is-delete {
-        color: rgba(255, 150, 150, 0.9);
-      }
-
-      .playground-imagine-template-action-button.is-delete:hover {
-        color: rgba(255, 190, 190, 0.98);
-      }
-
       .playground-imagine-template-action-rail.is-ghost .playground-imagine-template-action-button {
         pointer-events: none;
       }
@@ -1459,6 +1451,15 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
         color: rgba(255, 255, 255, 0.96);
       }
 
+      .playground-imagine-template-popup-row.is-danger {
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-imagine-template-popup-row.is-danger:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.98);
+      }
+
       .playground-imagine-template-popup-row-copy {
         min-width: 0;
         display: flex;
@@ -1484,6 +1485,50 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
         color: rgba(255, 255, 255, 0.48);
         font-size: 11px;
         line-height: 1.25;
+        font-weight: 400;
+      }
+
+      .playground-imagine-template-popup-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .playground-imagine-template-popup-button {
+        min-width: 72px;
+        height: 30px;
+        border: 0;
+        border-radius: 999px;
+        padding: 0 12px;
+        font: inherit;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-imagine-template-popup-button.is-primary {
+        background: #fff;
+        color: #000;
+      }
+
+      .playground-imagine-template-popup-button.is-secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .playground-imagine-template-popup-button:disabled {
+        opacity: 0.48;
+        cursor: default;
+      }
+
+      .playground-imagine-template-popup-error {
+        margin: 8px 0 0;
+        color: rgba(255, 170, 170, 0.92);
+        font-size: 11px;
+        line-height: 1.35;
         font-weight: 400;
       }
 
@@ -1739,6 +1784,10 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
           const [aspectRatio, setAspectRatio] = useState("");
           const [selectedStyleIds, setSelectedStyleIds] = useState([]);
           const [activeActionPopup, setActiveActionPopup] = useState("");
+          const [shareTeams, setShareTeams] = useState([]);
+          const [shareTeamId, setShareTeamId] = useState("");
+          const [shareLoading, setShareLoading] = useState(false);
+          const [shareError, setShareError] = useState("");
           const [localLikedTemplateIds, setLocalLikedTemplateIds] = useState([]);
           const [settingsFlipped, setSettingsFlipped] = useState(false);
           const [stylePickerOpen, setStylePickerOpen] = useState(false);
@@ -1772,6 +1821,64 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
           const likedTemplateIds = typeof onToggleFavouriteTemplate === "function"
             ? normalizedFavouriteTemplateIds
             : localLikedTemplateIds;
+
+          useEffect(() => {
+            if (activeActionPopup !== "share-template") {
+              return undefined;
+            }
+            let cancelled = false;
+            const loadShareTeams = async () => {
+              const normalizedBackendUrl = String(backendUrl || "").trim().replace(new RegExp("/+$"), "");
+              if (!normalizedBackendUrl) {
+                if (!cancelled) {
+                  setShareTeams([]);
+                  setShareError("Team sharing is unavailable in this session.");
+                }
+                return;
+              }
+              setShareLoading(true);
+              setShareError("");
+              try {
+                const headers = new Headers(requestHeaders || {});
+                if (apiKey) {
+                  headers.set("X-API-Key", apiKey);
+                }
+                const response = await fetch(normalizedBackendUrl + "/teams", {
+                  method: "GET",
+                  headers,
+                  credentials: "include",
+                  cache: "no-store",
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                  throw new Error(data?.message || data?.error || "Failed to load teams.");
+                }
+                const teams = Array.isArray(data?.data) ? data.data : [];
+                if (!cancelled) {
+                  setShareTeams(teams);
+                  setShareTeamId((current) => {
+                    if (current && teams.some((team) => String(team?.id || "") === current)) {
+                      return current;
+                    }
+                    return teams[0]?.id ? String(teams[0].id) : "";
+                  });
+                }
+              } catch (error) {
+                if (!cancelled) {
+                  setShareTeams([]);
+                  setShareError(error instanceof Error ? error.message : "Failed to load teams.");
+                }
+              } finally {
+                if (!cancelled) {
+                  setShareLoading(false);
+                }
+              }
+            };
+            void loadShareTeams();
+            return () => {
+              cancelled = true;
+            };
+          }, [activeActionPopup, apiKey, backendUrl, requestHeaders]);
 
           useEffect(() => {
             return () => {
@@ -2560,9 +2667,139 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             )
           );
 
+          const handleShareTemplateWithTeam = async () => {
+            const normalizedBackendUrl = String(backendUrl || "").trim().replace(new RegExp("/+$"), "");
+            const normalizedTeamId = String(shareTeamId || "").trim();
+            const normalizedTemplateId = String(activeTemplate?.id || "").trim();
+            if (!normalizedBackendUrl || !normalizedTeamId || !normalizedTemplateId || !activeTemplate?.isCustom) {
+              return;
+            }
+            setShareLoading(true);
+            setShareError("");
+            try {
+              const headers = new Headers(requestHeaders || {});
+              headers.set("Content-Type", "application/json");
+              if (apiKey) {
+                headers.set("X-API-Key", apiKey);
+              }
+              const templatePayload = {
+                ...activeTemplate,
+              };
+              delete templatePayload["long" + "Description"];
+              const response = await fetch(
+                normalizedBackendUrl + "/teams/" + encodeURIComponent(normalizedTeamId) + "/resource-shares",
+                {
+                  method: "POST",
+                  headers,
+                  credentials: "include",
+                  cache: "no-store",
+                  body: JSON.stringify({
+                    resourceType: "imagine_template",
+                    resourceId: normalizedTemplateId,
+                    accessLevel: "use",
+                    metadata: {
+                      template: templatePayload,
+                    },
+                  }),
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to share template.");
+              }
+              setActiveActionPopup("");
+              setShareError("");
+            } catch (error) {
+              setShareError(error instanceof Error ? error.message : "Failed to share template.");
+            } finally {
+              setShareLoading(false);
+            }
+          };
+
           const renderActionPopup = () => {
             if (!activeActionPopup) {
               return null;
+            }
+            if (activeActionPopup === "template-actions") {
+              return React.createElement("div", { className: "playground-imagine-template-action-popup" },
+                React.createElement("h3", { className: "playground-imagine-template-action-popup-title" }, "Template actions"),
+                React.createElement("div", { className: "playground-imagine-template-popup-list" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-imagine-template-popup-row",
+                    onClick: () => {
+                      setShareError("");
+                      setActiveActionPopup("share-template");
+                    },
+                  },
+                    React.createElement("span", { className: "tb-popup-check-slot" },
+                      React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8 })
+                    ),
+                    React.createElement("span", { className: "playground-imagine-template-popup-row-copy" },
+                      React.createElement("span", { className: "playground-imagine-template-popup-row-label" }, "Share with team"),
+                      React.createElement("span", { className: "playground-imagine-template-popup-row-description" }, "Make this template available to a team")
+                    )
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-imagine-template-popup-row is-danger",
+                    onClick: () => {
+                      setActiveActionPopup("");
+                      setSettingsFlipped(false);
+                      if (typeof onDeleteTemplate === "function") {
+                        onDeleteTemplate(activeTemplate);
+                      }
+                    },
+                  },
+                    React.createElement("span", { className: "tb-popup-check-slot" },
+                      React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 })
+                    ),
+                    React.createElement("span", { className: "playground-imagine-template-popup-row-copy" },
+                      React.createElement("span", { className: "playground-imagine-template-popup-row-label" }, "Delete template"),
+                      React.createElement("span", { className: "playground-imagine-template-popup-row-description" }, "Remove it from My Templates")
+                    )
+                  )
+                )
+              );
+            }
+            if (activeActionPopup === "share-template") {
+              return React.createElement("div", { className: "playground-imagine-template-action-popup" },
+                React.createElement("h3", { className: "playground-imagine-template-action-popup-title" }, "Share with team"),
+                shareLoading && !shareTeams.length
+                  ? React.createElement("p", { className: "playground-imagine-template-action-popup-copy" }, "Loading teams...")
+                  : React.createElement("div", { className: "playground-imagine-template-popup-list" },
+                      shareTeams.length
+                        ? shareTeams.map((team) => renderPopupRow({
+                            key: "share-team:" + team.id,
+                            selected: String(team.id || "") === shareTeamId,
+                            label: team.name || "Untitled team",
+                            description: "Use this Imagine template",
+                            onClick: () => setShareTeamId(String(team.id || "")),
+                          }))
+                        : React.createElement("p", { className: "playground-imagine-template-action-popup-copy" }, "No teams available yet.")
+                    ),
+                shareError
+                  ? React.createElement("p", { className: "playground-imagine-template-popup-error" }, shareError)
+                  : null,
+                React.createElement("div", { className: "playground-imagine-template-popup-footer" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-imagine-template-popup-button is-secondary",
+                    onClick: () => {
+                      setShareError("");
+                      setActiveActionPopup("template-actions");
+                    },
+                  }, "Back"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-imagine-template-popup-button is-primary",
+                    disabled: shareLoading || !shareTeamId,
+                    onClick: () => {
+                      void handleShareTemplateWithTeam();
+                    },
+                  }, shareLoading ? "Sharing..." : "Share")
+                )
+              );
             }
             if (activeActionPopup === "info") {
               return React.createElement("div", { className: "playground-imagine-template-action-popup" },
@@ -2693,7 +2930,12 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             ),
             React.createElement("span", { className: "playground-imagine-template-action-button" },
               React.createElement(SlidersHorizontal, { width: 16, height: 16, strokeWidth: 1.8 })
-            )
+            ),
+            canManageCustomTemplate
+              ? React.createElement("span", { className: "playground-imagine-template-action-button" },
+                  React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })
+                )
+              : null
           );
 
           const templatePageElement = React.createElement("div", { className: "playground-imagine-template-page" },
@@ -2851,16 +3093,11 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                       }),
                       canManageCustomTemplate
                         ? renderActionButton({
-                            id: "delete-template",
-                            label: "Delete template",
-                            Icon: Trash2,
-                            className: "is-delete",
+                            id: "template-actions",
+                            label: "Template actions",
+                            Icon: Ellipsis,
                             onClick: () => {
-                              setActiveActionPopup("");
-                              setSettingsFlipped(false);
-                              if (typeof onDeleteTemplate === "function") {
-                                onDeleteTemplate(activeTemplate);
-                              }
+                              setActiveActionPopup((current) => current === "template-actions" ? "" : "template-actions");
                             },
                           })
                         : null,

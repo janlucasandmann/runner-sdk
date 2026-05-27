@@ -52,7 +52,8 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "unist-util-visit": "^5.0.0",
-    "ws": "^8.20.0"
+    "ws": "^8.20.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@types/react": "^19.0.12",

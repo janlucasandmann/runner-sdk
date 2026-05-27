@@ -740,6 +740,21 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
+      .playground-project-overview-files-section .playground-plugins-search-row {
+        position: relative;
+        z-index: 40;
+      }
+
+      .playground-project-overview-files-section .playground-plugins-toolbar-controls,
+      .playground-project-overview-files-section .playground-tasks-toolbar-popup-shell {
+        position: relative;
+        z-index: 41;
+      }
+
+      .playground-project-overview-files-section .playground-tasks-toolbar-popup-shell .tb-popup-menu.playground-tasks-toolbar-popup-menu {
+        z-index: 42;
+      }
+
       .playground-project-overview-current-tasks-section .playground-plugins-search-shell,
       .playground-project-overview-threads-section .playground-plugins-search-shell,
       .playground-project-overview-files-section .playground-plugins-search-shell {
@@ -998,6 +1013,8 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         flex-direction: column;
         gap: 0;
         margin-bottom: 20px;
+        position: relative;
+        z-index: 1;
       }
 
       .playground-project-overview-files-table-header,

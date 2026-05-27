@@ -1,4 +1,6 @@
-export type RunnerDocumentPreviewKind = "pdf" | "text" | "html" | "markdown" | "docx" | "directory" | "unsupported";
+import { isRunnerSpreadsheetFile } from "./runner-spreadsheet-utils.js";
+
+export type RunnerDocumentPreviewKind = "pdf" | "text" | "html" | "markdown" | "docx" | "spreadsheet" | "directory" | "unsupported";
 
 export interface RunnerPreviewAttachment {
   id: string;
@@ -53,7 +55,14 @@ const RUNNER_PREVIEW_MIME_TYPES_BY_EXTENSION: Record<string, string> = {
   png: "image/png",
   svg: "image/svg+xml",
   txt: "text/plain",
+  numbers: "application/vnd.apple.numbers",
+  ods: "application/vnd.oasis.opendocument.spreadsheet",
+  tsv: "text/tab-separated-values",
   webp: "image/webp",
+  xls: "application/vnd.ms-excel",
+  xlsb: "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+  xlsm: "application/vnd.ms-excel.sheet.macroEnabled.12",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   xhtml: "application/xhtml+xml",
   xml: "application/xml",
   yaml: "text/yaml",
@@ -500,6 +509,9 @@ export function getRunnerDocumentPreviewKind(input: {
   if (mimeType === "application/pdf" || extension === "pdf") {
     return "pdf";
   }
+  if (isRunnerSpreadsheetFile(input.filename, mimeType)) {
+    return "spreadsheet";
+  }
   if (mimeType === "text/markdown" || ["md", "markdown", "mdx"].includes(extension)) {
     return "markdown";
   }
@@ -520,7 +532,6 @@ export function getRunnerDocumentPreviewKind(input: {
     mimeType.includes("ecmascript") ||
     [
       "txt",
-      "csv",
       "log",
       "yaml",
       "yml",

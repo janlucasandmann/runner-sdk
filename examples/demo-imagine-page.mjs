@@ -1070,6 +1070,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               return [];
             }
           });
+          const [sharedCustomTemplates, setSharedCustomTemplates] = useState([]);
           const [favouriteTemplateIds, setFavouriteTemplateIds] = useState(() => {
             if (typeof window === "undefined" || !window.localStorage) {
               return [];
@@ -1230,6 +1231,109 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               // Local template images can be large; failing to persist should not block the UI.
             }
           }, [customTemplates]);
+
+          useEffect(() => {
+            let cancelled = false;
+            const loadSharedCustomTemplates = async () => {
+              const normalizedBackendUrl = String(backendUrl || "").trim().replace(new RegExp("/+$"), "");
+              if (!normalizedBackendUrl) {
+                setSharedCustomTemplates([]);
+                return;
+              }
+              const headers = new Headers(requestHeaders || {});
+              if (apiKey) {
+                headers.set("X-API-Key", apiKey);
+              }
+              const parseMetadata = (metadata) => {
+                if (!metadata) {
+                  return {};
+                }
+                if (typeof metadata === "string") {
+                  try {
+                    return JSON.parse(metadata);
+                  } catch (_error) {
+                    return {};
+                  }
+                }
+                return metadata && typeof metadata === "object" ? metadata : {};
+              };
+              try {
+                const teamsResponse = await fetch(normalizedBackendUrl + "/teams", {
+                  method: "GET",
+                  headers,
+                  credentials: "include",
+                  cache: "no-store",
+                });
+                if (!teamsResponse.ok) {
+                  if (!cancelled) {
+                    setSharedCustomTemplates([]);
+                  }
+                  return;
+                }
+                const teamsData = await teamsResponse.json().catch(() => ({}));
+                const teams = Array.isArray(teamsData?.data) ? teamsData.data : [];
+                const shareResponses = await Promise.all(teams.map(async (team) => {
+                  const teamId = String(team?.id || "").trim();
+                  if (!teamId) {
+                    return [];
+                  }
+                  try {
+                    const response = await fetch(
+                      normalizedBackendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares",
+                      {
+                        method: "GET",
+                        headers,
+                        credentials: "include",
+                        cache: "no-store",
+                      }
+                    );
+                    if (!response.ok) {
+                      return [];
+                    }
+                    const data = await response.json().catch(() => ({}));
+                    return Array.isArray(data?.data) ? data.data : [];
+                  } catch (_error) {
+                    return [];
+                  }
+                }));
+                const nextTemplates = [];
+                shareResponses.flat().forEach((share) => {
+                  if (String(share?.resourceType || "") !== "imagine_template") {
+                    return;
+                  }
+                  const metadata = parseMetadata(share?.metadata);
+                  const template = metadata?.template || metadata?.imagineTemplate || null;
+                  if (!template || !template.imageUrl) {
+                    return;
+                  }
+                  const normalizedTemplate = {
+                    ...(template || {}),
+                    id: String(template.id || share.resourceId || "").trim(),
+                    isShared: true,
+                    sharedTeamId: String(share.teamId || ""),
+                    sharedShareId: String(share.id || ""),
+                    sharedAccessLevel: String(share.accessLevel || "use"),
+                  };
+                  delete normalizedTemplate["long" + "Description"];
+                  if (normalizedTemplate.id) {
+                    nextTemplates.push(normalizedTemplate);
+                  }
+                });
+                if (!cancelled) {
+                  const deduped = Array.from(new Map(nextTemplates.map((template) => [template.id, template])).values());
+                  setSharedCustomTemplates(deduped);
+                }
+              } catch (_error) {
+                if (!cancelled) {
+                  setSharedCustomTemplates([]);
+                }
+              }
+            };
+            void loadSharedCustomTemplates();
+            return () => {
+              cancelled = true;
+            };
+          }, [apiKey, backendUrl, requestHeaders]);
 
           useEffect(() => {
             let cancelled = false;
@@ -1630,19 +1734,34 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           ], []);
 
           const normalizedCustomTemplates = useMemo(() => {
-            return customTemplates.map((template) => {
+            const normalizeCustomTemplate = (template, extras = {}) => {
               const normalizedTemplate = { ...(template || {}) };
               delete normalizedTemplate["long" + "Description"];
               return {
                 ...normalizedTemplate,
+                ...extras,
                 isCustom: true,
                 Icon: ImageIcon,
                 tone: normalizedTemplate.tone || ("url('" + normalizedTemplate.imageUrl + "') center / cover no-repeat"),
                 defaultStyles: Array.isArray(normalizedTemplate.defaultStyles) ? normalizedTemplate.defaultStyles : ["professional"],
                 defaultAspectRatio: String(normalizedTemplate.defaultAspectRatio || "").trim(),
               };
+            };
+            const templatesById = new Map();
+            sharedCustomTemplates.forEach((template) => {
+              const normalizedId = String(template?.id || "").trim();
+              if (normalizedId) {
+                templatesById.set(normalizedId, normalizeCustomTemplate(template, { isShared: true }));
+              }
             });
-          }, [customTemplates]);
+            customTemplates.forEach((template) => {
+              const normalizedId = String(template?.id || "").trim();
+              if (normalizedId) {
+                templatesById.set(normalizedId, normalizeCustomTemplate(template));
+              }
+            });
+            return Array.from(templatesById.values());
+          }, [customTemplates, sharedCustomTemplates]);
 
           const allTemplates = useMemo(() => {
             return normalizedCustomTemplates.concat(templates);
@@ -2437,7 +2556,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           return React.createElement("div", { className: "playground-imagine-page" },
             React.createElement("div", { className: "playground-imagine-shell" },
               React.createElement("div", { className: "playground-imagine-grid-scroll" },
-                activeTab === "my-templates" && !customTemplates.length
+                activeTab === "my-templates" && !normalizedCustomTemplates.length
                   ? React.createElement("div", { className: "playground-imagine-empty" },
                       React.createElement("img", {
                         className: "playground-imagine-empty-visual",

@@ -19,6 +19,7 @@ const packageRoot = path.resolve(__dirname, "..");
 const distRoot = path.join(packageRoot, "dist");
 const examplesRoot = path.join(packageRoot, "examples");
 const noVncNextRoot = path.join(packageRoot, "node_modules", "novnc-next");
+const xlsxRoot = path.join(packageRoot, "node_modules", "xlsx");
 const aiosPublicRoot = path.resolve(packageRoot, "..", "..", "web", "hosting", "public");
 const aiosHostingRoot = path.resolve(packageRoot, "..", "..", "web", "hosting");
 const port = Number(process.env.PORT || 4177);
@@ -602,8 +603,8 @@ const html = `<!doctype html>
       }
 
       .sidebar-hide-button {
-        width: 30px;
-        height: 30px;
+        width: 24px;
+        height: 24px;
         padding: 0;
         border: 0;
         border-radius: 10px;
@@ -1957,8 +1958,8 @@ const html = `<!doctype html>
       }
 
       .sidebar-account-avatar {
-        width: 30px;
-        height: 30px;
+        width: 24px;
+        height: 24px;
         font-size: 11px;
         font-weight: 600;
         letter-spacing: 0.02em;
@@ -3058,8 +3059,8 @@ const html = `<!doctype html>
       }
 
       .playground-develop-server-metrics-menu-shell .playground-content-menu-button {
-        width: 30px;
-        height: 30px;
+        width: 24px;
+        height: 24px;
       }
 
       .playground-develop-server-metrics-menu-shell .playground-tasks-toolbar-popup-menu {
@@ -4113,6 +4114,71 @@ const html = `<!doctype html>
         flex: 0 0 auto;
       }
 
+      .playground-top-nav-pill-button {
+        --playground-top-nav-pill-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        min-height: 30px;
+        height: 30px;
+        overflow: hidden;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        padding: 0 14px;
+        color: rgba(255, 255, 255, 0.92);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        cursor: pointer;
+        transition: color 160ms ease, background 160ms ease;
+      }
+
+      .playground-top-nav-pill-button.is-active,
+      .playground-top-nav-pill-button:hover,
+      .playground-top-nav-pill-button:focus-visible {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.98);
+        outline: none;
+      }
+
+      .playground-top-nav-pill-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-top-nav-pill-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-top-nav-pill-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-top-nav-pill-button svg {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
       .playground-top-nav-sidebar-toggle {
         flex: 0 0 auto;
         width: 30px;
@@ -4228,8 +4294,8 @@ const html = `<!doctype html>
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 30px;
-        height: 30px;
+        width: 24px;
+        height: 24px;
         font-size: 10px;
         font-weight: 400;
       }
@@ -8852,6 +8918,9 @@ const html = `<!doctype html>
         width: 100%;
         height: 100%;
         min-height: 0;
+        padding: 42px 50px 56px;
+        background: #000;
+        box-sizing: border-box;
         overflow-x: hidden;
         overflow-y: auto;
         scrollbar-width: none;
@@ -8862,13 +8931,78 @@ const html = `<!doctype html>
       }
 
       .playground-team-shell {
-        width: min(1180px, calc(100% - 48px));
+        width: min(100%, var(--playground-centered-page-max-width));
         margin: 0 auto;
-        padding: 24px 0 56px;
+        padding: 0 0 56px;
         display: flex;
         flex-direction: column;
         gap: 14px;
         box-sizing: border-box;
+      }
+
+      .playground-team-shell.is-plan-empty {
+        height: 100%;
+        padding: 0;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-team-plan-empty {
+        width: min(100%, 420px);
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        color: rgba(255, 255, 255, 0.48);
+        text-align: center;
+      }
+
+      .playground-team-plan-empty-visual {
+        width: 220px;
+        max-width: min(220px, 70vw);
+        height: auto;
+        object-fit: contain;
+      }
+
+      .playground-team-plan-empty-title {
+        margin: 0;
+        max-width: 390px;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 18px;
+        line-height: 1.15;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+
+      .playground-team-plan-empty-copy {
+        margin: 0;
+        max-width: 380px;
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.5;
+        font-weight: 400;
+      }
+
+      .playground-team-plan-empty-button {
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 999px;
+        padding: 0 14px;
+        background: #fff;
+        color: #000;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-team-plan-empty-button:hover {
+        background: rgba(255, 255, 255, 0.9);
       }
 
       .playground-team-hero,
@@ -9216,18 +9350,31 @@ const html = `<!doctype html>
         line-height: 1.2;
       }
 
-      .playground-team-detail-navbar {
-        margin-bottom: 12px;
+      .playground-team-detail-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 0 0 12px;
+      }
+
+      .playground-team-detail-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
       }
 
       .playground-team-detail-title {
+        margin: 0;
         padding: 0;
         border: 0;
         background: transparent;
         color: rgba(255, 255, 255, 0.96);
-        font-size: 32px;
+        font-size: 18px;
         font-weight: 500;
-        line-height: 1.08;
+        line-height: 1;
       }
 
       .playground-team-detail-meta {
@@ -9259,8 +9406,39 @@ const html = `<!doctype html>
         grid-template-columns: 160px minmax(220px, 1fr) 140px auto;
       }
 
-      .playground-team-table-shell {
+      .playground-auth-users-table-shell.playground-team-table-shell {
+        position: relative;
         overflow-x: auto;
+        border-radius: 10px;
+        background: transparent;
+      }
+
+      .playground-auth-users-table-shell.playground-team-table-shell::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375)));
+        -webkit-mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        -webkit-mask-clip: content-box, border-box;
+        -webkit-mask-composite: xor;
+        -webkit-mask-origin: content-box, border-box;
+        -webkit-mask-repeat: repeat, repeat;
+        -webkit-mask-size: auto, auto;
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-auth-users-table-shell.playground-team-table-shell > * {
+        position: relative;
+        z-index: 2;
       }
 
       .playground-auth-users-table.is-secrets-table .playground-team-table-col-main {
@@ -9305,11 +9483,19 @@ const html = `<!doctype html>
       }
 
       .playground-team-table .playground-team-select {
-        height: 30px;
+        width: auto;
+        height: auto;
         max-width: 150px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.06);
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
         font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .playground-team-table .playground-team-select:focus {
+        border-color: transparent;
       }
 
       .playground-team-back-button {
@@ -9344,6 +9530,12 @@ const html = `<!doctype html>
         border-radius: inherit;
         padding: 1px;
         background: var(--playground-team-action-border);
+        -webkit-mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        -webkit-mask-clip: content-box, border-box;
+        -webkit-mask-composite: xor;
+        -webkit-mask-origin: content-box, border-box;
+        -webkit-mask-repeat: repeat, repeat;
+        -webkit-mask-size: auto, auto;
         mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
         mask-clip: content-box, border-box;
         mask-composite: exclude;
@@ -9391,6 +9583,12 @@ const html = `<!doctype html>
         border-radius: inherit;
         padding: 1px;
         background: var(--playground-project-overview-chart-border);
+        -webkit-mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        -webkit-mask-clip: content-box, border-box;
+        -webkit-mask-composite: xor;
+        -webkit-mask-origin: content-box, border-box;
+        -webkit-mask-repeat: repeat, repeat;
+        -webkit-mask-size: auto, auto;
         mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
         mask-clip: content-box, border-box;
         mask-composite: exclude;
@@ -9452,6 +9650,12 @@ const html = `<!doctype html>
         gap: 14px;
       }
 
+      .playground-team-modal-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
       .playground-team-modal-field {
         display: flex;
         flex-direction: column;
@@ -9462,6 +9666,14 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.68);
         font-size: 12px;
         font-weight: 500;
+      }
+
+      .playground-team-modal-help {
+        margin: 2px 0 0;
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.4;
       }
 
       .playground-team-textarea {
@@ -9479,9 +9691,113 @@ const html = `<!doctype html>
         padding-top: 4px;
       }
 
+      .playground-team-modal-actions.is-split {
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .playground-team-modal-action-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-team-modal.is-share-resource {
+        width: min(540px, 100%);
+        background: rgba(12, 12, 13, 0.96);
+      }
+
+      .playground-team-modal.is-share-resource .playground-team-modal-header {
+        margin-bottom: 18px;
+      }
+
+      .playground-team-modal.is-share-resource .playground-team-modal-subtitle {
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .playground-team-modal.is-share-resource .playground-team-modal-form,
+      .playground-team-modal.is-share-resource .playground-team-modal-form-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-team-modal.is-share-resource .playground-team-modal-form {
+        gap: 12px;
+      }
+
+      .playground-team-share-row {
+        display: grid;
+        grid-template-columns: minmax(0, 140px) minmax(0, 1fr);
+        align-items: center;
+        gap: 18px;
+        min-height: 42px;
+        padding: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-team-share-row .playground-team-modal-label {
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-team-share-row .playground-team-modal-help {
+        grid-column: 2;
+        margin: -2px 0 10px;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      .playground-team-share-select.playground-team-select {
+        width: 100%;
+        height: auto;
+        min-height: 22px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      .playground-team-share-select.playground-team-select:focus {
+        border-color: transparent;
+      }
+
+      .playground-team-modal.is-share-resource .playground-team-modal-actions {
+        padding-top: 2px;
+      }
+
+      .playground-team-modal.is-share-resource .playground-team-button {
+        height: 34px;
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-team-button.is-danger {
+        border-color: rgba(255, 113, 113, 0.28);
+        background: rgba(255, 113, 113, 0.08);
+        color: #ff9a9a;
+      }
+
+      .playground-team-button.is-danger:hover:not(:disabled) {
+        border-color: rgba(255, 113, 113, 0.46);
+        background: rgba(255, 113, 113, 0.14);
+        color: #ffd0d0;
+      }
+
       @media (max-width: 900px) {
         .playground-team-shell {
-          width: min(100% - 24px, 1180px);
+          width: 100%;
+        }
+
+        .playground-team-page {
+          padding: 24px 16px 44px;
         }
 
         .playground-team-hero,
@@ -9497,6 +9813,19 @@ const html = `<!doctype html>
 
         .playground-team-hero-meta {
           align-items: flex-start;
+        }
+
+        .playground-team-detail-header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .playground-team-detail-actions {
+          justify-content: flex-start;
+        }
+
+        .playground-team-modal-form-grid {
+          grid-template-columns: 1fr;
         }
 
         .playground-team-row {
@@ -17784,6 +18113,7 @@ const html = `<!doctype html>
         gap: 10px;
         padding: 10px 12px 8px;
         position: relative;
+        z-index: 320;
         overflow: visible;
       }
 
@@ -17831,6 +18161,7 @@ const html = `<!doctype html>
 
       .playground-files-toolbar-anchor {
         position: relative;
+        z-index: 321;
       }
 
       .playground-files-environment-select-shell {
@@ -18068,7 +18399,7 @@ const html = `<!doctype html>
         flex-wrap: nowrap;
         min-width: 0;
         position: relative;
-        z-index: 30;
+        z-index: 322;
       }
 
       .playground-files-control-actions {
@@ -18289,7 +18620,7 @@ const html = `<!doctype html>
         border: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(20, 20, 22, 0.98);
         box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
-        z-index: 260;
+        z-index: 340;
       }
 
       .playground-files-toolbar-menu-wide {
@@ -18417,6 +18748,7 @@ const html = `<!doctype html>
 
       .playground-files-browser-body {
         position: relative;
+        z-index: 1;
         min-height: 0;
         flex: 1;
         overflow: auto;
@@ -30725,6 +31057,87 @@ const html = `<!doctype html>
 	        min-height: 180px;
 	      }
 
+	      .playground-server-detail-content.is-payments-detail {
+	        gap: 12px;
+	      }
+
+	      .playground-server-detail-content.is-payments-detail .playground-payments-detail-card {
+	        --playground-project-overview-chart-border: linear-gradient(
+	          -10deg,
+	          rgba(200, 200, 200, 0.25),
+	          rgba(255, 255, 255, 0.1),
+	          rgba(255, 255, 255, 0.15),
+	          rgba(255, 255, 255, 0.375)
+	        );
+	        position: relative;
+	        margin-bottom: 12px;
+	        padding: 20px;
+	        border: 0;
+	        border-radius: 15px;
+	        overflow: hidden;
+	        background: transparent;
+	        -webkit-backdrop-filter: blur(50px);
+	        backdrop-filter: blur(50px);
+	      }
+
+	      .playground-server-detail-content.is-payments-detail .playground-payments-detail-card::before {
+	        content: "";
+	        display: block;
+	        pointer-events: none;
+	        position: absolute;
+	        inset: 0;
+	        z-index: 5;
+	        border-radius: inherit;
+	        padding: 1px;
+	        background: var(--playground-project-overview-chart-border);
+	        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+	        mask-clip: content-box, border-box;
+	        mask-composite: exclude;
+	        mask-origin: content-box, border-box;
+	        mask-repeat: repeat, repeat;
+	        mask-size: auto, auto;
+	      }
+
+	      .playground-server-detail-content.is-payments-detail .playground-payments-detail-card > * {
+	        position: relative;
+	        z-index: 1;
+	      }
+
+	      .playground-server-detail-content.is-payments-detail .playground-server-details-card-header {
+	        padding-bottom: 12px;
+	        margin-bottom: 12px;
+	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	      }
+
+	      .playground-server-detail-content.is-payments-detail .playground-server-details-card-title {
+	        color: rgba(255, 255, 255, 0.92);
+	        font-size: 14px;
+	        font-weight: 400;
+	        line-height: 1.3;
+	      }
+
+	      .playground-server-detail-content.is-payments-detail .playground-server-details-card-copy {
+	        max-width: 700px;
+	        color: rgba(255, 255, 255, 0.58);
+	        font-size: 12px;
+	        line-height: 1.45;
+	      }
+
+	      .playground-server-detail-content.is-payments-detail .playground-server-runtime-grid {
+	        display: grid;
+	        grid-template-columns: repeat(2, minmax(0, 1fr));
+	        gap: 0;
+	      }
+
+	      .playground-server-detail-content.is-payments-detail .playground-server-runtime-grid .playground-environments-editor-fact-row {
+	        min-height: 42px;
+	      }
+
+	      .playground-server-detail-content.is-payments-detail .playground-server-status-pill {
+	        flex: 0 0 auto;
+	        border-radius: 999px;
+	      }
+
 	      .playground-database-browser-columns {
 	        display: grid;
 	        grid-template-columns: minmax(180px, 0.84fr) minmax(220px, 1fr) minmax(0, 1.7fr);
@@ -37683,6 +38096,20 @@ ${IMAGINE_PAGE_CSS}
         z-index: 96;
       }
 
+      .playground-resources-overview-section .playground-resources-overview-search-row,
+      .playground-resources-overview-section .playground-develop-server-kind-table-toolbar {
+        position: relative;
+        z-index: 120;
+      }
+
+      .playground-resources-overview-section .playground-tasks-toolbar-popup-shell {
+        z-index: 121;
+      }
+
+      .playground-resources-overview-section .playground-tasks-toolbar-popup-menu {
+        z-index: 122;
+      }
+
       .playground-tasks-toolbar-popup-shell .playground-tasks-toolbar-popup-menu-animate-down-in {
         animation: playground-tasks-toolbar-popup-fade-down-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
       }
@@ -41086,7 +41513,8 @@ ${IMAGINE_PAGE_CSS}
           "react-markdown": "https://esm.sh/react-markdown@10.1.0?bundle&external=react",
           "rehype-raw": "https://esm.sh/rehype-raw@7.0.0?bundle",
           "remark-gfm": "https://esm.sh/remark-gfm@4.0.1?bundle",
-          "unist-util-visit": "https://esm.sh/unist-util-visit@5.0.0"
+          "unist-util-visit": "https://esm.sh/unist-util-visit@5.0.0",
+          "xlsx": "/vendor/xlsx/xlsx.mjs"
         }
       }
     </script>
@@ -50694,6 +51122,21 @@ ${IMAGINE_PAGE_CSS}
           return "image";
         }
 
+        if (
+          mimeType === "text/csv" ||
+          mimeType === "text/tab-separated-values" ||
+          mimeType === "application/vnd.ms-excel" ||
+          mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+          mimeType === "application/vnd.ms-excel.sheet.macroenabled.12" ||
+          mimeType === "application/vnd.ms-excel.sheet.binary.macroenabled.12" ||
+          mimeType === "application/vnd.oasis.opendocument.spreadsheet" ||
+          mimeType === "application/vnd.apple.numbers" ||
+          mimeType === "application/x-iwork-numbers-sffnumbers" ||
+          ["csv", "tsv", "xls", "xlsx", "xlsm", "xlsb", "ods", "numbers"].includes(extension)
+        ) {
+          return "spreadsheet";
+        }
+
         if (mimeType.includes("json") || extension === "json") {
           return "code";
         }
@@ -50782,6 +51225,17 @@ ${IMAGINE_PAGE_CSS}
         if (kind === "markdown") return "text/markdown";
         if (kind === "html") return "text/html";
         if (kind === "pdf") return "application/pdf";
+        if (kind === "spreadsheet") {
+          const fileName = String(entry.name || entry.path || "").trim().toLowerCase();
+          if (fileName.endsWith(".csv")) return "text/csv";
+          if (fileName.endsWith(".tsv")) return "text/tab-separated-values";
+          if (fileName.endsWith(".xls")) return "application/vnd.ms-excel";
+          if (fileName.endsWith(".xlsm")) return "application/vnd.ms-excel.sheet.macroEnabled.12";
+          if (fileName.endsWith(".xlsb")) return "application/vnd.ms-excel.sheet.binary.macroEnabled.12";
+          if (fileName.endsWith(".ods")) return "application/vnd.oasis.opendocument.spreadsheet";
+          if (fileName.endsWith(".numbers")) return "application/vnd.apple.numbers";
+          return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        }
         if (kind === "code") return "text/plain";
         return "application/octet-stream";
       }
@@ -62677,7 +63131,7 @@ ${IMAGINE_PAGE_SCRIPT}
               requestHeaders,
               headerCopy: renderFilePreviewHeaderCopy(),
               headerActions: previewHeaderActions,
-              showPreviewCodeToggle: false,
+              showPreviewCodeToggle: singleSelectedEntryFileKind === "spreadsheet",
               imagePreviewInteractive: !isPreviewMaximized && !isImageSelectionMode && !isImageCropMode,
               enableImageWheelZoom: singleSelectedEntryFileKind === "image" && !isImageSelectionMode && !isImageCropMode,
               imagePreviewReservedBottom: 132,
@@ -62711,6 +63165,29 @@ ${IMAGINE_PAGE_SCRIPT}
                   height: Math.round(Number(dimensions?.naturalHeight || 0)),
                 });
               },
+              onDocumentBlobSave: singleSelectedEntryFileKind === "spreadsheet"
+                ? async (blob, options = {}) => {
+                    const formData = new FormData();
+                    formData.append("file", blob, options.filename || activePreviewEntry.name || "spreadsheet");
+                    formData.append("path", getPlaygroundEntryParentPath(activePreviewEntry.path));
+                    const response = await fetch(
+                      backendUrl + "/environments/" + encodeURIComponent(selectedEnvironmentId) + "/files/upload",
+                      {
+                        method: "POST",
+                        headers: requestHeaders,
+                        body: formData,
+                      }
+                    );
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                      throw new Error(data?.message || data?.error || "Failed to save spreadsheet.");
+                    }
+                    await refreshEnvironmentFolders(
+                      selectedEnvironmentId,
+                      [getPlaygroundEntryParentPath(activePreviewEntry.path)]
+                    );
+                  }
+                : undefined,
               inline: true,
               onClose: closePreviewPane,
               onResizeStart: isPreviewMaximized ? undefined : startPreviewResize,
@@ -69663,8 +70140,13 @@ ${IMAGINE_PAGE_SCRIPT}
                 serverEditorDirtyRef.current = false;
               }
             }
-            if (typeof data?.onboardingUrl === "string" && data.onboardingUrl.trim()) {
-              window.location.href = data.onboardingUrl;
+            const paymentsOnboardingUrl = typeof data?.onboardingUrl === "string" && data.onboardingUrl.trim()
+              ? data.onboardingUrl.trim()
+              : typeof data?.url === "string" && data.url.trim()
+                ? data.url.trim()
+                : "";
+            if (paymentsOnboardingUrl) {
+              window.location.href = paymentsOnboardingUrl;
               return updatedServer;
             }
             setServerSaveState({
@@ -78363,7 +78845,7 @@ ${IMAGINE_PAGE_SCRIPT}
             const paymentsMetadata = getPlaygroundPaymentsMetadata(draftServer);
             const paymentsCurrency = String(paymentsMetadata.currency || paymentsMetadata.defaultCurrency || "usd").toUpperCase();
             const paymentsStatus = formatPlaygroundPaymentsStatus(paymentsMetadata);
-            const paymentsDetailsSection = React.createElement("section", { className: "playground-server-details-card playground-server-runtime-card" },
+            const paymentsDetailsSection = React.createElement("section", { className: "playground-server-details-card playground-server-runtime-card playground-payments-detail-card" },
               React.createElement("div", { className: "playground-server-details-card-header" },
                 React.createElement("div", null,
                   React.createElement("h2", { className: "playground-server-details-card-title" }, "Stripe payments"),
@@ -78404,7 +78886,7 @@ ${IMAGINE_PAGE_SCRIPT}
                 )
               )
             );
-            const paymentsRuntimeSection = React.createElement("section", { className: "playground-server-details-card playground-server-runtime-card" },
+            const paymentsRuntimeSection = React.createElement("section", { className: "playground-server-details-card playground-server-runtime-card playground-payments-detail-card playground-payments-runtime-card" },
               React.createElement("div", { className: "playground-server-details-card-header" },
                 React.createElement("div", null,
                   React.createElement("h2", { className: "playground-server-details-card-title" }, "Runtime checkout API"),
@@ -78426,7 +78908,7 @@ ${IMAGINE_PAGE_SCRIPT}
             return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
               serverMainTopbar,
               React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-                React.createElement("div", { className: "playground-server-detail-content" },
+                React.createElement("div", { className: "playground-server-detail-content is-payments-detail" },
                   serverSaveState.error
                     ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
                     : null,
@@ -121261,8 +121743,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [teamPageCreateModalOpen, setTeamPageCreateModalOpen] = useState(false);
         const [teamPageCreateInviteEmails, setTeamPageCreateInviteEmails] = useState("");
         const [teamPageCreateInviteRole, setTeamPageCreateInviteRole] = useState("create");
+        const [teamPageRenameModalOpen, setTeamPageRenameModalOpen] = useState(false);
+        const [teamPageRenameName, setTeamPageRenameName] = useState("");
+        const [teamPageInviteModalOpen, setTeamPageInviteModalOpen] = useState(false);
         const [teamPageInviteEmail, setTeamPageInviteEmail] = useState("");
         const [teamPageInviteRole, setTeamPageInviteRole] = useState("create");
+        const [teamPageShareModalOpen, setTeamPageShareModalOpen] = useState(false);
         const [teamPageShareResourceType, setTeamPageShareResourceType] = useState("project");
         const [teamPageShareResourceId, setTeamPageShareResourceId] = useState("");
         const [teamPageShareAccessLevel, setTeamPageShareAccessLevel] = useState("use");
@@ -122844,6 +123330,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               throw new Error(data?.message || data?.error || "Failed to invite team member.");
             }
             setTeamPageInviteEmail("");
+            setTeamPageInviteModalOpen(false);
             await loadTeamPageData();
           } catch (error) {
             setTeamPageError(error instanceof Error ? error.message : "Failed to invite team member.");
@@ -122943,6 +123430,96 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
         }
 
+        function readTeamPageCustomImagineTemplates() {
+          if (typeof window === "undefined" || !window.localStorage) {
+            return [];
+          }
+          try {
+            const parsed = JSON.parse(window.localStorage.getItem("runner_demo_imagine_custom_templates_v1") || "[]");
+            if (!Array.isArray(parsed)) {
+              return [];
+            }
+            return parsed
+              .filter((template) => template && template.id && template.imageUrl)
+              .map((template) => {
+                const safeTemplate = { ...(template || {}) };
+                delete safeTemplate["long" + "Description"];
+                return safeTemplate;
+              });
+          } catch (_error) {
+            return [];
+          }
+        }
+
+        async function handleRenameTeam() {
+          const teamId = String(teamPageSelectedTeamId || "").trim();
+          const name = String(teamPageRenameName || "").trim();
+          if (!teamId || !name) {
+            return;
+          }
+          setTeamPageActionId("rename-team");
+          setTeamPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId), {
+              method: "PATCH",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name }),
+            }, 8000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to rename team.");
+            }
+            setTeamPageRenameModalOpen(false);
+            setTeamPageRenameName("");
+            await loadTeamPageData({ selectedTeamId: teamId });
+          } catch (error) {
+            setTeamPageError(error instanceof Error ? error.message : "Failed to rename team.");
+          } finally {
+            setTeamPageActionId("");
+          }
+        }
+
+        async function handleDeleteTeam() {
+          const teamId = String(teamPageSelectedTeamId || "").trim();
+          if (!teamId) {
+            return;
+          }
+          const team = teamPageTeams.find((item) => item.id === teamId) || null;
+          const teamName = String(team?.name || "this team").trim() || "this team";
+          const confirmed = window.confirm("Delete " + teamName + "? This removes team membership, invitations, and shared resource access.");
+          if (!confirmed) {
+            return;
+          }
+          setTeamPageActionId("delete-team");
+          setTeamPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId), {
+              method: "DELETE",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders,
+            }, 8000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to delete team.");
+            }
+            setTeamPageRenameModalOpen(false);
+            setTeamPageRenameName("");
+            setTeamPageSelectedTeamId("");
+            setTeamPageMembers([]);
+            setTeamPageInvitations([]);
+            setTeamPageShares([]);
+            await loadTeamPageData({ selectedTeamId: "" });
+          } catch (error) {
+            setTeamPageError(error instanceof Error ? error.message : "Failed to delete team.");
+          } finally {
+            setTeamPageActionId("");
+          }
+        }
+
         async function handleCreateTeamResourceShare() {
           const teamId = String(teamPageSelectedTeamId || "").trim();
           const resourceType = String(teamPageShareResourceType || "").trim();
@@ -122962,12 +123539,26 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ...requestHeaders,
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ resourceType, resourceId, accessLevel }),
+              body: JSON.stringify({
+                resourceType,
+                resourceId,
+                accessLevel,
+                ...(resourceType === "imagine_template"
+                  ? {
+                      metadata: {
+                        template: readTeamPageCustomImagineTemplates().find((template) =>
+                          String(template.id || "") === resourceId
+                        ) || null,
+                      },
+                    }
+                  : {}),
+              }),
             }, 8000);
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to share resource.");
             }
             setTeamPageShareResourceId("");
+            setTeamPageShareModalOpen(false);
             await loadTeamPageData();
           } catch (error) {
             setTeamPageError(error instanceof Error ? error.message : "Failed to share resource.");
@@ -137241,26 +137832,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
             { value: "agent", label: "Agents" },
             { value: "imagine_template", label: "Imagine templates" },
           ];
-          const teamPageImagineTemplateOptions = [
-            { id: "product-ads", label: "Product ads" },
-            { id: "luxury-watch-ads", label: "Luxury watch ads" },
-            { id: "fragrance-ads", label: "Fragrance ads" },
-            { id: "coffee-ads", label: "Coffee ads" },
-            { id: "beauty-ads", label: "Beauty ads" },
-            { id: "furniture-campaigns", label: "Furniture campaigns" },
-            { id: "sneaker-campaigns", label: "Sneaker campaigns" },
-            { id: "brand-campaigns", label: "Brand campaigns" },
-            { id: "infographics", label: "Infographics" },
-            { id: "technical-drawings", label: "Technical drawings" },
-            { id: "app-screens", label: "App screens" },
-            { id: "editorial", label: "Editorial images" },
-            { id: "social-posts", label: "Social posts" },
-            { id: "restaurant-ads", label: "Restaurant ads" },
-            { id: "comparison-ads", label: "Comparison ads" },
-            { id: "data-visuals", label: "Data visuals" },
-            { id: "fashion-campaigns", label: "Fashion campaigns" },
-            { id: "portrait-studio", label: "Portrait studio" },
-          ];
+          const teamPageImagineTemplateOptions = readTeamPageCustomImagineTemplates().map((template) => ({
+            id: String(template.id || ""),
+            label: String(template.title || template.name || "Untitled template"),
+          })).filter((item) => item.id);
           const selectedTeam = teamPageTeams.find((team) => team.id === teamPageSelectedTeamId) || null;
           const selectedTeamId = selectedTeam?.id || "";
           const currentMember = teamPageMembers.find((member) => member.userId === sessionState.userId) || null;
@@ -137311,16 +137886,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           if (teamPageRequiresPlan) {
             return React.createElement("div", { className: "playground-team-page" },
-              React.createElement("div", { className: "playground-team-shell" },
-                React.createElement("div", { className: "playground-team-hero" },
-                  React.createElement("div", null,
-                    React.createElement("div", { className: "playground-team-eyebrow" }, "Team plan required"),
-                    React.createElement("h1", { className: "playground-team-title" }, "Collaborate with humans and agents in one workspace."),
-                    React.createElement("p", { className: "playground-team-muted" }, "Team workspaces are available on the Team plan. Upgrade to invite people, assign permissions, and share projects, computers, and agents.")
-                  ),
+              React.createElement("div", { className: "playground-team-shell is-plan-empty" },
+                React.createElement("div", { className: "playground-team-plan-empty" },
+                  React.createElement("img", {
+                    className: "playground-team-plan-empty-visual",
+                    src: "/img/empty-state/no-users-yet.avif",
+                    alt: "",
+                    draggable: false,
+                  }),
+                  React.createElement("h1", { className: "playground-team-plan-empty-title" }, "Teams are available on the Team plan"),
+                  React.createElement("p", { className: "playground-team-plan-empty-copy" }, "Upgrade to invite people, share projects, computers, agents, and Imagine templates, and keep everyone working inside one shared workspace."),
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-team-button is-primary",
+                    className: "playground-team-plan-empty-button",
                     onClick: () => openSettingsPage("costs-plans"),
                   }, "View plans")
                 )
@@ -137431,11 +138009,256 @@ ${PROJECT_OVERVIEW_SCRIPT}
               )
             : null;
 
+          const closeRenameTeamModal = () => {
+            if (teamPageActionId === "rename-team" || teamPageActionId === "delete-team") {
+              return;
+            }
+            setTeamPageRenameModalOpen(false);
+          };
+
+          const renderRenameTeamModal = () => teamPageRenameModalOpen
+            ? React.createElement("div", {
+                className: "playground-team-modal-backdrop",
+                onMouseDown: (event) => {
+                  if (event.target === event.currentTarget) {
+                    closeRenameTeamModal();
+                  }
+                },
+              },
+                React.createElement("div", {
+                  className: "playground-team-modal",
+                  role: "dialog",
+                  "aria-modal": "true",
+                  "aria-labelledby": "team-rename-modal-title",
+                },
+                  React.createElement("div", { className: "playground-team-modal-header" },
+                    React.createElement("div", null,
+                      React.createElement("h2", { id: "team-rename-modal-title", className: "playground-team-modal-title" }, "Edit team"),
+                      React.createElement("p", { className: "playground-team-modal-subtitle" }, "Rename this workspace for everyone on the team.")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-team-modal-close",
+                      onClick: closeRenameTeamModal,
+                      disabled: teamPageActionId === "rename-team" || teamPageActionId === "delete-team",
+                      "aria-label": "Close edit team modal",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-team-modal-form" },
+                    React.createElement("div", { className: "playground-team-modal-field" },
+                      React.createElement("label", { className: "playground-team-modal-label", htmlFor: "team-rename-name" }, "Team name"),
+                      React.createElement("input", {
+                        id: "team-rename-name",
+                        className: "playground-team-input",
+                        value: teamPageRenameName,
+                        onChange: (event) => setTeamPageRenameName(event.target.value),
+                        placeholder: "Acme product team",
+                        disabled: teamPageActionId === "rename-team" || teamPageActionId === "delete-team",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-team-modal-actions is-split" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button is-danger",
+                        onClick: handleDeleteTeam,
+                        disabled: teamPageActionId === "rename-team" || teamPageActionId === "delete-team",
+                      }, teamPageActionId === "delete-team" ? "Deleting..." : "Delete team"),
+                      React.createElement("div", { className: "playground-team-modal-action-group" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-team-button",
+                          onClick: closeRenameTeamModal,
+                          disabled: teamPageActionId === "rename-team" || teamPageActionId === "delete-team",
+                        }, "Cancel"),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-team-button is-primary",
+                          onClick: handleRenameTeam,
+                          disabled: teamPageActionId === "rename-team" || teamPageActionId === "delete-team" || !String(teamPageRenameName || "").trim(),
+                        }, teamPageActionId === "rename-team" ? "Saving..." : "Save changes")
+                      )
+                    )
+                  )
+                )
+              )
+            : null;
+
+          const closeInviteTeamModal = () => {
+            if (teamPageActionId === "invite") {
+              return;
+            }
+            setTeamPageInviteModalOpen(false);
+          };
+
+          const renderInviteTeamModal = () => teamPageInviteModalOpen
+            ? React.createElement("div", {
+                className: "playground-team-modal-backdrop",
+                onMouseDown: (event) => {
+                  if (event.target === event.currentTarget) {
+                    closeInviteTeamModal();
+                  }
+                },
+              },
+                React.createElement("div", {
+                  className: "playground-team-modal",
+                  role: "dialog",
+                  "aria-modal": "true",
+                  "aria-labelledby": "team-invite-modal-title",
+                },
+                  React.createElement("div", { className: "playground-team-modal-header" },
+                    React.createElement("div", null,
+                      React.createElement("h2", { id: "team-invite-modal-title", className: "playground-team-modal-title" }, "Invite member"),
+                      React.createElement("p", { className: "playground-team-modal-subtitle" }, "Send an invitation and choose the permission level for this person.")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-team-modal-close",
+                      onClick: closeInviteTeamModal,
+                      "aria-label": "Close invite member modal",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-team-modal-form" },
+                    React.createElement("div", { className: "playground-team-modal-field" },
+                      React.createElement("label", { className: "playground-team-modal-label", htmlFor: "team-invite-email" }, "Email"),
+                      React.createElement("input", {
+                        id: "team-invite-email",
+                        className: "playground-team-input",
+                        type: "email",
+                        value: teamPageInviteEmail,
+                        onChange: (event) => setTeamPageInviteEmail(event.target.value),
+                        placeholder: "name@company.com",
+                        disabled: teamPageActionId === "invite",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-team-modal-field" },
+                      React.createElement("label", { className: "playground-team-modal-label" }, "Permission"),
+                      renderRoleSelect({
+                        value: teamPageInviteRole,
+                        onChange: (event) => setTeamPageInviteRole(event.target.value),
+                        disabled: teamPageActionId === "invite",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-team-modal-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button",
+                        onClick: closeInviteTeamModal,
+                        disabled: teamPageActionId === "invite",
+                      }, "Cancel"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button is-primary",
+                        onClick: handleSendTeamInvite,
+                        disabled: teamPageActionId === "invite" || !String(teamPageInviteEmail || "").trim(),
+                      }, teamPageActionId === "invite" ? "Sending..." : "Send invite")
+                    )
+                  )
+                )
+              )
+            : null;
+
+          const closeShareTeamModal = () => {
+            if (teamPageActionId === "share") {
+              return;
+            }
+            setTeamPageShareModalOpen(false);
+          };
+
+          const renderShareResourceModal = () => teamPageShareModalOpen
+            ? React.createElement("div", {
+                className: "playground-team-modal-backdrop",
+                onMouseDown: (event) => {
+                  if (event.target === event.currentTarget) {
+                    closeShareTeamModal();
+                  }
+                },
+                },
+                React.createElement("div", {
+                  className: "playground-team-modal is-share-resource",
+                  role: "dialog",
+                  "aria-modal": "true",
+                  "aria-labelledby": "team-share-modal-title",
+                },
+                  React.createElement("div", { className: "playground-team-modal-header" },
+                    React.createElement("div", null,
+                      React.createElement("h2", { id: "team-share-modal-title", className: "playground-team-modal-title" }, "Share resource"),
+                      React.createElement("p", { className: "playground-team-modal-subtitle" }, "Choose a resource and how this team can use it.")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-team-modal-close",
+                      onClick: closeShareTeamModal,
+                      "aria-label": "Close share resource modal",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-team-modal-form" },
+                    React.createElement("div", { className: "playground-team-modal-form-grid" },
+                      React.createElement("div", { className: "playground-team-modal-field playground-team-share-row" },
+                        React.createElement("label", { className: "playground-team-modal-label" }, "Resource type"),
+                        React.createElement("select", {
+                          className: "playground-team-select playground-team-share-select",
+                          value: teamPageShareResourceType,
+                          onChange: (event) => {
+                            setTeamPageShareResourceType(event.target.value);
+                            setTeamPageShareResourceId("");
+                          },
+                          disabled: teamPageActionId === "share",
+                        }, resourceTypeOptions.map((option) =>
+                          React.createElement("option", { key: option.value, value: option.value }, option.label)
+                        ))
+                      ),
+                      React.createElement("div", { className: "playground-team-modal-field playground-team-share-row" },
+                        React.createElement("label", { className: "playground-team-modal-label" }, "Access"),
+                        React.createElement("select", {
+                          className: "playground-team-select playground-team-share-select",
+                          value: teamPageShareAccessLevel,
+                          onChange: (event) => setTeamPageShareAccessLevel(event.target.value),
+                          disabled: teamPageActionId === "share",
+                        }, accessOptions.map((option) =>
+                          React.createElement("option", { key: option.value, value: option.value }, option.label)
+                        ))
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-team-modal-field playground-team-share-row" },
+                      React.createElement("label", { className: "playground-team-modal-label" }, "Resource"),
+                      React.createElement("select", {
+                        className: "playground-team-select playground-team-share-select",
+                        value: teamPageShareResourceId,
+                        onChange: (event) => setTeamPageShareResourceId(event.target.value),
+                        disabled: teamPageActionId === "share" || selectedResourceOptions.length === 0,
+                      },
+                        React.createElement("option", { value: "" }, selectedResourceOptions.length === 0 ? "No resources available" : "Select resource"),
+                        selectedResourceOptions.map((resource) =>
+                          React.createElement("option", { key: resource.id, value: resource.id }, resource.label)
+                        )
+                      ),
+                      teamPageShareResourceType === "imagine_template"
+                        ? React.createElement("p", { className: "playground-team-modal-help" }, "Only custom templates from Imagine My Templates can be shared.")
+                        : null
+                    ),
+                    React.createElement("div", { className: "playground-team-modal-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button",
+                        onClick: closeShareTeamModal,
+                        disabled: teamPageActionId === "share",
+                      }, "Cancel"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button is-primary",
+                        onClick: handleCreateTeamResourceShare,
+                        disabled: teamPageActionId === "share" || !teamPageShareResourceId,
+                      }, teamPageActionId === "share" ? "Sharing..." : "Share resource")
+                    )
+                  )
+                )
+              )
+            : null;
+
           const renderTeamOverview = () => React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-team-page-header" },
               React.createElement("div", null,
-                React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-team-page-title" }, "Teams"),
-                React.createElement("p", { className: "playground-team-page-subtitle" }, "Workspaces where humans can share agents, computers, projects, and Imagine templates.")
+                React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-team-page-title" }, "Teams")
               ),
               renderTeamActionButton("Create team", () => setTeamPageCreateModalOpen(true), {
                 icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
@@ -137503,29 +138326,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
           ];
 
           const renderMembersTab = () => React.createElement("div", { className: "playground-team-detail-panel" },
-            canManageTeam
-              ? React.createElement("div", { className: "playground-team-inline-editor" },
-                  React.createElement("input", {
-                    className: "playground-team-input",
-                    type: "email",
-                    value: teamPageInviteEmail,
-                    onChange: (event) => setTeamPageInviteEmail(event.target.value),
-                    placeholder: "name@company.com",
-                    disabled: teamPageActionId === "invite",
-                  }),
-                  renderRoleSelect({
-                    value: teamPageInviteRole,
-                    onChange: (event) => setTeamPageInviteRole(event.target.value),
-                    disabled: teamPageActionId === "invite",
-                  }),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-team-button is-primary",
-                    onClick: handleSendTeamInvite,
-                    disabled: teamPageActionId === "invite" || !String(teamPageInviteEmail || "").trim(),
-                  }, teamPageActionId === "invite" ? "Sending..." : "Invite member")
-                )
-              : null,
             memberRows.length > 0
               ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
                   React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table" },
@@ -137596,46 +138396,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
 
           const renderResourcesTab = () => React.createElement("div", { className: "playground-team-detail-panel" },
-            canManageTeam
-              ? React.createElement("div", { className: "playground-team-inline-editor is-resource-share" },
-                  React.createElement("select", {
-                    className: "playground-team-select",
-                    value: teamPageShareResourceType,
-                    onChange: (event) => {
-                      setTeamPageShareResourceType(event.target.value);
-                      setTeamPageShareResourceId("");
-                    },
-                    disabled: teamPageActionId === "share",
-                  }, resourceTypeOptions.map((option) =>
-                    React.createElement("option", { key: option.value, value: option.value }, option.label)
-                  )),
-                  React.createElement("select", {
-                    className: "playground-team-select",
-                    value: teamPageShareResourceId,
-                    onChange: (event) => setTeamPageShareResourceId(event.target.value),
-                    disabled: teamPageActionId === "share" || selectedResourceOptions.length === 0,
-                  },
-                    React.createElement("option", { value: "" }, selectedResourceOptions.length === 0 ? "No resources available" : "Select resource"),
-                    selectedResourceOptions.map((resource) =>
-                      React.createElement("option", { key: resource.id, value: resource.id }, resource.label)
-                    )
-                  ),
-                  React.createElement("select", {
-                    className: "playground-team-select",
-                    value: teamPageShareAccessLevel,
-                    onChange: (event) => setTeamPageShareAccessLevel(event.target.value),
-                    disabled: teamPageActionId === "share",
-                  }, accessOptions.map((option) =>
-                    React.createElement("option", { key: option.value, value: option.value }, option.label)
-                  )),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-team-button is-primary",
-                    onClick: handleCreateTeamResourceShare,
-                    disabled: teamPageActionId === "share" || !teamPageShareResourceId,
-                  }, teamPageActionId === "share" ? "Sharing..." : "Share resource")
-                )
-              : null,
             teamPageShares.length > 0
               ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
                   React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table" },
@@ -137706,23 +138466,24 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         setTeamPageShares([]);
                       },
                     }, React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }), "Teams"),
-                    React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar playground-team-detail-navbar" },
-                      React.createElement("div", { className: "playground-environments-editor-title-wrap" },
-                        React.createElement("div", { className: "playground-environments-editor-title-input playground-team-detail-title" }, selectedTeam.name || "Team"),
-                        React.createElement("div", { className: "playground-team-detail-meta" }, currentRoleLabel + " · " + teamPageMembers.length + " members · " + teamPageShares.length + " resources")
-                      ),
-                      React.createElement("div", { className: "playground-environments-editor-navbar-actions playground-team-detail-actions" },
+                    React.createElement("div", { className: "playground-team-detail-header" },
+                      React.createElement("h1", { className: "playground-team-detail-title" }, selectedTeam.name || "Team"),
+                      React.createElement("div", { className: "playground-team-detail-actions" },
+                        canManageTeam
+                          ? renderTeamActionButton("Edit", () => {
+                              setTeamPageRenameName(selectedTeam.name || "");
+                              setTeamPageRenameModalOpen(true);
+                            }, { icon: React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }) })
+                          : null,
                         canManageTeam && teamPageActiveTab === "members"
-                          ? renderTeamActionButton("Invite member", () => {
-                              const input = document.querySelector(".playground-team-inline-editor input");
-                              if (input && typeof input.focus === "function") input.focus();
-                            }, { icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }) })
+                          ? renderTeamActionButton("Invite member", () => setTeamPageInviteModalOpen(true), {
+                              icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            })
                           : null,
                         canManageTeam && teamPageActiveTab === "resources"
-                          ? renderTeamActionButton("Share resource", () => {
-                              const select = document.querySelector(".playground-team-inline-editor select");
-                              if (select && typeof select.focus === "function") select.focus();
-                            }, { icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }) })
+                          ? renderTeamActionButton("Share resource", () => setTeamPageShareModalOpen(true), {
+                              icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            })
                           : null
                       )
                     ),
@@ -137746,6 +138507,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       ? React.createElement("div", { className: "playground-team-error" }, teamPageError)
                       : null,
                     teamPageActiveTab === "resources" ? renderResourcesTab() : renderMembersTab()
+                    ,
+                    renderRenameTeamModal(),
+                    renderInviteTeamModal(),
+                    renderShareResourceModal()
                   )
                 : renderTeamOverview()
             )
@@ -141672,7 +142437,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function renderTeamPageNav() {
           return renderUnifiedTopNav({
             className: "playground-settings-top-navbar",
-            pathItems: [{ label: "Configure" }, { label: "Team" }],
+            pathItems: [{ label: "Configure" }, { label: "Teams" }],
           });
         }
 
@@ -141782,11 +142547,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
             extraActions: isProjectDetailView
               ? React.createElement("button", {
                   type: "button",
-                  className: "playground-content-menu-button",
-                  "aria-label": "Project settings",
-                  title: "Project settings",
+                  className: "playground-top-nav-pill-button playground-tasks-top-nav-edit-button",
+                  "aria-label": "Edit project",
+                  title: "Edit project",
                   onClick: () => setTasksProjectSettingsRequestToken((current) => current + 1),
-                }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 }))
+                },
+                  React.createElement(SquarePen, { strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Edit")
+                )
               : React.createElement("button", {
                   type: "button",
                   className: "playground-content-menu-button",
@@ -143761,7 +144529,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               },
               {
                 id: "team",
-                label: "Team",
+                label: "Teams",
                 Icon: UsersRound,
                 active: activePage === "team",
                 onClick: () => openTeamPage(),
@@ -149412,7 +150180,7 @@ async function serveVendorAsset(req, res, vendorRoot, vendorPrefix) {
 
   try {
     const file = await fs.readFile(normalized);
-    const contentType = pathname.endsWith(".js")
+    const contentType = pathname.endsWith(".js") || pathname.endsWith(".mjs")
       ? "text/javascript; charset=utf-8"
       : pathname.endsWith(".map")
         ? "application/json; charset=utf-8"
@@ -150621,6 +151389,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname.startsWith("/vendor/novnc-next/")) {
     void serveVendorAsset(req, res, noVncNextRoot, "/vendor/novnc-next/");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname.startsWith("/vendor/xlsx/")) {
+    void serveVendorAsset(req, res, xlsxRoot, "/vendor/xlsx/");
     return;
   }
 

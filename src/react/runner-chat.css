@@ -7638,6 +7638,21 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   background: transparent;
 }
 
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-code-shell {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-code-shell .tb-log-card-code {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
 .tb-runner-document-preview-host-inline .tb-attachment-preview-drawer-body,
 .tb-runner-document-preview-host-inline .tb-attachment-preview-pdf,
 .tb-runner-document-preview-host-inline .tb-attachment-preview-markdown-shell,
@@ -8228,6 +8243,290 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-docx-stage .tb-attachment-docx {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-mode-shell,
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-mode-panel {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-mode-panel.is-hidden {
+  display: none;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-spreadsheet-preview-header-save-button {
+  --playground-code-preview-header-button-border: linear-gradient(
+    -10deg,
+    rgba(200, 200, 200, 0.25),
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.375)
+  );
+  position: relative;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 0;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-spreadsheet-preview-header-save-button::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--playground-code-preview-header-button-border);
+  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  mask-origin: content-box, border-box;
+  mask-repeat: repeat, repeat;
+  mask-size: auto, auto;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-spreadsheet-preview-header-save-button > * {
+  position: relative;
+  z-index: 1;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-spreadsheet-preview-header-save-button:disabled,
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-action:disabled {
+  opacity: 0.44;
+  cursor: default;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-toolbar {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-tabs {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-tab {
+  min-height: 30px;
+  max-width: 180px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-tab:hover,
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-tab.is-active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-notices {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-actions {
+  min-width: 0;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-note,
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-save-message {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-save-message.is-error {
+  max-width: 260px;
+  color: rgba(255, 120, 120, 0.86);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-save-message.is-saved {
+  color: rgba(128, 255, 183, 0.82);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-action {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-action.is-primary {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(0, 0, 0, 0.86);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-action:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  min-width: max-content;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-corner,
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-column-header,
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-row-header {
+  position: sticky;
+  z-index: 2;
+  height: 28px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #111;
+  color: rgba(255, 255, 255, 0.48);
+  font-weight: 500;
+  text-align: center;
+  user-select: none;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-corner {
+  top: 0;
+  left: 0;
+  width: 48px;
+  min-width: 48px;
+  z-index: 4;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-column-header {
+  top: 0;
+  width: 128px;
+  min-width: 128px;
+  z-index: 3;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-row-header {
+  left: 0;
+  width: 48px;
+  min-width: 48px;
+  z-index: 2;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-cell {
+  width: 128px;
+  min-width: 128px;
+  height: 30px;
+  padding: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.055);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-input {
+  width: 100%;
+  height: 30px;
+  display: block;
+  padding: 0 8px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  font: inherit;
+  line-height: 30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-input:focus {
+  box-shadow: inset 0 0 0 1px rgba(102, 166, 255, 0.9);
+  background: rgba(102, 166, 255, 0.08);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet-input[readonly] {
+  cursor: default;
 }
 
 .tb-runner-chat .tb-composer-textarea-shell {

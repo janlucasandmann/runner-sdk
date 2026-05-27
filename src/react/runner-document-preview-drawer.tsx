@@ -7,11 +7,13 @@ import {
   Crop as LucideCrop,
   Eye as LucideEye,
   FileText as LucideFileText,
+  HardDrive as LucideHardDrive,
   Check as LucideCheck,
   LassoSelect as LucideLassoSelect,
   LoaderCircle as LucideLoaderCircle,
   Minus as LucideMinus,
   Plus as LucidePlus,
+  RotateCcw as LucideRotateCcw,
   X as LucideX,
 } from "lucide-react";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
@@ -40,6 +42,11 @@ import {
 } from "./runner-image-edit-overlays.js";
 import { RunnerCodeViewer } from "./runner-log-boxes.js";
 import { RunnerMarkdown } from "./runner-markdown.js";
+import {
+  RunnerSpreadsheetPreview,
+  type RunnerSpreadsheetPreviewControls,
+  type RunnerSpreadsheetSaveOptions,
+} from "./runner-spreadsheet-preview.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
 const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
@@ -89,6 +96,7 @@ export interface RunnerDocumentPreviewDrawerProps {
   } | null) => void;
   showCloseButton?: boolean;
   showResizeHandle?: boolean;
+  onDocumentBlobSave?: (blob: Blob, options: RunnerSpreadsheetSaveOptions) => Promise<void> | void;
   onWorkspacePathOpen?: (path: string, options?: { isFolder?: boolean }) => void;
 }
 
@@ -172,6 +180,7 @@ export function RunnerDocumentPreviewDrawer({
   onImageSelectionChange,
   showCloseButton = true,
   showResizeHandle = false,
+  onDocumentBlobSave,
   onWorkspacePathOpen,
 }: RunnerDocumentPreviewDrawerProps) {
   const documentPreviewDocxRef = useRef<HTMLDivElement | null>(null);
@@ -194,6 +203,8 @@ export function RunnerDocumentPreviewDrawer({
   const [isPdfPreviewRendering, setIsPdfPreviewRendering] = useState(false);
   const [pdfPreviewError, setPdfPreviewError] = useState<string | null>(null);
   const [markdownPreviewMode, setMarkdownPreviewMode] = useState<"rendered" | "code">("rendered");
+  const [spreadsheetPreviewMode, setSpreadsheetPreviewMode] = useState<"preview" | "code">("preview");
+  const [spreadsheetPreviewControls, setSpreadsheetPreviewControls] = useState<RunnerSpreadsheetPreviewControls | null>(null);
   const [imagePreviewZoom, setImagePreviewZoom] = useState(1);
   const [imagePreviewToolMode, setImagePreviewToolMode] = useState<"idle" | "select" | "crop">("idle");
   const [imageNaturalSize, setImageNaturalSize] = useState<RunnerImageNaturalSize>({ width: 0, height: 0 });
@@ -253,7 +264,15 @@ export function RunnerDocumentPreviewDrawer({
     (directoryPreviewState.status !== "not-directory" || isExplicitDirectoryAttachment);
   const isDirectoryLikePreview = shouldRenderDirectoryPreview || isExplicitDirectoryAttachment;
   const activeDirectoryAbsolutePath = toAbsoluteRunnerWorkspacePath(directoryPreviewPath);
-  const canTogglePreviewCode = showPreviewCodeToggle && (attachmentPreviewKind === "markdown" || attachmentPreviewKind === "html");
+  const isSpreadsheetAttachment = attachmentPreviewKind === "spreadsheet";
+  const canTogglePreviewCode = showPreviewCodeToggle && (
+    attachmentPreviewKind === "markdown" ||
+    attachmentPreviewKind === "html" ||
+    isSpreadsheetAttachment
+  );
+  const isPreviewCodeMode = isSpreadsheetAttachment
+    ? spreadsheetPreviewMode === "code"
+    : markdownPreviewMode === "code";
   const requestHeadersWithApiKey = useMemo(
     () => buildRunnerPreviewHeaders(requestHeaders, apiKey),
     [apiKey, requestHeaders]
@@ -357,6 +376,8 @@ export function RunnerDocumentPreviewDrawer({
     setPdfPreviewError(null);
     setIsPdfPreviewRendering(false);
     setMarkdownPreviewMode("rendered");
+    setSpreadsheetPreviewMode("preview");
+    setSpreadsheetPreviewControls(null);
     setImagePreviewZoom(1);
     setImagePreviewToolMode("idle");
     setImageNaturalSize({ width: 0, height: 0 });
@@ -1795,9 +1816,39 @@ export function RunnerDocumentPreviewDrawer({
           </>
         )
     : null;
+  const spreadsheetPreviewHeaderActions = isSpreadsheetAttachment && spreadsheetPreviewControls?.canSave
+    ? (
+      <>
+        <button
+          type="button"
+          className="tb-attachment-preview-drawer-action"
+          onClick={spreadsheetPreviewControls.onRevert}
+          disabled={!spreadsheetPreviewControls.canRevert || spreadsheetPreviewControls.isSaving}
+          title="Revert changes"
+          aria-label="Revert changes"
+        >
+          <LucideRotateCcw className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.9} />
+        </button>
+        <button
+          type="button"
+          className="playground-code-preview-header-save-button tb-spreadsheet-preview-header-save-button"
+          onClick={spreadsheetPreviewControls.onSave}
+          disabled={!spreadsheetPreviewControls.isDirty || spreadsheetPreviewControls.isSaving}
+          title="Save spreadsheet"
+        >
+          {spreadsheetPreviewControls.isSaving ? (
+            <LucideLoaderCircle className="tb-context-action-notice-icon-spinner" width={14} height={14} strokeWidth={1.9} />
+          ) : (
+            <LucideHardDrive width={14} height={14} strokeWidth={1.9} />
+          )}
+          <span>{spreadsheetPreviewControls.isSaving ? "Saving..." : "Save"}</span>
+        </button>
+      </>
+    )
+    : null;
   const hasDrawerHeaderActions = Boolean(
     (isBuiltInImageToolModeActive ? builtInImagePreviewHeaderActions : (
-      headerActions || builtInImagePreviewHeaderActions || canTogglePreviewCode || headerActionsAfterPreviewToggle || (showCloseButton && onClose)
+      spreadsheetPreviewHeaderActions || headerActions || builtInImagePreviewHeaderActions || canTogglePreviewCode || headerActionsAfterPreviewToggle || (showCloseButton && onClose)
     ))
   );
   const shouldRenderImagePreviewZoomControl = Boolean(imagePreviewFullscreen && isImageAttachment && effectiveImagePreviewUrl);
@@ -1882,25 +1933,32 @@ export function RunnerDocumentPreviewDrawer({
                 builtInImagePreviewHeaderActions
               ) : (
                 <>
-                  {headerActions}
+                  {spreadsheetPreviewHeaderActions}
                   {builtInImagePreviewHeaderActions}
                   {canTogglePreviewCode ? (
                     <button
                       type="button"
-                      className={`tb-image-preview-select-button tb-document-preview-mode-toggle${markdownPreviewMode === "code" ? " is-active" : ""}`}
-                      onClick={() => setMarkdownPreviewMode((current) => current === "code" ? "rendered" : "code")}
-                      aria-label={markdownPreviewMode === "code" ? "Show preview" : "Show code"}
-                      aria-pressed={markdownPreviewMode === "code"}
-                      title={markdownPreviewMode === "code" ? "Show preview" : "Show code"}
+                      className={`tb-image-preview-select-button tb-document-preview-mode-toggle${isPreviewCodeMode ? " is-active" : ""}`}
+                      onClick={() => {
+                        if (isSpreadsheetAttachment) {
+                          setSpreadsheetPreviewMode((current) => current === "code" ? "preview" : "code");
+                          return;
+                        }
+                        setMarkdownPreviewMode((current) => current === "code" ? "rendered" : "code");
+                      }}
+                      aria-label={isPreviewCodeMode ? "Show preview" : "Show code"}
+                      aria-pressed={isPreviewCodeMode}
+                      title={isPreviewCodeMode ? "Show preview" : "Show code"}
                     >
-                      {markdownPreviewMode === "code" ? (
+                      {isPreviewCodeMode ? (
                         <LucideEye width={14} height={14} strokeWidth={1.9} />
                       ) : (
                         <LucideCode2 width={14} height={14} strokeWidth={1.9} />
                       )}
-                      <span>{markdownPreviewMode === "code" ? "Preview" : "Code"}</span>
+                      <span>{isPreviewCodeMode ? "Preview" : "Code"}</span>
                     </button>
                   ) : null}
+                  {headerActions}
                   {headerActionsAfterPreviewToggle && !builtInImagePreviewHeaderActions ? (
                     <span className="tb-image-preview-header-divider" aria-hidden="true" />
                   ) : null}
@@ -2111,6 +2169,31 @@ export function RunnerDocumentPreviewDrawer({
                 showLineNumbers
                 className="tb-log-card-code-hide-scrollbars"
               />
+            </div>
+          ) : documentPreviewState.kind === "spreadsheet" && documentPreviewState.blob ? (
+            <div className="tb-attachment-preview-spreadsheet-mode-shell">
+              <div className={`tb-attachment-preview-spreadsheet-mode-panel${spreadsheetPreviewMode === "code" ? " is-hidden" : ""}`}>
+                <RunnerSpreadsheetPreview
+                  blob={documentPreviewState.blob}
+                  filename={attachment.filename}
+                  mimeType={attachment.mimeType}
+                  editable={Boolean(onDocumentBlobSave)}
+                  onSave={onDocumentBlobSave}
+                  onControlsChange={setSpreadsheetPreviewControls}
+                />
+              </div>
+              {spreadsheetPreviewMode === "code" ? (
+                <div className="tb-attachment-preview-code-shell">
+                  <RunnerCodeViewer
+                    content={spreadsheetPreviewControls?.codeText || ""}
+                    filePath={attachment.filename}
+                    language={spreadsheetPreviewControls?.codeLanguage || "json"}
+                    maxHeight={inline ? 520 : 980}
+                    showLineNumbers
+                    className="tb-log-card-code-hide-scrollbars"
+                  />
+                </div>
+              ) : null}
             </div>
           ) : documentPreviewState.kind === "docx" ? (
             <div className="tb-attachment-preview-docx-shell">
