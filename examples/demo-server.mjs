@@ -10192,6 +10192,31 @@ const html = `<!doctype html>
         white-space: nowrap;
       }
 
+      .thread-search-result-icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.64);
+      }
+
+      .thread-search-result-copy {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .thread-search-result-subtitle {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.44);
+        font-size: 11px;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
       .thread-search-empty-state {
         padding: 24px 4px 12px;
         color: rgba(255, 255, 255, 0.48);
@@ -13141,6 +13166,10 @@ const html = `<!doctype html>
       .playground-plugins-detail {
         height: 100%;
         min-height: 0;
+      }
+
+      .playground-plugins-detail > .playground-environments-detail-scroll.playground-settings-detail-scroll {
+        padding: 42px 44px 56px;
       }
 
       .playground-plugins-section {
@@ -21224,6 +21253,11 @@ const html = `<!doctype html>
         min-height: 0;
       }
 
+      .playground-skills-detail-page > .playground-environments-detail-scroll.playground-environments-editor-scroll {
+        padding: 42px 44px 56px;
+        overflow: visible;
+      }
+
       .playground-skills-detail-navbar-icon-shell {
         position: relative;
         flex: 0 0 auto;
@@ -21282,6 +21316,10 @@ const html = `<!doctype html>
         width: min(100%, var(--playground-centered-page-max-width));
         max-width: var(--playground-centered-page-max-width);
         margin: 0 auto;
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
       }
 
       .playground-plugin-detail-page {
@@ -21365,12 +21403,31 @@ const html = `<!doctype html>
 
       .playground-plugin-detail-title {
         margin: 0;
-        position: relative;
-        top: 8px;
-        font-size: 20px;
-        line-height: 1.1;
+        font-size: inherit;
+        line-height: inherit;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-plugin-detail-title-row {
+        margin-top: 0;
+      }
+
+      .playground-plugin-detail-tabs {
+        width: min(100%, 260px);
+        margin: -6px 0 4px;
+      }
+
+      .playground-plugin-detail-tabs .content-mode-button {
+        min-width: 0;
+      }
+
+      .playground-plugin-detail-connect-button.is-destructive {
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-plugin-detail-connect-button.is-destructive:hover {
+        color: rgba(255, 255, 255, 0.96);
       }
 
       .playground-plugin-detail-subtitle {
@@ -21440,12 +21497,66 @@ const html = `<!doctype html>
         margin-top: 12px;
       }
 
-      .playground-plugin-detail-copy {
-        margin: 0;
-        font-size: 12px;
-        line-height: 1.65;
-        color: rgba(255, 255, 255, 0.7);
-      }
+	      .playground-plugin-detail-copy {
+	        margin: 0;
+	        font-size: 12px;
+	        line-height: 1.65;
+	        color: rgba(255, 255, 255, 0.7);
+	      }
+
+	      .playground-plugin-detail-workflow-card {
+	        position: relative;
+	        overflow: hidden;
+	        display: grid;
+	        grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+	        align-items: center;
+	        gap: 18px;
+	        min-height: 58px;
+	        padding: 14px 16px;
+	        border-radius: 10px;
+	        background: rgba(255, 255, 255, 0.05);
+	      }
+
+	      .playground-plugin-detail-workflow-card::before {
+	        content: "";
+	        pointer-events: none;
+	        position: absolute;
+	        inset: 0;
+	        z-index: 2;
+	        border-radius: inherit;
+	        padding: 1px;
+	        background: linear-gradient(
+	          -10deg,
+	          rgba(200, 200, 200, 0.2),
+	          rgba(255, 255, 255, 0.08),
+	          rgba(255, 255, 255, 0.12),
+	          rgba(255, 255, 255, 0.28)
+	        );
+	        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+	        mask-clip: content-box, border-box;
+	        mask-composite: exclude;
+	        mask-origin: content-box, border-box;
+	        mask-repeat: repeat, repeat;
+	        mask-size: auto, auto;
+	      }
+
+	      .playground-plugin-detail-workflow-label {
+	        position: relative;
+	        z-index: 3;
+	        font-size: 12px;
+	        line-height: 1.35;
+	        font-weight: 500;
+	        color: rgba(255, 255, 255, 0.92);
+	      }
+
+	      .playground-plugin-detail-workflow-copy {
+	        position: relative;
+	        z-index: 3;
+	        font-size: 12px;
+	        line-height: 1.5;
+	        font-weight: 400;
+	        color: rgba(255, 255, 255, 0.56);
+	      }
 
       .playground-plugin-detail-prompt-card {
         position: relative;
@@ -21468,6 +21579,224 @@ const html = `<!doctype html>
         inset: 0;
         background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
         pointer-events: none;
+      }
+
+      .playground-plugin-detail-carousel {
+        position: relative;
+        overflow: hidden;
+        min-height: 300px;
+        display: grid;
+        grid-template-columns: minmax(0, 0.86fr) minmax(260px, 1fr);
+        gap: 28px;
+        align-items: center;
+        padding: 28px;
+        border-radius: 15px;
+        background-image:
+          linear-gradient(110deg, rgba(3, 7, 18, 0.88), rgba(20, 24, 43, 0.64) 48%, rgba(5, 8, 16, 0.96)),
+          radial-gradient(circle at 18% 18%, rgba(102, 166, 255, 0.16), transparent 34%),
+          url('/img/bg/clouds.jpeg');
+        background-size: cover;
+        background-position: center;
+      }
+
+      .playground-plugin-detail-carousel::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.10), transparent 32%),
+          linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
+      }
+
+      .playground-plugin-detail-carousel-copy,
+      .playground-plugin-detail-carousel-preview,
+      .playground-plugin-detail-carousel-controls,
+      .playground-plugin-detail-carousel-dots {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-plugin-detail-carousel-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-plugin-detail-carousel-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 400;
+        text-transform: uppercase;
+        letter-spacing: 0;
+      }
+
+      .playground-plugin-detail-carousel-title {
+        margin: 0;
+        max-width: 520px;
+        font-size: 26px;
+        line-height: 1.12;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-plugin-detail-carousel-description {
+        margin: 0;
+        max-width: 540px;
+        font-size: 12px;
+        line-height: 1.7;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.66);
+      }
+
+      .playground-plugin-detail-carousel-status {
+        width: fit-content;
+      }
+
+      .playground-plugin-detail-carousel-preview {
+        align-self: stretch;
+        min-height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-plugin-detail-carousel-image {
+        width: min(100%, 420px);
+        min-height: 214px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: 14px;
+        background: rgba(8, 10, 18, 0.52);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 46px rgba(0, 0, 0, 0.22);
+        backdrop-filter: blur(26px);
+        -webkit-backdrop-filter: blur(26px);
+      }
+
+      .playground-plugin-detail-carousel-image-top {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-plugin-detail-carousel-image-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.22);
+      }
+
+      .playground-plugin-detail-carousel-image-body {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 0.86fr 1.14fr;
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .playground-plugin-detail-carousel-image-panel {
+        min-height: 148px;
+        border-radius: 10px;
+        background:
+          radial-gradient(circle at 24% 24%, rgba(102, 166, 255, 0.18), transparent 32%),
+          rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-plugin-detail-carousel-image-lines {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        justify-content: center;
+      }
+
+      .playground-plugin-detail-carousel-image-line {
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .playground-plugin-detail-carousel-image-line:nth-child(2) {
+        width: 74%;
+      }
+
+      .playground-plugin-detail-carousel-image-line:nth-child(3) {
+        width: 52%;
+      }
+
+      .playground-plugin-detail-carousel-icon-shell {
+        width: 44px;
+        height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        align-self: flex-start;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-plugin-detail-carousel-controls {
+        position: absolute;
+        right: 22px;
+        bottom: 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-plugin-detail-carousel-nav {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.84);
+        cursor: pointer;
+      }
+
+      .playground-plugin-detail-carousel-nav:hover {
+        background: rgba(255, 255, 255, 0.14);
+        color: #fff;
+      }
+
+      .playground-plugin-detail-carousel-dots {
+        position: absolute;
+        left: 28px;
+        bottom: 26px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .playground-plugin-detail-carousel-dot {
+        width: 6px;
+        height: 6px;
+        border: 0;
+        border-radius: 999px;
+        padding: 0;
+        background: rgba(255, 255, 255, 0.28);
+        cursor: pointer;
+      }
+
+      .playground-plugin-detail-carousel-dot.is-active {
+        width: 18px;
+        background: rgba(255, 255, 255, 0.86);
       }
 
       .playground-plugin-detail-prompt-pill {
@@ -21530,6 +21859,251 @@ const html = `<!doctype html>
         border: 1px solid rgba(255, 255, 255, 0.1);
         background: rgba(255, 255, 255, 0.05);
         overflow: hidden;
+      }
+
+	      .playground-plugin-detail-capability-grid {
+	        display: grid;
+	        grid-template-columns: repeat(4, minmax(0, 1fr));
+	        gap: 12px;
+	      }
+
+      .playground-plugin-detail-capability-card {
+        position: relative;
+        min-width: 0;
+        min-height: 138px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        overflow: hidden;
+      }
+
+      .playground-plugin-detail-capability-card::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.2),
+          rgba(255, 255, 255, 0.08),
+          rgba(255, 255, 255, 0.12),
+          rgba(255, 255, 255, 0.28)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-plugin-detail-capability-card.is-unsupported {
+        opacity: 0.66;
+      }
+
+      .playground-plugin-detail-capability-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .playground-plugin-detail-capability-icon {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .playground-plugin-detail-status-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 22px;
+        padding: 0 9px;
+        border-radius: 999px;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 400;
+        white-space: nowrap;
+        color: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .playground-plugin-detail-status-pill.is-connected {
+        color: rgba(187, 247, 208, 0.96);
+        background: rgba(34, 197, 94, 0.16);
+      }
+
+      .playground-plugin-detail-status-pill.is-pending,
+      .playground-plugin-detail-status-pill.is-available {
+        color: rgba(255, 231, 153, 0.96);
+        background: rgba(234, 179, 8, 0.15);
+      }
+
+      .playground-plugin-detail-status-pill.is-inactive,
+      .playground-plugin-detail-status-pill.is-muted {
+        color: rgba(255, 255, 255, 0.46);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-plugin-detail-capability-title {
+        font-size: 13px;
+        line-height: 1.25;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-plugin-detail-capability-description {
+        font-size: 12px;
+        line-height: 1.55;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-plugin-detail-control-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .playground-plugin-detail-connection-panel,
+      .playground-plugin-detail-permission-panel {
+        padding: 16px;
+      }
+
+      .playground-plugin-detail-connection-head {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-plugin-detail-status-dot {
+        width: 9px;
+        height: 9px;
+        flex: 0 0 auto;
+        margin-top: 4px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.24);
+      }
+
+      .playground-plugin-detail-status-dot.is-connected {
+        background: #22c55e;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+      }
+
+      .playground-plugin-detail-status-dot.is-pending,
+      .playground-plugin-detail-status-dot.is-available {
+        background: #eab308;
+        box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.12);
+      }
+
+      .playground-plugin-detail-connection-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-plugin-detail-connection-title,
+      .playground-plugin-detail-permission-title {
+        font-size: 13px;
+        line-height: 1.3;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-plugin-detail-connection-subtitle {
+        font-size: 12px;
+        line-height: 1.5;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.54);
+      }
+
+      .playground-plugin-detail-info-compact {
+        margin: 8px -16px -4px;
+      }
+
+      .playground-plugin-detail-permission-head {
+        min-height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-plugin-detail-permission-list {
+        display: flex;
+        flex-direction: column;
+        margin: 0 -16px -16px;
+      }
+
+      .playground-plugin-detail-permission-row {
+        display: flex;
+        gap: 12px;
+        padding: 13px 16px;
+      }
+
+      .playground-plugin-detail-permission-row + .playground-plugin-detail-permission-row {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-plugin-detail-permission-icon {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        color: rgba(255, 255, 255, 0.48);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-plugin-detail-permission-icon.is-connected {
+        color: rgba(187, 247, 208, 0.96);
+        background: rgba(34, 197, 94, 0.14);
+      }
+
+      .playground-plugin-detail-permission-icon.is-pending,
+      .playground-plugin-detail-permission-icon.is-available {
+        color: rgba(255, 231, 153, 0.96);
+        background: rgba(234, 179, 8, 0.13);
+      }
+
+      .playground-plugin-detail-permission-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .playground-plugin-detail-permission-name {
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-plugin-detail-permission-description {
+        font-size: 11px;
+        line-height: 1.5;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.5);
       }
 
       .playground-plugin-detail-table {
@@ -21676,11 +22250,30 @@ const html = `<!doctype html>
         gap: 14px;
       }
 
+	      @media (max-width: 1100px) {
+	        .playground-plugin-detail-capability-grid {
+	          grid-template-columns: repeat(2, minmax(0, 1fr));
+	        }
+	      }
+
+	      @media (max-width: 900px) {
+	        .playground-plugin-detail-capability-grid,
+	        .playground-plugin-detail-control-grid {
+	          grid-template-columns: 1fr;
+	        }
+
+	        .playground-plugin-detail-workflow-card {
+	          grid-template-columns: 1fr;
+	          align-items: flex-start;
+	          gap: 6px;
+	        }
+	      }
+
       .playground-skills-detail-header {
         display: flex;
         align-items: center;
         gap: 16px;
-        margin: 24px 0 22px;
+        margin: 0 0 4px;
       }
 
       .playground-skills-detail-header-icon-shell {
@@ -21782,8 +22375,382 @@ const html = `<!doctype html>
         margin-bottom: 22px;
       }
 
+      .playground-skills-detail-page .playground-tasks-detail-description {
+        min-height: 0;
+        overflow: visible;
+      }
+
+      .playground-skills-detail-page .playground-tasks-detail-description-editor {
+        display: block;
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+      }
+
+      .playground-skills-detail-page .playground-tasks-detail-description-editor.is-preview .playground-tasks-detail-description-preview-scope.tb-runner-chat {
+        position: relative;
+        inset: auto;
+        display: block;
+        width: 100%;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible;
+      }
+
+      .playground-skills-detail-page .playground-tasks-detail-description-editor.is-preview .playground-tasks-detail-description-input {
+        position: absolute;
+        inset: 0;
+        height: 100% !important;
+        min-height: 100%;
+        padding: 0;
+        opacity: 0;
+      }
+
+      .playground-skills-detail-page .playground-tasks-detail-description-editor.is-editing .playground-tasks-detail-description-input {
+        position: relative;
+        min-height: 110px;
+      }
+
+      .playground-skills-detail-page .playground-tasks-detail-description-preview {
+        min-height: 0;
+        height: auto;
+        overflow: visible;
+      }
+
+      .playground-skills-detail-page .playground-tasks-detail-description-preview > :first-child {
+        margin-top: 0;
+      }
+
+      .playground-skills-detail-page .playground-tasks-detail-description-preview > :last-child {
+        margin-bottom: 0;
+      }
+
+      .playground-skills-detail-page .playground-tasks-detail-description-preview .tb-message-markdown-list {
+        margin-top: 8px;
+        margin-bottom: 8px;
+      }
+
+      .playground-skills-detail-page .playground-tasks-detail-description-preview .tb-message-markdown-list-item + .tb-message-markdown-list-item {
+        margin-top: 4px;
+      }
+
+      .playground-skills-detail-page .playground-tasks-detail-description + .playground-tasks-detail-description {
+        margin-top: 18px;
+      }
+
       .playground-skills-detail-page .playground-tasks-detail-facts {
         margin-top: 12px;
+      }
+
+      .playground-skills-detail-tabs {
+        margin: 0 0 2px;
+      }
+
+      .playground-skills-detail-page.is-source-files-tab {
+        flex: 1 1 0;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .playground-skills-detail-page.is-source-files-tab .playground-environments-detail-scroll {
+        min-height: 0;
+        height: 100%;
+        overflow: hidden;
+        padding-bottom: 12px;
+      }
+
+      .playground-skills-detail-page.is-source-files-tab .playground-skills-detail-content {
+        height: 100%;
+        max-height: 100%;
+        min-height: 0;
+      }
+
+      .playground-skills-detail-metrics.playground-environments-home-metrics {
+        margin-top: 0;
+        margin-bottom: 0;
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .playground-skills-detail-metrics > .playground-tasks-detail-facts {
+        grid-column: 1 / -1;
+        width: 100%;
+        min-width: 0;
+        margin-top: 0;
+      }
+
+      .playground-skills-usage-card {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        box-sizing: border-box;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 15px;
+        background: transparent;
+        padding: 20px;
+        border: 0;
+        box-shadow: none;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        height: auto;
+        min-height: 0;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-skills-usage-card::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-skills-usage-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-skills-usage-header {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 12px;
+      }
+
+      .playground-skills-usage-title-group {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-skills-usage-title {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 14px;
+        line-height: 1.2;
+        font-weight: 500;
+      }
+
+      .playground-skills-usage-subtitle {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        line-height: 1.3;
+        font-weight: 400;
+      }
+
+      .playground-skills-detail-metrics .playground-skills-usage-kpis {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        width: calc(100% + 40px);
+        min-width: 0;
+        margin-top: -20px;
+        margin-left: -20px;
+        margin-right: -20px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-skills-detail-metrics .playground-skills-usage-kpi {
+        min-width: 0;
+        background: transparent;
+      }
+
+      .playground-skills-usage-chart {
+        position: relative;
+        z-index: 3;
+        min-height: 152px;
+      }
+
+      .playground-skills-usage-card .playground-settings-usage-chart-card {
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+      }
+
+      .playground-skills-usage-card .playground-project-overview-chart-header {
+        display: none;
+        padding-top: 0;
+      }
+
+      .playground-skills-detail-page .playground-skills-detail-fact-rows {
+        margin-top: 2px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-skills-detail-page .playground-skills-detail-fact-rows .playground-tasks-detail-fact:first-child {
+        border-top: 0;
+      }
+
+      .playground-skills-detail-page .playground-skills-detail-fact-rows .playground-tasks-detail-fact {
+        min-height: 44px;
+      }
+
+      .playground-skills-usage-svg {
+        width: 100%;
+        height: 152px;
+        display: block;
+        overflow: visible;
+      }
+
+      .playground-skills-usage-grid-line {
+        stroke: rgba(255, 255, 255, 0.08);
+        stroke-width: 1;
+      }
+
+      .playground-skills-usage-line {
+        fill: none;
+        stroke: #66a6ff;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .playground-skills-usage-point {
+        fill: #66a6ff;
+        stroke: #0a0a0b;
+        stroke-width: 1;
+      }
+
+      .playground-skills-usage-axis-label {
+        fill: rgba(255, 255, 255, 0.42);
+        font-size: 10px;
+        font-weight: 400;
+      }
+
+      .playground-skills-usage-empty {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.4;
+        text-align: center;
+        pointer-events: none;
+      }
+
+      .playground-skills-code-workspace {
+        flex: 1 1 0;
+        min-height: 0;
+        height: auto;
+        margin-bottom: 0;
+        border: 0;
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.2);
+      }
+
+      .playground-skills-code-workspace::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-skills-code-workspace .playground-servers-code-sidebar {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-skills-code-workspace .playground-servers-code-editor-main,
+      .playground-skills-code-workspace .playground-servers-code-editor-shell {
+        background: #000;
+      }
+
+      .playground-skills-code-workspace .playground-servers-code-editor-status-actions .playground-environments-action-button {
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+        min-height: 30px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
+        font-weight: 400;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-skills-code-workspace .playground-servers-code-editor-status-actions .playground-environments-action-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-skills-code-workspace .playground-servers-code-editor-status-actions .playground-environments-action-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-skills-code-workspace .playground-servers-code-editor-status-actions .playground-environments-action-button:hover:not(:disabled),
+      .playground-skills-code-workspace .playground-servers-code-editor-status-actions .playground-environments-action-button.is-primary:hover:not(:disabled) {
+        background: transparent;
+        color: #fff;
+      }
+
+      @media (max-width: 900px) {
+        .playground-skills-usage-header {
+          flex-direction: column;
+        }
+
+        .playground-skills-usage-kpis {
+          width: 100%;
+          min-width: 0;
+        }
+
+        .playground-skills-code-workspace {
+          grid-template-columns: 180px minmax(0, 1fr);
+        }
       }
 
       .playground-tools-navbar-back-button {
@@ -41514,6 +42481,8 @@ ${IMAGINE_PAGE_CSS}
           "rehype-raw": "https://esm.sh/rehype-raw@7.0.0?bundle",
           "remark-gfm": "https://esm.sh/remark-gfm@4.0.1?bundle",
           "unist-util-visit": "https://esm.sh/unist-util-visit@5.0.0",
+          "pptx-preview": "https://esm.sh/pptx-preview@1.0.7?bundle",
+          "jszip": "https://esm.sh/jszip@3.10.1?bundle",
           "xlsx": "/vendor/xlsx/xlsx.mjs"
         }
       }
@@ -41754,7 +42723,7 @@ ${IMAGINE_PAGE_CSS}
       const FIREBASE_STORAGE_BUCKET = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "testbaseai.firebasestorage.app")};
       const FIREBASE_MESSAGING_SENDER_ID = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "65067873832")};
       const FIREBASE_APP_ID = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:65067873832:web:15722955fece43cdf9671d")};
-      const SEARCH_THREAD_FETCH_LIMIT = 200;
+      const SEARCH_THREAD_FETCH_LIMIT = 20;
       const SETTINGS_CT_PER_DOLLAR = 100;
       const PLAYGROUND_SERVER_IDLE_RATE_PER_MINUTE = {
         website: 0.000005,
@@ -57961,11 +58930,13 @@ ${IMAGINE_PAGE_CSS}
               return;
             }
             event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation?.();
             void handleSave();
           }
 
-          window.addEventListener("keydown", handleKeyDown);
-          return () => window.removeEventListener("keydown", handleKeyDown);
+          window.addEventListener("keydown", handleKeyDown, true);
+          return () => window.removeEventListener("keydown", handleKeyDown, true);
         }, [handleSave]);
 
         function handleEditorChange(nextValue) {
@@ -65539,11 +66510,13 @@ ${IMAGINE_PAGE_SCRIPT}
               return;
             }
             event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation?.();
             void handleServerFileSave();
           }
 
-          window.addEventListener("keydown", handleServerEditorSaveShortcut);
-          return () => window.removeEventListener("keydown", handleServerEditorSaveShortcut);
+          window.addEventListener("keydown", handleServerEditorSaveShortcut, true);
+          return () => window.removeEventListener("keydown", handleServerEditorSaveShortcut, true);
         }, [handleServerFileSave, resourceMode, serverFileEditorState.path, serverFileEditorState.status]);
 
         useEffect(() => {
@@ -93807,6 +94780,16 @@ ${IMAGINE_PAGE_SCRIPT}
         const [skillsHeroDisplayIndex, setSkillsHeroDisplayIndex] = useState(0);
         const [skillsHeroOutgoingIndex, setSkillsHeroOutgoingIndex] = useState(null);
         const [skillsHeroTransitionKey, setSkillsHeroTransitionKey] = useState(0);
+        const [skillDetailTab, setSkillDetailTab] = useState("general");
+        const [SkillCodeEditorComponent, setSkillCodeEditorComponent] = useState(null);
+        const [skillCodeEditorState, setSkillCodeEditorState] = useState({
+          fileId: "",
+          value: "",
+          initialValue: "",
+          isSaving: false,
+          error: "",
+          message: "",
+        });
         const [isSkillComposerDescriptionEditing, setIsSkillComposerDescriptionEditing] = useState(false);
         const [skillComposerIconPickerOpen, setSkillComposerIconPickerOpen] = useState(false);
         const [skillDetailIconPickerOpen, setSkillDetailIconPickerOpen] = useState(false);
@@ -94408,6 +95391,57 @@ ${IMAGINE_PAGE_SCRIPT}
         const selectedSkillSections = useMemo(() => {
           return parsePlaygroundSkillMarkdownSections(selectedSkill?.markdown || "");
         }, [selectedSkill?.markdown]);
+
+        useEffect(() => {
+          setSkillDetailTab("general");
+        }, [selectedSkillId]);
+
+        useEffect(() => {
+          if (skillDetailTab !== "sourceFiles") {
+            return;
+          }
+          let cancelled = false;
+          void loadPlaygroundCodeEditorModule()
+            .then((module) => {
+              if (cancelled) {
+                return;
+              }
+              setSkillCodeEditorComponent(() => module?.default || null);
+            })
+            .catch(() => {
+              if (!cancelled) {
+                setSkillCodeEditorComponent(null);
+              }
+            });
+          return () => {
+            cancelled = true;
+          };
+        }, [skillDetailTab]);
+
+        useEffect(() => {
+          const files = normalizeSkillCodeFiles(selectedSkill?.codeFiles);
+          const activeFile = files.find((file) => file.id === skillCodeEditorState.fileId) || files[0] || null;
+          const nextFileId = activeFile?.id || "";
+          const nextValue = activeFile?.content || "";
+          if (
+            skillCodeEditorState.fileId === nextFileId
+            && skillCodeEditorState.value === nextValue
+            && skillCodeEditorState.initialValue === nextValue
+            && !skillCodeEditorState.isSaving
+            && !skillCodeEditorState.error
+            && !skillCodeEditorState.message
+          ) {
+            return;
+          }
+          setSkillCodeEditorState({
+            fileId: nextFileId,
+            value: nextValue,
+            initialValue: nextValue,
+            isSaving: false,
+            error: "",
+            message: "",
+          });
+        }, [selectedSkill?.id, selectedSkill?.codeFiles]);
 
         const normalizedSkillsOverviewQuery = String(skillsOverviewSearchQuery || "").trim().toLowerCase();
         const filteredOverviewSkills = useMemo(() => {
@@ -95849,7 +96883,7 @@ ${IMAGINE_PAGE_SCRIPT}
 
         async function saveSelectedSkillCodeFiles(nextCodeFiles) {
           if (!selectedSkill || !selectedSkill.isCustom) {
-            return;
+            return false;
           }
 
           setSkillCodeFilesTransferState({
@@ -95894,11 +96928,13 @@ ${IMAGINE_PAGE_SCRIPT}
               isProcessing: false,
               error: "",
             });
+            return true;
           } catch (error) {
             setSkillCodeFilesTransferState({
               isProcessing: false,
               error: error instanceof Error ? error.message : "Failed to save skill code files.",
             });
+            return false;
           }
         }
 
@@ -96262,6 +97298,137 @@ ${IMAGINE_PAGE_SCRIPT}
                 }, React.createElement(X, { className: "runner-attachment-remove-icon", strokeWidth: 2 }))
               : null
           );
+        }
+
+        function readSkillUsageMetricValue(item) {
+          if (!item || typeof item !== "object") {
+            return 0;
+          }
+          const metricKeys = [
+            "usageCount",
+            "invocations",
+            "runs",
+            "runCount",
+            "threadCount",
+            "messageCount",
+            "count",
+            "calls",
+            "total",
+            "value",
+          ];
+          for (const key of metricKeys) {
+            const value = Number(item?.[key]);
+            if (Number.isFinite(value) && value > 0) {
+              return value;
+            }
+          }
+          return 0;
+        }
+
+        function readSkillUsageTimestampMs(item) {
+          if (!item || typeof item !== "object") {
+            return Date.now();
+          }
+          const timestampKeys = [
+            "timestamp",
+            "createdAt",
+            "startedAt",
+            "updatedAt",
+            "date",
+            "hour",
+            "bucket",
+            "bucketStart",
+          ];
+          for (const key of timestampKeys) {
+            const rawValue = item?.[key];
+            if (rawValue === undefined || rawValue === null || rawValue === "") {
+              continue;
+            }
+            const numericValue = Number(rawValue);
+            if (Number.isFinite(numericValue)) {
+              return numericValue < 10000000000 ? numericValue * 1000 : numericValue;
+            }
+            const parsedValue = Date.parse(String(rawValue));
+            if (Number.isFinite(parsedValue)) {
+              return parsedValue;
+            }
+          }
+          return Date.now();
+        }
+
+        function collectSkillUsageCandidates(value, output = [], depth = 0) {
+          if (!value || depth > 5) {
+            return output;
+          }
+          if (Array.isArray(value)) {
+            value.forEach((entry) => collectSkillUsageCandidates(entry, output, depth + 1));
+            return output;
+          }
+          if (typeof value !== "object") {
+            return output;
+          }
+          if (readSkillUsageMetricValue(value) > 0) {
+            output.push(value);
+          }
+          Object.values(value).forEach((entry) => {
+            if (entry && (Array.isArray(entry) || typeof entry === "object")) {
+              collectSkillUsageCandidates(entry, output, depth + 1);
+            }
+          });
+          return output;
+        }
+
+        function formatPlaygroundSkillUsageInteger(value) {
+          const numericValue = Number(value);
+          if (!Number.isFinite(numericValue)) {
+            return "0";
+          }
+          return Math.max(0, Math.round(numericValue)).toLocaleString();
+        }
+
+        function buildSkillUsageSummary(skill, analytics) {
+          const now = Date.now();
+          const hourMs = 60 * 60 * 1000;
+          const startHourMs = Math.floor((now - 23 * hourMs) / hourMs) * hourMs;
+          const buckets = Array.from({ length: 24 }, (_, index) => {
+            const timestamp = startHourMs + index * hourMs;
+            return {
+              timestamp,
+              label: new Date(timestamp).toLocaleTimeString([], { hour: "numeric" }),
+              value: 0,
+            };
+          });
+          const skillNeedles = [
+            skill?.id,
+            skill?.systemFamilyId,
+            skill?.name,
+          ]
+            .map((value) => String(value || "").trim().toLowerCase())
+            .filter(Boolean);
+          if (skillNeedles.length > 0) {
+            collectSkillUsageCandidates(analytics)
+              .filter((item) => {
+                const haystack = JSON.stringify(item || {}).toLowerCase();
+                return skillNeedles.some((needle) => haystack.includes(needle));
+              })
+              .forEach((item) => {
+                const timestamp = readSkillUsageTimestampMs(item);
+                const bucketIndex = Math.floor((timestamp - startHourMs) / hourMs);
+                if (bucketIndex < 0 || bucketIndex >= buckets.length) {
+                  return;
+                }
+                buckets[bucketIndex].value += readSkillUsageMetricValue(item);
+              });
+          }
+          const total = buckets.reduce((sum, bucket) => sum + bucket.value, 0);
+          const peak = buckets.reduce((max, bucket) => Math.max(max, bucket.value), 0);
+          const lastUsedBucket = buckets.slice().reverse().find((bucket) => bucket.value > 0) || null;
+          return {
+            buckets,
+            total,
+            peak,
+            lastUsedLabel: lastUsedBucket ? formatPlaygroundRelativeTime(lastUsedBucket.timestamp) : "No usage",
+          };
         }
 
         function renderSkillEnvironmentFilePickerIcon(entry) {
@@ -96832,40 +97999,168 @@ ${IMAGINE_PAGE_SCRIPT}
             ? renderSkillFactRow("Cost per image", getSkillImageGenerationCostLabel(skillImageGenerationDefaultModel, skillImageGenerationDefaultQuality))
             : null;
 
-          const detailMeta = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
-            React.createElement("div", { className: "playground-tasks-detail-facts-header" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details")
-            ),
-              React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-              renderSkillFactRow("Type", selectedSkill.isCustom ? "Project skill" : "System skill"),
-              renderSkillFactRow("Identifier", selectedSkill.id),
-              renderSkillFactRow("Availability", selectedSkill.isCustom ? "Project scope" : "Default in playground"),
-              renderSkillFactRow("Status", selectedSkill.isActive ? "Enabled" : "Disabled"),
-              deepResearchSkillModelFact,
-              imageGenerationSkillModelFact,
-              imageGenerationSkillQualityFact,
-              renderSkillFactRow("Code Files", String(selectedSkill.codeFiles.length || 0)),
-              imageGenerationCostFact
-            )
+          const skillDetailRows = [
+            renderSkillFactRow("Type", selectedSkill.isCustom ? "Project skill" : "System skill"),
+            renderSkillFactRow("Identifier", selectedSkill.id),
+            renderSkillFactRow("Availability", selectedSkill.isCustom ? "Project scope" : "Default in playground"),
+            renderSkillFactRow("Status", selectedSkill.isActive ? "Enabled" : "Disabled"),
+            deepResearchSkillModelFact,
+            imageGenerationSkillModelFact,
+            imageGenerationSkillQualityFact,
+            renderSkillFactRow("Code Files", String(selectedSkill.codeFiles.length || 0)),
+            imageGenerationCostFact,
+          ].filter(Boolean);
+          const detailMeta = React.createElement("div", { className: "playground-server-detail-fact-rows playground-skills-detail-fact-rows" },
+            skillDetailRows
           );
 
-          const codeFilesSection = React.createElement("div", { className: "playground-tasks-attachments" },
-            React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Code Files"),
-              isSelectedSkillCodeFilesEditable
-                ? React.createElement("div", { className: "playground-tasks-attachments-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button playground-tasks-attachments-environment-button",
-                      onClick: openSkillEnvironmentFilePicker,
-                      disabled: skillCodeFilesTransferState.isProcessing || availableSkillEnvironments.length === 0,
-                      title: availableSkillEnvironments.length > 0
-                        ? "Add files from " + (selectedSkillEnvironment?.name || "an environment")
-                        : "No environments available",
-	                    }, "From Environment")
-                  )
-                : null
-            ),
+          const selectedSkillCodeFiles = normalizeSkillCodeFiles(selectedSkill.codeFiles);
+          const activeSkillCodeFile = selectedSkillCodeFiles.find((file) => file.id === skillCodeEditorState.fileId) || selectedSkillCodeFiles[0] || null;
+          const activeSkillCodeFileEntry = activeSkillCodeFile
+            ? { name: activeSkillCodeFile.name, path: activeSkillCodeFile.name, isFolder: false, mimeType: "" }
+            : null;
+          const skillCodeEditorIsDirty = skillCodeEditorState.value !== skillCodeEditorState.initialValue;
+          const skillUsageSummary = buildSkillUsageSummary(selectedSkill, overviewAnalytics);
+
+          function selectSkillCodeFile(fileId) {
+            const nextFile = selectedSkillCodeFiles.find((file) => file.id === fileId) || selectedSkillCodeFiles[0] || null;
+            setSkillCodeEditorState({
+              fileId: nextFile?.id || "",
+              value: nextFile?.content || "",
+              initialValue: nextFile?.content || "",
+              isSaving: false,
+              error: "",
+              message: "",
+            });
+          }
+
+          function handleSkillCodeEditorChange(value) {
+            setSkillCodeEditorState((current) => ({
+              ...current,
+              value: typeof value === "string" ? value : "",
+              error: "",
+              message: "",
+            }));
+          }
+
+          function handleSkillCodeEditorRevert() {
+            setSkillCodeEditorState((current) => ({
+              ...current,
+              value: current.initialValue,
+              error: "",
+              message: "",
+            }));
+          }
+
+          async function handleSkillCodeEditorSave() {
+            if (!activeSkillCodeFile || !isSelectedSkillCodeFilesEditable || !skillCodeEditorIsDirty) {
+              return;
+            }
+            setSkillCodeEditorState((current) => ({
+              ...current,
+              isSaving: true,
+              error: "",
+              message: "",
+            }));
+            const nextFiles = selectedSkillCodeFiles.map((file) =>
+              file.id === activeSkillCodeFile.id
+                ? {
+                    ...file,
+                    content: skillCodeEditorState.value,
+                    language: file.language || getPlaygroundCodeEditorLanguage({ name: file.name, path: file.name }),
+                  }
+                : file
+            );
+            const didSave = await saveSelectedSkillCodeFiles(nextFiles);
+            setSkillCodeEditorState((current) => ({
+              ...current,
+              isSaving: false,
+              initialValue: didSave ? current.value : current.initialValue,
+              error: didSave ? "" : (skillCodeFilesTransferState.error || "Failed to save code file."),
+              message: didSave ? "Saved" : "",
+            }));
+          }
+
+          function renderSkillCodeFileRow(codeFile) {
+            const isActive = activeSkillCodeFile?.id === codeFile.id;
+            return React.createElement("button", {
+                key: codeFile.id,
+                type: "button",
+                className: "playground-servers-code-file-row" + (isActive ? " is-active" : ""),
+                onClick: () => selectSkillCodeFile(codeFile.id),
+              },
+              React.createElement("span", { className: "playground-servers-code-file-chevron", "aria-hidden": "true" }),
+              React.createElement("span", { className: "playground-servers-code-file-icon", "aria-hidden": "true" },
+                React.createElement(PlaygroundFileIcon, { entry: { name: codeFile.name, path: codeFile.name, isFolder: false }, className: "playground-skills-code-file-icon" })
+              ),
+              React.createElement("span", { className: "playground-servers-code-file-name" }, codeFile.name || "Untitled")
+            );
+          }
+
+          function renderSkillCodeEditorBody() {
+            if (!activeSkillCodeFile) {
+              return React.createElement("div", { className: "playground-servers-code-empty" },
+                isSelectedSkillCodeFilesEditable ? "Add a file to start editing this skill." : "No source files available for this skill."
+              );
+            }
+            if (SkillCodeEditorComponent) {
+              return React.createElement("div", { className: "playground-code-preview-editor-shell playground-servers-code-editor-shell" },
+                React.createElement(SkillCodeEditorComponent, {
+                  path: activeSkillCodeFile.name,
+                  height: "100%",
+                  language: activeSkillCodeFile.language || getPlaygroundCodeEditorLanguage(activeSkillCodeFileEntry),
+                  theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+                  value: skillCodeEditorState.value,
+                  onChange: handleSkillCodeEditorChange,
+                  beforeMount: ensurePlaygroundCodeEditorTheme,
+                  options: {
+                    automaticLayout: true,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    smoothScrolling: true,
+                    readOnly: !isSelectedSkillCodeFilesEditable,
+                    fontSize: 12,
+                    lineHeight: 20,
+                    tabSize: 2,
+                    insertSpaces: true,
+                    renderLineHighlight: "gutter",
+                    lineNumbersMinChars: 3,
+                    overviewRulerBorder: false,
+                    hideCursorInOverviewRuler: true,
+                    wordWrap: "off",
+                    padding: { top: 12, bottom: 12 },
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                  },
+                })
+              );
+            }
+            return React.createElement("textarea", {
+              className: "playground-code-preview-textarea playground-servers-source-editor-textarea playground-servers-code-editor-shell",
+              value: skillCodeEditorState.value,
+              onChange: (event) => handleSkillCodeEditorChange(event.target.value),
+              readOnly: !isSelectedSkillCodeFilesEditable,
+              spellCheck: false,
+              wrap: "off",
+            });
+          }
+
+          const skillSourceFilesSection = React.createElement("div", {
+              className: "playground-servers-code-workspace playground-skills-code-workspace" + (isSkillCodeDragging ? " is-dragging" : ""),
+              onDragOver: (event) => {
+                event.preventDefault();
+                if (!isSelectedSkillCodeFilesEditable || skillCodeFilesTransferState.isProcessing) {
+                  return;
+                }
+                setIsSkillCodeDragging(true);
+              },
+              onDragLeave: (event) => {
+                if (event.currentTarget.contains(event.relatedTarget)) {
+                  return;
+                }
+                setIsSkillCodeDragging(false);
+              },
+              onDrop: (event) => void handleSkillCodeFileDrop(event),
+            },
             isSelectedSkillCodeFilesEditable
               ? React.createElement("input", {
                   ref: skillCodeFileInputRef,
@@ -96875,70 +98170,267 @@ ${IMAGINE_PAGE_SCRIPT}
                   onChange: (event) => void handleSkillCodeFileInputChange(event),
                 })
               : null,
-            React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
-              React.createElement("div", {
-                className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isSkillCodeDragging ? " dragging" : "") + (selectedSkill.codeFiles.length > 0 ? " is-filled" : ""),
-                onDragOver: (event) => {
-                  event.preventDefault();
-                  if (!isSelectedSkillCodeFilesEditable || skillCodeFilesTransferState.isProcessing) {
-                    return;
-                  }
-                  setIsSkillCodeDragging(true);
-                },
-                onDragLeave: (event) => {
-                  if (event.currentTarget.contains(event.relatedTarget)) {
-                    return;
-                  }
-                  setIsSkillCodeDragging(false);
-                },
-                onDrop: (event) => void handleSkillCodeFileDrop(event),
-              },
-                selectedSkill.codeFiles.length > 0
-                  ? React.createElement(React.Fragment, null,
-                      isSelectedSkillCodeFilesEditable
-                        ? React.createElement("div", { className: "playground-tasks-attachments-topline" },
-                            React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
-                            React.createElement("span", null, isSkillCodeDragging ? "Drop files here" : "Drop files to attach, or"),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-tasks-attachments-browse",
-                              disabled: skillCodeFilesTransferState.isProcessing,
-                              onClick: openSkillCodeFilePicker,
-                            }, "browse.")
-                          )
-                        : null,
-                      React.createElement("div", { className: "runner-attachments" },
-                        selectedSkill.codeFiles.map((codeFile) => renderSkillCodeFileChip(codeFile, {
-                          removable: isSelectedSkillCodeFilesEditable,
-                          onRemove: handleRemoveSkillCodeFile,
-                        }))
-                      )
+            React.createElement("aside", { className: "playground-servers-code-sidebar" },
+              React.createElement("div", { className: "playground-servers-code-sidebar-header" },
+                React.createElement("div", { className: "playground-servers-code-sidebar-title" }, "Files"),
+                isSelectedSkillCodeFilesEditable
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button playground-servers-code-add-file-button",
+                      onClick: openSkillCodeFilePicker,
+                      disabled: skillCodeFilesTransferState.isProcessing,
+                    },
+                      React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Add File")
                     )
-                  : isSelectedSkillCodeFilesEditable
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: "playground-tasks-attachments-empty-button",
-                        disabled: skillCodeFilesTransferState.isProcessing,
-                        onClick: openSkillCodeFilePicker,
-                      },
-                        React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
-                        React.createElement("span", { className: "tb-popup-dropzone-title" }, isSkillCodeDragging ? "Drop files here" : "Drag & drop files here"),
-                        React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
-                      )
-                    : React.createElement("div", {
-                        className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                      }, "No code files attached to this skill.")
+                  : null
+              ),
+              React.createElement("div", { className: "playground-servers-code-file-list" },
+                selectedSkillCodeFiles.length > 0
+                  ? selectedSkillCodeFiles.map((codeFile) => renderSkillCodeFileRow(codeFile))
+                  : React.createElement("div", { className: "playground-servers-code-empty" },
+                      isSelectedSkillCodeFilesEditable ? "No source files yet." : "No source files."
+                    )
               )
             ),
-            skillCodeFilesTransferState.isProcessing
-              ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Saving code files...")
-              : null,
-            skillCodeFilesTransferState.error
-              ? React.createElement("div", { className: "playground-environments-error" }, skillCodeFilesTransferState.error)
-              : null
+            React.createElement("section", { className: "playground-servers-code-editor-main" },
+              React.createElement("div", { className: "playground-servers-code-editor-body" }, renderSkillCodeEditorBody()),
+              React.createElement("div", { className: "playground-servers-code-editor-statusbar" },
+                React.createElement("div", {
+                    className: "playground-servers-source-preview-status" + ((skillCodeEditorState.error || skillCodeFilesTransferState.error) ? " is-error" : ""),
+                  },
+                  skillCodeEditorState.error
+                    || skillCodeFilesTransferState.error
+                    || (skillCodeEditorState.isSaving || skillCodeFilesTransferState.isProcessing
+                      ? "Saving..."
+                      : skillCodeEditorState.message
+                        ? skillCodeEditorState.message
+                        : activeSkillCodeFile
+                          ? (isSelectedSkillCodeFilesEditable
+                            ? (skillCodeEditorIsDirty ? "Unsaved changes" : formatPlaygroundCodeEditorLanguageLabel(activeSkillCodeFileEntry))
+                            : "Read-only")
+                          : "")
+                ),
+                isSelectedSkillCodeFilesEditable
+                  ? React.createElement("div", { className: "playground-servers-code-editor-status-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button",
+                        onClick: handleSkillCodeEditorRevert,
+                        disabled: !skillCodeEditorIsDirty || skillCodeEditorState.isSaving || skillCodeFilesTransferState.isProcessing,
+                      }, React.createElement("span", null, "Revert")),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button is-primary",
+                        onClick: () => void handleSkillCodeEditorSave(),
+                        disabled: !skillCodeEditorIsDirty || skillCodeEditorState.isSaving || skillCodeFilesTransferState.isProcessing,
+                      },
+                        skillCodeEditorState.isSaving || skillCodeFilesTransferState.isProcessing
+                          ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                          : React.createElement(HardDrive, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, skillCodeEditorState.isSaving || skillCodeFilesTransferState.isProcessing ? "Saving..." : "Save")
+                      )
+                    )
+                  : null
+              )
+            )
           );
 
-          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main playground-skills-detail-page" },
+          const skillUsageKpis = [
+            { id: "runs", label: "Runs", value: formatPlaygroundSkillUsageInteger(skillUsageSummary.total) },
+            { id: "peak", label: "Peak hour", value: formatPlaygroundSkillUsageInteger(skillUsageSummary.peak) },
+            { id: "last-used", label: "Last used", value: skillUsageSummary.lastUsedLabel },
+          ];
+          function renderSkillUsageEmptyState() {
+            return React.createElement("div", { className: "playground-settings-usage-chart-empty is-tall playground-skills-usage-empty" },
+              "No usage recorded in the past 24 hours."
+            );
+          }
+
+          function renderSkillUsageChart() {
+            const buckets = Array.isArray(skillUsageSummary.buckets) ? skillUsageSummary.buckets : [];
+            const values = buckets.map((bucket) => Math.max(0, Number(bucket?.value || 0)));
+            const hasUsage = values.some((value) => value > 0);
+            if (!buckets.length || !hasUsage) {
+              return renderSkillUsageEmptyState();
+            }
+
+            const width = 1200;
+            const height = 288;
+            const marginLeft = 58;
+            const marginRight = 18;
+            const marginTop = 18;
+            const marginBottom = 52;
+            const plotWidth = width - marginLeft - marginRight;
+            const plotHeight = height - marginTop - marginBottom;
+            const maxValue = Math.max(1, ...values);
+            const points = values.map((value, index) => {
+              const x = marginLeft + (buckets.length <= 1 ? plotWidth / 2 : (index / (buckets.length - 1)) * plotWidth);
+              const y = marginTop + plotHeight - (value / maxValue) * plotHeight;
+              return { x, y, value, label: buckets[index]?.label || "" };
+            });
+            const linePath = points.map((point, index) =>
+              (index === 0 ? "M" : "L") + point.x.toFixed(1) + " " + point.y.toFixed(1)
+            ).join(" ");
+            const labelStep = Math.max(1, Math.ceil(buckets.length / 7));
+            const yTicks = [0, Math.ceil(maxValue / 2), maxValue].filter((value, index, array) => array.indexOf(value) === index);
+
+            return React.createElement("div", { className: "playground-settings-usage-chart-card playground-skills-usage-chart-card" },
+              React.createElement("div", { className: "playground-project-overview-chart-shell" },
+                React.createElement("div", { className: "playground-settings-usage-chart-frame is-tall" },
+                  React.createElement("svg", {
+                      className: "playground-settings-usage-chart-svg",
+                      viewBox: "0 0 " + width + " " + height,
+                      role: "img",
+                      "aria-label": "Skill usage over the past 24 hours",
+                    },
+                    yTicks.map((tick) => {
+                      const y = marginTop + plotHeight - (tick / maxValue) * plotHeight;
+                      return React.createElement("g", { key: "y-" + tick },
+                        React.createElement("line", {
+                          x1: marginLeft,
+                          y1: y,
+                          x2: width - marginRight,
+                          y2: y,
+                          stroke: "rgba(255,255,255,0.08)",
+                          strokeWidth: 1,
+                        }),
+                        React.createElement("text", {
+                          x: 10,
+                          y: y + 4,
+                          fill: "rgba(255,255,255,0.42)",
+                          fontSize: 11,
+                        }, String(Math.max(0, Math.round(tick))))
+                      );
+                    }),
+                    React.createElement("path", {
+                      d: linePath,
+                      fill: "none",
+                      stroke: "#66a6ff",
+                      strokeWidth: 3,
+                      strokeLinecap: "round",
+                      strokeLinejoin: "round",
+                    }),
+                    points.map((point, index) =>
+                      React.createElement("circle", {
+                        key: "point-" + index,
+                        cx: point.x,
+                        cy: point.y,
+                        r: 3.6,
+                        fill: "#66a6ff",
+                        stroke: "#0b0b0c",
+                        strokeWidth: 1.5,
+                      })
+                    ),
+                    points.map((point, index) => index % labelStep === 0 || index === points.length - 1
+                      ? React.createElement("text", {
+                          key: "x-" + index,
+                          x: point.x,
+                          y: height - 16,
+                          textAnchor: index === 0 ? "start" : index === points.length - 1 ? "end" : "middle",
+                          fill: "rgba(255,255,255,0.42)",
+                          fontSize: 11,
+                        }, point.label)
+                      : null
+                    )
+                  )
+                )
+              )
+            );
+          }
+
+          const skillUsageChart = renderSkillUsageChart();
+          const skillUsageSection = React.createElement("div", { className: "playground-environments-home-metrics playground-server-detail-metrics playground-skills-detail-metrics" },
+            React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card" },
+              React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                React.createElement("div", { className: "playground-database-overview" },
+                  React.createElement("div", { className: "playground-database-overview-chart-block playground-server-detail-chart-block playground-skills-usage-card" },
+                    React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-server-detail-chart-kpis playground-skills-usage-kpis" },
+                      skillUsageKpis.map((item) =>
+                        React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi playground-skills-usage-kpi" },
+                          React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                            React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+                        )
+                      )
+                    ),
+                    skillUsageChart,
+                    detailMeta
+                  )
+                )
+              )
+            )
+          );
+
+          const skillDetailTabs = [
+            { id: "general", label: "General" },
+            { id: "prompting", label: "Prompting" },
+            { id: "sourceFiles", label: "Source Files" },
+          ];
+          const skillDetailTabsElement = React.createElement("div", {
+              className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs playground-skills-detail-tabs",
+            },
+            React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+              skillDetailTabs.map((tab) =>
+                React.createElement("button", {
+                  key: tab.id,
+                  type: "button",
+                  className: "playground-project-overview-chart-tab" + (skillDetailTab === tab.id ? " is-active" : ""),
+                  onClick: () => setSkillDetailTab(tab.id),
+                }, tab.label)
+              )
+            )
+          );
+
+          const generalTabContent = React.createElement(React.Fragment, null,
+            renderSkillMarkdownSection({
+              sectionId: "description",
+              title: "Description",
+              content: selectedSkill.description,
+              emptyLabel: "Add Description here",
+            }),
+            skillUsageSection
+          );
+          const promptingTabContent = React.createElement(React.Fragment, null,
+            renderSkillMarkdownSection({
+              sectionId: "usage",
+              title: "Usage",
+              content: selectedSkillSections.usage,
+              emptyLabel: "Add Usage here",
+            }),
+            renderSkillMarkdownSection({
+              sectionId: "process",
+              title: "Process",
+              content: selectedSkillSections.process,
+              emptyLabel: "Add Process here",
+            }),
+            renderSkillMarkdownSection({
+              sectionId: "outputFormat",
+              title: "Output",
+              content: selectedSkillSections.outputFormat,
+              emptyLabel: "Add Output guidance here",
+            }),
+            renderSkillMarkdownSection({
+              sectionId: "configuration",
+              title: "Config",
+              content: selectedSkillSections.configuration,
+              emptyLabel: "Add Config here",
+            }),
+            renderSkillMarkdownSection({
+              sectionId: "examplePrompts",
+              title: "Examples",
+              content: selectedSkillSections.examplePrompts,
+              emptyLabel: "Add Examples here",
+            })
+          );
+          const activeSkillDetailTabContent = skillDetailTab === "sourceFiles"
+            ? skillSourceFilesSection
+            : skillDetailTab === "prompting"
+              ? promptingTabContent
+              : generalTabContent;
+
+          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main playground-skills-detail-page" + (skillDetailTab === "sourceFiles" ? " is-source-files-tab" : "") },
             skillsTopNavActions,
             React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
               React.createElement("div", { className: "playground-skills-detail-content" },
@@ -96954,44 +98446,8 @@ ${IMAGINE_PAGE_SCRIPT}
                 skillSaveState.error
                   ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, skillSaveState.error)
                   : null,
-                renderSkillMarkdownSection({
-                  sectionId: "description",
-                  title: "Description",
-                  content: selectedSkill.description,
-                  emptyLabel: "Add Description here",
-                }),
-                detailMeta,
-                renderSkillMarkdownSection({
-                  sectionId: "usage",
-                  title: "Usage",
-                  content: selectedSkillSections.usage,
-                  emptyLabel: "Add Usage here",
-                }),
-                renderSkillMarkdownSection({
-                  sectionId: "process",
-                  title: "Process",
-                  content: selectedSkillSections.process,
-                  emptyLabel: "Add Process here",
-                }),
-                renderSkillMarkdownSection({
-                  sectionId: "outputFormat",
-                  title: "Output",
-                  content: selectedSkillSections.outputFormat,
-                  emptyLabel: "Add Output guidance here",
-                }),
-                renderSkillMarkdownSection({
-                  sectionId: "configuration",
-                  title: "Config",
-                  content: selectedSkillSections.configuration,
-                  emptyLabel: "Add Config here",
-                }),
-                renderSkillMarkdownSection({
-                  sectionId: "examplePrompts",
-                  title: "Examples",
-                  content: selectedSkillSections.examplePrompts,
-                  emptyLabel: "Add Examples here",
-                }),
-                codeFilesSection
+                skillDetailTabsElement,
+                activeSkillDetailTabContent
               )
             ),
           );
@@ -121560,6 +123016,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [tasksPageNavigationRequest, setTasksPageNavigationRequest] = useState(null);
         const [filesPageNavigationRequest, setFilesPageNavigationRequest] = useState(null);
         const [filesPageTopNav, setFilesPageTopNav] = useState(null);
+        const [threadSearchFileInventoryByEnvironmentId, setThreadSearchFileInventoryByEnvironmentId] = useState({});
+        const [threadSearchFileInventoryLoadingByEnvironmentId, setThreadSearchFileInventoryLoadingByEnvironmentId] = useState({});
+        const threadSearchFileInventoryByEnvironmentIdRef = useRef({});
+        const threadSearchFileInventoryLoadingIdsRef = useRef(new Set());
         const [imagineActiveView, setImagineActiveView] = useState("explore");
         const [imagineToolbarPopover, setImagineToolbarPopover] = useState("");
         const [imagineFilterMode, setImagineFilterMode] = useState("all");
@@ -121642,6 +123102,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
         useEffect(() => {
           realThreadsRef.current = realThreads;
         }, [realThreads]);
+        useEffect(() => {
+          threadSearchFileInventoryByEnvironmentIdRef.current = threadSearchFileInventoryByEnvironmentId;
+        }, [threadSearchFileInventoryByEnvironmentId]);
         const [settingsDiscordStatus, setSettingsDiscordStatus] = useState(null);
         const [settingsDiscordLoading, setSettingsDiscordLoading] = useState(false);
         const [settingsDiscordError, setSettingsDiscordError] = useState("");
@@ -121775,6 +123238,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [tasksProjectBackRequestToken, setTasksProjectBackRequestToken] = useState(0);
         const [tasksProjectViewRequest, setTasksProjectViewRequest] = useState(null);
         const [tasksProjectSettingsRequestToken, setTasksProjectSettingsRequestToken] = useState(0);
+        const [pluginDetailTab, setPluginDetailTab] = useState("general");
+        const [pluginDetailCapabilityIndex, setPluginDetailCapabilityIndex] = useState(0);
         const [pluginsHeroSlideIndex, setPluginsHeroSlideIndex] = useState(0);
         const [pluginsHeroDisplayIndex, setPluginsHeroDisplayIndex] = useState(0);
         const [pluginsHeroOutgoingIndex, setPluginsHeroOutgoingIndex] = useState(null);
@@ -121962,6 +123427,57 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const requestHeaders = useMemo(() => {
           return authRequestHeaders;
         }, [authRequestHeaders]);
+        const loadThreadSearchFileInventory = useCallback(async (targetEnvironmentId) => {
+          const normalizedEnvironmentId = String(targetEnvironmentId || "").trim();
+          if (!normalizedEnvironmentId) {
+            return [];
+          }
+          const cachedInventory = threadSearchFileInventoryByEnvironmentIdRef.current[normalizedEnvironmentId];
+          if (Array.isArray(cachedInventory)) {
+            return cachedInventory;
+          }
+          if (threadSearchFileInventoryLoadingIdsRef.current.has(normalizedEnvironmentId)) {
+            return [];
+          }
+
+          threadSearchFileInventoryLoadingIdsRef.current.add(normalizedEnvironmentId);
+          setThreadSearchFileInventoryLoadingByEnvironmentId((current) => ({
+            ...current,
+            [normalizedEnvironmentId]: true,
+          }));
+
+          try {
+            const response = await fetch(
+              buildPlaygroundEnvironmentFilesListUrl(proxyBackendBase, normalizedEnvironmentId, "", -1),
+              {
+                method: "GET",
+                headers: authRequestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to search files.");
+            }
+            const normalizedInventory = normalizePlaygroundEnvironmentInventory(data?.files || data?.items || data);
+            setThreadSearchFileInventoryByEnvironmentId((current) => ({
+              ...current,
+              [normalizedEnvironmentId]: normalizedInventory,
+            }));
+            return normalizedInventory;
+          } catch {
+            setThreadSearchFileInventoryByEnvironmentId((current) => ({
+              ...current,
+              [normalizedEnvironmentId]: [],
+            }));
+            return [];
+          } finally {
+            threadSearchFileInventoryLoadingIdsRef.current.delete(normalizedEnvironmentId);
+            setThreadSearchFileInventoryLoadingByEnvironmentId((current) => ({
+              ...current,
+              [normalizedEnvironmentId]: false,
+            }));
+          }
+        }, [authRequestHeaders, proxyBackendBase]);
         const hasRealAccess = !isDemoMode && hasSessionAuth;
         const hasShellAccess = hasRealAccess || hasDemoAccess;
         const activeProjectId = projectId.trim() || sessionState.projectId || "";
@@ -122974,6 +124490,27 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function handleThreadSearchSelect(threadId) {
           closeThreadSearch();
           handleThreadSelect(threadId);
+        }
+
+        function handleThreadSearchFileSelect(fileResult) {
+          const normalizedEnvironmentId = String(fileResult?.environmentId || "").trim();
+          const entry = fileResult?.entry || null;
+          const normalizedPath = normalizeHistoryPath(entry?.path || "");
+          if (!normalizedEnvironmentId || !normalizedPath) {
+            return;
+          }
+
+          closeThreadSearch();
+          setSidebarWorkspaceMode("work");
+          setEnvironmentId(normalizedEnvironmentId);
+          setFilesPageNavigationRequest({
+            token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+            environmentId: normalizedEnvironmentId,
+            path: normalizedPath,
+            isFolder: Boolean(entry?.isFolder),
+            contentMode: "files",
+          });
+          setActivePage("files");
         }
 
         useEffect(() => {
@@ -128440,6 +129977,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }, [activePage, toolsView]);
 
         useEffect(() => {
+          setPluginDetailTab("general");
+          setPluginDetailCapabilityIndex(0);
+        }, [selectedPluginId]);
+
+        useEffect(() => {
           if (activePage === "tools" && toolsView === "skills") {
             return;
           }
@@ -133008,8 +134550,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return "Not connected";
         }
 
-        function getPluginStaticDetail(pluginId) {
-          switch (String(pluginId || "").trim().toLowerCase()) {
+	        function getPluginStaticDetail(pluginId) {
+	          switch (String(pluginId || "").trim().toLowerCase()) {
             case "github":
               return {
                 categoryLabel: "Workspace Integration",
@@ -133157,10 +134699,197 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 privacyUrl: "",
                 features: [],
               };
-          }
-        }
+	          }
+	        }
 
-        function buildPluginsCatalog() {
+	        function getPluginIntegrationManifest(pluginId) {
+	          const normalizedId = String(pluginId || "").trim().toLowerCase();
+	          const capabilityDefaults = {
+	            agentActions: {
+	              id: "agentActions",
+	              title: "Agents can use it",
+	              description: "Run read or write actions from inside ACP threads.",
+	              icon: Bot,
+	              supported: false,
+	              planned: false,
+	            },
+	            externalTriggers: {
+	              id: "externalTriggers",
+	              title: "Starts work externally",
+	              description: "Let the external system start or continue ACP threads.",
+	              icon: Webhook,
+	              supported: false,
+	              planned: false,
+	            },
+	            context: {
+	              id: "context",
+	              title: "Provides context",
+	              description: "Attach live files, records, messages, or events to agent work.",
+	              icon: Layers,
+	              supported: false,
+	              planned: false,
+	            },
+	            notifications: {
+	              id: "notifications",
+	              title: "Sends updates",
+	              description: "Deliver run status, summaries, or follow-ups back to the connected system.",
+	              icon: Bell,
+	              supported: false,
+	              planned: false,
+	            },
+	          };
+	          const manifests = {
+	            github: {
+	              authMethod: "GitHub App",
+	              workflowMode: "Workspace actions + webhooks",
+	              workflowDescription: "Agents can inspect and update repositories while repository events can start ACP workflows.",
+	              capabilities: {
+	                agentActions: { supported: true, description: "Agents can inspect repositories, issues, PRs, branches, and CI state." },
+	                externalTriggers: { supported: true, description: "Repository events can trigger or continue ACP workflows through webhooks." },
+	                context: { supported: true, description: "Code, reviews, issues, and build logs can become task context." },
+	                notifications: { supported: true, description: "Agents can post requested comments, reviews, and pull request updates." },
+	              },
+	              permissions: [
+	                { id: "read", title: "Read repositories", description: "Repository files, issues, pull requests, branches, and CI metadata." },
+	                { id: "write", title: "Write repository updates", description: "Comments, commits, pull requests, and review follow-ups when requested." },
+	                { id: "trigger", title: "Receive repository events", description: "GitHub webhook events can start or continue structured agent work." },
+	              ],
+	            },
+	            gitlab: {
+	              authMethod: "Webhook secret",
+	              workflowMode: "External workflow trigger",
+	              workflowDescription: "GitLab events can enter ACP through webhook endpoints; direct GitLab browsing is not enabled yet.",
+	              capabilities: {
+	                agentActions: { planned: true, description: "Direct GitLab browsing from ACP is planned for a future connector version." },
+	                externalTriggers: { supported: true, title: "Webhook-triggered work", description: "Merge requests, notes, pushes, and pipelines can route into ACP." },
+	                context: { supported: true, description: "Event payloads and merge request metadata are carried into the new thread." },
+	                notifications: { supported: true, description: "Webhook workflows can post structured follow-ups back to GitLab." },
+	              },
+	              permissions: [
+	                { id: "trigger", title: "Receive GitLab events", description: "Push, note, pipeline, and merge request payloads." },
+	                { id: "write", title: "Post merge request follow-ups", description: "Structured comments and summaries back to GitLab." },
+	              ],
+	            },
+	            notion: {
+	              authMethod: "OAuth",
+	              workflowMode: "Workspace context",
+	              workflowDescription: "Agents can use selected Notion pages and databases as live project and thread context.",
+	              capabilities: {
+	                agentActions: { supported: true, description: "Agents can search connected pages and databases while working." },
+	                externalTriggers: { planned: true, description: "Notion events do not start ACP work yet." },
+	                context: { supported: true, description: "Pages and database records can be referenced as workspace context." },
+	              },
+	              permissions: [
+	                { id: "read", title: "Read pages and databases", description: "Connected Notion workspace content used as context." },
+	                { id: "context", title: "Use workspace knowledge", description: "Reference pages and records in active tasks." },
+	              ],
+	            },
+	            "google-drive": {
+	              authMethod: "OAuth",
+	              workflowMode: "Workspace files",
+	              workflowDescription: "Agents can browse and import granted Drive files as task, project, and thread context.",
+	              capabilities: {
+	                agentActions: { supported: true, description: "Agents can browse and read files you grant from Google Drive." },
+	                externalTriggers: { planned: true, description: "Drive activity does not start ACP work yet." },
+	                context: { supported: true, description: "Documents, spreadsheets, PDFs, and images can be attached to tasks." },
+	              },
+	              permissions: [
+	                { id: "read", title: "Read granted files", description: "Files and folders selected through Google Drive access." },
+	                { id: "context", title: "Attach documents", description: "Bring Drive files into agent tasks and project context." },
+	              ],
+	            },
+	            gmail: {
+	              authMethod: "OAuth",
+	              workflowMode: "Workspace actions",
+	              workflowDescription: "Agents can search inbox context and send requested follow-up messages from Gmail.",
+	              capabilities: {
+	                agentActions: { supported: true, description: "Agents can search inbox threads, summarize messages, and send replies." },
+	                externalTriggers: { planned: true, description: "Incoming Gmail triggers are not enabled yet." },
+	                context: { supported: true, description: "Email threads can be used as evidence and follow-up context." },
+	                notifications: { supported: true, description: "Follow-up messages can be sent from the connected Gmail account." },
+	              },
+	              permissions: [
+	                { id: "read", title: "Read messages", description: "Search message metadata, snippets, and conversation context." },
+	                { id: "write", title: "Send messages", description: "Send requested follow-up emails from the connected account." },
+	              ],
+	            },
+	            "one-drive": {
+	              authMethod: "OAuth",
+	              workflowMode: "Workspace files",
+	              workflowDescription: "Agents can browse and import granted OneDrive files as task, project, and thread context.",
+	              capabilities: {
+	                agentActions: { supported: true, description: "Agents can browse and read Microsoft-hosted files you grant." },
+	                externalTriggers: { planned: true, description: "OneDrive events do not start ACP work yet." },
+	                context: { supported: true, description: "Files and folders can be attached to tasks as live context." },
+	              },
+	              permissions: [
+	                { id: "read", title: "Read granted files", description: "Files and folders selected from OneDrive." },
+	                { id: "context", title: "Attach documents", description: "Bring Microsoft-hosted files into agent tasks." },
+	              ],
+	            },
+	            discord: {
+	              authMethod: "Discord account link",
+	              workflowMode: "External agent channel",
+	              workflowDescription: "Discord can start ACP runs and receive updates; agent-side Discord read/write actions are separate from the trigger path.",
+	              capabilities: {
+	                agentActions: { planned: true, description: "Discord read/write actions from ACP are not enabled yet." },
+	                externalTriggers: { supported: true, description: "Slash commands and bot messages can start and monitor ACP work." },
+	                context: { supported: true, description: "Discord command details become context for the started thread." },
+	                notifications: { supported: true, description: "Run status updates and completions can be delivered back to Discord." },
+	              },
+	              permissions: [
+	                { id: "trigger", title: "Run slash commands", description: "Start tasks, check status, and receive updates in Discord." },
+	                { id: "notify", title: "Send run updates", description: "Deliver asynchronous run events back to Discord." },
+	              ],
+	            },
+	            telegram: {
+	              authMethod: "Bot verification code",
+	              workflowMode: "External agent channel",
+	              workflowDescription: "Telegram can start ACP runs, continue work, and receive status updates through the bot.",
+	              capabilities: {
+	                agentActions: { planned: true, description: "Telegram read/write actions from ACP are not enabled yet." },
+	                externalTriggers: { supported: true, description: "Bot commands can start runs, query status, and continue work." },
+	                context: { supported: true, description: "Telegram request text is attached to the thread as context." },
+	                notifications: { supported: true, description: "Run status updates and completions can be delivered back to Telegram." },
+	              },
+	              permissions: [
+	                { id: "trigger", title: "Run bot commands", description: "Start tasks and request run status from Telegram." },
+	                { id: "notify", title: "Send run updates", description: "Deliver asynchronous run events back to Telegram." },
+	              ],
+	            },
+	            email: {
+	              authMethod: "Email verification code",
+	              workflowMode: "External agent channel",
+	              workflowDescription: "Email can create or continue ACP work through messages, replies, and attachments.",
+	              capabilities: {
+	                agentActions: { planned: true, description: "Sending arbitrary outbound email from ACP uses Gmail instead." },
+	                externalTriggers: { supported: true, description: "Emails and replies can start or continue ACP threads." },
+	                context: { supported: true, description: "Email bodies and attachments are ingested as thread context." },
+	                notifications: { supported: true, description: "Verification and notification emails are sent through ACP." },
+	              },
+	              permissions: [
+	                { id: "trigger", title: "Start work by email", description: "Create tasks from email subject, body, and attachments." },
+	                { id: "context", title: "Continue by reply", description: "Replies can continue the same ACP thread." },
+	              ],
+	            },
+	          };
+	          const manifest = manifests[normalizedId] || {
+	            authMethod: "Connection flow",
+	            workflowMode: "Workspace integration",
+	            workflowDescription: "Connect this external system so ACP can exchange context, actions, or trigger events.",
+	            capabilities: {},
+	            permissions: [],
+	          };
+	          return {
+	            ...manifest,
+	            capabilities: ["agentActions", "externalTriggers", "context", "notifications"].map((key) => ({
+	              ...capabilityDefaults[key],
+	              ...((manifest.capabilities && manifest.capabilities[key]) || {}),
+	            })),
+	          };
+	        }
+
+	        function buildPluginsCatalog() {
           return [
             {
               id: "github",
@@ -133337,6 +135066,65 @@ ${PROJECT_OVERVIEW_SCRIPT}
           ];
         }
 
+        function getPluginDetailConnectionState(plugin) {
+          const pluginId = String(plugin?.id || "").trim().toLowerCase();
+          if (pluginId === "email" && settingsEmailStatus?.linked && !settingsEmailStatus?.verified) {
+            return {
+              id: "pending",
+              label: "Verification pending",
+              copy: "Finish email verification before ACP can use this channel.",
+              tone: "pending",
+            };
+          }
+          if (pluginId === "telegram" && settingsTelegramStatus?.linked && !settingsTelegramStatus?.verified) {
+            return {
+              id: "pending",
+              label: "Verification pending",
+              copy: "Finish Telegram verification before ACP can use this channel.",
+              tone: "pending",
+            };
+          }
+          if (pluginId === "gitlab") {
+            return {
+              id: "webhook",
+              label: "Webhook setup",
+              copy: "Create a webhook endpoint and connect it from GitLab.",
+              tone: "available",
+            };
+          }
+          if (plugin?.connected) {
+            return {
+              id: "connected",
+              label: "Connected",
+              copy: plugin.statusCopy || "Connected to ACP.",
+              tone: "connected",
+            };
+          }
+          return {
+            id: "not-connected",
+            label: "Not connected",
+            copy: "Connect this plugin before agents can use its protected data or actions.",
+            tone: "inactive",
+          };
+        }
+
+	        function getPluginDetailAuthMethod(pluginId) {
+	          return getPluginIntegrationManifest(pluginId).authMethod || "Connection flow";
+	        }
+
+	        function getPluginDetailCapabilityCards(plugin) {
+	          return getPluginIntegrationManifest(plugin?.id).capabilities;
+	        }
+
+	        function getPluginDetailPermissionRows(plugin) {
+	          const manifestRows = getPluginIntegrationManifest(plugin?.id).permissions || [];
+	          return manifestRows.length ? manifestRows : (plugin.features || []).map((feature) => ({
+	            id: feature.id,
+	            title: feature.title,
+	            description: feature.description,
+	          }));
+	        }
+
         function renderPluginDetailBody(selectedPlugin) {
           if (!selectedPlugin) {
             return null;
@@ -133483,69 +135271,228 @@ ${PROJECT_OVERVIEW_SCRIPT}
               : null;
           }
 
-          return React.createElement("div", { className: "playground-plugin-detail-stack" },
-            React.createElement("section", { className: "playground-plugin-detail-prompt-card" },
-              React.createElement("div", { className: "playground-plugin-detail-prompt-pill" },
-                React.createElement("div", { className: "playground-plugin-detail-prompt-copy" },
-                  React.createElement("span", { className: "playground-plugin-detail-prompt-plugin" }, selectedPlugin.label),
-                  React.createElement("span", { className: "playground-plugin-detail-prompt-text" }, selectedPlugin.samplePrompt || "")
-                )
-              )
-            ),
-            React.createElement("section", { className: "playground-plugin-detail-section" },
-              React.createElement("p", { className: "playground-plugin-detail-copy" }, selectedPlugin.whenToUse || selectedPlugin.description || "")
-            ),
-            React.createElement("section", { className: "playground-plugin-detail-section" },
-              React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Includes"),
-              React.createElement("div", { className: "playground-plugin-detail-surface playground-plugin-detail-table" },
-                (selectedPlugin.features || []).map((feature) =>
-                  React.createElement("div", { key: feature.id, className: "playground-plugin-detail-table-row" },
-                    React.createElement("div", { className: "playground-plugin-detail-feature-main" },
-                      React.createElement("span", { className: "playground-plugin-detail-feature-icon" }, renderFeatureIcon(feature)),
-                      React.createElement("div", { className: "playground-plugin-detail-feature-copy" },
-                        React.createElement("div", { className: "playground-plugin-detail-feature-title-row" },
-                          React.createElement("span", { className: "playground-plugin-detail-feature-title" }, feature.title),
-                          feature.kind
-                            ? React.createElement("span", { className: "playground-plugin-detail-feature-kind" }, feature.kind)
-                            : null
-                        ),
-                        React.createElement("div", { className: "playground-plugin-detail-feature-description" }, feature.description)
-                      )
-                    )
-                  )
-                )
-              )
-            ),
-            React.createElement("section", { className: "playground-plugin-detail-section" },
-              React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Information"),
-              React.createElement("div", { className: "playground-plugin-detail-surface" },
-                infoRows.map((row) =>
-                  React.createElement("div", { key: row.id, className: "playground-plugin-detail-info-row" },
-                    React.createElement("div", { className: "playground-plugin-detail-info-label" }, row.label),
-                    React.createElement("div", { className: "playground-plugin-detail-info-value" },
-                      row.href
-                        ? React.createElement("a", {
-                            href: row.href,
-                            target: "_blank",
-                            rel: "noreferrer noopener",
-                            className: "playground-plugin-detail-info-link",
-                          },
-                            React.createElement("span", { className: "playground-plugin-detail-info-link-text" }, getLinkLabel(row.href)),
-                            React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 })
-                          )
-                        : row.value
-                    )
-                  )
-                )
-              )
-            ),
-            setupContent
-              ? React.createElement("section", { className: "playground-plugin-detail-section playground-plugin-detail-setup" },
-                  React.createElement("h3", { className: "playground-plugin-detail-section-title" }, "Setup"),
-                  setupContent
-                )
-              : null
-          );
+	          const connectionState = getPluginDetailConnectionState(selectedPlugin);
+	          const pluginManifest = getPluginIntegrationManifest(selectedPlugin.id);
+	          const capabilityCards = getPluginDetailCapabilityCards(selectedPlugin);
+	          const permissionRows = getPluginDetailPermissionRows(selectedPlugin);
+	          const getCapabilityStatus = (card) => {
+	            if (card.planned) {
+	              return { label: "Planned", tone: "available" };
+	            }
+	            if (!card.supported) {
+	              return { label: "Not available", tone: "muted" };
+	            }
+            if (connectionState.id === "connected") {
+              return { label: "Enabled", tone: "connected" };
+            }
+            if (connectionState.id === "pending") {
+              return { label: "Verification pending", tone: "pending" };
+            }
+            if (connectionState.id === "webhook") {
+              return { label: "Setup required", tone: "available" };
+            }
+            return { label: "Needs connection", tone: "inactive" };
+          };
+          const getPermissionStatus = () => {
+            if (connectionState.id === "connected") {
+              return { label: "Enabled", tone: "connected" };
+            }
+            if (connectionState.id === "pending") {
+              return { label: "Pending", tone: "pending" };
+            }
+            if (connectionState.id === "webhook") {
+              return { label: "Configure", tone: "available" };
+            }
+            return { label: "Disabled", tone: "inactive" };
+          };
+          const permissionStatus = getPermissionStatus();
+          const connectionRows = [
+            { id: "status", label: "Status", value: connectionState.label },
+	            { id: "account", label: "Account", value: selectedPlugin.statusCopy || connectionState.copy },
+	            { id: "auth", label: "Authentication", value: getPluginDetailAuthMethod(selectedPlugin.id) },
+	            { id: "mode", label: "Workflow mode", value: pluginManifest.workflowMode },
+	            { id: "category", label: "Category", value: selectedPlugin.categoryLabel || selectedPlugin.category || "Workspace Integration" },
+	            { id: "website", label: "Website", href: selectedPlugin.websiteUrl },
+            { id: "terms", label: "Terms", href: selectedPlugin.termsUrl },
+            { id: "privacy", label: "Privacy", href: selectedPlugin.privacyUrl },
+          ];
+
+	          const normalizedCapabilityCards = capabilityCards.length
+	            ? capabilityCards
+	            : [{
+	                id: "overview",
+	                title: selectedPlugin.label,
+	                description: selectedPlugin.description || "Connect this plugin to extend what agents can read, write, or trigger.",
+	                icon: Layers,
+	                supported: true,
+	              }];
+	          const normalizedCapabilityIndex = ((pluginDetailCapabilityIndex % normalizedCapabilityCards.length) + normalizedCapabilityCards.length) % normalizedCapabilityCards.length;
+	          const activeCapability = normalizedCapabilityCards[normalizedCapabilityIndex] || normalizedCapabilityCards[0];
+	          const activeCapabilityStatus = getCapabilityStatus(activeCapability || {});
+	          const ActiveCapabilityIcon = activeCapability?.icon || Layers;
+	          const advanceCapability = (direction) => {
+	            setPluginDetailCapabilityIndex((current) => {
+	              const count = normalizedCapabilityCards.length || 1;
+	              return (current + direction + count) % count;
+	            });
+	          };
+	          const renderConnectionPanel = () =>
+	            React.createElement("div", { className: "playground-plugin-detail-surface playground-plugin-detail-connection-panel" },
+	              React.createElement("div", { className: "playground-plugin-detail-connection-head" },
+	                React.createElement("span", { className: "playground-plugin-detail-status-dot is-" + connectionState.tone }),
+	                React.createElement("div", { className: "playground-plugin-detail-connection-copy" },
+	                  React.createElement("div", { className: "playground-plugin-detail-connection-title" }, connectionState.label),
+	                  React.createElement("div", { className: "playground-plugin-detail-connection-subtitle" }, connectionState.copy)
+	                )
+	              ),
+	              React.createElement("div", { className: "playground-plugin-detail-info-compact" },
+	                connectionRows.filter((row) => row.value || row.href).map((row) =>
+	                  React.createElement("div", { key: row.id, className: "playground-plugin-detail-info-row" },
+	                    React.createElement("div", { className: "playground-plugin-detail-info-label" }, row.label),
+	                    React.createElement("div", { className: "playground-plugin-detail-info-value" },
+	                      row.href
+	                        ? React.createElement("a", {
+	                            href: row.href,
+	                            target: "_blank",
+	                            rel: "noreferrer noopener",
+	                            className: "playground-plugin-detail-info-link",
+	                          },
+	                            React.createElement("span", { className: "playground-plugin-detail-info-link-text" }, getLinkLabel(row.href)),
+	                            React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 })
+	                          )
+	                        : row.value
+	                    )
+	                  )
+	                )
+	              )
+	            );
+	          const renderPermissionsPanel = () =>
+	            React.createElement("div", { className: "playground-plugin-detail-surface playground-plugin-detail-permission-panel" },
+	              React.createElement("div", { className: "playground-plugin-detail-permission-head" },
+	                React.createElement("div", { className: "playground-plugin-detail-permission-title" }, "Permissions"),
+	                React.createElement("span", { className: "playground-plugin-detail-status-pill is-" + permissionStatus.tone }, permissionStatus.label)
+	              ),
+	              React.createElement("div", { className: "playground-plugin-detail-permission-list" },
+	                permissionRows.map((row) =>
+	                  React.createElement("div", { key: row.id, className: "playground-plugin-detail-permission-row" },
+	                    React.createElement("span", { className: "playground-plugin-detail-permission-icon is-" + permissionStatus.tone },
+	                      permissionStatus.tone === "connected"
+	                        ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 2 })
+	                        : React.createElement(Shield, { width: 13, height: 13, strokeWidth: 1.8 })
+	                    ),
+	                    React.createElement("div", { className: "playground-plugin-detail-permission-copy" },
+	                      React.createElement("div", { className: "playground-plugin-detail-permission-name" }, row.title),
+	                      React.createElement("div", { className: "playground-plugin-detail-permission-description" }, row.description)
+	                    )
+	                  )
+	                )
+	              )
+	            );
+	          const renderIncludedActions = () =>
+	            React.createElement("section", { className: "playground-plugin-detail-section" },
+	              React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Included actions"),
+	              React.createElement("div", { className: "playground-plugin-detail-surface playground-plugin-detail-table" },
+	                (selectedPlugin.features || []).map((feature) =>
+	                  React.createElement("div", { key: feature.id, className: "playground-plugin-detail-table-row" },
+	                    React.createElement("div", { className: "playground-plugin-detail-feature-main" },
+	                      React.createElement("span", { className: "playground-plugin-detail-feature-icon" }, renderFeatureIcon(feature)),
+	                      React.createElement("div", { className: "playground-plugin-detail-feature-copy" },
+	                        React.createElement("div", { className: "playground-plugin-detail-feature-title-row" },
+	                          React.createElement("span", { className: "playground-plugin-detail-feature-title" }, feature.title),
+	                          feature.kind
+	                            ? React.createElement("span", { className: "playground-plugin-detail-feature-kind" }, feature.kind)
+	                            : null
+	                        ),
+	                        React.createElement("div", { className: "playground-plugin-detail-feature-description" }, feature.description)
+	                      )
+	                    )
+	                  )
+	                )
+	              )
+	            );
+	          const renderSetupSection = () =>
+	            setupContent
+	              ? React.createElement("section", { className: "playground-plugin-detail-section playground-plugin-detail-setup" },
+	                  React.createElement("h3", { className: "playground-plugin-detail-section-title" }, "Setup"),
+	                  setupContent
+	                )
+	              : null;
+	          const renderCapabilityCarousel = () =>
+	            React.createElement("section", { className: "playground-plugin-detail-carousel" },
+	              React.createElement("div", { className: "playground-plugin-detail-carousel-copy" },
+	                React.createElement("span", { className: "playground-plugin-detail-carousel-eyebrow" }, "Capability " + (normalizedCapabilityIndex + 1) + " of " + normalizedCapabilityCards.length),
+	                React.createElement("h3", { className: "playground-plugin-detail-carousel-title" }, activeCapability.title),
+	                React.createElement("p", { className: "playground-plugin-detail-carousel-description" }, activeCapability.description),
+	                React.createElement("span", { className: "playground-plugin-detail-status-pill playground-plugin-detail-carousel-status is-" + activeCapabilityStatus.tone }, activeCapabilityStatus.label)
+	              ),
+	              React.createElement("div", { className: "playground-plugin-detail-carousel-preview" },
+	                React.createElement("div", { className: "playground-plugin-detail-carousel-image" },
+	                  React.createElement("div", { className: "playground-plugin-detail-carousel-image-top" },
+	                    React.createElement("span", { className: "playground-plugin-detail-carousel-image-dot" }),
+	                    React.createElement("span", { className: "playground-plugin-detail-carousel-image-dot" }),
+	                    React.createElement("span", { className: "playground-plugin-detail-carousel-image-dot" })
+	                  ),
+	                  React.createElement("div", { className: "playground-plugin-detail-carousel-image-body" },
+	                    React.createElement("div", { className: "playground-plugin-detail-carousel-image-panel" }),
+	                    React.createElement("div", { className: "playground-plugin-detail-carousel-image-lines" },
+	                      React.createElement("span", { className: "playground-plugin-detail-carousel-icon-shell" },
+	                        React.createElement(ActiveCapabilityIcon, { width: 19, height: 19, strokeWidth: 1.8 })
+	                      ),
+	                      React.createElement("span", { className: "playground-plugin-detail-carousel-image-line" }),
+	                      React.createElement("span", { className: "playground-plugin-detail-carousel-image-line" }),
+	                      React.createElement("span", { className: "playground-plugin-detail-carousel-image-line" })
+	                    )
+	                  )
+	                )
+	              ),
+	              React.createElement("div", { className: "playground-plugin-detail-carousel-dots" },
+	                normalizedCapabilityCards.map((card, index) =>
+	                  React.createElement("button", {
+	                    key: card.id || index,
+	                    type: "button",
+	                    className: "playground-plugin-detail-carousel-dot" + (index === normalizedCapabilityIndex ? " is-active" : ""),
+	                    onClick: () => setPluginDetailCapabilityIndex(index),
+	                    "aria-label": "Show " + (card.title || "capability"),
+	                  })
+	                )
+	              ),
+	              React.createElement("div", { className: "playground-plugin-detail-carousel-controls" },
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-plugin-detail-carousel-nav",
+	                  onClick: () => advanceCapability(-1),
+	                  "aria-label": "Previous capability",
+	                }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-plugin-detail-carousel-nav",
+	                  onClick: () => advanceCapability(1),
+	                  "aria-label": "Next capability",
+	                }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
+	              )
+	            );
+
+	          return React.createElement("div", { className: "playground-plugin-detail-stack" },
+	            pluginDetailTab === "permissions"
+	              ? React.createElement(React.Fragment, null,
+	                  React.createElement("section", { className: "playground-plugin-detail-section" },
+	                    renderPermissionsPanel()
+	                  ),
+	                  React.createElement("section", { className: "playground-plugin-detail-section" },
+	                    React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Connection"),
+	                    renderConnectionPanel()
+	                  )
+	                )
+	              : React.createElement(React.Fragment, null,
+	                  renderCapabilityCarousel(),
+	                  React.createElement("section", { className: "playground-plugin-detail-section" },
+	                    React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Connection"),
+	                    renderConnectionPanel()
+	                  ),
+	                  renderIncludedActions(),
+	                  renderSetupSection()
+	                )
+	          );
         }
 
         function renderWebhookActionsPanel(options = {}) {
@@ -134341,13 +136288,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : featuredPlugins[pluginsHeroOutgoingIndex % featuredPlugins.length] || null;
 
           if (selectedPlugin) {
-            const pluginStatusLabel = selectedPlugin.connected ? "Connected" : "Not connected";
+            const pluginHeaderButtonClass = "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button playground-plugin-detail-connect-button";
             const pluginHeaderAction = (() => {
               if (selectedPlugin.id === "email") {
                 return settingsEmailStatus?.linked && settingsEmailStatus?.verified
                   ? React.createElement("button", {
                       type: "button",
-                      className: "playground-plugin-modal-button is-destructive",
+                      className: pluginHeaderButtonClass + " is-destructive",
                       onClick: () => {
                         void handleSettingsUnlinkEmail();
                       },
@@ -134359,7 +136306,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 return settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
                   ? React.createElement("button", {
                       type: "button",
-                      className: "playground-plugin-modal-button is-destructive",
+                      className: pluginHeaderButtonClass + " is-destructive",
                       onClick: () => {
                         void handleSettingsUnlinkTelegram();
                       },
@@ -134386,7 +136333,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   : preferredAction.label;
               return React.createElement("button", {
                 type: "button",
-                className: "playground-plugin-modal-button" + (preferredAction.tone === "primary" ? " is-primary" : preferredAction.tone === "destructive" ? " is-destructive" : ""),
+                className: pluginHeaderButtonClass + (preferredAction.tone === "destructive" ? " is-destructive" : ""),
                 onClick: preferredAction.onClick,
                 disabled,
               }, label);
@@ -134395,20 +136342,29 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page" },
               React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
                 React.createElement("div", { className: "playground-plugin-detail-page playground-plugin-detail-content" },
-                  React.createElement("div", { className: "playground-plugin-detail-header" },
-                    React.createElement("span", { className: "playground-plugin-detail-header-icon-shell" },
-                      renderPluginRowLogo(selectedPlugin)
-                    ),
-                    React.createElement("div", { className: "playground-plugin-detail-heading-group" },
-                      React.createElement("h2", { className: "playground-plugin-detail-title" }, selectedPlugin.label),
-                      React.createElement("div", { className: "playground-plugin-detail-meta-row" },
-                        React.createElement("p", { className: "playground-plugin-detail-subtitle" }, selectedPlugin.description),
-                        React.createElement("div", { className: "playground-plugin-detail-meta-actions" },
-                          React.createElement("span", { className: "playground-plugin-detail-status-badge" }, pluginStatusLabel),
+                  React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-plugin-detail-title-row" },
+                    React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-plugin-detail-title" }, selectedPlugin.label),
+                    pluginHeaderAction
+                      ? React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
                           pluginHeaderAction
                         )
+                      : null
+                  ),
+                  React.createElement("div", { className: "playground-agents-list-switch-row playground-plugin-detail-tabs" },
+                    React.createElement("div", { className: "content-mode-switch playground-agents-list-switch" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "content-mode-button" + (pluginDetailTab === "general" ? " is-active" : ""),
+                        onClick: () => setPluginDetailTab("general"),
+                        "aria-pressed": pluginDetailTab === "general" ? "true" : "false",
+                      }, "General"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "content-mode-button" + (pluginDetailTab === "permissions" ? " is-active" : ""),
+                        onClick: () => setPluginDetailTab("permissions"),
+                        "aria-pressed": pluginDetailTab === "permissions" ? "true" : "false",
+                      }, "Permissions")
                       )
-                    )
                   ),
                   renderPluginDetailBody(selectedPlugin)
                 )
@@ -139223,6 +141179,65 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }, [baseThreadItems]);
 
         const normalizedThreadSearchQuery = threadSearchQuery.trim().toLowerCase();
+        const threadSearchFileEnvironmentItems = useMemo(() => {
+          if (!hasRealAccess) {
+            return [];
+          }
+          return realEnvironments
+            .filter((environment) => String(environment?.id || "").trim())
+            .slice(0, 24);
+        }, [hasRealAccess, realEnvironments]);
+
+        useEffect(() => {
+          if (!threadSearchOpen || !hasRealAccess || !normalizedThreadSearchQuery) {
+            return;
+          }
+          threadSearchFileEnvironmentItems.forEach((environment) => {
+            void loadThreadSearchFileInventory(environment.id);
+          });
+        }, [
+          hasRealAccess,
+          loadThreadSearchFileInventory,
+          normalizedThreadSearchQuery,
+          threadSearchFileEnvironmentItems,
+          threadSearchOpen,
+        ]);
+
+        const filteredThreadSearchFileItems = useMemo(() => {
+          if (!normalizedThreadSearchQuery) {
+            return [];
+          }
+          const results = [];
+          threadSearchFileEnvironmentItems.forEach((environment) => {
+            const inventory = threadSearchFileInventoryByEnvironmentId[environment.id] || [];
+            const rows = buildPlaygroundEnvironmentSearchRows(inventory, threadSearchQuery, { filesOnly: true });
+            rows.slice(0, 12).forEach((row) => {
+              if (!row?.entry || row.entry.isFolder) {
+                return;
+              }
+              results.push({
+                key: environment.id + ":" + normalizeHistoryPath(row.entry.path || ""),
+                environmentId: environment.id,
+                environmentName: environment.name || "Computer",
+                entry: row.entry,
+              });
+            });
+          });
+          return results.slice(0, 24);
+        }, [
+          normalizedThreadSearchQuery,
+          threadSearchFileEnvironmentItems,
+          threadSearchFileInventoryByEnvironmentId,
+          threadSearchQuery,
+        ]);
+
+        const isThreadSearchFileLoading = Boolean(
+          normalizedThreadSearchQuery &&
+          threadSearchFileEnvironmentItems.some((environment) => (
+            threadSearchFileInventoryLoadingByEnvironmentId[environment.id] ||
+            !Array.isArray(threadSearchFileInventoryByEnvironmentId[environment.id])
+          ))
+        );
 
         const filteredThreadSearchItems = useMemo(() => {
           return searchableThreadItems.filter((thread) => {
@@ -139261,6 +141276,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             .map((key) => groupsByKey.get(key))
             .filter(Boolean);
         }, [filteredThreadSearchItems]);
+        const threadSearchTotalResultCount = filteredThreadSearchItems.length + filteredThreadSearchFileItems.length;
 
         const activeRunnerThreadId = useMemo(() => {
           return isRealThreadId(currentThreadId) ? currentThreadId : "";
@@ -142085,7 +144101,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     ref: threadSearchInputRef,
                     className: "thread-search-input",
                     type: "text",
-                    placeholder: "Search...",
+                    placeholder: "Search threads and files...",
                     value: threadSearchQuery,
                     onChange: (event) => setThreadSearchQuery(event.target.value),
                   }),
@@ -142106,7 +144122,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         },
                       }, "Show All")
                     ),
-                    React.createElement("button", {
+                  React.createElement("button", {
                       type: "button",
                       className: "thread-search-action-card",
                       onClick: handleThreadSearchCreate,
@@ -142115,6 +144131,36 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       React.createElement("span", { className: "thread-search-action-copy" }, "Create New Chat")
                     )
                   ),
+                  normalizedThreadSearchQuery
+                    ? React.createElement("section", { className: "thread-search-section" },
+                        React.createElement("div", { className: "thread-search-section-header" },
+                          React.createElement("span", { className: "thread-search-section-label" }, "Files")
+                        ),
+                        isThreadSearchFileLoading && filteredThreadSearchFileItems.length === 0
+                        ? React.createElement("div", { className: "thread-search-empty-state" }, "Searching files...")
+                        : filteredThreadSearchFileItems.length === 0
+                          ? React.createElement("div", { className: "thread-search-empty-state" }, "No files found.")
+                          : React.createElement("div", { className: "thread-search-result-list" },
+                              filteredThreadSearchFileItems.map((fileResult) => {
+                                const filePath = normalizeHistoryPath(fileResult.entry?.path || "");
+                                const fileName = fileResult.entry?.name || filePath.split("/").filter(Boolean).pop() || filePath || "Untitled file";
+                                return React.createElement("button", {
+                                  key: fileResult.key,
+                                  type: "button",
+                                  className: "thread-search-result",
+                                  onClick: () => handleThreadSearchFileSelect(fileResult),
+                                },
+                                  React.createElement(FileText, { className: "thread-search-result-icon", strokeWidth: 1.85 }),
+                                  React.createElement("span", { className: "thread-search-result-copy" },
+                                    React.createElement("span", { className: "thread-search-result-title" }, fileName),
+                                    React.createElement("span", { className: "thread-search-result-subtitle" }, "/" + filePath)
+                                  ),
+                                  React.createElement("span", { className: "thread-search-result-time" }, fileResult.environmentName)
+                                );
+                              })
+                            )
+                      )
+                    : null,
                   isThreadsLoading && searchableThreadItems.length === 0
                     ? React.createElement("div", { className: "thread-search-empty-state" }, "Loading conversations...")
                     : groupedThreadSearchItems.length === 0
@@ -142146,10 +144192,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 React.createElement("div", { className: "thread-search-footer" },
                   React.createElement("div", { className: "thread-search-footer-copy" },
                     React.createElement(ArrowUpRight, { className: "thread-search-footer-icon", strokeWidth: 1.85 }),
-                    React.createElement("span", null, "Open conversation")
+                    React.createElement("span", null, "Open result")
                   ),
                   React.createElement("div", { className: "thread-search-footer-meta" },
-                    React.createElement("span", null, filteredThreadSearchItems.length + " result" + (filteredThreadSearchItems.length === 1 ? "" : "s")),
+                    React.createElement("span", null, threadSearchTotalResultCount + " result" + (threadSearchTotalResultCount === 1 ? "" : "s")),
                     React.createElement("span", { className: "thread-search-footer-separator" }, "•"),
                     React.createElement("span", null, "Esc close")
                   )

@@ -7657,6 +7657,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-document-preview-host-inline .tb-attachment-preview-pdf,
 .tb-runner-document-preview-host-inline .tb-attachment-preview-markdown-shell,
 .tb-runner-document-preview-host-inline .tb-attachment-preview-text,
+.tb-runner-document-preview-host-inline .tb-attachment-preview-presentation-shell,
 .tb-runner-document-preview-host-inline .tb-attachment-preview-docx-shell {
   background: transparent;
 }
@@ -8243,6 +8244,92 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-docx-stage .tb-attachment-docx {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-presentation-shell {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  position: relative;
+  overflow: auto;
+  background: transparent;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-presentation-stage {
+  width: 100%;
+  min-height: 100%;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-presentation-stage.is-hidden {
+  display: none;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-presentation-stage .pptx-preview-wrapper {
+  width: 100% !important;
+  max-width: 100%;
+  background: transparent !important;
+  margin: 0 auto !important;
+  overflow: visible !important;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-presentation-stage .pptx-preview-slide-wrapper {
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0 auto 18px !important;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-presentation-state {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-presentation-state-icon {
+  width: 22px;
+  height: 22px;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-presentation-state-icon.is-spinning {
+  animation: tb-context-action-spin 0.9s linear infinite;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-keynote-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-keynote-page {
+  width: min(100%, 1080px);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-keynote-page img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
 }
 
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-spreadsheet {

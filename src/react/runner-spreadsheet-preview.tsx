@@ -22,16 +22,20 @@ export interface RunnerSpreadsheetSaveOptions {
 }
 
 export interface RunnerSpreadsheetPreviewControls {
+  canRedo: boolean;
   canRevert: boolean;
   canSave: boolean;
+  canUndo: boolean;
   codeLanguage: string;
   codeText: string;
   isDirty: boolean;
   isSaving: boolean;
   saveMessage: string;
   saveStatus: "idle" | "saving" | "saved" | "error";
+  onRedo: () => void;
   onRevert: () => void;
   onSave: () => void;
+  onUndo: () => void;
 }
 
 export interface RunnerSpreadsheetPreviewProps {
@@ -110,6 +114,71 @@ export function RunnerSpreadsheetPreview({
     message: "",
   });
   const gridRef = useRef<HTMLDivElement | null>(null);
+  const spreadsheetHistoryRef = useRef<{
+    past: RunnerSpreadsheetSheet[][];
+    future: RunnerSpreadsheetSheet[][];
+    current: RunnerSpreadsheetSheet[];
+    isApplying: boolean;
+  }>({
+    past: [],
+    future: [],
+    current: [],
+    isApplying: false,
+  });
+  const [spreadsheetHistoryAvailability, setSpreadsheetHistoryAvailability] = useState({
+    canUndo: false,
+    canRedo: false,
+  });
+
+  function updateSpreadsheetHistoryAvailability() {
+    const history = spreadsheetHistoryRef.current;
+    setSpreadsheetHistoryAvailability({
+      canUndo: history.past.length > 0,
+      canRedo: history.future.length > 0,
+    });
+  }
+
+  function resetSpreadsheetHistory(sheets: RunnerSpreadsheetSheet[]) {
+    spreadsheetHistoryRef.current = {
+      past: [],
+      future: [],
+      current: cloneRunnerSpreadsheetSheets(sheets),
+      isApplying: false,
+    };
+    setSpreadsheetHistoryAvailability({
+      canUndo: false,
+      canRedo: false,
+    });
+  }
+
+  function recordSpreadsheetHistorySheets(nextSheets: RunnerSpreadsheetSheet[]) {
+    const history = spreadsheetHistoryRef.current;
+    if (history.isApplying) {
+      return;
+    }
+    const currentSerialized = serializeRunnerSpreadsheetSheetsForComparison(history.current);
+    const nextSerialized = serializeRunnerSpreadsheetSheetsForComparison(nextSheets);
+    if (currentSerialized === nextSerialized) {
+      return;
+    }
+    history.past = [...history.past, cloneRunnerSpreadsheetSheets(history.current)].slice(-200);
+    history.future = [];
+    history.current = cloneRunnerSpreadsheetSheets(nextSheets);
+    updateSpreadsheetHistoryAvailability();
+  }
+
+  function applySpreadsheetHistorySheets(nextSheets: RunnerSpreadsheetSheet[]) {
+    const normalizedSheets = cloneRunnerSpreadsheetSheets(nextSheets);
+    const history = spreadsheetHistoryRef.current;
+    history.current = cloneRunnerSpreadsheetSheets(normalizedSheets);
+    history.isApplying = true;
+    setDraftSheets(normalizedSheets);
+    setSaveState({ status: "idle", message: "" });
+    window.requestAnimationFrame(() => {
+      history.isApplying = false;
+      updateSpreadsheetHistoryAvailability();
+    });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -134,6 +203,7 @@ export function RunnerSpreadsheetPreview({
     setInitialSheets([]);
     setActiveSheetIndex(0);
     setSaveState({ status: "idle", message: "" });
+    resetSpreadsheetHistory([]);
 
     void parseRunnerSpreadsheetBlob(blob, filename, mimeType)
       .then((workbook) => {
@@ -146,6 +216,7 @@ export function RunnerSpreadsheetPreview({
         });
         setDraftSheets(nextSheets);
         setInitialSheets(cloneRunnerSpreadsheetSheets(nextSheets));
+        resetSpreadsheetHistory(nextSheets);
         setActiveSheetIndex(0);
       })
       .catch((error) => {
@@ -215,6 +286,7 @@ export function RunnerSpreadsheetPreview({
       }
       row[columnIndex] = String(value ?? "");
       targetSheet.rows[rowIndex] = row;
+      recordSpreadsheetHistorySheets(nextSheets);
       return nextSheets;
     });
     setSaveState({ status: "idle", message: "" });
@@ -241,6 +313,7 @@ export function RunnerSpreadsheetPreview({
         });
         targetSheet.rows[rowIndex] = row;
       });
+      recordSpreadsheetHistorySheets(nextSheets);
       return nextSheets;
     });
     setSaveState({ status: "idle", message: "" });
@@ -295,8 +368,31 @@ export function RunnerSpreadsheetPreview({
 
   const handleRevert = useCallback(() => {
     setDraftSheets(cloneRunnerSpreadsheetSheets(initialSheets));
+    resetSpreadsheetHistory(initialSheets);
     setSaveState({ status: "idle", message: "" });
   }, [initialSheets]);
+
+  const handleUndo = useCallback(() => {
+    const history = spreadsheetHistoryRef.current;
+    const previousSheets = history.past.pop();
+    if (!previousSheets) {
+      updateSpreadsheetHistoryAvailability();
+      return;
+    }
+    history.future.push(cloneRunnerSpreadsheetSheets(history.current));
+    applySpreadsheetHistorySheets(previousSheets);
+  }, []);
+
+  const handleRedo = useCallback(() => {
+    const history = spreadsheetHistoryRef.current;
+    const nextSheets = history.future.pop();
+    if (!nextSheets) {
+      updateSpreadsheetHistoryAvailability();
+      return;
+    }
+    history.past.push(cloneRunnerSpreadsheetSheets(history.current));
+    applySpreadsheetHistorySheets(nextSheets);
+  }, []);
 
   const handleSave = useCallback(async () => {
     if (!canSave || !sourceWorkbook || saveState.status === "saving") {
@@ -335,29 +431,37 @@ export function RunnerSpreadsheetPreview({
     }
 
     onControlsChange({
+      canRedo: spreadsheetHistoryAvailability.canRedo && saveState.status !== "saving",
       canRevert: isDirty && saveState.status !== "saving",
       canSave,
+      canUndo: spreadsheetHistoryAvailability.canUndo && saveState.status !== "saving",
       codeLanguage: spreadsheetCodePreview.language,
       codeText: spreadsheetCodePreview.text,
       isDirty,
       isSaving: saveState.status === "saving",
       saveMessage: saveState.message,
       saveStatus: saveState.status,
+      onRedo: handleRedo,
       onRevert: handleRevert,
       onSave: () => {
         void handleSave();
       },
+      onUndo: handleUndo,
     });
   }, [
     activeSheet,
     canSave,
+    handleRedo,
     handleRevert,
     handleSave,
+    handleUndo,
     isDirty,
     loadState.status,
     onControlsChange,
     saveState.message,
     saveState.status,
+    spreadsheetHistoryAvailability.canRedo,
+    spreadsheetHistoryAvailability.canUndo,
     spreadsheetCodePreview.language,
     spreadsheetCodePreview.text,
   ]);

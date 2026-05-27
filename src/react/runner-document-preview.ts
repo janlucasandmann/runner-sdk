@@ -1,6 +1,16 @@
+import { isRunnerPresentationFile } from "./runner-presentation-utils.js";
 import { isRunnerSpreadsheetFile } from "./runner-spreadsheet-utils.js";
 
-export type RunnerDocumentPreviewKind = "pdf" | "text" | "html" | "markdown" | "docx" | "spreadsheet" | "directory" | "unsupported";
+export type RunnerDocumentPreviewKind =
+  | "pdf"
+  | "text"
+  | "html"
+  | "markdown"
+  | "docx"
+  | "spreadsheet"
+  | "presentation"
+  | "directory"
+  | "unsupported";
 
 export interface RunnerPreviewAttachment {
   id: string;
@@ -53,8 +63,10 @@ const RUNNER_PREVIEW_MIME_TYPES_BY_EXTENSION: Record<string, string> = {
   md: "text/markdown",
   pdf: "application/pdf",
   png: "image/png",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   svg: "image/svg+xml",
   txt: "text/plain",
+  key: "application/vnd.apple.keynote",
   numbers: "application/vnd.apple.numbers",
   ods: "application/vnd.oasis.opendocument.spreadsheet",
   tsv: "text/tab-separated-values",
@@ -511,6 +523,9 @@ export function getRunnerDocumentPreviewKind(input: {
   }
   if (isRunnerSpreadsheetFile(input.filename, mimeType)) {
     return "spreadsheet";
+  }
+  if (isRunnerPresentationFile(input.filename, mimeType)) {
+    return "presentation";
   }
   if (mimeType === "text/markdown" || ["md", "markdown", "mdx"].includes(extension)) {
     return "markdown";

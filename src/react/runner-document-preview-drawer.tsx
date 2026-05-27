@@ -14,6 +14,7 @@ import {
   Minus as LucideMinus,
   Plus as LucidePlus,
   RotateCcw as LucideRotateCcw,
+  RotateCw as LucideRotateCw,
   X as LucideX,
 } from "lucide-react";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
@@ -42,6 +43,7 @@ import {
 } from "./runner-image-edit-overlays.js";
 import { RunnerCodeViewer } from "./runner-log-boxes.js";
 import { RunnerMarkdown } from "./runner-markdown.js";
+import { RunnerPresentationPreview } from "./runner-presentation-preview.js";
 import {
   RunnerSpreadsheetPreview,
   type RunnerSpreadsheetPreviewControls,
@@ -618,6 +620,25 @@ export function RunnerDocumentPreviewDrawer({
     requestHeadersWithApiKeySignature,
     resolvedDirectHtmlPreviewUrl,
   ]);
+
+  useEffect(() => {
+    if (!isSpreadsheetAttachment) {
+      return undefined;
+    }
+
+    function handleSpreadsheetSaveShortcut(event: globalThis.KeyboardEvent) {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || String(event.key || "").toLowerCase() !== "s") {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+      spreadsheetPreviewControls?.onSave();
+    }
+
+    window.addEventListener("keydown", handleSpreadsheetSaveShortcut, true);
+    return () => window.removeEventListener("keydown", handleSpreadsheetSaveShortcut, true);
+  }, [isSpreadsheetAttachment, spreadsheetPreviewControls]);
 
   useEffect(() => {
     if (
@@ -1822,12 +1843,22 @@ export function RunnerDocumentPreviewDrawer({
         <button
           type="button"
           className="tb-attachment-preview-drawer-action"
-          onClick={spreadsheetPreviewControls.onRevert}
-          disabled={!spreadsheetPreviewControls.canRevert || spreadsheetPreviewControls.isSaving}
-          title="Revert changes"
-          aria-label="Revert changes"
+          onClick={spreadsheetPreviewControls.onUndo}
+          disabled={!spreadsheetPreviewControls.canUndo || spreadsheetPreviewControls.isSaving}
+          title="Undo change"
+          aria-label="Undo change"
         >
           <LucideRotateCcw className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.9} />
+        </button>
+        <button
+          type="button"
+          className="tb-attachment-preview-drawer-action"
+          onClick={spreadsheetPreviewControls.onRedo}
+          disabled={!spreadsheetPreviewControls.canRedo || spreadsheetPreviewControls.isSaving}
+          title="Redo change"
+          aria-label="Redo change"
+        >
+          <LucideRotateCw className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.9} />
         </button>
         <button
           type="button"
@@ -2195,6 +2226,12 @@ export function RunnerDocumentPreviewDrawer({
                 </div>
               ) : null}
             </div>
+          ) : documentPreviewState.kind === "presentation" && documentPreviewState.blob ? (
+            <RunnerPresentationPreview
+              blob={documentPreviewState.blob}
+              filename={attachment.filename}
+              mimeType={attachment.mimeType}
+            />
           ) : documentPreviewState.kind === "docx" ? (
             <div className="tb-attachment-preview-docx-shell">
               <div ref={documentPreviewDocxRef} className="tb-attachment-preview-docx-stage" />
