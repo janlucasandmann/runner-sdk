@@ -9,6 +9,7 @@ export type RunnerDocumentPreviewKind =
   | "docx"
   | "spreadsheet"
   | "presentation"
+  | "video"
   | "directory"
   | "unsupported";
 
@@ -61,6 +62,10 @@ const RUNNER_PREVIEW_MIME_TYPES_BY_EXTENSION: Record<string, string> = {
   log: "text/plain",
   markdown: "text/markdown",
   md: "text/markdown",
+  m4v: "video/mp4",
+  mkv: "video/x-matroska",
+  mov: "video/quicktime",
+  mp4: "video/mp4",
   pdf: "application/pdf",
   png: "image/png",
   pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -70,6 +75,7 @@ const RUNNER_PREVIEW_MIME_TYPES_BY_EXTENSION: Record<string, string> = {
   numbers: "application/vnd.apple.numbers",
   ods: "application/vnd.oasis.opendocument.spreadsheet",
   tsv: "text/tab-separated-values",
+  webm: "video/webm",
   webp: "image/webp",
   xls: "application/vnd.ms-excel",
   xlsb: "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
@@ -232,6 +238,13 @@ export function inferRunnerPreviewMimeType(filePath: string): string {
   }
   if (/\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i.test(filePath)) {
     return "image/*";
+  }
+  if (/\.(mp4|m4v|mov|webm|mkv)$/i.test(filePath)) {
+    const normalized = filePath.toLowerCase();
+    if (normalized.endsWith(".webm")) return "video/webm";
+    if (normalized.endsWith(".mov")) return "video/quicktime";
+    if (normalized.endsWith(".mkv")) return "video/x-matroska";
+    return "video/mp4";
   }
   if (/\.pdf$/i.test(filePath)) {
     return "application/pdf";
@@ -520,6 +533,9 @@ export function getRunnerDocumentPreviewKind(input: {
   }
   if (mimeType === "application/pdf" || extension === "pdf") {
     return "pdf";
+  }
+  if (mimeType.startsWith("video/") || ["mp4", "m4v", "mov", "webm", "mkv"].includes(extension)) {
+    return "video";
   }
   if (isRunnerSpreadsheetFile(input.filename, mimeType)) {
     return "spreadsheet";

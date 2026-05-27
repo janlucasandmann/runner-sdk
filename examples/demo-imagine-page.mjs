@@ -160,6 +160,50 @@ export const IMAGINE_PAGE_CSS = String.raw`
         color: #fff;
       }
 
+      .playground-imagine-media-switch {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        height: 28px;
+        padding: 1px !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 999px;
+        background: transparent;
+        overflow: hidden;
+      }
+
+      .playground-imagine-media-switch::before {
+        content: none !important;
+        display: none !important;
+      }
+
+      .playground-imagine-media-switch-button {
+        position: relative;
+        z-index: 1;
+        height: 24px;
+        min-width: 46px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        padding: 0 10px;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-imagine-media-switch-button.is-active {
+        background: rgba(255, 255, 255, 0.2) !important;
+        color: #fff;
+      }
+
+      .tb-runner-chat .tb-composer-leading-control .playground-imagine-media-switch {
+        margin-left: -10px !important;
+        margin-right: 0 !important;
+      }
+
       .playground-imagine-toolbar.playground-auth-users-toolbar {
         flex: 0 0 auto;
         margin: 0;
@@ -1050,9 +1094,11 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           onOpenPlansBudget,
           onRequireAuth,
           activeView,
+          mediaMode,
           filterMode: externalFilterMode,
           sortMode: externalSortMode,
           onActiveViewChange,
+          onMediaModeChange,
         }) {
           const [localActiveTab, setLocalActiveTab] = useState("explore");
           const [searchQuery, setSearchQuery] = useState("");
@@ -1148,6 +1194,13 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           const sortMode = ["featured", "name-asc", "name-desc"].includes(String(externalSortMode || ""))
             ? String(externalSortMode || "")
             : "featured";
+          const activeMediaMode = String(mediaMode || "").toLowerCase() === "video" ? "video" : "image";
+          const setActiveMediaMode = useCallback((nextMode) => {
+            const normalizedNextMode = String(nextMode || "").toLowerCase() === "video" ? "video" : "image";
+            if (typeof onMediaModeChange === "function") {
+              onMediaModeChange(normalizedNextMode);
+            }
+          }, [onMediaModeChange]);
           const rawActiveView = String(activeView || "");
           const normalizedActiveView = rawActiveView === "history"
             ? "my-templates"
@@ -1794,6 +1847,9 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           ], []);
 
           const filteredTemplates = useMemo(() => {
+            if (activeMediaMode === "video") {
+              return [];
+            }
             const query = String(searchQuery || "").trim().toLowerCase();
             let nextTemplates = activeTab === "my-templates"
               ? normalizedCustomTemplates
@@ -1817,7 +1873,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               nextTemplates = [...nextTemplates].sort((a, b) => b.title.localeCompare(a.title));
             }
             return nextTemplates;
-          }, [activeTab, allTemplates, favouriteTemplateIds, filterGroups, filterMode, normalizedCustomTemplates, searchQuery, sortMode, templates]);
+          }, [activeMediaMode, activeTab, allTemplates, favouriteTemplateIds, filterGroups, filterMode, normalizedCustomTemplates, searchQuery, sortMode, templates]);
 
           const updateTemplateDraft = useCallback((field, value) => {
             setTemplateDraft((current) => ({
@@ -2365,11 +2421,32 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               )
             );
 
+          const renderImagineMediaModeSwitch = () =>
+            React.createElement("div", { className: "playground-imagine-media-switch", role: "tablist", "aria-label": "Imagine media mode" },
+              [
+                { id: "image", label: "Image" },
+                { id: "video", label: "Video" },
+              ].map((option) =>
+                React.createElement("button", {
+                  key: option.id,
+                  type: "button",
+                  role: "tab",
+                  className: "playground-imagine-media-switch-button" + (activeMediaMode === option.id ? " is-active" : ""),
+                  "aria-selected": activeMediaMode === option.id ? "true" : "false",
+                  onClick: () => setActiveMediaMode(option.id),
+                }, option.label)
+              )
+            );
+
           const hiddenSystemPrompt = [
             "You are running inside Computer Agents Imagine mode.",
-            "The user is asking for image generation only. Do not produce video unless the user explicitly asks to leave Imagine mode.",
-            "Use the available image generation skill when possible. Produce polished image prompts, create the image, and summarize the image outputs concisely.",
-            selectedTemplate ? "The user selected this image template: " + selectedTemplate.title + ". Suggested direction: " + selectedTemplate.prompt : "",
+            activeMediaMode === "video"
+              ? "The user is asking for video generation. Use the Video Generation skill when possible and save generated videos into /workspace/generated_videos."
+              : "The user is asking for image generation only. Do not produce video unless the user explicitly asks to leave Imagine mode.",
+            activeMediaMode === "video"
+              ? "Create concise, production-ready video prompts. Prefer seedance-2.0-fast for quick drafts and seedance-2.0 for higher quality unless the user asks otherwise."
+              : "Use the available image generation skill when possible. Produce polished image prompts, create the image, and summarize the image outputs concisely.",
+            activeMediaMode === "image" && selectedTemplate ? "The user selected this image template: " + selectedTemplate.title + ". Suggested direction: " + selectedTemplate.prompt : "",
           ].filter(Boolean).join("\\n");
 
           if (activeTab === "create-template") {
@@ -2518,7 +2595,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             );
           }
 
-          if (selectedTemplate) {
+          if (activeMediaMode === "image" && selectedTemplate) {
             const detailTemplates = activeTab === "favourites"
               ? (filteredTemplates.some((template) => template.id === selectedTemplate.id)
                   ? filteredTemplates
@@ -2556,7 +2633,30 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           return React.createElement("div", { className: "playground-imagine-page" },
             React.createElement("div", { className: "playground-imagine-shell" },
               React.createElement("div", { className: "playground-imagine-grid-scroll" },
-                activeTab === "my-templates" && !normalizedCustomTemplates.length
+                activeMediaMode === "video"
+                  ? React.createElement("div", { className: "playground-imagine-empty" },
+                      React.createElement("img", {
+                        className: "playground-imagine-empty-visual",
+                        src: activeTab === "favourites" ? "/img/empty-state/no-users-yet.avif" : "/img/empty-state/no-skills-usage.avif",
+                        alt: "",
+                        draggable: false,
+                      }),
+                      React.createElement("h2", { className: "playground-imagine-empty-title" },
+                        activeTab === "favourites"
+                          ? "No favourite videos yet"
+                          : activeTab === "my-templates"
+                            ? "Video templates are coming soon"
+                            : "Describe a video to create it"
+                      ),
+                      React.createElement("p", { className: "playground-imagine-empty-copy" },
+                        activeTab === "favourites"
+                          ? "Save video templates you like and return to them here."
+                          : activeTab === "my-templates"
+                            ? "Reusable video templates will appear here once video template creation is enabled."
+                            : "Use the composer below to generate short videos with the Video Generation skill."
+                      )
+                    )
+                : activeTab === "my-templates" && !normalizedCustomTemplates.length
                   ? React.createElement("div", { className: "playground-imagine-empty" },
                       React.createElement("img", {
                         className: "playground-imagine-empty-visual",
@@ -2624,7 +2724,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             ),
             activeTab === "explore"
               ? React.createElement("div", { className: "playground-imagine-composer-wrap" },
-                  selectedTemplate
+                  activeMediaMode === "image" && selectedTemplate
                     ? React.createElement("div", { className: "playground-imagine-selected-preset" },
                         React.createElement(Sparkles, { width: 14, height: 14, strokeWidth: 1.8 }),
                         React.createElement("span", null, "Template: ", React.createElement("strong", null, selectedTemplate.title)),
@@ -2638,7 +2738,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                     : null,
                   React.createElement("div", { className: "playground-imagine-composer-shell" },
                     React.createElement(RunnerChat, {
-                      key: "imagine-runner:" + (selectedTemplateId || "__none__"),
+                      key: "imagine-runner:" + activeMediaMode + ":" + (activeMediaMode === "image" ? (selectedTemplateId || "__none__") : "__video__"),
                       className: "playground-imagine-runner",
                       backendUrl,
                       apiKey,
@@ -2657,7 +2757,10 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                       autoFocusComposer: true,
                       keepFocusOnSubmit: true,
                       showUsageInStatus: false,
-                      placeholder: selectedTemplate ? (selectedTemplate.placeholder || selectedTemplate.title) : "Describe an image",
+                      placeholder: activeMediaMode === "video"
+                        ? "Describe a video"
+                        : selectedTemplate ? (selectedTemplate.placeholder || selectedTemplate.title) : "Describe an image",
+                      composerLeadingControl: renderImagineMediaModeSwitch(),
                       hiddenSystemPrompt,
                       onThreadIdChange: () => {},
                       onExternalRunRequestCreate: (request) => {

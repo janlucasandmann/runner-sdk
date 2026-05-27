@@ -2990,13 +2990,29 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   margin-top: 0;
 }
 
+.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-log-video-grid {
+  margin-top: 0;
+  width: 100%;
+}
+
 .tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview {
   width: min(300px, 100%);
   max-width: 300px;
 }
 
+.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview {
+  display: block;
+  width: min(520px, 100%);
+  max-width: 520px;
+  max-height: 420px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  object-fit: contain;
+}
+
 .tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview:disabled,
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview-loading {
+.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview-loading,
+.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview-loading {
   aspect-ratio: 1 / 1;
   height: auto;
   max-height: 300px;
@@ -8922,6 +8938,28 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   box-sizing: border-box;
 }
 
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-video-shell {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  background: transparent;
+  overflow: hidden;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-video {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  background: #000;
+}
+
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-presentation-stage {
   width: 100%;
   min-height: 100%;
@@ -9352,6 +9390,12 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .task-input-controls-full {
   position: relative;
   flex-wrap: wrap;
+}
+
+.tb-runner-chat .tb-composer-leading-control {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
 }
 
 .tb-runner-chat .task-input-spacer {
@@ -11889,6 +11933,12 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-file-browser-preview-image {
   max-width: 100%;
   max-height: 100%;
+  object-fit: contain;
+}
+
+.tb-runner-chat .tb-file-browser-preview-video {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 

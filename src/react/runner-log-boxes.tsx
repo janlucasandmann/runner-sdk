@@ -230,6 +230,10 @@ function isRunnerLogImageFilePath(filePath?: string | null): boolean {
   return /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i.test(String(filePath || "").trim());
 }
 
+function isRunnerLogVideoFilePath(filePath?: string | null): boolean {
+  return /\.(mp4|mov|webm|mkv|avi)$/i.test(String(filePath || "").trim());
+}
+
 let runnerLogThemeRegistered = false;
 let runnerLogMonacoLoader: Promise<any> | null = null;
 const RUNNER_LOG_DEFAULT_THEME = "runner-log-transparent";
@@ -9812,6 +9816,177 @@ export function isLikelyImageGenerationLog(log: RunnerLog, command?: string): bo
   );
 }
 
+function isVideoGenerationCommand(command?: string): boolean {
+  if (!command) return false;
+  return command.includes(".claude/skills/video-generation/") || command.includes("generate-video.py");
+}
+
+function extractWorkspaceVideoPathFromResult(result: unknown): string | null {
+  const candidates: string[] = [];
+  const visit = (value: unknown): void => {
+    if (!value) return;
+    if (typeof value === "string") {
+      const matchedPath = value.match(/(?:\/workspace\/)?([A-Za-z0-9_./-]+\.(?:mp4|mov|webm|mkv|avi))/i)?.[1];
+      if (matchedPath) {
+        candidates.push(matchedPath);
+      }
+      return;
+    }
+    if (Array.isArray(value)) {
+      for (const entry of value) visit(entry);
+      return;
+    }
+    if (typeof value === "object") {
+      const record = value as Record<string, unknown>;
+      const structured = record.structuredContent && typeof record.structuredContent === "object"
+        ? (record.structuredContent as Record<string, unknown>)
+        : record.structured_content && typeof record.structured_content === "object"
+          ? (record.structured_content as Record<string, unknown>)
+          : null;
+      if (structured) {
+        visit(structured.workspace_file_paths);
+        visit(structured.file_paths);
+        visit(structured.original_file_paths);
+      }
+      for (const nestedValue of Object.values(record)) {
+        visit(nestedValue);
+      }
+    }
+  };
+
+  visit(result);
+
+  const normalized = candidates
+    .map((value) => String(value || "").trim().replace(/^\/workspace\//, ""))
+    .find((value) => isRunnerLogVideoFilePath(value));
+  return normalized || null;
+}
+
+function extractWorkspaceVideoPathFromOutput(output: unknown): string | null {
+  if (typeof output !== "string" || !output.trim()) {
+    return null;
+  }
+
+  const candidates: string[] = [];
+  const patterns = [
+    /video saved to:\s*["']?([^\s"'\n]+\.(?:mp4|mov|webm|mkv|avi))["']?/ig,
+    /saved to:\s*["']?([^\s"'\n]+\.(?:mp4|mov|webm|mkv|avi))["']?/ig,
+    /((?:\/workspace\/|workspace\/)?[A-Za-z0-9_./-]+\.(?:mp4|mov|webm|mkv|avi))/ig,
+  ];
+
+  for (const pattern of patterns) {
+    for (const match of output.matchAll(pattern)) {
+      const candidate = String(match[1] || "").trim().replace(/^\/workspace\//, "").replace(/^workspace\//, "");
+      if (isRunnerLogVideoFilePath(candidate)) {
+        candidates.push(candidate);
+      }
+    }
+  }
+
+  return candidates[0] || null;
+}
+
+function hasConfirmedGeneratedVideoPathText(output: unknown): boolean {
+  if (typeof output !== "string" || !output.trim()) {
+    return false;
+  }
+  return /(?:generated video|video saved to:|saved video to:|✓\s*video saved to:)/i.test(output);
+}
+
+function hasStructuredVideoPayload(content: unknown): boolean {
+  if (!content || typeof content !== "object") {
+    return false;
+  }
+  const record = content as {
+    structured_content?: Record<string, unknown>;
+    structuredContent?: Record<string, unknown>;
+  };
+  const structured =
+    record.structuredContent && typeof record.structuredContent === "object"
+      ? record.structuredContent
+      : record.structured_content && typeof record.structured_content === "object"
+        ? record.structured_content
+        : null;
+  if (!structured) {
+    return false;
+  }
+  const candidateLists = [
+    structured.workspace_file_paths,
+    structured.file_paths,
+    structured.original_file_paths,
+  ];
+  return candidateLists.some(
+    (value) => Array.isArray(value) && value.some((entry) => typeof entry === "string" && isRunnerLogVideoFilePath(entry))
+  );
+}
+
+function isVideoFileChangeLog(log: RunnerLog): boolean {
+  if (log.eventType !== "file_change") {
+    return false;
+  }
+  if (log.metadata?.isVideoGeneration || typeof log.metadata?.savedVideoPath === "string") {
+    return true;
+  }
+  const filePaths = Array.isArray(log.metadata?.filePaths) ? log.metadata?.filePaths : [];
+  return filePaths.some((filePath) => isRunnerLogVideoFilePath(String(filePath || "")));
+}
+
+function extractVideoPrompt(command?: string): string | undefined {
+  if (!command) return undefined;
+  const quoted = [...command.matchAll(/"([^"]+)"/g), ...command.matchAll(/'([^']+)'/g)]
+    .map((match) => sanitizeImagePromptCandidate(match[1]))
+    .filter(
+      (value) =>
+        value.length >= 3 &&
+        !value.match(/\.(mp4|mov|webm|mkv|avi|png|jpg|jpeg|gif|webp|py|sh|txt|md)$/i) &&
+        !value.startsWith("/") &&
+        !value.startsWith(".") &&
+        !value.startsWith("-") &&
+        !value.match(/^\d+:\d+$/) &&
+        !value.match(/^(720P|1080P)$/i)
+    );
+  if (quoted.length === 0) return undefined;
+  return quoted.reduce((longest, current) => (current.length > longest.length ? current : longest));
+}
+
+function extractVideoPromptFromLogMetadata(log: RunnerLog): string | undefined {
+  const args = log.metadata?.args && typeof log.metadata.args === "object" && !Array.isArray(log.metadata.args)
+    ? (log.metadata.args as Record<string, unknown>)
+    : null;
+  const toolInput = log.metadata?.toolInput && typeof log.metadata.toolInput === "object" && !Array.isArray(log.metadata.toolInput)
+    ? log.metadata.toolInput
+    : null;
+  const candidates = [
+    args?.prompt,
+    args?.text,
+    toolInput?.prompt,
+    toolInput?.text,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      const sanitized = sanitizeImagePromptCandidate(candidate);
+      if (sanitized) {
+        return sanitized;
+      }
+    }
+  }
+  return undefined;
+}
+
+export function isLikelyVideoGenerationLog(log: RunnerLog, command?: string): boolean {
+  const messageHasConfirmedVideoPath =
+    hasConfirmedGeneratedVideoPathText(log.message) &&
+    Boolean(extractWorkspaceVideoPathFromOutput(log.message));
+  return Boolean(
+    (command && isVideoGenerationCommand(command))
+    || log.metadata?.isVideoGeneration
+    || (typeof log.metadata?.savedVideoPath === "string" && log.metadata.savedVideoPath.trim())
+    || hasStructuredVideoPayload(log.metadata?.result)
+    || hasStructuredVideoPayload(log.metadata?.output)
+    || messageHasConfirmedVideoPath
+  );
+}
+
 function ImagePreviewLoadingState() {
   return (
     <div className="tb-runner-image-preview-surface tb-image-generation-preview tb-image-generation-preview-loading is-static" aria-hidden="true">
@@ -10148,6 +10323,103 @@ function ImageGenerationLogBox({
         ) : isLoading ? (
           <div className="tb-log-image-grid">
             <ImagePreviewLoadingState />
+          </div>
+        ) : null
+      }
+    />
+  );
+}
+
+function VideoPreviewLoadingState() {
+  return (
+    <div className="tb-video-generation-preview tb-video-generation-preview-loading" aria-hidden="true">
+      <span className="tb-runner-image-preview-surface-state">
+        <LoaderCircle className="tb-runner-image-preview-surface-spinner" strokeWidth={1.75} />
+      </span>
+    </div>
+  );
+}
+
+function VideoGenerationLogBox({
+  log,
+  timeLabel,
+  backendUrl,
+  environmentId,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+  backendUrl?: string;
+  environmentId?: string | null;
+  requestHeaders?: HeadersInit;
+}) {
+  const prompt = extractVideoPrompt(log.metadata?.command || log.message || "") || extractVideoPromptFromLogMetadata(log);
+  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
+  const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const parsedStdout = parsedOutput?.stdout || "";
+  const parsedStderr = parsedOutput?.stderr || "";
+  const isError = Boolean(log.metadata?.error)
+    || (typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0)
+    || parsedOutput?.returnCodeInterpretation === "timeout"
+    || parsedStderr.trim().length > 0;
+  const filePathFromMetadata =
+    Array.isArray(log.metadata?.filePaths)
+      ? log.metadata.filePaths.find((value): value is string => typeof value === "string" && isRunnerLogVideoFilePath(value))
+      : null;
+  const outputPathSource = parsedOutput ? parsedStdout : log.metadata?.output;
+  const outputVideoPath =
+    !isLoading && !isError && hasConfirmedGeneratedVideoPathText(outputPathSource)
+      ? extractWorkspaceVideoPathFromOutput(outputPathSource)
+      : null;
+  const messageVideoPath =
+    !isLoading && !isError && hasConfirmedGeneratedVideoPathText(log.message)
+      ? extractWorkspaceVideoPathFromOutput(log.message)
+      : null;
+  const resolvedVideoPath =
+    log.metadata?.savedVideoPath
+    || filePathFromMetadata
+    || extractWorkspaceVideoPathFromResult(log.metadata?.result)
+    || outputVideoPath
+    || messageVideoPath
+    || null;
+  const resolvedVideoSrc = buildRunnerPreviewDownloadUrl(
+    backendUrl,
+    environmentId,
+    resolvedVideoPath
+  );
+  const errorMessage =
+    typeof log.metadata?.error === "string" && log.metadata.error.trim()
+      ? log.metadata.error.trim()
+      : parsedOutput?.returnCodeInterpretation === "timeout"
+        ? "Video generation timed out before a new video was saved."
+        : parsedStderr.trim() || String(log.metadata?.output || "Video generation failed.");
+
+  if (!isError && !isLoading && !resolvedVideoSrc) {
+    return null;
+  }
+
+  return (
+    <ImagePreviewLogCard
+      icon={<Video className="tb-log-card-small-icon" strokeWidth={1.5} />}
+      label="Video Generation"
+      title={prompt}
+      timeLabel={timeLabel}
+      meta={isLoading ? <span className="tb-log-card-status">generating...</span> : null}
+      body={
+        isError ? (
+          <div className="tb-log-card-state tb-log-card-state-error">{errorMessage}</div>
+        ) : resolvedVideoSrc ? (
+          <div className="tb-log-video-grid">
+            <video
+              className="tb-video-generation-preview"
+              src={resolvedVideoSrc}
+              controls
+              playsInline
+              preload="metadata"
+            />
+          </div>
+        ) : isLoading ? (
+          <div className="tb-log-video-grid">
+            <VideoPreviewLoadingState />
           </div>
         ) : null
       }
@@ -11814,6 +12086,9 @@ export function RunnerWorkLogEntry({
     if (isLikelyImageGenerationLog(log, command)) {
       return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
+    if (isLikelyVideoGenerationLog(log, command)) {
+      return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
+    }
     if (isDeepResearchCommand(command)) return <DeepResearchCommandLogBox log={log} timeLabel={timeLabel} />;
     const gitDiffDetails = parseGitDiffLogDetails(log);
     if (gitDiffDetails) return <GitDiffLogBox details={gitDiffDetails} timeLabel={timeLabel} />;
@@ -11930,6 +12205,9 @@ export function RunnerWorkLogEntry({
     if (isLikelyImageGenerationLog(log)) {
       return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
+    if (isLikelyVideoGenerationLog(log)) {
+      return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
+    }
     return <GenericMcpToolLogBox log={log} timeLabel={timeLabel} />;
   }
 
@@ -11954,6 +12232,9 @@ export function RunnerWorkLogEntry({
       return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
     }
     if (isImageFileChangeLog(log)) {
+      return null;
+    }
+    if (isVideoFileChangeLog(log)) {
       return null;
     }
     return (

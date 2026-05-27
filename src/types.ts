@@ -101,6 +101,8 @@ export interface RunnerLog {
     args?: unknown;
     savedImagePath?: string;
     isImageGeneration?: boolean;
+    savedVideoPath?: string;
+    isVideoGeneration?: boolean;
     filePaths?: string[];
     changeKinds?: Array<"created" | "modified" | "deleted">;
     diffs?: Record<

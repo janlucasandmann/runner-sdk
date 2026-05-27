@@ -18258,6 +18258,38 @@ const html = `<!doctype html>
         backdrop-filter: blur(10px);
       }
 
+      .playground-imagine-media-mode-selector {
+        max-width: 120px;
+      }
+
+      .playground-imagine-media-mode-selector .playground-files-inline-selector {
+        min-height: 0;
+        gap: 5px;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px !important;
+        line-height: 1;
+        font-weight: 400 !important;
+      }
+
+      .playground-imagine-media-mode-selector .playground-files-inline-selector span {
+        font-size: 12px !important;
+        font-weight: 400 !important;
+      }
+
+      .playground-imagine-media-mode-selector .playground-files-inline-selector:hover,
+      .playground-imagine-media-mode-selector .playground-files-inline-selector.active {
+        color: #fff;
+      }
+
+      .playground-imagine-media-mode-selector .playground-files-inline-selector-chevron {
+        width: 12px;
+        height: 12px;
+      }
+
+      .playground-imagine-media-mode-menu {
+        width: 156px;
+      }
+
       .playground-files-environment-actions-menu {
         width: 280px;
         max-height: none;
@@ -21409,17 +21441,15 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.98);
       }
 
+      .playground-plugin-detail-title-main {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+      }
+
       .playground-plugin-detail-title-row {
         margin-top: 0;
-      }
-
-      .playground-plugin-detail-tabs {
-        width: min(100%, 260px);
-        margin: -6px 0 4px;
-      }
-
-      .playground-plugin-detail-tabs .content-mode-button {
-        min-width: 0;
       }
 
       .playground-plugin-detail-connect-button.is-destructive {
@@ -21428,6 +21458,58 @@ const html = `<!doctype html>
 
       .playground-plugin-detail-connect-button.is-destructive:hover {
         color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-plugin-detail-connect-button,
+      .playground-plugin-detail-connection-panel.playground-plugin-detail-surface,
+      .playground-plugin-detail-permission-panel.playground-plugin-detail-surface,
+      .playground-plugin-detail-table.playground-plugin-detail-surface {
+        --playground-plugin-detail-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+        border: 0;
+        background: transparent;
+      }
+
+      .playground-plugin-detail-connect-button::before,
+      .playground-plugin-detail-connection-panel.playground-plugin-detail-surface::before,
+      .playground-plugin-detail-permission-panel.playground-plugin-detail-surface::before,
+      .playground-plugin-detail-table.playground-plugin-detail-surface::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-plugin-detail-border);
+        -webkit-mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        -webkit-mask-clip: content-box, border-box;
+        -webkit-mask-composite: xor;
+        -webkit-mask-origin: content-box, border-box;
+        -webkit-mask-repeat: repeat, repeat;
+        -webkit-mask-size: auto, auto;
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-plugin-detail-connect-button > *,
+      .playground-plugin-detail-connection-panel .playground-plugin-detail-info-compact,
+      .playground-plugin-detail-permission-panel .playground-plugin-detail-permission-list,
+      .playground-plugin-detail-table .playground-plugin-detail-table-row {
+        position: relative;
+        z-index: 3;
       }
 
       .playground-plugin-detail-subtitle {
@@ -21483,6 +21565,14 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 14px;
+      }
+
+      .playground-plugin-detail-included-actions {
+        margin-bottom: 24px;
+      }
+
+      .playground-plugin-detail-tabs.playground-agents-overview-tabs {
+        margin-top: 0;
       }
 
       .playground-plugin-detail-section-title {
@@ -21585,10 +21675,6 @@ const html = `<!doctype html>
         position: relative;
         overflow: hidden;
         min-height: 300px;
-        display: grid;
-        grid-template-columns: minmax(0, 0.86fr) minmax(260px, 1fr);
-        gap: 28px;
-        align-items: center;
         padding: 28px;
         border-radius: 15px;
         background-image:
@@ -21611,10 +21697,90 @@ const html = `<!doctype html>
 
       .playground-plugin-detail-carousel-copy,
       .playground-plugin-detail-carousel-preview,
+      .playground-plugin-detail-carousel-stage,
       .playground-plugin-detail-carousel-controls,
       .playground-plugin-detail-carousel-dots {
         position: relative;
         z-index: 1;
+      }
+
+      .playground-plugin-detail-carousel-stage {
+        min-height: 224px;
+      }
+
+      .playground-plugin-detail-carousel-slide {
+        min-height: 224px;
+        display: grid;
+        grid-template-columns: minmax(0, 0.86fr) minmax(260px, 1fr);
+        gap: 28px;
+        align-items: center;
+        will-change: transform, opacity;
+      }
+
+      .playground-plugin-detail-carousel-slide.is-outgoing {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .playground-plugin-detail-carousel-slide.is-incoming.is-forward {
+        animation: playgroundPluginCapabilityInForward 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      .playground-plugin-detail-carousel-slide.is-outgoing.is-forward {
+        animation: playgroundPluginCapabilityOutForward 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      .playground-plugin-detail-carousel-slide.is-incoming.is-backward {
+        animation: playgroundPluginCapabilityInBackward 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      .playground-plugin-detail-carousel-slide.is-outgoing.is-backward {
+        animation: playgroundPluginCapabilityOutBackward 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      @keyframes playgroundPluginCapabilityInForward {
+        from {
+          opacity: 0;
+          transform: translateX(115%);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes playgroundPluginCapabilityOutForward {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateX(-115%);
+        }
+      }
+
+      @keyframes playgroundPluginCapabilityInBackward {
+        from {
+          opacity: 0;
+          transform: translateX(-115%);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes playgroundPluginCapabilityOutBackward {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateX(115%);
+        }
       }
 
       .playground-plugin-detail-carousel-copy {
@@ -21765,13 +21931,13 @@ const html = `<!doctype html>
         justify-content: center;
         border: 0;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
+        background: transparent;
         color: rgba(255, 255, 255, 0.84);
         cursor: pointer;
       }
 
       .playground-plugin-detail-carousel-nav:hover {
-        background: rgba(255, 255, 255, 0.14);
+        background: transparent;
         color: #fff;
       }
 
@@ -21982,6 +22148,14 @@ const html = `<!doctype html>
         padding: 16px;
       }
 
+      .playground-plugin-detail-connection-panel.playground-plugin-detail-surface {
+        padding: 0;
+      }
+
+      .playground-plugin-detail-permission-panel.playground-plugin-detail-surface {
+        padding: 0;
+      }
+
       .playground-plugin-detail-connection-head {
         display: flex;
         align-items: flex-start;
@@ -22036,6 +22210,10 @@ const html = `<!doctype html>
         margin: 8px -16px -4px;
       }
 
+      .playground-plugin-detail-connection-panel .playground-plugin-detail-info-compact {
+        margin: 0;
+      }
+
       .playground-plugin-detail-permission-head {
         min-height: 35px;
         display: flex;
@@ -22049,7 +22227,7 @@ const html = `<!doctype html>
       .playground-plugin-detail-permission-list {
         display: flex;
         flex-direction: column;
-        margin: 0 -16px -16px;
+        margin: 0;
       }
 
       .playground-plugin-detail-permission-row {
@@ -22272,8 +22450,16 @@ const html = `<!doctype html>
       .playground-skills-detail-header {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 16px;
         margin: 0 0 4px;
+      }
+
+      .playground-skills-detail-header-main {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
       }
 
       .playground-skills-detail-header-icon-shell {
@@ -22320,15 +22506,9 @@ const html = `<!doctype html>
         flex: 0 0 auto;
       }
 
-      .playground-skills-detail-heading {
-        text-align: left;
-      }
-
-      .playground-skills-detail-page .playground-skills-detail-heading {
-        font-size: 24px;
-        line-height: 1.2;
-        letter-spacing: -0.02em;
-      }
+	      .playground-skills-detail-enable-button {
+	        flex: 0 0 auto;
+	      }
 
       .playground-resources-detail-content {
         width: min(100%, var(--playground-centered-page-max-width));
@@ -22446,6 +22626,32 @@ const html = `<!doctype html>
         margin: 0 0 2px;
       }
 
+      .playground-skills-detail-hero-preview {
+        display: grid;
+        grid-template-columns: minmax(0, 0.86fr) minmax(260px, 1fr);
+        gap: 28px;
+        align-items: center;
+        margin: 0;
+      }
+
+      .playground-skills-detail-hero-preview .playground-plugin-detail-carousel-copy {
+        align-self: center;
+      }
+
+      .playground-skills-detail-hero-preview .playground-plugin-detail-carousel-preview {
+        min-height: 220px;
+      }
+
+      .playground-skills-detail-hero-preview .playground-plugin-detail-carousel-image {
+        width: min(100%, 420px);
+      }
+
+      .playground-skills-detail-hero-image-icon {
+        width: 19px;
+        height: 19px;
+        flex: 0 0 auto;
+      }
+
       .playground-skills-detail-page.is-source-files-tab {
         flex: 1 1 0;
         min-height: 0;
@@ -22476,6 +22682,52 @@ const html = `<!doctype html>
         width: 100%;
         min-width: 0;
         margin-top: 0;
+      }
+
+      .playground-skills-detail-metrics .playground-skills-details-card.playground-database-overview-chart-block {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        padding: 20px;
+        border: 0;
+        border-radius: 15px;
+        background: transparent;
+        overflow: hidden;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-skills-detail-metrics .playground-skills-details-card.playground-database-overview-chart-block::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-skills-detail-metrics .playground-skills-details-card.playground-database-overview-chart-block > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-skills-detail-page .playground-skills-details-card .playground-skills-detail-fact-rows {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 0;
       }
 
       .playground-skills-usage-card {
@@ -22739,6 +22991,10 @@ const html = `<!doctype html>
       }
 
       @media (max-width: 900px) {
+        .playground-skills-detail-hero-preview {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
         .playground-skills-usage-header {
           flex-direction: column;
         }
@@ -46025,6 +46281,9 @@ ${IMAGINE_PAGE_CSS}
         imageGeneration: "image_generation",
         image_generation: "image_generation",
         "image-generation": "image_generation",
+        videoGeneration: "video_generation",
+        video_generation: "video_generation",
+        "video-generation": "video_generation",
         webSearch: "web_search",
         web_search: "web_search",
         "web-search": "web_search",
@@ -46059,6 +46318,18 @@ ${IMAGINE_PAGE_CSS}
         mail: "email",
         email: "email",
       };
+      const PLAYGROUND_RUNNER_ENABLED_SKILLS_STORAGE_KEY = "tb_runner_chat_enabled_skills_v3:runner-web-sdk-demo";
+      const PLAYGROUND_DEFAULT_ENABLED_SKILL_IDS = [
+        "image_generation",
+        "video_generation",
+        "web_search",
+        "deep_research",
+        "browser",
+        "memory",
+        "task_management",
+        "computer_agents",
+        "email",
+      ];
 
       function dedupePlaygroundAgentIds(ids) {
         const next = [];
@@ -49218,6 +49489,37 @@ ${IMAGINE_PAGE_CSS}
         return next;
       }
 
+      function loadPlaygroundRunnerEnabledSkillIds() {
+        if (typeof window === "undefined" || !window.localStorage) {
+          return PLAYGROUND_DEFAULT_ENABLED_SKILL_IDS;
+        }
+        try {
+          const raw = window.localStorage.getItem(PLAYGROUND_RUNNER_ENABLED_SKILLS_STORAGE_KEY);
+          if (!raw) {
+            return PLAYGROUND_DEFAULT_ENABLED_SKILL_IDS;
+          }
+          const parsed = JSON.parse(raw);
+          const normalized = normalizePlaygroundEnabledSkillIds(parsed);
+          return normalized.length > 0 ? normalized : [];
+        } catch {
+          return PLAYGROUND_DEFAULT_ENABLED_SKILL_IDS;
+        }
+      }
+
+      function persistPlaygroundRunnerEnabledSkillIds(skillIds) {
+        if (typeof window === "undefined" || !window.localStorage) {
+          return;
+        }
+        try {
+          window.localStorage.setItem(
+            PLAYGROUND_RUNNER_ENABLED_SKILLS_STORAGE_KEY,
+            JSON.stringify(normalizePlaygroundEnabledSkillIds(skillIds))
+          );
+        } catch {
+          // Ignore storage failures; the current page state still reflects the user's choice.
+        }
+      }
+
       function normalizePlaygroundTaskAttachmentRecord(attachment) {
         if (!attachment || typeof attachment !== "object") {
           return null;
@@ -52091,6 +52393,10 @@ ${IMAGINE_PAGE_CSS}
           return "image";
         }
 
+        if (mimeType.startsWith("video/") || ["mp4", "m4v", "mov", "webm", "mkv"].includes(extension)) {
+          return "video";
+        }
+
         if (
           mimeType === "text/csv" ||
           mimeType === "text/tab-separated-values" ||
@@ -52194,6 +52500,13 @@ ${IMAGINE_PAGE_CSS}
         if (kind === "markdown") return "text/markdown";
         if (kind === "html") return "text/html";
         if (kind === "pdf") return "application/pdf";
+        if (kind === "video") {
+          const fileName = String(entry.name || entry.path || "").trim().toLowerCase();
+          if (fileName.endsWith(".webm")) return "video/webm";
+          if (fileName.endsWith(".mov")) return "video/quicktime";
+          if (fileName.endsWith(".mkv")) return "video/x-matroska";
+          return "video/mp4";
+        }
         if (kind === "spreadsheet") {
           const fileName = String(entry.name || entry.path || "").trim().toLowerCase();
           if (fileName.endsWith(".csv")) return "text/csv";
@@ -60567,6 +60880,7 @@ ${IMAGINE_PAGE_SCRIPT}
             environmentId: selectedEnvironmentId,
             workspacePath: normalizeHistoryPath(activePreviewEntry.path),
             sourcePath: normalizeHistoryPath(activePreviewEntry.path),
+            previewKindOverride: fileKind === "video" ? "video" : undefined,
             url: effectivePreviewUrl,
             previewUrl: effectivePreviewUrl,
             htmlPreviewUrl,
@@ -63849,7 +64163,7 @@ ${IMAGINE_PAGE_SCRIPT}
             agents: composerAgents,
             environments: composerEnvironments,
             inputMode: "computer-agents",
-            placeholder: fileKind === "image" ? "Ask about this image" : "Ask about this file",
+            placeholder: fileKind === "image" ? "Ask about this image" : fileKind === "video" ? "Ask about this video" : "Ask about this file",
             autoCreateThread: true,
             autoFocusComposer: false,
             keepFocusOnSubmit: false,
@@ -80420,6 +80734,7 @@ ${IMAGINE_PAGE_SCRIPT}
                 return Wand2;
               }
               if (skill?.id === "image_generation") return ImageIcon;
+              if (skill?.id === "video_generation") return Film;
               if (skill?.id === "web_search") return Globe;
               if (skill?.id === "research" || skill?.id === "deep_research") return Telescope;
               if (skill?.id === "pdf") return FileText;
@@ -94727,6 +95042,8 @@ ${IMAGINE_PAGE_SCRIPT}
         topNavActionsPortalId,
         onToolsSkillsHeaderChange,
         backRequestToken,
+        enabledSkillIds = [],
+        onSkillsChange = null,
         overviewAnalytics = null,
       }) {
         const searchPopupInputRef = useRef(null);
@@ -94893,6 +95210,11 @@ ${IMAGINE_PAGE_SCRIPT}
             name: "Image Generation",
             description: "Generate and edit images with GPT Image 2 or Gemini 3.1 Flash Image.",
             icon: "image",
+          },
+          video_generation: {
+            name: "Video Generation",
+            description: "Generate short videos with Cloudflare video models and save them to the computer file base.",
+            icon: "video",
           },
           web_search: {
             name: "Web Search",
@@ -95073,6 +95395,7 @@ ${IMAGINE_PAGE_SCRIPT}
           }
 
           if (normalizedLower.startsWith("skill-image-generation-")) return "image_generation";
+          if (normalizedLower.startsWith("skill-video-generation-")) return "video_generation";
           if (normalizedLower.startsWith("skill-web-search-")) return "web_search";
           if (normalizedLower.startsWith("skill-deep-research-")) return "deep_research";
           if (normalizedLower.startsWith("skill-browser-")) return "browser";
@@ -96176,6 +96499,7 @@ ${IMAGINE_PAGE_SCRIPT}
           }
           if (systemSkillFamilyId === "browser") return Globe;
           if (systemSkillFamilyId === "image_generation") return ImageIcon;
+          if (systemSkillFamilyId === "video_generation") return Film;
           if (systemSkillFamilyId === "web_search") return Search;
           if (systemSkillFamilyId === "research" || systemSkillFamilyId === "deep_research") return Telescope;
           if (systemSkillFamilyId === "pdf") return FileText;
@@ -97300,137 +97624,6 @@ ${IMAGINE_PAGE_SCRIPT}
           );
         }
 
-        function readSkillUsageMetricValue(item) {
-          if (!item || typeof item !== "object") {
-            return 0;
-          }
-          const metricKeys = [
-            "usageCount",
-            "invocations",
-            "runs",
-            "runCount",
-            "threadCount",
-            "messageCount",
-            "count",
-            "calls",
-            "total",
-            "value",
-          ];
-          for (const key of metricKeys) {
-            const value = Number(item?.[key]);
-            if (Number.isFinite(value) && value > 0) {
-              return value;
-            }
-          }
-          return 0;
-        }
-
-        function readSkillUsageTimestampMs(item) {
-          if (!item || typeof item !== "object") {
-            return Date.now();
-          }
-          const timestampKeys = [
-            "timestamp",
-            "createdAt",
-            "startedAt",
-            "updatedAt",
-            "date",
-            "hour",
-            "bucket",
-            "bucketStart",
-          ];
-          for (const key of timestampKeys) {
-            const rawValue = item?.[key];
-            if (rawValue === undefined || rawValue === null || rawValue === "") {
-              continue;
-            }
-            const numericValue = Number(rawValue);
-            if (Number.isFinite(numericValue)) {
-              return numericValue < 10000000000 ? numericValue * 1000 : numericValue;
-            }
-            const parsedValue = Date.parse(String(rawValue));
-            if (Number.isFinite(parsedValue)) {
-              return parsedValue;
-            }
-          }
-          return Date.now();
-        }
-
-        function collectSkillUsageCandidates(value, output = [], depth = 0) {
-          if (!value || depth > 5) {
-            return output;
-          }
-          if (Array.isArray(value)) {
-            value.forEach((entry) => collectSkillUsageCandidates(entry, output, depth + 1));
-            return output;
-          }
-          if (typeof value !== "object") {
-            return output;
-          }
-          if (readSkillUsageMetricValue(value) > 0) {
-            output.push(value);
-          }
-          Object.values(value).forEach((entry) => {
-            if (entry && (Array.isArray(entry) || typeof entry === "object")) {
-              collectSkillUsageCandidates(entry, output, depth + 1);
-            }
-          });
-          return output;
-        }
-
-        function formatPlaygroundSkillUsageInteger(value) {
-          const numericValue = Number(value);
-          if (!Number.isFinite(numericValue)) {
-            return "0";
-          }
-          return Math.max(0, Math.round(numericValue)).toLocaleString();
-        }
-
-        function buildSkillUsageSummary(skill, analytics) {
-          const now = Date.now();
-          const hourMs = 60 * 60 * 1000;
-          const startHourMs = Math.floor((now - 23 * hourMs) / hourMs) * hourMs;
-          const buckets = Array.from({ length: 24 }, (_, index) => {
-            const timestamp = startHourMs + index * hourMs;
-            return {
-              timestamp,
-              label: new Date(timestamp).toLocaleTimeString([], { hour: "numeric" }),
-              value: 0,
-            };
-          });
-          const skillNeedles = [
-            skill?.id,
-            skill?.systemFamilyId,
-            skill?.name,
-          ]
-            .map((value) => String(value || "").trim().toLowerCase())
-            .filter(Boolean);
-          if (skillNeedles.length > 0) {
-            collectSkillUsageCandidates(analytics)
-              .filter((item) => {
-                const haystack = JSON.stringify(item || {}).toLowerCase();
-                return skillNeedles.some((needle) => haystack.includes(needle));
-              })
-              .forEach((item) => {
-                const timestamp = readSkillUsageTimestampMs(item);
-                const bucketIndex = Math.floor((timestamp - startHourMs) / hourMs);
-                if (bucketIndex < 0 || bucketIndex >= buckets.length) {
-                  return;
-                }
-                buckets[bucketIndex].value += readSkillUsageMetricValue(item);
-              });
-          }
-          const total = buckets.reduce((sum, bucket) => sum + bucket.value, 0);
-          const peak = buckets.reduce((max, bucket) => Math.max(max, bucket.value), 0);
-          const lastUsedBucket = buckets.slice().reverse().find((bucket) => bucket.value > 0) || null;
-          return {
-            buckets,
-            total,
-            peak,
-            lastUsedLabel: lastUsedBucket ? formatPlaygroundRelativeTime(lastUsedBucket.timestamp) : "No usage",
-          };
-        }
-
         function renderSkillEnvironmentFilePickerIcon(entry) {
           if (entry?.isFolder) {
             return React.createElement("img", {
@@ -97884,143 +98077,27 @@ ${IMAGINE_PAGE_SCRIPT}
           }
 
           const selectedSkillFamilyId = String(selectedSkill.systemFamilyId || selectedSkill.id || "").trim().toLowerCase();
-          const deepResearchSkillModelFact = (selectedSkillFamilyId === "deep_research" || selectedSkillFamilyId === "research")
-            ? React.createElement("div", { className: "playground-tasks-detail-fact" },
-                React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Default Model"),
-                React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                  React.createElement("div", {
-                      className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell playground-skills-deep-research-model-shell" + (skillDeepResearchModelPopoverOpen ? " is-open" : ""),
-                    },
-                    React.createElement("button", {
-                      ref: skillDeepResearchModelTriggerRef,
-                      type: "button",
-                      className: "playground-environments-runtime-value-button playground-tasks-detail-select-trigger" + (skillDeepResearchModelPopoverOpen ? " is-active" : ""),
-                      onClick: () => setSkillDeepResearchModelPopoverOpen((current) => !current),
-                    },
-                      React.createElement("span", { className: "playground-environments-runtime-value-label" }, getSkillDeepResearchModelMeta(skillDeepResearchDefaultModel)?.label || "Gemini 3.1 Flash"),
-                      React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", width: 14, height: 14, strokeWidth: 1.8 })
-                    ),
-                    skillDeepResearchModelPopoverOpen
-                      ? renderSkillPopoverMenu(skillDeepResearchModelTriggerRef, skillDeepResearchModelPopoverRef, React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.map((option) =>
-                            React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "tb-popup-row tb-popup-row-select" + (skillDeepResearchDefaultModel === option.id ? " selected" : ""),
-                                onClick: () => updateSkillDeepResearchDefaultModel(option.id),
-                              },
-                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                React.createElement("span", null, option.label),
-                                React.createElement("span", null, option.description || "")
-                              )
-                            )
-                          )
-                        ))
-                      : null
-                  )
-                )
-              )
-            : null;
-          const imageGenerationSkillModelFact = selectedSkillFamilyId === "image_generation"
-            ? React.createElement("div", { className: "playground-tasks-detail-fact" },
-                React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Default Model"),
-                React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                  React.createElement("div", {
-                      className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell playground-skills-deep-research-model-shell" + (skillImageGenerationModelPopoverOpen ? " is-open" : ""),
-                    },
-                    React.createElement("button", {
-                      ref: skillImageGenerationModelTriggerRef,
-                      type: "button",
-                      className: "playground-environments-runtime-value-button playground-tasks-detail-select-trigger" + (skillImageGenerationModelPopoverOpen ? " is-active" : ""),
-                      onClick: () => setSkillImageGenerationModelPopoverOpen((current) => !current),
-                    },
-                      React.createElement("span", { className: "playground-environments-runtime-value-label" }, getSkillImageGenerationModelMeta(skillImageGenerationDefaultModel)?.label || "GPT Image 2"),
-                      React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", width: 14, height: 14, strokeWidth: 1.8 })
-                    ),
-                    skillImageGenerationModelPopoverOpen
-                      ? renderSkillPopoverMenu(skillImageGenerationModelTriggerRef, skillImageGenerationModelPopoverRef, React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          PLAYGROUND_SKILL_IMAGE_MODEL_OPTIONS.map((option) =>
-                            React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "tb-popup-row tb-popup-row-select" + (skillImageGenerationDefaultModel === option.id ? " selected" : ""),
-                                onClick: () => updateSkillImageGenerationDefaultModel(option.id),
-                              },
-                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                React.createElement("span", null, option.label),
-                                React.createElement("span", null, option.provider + " · " + (option.description || ""))
-                              )
-                            )
-                          )
-                        ))
-                      : null
-                  )
-                )
-              )
-            : null;
-          const imageGenerationSkillQualityFact = selectedSkillFamilyId === "image_generation"
-            ? React.createElement("div", { className: "playground-tasks-detail-fact" },
-                React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Default Quality"),
-                React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                  React.createElement("div", {
-                      className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell playground-skills-deep-research-model-shell" + (skillImageGenerationQualityPopoverOpen ? " is-open" : ""),
-                    },
-                    React.createElement("button", {
-                      ref: skillImageGenerationQualityTriggerRef,
-                      type: "button",
-                      className: "playground-environments-runtime-value-button playground-tasks-detail-select-trigger" + (skillImageGenerationQualityPopoverOpen ? " is-active" : ""),
-                      onClick: () => setSkillImageGenerationQualityPopoverOpen((current) => !current),
-                    },
-                      React.createElement("span", { className: "playground-environments-runtime-value-label" }, getSkillImageGenerationQualityMeta(skillImageGenerationDefaultQuality)?.label || "Medium"),
-                      React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", width: 14, height: 14, strokeWidth: 1.8 })
-                    ),
-                    skillImageGenerationQualityPopoverOpen
-                      ? renderSkillPopoverMenu(skillImageGenerationQualityTriggerRef, skillImageGenerationQualityPopoverRef, React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          PLAYGROUND_SKILL_IMAGE_QUALITY_OPTIONS.map((option) =>
-                            React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "tb-popup-row tb-popup-row-select" + (skillImageGenerationDefaultQuality === option.id ? " selected" : ""),
-                                onClick: () => updateSkillImageGenerationDefaultQuality(option.id),
-                              },
-                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                React.createElement("span", null, option.label),
-                                React.createElement("span", null, option.description + " · " + getSkillImageGenerationCostLabel(skillImageGenerationDefaultModel, option.id))
-                              )
-                            )
-                          )
-                        ))
-                      : null
-                  )
-                )
-              )
-            : null;
-          const imageGenerationCostFact = selectedSkillFamilyId === "image_generation"
-            ? renderSkillFactRow("Cost per image", getSkillImageGenerationCostLabel(skillImageGenerationDefaultModel, skillImageGenerationDefaultQuality))
-            : null;
-
-          const skillDetailRows = [
-            renderSkillFactRow("Type", selectedSkill.isCustom ? "Project skill" : "System skill"),
-            renderSkillFactRow("Identifier", selectedSkill.id),
-            renderSkillFactRow("Availability", selectedSkill.isCustom ? "Project scope" : "Default in playground"),
-            renderSkillFactRow("Status", selectedSkill.isActive ? "Enabled" : "Disabled"),
-            deepResearchSkillModelFact,
-            imageGenerationSkillModelFact,
-            imageGenerationSkillQualityFact,
-            renderSkillFactRow("Code Files", String(selectedSkill.codeFiles.length || 0)),
-            imageGenerationCostFact,
-          ].filter(Boolean);
-          const detailMeta = React.createElement("div", { className: "playground-server-detail-fact-rows playground-skills-detail-fact-rows" },
-            skillDetailRows
-          );
-
-          const selectedSkillCodeFiles = normalizeSkillCodeFiles(selectedSkill.codeFiles);
+          const selectedSkillToggleId = normalizePlaygroundEnabledSkillIds([selectedSkill.systemFamilyId || selectedSkill.id])[0] || selectedSkillFamilyId;
+          const normalizedEnabledSkillIds = normalizePlaygroundEnabledSkillIds(enabledSkillIds);
+          const isSelectedSkillEnabled = selectedSkillToggleId
+            ? normalizedEnabledSkillIds.includes(selectedSkillToggleId)
+            : Boolean(selectedSkill.isActive);
+          function handleToggleSelectedSkillEnabled() {
+            if (!selectedSkillToggleId || typeof onSkillsChange !== "function") {
+              return;
+            }
+            const currentEnabledSkillIds = normalizePlaygroundEnabledSkillIds(enabledSkillIds);
+            const nextEnabledSkillIds = currentEnabledSkillIds.includes(selectedSkillToggleId)
+              ? currentEnabledSkillIds.filter((skillId) => skillId !== selectedSkillToggleId)
+              : [...currentEnabledSkillIds, selectedSkillToggleId];
+            onSkillsChange(nextEnabledSkillIds);
+          }
+	          const selectedSkillCodeFiles = normalizeSkillCodeFiles(selectedSkill.codeFiles);
           const activeSkillCodeFile = selectedSkillCodeFiles.find((file) => file.id === skillCodeEditorState.fileId) || selectedSkillCodeFiles[0] || null;
           const activeSkillCodeFileEntry = activeSkillCodeFile
             ? { name: activeSkillCodeFile.name, path: activeSkillCodeFile.name, isFolder: false, mimeType: "" }
             : null;
           const skillCodeEditorIsDirty = skillCodeEditorState.value !== skillCodeEditorState.initialValue;
-          const skillUsageSummary = buildSkillUsageSummary(selectedSkill, overviewAnalytics);
 
           function selectSkillCodeFile(fileId) {
             const nextFile = selectedSkillCodeFiles.find((file) => file.id === fileId) || selectedSkillCodeFiles[0] || null;
@@ -98236,138 +98313,39 @@ ${IMAGINE_PAGE_SCRIPT}
             )
           );
 
-          const skillUsageKpis = [
-            { id: "runs", label: "Runs", value: formatPlaygroundSkillUsageInteger(skillUsageSummary.total) },
-            { id: "peak", label: "Peak hour", value: formatPlaygroundSkillUsageInteger(skillUsageSummary.peak) },
-            { id: "last-used", label: "Last used", value: skillUsageSummary.lastUsedLabel },
-          ];
-          function renderSkillUsageEmptyState() {
-            return React.createElement("div", { className: "playground-settings-usage-chart-empty is-tall playground-skills-usage-empty" },
-              "No usage recorded in the past 24 hours."
-            );
-          }
-
-          function renderSkillUsageChart() {
-            const buckets = Array.isArray(skillUsageSummary.buckets) ? skillUsageSummary.buckets : [];
-            const values = buckets.map((bucket) => Math.max(0, Number(bucket?.value || 0)));
-            const hasUsage = values.some((value) => value > 0);
-            if (!buckets.length || !hasUsage) {
-              return renderSkillUsageEmptyState();
-            }
-
-            const width = 1200;
-            const height = 288;
-            const marginLeft = 58;
-            const marginRight = 18;
-            const marginTop = 18;
-            const marginBottom = 52;
-            const plotWidth = width - marginLeft - marginRight;
-            const plotHeight = height - marginTop - marginBottom;
-            const maxValue = Math.max(1, ...values);
-            const points = values.map((value, index) => {
-              const x = marginLeft + (buckets.length <= 1 ? plotWidth / 2 : (index / (buckets.length - 1)) * plotWidth);
-              const y = marginTop + plotHeight - (value / maxValue) * plotHeight;
-              return { x, y, value, label: buckets[index]?.label || "" };
-            });
-            const linePath = points.map((point, index) =>
-              (index === 0 ? "M" : "L") + point.x.toFixed(1) + " " + point.y.toFixed(1)
-            ).join(" ");
-            const labelStep = Math.max(1, Math.ceil(buckets.length / 7));
-            const yTicks = [0, Math.ceil(maxValue / 2), maxValue].filter((value, index, array) => array.indexOf(value) === index);
-
-            return React.createElement("div", { className: "playground-settings-usage-chart-card playground-skills-usage-chart-card" },
-              React.createElement("div", { className: "playground-project-overview-chart-shell" },
-                React.createElement("div", { className: "playground-settings-usage-chart-frame is-tall" },
-                  React.createElement("svg", {
-                      className: "playground-settings-usage-chart-svg",
-                      viewBox: "0 0 " + width + " " + height,
-                      role: "img",
-                      "aria-label": "Skill usage over the past 24 hours",
-                    },
-                    yTicks.map((tick) => {
-                      const y = marginTop + plotHeight - (tick / maxValue) * plotHeight;
-                      return React.createElement("g", { key: "y-" + tick },
-                        React.createElement("line", {
-                          x1: marginLeft,
-                          y1: y,
-                          x2: width - marginRight,
-                          y2: y,
-                          stroke: "rgba(255,255,255,0.08)",
-                          strokeWidth: 1,
-                        }),
-                        React.createElement("text", {
-                          x: 10,
-                          y: y + 4,
-                          fill: "rgba(255,255,255,0.42)",
-                          fontSize: 11,
-                        }, String(Math.max(0, Math.round(tick))))
-                      );
-                    }),
-                    React.createElement("path", {
-                      d: linePath,
-                      fill: "none",
-                      stroke: "#66a6ff",
-                      strokeWidth: 3,
-                      strokeLinecap: "round",
-                      strokeLinejoin: "round",
-                    }),
-                    points.map((point, index) =>
-                      React.createElement("circle", {
-                        key: "point-" + index,
-                        cx: point.x,
-                        cy: point.y,
-                        r: 3.6,
-                        fill: "#66a6ff",
-                        stroke: "#0b0b0c",
-                        strokeWidth: 1.5,
-                      })
-                    ),
-                    points.map((point, index) => index % labelStep === 0 || index === points.length - 1
-                      ? React.createElement("text", {
-                          key: "x-" + index,
-                          x: point.x,
-                          y: height - 16,
-                          textAnchor: index === 0 ? "start" : index === points.length - 1 ? "end" : "middle",
-                          fill: "rgba(255,255,255,0.42)",
-                          fontSize: 11,
-                        }, point.label)
-                      : null
-                    )
-                  )
-                )
+          const skillHeroPreview = React.createElement("section", { className: "playground-plugin-detail-carousel playground-skills-detail-hero-preview" },
+            React.createElement("div", { className: "playground-plugin-detail-carousel-copy" },
+              React.createElement("span", { className: "playground-plugin-detail-carousel-eyebrow" }, selectedSkill.isCustom ? "Custom Skill" : "System Skill"),
+              React.createElement("h3", { className: "playground-plugin-detail-carousel-title" }, selectedSkill.name || "Skill workspace"),
+              React.createElement("p", { className: "playground-plugin-detail-carousel-description" },
+                selectedSkill.description || "Preview how this skill appears while agents use it. Screenshots can be added here later."
               )
-            );
-          }
-
-          const skillUsageChart = renderSkillUsageChart();
-          const skillUsageSection = React.createElement("div", { className: "playground-environments-home-metrics playground-server-detail-metrics playground-skills-detail-metrics" },
-            React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card" },
-              React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                React.createElement("div", { className: "playground-database-overview" },
-                  React.createElement("div", { className: "playground-database-overview-chart-block playground-server-detail-chart-block playground-skills-usage-card" },
-                    React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-server-detail-chart-kpis playground-skills-usage-kpis" },
-                      skillUsageKpis.map((item) =>
-                        React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi playground-skills-usage-kpi" },
-                          React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                            React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                        )
-                      )
+            ),
+            React.createElement("div", { className: "playground-plugin-detail-carousel-preview" },
+              React.createElement("div", { className: "playground-plugin-detail-carousel-image playground-skills-detail-hero-image" },
+                React.createElement("div", { className: "playground-plugin-detail-carousel-image-top" },
+                  React.createElement("span", { className: "playground-plugin-detail-carousel-image-dot" }),
+                  React.createElement("span", { className: "playground-plugin-detail-carousel-image-dot" }),
+                  React.createElement("span", { className: "playground-plugin-detail-carousel-image-dot" })
+                ),
+                React.createElement("div", { className: "playground-plugin-detail-carousel-image-body" },
+                  React.createElement("div", { className: "playground-plugin-detail-carousel-image-panel" }),
+                  React.createElement("div", { className: "playground-plugin-detail-carousel-image-lines" },
+                    React.createElement("span", { className: "playground-plugin-detail-carousel-icon-shell" },
+                      renderSkillIcon(selectedSkill, "playground-skills-detail-hero-image-icon")
                     ),
-                    skillUsageChart,
-                    detailMeta
+                    React.createElement("span", { className: "playground-plugin-detail-carousel-image-line" }),
+                    React.createElement("span", { className: "playground-plugin-detail-carousel-image-line" }),
+                    React.createElement("span", { className: "playground-plugin-detail-carousel-image-line" })
                   )
                 )
               )
             )
           );
-
-          const skillDetailTabs = [
-            { id: "general", label: "General" },
-            { id: "prompting", label: "Prompting" },
-            { id: "sourceFiles", label: "Source Files" },
-          ];
+	          const skillDetailTabs = [
+	            { id: "general", label: "General" },
+	            { id: "sourceFiles", label: "Source Files" },
+	          ];
           const skillDetailTabsElement = React.createElement("div", {
               className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs playground-skills-detail-tabs",
             },
@@ -98383,19 +98361,11 @@ ${IMAGINE_PAGE_SCRIPT}
             )
           );
 
-          const generalTabContent = React.createElement(React.Fragment, null,
-            renderSkillMarkdownSection({
-              sectionId: "description",
-              title: "Description",
-              content: selectedSkill.description,
-              emptyLabel: "Add Description here",
-            }),
-            skillUsageSection
-          );
-          const promptingTabContent = React.createElement(React.Fragment, null,
-            renderSkillMarkdownSection({
-              sectionId: "usage",
-              title: "Usage",
+	          const generalTabContent = React.createElement(React.Fragment, null,
+	            skillHeroPreview,
+	            renderSkillMarkdownSection({
+	              sectionId: "usage",
+	              title: "Usage",
               content: selectedSkillSections.usage,
               emptyLabel: "Add Usage here",
             }),
@@ -98422,24 +98392,32 @@ ${IMAGINE_PAGE_SCRIPT}
               title: "Examples",
               content: selectedSkillSections.examplePrompts,
               emptyLabel: "Add Examples here",
-            })
-          );
-          const activeSkillDetailTabContent = skillDetailTab === "sourceFiles"
-            ? skillSourceFilesSection
-            : skillDetailTab === "prompting"
-              ? promptingTabContent
-              : generalTabContent;
+	            })
+	          );
+	          const activeSkillDetailTabContent = skillDetailTab === "sourceFiles"
+	            ? skillSourceFilesSection
+	            : generalTabContent;
 
-          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main playground-skills-detail-page" + (skillDetailTab === "sourceFiles" ? " is-source-files-tab" : "") },
-            skillsTopNavActions,
-            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-              React.createElement("div", { className: "playground-skills-detail-content" },
-                React.createElement("div", { className: "playground-skills-detail-header" },
-                  React.createElement("span", { className: "playground-skills-detail-header-icon-shell" },
-                    renderSkillIcon(selectedSkill, "playground-skills-detail-header-icon")
-                  ),
-                  React.createElement("h2", { className: "playground-plugins-hero-heading playground-skills-detail-heading" }, selectedSkill.name || selectedSkill.id || "Untitled skill")
-                ),
+	          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main playground-skills-detail-page" + (skillDetailTab === "sourceFiles" ? " is-source-files-tab" : "") },
+	            skillsTopNavActions,
+	            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+	              React.createElement("div", { className: "playground-skills-detail-content" },
+	                React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-plugin-detail-title-row" },
+	                  React.createElement("div", { className: "playground-plugin-detail-title-main" },
+	                    React.createElement("div", { className: "playground-plugin-detail-header-icon-shell playground-skills-detail-header-icon-shell" },
+	                      renderSkillIcon(selectedSkill, "playground-skills-detail-header-icon")
+	                    ),
+	                    React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-plugin-detail-title" }, selectedSkill.name || selectedSkill.id || "Untitled skill")
+	                  ),
+	                  React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button playground-plugin-detail-connect-button playground-skills-detail-enable-button" + (isSelectedSkillEnabled ? " is-destructive" : ""),
+	                      onClick: handleToggleSelectedSkillEnabled,
+	                      disabled: !selectedSkillToggleId || typeof onSkillsChange !== "function",
+	                    }, isSelectedSkillEnabled ? "Disable" : "Enable")
+	                  )
+	                ),
                 skillsError && skillListMode === "custom"
                   ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, skillsError)
                   : null,
@@ -101172,6 +101150,7 @@ ${IMAGINE_PAGE_SCRIPT}
             return Wand2;
           }
           if (skill?.id === "image_generation") return ImageIcon;
+          if (skill?.id === "video_generation") return Film;
           if (skill?.id === "web_search") return Globe;
           if (skill?.id === "research" || skill?.id === "deep_research") return Telescope;
           if (skill?.id === "pdf") return FileText;
@@ -101850,6 +101829,7 @@ ${IMAGINE_PAGE_SCRIPT}
           const enabledSkillIds = getEffectivePlaygroundTaskEnabledSkillIds(normalizedTaskRecord);
           const defaultSkillMap = {
             image_generation: "imageGeneration",
+            video_generation: "videoGeneration",
             web_search: "webSearch",
             deep_research: "deepResearch",
             pdf: "pdf",
@@ -102471,6 +102451,7 @@ ${IMAGINE_PAGE_SCRIPT}
         function buildPlaygroundMissionControlSkillSnapshot(systemSkillRecords, customSkillRecords) {
           const builtInSkillInvocationNames = {
             image_generation: "image-generation",
+            video_generation: "video-generation",
             web_search: "web-search",
             deep_research: "deep-research",
             frontend_design: "frontend-design",
@@ -123022,6 +123003,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const threadSearchFileInventoryLoadingIdsRef = useRef(new Set());
         const [imagineActiveView, setImagineActiveView] = useState("explore");
         const [imagineToolbarPopover, setImagineToolbarPopover] = useState("");
+        const [imagineMediaModePopover, setImagineMediaModePopover] = useState(false);
+        const [imagineMediaMode, setImagineMediaMode] = useState("image");
         const [imagineFilterMode, setImagineFilterMode] = useState("all");
         const [imagineSortMode, setImagineSortMode] = useState("featured");
         const [welcomeWidgetsState, setWelcomeWidgetsState] = useState(() => (
@@ -123240,6 +123223,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [tasksProjectSettingsRequestToken, setTasksProjectSettingsRequestToken] = useState(0);
         const [pluginDetailTab, setPluginDetailTab] = useState("general");
         const [pluginDetailCapabilityIndex, setPluginDetailCapabilityIndex] = useState(0);
+        const [pluginDetailCapabilityOutgoingIndex, setPluginDetailCapabilityOutgoingIndex] = useState(null);
+        const [pluginDetailCapabilityDirection, setPluginDetailCapabilityDirection] = useState(0);
+        const [pluginDetailCapabilityTransitionKey, setPluginDetailCapabilityTransitionKey] = useState(0);
         const [pluginsHeroSlideIndex, setPluginsHeroSlideIndex] = useState(0);
         const [pluginsHeroDisplayIndex, setPluginsHeroDisplayIndex] = useState(0);
         const [pluginsHeroOutgoingIndex, setPluginsHeroOutgoingIndex] = useState(null);
@@ -123392,6 +123378,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         ];
         const demoSkills = [
           { id: "image_generation", name: "Image Generation", enabled: true },
+          { id: "video_generation", name: "Video Generation", enabled: true },
           { id: "web_search", name: "Web Search", enabled: true },
           { id: "deep_research", name: "Deep Research", enabled: true },
           { id: "pdf", name: "PDF Processing", enabled: true },
@@ -123403,6 +123390,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
           { id: "computer_agents", name: "Computer Agents", enabled: true },
           { id: "email", name: "Email", enabled: true }
         ];
+        const [runnerEnabledSkillIds, setRunnerEnabledSkillIds] = useState(() => loadPlaygroundRunnerEnabledSkillIds());
+        useEffect(() => {
+          persistPlaygroundRunnerEnabledSkillIds(runnerEnabledSkillIds);
+        }, [runnerEnabledSkillIds]);
         const SESSION_API_KEY_SENTINEL = "__runner_playground_session__";
         const hasSessionAuth = sessionState.status === "authenticated";
         const hasDemoAccess = isDemoMode;
@@ -125562,6 +125553,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
           const defaultSkillMap = {
             image_generation: "imageGeneration",
+            video_generation: "videoGeneration",
             web_search: "webSearch",
             deep_research: "deepResearch",
             pdf: "pdf",
@@ -129979,6 +129971,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
         useEffect(() => {
           setPluginDetailTab("general");
           setPluginDetailCapabilityIndex(0);
+          setPluginDetailCapabilityOutgoingIndex(null);
+          setPluginDetailCapabilityDirection(0);
+          setPluginDetailCapabilityTransitionKey(0);
         }, [selectedPluginId]);
 
         useEffect(() => {
@@ -135273,26 +135268,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
 	          const connectionState = getPluginDetailConnectionState(selectedPlugin);
 	          const pluginManifest = getPluginIntegrationManifest(selectedPlugin.id);
-	          const capabilityCards = getPluginDetailCapabilityCards(selectedPlugin);
+	          const capabilityCards = getPluginDetailCapabilityCards(selectedPlugin).filter((card) =>
+	            card && card.supported !== false && !card.planned
+	          );
 	          const permissionRows = getPluginDetailPermissionRows(selectedPlugin);
-	          const getCapabilityStatus = (card) => {
-	            if (card.planned) {
-	              return { label: "Planned", tone: "available" };
-	            }
-	            if (!card.supported) {
-	              return { label: "Not available", tone: "muted" };
-	            }
-            if (connectionState.id === "connected") {
-              return { label: "Enabled", tone: "connected" };
-            }
-            if (connectionState.id === "pending") {
-              return { label: "Verification pending", tone: "pending" };
-            }
-            if (connectionState.id === "webhook") {
-              return { label: "Setup required", tone: "available" };
-            }
-            return { label: "Needs connection", tone: "inactive" };
-          };
           const getPermissionStatus = () => {
             if (connectionState.id === "connected") {
               return { label: "Enabled", tone: "connected" };
@@ -135328,50 +135307,30 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	              }];
 	          const normalizedCapabilityIndex = ((pluginDetailCapabilityIndex % normalizedCapabilityCards.length) + normalizedCapabilityCards.length) % normalizedCapabilityCards.length;
 	          const activeCapability = normalizedCapabilityCards[normalizedCapabilityIndex] || normalizedCapabilityCards[0];
-	          const activeCapabilityStatus = getCapabilityStatus(activeCapability || {});
-	          const ActiveCapabilityIcon = activeCapability?.icon || Layers;
-	          const advanceCapability = (direction) => {
-	            setPluginDetailCapabilityIndex((current) => {
-	              const count = normalizedCapabilityCards.length || 1;
-	              return (current + direction + count) % count;
-	            });
+	          const outgoingCapability = pluginDetailCapabilityOutgoingIndex === null
+	            ? null
+	            : normalizedCapabilityCards[((pluginDetailCapabilityOutgoingIndex % normalizedCapabilityCards.length) + normalizedCapabilityCards.length) % normalizedCapabilityCards.length];
+	          const showCapabilityAt = (nextIndex, directionOverride = null) => {
+	            const count = normalizedCapabilityCards.length || 1;
+	            const normalizedNextIndex = ((nextIndex % count) + count) % count;
+	            if (normalizedNextIndex === normalizedCapabilityIndex) {
+	              return;
+	            }
+	            const direction = directionOverride || (normalizedNextIndex > normalizedCapabilityIndex ? 1 : -1);
+	            setPluginDetailCapabilityOutgoingIndex(normalizedCapabilityIndex);
+	            setPluginDetailCapabilityDirection(direction > 0 ? 1 : -1);
+	            setPluginDetailCapabilityIndex(normalizedNextIndex);
+	            setPluginDetailCapabilityTransitionKey((current) => current + 1);
+	            window.setTimeout(() => {
+	              setPluginDetailCapabilityOutgoingIndex(null);
+	            }, 360);
 	          };
-	          const renderConnectionPanel = () =>
-	            React.createElement("div", { className: "playground-plugin-detail-surface playground-plugin-detail-connection-panel" },
-	              React.createElement("div", { className: "playground-plugin-detail-connection-head" },
-	                React.createElement("span", { className: "playground-plugin-detail-status-dot is-" + connectionState.tone }),
-	                React.createElement("div", { className: "playground-plugin-detail-connection-copy" },
-	                  React.createElement("div", { className: "playground-plugin-detail-connection-title" }, connectionState.label),
-	                  React.createElement("div", { className: "playground-plugin-detail-connection-subtitle" }, connectionState.copy)
-	                )
-	              ),
-	              React.createElement("div", { className: "playground-plugin-detail-info-compact" },
-	                connectionRows.filter((row) => row.value || row.href).map((row) =>
-	                  React.createElement("div", { key: row.id, className: "playground-plugin-detail-info-row" },
-	                    React.createElement("div", { className: "playground-plugin-detail-info-label" }, row.label),
-	                    React.createElement("div", { className: "playground-plugin-detail-info-value" },
-	                      row.href
-	                        ? React.createElement("a", {
-	                            href: row.href,
-	                            target: "_blank",
-	                            rel: "noreferrer noopener",
-	                            className: "playground-plugin-detail-info-link",
-	                          },
-	                            React.createElement("span", { className: "playground-plugin-detail-info-link-text" }, getLinkLabel(row.href)),
-	                            React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 })
-	                          )
-	                        : row.value
-	                    )
-	                  )
-	                )
-	              )
-	            );
-	          const renderPermissionsPanel = () =>
-	            React.createElement("div", { className: "playground-plugin-detail-surface playground-plugin-detail-permission-panel" },
-	              React.createElement("div", { className: "playground-plugin-detail-permission-head" },
-	                React.createElement("div", { className: "playground-plugin-detail-permission-title" }, "Permissions"),
-	                React.createElement("span", { className: "playground-plugin-detail-status-pill is-" + permissionStatus.tone }, permissionStatus.label)
-	              ),
+	          const advanceCapability = (direction) => {
+	            const count = normalizedCapabilityCards.length || 1;
+	            showCapabilityAt(normalizedCapabilityIndex + direction + count, direction >= 0 ? 1 : -1);
+          };
+          const renderPermissionsPanel = () =>
+            React.createElement("div", { className: "playground-plugin-detail-surface playground-plugin-detail-permission-panel" },
 	              React.createElement("div", { className: "playground-plugin-detail-permission-list" },
 	                permissionRows.map((row) =>
 	                  React.createElement("div", { key: row.id, className: "playground-plugin-detail-permission-row" },
@@ -135388,8 +135347,36 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                )
 	              )
 	            );
-	          const renderIncludedActions = () =>
+	          const renderConnectionDetailsPanel = () =>
 	            React.createElement("section", { className: "playground-plugin-detail-section" },
+	              React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Connection"),
+	              React.createElement("div", { className: "playground-plugin-detail-surface playground-plugin-detail-connection-panel" },
+	                React.createElement("div", { className: "playground-plugin-detail-info-compact" },
+	                  connectionRows
+	                    .filter((row) => row.id !== "status" && (row.href || row.value))
+	                    .map((row) =>
+	                      React.createElement("div", { key: row.id, className: "playground-plugin-detail-info-row" },
+	                        React.createElement("div", { className: "playground-plugin-detail-info-label" }, row.label),
+	                        React.createElement("div", { className: "playground-plugin-detail-info-value" },
+	                          row.href
+	                            ? React.createElement("a", {
+	                                className: "playground-plugin-detail-info-link",
+	                                href: row.href,
+	                                target: "_blank",
+	                                rel: "noreferrer",
+	                              },
+	                                React.createElement("span", { className: "playground-plugin-detail-info-link-text" }, getLinkLabel(row.href)),
+	                                React.createElement(ExternalLink, { width: 12, height: 12, strokeWidth: 1.8 })
+	                              )
+	                            : row.value
+	                        )
+	                      )
+	                    )
+	                )
+	              )
+	            );
+	          const renderIncludedActions = () =>
+	            React.createElement("section", { className: "playground-plugin-detail-section playground-plugin-detail-included-actions" },
 	              React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Included actions"),
 	              React.createElement("div", { className: "playground-plugin-detail-surface playground-plugin-detail-table" },
 	                (selectedPlugin.features || []).map((feature) =>
@@ -135417,13 +135404,21 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                  setupContent
 	                )
 	              : null;
-	          const renderCapabilityCarousel = () =>
-	            React.createElement("section", { className: "playground-plugin-detail-carousel" },
+	          const renderCapabilitySlide = (capability, index, variant) => {
+	            const CapabilityIcon = capability?.icon || Layers;
+	            const directionClass = pluginDetailCapabilityDirection > 0
+	              ? " is-forward"
+	              : pluginDetailCapabilityDirection < 0
+	                ? " is-backward"
+	                : "";
+	            const variantClass = variant ? " is-" + variant : "";
+	            return React.createElement("div", {
+	              key: (capability?.id || index) + ":" + variant + ":" + pluginDetailCapabilityTransitionKey,
+	              className: "playground-plugin-detail-carousel-slide" + variantClass + directionClass,
+	            },
 	              React.createElement("div", { className: "playground-plugin-detail-carousel-copy" },
-	                React.createElement("span", { className: "playground-plugin-detail-carousel-eyebrow" }, "Capability " + (normalizedCapabilityIndex + 1) + " of " + normalizedCapabilityCards.length),
-	                React.createElement("h3", { className: "playground-plugin-detail-carousel-title" }, activeCapability.title),
-	                React.createElement("p", { className: "playground-plugin-detail-carousel-description" }, activeCapability.description),
-	                React.createElement("span", { className: "playground-plugin-detail-status-pill playground-plugin-detail-carousel-status is-" + activeCapabilityStatus.tone }, activeCapabilityStatus.label)
+	                React.createElement("h3", { className: "playground-plugin-detail-carousel-title" }, capability.title),
+	                React.createElement("p", { className: "playground-plugin-detail-carousel-description" }, capability.description)
 	              ),
 	              React.createElement("div", { className: "playground-plugin-detail-carousel-preview" },
 	                React.createElement("div", { className: "playground-plugin-detail-carousel-image" },
@@ -135436,7 +135431,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                    React.createElement("div", { className: "playground-plugin-detail-carousel-image-panel" }),
 	                    React.createElement("div", { className: "playground-plugin-detail-carousel-image-lines" },
 	                      React.createElement("span", { className: "playground-plugin-detail-carousel-icon-shell" },
-	                        React.createElement(ActiveCapabilityIcon, { width: 19, height: 19, strokeWidth: 1.8 })
+	                        React.createElement(CapabilityIcon, { width: 19, height: 19, strokeWidth: 1.8 })
 	                      ),
 	                      React.createElement("span", { className: "playground-plugin-detail-carousel-image-line" }),
 	                      React.createElement("span", { className: "playground-plugin-detail-carousel-image-line" }),
@@ -135444,6 +135439,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                    )
 	                  )
 	                )
+	              )
+	            );
+	          };
+	          const renderCapabilityCarousel = () =>
+	            React.createElement("section", { className: "playground-plugin-detail-carousel" },
+	              React.createElement("div", { className: "playground-plugin-detail-carousel-stage" },
+	                outgoingCapability
+	                  ? renderCapabilitySlide(outgoingCapability, pluginDetailCapabilityOutgoingIndex, "outgoing")
+	                  : null,
+	                renderCapabilitySlide(activeCapability, normalizedCapabilityIndex, pluginDetailCapabilityDirection === 0 ? "" : "incoming")
 	              ),
 	              React.createElement("div", { className: "playground-plugin-detail-carousel-dots" },
 	                normalizedCapabilityCards.map((card, index) =>
@@ -135451,7 +135456,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                    key: card.id || index,
 	                    type: "button",
 	                    className: "playground-plugin-detail-carousel-dot" + (index === normalizedCapabilityIndex ? " is-active" : ""),
-	                    onClick: () => setPluginDetailCapabilityIndex(index),
+	                    onClick: () => showCapabilityAt(index),
 	                    "aria-label": "Show " + (card.title || "capability"),
 	                  })
 	                )
@@ -135477,18 +135482,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	              ? React.createElement(React.Fragment, null,
 	                  React.createElement("section", { className: "playground-plugin-detail-section" },
 	                    renderPermissionsPanel()
-	                  ),
-	                  React.createElement("section", { className: "playground-plugin-detail-section" },
-	                    React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Connection"),
-	                    renderConnectionPanel()
 	                  )
 	                )
 	              : React.createElement(React.Fragment, null,
 	                  renderCapabilityCarousel(),
-	                  React.createElement("section", { className: "playground-plugin-detail-section" },
-	                    React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Connection"),
-	                    renderConnectionPanel()
-	                  ),
+	                  renderConnectionDetailsPanel(),
 	                  renderIncludedActions(),
 	                  renderSetupSection()
 	                )
@@ -136204,6 +136202,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               topNavActionsPortalId: "playground-tools-skills-nav-actions",
               onToolsSkillsHeaderChange: setToolsSkillsHeaderState,
               backRequestToken: toolsSkillsBackRequestToken,
+              enabledSkillIds: runnerEnabledSkillIds,
+              onSkillsChange: setRunnerEnabledSkillIds,
             });
           }
 
@@ -136341,26 +136341,29 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
             return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page" },
               React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                React.createElement("div", { className: "playground-plugin-detail-page playground-plugin-detail-content" },
+                  React.createElement("div", { className: "playground-plugin-detail-page playground-plugin-detail-content" },
                   React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-plugin-detail-title-row" },
-                    React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-plugin-detail-title" }, selectedPlugin.label),
+                    React.createElement("div", { className: "playground-plugin-detail-title-main" },
+                      React.createElement("div", { className: "playground-plugin-detail-header-icon-shell" }, renderPluginRowLogo(selectedPlugin)),
+                      React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-plugin-detail-title" }, selectedPlugin.label)
+                    ),
                     pluginHeaderAction
                       ? React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
                           pluginHeaderAction
                         )
                       : null
                   ),
-                  React.createElement("div", { className: "playground-agents-list-switch-row playground-plugin-detail-tabs" },
-                    React.createElement("div", { className: "content-mode-switch playground-agents-list-switch" },
+                  React.createElement("div", { className: "playground-agents-overview-tabs playground-plugin-detail-tabs" },
+                    React.createElement("div", { className: "playground-project-overview-chart-tabs" },
                       React.createElement("button", {
                         type: "button",
-                        className: "content-mode-button" + (pluginDetailTab === "general" ? " is-active" : ""),
+                        className: "playground-project-overview-chart-tab" + (pluginDetailTab === "general" ? " is-active" : ""),
                         onClick: () => setPluginDetailTab("general"),
                         "aria-pressed": pluginDetailTab === "general" ? "true" : "false",
                       }, "General"),
                       React.createElement("button", {
                         type: "button",
-                        className: "content-mode-button" + (pluginDetailTab === "permissions" ? " is-active" : ""),
+                        className: "playground-project-overview-chart-tab" + (pluginDetailTab === "permissions" ? " is-active" : ""),
                         onClick: () => setPluginDetailTab("permissions"),
                         "aria-pressed": pluginDetailTab === "permissions" ? "true" : "false",
                       }, "Permissions")
@@ -137986,6 +137989,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     ].filter(Boolean).join(" ")).toLowerCase();
                     if (/(image|gpt-image|imagen|nanobanana|dall[-_ ]?e)/.test(haystack)) {
                       return { id: "image_generation", label: "Image Generation" };
+                    }
+                    if (/(video|seedance|grok[_ -]?imagine|text[_ -]?to[_ -]?video|image[_ -]?to[_ -]?video)/.test(haystack)) {
+                      return { id: "video_generation", label: "Video Generation" };
                     }
                     if (/(firecrawl|web[_ -]?search|scrape|crawl|parse|document)/.test(haystack)) {
                       return { id: "web_search", label: "Web Search & Scraping" };
@@ -144644,7 +144650,61 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
         }
 
+        function renderImagineMediaModeSelector() {
+          const options = [
+            { id: "image", label: "Image" },
+            { id: "video", label: "Video" },
+          ];
+          const activeOption = options.find((option) => option.id === imagineMediaMode) || options[0];
+          return React.createElement("div", { className: "playground-files-toolbar-anchor playground-files-environment-select-shell playground-imagine-media-mode-selector" },
+            React.createElement("button", {
+              type: "button",
+              className: "playground-files-inline-selector" + (imagineMediaModePopover ? " active" : ""),
+              onClick: () => {
+                setImagineToolbarPopover("");
+                setImagineMediaModePopover((current) => !current);
+              },
+            },
+              React.createElement("span", null, activeOption.label),
+              React.createElement(ChevronDown, {
+                className: "playground-files-inline-selector-chevron",
+                strokeWidth: 1.85,
+              })
+            ),
+            imagineMediaModePopover
+              ? React.createElement("div", { className: "playground-files-environment-menu playground-imagine-media-mode-menu" },
+                  React.createElement("div", { className: "playground-files-environment-menu-title" }, "Mode"),
+                  React.createElement("div", { className: "playground-files-environment-menu-body" },
+                    options.map((option) =>
+                      React.createElement("button", {
+                          key: option.id,
+                          type: "button",
+                          className: "playground-files-environment-menu-row" + (imagineMediaMode === option.id ? " selected" : ""),
+                          onClick: () => {
+                            setImagineMediaMode(option.id);
+                            setImagineMediaModePopover(false);
+                          },
+                        },
+                        React.createElement("span", { className: "playground-files-environment-menu-label" }, option.label),
+                        React.createElement("span", { className: "playground-files-environment-menu-check-slot" },
+                          imagineMediaMode === option.id
+                            ? React.createElement(Check, { className: "playground-files-environment-menu-check", width: 16, height: 16, strokeWidth: 2 })
+                            : null
+                        )
+                      )
+                    )
+                  )
+                )
+              : null
+          );
+        }
+
         function renderImagineTopNavControls() {
+          if (imagineMediaMode === "video") {
+            return React.createElement("div", { className: "playground-imagine-top-nav-controls" },
+              React.createElement("span", { className: "tb-image-preview-header-divider playground-imagine-top-nav-divider", "aria-hidden": "true" })
+            );
+          }
           const filterOptions = [
             { id: "all", label: "All templates", description: "Show every image template" },
             { id: "campaign", label: "Campaigns", description: "Ads, launches, and social visuals" },
@@ -144719,6 +144779,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               : activePage === "imagine"
                 ? [{ label: "Create" }, { label: "Imagine" }]
               : [{ label: selectedThreadTitle || "Home" }],
+            leftExtra: activePage === "imagine" ? renderImagineMediaModeSelector() : null,
             center: activePage === "imagine" ? renderImagineModeSwitch() : null,
             extraActions: activePage === "imagine" ? renderImagineTopNavControls() : null,
           });
@@ -145072,6 +145133,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
             ].filter(Boolean).join(" ")).toLowerCase();
             if (/(image|gpt-image|imagen|nanobanana|dall[-_ ]?e)/.test(haystack)) {
               return { id: "image_generation", label: "Image Generation" };
+            }
+            if (/(video|seedance|grok[_ -]?imagine|text[_ -]?to[_ -]?video|image[_ -]?to[_ -]?video)/.test(haystack)) {
+              return { id: "video_generation", label: "Video Generation" };
             }
             if (/(firecrawl|web[_ -]?search|scrape|crawl|parse|document)/.test(haystack)) {
               return { id: "web_search", label: "Web Search & Scraping" };
@@ -147566,9 +147630,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               },
                               onRequireAuth: handleSignInWithComputerAgents,
                               activeView: imagineActiveView,
+                              mediaMode: imagineMediaMode,
                               filterMode: imagineFilterMode,
                               sortMode: imagineSortMode,
                               onActiveViewChange: setImagineActiveView,
+                              onMediaModeChange: setImagineMediaMode,
                               onOpenPlansBudget: () => {
                                 setSidebarWorkspaceMode("configure");
                                 setActivePage("settings");
@@ -147801,6 +147867,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                       buildPlaygroundRunnerAgentOption(agent, resolvedTaskInputAgentId && agent.id === resolvedTaskInputAgentId ? { isDefault: true } : {})
                                     )) : undefined,
                                     skills: computerAgentsMode ? demoSkills : undefined,
+                                    enabledSkillIds: computerAgentsMode ? runnerEnabledSkillIds : undefined,
+                                    onSkillsChange: computerAgentsMode ? setRunnerEnabledSkillIds : undefined,
                                     skillDefaults: getDemoImageGenerationSkillDefaults(),
                                     environmentId: resolvedEnvironmentId || undefined,
                                     agentId: resolvedTaskInputAgentId || undefined,
@@ -149263,10 +149331,14 @@ async function proxyTaskBacklogCreateTaskMessage(req, res, projectId, threadId, 
           "imageGenerationQuality",
           "imageGenerationComputeTokensPerImage",
           "imageGenerationConfig",
+          "videoGenerationConfig",
         ]);
         const skillAliases = {
           imageGeneration: "image_generation",
           image_generation: "image_generation",
+          videoGeneration: "video_generation",
+          video_generation: "video_generation",
+          "video-generation": "video_generation",
           webSearch: "web_search",
           web_search: "web_search",
           frontendDesign: "frontend_design",

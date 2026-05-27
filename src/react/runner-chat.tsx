@@ -57,6 +57,7 @@ import {
   ThumbsDown as LucideThumbsDown,
   ThumbsUp as LucideThumbsUp,
   Upload as LucideUpload,
+  Video as LucideVideo,
   Wand2 as LucideWand2,
   X as LucideX,
   Zap as LucideZap,
@@ -1934,6 +1935,7 @@ export interface RunnerChatProps {
   hiddenSystemPrompt?: string;
   emptyState?: ReactNode;
   emptyStateAfterComposer?: ReactNode;
+  composerLeadingControl?: ReactNode;
   className?: string;
   disabled?: boolean;
   autoCreateThread?: boolean;
@@ -1946,6 +1948,7 @@ export interface RunnerChatProps {
   environments?: RunnerChatOption[];
   hideEnvironmentSelector?: boolean;
   skills?: RunnerChatSkill[];
+  enabledSkillIds?: string[];
   skillDefaults?: RunnerChatSkillDefaults;
   computerAgents?: RunnerChatComputerAgentsConfig;
   uploadFiles?: (files: File[]) => Promise<RunnerAttachment[]>;
@@ -2104,6 +2107,7 @@ interface ParsedThreadContextCommand {
 
 const DEFAULT_COMPUTER_AGENT_SKILLS: RunnerChatSkill[] = [
   { id: "image_generation", name: "Image Generation", enabled: true },
+  { id: "video_generation", name: "Video Generation", enabled: true },
   { id: "web_search", name: "Web Search", enabled: true },
   { id: "deep_research", name: "Deep Research", enabled: true },
   { id: "browser", name: "Browser", enabled: true },
@@ -2115,8 +2119,11 @@ const DEFAULT_COMPUTER_AGENT_SKILLS: RunnerChatSkill[] = [
   { id: "computer_agents", name: "Computer Agents", enabled: true },
   { id: "email", name: "Email", enabled: true },
 ];
-const DEFAULT_ENABLED_SKILL_IDS = ["image_generation", "web_search", "deep_research", "browser", "memory", "task_management", "computer_agents", "email"] as const;
+const DEFAULT_ENABLED_SKILL_IDS = ["image_generation", "video_generation", "web_search", "deep_research", "browser", "memory", "task_management", "computer_agents", "email"] as const;
 const RUNNER_CHAT_SKILL_ID_ALIASES: Record<string, string> = {
+  videoGeneration: "video_generation",
+  video_generation: "video_generation",
+  "video-generation": "video_generation",
   deepResearch: "deep_research",
   deep_research: "deep_research",
   "deep-research": "deep_research",
@@ -2128,7 +2135,7 @@ const RUNNER_CHAT_SKILL_ID_ALIASES: Record<string, string> = {
   gmail: "email",
   mail: "email",
 };
-const RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX = "tb_runner_chat_enabled_skills_v2";
+const RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX = "tb_runner_chat_enabled_skills_v3";
 const RUNNER_CHAT_WORKSPACE_SELECTION_STORAGE_KEY_PREFIX = "tb_runner_chat_workspace_selection_v1";
 
 const DEFAULT_SCHEDULE_PRESETS: RunnerChatSchedulePreset[] = [
@@ -3079,7 +3086,7 @@ function attachmentTypeForFile(mimeType?: string, name?: string): RunnerAttachme
 
 function isBrowserFilePreviewable(file: RunnerChatFileNode): boolean {
   const fileType = getBrowserFileType(file.mimeType, file.name);
-  return fileType === "image" || fileType === "code" || fileType === "document" || file.name.endsWith(".txt") || file.name.endsWith(".md") || file.name.endsWith(".json");
+  return fileType === "image" || fileType === "video" || fileType === "code" || fileType === "document" || file.name.endsWith(".txt") || file.name.endsWith(".md") || file.name.endsWith(".json");
 }
 
 function buildEnvironmentFileDownloadUrl(backendUrl: string, environmentId: string, filePath?: string): string | null {
@@ -3999,6 +4006,27 @@ function loadPersistedEnabledSkillIds(storageKey: string): string[] | null {
   }
 }
 
+function normalizeEnabledSkillIdList(skillIds?: string[] | null): string[] | null {
+  if (!Array.isArray(skillIds)) {
+    return null;
+  }
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+  for (const skillId of skillIds) {
+    const rawSkillId = String(skillId || "").trim();
+    if (!rawSkillId) {
+      continue;
+    }
+    const normalizedSkillId = RUNNER_CHAT_SKILL_ID_ALIASES[rawSkillId] || rawSkillId;
+    if (!normalizedSkillId || seen.has(normalizedSkillId)) {
+      continue;
+    }
+    seen.add(normalizedSkillId);
+    normalized.push(normalizedSkillId);
+  }
+  return normalized;
+}
+
 function persistEnabledSkillIds(storageKey: string, skillIds: string[]) {
   if (typeof window === "undefined") {
     return;
@@ -4068,6 +4096,7 @@ function buildEnabledSkillsPayload(
   const enabled = new Set(enabledSkillIds);
   const defaultSkillMap: Record<string, string> = {
     image_generation: "imageGeneration",
+    video_generation: "videoGeneration",
     web_search: "webSearch",
     deep_research: "deepResearch",
     browser: "browser",
@@ -8560,6 +8589,7 @@ export function RunnerChat({
   hiddenSystemPrompt = "",
   emptyState,
   emptyStateAfterComposer,
+  composerLeadingControl,
   className,
   disabled = false,
   autoCreateThread = true,
@@ -8572,6 +8602,7 @@ export function RunnerChat({
   environments = [],
   hideEnvironmentSelector = false,
   skills = [],
+  enabledSkillIds: controlledEnabledSkillIds,
   skillDefaults,
   computerAgents,
   uploadFiles,
@@ -8698,7 +8729,7 @@ export function RunnerChat({
   const [fileBrowserPreviewId, setFileBrowserPreviewId] = useState<string | null>(null);
   const [expandedFileBrowserFolderIds, setExpandedFileBrowserFolderIds] = useState<string[]>([]);
   const [fileBrowserPreviewContent, setFileBrowserPreviewContent] = useState<string | null>(null);
-  const [fileBrowserPreviewKind, setFileBrowserPreviewKind] = useState<"image" | "text" | null>(null);
+  const [fileBrowserPreviewKind, setFileBrowserPreviewKind] = useState<"image" | "video" | "text" | null>(null);
   const [isFileBrowserPreviewLoading, setIsFileBrowserPreviewLoading] = useState(false);
   const [isFileBrowserAttaching, setIsFileBrowserAttaching] = useState(false);
   const [fileBrowserHistory, setFileBrowserHistory] = useState<Array<{ source: RunnerFileBrowserSource; folderId: string | null }>>([]);
@@ -8773,6 +8804,10 @@ export function RunnerChat({
   const [initialAgentTopId, setInitialAgentTopId] = useState<string | null>(null);
   const [initialEnvironmentTopId, setInitialEnvironmentTopId] = useState<string | null>(null);
   const [enabledSkillIds, setEnabledSkillIds] = useState<string[]>(() => {
+    const controlled = normalizeEnabledSkillIdList(controlledEnabledSkillIds);
+    if (controlled !== null) {
+      return controlled;
+    }
     const storageKey = buildEnabledSkillsStorageKey(appId);
     const persisted = loadPersistedEnabledSkillIds(storageKey);
     if (persisted !== null) {
@@ -8896,6 +8931,10 @@ export function RunnerChat({
   );
   const normalizedSkills = useMemo(() => normalizeComputerAgentSkills(skills), [skills]);
   const displayedSkills = useMemo(() => [...normalizedSkills, ...customSkills], [customSkills, normalizedSkills]);
+  const controlledEnabledSkillIdsList = useMemo(
+    () => normalizeEnabledSkillIdList(controlledEnabledSkillIds),
+    [controlledEnabledSkillIds]
+  );
   const enabledSkillsStorageKey = useMemo(() => buildEnabledSkillsStorageKey(appId), [appId]);
   const workspaceSelectionStorageKey = useMemo(
     () => buildWorkspaceSelectionStorageKey(appId, normalizedBackendUrl),
@@ -12976,10 +13015,20 @@ export function RunnerChat({
   }, [availableEnvironments, environmentId, initialEnvironmentTopId, scopedActiveThreadEnvironmentId, selectedEnvironmentId]);
 
   useEffect(() => {
+    if (controlledEnabledSkillIdsList !== null) {
+      return;
+    }
     const persisted = loadPersistedEnabledSkillIds(enabledSkillsStorageKey);
     const nextEnabledSkillIds = persisted !== null ? persisted : defaultEnabledSkillIds(normalizedSkills);
     setEnabledSkillIds((current) => (areStringArraysEqual(current, nextEnabledSkillIds) ? current : nextEnabledSkillIds));
-  }, [enabledSkillsStorageKey, normalizedSkills]);
+  }, [controlledEnabledSkillIdsList, enabledSkillsStorageKey, normalizedSkills]);
+
+  useEffect(() => {
+    if (controlledEnabledSkillIdsList === null) {
+      return;
+    }
+    setEnabledSkillIds((current) => (areStringArraysEqual(current, controlledEnabledSkillIdsList) ? current : controlledEnabledSkillIdsList));
+  }, [controlledEnabledSkillIdsList]);
 
   useEffect(() => {
     persistEnabledSkillIds(enabledSkillsStorageKey, enabledSkillIds);
@@ -14760,8 +14809,12 @@ export function RunnerChat({
   }
 
   function toggleSkill(skillId: string) {
+    const normalizedSkillId = RUNNER_CHAT_SKILL_ID_ALIASES[String(skillId || "").trim()] || String(skillId || "").trim();
+    if (!normalizedSkillId) {
+      return;
+    }
     setEnabledSkillIds((current) => {
-      const next = current.includes(skillId) ? current.filter((id) => id !== skillId) : [...current, skillId];
+      const next = current.includes(normalizedSkillId) ? current.filter((id) => id !== normalizedSkillId) : [...current, normalizedSkillId];
       onSkillsChange?.(next);
       return next;
     });
@@ -16751,6 +16804,7 @@ export function RunnerChat({
       return <CustomSkillIcon className={className} strokeWidth={1.75} />;
     }
     if (skill.id === "image_generation") return <LucideImages className={className} strokeWidth={1.75} />;
+    if (skill.id === "video_generation") return <LucideVideo className={className} strokeWidth={1.75} />;
     if (skill.id === "web_search") return <LucideGlobe className={className} strokeWidth={1.75} />;
     if (skill.id === "deep_research" || skill.id === "research") return <LucideTelescope className={className} strokeWidth={1.75} />;
     if (skill.id === "browser") return <LucideMonitor className={className} strokeWidth={1.75} />;
@@ -18828,8 +18882,8 @@ export function RunnerChat({
         .then((payload) => {
           if (cancelled) return;
           if (!payload?.content) {
-            if (fileType === "image" && previewFileBrowserItem.previewUrl) {
-              setFileBrowserPreviewKind("image");
+            if ((fileType === "image" || fileType === "video") && previewFileBrowserItem.previewUrl) {
+              setFileBrowserPreviewKind(fileType);
               setFileBrowserPreviewContent(previewFileBrowserItem.previewUrl);
             } else {
               setFileBrowserPreviewContent(null);
@@ -18841,6 +18895,13 @@ export function RunnerChat({
           if (fileType === "image") {
             const mimeType = payload.mimeType || previewFileBrowserItem.mimeType || "image/png";
             setFileBrowserPreviewKind("image");
+            setFileBrowserPreviewContent(`data:${mimeType};base64,${normalizeBase64Content(payload.content)}`);
+            return;
+          }
+
+          if (fileType === "video" && payload.encoding === "base64") {
+            const mimeType = payload.mimeType || previewFileBrowserItem.mimeType || "video/mp4";
+            setFileBrowserPreviewKind("video");
             setFileBrowserPreviewContent(`data:${mimeType};base64,${normalizeBase64Content(payload.content)}`);
             return;
           }
@@ -18857,8 +18918,8 @@ export function RunnerChat({
         })
         .catch(() => {
           if (cancelled) return;
-          if (fileType === "image" && previewFileBrowserItem.previewUrl) {
-            setFileBrowserPreviewKind("image");
+          if ((fileType === "image" || fileType === "video") && previewFileBrowserItem.previewUrl) {
+            setFileBrowserPreviewKind(fileType);
             setFileBrowserPreviewContent(previewFileBrowserItem.previewUrl);
           } else {
             setFileBrowserPreviewContent(null);
@@ -18877,8 +18938,8 @@ export function RunnerChat({
     }
 
     if (currentFileBrowserSource !== "workspace") {
-      if (fileType === "image" && previewFileBrowserItem.previewUrl) {
-        setFileBrowserPreviewKind("image");
+      if ((fileType === "image" || fileType === "video") && previewFileBrowserItem.previewUrl) {
+        setFileBrowserPreviewKind(fileType);
         setFileBrowserPreviewContent(previewFileBrowserItem.previewUrl);
       } else {
         setFileBrowserPreviewKind(null);
@@ -18912,11 +18973,11 @@ export function RunnerChat({
           throw new Error(`Failed to load preview (${response.status})`);
         }
 
-        if (fileType === "image") {
+        if (fileType === "image" || fileType === "video") {
           const blob = await response.blob();
           const objectUrl = URL.createObjectURL(blob);
           fileBrowserPreviewObjectUrlRef.current = objectUrl;
-          setFileBrowserPreviewKind("image");
+          setFileBrowserPreviewKind(fileType);
           setFileBrowserPreviewContent(objectUrl);
           return;
         }
@@ -19981,7 +20042,7 @@ export function RunnerChat({
                 />
               </div>
 
-                {useComputerAgentsMode ? (
+              {useComputerAgentsMode ? (
                   <div ref={popupAreaRef} className="task-input-controls task-input-controls-full">
                     <div className="tb-selector-anchor">
                       <button
@@ -20458,6 +20519,9 @@ export function RunnerChat({
                         </div>
                       ) : null}
                     </div>
+                    {composerLeadingControl ? (
+                      <div className="tb-composer-leading-control">{composerLeadingControl}</div>
+                    ) : null}
                     {renderContextIndicatorControl()}
 
                     {renderAgentSelectorControl()}
@@ -21411,6 +21475,8 @@ export function RunnerChat({
                               <IconLoader2 className="tb-file-browser-preview-loader" />
                             ) : fileBrowserPreviewContent && fileBrowserPreviewKind === "image" ? (
                               <img src={fileBrowserPreviewContent} alt={previewFileBrowserItem.name} className="tb-file-browser-preview-image" />
+                            ) : fileBrowserPreviewContent && fileBrowserPreviewKind === "video" ? (
+                              <video src={fileBrowserPreviewContent} className="tb-file-browser-preview-video" controls playsInline preload="metadata" />
                             ) : fileBrowserPreviewContent && fileBrowserPreviewKind === "text" ? (
                               <pre className="tb-file-browser-preview-text">{fileBrowserPreviewContent}</pre>
                             ) : (

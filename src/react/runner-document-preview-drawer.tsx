@@ -2232,6 +2232,16 @@ export function RunnerDocumentPreviewDrawer({
               filename={attachment.filename}
               mimeType={attachment.mimeType}
             />
+          ) : documentPreviewState.kind === "video" && documentPreviewUrl ? (
+            <div className="tb-attachment-preview-video-shell">
+              <video
+                className="tb-attachment-preview-video"
+                src={documentPreviewUrl}
+                controls
+                playsInline
+                preload="metadata"
+              />
+            </div>
           ) : documentPreviewState.kind === "docx" ? (
             <div className="tb-attachment-preview-docx-shell">
               <div ref={documentPreviewDocxRef} className="tb-attachment-preview-docx-stage" />

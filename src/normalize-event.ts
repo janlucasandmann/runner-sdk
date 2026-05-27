@@ -569,6 +569,40 @@ export class RunnerEventNormalizer {
         ],
       };
     }
+    const isVideoGenerationStart = Boolean(
+      metadata?.isVideoGeneration ||
+        eventToolName === "video_generation_skill" ||
+        eventToolName === "video_generation" ||
+        eventToolName === "generate_video" ||
+        metadataToolName === "generate_video" ||
+        metadataToolName === "video_generation" ||
+        metadataServerName.includes("video-generation") ||
+        commandCandidate.includes("generate-video.py") ||
+        commandCandidate.includes(".claude/skills/video-generation/") ||
+        /\bvideo generation\b|\bgenerate video\b/i.test(rawDescription)
+    );
+    if (isVideoGenerationStart) {
+      return {
+        logs: [
+          {
+            time: this.formatElapsed(),
+            message: promptCandidate ? `Generating video: ${promptCandidate}` : this.asString(event.description, "Video generation"),
+            type: "info",
+            eventType: "command_execution",
+            metadata: this.mergeMetadata(metadata, {
+              isVideoGeneration: true,
+              isToolStarted: true,
+              serverName: this.optionalString(metadata?.serverName) ?? "video-generation-skill",
+              toolName: this.optionalString(metadata?.toolName) ?? "generate_video",
+              command: commandCandidate,
+              status: "started",
+              args: toolArgs,
+              toolInput: input || undefined,
+            }),
+          },
+        ],
+      };
+    }
 
     if (!metadata) {
       return { logs: [] };
@@ -693,8 +727,9 @@ export class RunnerEventNormalizer {
       };
     }
 
-    if (toolType === "command_execution" || toolType === "image_generation_skill") {
+    if (toolType === "command_execution" || toolType === "image_generation_skill" || toolType === "video_generation_skill") {
       const isImageGeneration = toolType === "image_generation_skill" || Boolean(metadata?.isImageGeneration);
+      const isVideoGeneration = toolType === "video_generation_skill" || Boolean(metadata?.isVideoGeneration);
       const command = this.optionalString(tool.command);
       const output = this.optionalString(tool.output)?.trim();
       if (isBrowserSkillLaunchCommand(command)) {
@@ -767,6 +802,17 @@ export class RunnerEventNormalizer {
                     toolName: this.optionalString(metadata?.toolName) ?? "generate_image",
                     args: metadata?.args,
                     savedImagePath: this.optionalString(metadata?.savedImagePath),
+                    result: metadata?.result,
+                    error: metadata?.error,
+                  }
+                : {}),
+              ...(isVideoGeneration
+                ? {
+                    isVideoGeneration: true,
+                    serverName: this.optionalString(metadata?.serverName) ?? "video-generation-skill",
+                    toolName: this.optionalString(metadata?.toolName) ?? "generate_video",
+                    args: metadata?.args,
+                    savedVideoPath: this.optionalString(metadata?.savedVideoPath),
                     result: metadata?.result,
                     error: metadata?.error,
                   }
