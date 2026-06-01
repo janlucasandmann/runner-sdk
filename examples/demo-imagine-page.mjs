@@ -204,6 +204,51 @@ export const IMAGINE_PAGE_CSS = String.raw`
         margin-right: 0 !important;
       }
 
+      .playground-imagine-model-selector .tb-inline-selector {
+        max-width: 170px;
+        min-height: 32px;
+      }
+
+      .playground-imagine-model-selector .tb-inline-selector span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-imagine-model-menu {
+        width: 300px !important;
+      }
+
+      .playground-imagine-model-menu .tb-popup-row {
+        align-items: flex-start;
+        gap: 10px;
+        min-height: 52px;
+      }
+
+      .playground-imagine-model-option-copy {
+        min-width: 0;
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        gap: 3px;
+        text-align: left;
+      }
+
+      .playground-imagine-model-option-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-imagine-model-option-description {
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 11px;
+        line-height: 1.3;
+        font-weight: 400;
+      }
+
       .playground-imagine-toolbar.playground-auth-users-toolbar {
         flex: 0 0 auto;
         margin: 0;
@@ -371,10 +416,147 @@ export const IMAGINE_PAGE_CSS = String.raw`
         content: "";
         position: absolute;
         inset: 0;
-        z-index: -1;
+        z-index: 1;
         background: linear-gradient(to bottom, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.58));
         opacity: 0;
         transition: opacity 180ms ease;
+      }
+
+      .playground-imagine-template-media {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-imagine-template-media-image,
+      .playground-imagine-template-video {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        pointer-events: none;
+      }
+
+      .playground-imagine-template-media-layer {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .playground-imagine-template-media-transition {
+        position: absolute;
+        inset: 0;
+        display: block;
+      }
+
+      .playground-imagine-template-media-layer.is-current {
+        z-index: 2;
+        animation: playgroundImagineTemplateAssetIn 240ms ease both;
+      }
+
+      .playground-imagine-template-media-layer.is-static {
+        z-index: 2;
+      }
+
+      .playground-imagine-template-media-layer.is-previous {
+        z-index: 1;
+        animation: playgroundImagineTemplateAssetOut 240ms ease both;
+      }
+
+      @keyframes playgroundImagineTemplateAssetIn {
+        from {
+          opacity: 0;
+          transform: translateX(calc(var(--imagine-template-asset-direction, 1) * 112%));
+        }
+
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes playgroundImagineTemplateAssetOut {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+
+        to {
+          opacity: 0;
+          transform: translateX(calc(var(--imagine-template-asset-direction, 1) * -112%));
+        }
+      }
+
+      .playground-imagine-template-video-placeholder {
+        width: 100%;
+        height: 100%;
+        background: var(--imagine-template-bg, rgba(255, 255, 255, 0.06));
+      }
+
+      .playground-imagine-template-media-controls {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 4;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        pointer-events: none;
+      }
+
+      .playground-imagine-template-media-dots,
+      .playground-imagine-template-media-arrows {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        pointer-events: auto;
+      }
+
+      .playground-imagine-template-media-dot {
+        width: 5px;
+        height: 5px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.42);
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .playground-imagine-template-media-dot.is-active {
+        background: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-imagine-template-media-arrow {
+        width: 24px;
+        height: 24px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.46);
+        color: rgba(255, 255, 255, 0.9);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+      }
+
+      .playground-imagine-template-media-arrow:hover,
+      .playground-imagine-template-media-dot:hover {
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      .playground-imagine-template.is-multi-asset .playground-imagine-template-copy {
+        bottom: 28px;
       }
 
       .playground-imagine-template:hover {
@@ -399,6 +581,8 @@ export const IMAGINE_PAGE_CSS = String.raw`
       }
 
       .playground-imagine-template-copy {
+        position: relative;
+        z-index: 2;
         display: flex;
         flex-direction: column;
         gap: 6px;
@@ -770,9 +954,34 @@ export const IMAGINE_PAGE_CSS = String.raw`
         min-height: 166px;
       }
 
-      .playground-imagine-create-upload-dropzone {
-        position: relative;
+      .playground-imagine-create-reference-section .playground-tasks-attachments {
+        padding-top: 0;
+      }
+
+      .playground-imagine-create-reference-section .playground-tasks-attachments-surface.tb-runner-chat,
+      .playground-imagine-create-reference-section .playground-tasks-attachments-surface.tb-runner-chat .tb-popup-dropzone {
         min-height: 166px;
+      }
+
+      .playground-imagine-create-reference-section .playground-tasks-attachments-dropzone.is-filled {
+        min-height: 166px;
+      }
+
+      .playground-imagine-create-reference-section .runner-attachment-image-button {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        cursor: default;
+      }
+
+      .playground-imagine-create-reference-section .runner-attachment-file-button {
+        cursor: default;
+      }
+
+      .playground-imagine-create-reference-section .runner-attachment-file-icon-slot svg {
+        width: 18px;
+        height: 18px;
+        color: rgba(255, 255, 255, 0.72);
       }
 
       .playground-imagine-create-upload-dropzone input {
@@ -1074,6 +1283,163 @@ export const IMAGINE_PAGE_CSS = String.raw`
 `;
 
 export const IMAGINE_PAGE_SCRIPT = String.raw`
+        function normalizePlaygroundImagineTemplateAssets(template) {
+          const normalizedAssets = [];
+          const pushAsset = (asset) => {
+            if (!asset) {
+              return;
+            }
+            const url = String(asset.url || asset.imageUrl || asset.videoUrl || "").trim();
+            if (!url) {
+              return;
+            }
+            const explicitType = String(asset.type || asset.mediaType || "").toLowerCase();
+            const type = explicitType === "video" || /\.(mp4|webm|mov)(?:[?#].*)?$/i.test(url) ? "video" : "image";
+            normalizedAssets.push({
+              ...asset,
+              url,
+              type,
+              title: String(asset.title || template?.title || "").trim(),
+              aspectRatio: String(asset.aspectRatio || template?.aspectRatio || "").trim(),
+            });
+          };
+          (Array.isArray(template?.assets) ? template.assets : []).forEach(pushAsset);
+          (Array.isArray(template?.mediaItems) ? template.mediaItems : []).forEach(pushAsset);
+          if (!normalizedAssets.length) {
+            const imageUrl = String(template?.imageUrl || "").trim();
+            const videoUrl = String(template?.videoUrl || "").trim();
+            if (imageUrl) {
+              pushAsset({ type: "image", url: imageUrl, title: template?.title, aspectRatio: template?.aspectRatio });
+            } else if (videoUrl) {
+              pushAsset({ type: "video", url: videoUrl, title: template?.title, aspectRatio: template?.aspectRatio });
+            }
+          }
+          return normalizedAssets;
+        }
+
+        function PlaygroundImagineTemplatePreviewMedia({ template }) {
+          const mediaRef = useRef(null);
+          const lastAssetRef = useRef(null);
+          const transitionTimeoutRef = useRef(null);
+          const [shouldLoad, setShouldLoad] = useState(false);
+          const [transitionState, setTransitionState] = useState({
+            previousAsset: null,
+            direction: 1,
+            token: 0,
+          });
+          const assets = useMemo(() => normalizePlaygroundImagineTemplateAssets(template), [template]);
+          const activeIndex = Math.max(0, Number(template?.activeAssetIndex || 0) || 0);
+          const activeAsset = assets[activeIndex] || assets[0] || null;
+          const isVideo = activeAsset?.type === "video";
+          const videoUrl = isVideo ? String(activeAsset?.url || "").trim() : "";
+
+          useEffect(() => {
+            if (!isVideo) {
+              return undefined;
+            }
+            const node = mediaRef.current;
+            if (!node || typeof IntersectionObserver === "undefined") {
+              setShouldLoad(true);
+              return undefined;
+            }
+            const observer = new IntersectionObserver((entries) => {
+              if (entries.some((entry) => entry.isIntersecting || entry.intersectionRatio > 0)) {
+                setShouldLoad(true);
+                observer.disconnect();
+              }
+            }, { root: null, rootMargin: "420px 0px", threshold: 0.01 });
+            observer.observe(node);
+            return () => observer.disconnect();
+          }, [isVideo, videoUrl]);
+
+          useEffect(() => {
+            const currentKey = activeAsset ? String(activeAsset.type || "") + ":" + String(activeAsset.url || "") : "";
+            const previous = lastAssetRef.current;
+            if (previous?.key && currentKey && previous.key !== currentKey) {
+              const direction = Number(template?.assetDirection || 1) < 0 ? -1 : 1;
+              if (transitionTimeoutRef.current) {
+                clearTimeout(transitionTimeoutRef.current);
+              }
+              setTransitionState({
+                previousAsset: previous.asset,
+                direction,
+                token: Date.now(),
+              });
+              transitionTimeoutRef.current = setTimeout(() => {
+                setTransitionState((current) => ({
+                  ...current,
+                  previousAsset: null,
+                }));
+              }, 280);
+            }
+            lastAssetRef.current = activeAsset ? { key: currentKey, asset: activeAsset } : null;
+            return undefined;
+          }, [activeAsset?.type, activeAsset?.url, template?.assetDirection]);
+
+          useEffect(() => {
+            return () => {
+              if (transitionTimeoutRef.current) {
+                clearTimeout(transitionTimeoutRef.current);
+              }
+            };
+          }, []);
+
+          if (!activeAsset) {
+            return null;
+          }
+
+          const renderAsset = (asset, className, key) => {
+            const assetIsVideo = asset?.type === "video";
+            const assetUrl = String(asset?.url || "").trim();
+            return React.createElement("span", { key, className: "playground-imagine-template-media-layer " + className },
+              assetIsVideo
+                ? (
+                    shouldLoad
+                      ? React.createElement("video", {
+                          className: "playground-imagine-template-video",
+                          src: assetUrl,
+                          muted: true,
+                          loop: true,
+                          playsInline: true,
+                          autoPlay: true,
+                          preload: "metadata",
+                          onTimeUpdate: (event) => {
+                            const video = event.currentTarget;
+                            if (video.currentTime > 4) {
+                              video.currentTime = 0;
+                              void video.play?.();
+                            }
+                          },
+                        })
+                      : React.createElement("span", { className: "playground-imagine-template-video-placeholder" })
+                  )
+                : React.createElement("img", {
+                    className: "playground-imagine-template-media-image",
+                    src: assetUrl,
+                    alt: "",
+                    draggable: false,
+                    loading: "lazy",
+                  })
+            );
+          };
+
+          return React.createElement("span", { ref: mediaRef, className: "playground-imagine-template-media", "aria-hidden": "true" },
+            React.createElement("span", {
+              className: "playground-imagine-template-media-transition",
+              style: { "--imagine-template-asset-direction": transitionState.direction },
+            },
+              transitionState.previousAsset
+                ? renderAsset(transitionState.previousAsset, "is-previous", "previous:" + transitionState.token)
+                : null,
+              renderAsset(
+                activeAsset,
+                transitionState.previousAsset ? "is-current" : "is-static",
+                "current:" + String(activeAsset.url || "") + ":" + transitionState.token
+              )
+            )
+          );
+        }
+
         function PlaygroundImaginePage({
           backendUrl,
           apiKey,
@@ -1093,6 +1459,8 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           onEnvironmentChange,
           onOpenPlansBudget,
           onRequireAuth,
+          canGenerateVideo = true,
+          onUpgradeToIndividual,
           activeView,
           mediaMode,
           filterMode: externalFilterMode,
@@ -1103,6 +1471,8 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           const [localActiveTab, setLocalActiveTab] = useState("explore");
           const [searchQuery, setSearchQuery] = useState("");
           const [selectedTemplateId, setSelectedTemplateId] = useState("");
+          const [templateAssetIndexes, setTemplateAssetIndexes] = useState({});
+          const [templateAssetDirections, setTemplateAssetDirections] = useState({});
           const customTemplateStorageKey = "runner_demo_imagine_custom_templates_v1";
           const favouriteTemplateStorageKey = "runner_demo_imagine_favourite_template_ids_v1";
           const [customTemplates, setCustomTemplates] = useState(() => {
@@ -1111,7 +1481,9 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             }
             try {
               const parsed = JSON.parse(window.localStorage.getItem(customTemplateStorageKey) || "[]");
-              return Array.isArray(parsed) ? parsed.filter((template) => template && template.id && template.imageUrl) : [];
+              return Array.isArray(parsed)
+                ? parsed.filter((template) => template && template.id && (template.imageUrl || template.videoUrl || (Array.isArray(template.assets) && template.assets.length)))
+                : [];
             } catch (_error) {
               return [];
             }
@@ -1131,6 +1503,63 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               return [];
             }
           });
+          const imagineModelStorageKey = "runner_demo_imagine_model_settings_v1";
+          const imagineImageModelOptions = useMemo(() => [
+            {
+              id: "gpt-image-2",
+              label: "GPT Image 2",
+              description: "Highest-fidelity OpenAI image generation and editing.",
+            },
+            {
+              id: "gemini-3.1-flash-image-preview",
+              label: "Gemini 3.1 Flash Image",
+              description: "Fast multimodal image generation and editing preview.",
+            },
+          ], []);
+          const imagineVideoModelOptions = useMemo(() => [
+            {
+              id: "seedance-2.0-fast",
+              label: "Seedance 2.0 Fast",
+              description: "Fast default video drafts and short motion clips.",
+            },
+            {
+              id: "seedance-2.0",
+              label: "Seedance 2.0",
+              description: "Higher-quality Seedance video generation.",
+            },
+            {
+              id: "grok-imagine-video",
+              label: "Grok Imagine Video",
+              description: "Alternative video model for imaginative motion.",
+            },
+          ], []);
+          const normalizeImagineModelId = (mode, modelId) => {
+            const options = String(mode || "") === "video" ? imagineVideoModelOptions : imagineImageModelOptions;
+            const normalizedModelId = String(modelId || "").trim();
+            return (options.find((option) => option.id === normalizedModelId) || options[0]).id;
+          };
+          const readStoredImagineModelSettings = () => {
+            if (typeof window === "undefined" || !window.localStorage) {
+              return {};
+            }
+            try {
+              const parsed = JSON.parse(window.localStorage.getItem(imagineModelStorageKey) || "{}");
+              return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+            } catch (_error) {
+              return {};
+            }
+          };
+          const storedImagineModelSettings = readStoredImagineModelSettings();
+          const [selectedImagineImageModelId, setSelectedImagineImageModelId] = useState(() =>
+            normalizeImagineModelId("image", storedImagineModelSettings.image || skillDefaults?.imageGeneration?.model || "gpt-image-2")
+          );
+          const [selectedImagineVideoModelId, setSelectedImagineVideoModelId] = useState(() =>
+            normalizeImagineModelId("video", storedImagineModelSettings.video || skillDefaults?.videoGeneration?.model || "seedance-2.0-fast")
+          );
+          const [imagineModelSelectorOpen, setImagineModelSelectorOpen] = useState(false);
+          const [videoUpgradeModalOpen, setVideoUpgradeModalOpen] = useState(false);
+          const [videoUpgradeCheckoutLoading, setVideoUpgradeCheckoutLoading] = useState(false);
+          const imagineModelSelectorRef = useRef(null);
 
           async function generateImagineThreadTitle(threadId, prompt) {
             const normalizedThreadId = String(threadId || "").trim();
@@ -1169,7 +1598,9 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             title: "",
             description: "",
             prompt: "",
+            assets: [],
             imageUrl: "",
+            videoUrl: "",
             aspectRatio: "4 / 3",
             defaultAspectRatio: "",
             defaultStyles: ["professional"],
@@ -1194,13 +1625,60 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           const sortMode = ["featured", "name-asc", "name-desc"].includes(String(externalSortMode || ""))
             ? String(externalSortMode || "")
             : "featured";
-          const activeMediaMode = String(mediaMode || "").toLowerCase() === "video" ? "video" : "image";
+          const canUseVideoGeneration = canGenerateVideo !== false;
+          const rawActiveMediaMode = String(mediaMode || "").toLowerCase() === "video" ? "video" : "image";
+          const activeMediaMode = rawActiveMediaMode === "video" && !canUseVideoGeneration ? "image" : rawActiveMediaMode;
+          const activeImagineModelOptions = activeMediaMode === "video" ? imagineVideoModelOptions : imagineImageModelOptions;
+          const selectedImagineModelId = activeMediaMode === "video" ? selectedImagineVideoModelId : selectedImagineImageModelId;
+          const selectedImagineModel = activeImagineModelOptions.find((option) => option.id === selectedImagineModelId) || activeImagineModelOptions[0];
+          const selectedImagineImageModel = imagineImageModelOptions.find((option) => option.id === selectedImagineImageModelId) || imagineImageModelOptions[0];
+          const selectedImagineVideoModel = imagineVideoModelOptions.find((option) => option.id === selectedImagineVideoModelId) || imagineVideoModelOptions[0];
+          const imagineSkillDefaults = useMemo(() => {
+            const source = skillDefaults && typeof skillDefaults === "object" ? skillDefaults : {};
+            const imageGeneration = source.imageGeneration && typeof source.imageGeneration === "object" ? source.imageGeneration : {};
+            const videoGeneration = source.videoGeneration && typeof source.videoGeneration === "object" ? source.videoGeneration : {};
+            return {
+              ...source,
+              imageGeneration: {
+                ...imageGeneration,
+                model: selectedImagineImageModel.id,
+              },
+              videoGeneration: {
+                ...videoGeneration,
+                model: selectedImagineVideoModel.id,
+              },
+            };
+          }, [selectedImagineImageModel.id, selectedImagineVideoModel.id, skillDefaults]);
+          const imagineRunnerSkills = useMemo(() => {
+            const sourceSkills = Array.isArray(skills) ? skills : [];
+            return sourceSkills.map((skill) => {
+              const normalizedSkillId = String(skill?.id || skill?.name || "").trim().toLowerCase();
+              if (
+                normalizedSkillId === "video_generation"
+                || normalizedSkillId === "video-generation"
+                || normalizedSkillId === "videogeneration"
+                || normalizedSkillId.includes("video-generation")
+              ) {
+                return { ...skill, enabled: canUseVideoGeneration };
+              }
+              return skill;
+            });
+          }, [skills, canUseVideoGeneration]);
+          useEffect(() => {
+            if (!canUseVideoGeneration && rawActiveMediaMode === "video" && typeof onMediaModeChange === "function") {
+              onMediaModeChange("image");
+            }
+          }, [canUseVideoGeneration, rawActiveMediaMode, onMediaModeChange]);
           const setActiveMediaMode = useCallback((nextMode) => {
             const normalizedNextMode = String(nextMode || "").toLowerCase() === "video" ? "video" : "image";
+            if (normalizedNextMode === "video" && !canUseVideoGeneration) {
+              setVideoUpgradeModalOpen(true);
+              return;
+            }
             if (typeof onMediaModeChange === "function") {
               onMediaModeChange(normalizedNextMode);
             }
-          }, [onMediaModeChange]);
+          }, [canUseVideoGeneration, onMediaModeChange]);
           const rawActiveView = String(activeView || "");
           const normalizedActiveView = rawActiveView === "history"
             ? "my-templates"
@@ -1212,6 +1690,45 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           useEffect(() => {
             createReferenceEnvironmentIdRef.current = String(environmentId || "");
           }, [environmentId]);
+          useEffect(() => {
+            if (typeof window === "undefined" || !window.localStorage) {
+              return;
+            }
+            try {
+              window.localStorage.setItem(imagineModelStorageKey, JSON.stringify({
+                image: selectedImagineImageModel.id,
+                video: selectedImagineVideoModel.id,
+              }));
+            } catch (_error) {}
+          }, [selectedImagineImageModel.id, selectedImagineVideoModel.id]);
+          useEffect(() => {
+            if (!imagineModelSelectorOpen || typeof document === "undefined") {
+              return;
+            }
+            const handlePointerDown = (event) => {
+              const target = event.target;
+              if (imagineModelSelectorRef.current && target && imagineModelSelectorRef.current.contains(target)) {
+                return;
+              }
+              setImagineModelSelectorOpen(false);
+            };
+            const handleKeyDown = (event) => {
+              if (event.key === "Escape") {
+                setImagineModelSelectorOpen(false);
+              }
+            };
+            document.addEventListener("mousedown", handlePointerDown);
+            document.addEventListener("touchstart", handlePointerDown);
+            document.addEventListener("keydown", handleKeyDown);
+            return () => {
+              document.removeEventListener("mousedown", handlePointerDown);
+              document.removeEventListener("touchstart", handlePointerDown);
+              document.removeEventListener("keydown", handleKeyDown);
+            };
+          }, [imagineModelSelectorOpen]);
+          useEffect(() => {
+            setImagineModelSelectorOpen(false);
+          }, [activeMediaMode]);
           const setActiveImagineTab = useCallback((nextTab) => {
             const rawNextTab = String(nextTab || "");
             const normalizedNextTab = rawNextTab === "history"
@@ -1505,6 +2022,50 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               size: "large",
             },
             {
+              id: "multi-asset-campaign-set",
+              title: "Pitch deck",
+              description: "Modern multi-slide pitch decks with sharp narrative, data, and visual hierarchy.",
+              prompt: "Create a modern pitch deck that follows the attached slide references: crisp startup narrative, strong page hierarchy, premium black/white/blue visual language, investor-ready copy, and a coherent slide system across every generated asset.",
+              placeholder: "Create a pitch deck",
+              defaultStyles: ["professional", "minimal", "data-driven", "premium"],
+              Icon: LayoutGrid,
+              imageUrl: "/img/imagine/pitch-deck/01.webp",
+              tone: "url('/img/imagine/pitch-deck/01.webp') center / cover no-repeat",
+              aspectRatio: "16 / 9",
+              assets: [
+                {
+                  type: "image",
+                  url: "/img/imagine/pitch-deck/01.webp",
+                  title: "Problem slide reference",
+                  aspectRatio: "16 / 9",
+                },
+                {
+                  type: "image",
+                  url: "/img/imagine/pitch-deck/02.webp",
+                  title: "Platform overview reference",
+                  aspectRatio: "16 / 9",
+                },
+                {
+                  type: "image",
+                  url: "/img/imagine/pitch-deck/03.webp",
+                  title: "Market validation reference",
+                  aspectRatio: "16 / 9",
+                },
+                {
+                  type: "image",
+                  url: "/img/imagine/pitch-deck/04.webp",
+                  title: "Use case reference",
+                  aspectRatio: "16 / 9",
+                },
+                {
+                  type: "image",
+                  url: "/img/imagine/pitch-deck/05.webp",
+                  title: "Business model reference",
+                  aspectRatio: "16 / 9",
+                },
+              ],
+            },
+            {
               id: "luxury-watch-ads",
               title: "Luxury watch ads",
               description: "Premium timepiece visuals with bold type, shine, and dramatic contrast.",
@@ -1515,6 +2076,62 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               imageUrl: "/img/imagine/watch-ad.webp",
               tone: "url('/img/imagine/watch-ad.webp') center / cover no-repeat",
               aspectRatio: "1 / 1",
+            },
+            {
+              id: "video-product-launch",
+              title: "Product launch video",
+              description: "Short cinematic product videos with motion, pacing, and campaign polish.",
+              prompt: "Create a short cinematic product launch video with premium camera movement, crisp lighting, restrained motion graphics, and a clear brand reveal.",
+              placeholder: "Create a product launch video",
+              defaultStyles: ["product", "premium", "cinematic", "professional"],
+              Icon: Film,
+              imageUrl: "/img/imagine/product-ad.webp",
+              tone: "url('/img/imagine/product-ad.webp') center / cover no-repeat",
+              aspectRatio: "16 / 9",
+              size: "wide",
+              mediaType: "video",
+            },
+            {
+              id: "akita-space-video",
+              title: "Akita in space",
+              description: "A playful Akita drifting through deep space with cinematic motion.",
+              prompt: "Create a playful cinematic video of an Akita floating weightlessly through deep space with gentle camera motion, soft starlight, and a polished sci-fi finish.",
+              placeholder: "Create an Akita space video",
+              defaultStyles: ["cinematic", "editorial", "premium", "exploratory"],
+              Icon: Film,
+              videoUrl: "/img/imagine/akita.mp4",
+              tone: "linear-gradient(135deg, rgba(5, 9, 20, 0.95), rgba(20, 31, 58, 0.72))",
+              aspectRatio: "16 / 9",
+              size: "wide",
+              mediaType: "video",
+            },
+            {
+              id: "youtube-intro-video",
+              title: "YouTube intro",
+              description: "Polished creator intros with cinematic pacing, title energy, and channel-ready motion.",
+              prompt: "Create a polished YouTube intro video with strong creator branding, cinematic motion, crisp title timing, and a high-retention opening sequence.",
+              placeholder: "Create a YouTube intro",
+              defaultStyles: ["cinematic", "bold", "premium", "professional"],
+              Icon: Film,
+              videoUrl: "/img/imagine/youtuber-intro.mp4",
+              tone: "linear-gradient(135deg, rgba(6, 8, 18, 0.95), rgba(38, 30, 68, 0.76))",
+              aspectRatio: "16 / 9",
+              size: "wide",
+              mediaType: "video",
+            },
+            {
+              id: "video-cinematic-scene",
+              title: "Cinematic scene video",
+              description: "Atmospheric short scenes with camera direction and production mood.",
+              prompt: "Create a cinematic short video with atmospheric depth, slow camera movement, natural motion, and a premium filmic finish.",
+              placeholder: "Create a cinematic scene",
+              defaultStyles: ["cinematic", "editorial", "premium", "exploratory"],
+              Icon: Film,
+              imageUrl: "/img/imagine/lions.webp",
+              tone: "url('/img/imagine/lions.webp') center / cover no-repeat",
+              aspectRatio: "16 / 9",
+              size: "wide",
+              mediaType: "video",
             },
             {
               id: "fragrance-ads",
@@ -1552,6 +2169,32 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               imageUrl: "/img/imagine/beauty-ad.webp",
               tone: "url('/img/imagine/beauty-ad.webp') center / cover no-repeat",
               aspectRatio: "1 / 1",
+            },
+            {
+              id: "metal-typography-ads",
+              title: "Metal typography ads",
+              description: "Premium poster ads with reflective type, product drama, and bold brand presence.",
+              prompt: "Create a premium typography-led campaign ad with metallic dimensional lettering, dramatic studio lighting, refined product placement, and a polished high-end brand finish.",
+              placeholder: "Create a metal text ad",
+              defaultStyles: ["product", "premium", "bold", "studio"],
+              Icon: Paintbrush,
+              imageUrl: "/img/imagine/metal-text-ad.webp",
+              tone: "url('/img/imagine/metal-text-ad.webp') center / cover no-repeat",
+              aspectRatio: "1122 / 1402",
+              size: "large",
+            },
+            {
+              id: "text-led-ads",
+              title: "Text-led ads",
+              description: "Clean campaign posters where the message, layout, and product work together.",
+              prompt: "Create a clean text-led advertising poster with confident headline typography, elegant product composition, restrained color, and a premium campaign layout.",
+              placeholder: "Create a text-led ad",
+              defaultStyles: ["product", "minimal", "premium", "professional"],
+              Icon: ReceiptText,
+              imageUrl: "/img/imagine/text-ad.webp",
+              tone: "url('/img/imagine/text-ad.webp') center / cover no-repeat",
+              aspectRatio: "1122 / 1402",
+              size: "large",
             },
             {
               id: "payment-ads",
@@ -1795,7 +2438,9 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                 ...extras,
                 isCustom: true,
                 Icon: ImageIcon,
-                tone: normalizedTemplate.tone || ("url('" + normalizedTemplate.imageUrl + "') center / cover no-repeat"),
+                tone: normalizedTemplate.tone || (normalizedTemplate.imageUrl
+                  ? "url('" + normalizedTemplate.imageUrl + "') center / cover no-repeat"
+                  : "linear-gradient(135deg, rgba(20, 20, 22, 0.96), rgba(42, 42, 48, 0.72))"),
                 defaultStyles: Array.isArray(normalizedTemplate.defaultStyles) ? normalizedTemplate.defaultStyles : ["professional"],
                 defaultAspectRatio: String(normalizedTemplate.defaultAspectRatio || "").trim(),
               };
@@ -1824,16 +2469,43 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             () => allTemplates.find((template) => template.id === selectedTemplateId) || null,
             [allTemplates, selectedTemplateId]
           );
+          const getTemplateAssetIndex = useCallback((template) => {
+            const templateId = String(template?.id || "").trim();
+            const assets = normalizePlaygroundImagineTemplateAssets(template);
+            const rawIndex = Number(templateAssetIndexes[templateId] || 0) || 0;
+            if (!assets.length) {
+              return 0;
+            }
+            return Math.max(0, Math.min(rawIndex, assets.length - 1));
+          }, [templateAssetIndexes]);
+          const setTemplateAssetIndex = useCallback((template, nextIndex, direction) => {
+            const templateId = String(template?.id || "").trim();
+            const assets = normalizePlaygroundImagineTemplateAssets(template);
+            if (!templateId || assets.length <= 1) {
+              return;
+            }
+            const currentIndex = Math.max(0, Math.min(Number(templateAssetIndexes[templateId] || 0) || 0, assets.length - 1));
+            const normalizedIndex = ((Number(nextIndex) || 0) + assets.length) % assets.length;
+            const normalizedDirection = Number(direction || 0) < 0 ? -1 : (Number(direction || 0) > 0 ? 1 : (normalizedIndex >= currentIndex ? 1 : -1));
+            setTemplateAssetDirections((current) => ({
+              ...current,
+              [templateId]: normalizedDirection,
+            }));
+            setTemplateAssetIndexes((current) => ({
+              ...current,
+              [templateId]: normalizedIndex,
+            }));
+          }, [templateAssetIndexes]);
 
           const filterGroups = useMemo(() => ({
-            campaign: ["product-ads", "luxury-watch-ads", "fragrance-ads", "coffee-ads", "beauty-ads", "payment-ads", "logo-branding", "furniture-campaigns", "sneaker-campaigns", "brand-campaigns", "social-posts", "restaurant-ads", "comparison-ads"],
-            product: ["product-ads", "luxury-watch-ads", "fragrance-ads", "coffee-ads", "beauty-ads", "payment-ads", "furniture-campaigns", "sneaker-campaigns", "technical-drawings", "app-screens", "data-visuals"],
+            campaign: ["product-ads", "multi-asset-campaign-set", "luxury-watch-ads", "video-product-launch", "akita-space-video", "youtube-intro-video", "fragrance-ads", "coffee-ads", "beauty-ads", "metal-typography-ads", "text-led-ads", "payment-ads", "logo-branding", "furniture-campaigns", "sneaker-campaigns", "brand-campaigns", "social-posts", "restaurant-ads", "comparison-ads"],
+            product: ["product-ads", "multi-asset-campaign-set", "luxury-watch-ads", "video-product-launch", "fragrance-ads", "coffee-ads", "beauty-ads", "metal-typography-ads", "text-led-ads", "payment-ads", "furniture-campaigns", "sneaker-campaigns", "technical-drawings", "app-screens", "data-visuals"],
             editorial: ["editorial", "logo-branding", "fashion-campaigns", "portrait-studio"],
-            concept: ["infographics", "technical-drawings", "concept-art", "animated-characters", "cinematic-wildlife"],
+            concept: ["akita-space-video", "youtube-intro-video", "video-cinematic-scene", "infographics", "technical-drawings", "concept-art", "animated-characters", "cinematic-wildlife"],
           }), []);
 
           const filterOptions = useMemo(() => [
-            { id: "all", label: "All templates", description: "Show every image template" },
+            { id: "all", label: "All templates", description: "Show every template" },
             { id: "campaign", label: "Campaigns", description: "Ads, launches, and social visuals" },
             { id: "product", label: "Product", description: "Product ads, apps, dashboards, and data visuals" },
             { id: "editorial", label: "Editorial", description: "Stories, blogs, and fashion campaigns" },
@@ -1847,9 +2519,6 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           ], []);
 
           const filteredTemplates = useMemo(() => {
-            if (activeMediaMode === "video") {
-              return [];
-            }
             const query = String(searchQuery || "").trim().toLowerCase();
             let nextTemplates = activeTab === "my-templates"
               ? normalizedCustomTemplates
@@ -1873,7 +2542,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               nextTemplates = [...nextTemplates].sort((a, b) => b.title.localeCompare(a.title));
             }
             return nextTemplates;
-          }, [activeMediaMode, activeTab, allTemplates, favouriteTemplateIds, filterGroups, filterMode, normalizedCustomTemplates, searchQuery, sortMode, templates]);
+          }, [activeTab, allTemplates, favouriteTemplateIds, filterGroups, filterMode, normalizedCustomTemplates, searchQuery, sortMode, templates]);
 
           const updateTemplateDraft = useCallback((field, value) => {
             setTemplateDraft((current) => ({
@@ -2001,47 +2670,163 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             applyTemplateMarkdownSelection(field, textareaRef, edit.value, edit.selectionStart, edit.selectionEnd);
           }, [applyTemplateMarkdownSelection, buildTemplateMarkdownListEdit, buildWrappedTemplateMarkdownEdit, templateDraft]);
 
-          const handleTemplateImageFile = useCallback((file) => {
-            if (!file) {
+          const inferTemplateAssetType = useCallback((file) => {
+            const mimeType = String(file?.type || "").toLowerCase();
+            const fileName = String(file?.name || "").toLowerCase();
+            if (mimeType.startsWith("image/") || /\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i.test(fileName)) {
+              return "image";
+            }
+            if (mimeType.startsWith("video/") || /\.(m4v|mkv|mov|mp4|webm)$/i.test(fileName)) {
+              return "video";
+            }
+            return "";
+          }, []);
+
+          const inferTemplateAssetMimeType = useCallback((fileName, fallbackType = "") => {
+            const normalizedFallback = String(fallbackType || "").trim();
+            if (normalizedFallback) {
+              return normalizedFallback;
+            }
+            const normalizedFileName = String(fileName || "").toLowerCase();
+            if (normalizedFileName.endsWith(".avif")) return "image/avif";
+            if (normalizedFileName.endsWith(".gif")) return "image/gif";
+            if (normalizedFileName.endsWith(".jpg") || normalizedFileName.endsWith(".jpeg")) return "image/jpeg";
+            if (normalizedFileName.endsWith(".png")) return "image/png";
+            if (normalizedFileName.endsWith(".svg")) return "image/svg+xml";
+            if (normalizedFileName.endsWith(".webp")) return "image/webp";
+            if (normalizedFileName.endsWith(".webm")) return "video/webm";
+            if (normalizedFileName.endsWith(".mov")) return "video/quicktime";
+            if (normalizedFileName.endsWith(".m4v")) return "video/x-m4v";
+            if (normalizedFileName.endsWith(".mkv")) return "video/x-matroska";
+            if (normalizedFileName.endsWith(".mp4")) return "video/mp4";
+            return "";
+          }, []);
+
+          const buildTemplateDraftAssetPatch = useCallback((assets) => {
+            const normalizedAssets = (Array.isArray(assets) ? assets : [])
+              .filter((asset) => asset && asset.url)
+              .map((asset, index) => ({
+                id: String(asset.id || ("template-asset-" + Date.now().toString(36) + "-" + index + "-" + Math.random().toString(36).slice(2, 8))),
+                type: asset.type === "video" ? "video" : "image",
+                url: String(asset.url || ""),
+                title: String(asset.title || asset.fileName || ("Reference asset " + (index + 1))).trim(),
+                fileName: String(asset.fileName || asset.title || ("reference-asset-" + (index + 1))).trim(),
+                mimeType: String(asset.mimeType || ""),
+                aspectRatio: String(asset.aspectRatio || "").trim(),
+                size: Number(asset.size || 0) || 0,
+                durationSeconds: Number(asset.durationSeconds || 0) || 0,
+              }));
+            const firstAsset = normalizedAssets[0] || null;
+            const firstImageAsset = normalizedAssets.find((asset) => asset.type === "image") || null;
+            const firstVideoAsset = normalizedAssets.find((asset) => asset.type === "video") || null;
+            return {
+              assets: normalizedAssets,
+              imageUrl: firstAsset?.type === "image" ? firstAsset.url : "",
+              videoUrl: firstAsset?.type === "video" ? firstAsset.url : "",
+              aspectRatio: firstAsset?.aspectRatio || firstImageAsset?.aspectRatio || firstVideoAsset?.aspectRatio || "4 / 3",
+            };
+          }, []);
+
+          const readTemplateAssetFile = useCallback((file) => new Promise((resolve, reject) => {
+            const assetType = inferTemplateAssetType(file);
+            if (!assetType) {
+              reject(new Error("Choose image or video files to create a template."));
               return;
             }
-            if (!String(file.type || "").startsWith("image/")) {
-              setTemplateFormError("Choose an image file to create a template.");
-              return;
-            }
+            const fileName = String(file?.name || (assetType === "video" ? "reference-video" : "reference-image")).trim();
+            const mimeType = inferTemplateAssetMimeType(fileName, file?.type);
             const reader = new FileReader();
+            const resolveAsset = (url, aspectRatio, extra = {}) => {
+              resolve({
+                id: "template-asset-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8),
+                type: assetType,
+                url,
+                title: fileName,
+                fileName,
+                mimeType,
+                aspectRatio,
+                size: Number(file?.size || 0) || 0,
+                ...extra,
+              });
+            };
             reader.onload = () => {
-              const imageUrl = String(reader.result || "");
-              if (!imageUrl) {
-                setTemplateFormError("Could not read that image.");
+              const assetUrl = String(reader.result || "");
+              if (!assetUrl) {
+                reject(new Error("Could not read that file."));
+                return;
+              }
+              if (assetType === "video") {
+                const video = document.createElement("video");
+                video.preload = "metadata";
+                video.muted = true;
+                video.playsInline = true;
+                video.onloadedmetadata = () => {
+                  const width = video.videoWidth || 16;
+                  const height = video.videoHeight || 9;
+                  resolveAsset(assetUrl, width + " / " + height, {
+                    durationSeconds: Number(video.duration || 0) || 0,
+                  });
+                };
+                video.onerror = () => {
+                  resolveAsset(assetUrl, "16 / 9");
+                };
+                video.src = assetUrl;
                 return;
               }
               const image = new Image();
               image.onload = () => {
                 const width = image.naturalWidth || 4;
                 const height = image.naturalHeight || 3;
-                setTemplateDraft((current) => ({
-                  ...current,
-                  imageUrl,
-                  aspectRatio: width + " / " + height,
-                }));
-                setTemplateFormError("");
+                resolveAsset(assetUrl, width + " / " + height);
               };
               image.onerror = () => {
-                setTemplateDraft((current) => ({
-                  ...current,
-                  imageUrl,
-                  aspectRatio: "4 / 3",
-                }));
-                setTemplateFormError("");
+                resolveAsset(assetUrl, "4 / 3");
               };
-              image.src = imageUrl;
+              image.src = assetUrl;
             };
             reader.onerror = () => {
-              setTemplateFormError("Could not read that image.");
+              reject(new Error("Could not read that file."));
             };
             reader.readAsDataURL(file);
-          }, []);
+          }), [inferTemplateAssetMimeType, inferTemplateAssetType]);
+
+          const handleTemplateAssetFiles = useCallback((fileList, options = {}) => {
+            const files = Array.from(fileList || []).filter(Boolean);
+            const supportedFiles = files.filter((file) => inferTemplateAssetType(file));
+            if (!supportedFiles.length) {
+              setTemplateFormError("Choose image or video files to create a template.");
+              return Promise.resolve([]);
+            }
+            return Promise.all(supportedFiles.map((file) => readTemplateAssetFile(file)))
+              .then((nextAssets) => {
+                setTemplateDraft((current) => {
+                  const currentAssets = options.replace ? [] : (Array.isArray(current.assets) ? current.assets : []);
+                  return {
+                    ...current,
+                    ...buildTemplateDraftAssetPatch(currentAssets.concat(nextAssets)),
+                  };
+                });
+                setTemplateFormError("");
+                return nextAssets;
+              })
+              .catch((error) => {
+                const message = error instanceof Error ? error.message : String(error || "Could not read those files.");
+                setTemplateFormError(message);
+                return [];
+              });
+          }, [buildTemplateDraftAssetPatch, inferTemplateAssetType, readTemplateAssetFile]);
+
+          const removeTemplateAssetAtIndex = useCallback((assetIndex) => {
+            const normalizedIndex = Number(assetIndex);
+            setTemplateDraft((current) => {
+              const currentAssets = Array.isArray(current.assets) ? current.assets : [];
+              return {
+                ...current,
+                ...buildTemplateDraftAssetPatch(currentAssets.filter((_asset, index) => index !== normalizedIndex)),
+              };
+            });
+            setTemplateFormError("");
+          }, [buildTemplateDraftAssetPatch]);
 
           const openCreateReferenceFileBrowser = useCallback(() => {
             setTemplateFormError("");
@@ -2070,58 +2855,81 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             return normalizedBackendUrl + "/environments/" + encodeURIComponent(normalizedEnvironmentId) + "/files/download/" + encodedPath;
           }, [backendUrl, environmentId]);
 
-          const importCreateReferenceWorkspaceFile = useCallback(async (fileId) => {
-            const normalizedFileId = String(fileId || "").trim();
-            if (!normalizedFileId) {
+          const importCreateReferenceWorkspaceFiles = useCallback(async (fileIds) => {
+            const normalizedFileIds = (Array.isArray(fileIds) ? fileIds : [fileIds])
+              .map((fileId) => String(fileId || "").trim())
+              .filter(Boolean);
+            if (!normalizedFileIds.length) {
               return;
             }
-            const downloadUrl = buildCreateReferenceDownloadUrl(normalizedFileId);
-            if (!downloadUrl) {
-              const message = "Select a computer before choosing a reference image.";
+            const firstDownloadUrl = buildCreateReferenceDownloadUrl(normalizedFileIds[0]);
+            if (!firstDownloadUrl) {
+              const message = "Select a computer before choosing reference assets.";
               setCreateReferenceImportState({ status: "error", error: message });
               setTemplateFormError(message);
               return;
             }
             setCreateReferenceImportState({ status: "loading", error: "" });
             try {
-              const headers = new Headers(requestHeaders || undefined);
-              const normalizedApiKey = String(apiKey || "").trim();
-              if (normalizedApiKey && !headers.has("Authorization")) {
-                headers.set("Authorization", "Bearer " + normalizedApiKey);
+              const importedFiles = [];
+              for (const normalizedFileId of normalizedFileIds) {
+                const downloadUrl = buildCreateReferenceDownloadUrl(normalizedFileId);
+                if (!downloadUrl) {
+                  continue;
+                }
+                const headers = new Headers(requestHeaders || undefined);
+                const normalizedApiKey = String(apiKey || "").trim();
+                if (normalizedApiKey && !headers.has("Authorization")) {
+                  headers.set("Authorization", "Bearer " + normalizedApiKey);
+                }
+                if (normalizedApiKey && !headers.has("x-api-key")) {
+                  headers.set("x-api-key", normalizedApiKey);
+                }
+                const response = await fetch(downloadUrl, { method: "GET", headers });
+                if (!response.ok) {
+                  throw new Error("Could not load that file from Computer Agents files.");
+                }
+                const blob = await response.blob();
+                const fileName = normalizedFileId.split("/").filter(Boolean).pop() || "reference-asset";
+                const mimeType = inferTemplateAssetMimeType(fileName, blob.type);
+                const fileShape = {
+                  name: fileName,
+                  type: mimeType,
+                  size: blob.size,
+                };
+                if (!inferTemplateAssetType(fileShape)) {
+                  throw new Error("Choose image or video files to create a template.");
+                }
+                const BrowserFile = globalThis.File;
+                if (typeof BrowserFile === "function") {
+                  importedFiles.push(new BrowserFile([blob], fileName, { type: mimeType || blob.type || "application/octet-stream" }));
+                } else {
+                  try {
+                    Object.defineProperty(blob, "name", { value: fileName, configurable: true });
+                  } catch (_error) {
+                    blob.name = fileName;
+                  }
+                  importedFiles.push(blob);
+                }
               }
-              if (normalizedApiKey && !headers.has("x-api-key")) {
-                headers.set("x-api-key", normalizedApiKey);
-              }
-              const response = await fetch(downloadUrl, { method: "GET", headers });
-              if (!response.ok) {
-                throw new Error("Could not load that file from Computer Agents files.");
-              }
-              const blob = await response.blob();
-              const fileName = normalizedFileId.split("/").filter(Boolean).pop() || "reference-image";
-              const mimeType = blob.type || (/\.webp$/i.test(fileName) ? "image/webp" : /\.png$/i.test(fileName) ? "image/png" : /\.jpe?g$/i.test(fileName) ? "image/jpeg" : "");
-              if (!String(mimeType || "").startsWith("image/") && !/\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i.test(fileName)) {
-                throw new Error("Choose an image file to create a template.");
-              }
-              const BrowserFile = globalThis.File;
-              const importedFile = typeof BrowserFile === "function"
-                ? new BrowserFile([blob], fileName, { type: mimeType || "image/png" })
-                : blob;
-              handleTemplateImageFile(importedFile);
+              await handleTemplateAssetFiles(importedFiles);
               setCreateReferenceImportState({ status: "idle", error: "" });
             } catch (error) {
-              const message = error instanceof Error ? error.message : String(error || "Could not import that image.");
+              const message = error instanceof Error ? error.message : String(error || "Could not import those assets.");
               setCreateReferenceImportState({ status: "error", error: message });
               setTemplateFormError(message);
             }
-          }, [apiKey, buildCreateReferenceDownloadUrl, handleTemplateImageFile, requestHeaders]);
+          }, [apiKey, buildCreateReferenceDownloadUrl, handleTemplateAssetFiles, inferTemplateAssetMimeType, inferTemplateAssetType, requestHeaders]);
 
           const handleCreateReferenceWorkspaceAttach = useCallback((fileIds) => {
-            const firstFileId = Array.isArray(fileIds) ? fileIds.find(Boolean) : "";
-            if (!firstFileId) {
+            const normalizedFileIds = (Array.isArray(fileIds) ? fileIds : [fileIds])
+              .map((fileId) => String(fileId || "").trim())
+              .filter(Boolean);
+            if (!normalizedFileIds.length) {
               return;
             }
-            void importCreateReferenceWorkspaceFile(firstFileId);
-          }, [importCreateReferenceWorkspaceFile]);
+            void importCreateReferenceWorkspaceFiles(normalizedFileIds);
+          }, [importCreateReferenceWorkspaceFiles]);
 
           const handleCreateReferenceEnvironmentChange = useCallback((nextEnvironmentId) => {
             createReferenceEnvironmentIdRef.current = String(nextEnvironmentId || "");
@@ -2135,7 +2943,9 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               title: "",
               description: "",
               prompt: "",
+              assets: [],
               imageUrl: "",
+              videoUrl: "",
               aspectRatio: "4 / 3",
               defaultAspectRatio: "",
               defaultStyles: ["professional"],
@@ -2159,24 +2969,35 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               setTemplateFormError("Add a short description.");
               return;
             }
-            if (!templateDraft.imageUrl) {
-              setTemplateFormError("Upload a reference image.");
+            const draftAssets = Array.isArray(templateDraft.assets)
+              ? templateDraft.assets.filter((asset) => asset && asset.url)
+              : [];
+            if (!draftAssets.length) {
+              setTemplateFormError("Upload at least one reference image or video.");
               return;
             }
+            const firstAsset = draftAssets[0] || null;
+            const firstImageAsset = draftAssets.find((asset) => asset.type === "image") || null;
+            const firstVideoAsset = draftAssets.find((asset) => asset.type === "video") || null;
             const id = editingTemplateId || ("custom-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8));
             const nextTemplate = {
               id,
               title,
               description,
-              prompt: prompt || ("Create an image in the same style as the " + title + " template."),
+              prompt: prompt || ("Create in the same style as the " + title + " template."),
               placeholder: title,
               defaultStyles: Array.isArray(templateDraft.defaultStyles) && templateDraft.defaultStyles.length
                 ? templateDraft.defaultStyles
                 : ["professional"],
               defaultAspectRatio: String(templateDraft.defaultAspectRatio || "").trim(),
-              imageUrl: templateDraft.imageUrl,
-              tone: "url('" + templateDraft.imageUrl + "') center / cover no-repeat",
-              aspectRatio: templateDraft.aspectRatio || "4 / 3",
+              assets: draftAssets,
+              imageUrl: firstAsset?.type === "image" ? firstAsset.url : (firstImageAsset?.url || ""),
+              videoUrl: firstAsset?.type === "video" ? firstAsset.url : (firstVideoAsset?.url || ""),
+              mediaType: firstAsset?.type === "video" ? "video" : "image",
+              tone: firstAsset?.type === "image"
+                ? "url('" + firstAsset.url + "') center / cover no-repeat"
+                : "linear-gradient(135deg, rgba(102, 166, 255, 0.2), rgba(255, 255, 255, 0.06))",
+              aspectRatio: firstAsset?.aspectRatio || templateDraft.aspectRatio || "4 / 3",
               size: "custom",
               isCustom: true,
             };
@@ -2202,12 +3023,16 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               return;
             }
             setEditingTemplateId(template.id);
+            const templateAssets = normalizePlaygroundImagineTemplateAssets(template);
+            const firstAsset = templateAssets[0] || null;
             setTemplateDraft({
               title: String(template.title || ""),
               description: String(template.description || ""),
               prompt: String(template.prompt || ""),
-              imageUrl: String(template.imageUrl || ""),
-              aspectRatio: String(template.aspectRatio || "4 / 3"),
+              assets: templateAssets,
+              imageUrl: firstAsset?.type === "image" ? firstAsset.url : "",
+              videoUrl: firstAsset?.type === "video" ? firstAsset.url : "",
+              aspectRatio: String(firstAsset?.aspectRatio || template.aspectRatio || "4 / 3"),
               defaultAspectRatio: String(template.defaultAspectRatio || ""),
               defaultStyles: Array.isArray(template.defaultStyles) && template.defaultStyles.length
                 ? template.defaultStyles
@@ -2421,6 +3246,71 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               )
             );
 
+          const renderCreateTemplateAssetChip = (asset, index) => {
+            const resolvedAsset = asset || {};
+            const assetTitle = String(resolvedAsset.title || resolvedAsset.fileName || ("Reference asset " + (index + 1))).trim();
+            const isVideoAsset = resolvedAsset.type === "video";
+            const assetUrl = String(resolvedAsset.url || "").trim();
+            return React.createElement("div", {
+              key: resolvedAsset.id || assetTitle + ":" + index,
+              className: "runner-attachment " + (isVideoAsset ? "runner-attachment-file" : "runner-attachment-image"),
+            },
+              isVideoAsset
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("button", {
+                      type: "button",
+                      className: "runner-attachment-file-button",
+                      tabIndex: -1,
+                      "aria-label": assetTitle,
+                    },
+                      React.createElement("span", { className: "runner-attachment-file-icon-slot", "aria-hidden": "true" },
+                        React.createElement(Film, { strokeWidth: 1.8 })
+                      ),
+                      React.createElement("div", { className: "runner-attachment-file-name", title: assetTitle }, assetTitle)
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "runner-attachment-remove runner-attachment-remove-file",
+                      onClick: (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        removeTemplateAssetAtIndex(index);
+                      },
+                      "aria-label": "Remove " + assetTitle,
+                    }, React.createElement(X, { className: "runner-attachment-remove-icon", strokeWidth: 2 }))
+                  )
+                : React.createElement(React.Fragment, null,
+                    React.createElement("span", { className: "runner-attachment-image-frame" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "runner-attachment-image-button",
+                        tabIndex: -1,
+                        "aria-label": assetTitle,
+                      },
+                        assetUrl
+                          ? React.createElement("img", {
+                              src: assetUrl,
+                              alt: "",
+                              draggable: false,
+                              className: "runner-attachment-image-preview",
+                            })
+                          : React.createElement(ImageIcon, { className: "runner-attachment-image-preview", strokeWidth: 1.8 })
+                      )
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "runner-attachment-remove runner-attachment-remove-image",
+                      onClick: (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        removeTemplateAssetAtIndex(index);
+                      },
+                      "aria-label": "Remove " + assetTitle,
+                    }, React.createElement(X, { className: "runner-attachment-remove-icon", strokeWidth: 2 }))
+                  )
+            );
+          };
+
           const renderImagineMediaModeSwitch = () =>
             React.createElement("div", { className: "playground-imagine-media-switch", role: "tablist", "aria-label": "Imagine media mode" },
               [
@@ -2438,16 +3328,134 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               )
             );
 
+          const selectImagineModel = (modelId) => {
+            const normalizedModelId = normalizeImagineModelId(activeMediaMode, modelId);
+            if (activeMediaMode === "video") {
+              setSelectedImagineVideoModelId(normalizedModelId);
+            } else {
+              setSelectedImagineImageModelId(normalizedModelId);
+            }
+            setImagineModelSelectorOpen(false);
+          };
+
+          const renderImagineModelSelector = () =>
+            React.createElement("div", { ref: imagineModelSelectorRef, className: "tb-selector-anchor playground-imagine-model-selector" },
+              React.createElement("button", {
+                type: "button",
+                className: "tb-inline-selector tb-inline-selector-agent" + (imagineModelSelectorOpen ? " active" : ""),
+                onClick: () => setImagineModelSelectorOpen((open) => !open),
+                "aria-haspopup": "menu",
+                "aria-expanded": imagineModelSelectorOpen ? "true" : "false",
+              },
+                React.createElement("span", null, selectedImagineModel.label),
+                React.createElement(ChevronDown, { className: "tb-inline-selector-chevron", strokeWidth: 1.8 })
+              ),
+              imagineModelSelectorOpen
+                ? React.createElement("div", { className: "tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent playground-tasks-toolbar-popup-menu-animate-up-in playground-imagine-model-menu" },
+                    React.createElement("div", { className: "tb-popup-menu-title" }, activeMediaMode === "video" ? "Video model" : "Image model"),
+                    React.createElement("div", { className: "tb-popup-menu-inline-body tb-popup-menu-inline-body-agent" },
+                      activeImagineModelOptions.map((option) =>
+                        React.createElement("button", {
+                          key: option.id,
+                          type: "button",
+                          className: "tb-popup-row tb-popup-row-select" + (option.id === selectedImagineModel.id ? " selected" : ""),
+                          onClick: () => selectImagineModel(option.id),
+                        },
+                          React.createElement(activeMediaMode === "video" ? Film : ImageIcon, { className: "tb-popup-icon", strokeWidth: 1.8 }),
+                          React.createElement("span", { className: "playground-imagine-model-option-copy" },
+                            React.createElement("span", { className: "playground-imagine-model-option-title" }, option.label),
+                            React.createElement("span", { className: "playground-imagine-model-option-description" }, option.description)
+                          ),
+                          React.createElement("span", { className: "tb-popup-check-slot" },
+                            option.id === selectedImagineModel.id
+                              ? React.createElement(Check, { className: "tb-popup-check", strokeWidth: 1.8 })
+                              : null
+                          )
+                        )
+                      )
+                    )
+                  )
+                : null
+            );
+
+          const handleVideoUpgradeCheckout = useCallback(async () => {
+            if (typeof onUpgradeToIndividual !== "function") {
+              return;
+            }
+            setVideoUpgradeCheckoutLoading(true);
+            try {
+              await Promise.resolve(onUpgradeToIndividual());
+            } finally {
+              setVideoUpgradeCheckoutLoading(false);
+            }
+          }, [onUpgradeToIndividual]);
+
+          const renderImagineVideoUpgradeModal = () => {
+            if (!videoUpgradeModalOpen) {
+              return null;
+            }
+            return React.createElement("div", {
+              className: "playground-calendar-upgrade-backdrop",
+              onClick: () => setVideoUpgradeModalOpen(false),
+            },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-header-icon-button is-plain playground-calendar-upgrade-close",
+                "aria-label": "Close video generation upgrade prompt",
+                onClick: () => setVideoUpgradeModalOpen(false),
+              }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 })),
+              React.createElement("div", {
+                className: "playground-calendar-upgrade-shell",
+                onClick: (event) => event.stopPropagation(),
+              },
+                React.createElement("div", { className: "playground-calendar-upgrade-pill" }, "Video generation"),
+                React.createElement("h2", { className: "playground-calendar-upgrade-headline" },
+                  "Try Individual for ",
+                  React.createElement("span", { className: "playground-calendar-upgrade-headline-price" }, "$0"),
+                  " for 14 days"
+                ),
+                React.createElement("div", { className: "playground-calendar-upgrade-modal" },
+                  React.createElement("div", { className: "playground-calendar-upgrade-modal-top" },
+                    React.createElement("div", { className: "playground-calendar-upgrade-modal-header" },
+                      React.createElement("div", { className: "playground-calendar-upgrade-modal-title" }, "Individual"),
+                      React.createElement("div", { className: "playground-calendar-upgrade-modal-offer" }, "14 day trial")
+                    ),
+                    React.createElement("p", { className: "playground-calendar-upgrade-modal-copy" },
+                      "Video generation is available on paid plans because it uses premium video models and Compute Tokens."
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-calendar-upgrade-modal-button",
+                      onClick: () => void handleVideoUpgradeCheckout(),
+                      disabled: videoUpgradeCheckoutLoading || typeof onUpgradeToIndividual !== "function",
+                    }, videoUpgradeCheckoutLoading ? "Opening checkout..." : "Try Individual free")
+                  )
+                )
+              )
+            );
+          };
+
           const hiddenSystemPrompt = [
             "You are running inside Computer Agents Imagine mode.",
             activeMediaMode === "video"
               ? "The user is asking for video generation. Use the Video Generation skill when possible and save generated videos into /workspace/generated_videos."
               : "The user is asking for image generation only. Do not produce video unless the user explicitly asks to leave Imagine mode.",
             activeMediaMode === "video"
-              ? "Create concise, production-ready video prompts. Prefer seedance-2.0-fast for quick drafts and seedance-2.0 for higher quality unless the user asks otherwise."
-              : "Use the available image generation skill when possible. Produce polished image prompts, create the image, and summarize the image outputs concisely.",
-            activeMediaMode === "image" && selectedTemplate ? "The user selected this image template: " + selectedTemplate.title + ". Suggested direction: " + selectedTemplate.prompt : "",
+              ? "Create concise, production-ready video prompts. Selected video model: " + selectedImagineVideoModel.id + " (" + selectedImagineVideoModel.label + "). Include --model " + selectedImagineVideoModel.id + " when calling the video generation script unless the user explicitly asks for another model."
+              : "Use the available image generation skill when possible. Selected image model: " + selectedImagineImageModel.id + " (" + selectedImagineImageModel.label + "). Include --model " + selectedImagineImageModel.id + " when calling the image generation script unless the user explicitly asks for another model.",
+            activeMediaMode === "video"
+              ? "Generate exactly one final video for this Imagine request. Do not create variations, alternates, or run a second generate-video.py call after a video has been saved."
+              : "",
+            selectedTemplate ? "The user selected this " + (activeMediaMode === "video" ? "video" : "image") + " template: " + selectedTemplate.title + ". Suggested direction: " + selectedTemplate.prompt : "",
           ].filter(Boolean).join("\\n");
+          const imagineThreadMetadata = {
+            runnerPlayground: {
+              source: "imagine",
+              mediaMode: activeMediaMode,
+              generationType: activeMediaMode,
+              videoGenerationMaxOutputs: activeMediaMode === "video" ? 1 : undefined,
+            },
+          };
 
           if (activeTab === "create-template") {
             return React.createElement("div", { className: "playground-imagine-page" },
@@ -2495,7 +3503,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                         renderCreateStylePicker(),
                         React.createElement("section", { className: "playground-imagine-template-section is-attachments playground-imagine-create-reference-section" },
                           React.createElement("div", { className: "playground-imagine-template-attachments-toolbar" },
-                            React.createElement("div", { className: "playground-imagine-template-section-title" }, "Reference image"),
+                            React.createElement("div", { className: "playground-imagine-template-section-title" }, "Reference assets"),
                             React.createElement("button", {
                               type: "button",
                               className: "playground-imagine-template-from-computer",
@@ -2503,28 +3511,52 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                               onClick: openCreateReferenceFileBrowser,
                             }, createReferenceImportState.status === "loading" ? "Importing..." : "From Computer")
                           ),
-                          React.createElement("div", { className: "playground-imagine-template-attachments-surface playground-imagine-create-upload-surface" },
-                            React.createElement("label", {
-                              className: "playground-imagine-template-dropzone playground-imagine-create-upload-dropzone",
+                          React.createElement("div", { className: "playground-tasks-attachments playground-imagine-create-upload-surface" },
+                            React.createElement("input", {
+                              id: "imagine-template-reference-assets-input",
+                              type: "file",
+                              multiple: true,
+                              accept: "image/*,video/*",
+                              hidden: true,
+                              onChange: (event) => {
+                                void handleTemplateAssetFiles(event.target.files);
+                                event.target.value = "";
+                              },
+                            }),
+                            React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
+                              React.createElement("div", {
+                              className: "tb-popup-dropzone playground-tasks-attachments-dropzone playground-imagine-create-upload-dropzone" + ((Array.isArray(templateDraft.assets) && templateDraft.assets.length) ? " is-filled" : ""),
                               onDragOver: (event) => event.preventDefault(),
                               onDrop: (event) => {
                                 event.preventDefault();
-                                handleTemplateImageFile(event.dataTransfer?.files && event.dataTransfer.files[0]);
+                                void handleTemplateAssetFiles(event.dataTransfer?.files);
                               },
                             },
-                              templateDraft.imageUrl
-                                ? React.createElement("span", { className: "playground-imagine-create-upload-preview" },
-                                    React.createElement("img", { src: templateDraft.imageUrl, alt: "" })
-                                  )
-                                : null,
-                              React.createElement(ArrowUpFromLine, { width: 19, height: 19, strokeWidth: 1.8 }),
-                              React.createElement("span", { className: "playground-imagine-template-dropzone-title" }, templateDraft.imageUrl ? "Replace reference image" : "Drag & drop image here"),
-                              React.createElement("span", { className: "playground-imagine-template-dropzone-copy" }, "or click to browse"),
-                              React.createElement("input", {
-                                type: "file",
-                                accept: "image/*",
-                                onChange: (event) => handleTemplateImageFile(event.target.files && event.target.files[0]),
-                              })
+                                Array.isArray(templateDraft.assets) && templateDraft.assets.length
+                                  ? React.createElement(React.Fragment, null,
+                                      React.createElement("div", { className: "playground-tasks-attachments-topline" },
+                                        React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                                        React.createElement("span", null, "Drop files to add, or"),
+                                        React.createElement("button", {
+                                          type: "button",
+                                          className: "playground-tasks-attachments-browse",
+                                          onClick: () => document.getElementById("imagine-template-reference-assets-input")?.click(),
+                                        }, "browse.")
+                                      ),
+                                      React.createElement("div", { className: "runner-attachments" },
+                                        templateDraft.assets.map((asset, index) => renderCreateTemplateAssetChip(asset, index))
+                                      )
+                                    )
+                                  : React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-tasks-attachments-empty-button",
+                                      onClick: () => document.getElementById("imagine-template-reference-assets-input")?.click(),
+                                    },
+                                      React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                                      React.createElement("span", { className: "tb-popup-dropzone-title" }, "Drag & drop files here"),
+                                      React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
+                                    )
+                              )
                             )
                           )
                         ),
@@ -2573,13 +3605,13 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                         },
                         environments: Array.isArray(environments) ? environments : [],
                         agents: Array.isArray(agents) ? agents : [],
-                        skills: Array.isArray(skills) ? skills : [],
+                        skills: imagineRunnerSkills,
                         skillDefaults,
                         environmentId: environmentId || undefined,
                         agentId: agentId || undefined,
-                        maxAttachments: 1,
+                        maxAttachments: 20,
                         showUsageInStatus: false,
-                        placeholder: "Select a reference image",
+                        placeholder: "Select reference assets",
                         externalFileBrowserRequest: createReferenceFileBrowserRequest,
                         onThreadIdChange: () => {},
                         onEnvironmentChange: handleCreateReferenceEnvironmentChange,
@@ -2595,7 +3627,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             );
           }
 
-          if (activeMediaMode === "image" && selectedTemplate) {
+          if (selectedTemplate) {
             const detailTemplates = activeTab === "favourites"
               ? (filteredTemplates.some((template) => template.id === selectedTemplate.id)
                   ? filteredTemplates
@@ -2603,7 +3635,8 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               : selectedTemplate.isCustom
                 ? normalizedCustomTemplates
                 : templates;
-            return React.createElement(PlaygroundImagineTemplatePage, {
+            return React.createElement(React.Fragment, null,
+              React.createElement(PlaygroundImagineTemplatePage, {
               templates: detailTemplates,
               initialTemplateId: selectedTemplate.id,
               backendUrl,
@@ -2613,12 +3646,16 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               computerAgents,
               environments,
               agents,
-              skills,
+              skills: imagineRunnerSkills,
               skillDefaults,
+              canGenerateVideo: canUseVideoGeneration,
+              onUpgradeToIndividual,
               environmentId,
               agentId,
+              mediaMode: activeMediaMode,
               fetchCustomSkills,
               onThreadStarted,
+              onMediaModeChange: setActiveMediaMode,
               onAgentChange,
               onEnvironmentChange,
               onOpenPlansBudget,
@@ -2627,36 +3664,16 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               favouriteTemplateIds,
               onToggleFavouriteTemplate: handleToggleFavouriteTemplate,
               onBack: () => setSelectedTemplateId(""),
-            });
+              }),
+              renderImagineVideoUpgradeModal()
+            );
           }
 
-          return React.createElement("div", { className: "playground-imagine-page" },
+          return React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "playground-imagine-page" },
             React.createElement("div", { className: "playground-imagine-shell" },
               React.createElement("div", { className: "playground-imagine-grid-scroll" },
-                activeMediaMode === "video"
-                  ? React.createElement("div", { className: "playground-imagine-empty" },
-                      React.createElement("img", {
-                        className: "playground-imagine-empty-visual",
-                        src: activeTab === "favourites" ? "/img/empty-state/no-users-yet.avif" : "/img/empty-state/no-skills-usage.avif",
-                        alt: "",
-                        draggable: false,
-                      }),
-                      React.createElement("h2", { className: "playground-imagine-empty-title" },
-                        activeTab === "favourites"
-                          ? "No favourite videos yet"
-                          : activeTab === "my-templates"
-                            ? "Video templates are coming soon"
-                            : "Describe a video to create it"
-                      ),
-                      React.createElement("p", { className: "playground-imagine-empty-copy" },
-                        activeTab === "favourites"
-                          ? "Save video templates you like and return to them here."
-                          : activeTab === "my-templates"
-                            ? "Reusable video templates will appear here once video template creation is enabled."
-                            : "Use the composer below to generate short videos with the Video Generation skill."
-                      )
-                    )
-                : activeTab === "my-templates" && !normalizedCustomTemplates.length
+                activeTab === "my-templates" && !normalizedCustomTemplates.length
                   ? React.createElement("div", { className: "playground-imagine-empty" },
                       React.createElement("img", {
                         className: "playground-imagine-empty-visual",
@@ -2665,7 +3682,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                         draggable: false,
                       }),
                       React.createElement("h2", { className: "playground-imagine-empty-title" }, "Create your first image template"),
-                      React.createElement("p", { className: "playground-imagine-empty-copy" }, "Upload a reference image, describe the reusable style, and use it whenever you want agents to generate new images in that direction."),
+                      React.createElement("p", { className: "playground-imagine-empty-copy" }, "Upload reference images or videos, describe the reusable style, and use it whenever you want agents to generate new assets in that direction."),
                       React.createElement("button", {
                         type: "button",
                         className: "playground-imagine-primary-button",
@@ -2697,21 +3714,94 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                   : filteredTemplates.length
                     ? React.createElement("div", { className: "playground-imagine-grid" },
                         filteredTemplates.map((template) => {
-                          return React.createElement("button", {
+                          const templateAssets = normalizePlaygroundImagineTemplateAssets(template);
+                          const activeAssetIndex = getTemplateAssetIndex(template);
+                          const activeAsset = templateAssets[activeAssetIndex] || templateAssets[0] || null;
+                          const templateMediaType = String(activeAsset?.type || template.mediaType || "image") === "video" ? "video" : "image";
+                          const hasMultipleAssets = templateAssets.length > 1;
+                          const handleOpenTemplate = () => {
+                            if (templateMediaType === "video" && !canUseVideoGeneration) {
+                              setActiveMediaMode("video");
+                              return;
+                            }
+                            setActiveMediaMode(templateMediaType);
+                            setSelectedTemplateId(template.id);
+                          };
+                          return React.createElement("div", {
                             key: template.id,
-                            type: "button",
+                            role: "button",
+                            tabIndex: 0,
                             className: [
                               "playground-imagine-template",
                               template.size === "large" ? "is-large" : "",
                               template.size === "wide" ? "is-wide" : "",
                               selectedTemplateId === template.id ? "is-selected" : "",
+                              templateMediaType === "video" ? "is-video" : "",
+                              hasMultipleAssets ? "is-multi-asset" : "",
                             ].filter(Boolean).join(" "),
                             style: {
                               "--imagine-template-bg": template.tone,
-                              "--imagine-template-aspect-ratio": template.aspectRatio || "4 / 3",
+                              "--imagine-template-aspect-ratio": activeAsset?.aspectRatio || template.aspectRatio || "4 / 3",
                             },
-                            onClick: () => setSelectedTemplateId(template.id),
+                            onClick: handleOpenTemplate,
+                            onKeyDown: (event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                handleOpenTemplate();
+                              }
+                            },
                           },
+                            React.createElement(PlaygroundImagineTemplatePreviewMedia, {
+                              template: {
+                                ...template,
+                                activeAssetIndex,
+                                assetDirection: templateAssetDirections[String(template.id || "").trim()] || 1,
+                              },
+                            }),
+                            hasMultipleAssets
+                              ? React.createElement("span", {
+                                  className: "playground-imagine-template-media-controls",
+                                  onClick: (event) => event.stopPropagation(),
+                                },
+                                  React.createElement("span", { className: "playground-imagine-template-media-dots" },
+                                    templateAssets.map((asset, assetIndex) =>
+                                      React.createElement("button", {
+                                        key: "asset-dot:" + template.id + ":" + assetIndex,
+                                        type: "button",
+                                        className: "playground-imagine-template-media-dot" + (assetIndex === activeAssetIndex ? " is-active" : ""),
+                                        "aria-label": "Show template asset " + (assetIndex + 1),
+                                        onClick: (event) => {
+                                          event.preventDefault();
+                                          event.stopPropagation();
+                                          setTemplateAssetIndex(template, assetIndex, assetIndex >= activeAssetIndex ? 1 : -1);
+                                        },
+                                      })
+                                    )
+                                  ),
+                                  React.createElement("span", { className: "playground-imagine-template-media-arrows" },
+                                    React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-imagine-template-media-arrow",
+                                      "aria-label": "Previous template asset",
+                                      onClick: (event) => {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        setTemplateAssetIndex(template, activeAssetIndex - 1, -1);
+                                      },
+                                    }, React.createElement(ChevronLeft, { width: 14, height: 14, strokeWidth: 1.9 })),
+                                    React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-imagine-template-media-arrow",
+                                      "aria-label": "Next template asset",
+                                      onClick: (event) => {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        setTemplateAssetIndex(template, activeAssetIndex + 1, 1);
+                                      },
+                                    }, React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.9 }))
+                                  )
+                                )
+                              : null,
                             React.createElement("span", { className: "playground-imagine-template-copy" },
                               React.createElement("span", { className: "playground-imagine-template-title" }, template.title),
                               React.createElement("span", { className: "playground-imagine-template-description" }, template.description)
@@ -2724,9 +3814,9 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             ),
             activeTab === "explore"
               ? React.createElement("div", { className: "playground-imagine-composer-wrap" },
-                  activeMediaMode === "image" && selectedTemplate
+                  selectedTemplate
                     ? React.createElement("div", { className: "playground-imagine-selected-preset" },
-                        React.createElement(Sparkles, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement(activeMediaMode === "video" ? Film : Sparkles, { width: 14, height: 14, strokeWidth: 1.8 }),
                         React.createElement("span", null, "Template: ", React.createElement("strong", null, selectedTemplate.title)),
                         React.createElement("button", {
                           type: "button",
@@ -2738,7 +3828,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                     : null,
                   React.createElement("div", { className: "playground-imagine-composer-shell" },
                     React.createElement(RunnerChat, {
-                      key: "imagine-runner:" + activeMediaMode + ":" + (activeMediaMode === "image" ? (selectedTemplateId || "__none__") : "__video__"),
+                      key: "imagine-runner:" + activeMediaMode + ":" + (selectedTemplateId || "__none__"),
                       className: "playground-imagine-runner",
                       backendUrl,
                       apiKey,
@@ -2750,8 +3840,8 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                       computerAgents: computerAgents || undefined,
                       environments: Array.isArray(environments) ? environments : [],
                       agents: Array.isArray(agents) ? agents : [],
-                      skills: Array.isArray(skills) ? skills : [],
-                      skillDefaults,
+                      skills: imagineRunnerSkills,
+                      skillDefaults: imagineSkillDefaults,
                       environmentId: environmentId || undefined,
                       agentId: agentId || undefined,
                       autoFocusComposer: true,
@@ -2761,7 +3851,9 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                         ? "Describe a video"
                         : selectedTemplate ? (selectedTemplate.placeholder || selectedTemplate.title) : "Describe an image",
                       composerLeadingControl: renderImagineMediaModeSwitch(),
+                      composerBeforeAgentControl: renderImagineModelSelector(),
                       hiddenSystemPrompt,
+                      threadMetadata: imagineThreadMetadata,
                       onThreadIdChange: () => {},
                       onExternalRunRequestCreate: (request) => {
                         const normalizedThreadId = String(request?.threadId || "").trim();
@@ -2800,6 +3892,8 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                   )
                 )
               : null
+            ),
+            renderImagineVideoUpgradeModal()
           );
         }
 `;

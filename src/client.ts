@@ -139,19 +139,24 @@ export class RunnerClient {
   async getThreadLogs(
     options: RunnerApiRequestOptions & {
       threadId: string;
+      compact?: boolean;
+      includeConversation?: boolean;
     },
   ): Promise<RunnerLog[]> {
+    const search = new URLSearchParams();
+    if (options.compact) search.set("compact", "1");
+    if (options.includeConversation === false) search.set("includeConversation", "0");
     const url = this.buildApiUrl(
       options.backendUrl,
-      `/threads/${encodeURIComponent(options.threadId)}/logs`,
+      `/threads/${encodeURIComponent(options.threadId)}/logs${search.size > 0 ? `?${search.toString()}` : ""}`,
     );
-    const payload = await this.requestJson<{ data?: RunnerLog[] }>(url, {
+    const payload = await this.requestJson<{ data?: RunnerLog[]; logs?: RunnerLog[] }>(url, {
       method: "GET",
       headers: options.headers,
       credentials: options.credentials,
       signal: options.signal,
     });
-    return Array.isArray(payload.data) ? payload.data : [];
+    return Array.isArray(payload.logs) ? payload.logs : Array.isArray(payload.data) ? payload.data : [];
   }
 
   async getThreadStepDiff(

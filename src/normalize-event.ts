@@ -38,6 +38,8 @@ type StreamErrorEvent = {
 
 const AGENT_RUNTIME_INTERRUPTED_MESSAGE =
   "The agent stopped unexpectedly before it could finish. Please retry this turn. If the issue continues, contact support.";
+const LLM_PROVIDER_UNAVAILABLE_MESSAGE =
+  "The selected model provider is temporarily unavailable. Please retry this turn in a moment.";
 
 function isInternalAgentRuntimeFailure(value: string): boolean {
   const normalized = value.replace(/\s+/g, " ").trim();
@@ -52,10 +54,36 @@ function isInternalAgentRuntimeFailure(value: string): boolean {
   );
 }
 
+function isLlmProviderUnavailableFailure(value: string): boolean {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (!normalized) return false;
+  const hasUnavailableStatus =
+    /\bapi returned\s+503\b/i.test(normalized) ||
+    /\b503\s+service unavailable\b/i.test(normalized) ||
+    /\bservice unavailable\b/i.test(normalized) ||
+    /\btemporarily unavailable\b/i.test(normalized);
+  const hasProviderMarker =
+    /"code"\s*:\s*3045\b/i.test(normalized) ||
+    /\bAiError:\s*AiError:\s*Unknown internal error\b/i.test(normalized) ||
+    /\b(?:cloudflare|workers ai|moonshot|model provider|llm provider)\b/i.test(normalized);
+  const hasRetryWrapper = /\bapi failed after\s+\d+\s+attempts\b/i.test(normalized);
+
+  return (
+    (hasProviderMarker && hasUnavailableStatus) ||
+    (hasRetryWrapper && hasUnavailableStatus)
+  );
+}
+
 function sanitizeRunnerExecutionErrorMessage(value: string): string {
   const normalized = String(value || "").trim();
   if (!normalized) return "";
-  return isInternalAgentRuntimeFailure(normalized) ? AGENT_RUNTIME_INTERRUPTED_MESSAGE : normalized;
+  if (isInternalAgentRuntimeFailure(normalized)) {
+    return AGENT_RUNTIME_INTERRUPTED_MESSAGE;
+  }
+  if (isLlmProviderUnavailableFailure(normalized)) {
+    return LLM_PROVIDER_UNAVAILABLE_MESSAGE;
+  }
+  return normalized;
 }
 
 type ToolStartedEvent = {

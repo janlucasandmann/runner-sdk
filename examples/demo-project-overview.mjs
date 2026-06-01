@@ -2784,6 +2784,39 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               }
             }
 
+            const projectCostSummary = projectOverviewCostSummaryState?.summary;
+            const projectCostSummaryDays = Array.isArray(projectCostSummary?.byDay) ? projectCostSummary.byDay : [];
+            if (projectOverviewCostSummaryState?.status === "ready" && projectCostSummary) {
+              projectCostSummaryDays.forEach((day) => {
+                const timestamp = Date.parse(String(day?.date || "") + "T00:00:00");
+                if (!Number.isFinite(timestamp)) {
+                  return;
+                }
+                const dayDate = new Date(timestamp);
+                let bucketKey = "";
+                if (projectOverviewTimescaleConfig.unit === "day") {
+                  bucketKey = getProjectOverviewLocalDayKey(dayDate);
+                } else if (projectOverviewTimescaleConfig.unit === "week") {
+                  bucketKey = getProjectOverviewLocalWeekStartKey(dayDate);
+                } else {
+                  bucketKey = getProjectOverviewLocalMonthStartKey(dayDate);
+                }
+                const bucketIndex = bucketIndexByKey.get(bucketKey);
+                if (typeof bucketIndex !== "number") {
+                  return;
+                }
+                const totalCT = Math.max(0, Number(readSettingsComputeTokens(day, "totalCT", "totalCost") || 0));
+                const aiCT = Math.max(0, Number(readSettingsComputeTokens(day, "agentCT", "agentCost") || 0));
+                const runtimeCT = Math.max(0, Number(readSettingsComputeTokens(day, "environmentCT", "environmentCost") || 0));
+                const otherCT = Math.max(0, totalCT - aiCT - runtimeCT);
+                buckets[bucketIndex].totalCT += totalCT;
+                buckets[bucketIndex].aiCT += aiCT;
+                buckets[bucketIndex].runtimeCT += runtimeCT;
+                buckets[bucketIndex].otherCT += otherCT;
+              });
+              return buckets;
+            }
+
             projectThreads.forEach((thread) => {
               const timestamp = Date.parse(String(thread?.updatedAt || thread?.createdAt || ""));
               if (!Number.isFinite(timestamp)) {

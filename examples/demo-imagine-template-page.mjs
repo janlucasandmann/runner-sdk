@@ -536,6 +536,72 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
         margin-left: auto;
       }
 
+      .playground-imagine-template-asset-picker {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-imagine-template-asset-picker-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .playground-imagine-template-asset-option {
+        position: relative;
+        aspect-ratio: 1;
+        min-width: 0;
+        border: 0;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .playground-imagine-template-asset-option img,
+      .playground-imagine-template-asset-option video {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      .playground-imagine-template-asset-option::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: rgba(0, 0, 0, 0.46);
+        opacity: 1;
+        transition: opacity 160ms ease;
+      }
+
+      .playground-imagine-template-asset-option.is-selected::after {
+        opacity: 0;
+      }
+
+      .playground-imagine-template-asset-option-check {
+        position: absolute;
+        right: 7px;
+        bottom: 7px;
+        z-index: 2;
+        width: 19px;
+        height: 19px;
+        border-radius: 999px;
+        background: rgba(102, 166, 255, 0.96);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+      }
+
+      .playground-imagine-template-asset-option:not(.is-selected) .playground-imagine-template-asset-option-check {
+        display: none;
+      }
+
       .playground-imagine-template-project-select,
       .playground-imagine-template-aspect-select {
         position: relative;
@@ -804,18 +870,77 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
           radial-gradient(circle at 50% 78%, rgba(0, 0, 0, 0.24), transparent 44%);
       }
 
-      .playground-imagine-template-preview-image {
+      .playground-imagine-template-preview-image,
+      .playground-imagine-template-preview-video {
         width: 100%;
         height: 100%;
         display: block;
         object-fit: cover;
       }
 
-      .playground-imagine-template-preview-image.is-current {
+      .playground-imagine-template-media-controls {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 8;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        pointer-events: none;
+      }
+
+      .playground-imagine-template-media-dots,
+      .playground-imagine-template-media-arrows {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        pointer-events: auto;
+      }
+
+      .playground-imagine-template-media-dot {
+        width: 5px;
+        height: 5px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.42);
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .playground-imagine-template-media-dot.is-active {
+        background: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-imagine-template-media-arrow {
+        width: 24px;
+        height: 24px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.46);
+        color: rgba(255, 255, 255, 0.9);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+      }
+
+      .playground-imagine-template-media-arrow:hover,
+      .playground-imagine-template-media-dot:hover {
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      .playground-imagine-template-preview-image.is-current,
+      .playground-imagine-template-preview-video.is-current {
         animation: playgroundImagineTemplatePreviewIn 280ms ease both;
       }
 
-      .playground-imagine-template-preview-image.is-previous {
+      .playground-imagine-template-preview-image.is-previous,
+      .playground-imagine-template-preview-video.is-previous {
         position: absolute;
         inset: 0;
         z-index: 1;
@@ -1185,8 +1310,10 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
       }
 
       .playground-imagine-template-slide-shell .playground-imagine-template-preview-image.is-current,
+      .playground-imagine-template-slide-shell .playground-imagine-template-preview-video.is-current,
       .playground-imagine-template-slide-shell .playground-imagine-template-preview-fallback.is-current,
       .playground-imagine-template-slide-shell .playground-imagine-template-preview-image.is-previous,
+      .playground-imagine-template-slide-shell .playground-imagine-template-preview-video.is-previous,
       .playground-imagine-template-slide-shell .playground-imagine-template-preview-fallback.is-previous {
         animation: none;
       }
@@ -1194,7 +1321,7 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
       @keyframes playgroundImagineTemplateSlideIn {
         from {
           opacity: 0;
-          transform: translateX(calc(var(--imagine-template-transition-direction, 1) * min(46vw, 780px)));
+          transform: translateX(calc(var(--imagine-template-transition-direction, 1) * 112%));
         }
         to {
           opacity: 1;
@@ -1209,7 +1336,7 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
         }
         to {
           opacity: 0;
-          transform: translateX(calc(var(--imagine-template-transition-direction, 1) * min(-46vw, -780px)));
+          transform: translateX(calc(var(--imagine-template-transition-direction, 1) * -112%));
         }
       }
 
@@ -1222,6 +1349,7 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
       }
 
       .playground-imagine-template-preview-image,
+      .playground-imagine-template-preview-video,
       .playground-imagine-template-preview-fallback {
         width: 100%;
         height: 100%;
@@ -1235,11 +1363,13 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
       }
 
       .playground-imagine-template-preview-image.is-current,
+      .playground-imagine-template-preview-video.is-current,
       .playground-imagine-template-preview-fallback.is-current {
         animation: playgroundImagineTemplatePreviewInY 320ms ease both;
       }
 
       .playground-imagine-template-preview-image.is-previous,
+      .playground-imagine-template-preview-video.is-previous,
       .playground-imagine-template-preview-fallback.is-previous {
         position: absolute;
         inset: 0;
@@ -1270,10 +1400,57 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
       }
 
       .playground-imagine-template-slide-shell .playground-imagine-template-preview-image.is-current,
+      .playground-imagine-template-slide-shell .playground-imagine-template-preview-video.is-current,
       .playground-imagine-template-slide-shell .playground-imagine-template-preview-fallback.is-current,
       .playground-imagine-template-slide-shell .playground-imagine-template-preview-image.is-previous,
+      .playground-imagine-template-slide-shell .playground-imagine-template-preview-video.is-previous,
       .playground-imagine-template-slide-shell .playground-imagine-template-preview-fallback.is-previous {
         animation: none !important;
+      }
+
+      .playground-imagine-template-preview-media.is-asset-transitioning .playground-imagine-template-preview-image,
+      .playground-imagine-template-preview-media.is-asset-transitioning .playground-imagine-template-preview-video,
+      .playground-imagine-template-preview-media.is-asset-transitioning .playground-imagine-template-preview-fallback {
+        position: absolute;
+        inset: 0;
+      }
+
+      .playground-imagine-template-preview-media.is-asset-transitioning .playground-imagine-template-preview-image.is-current,
+      .playground-imagine-template-preview-media.is-asset-transitioning .playground-imagine-template-preview-video.is-current,
+      .playground-imagine-template-preview-media.is-asset-transitioning .playground-imagine-template-preview-fallback.is-current {
+        z-index: 2;
+        animation: playgroundImagineTemplateDetailAssetIn 240ms ease both !important;
+      }
+
+      .playground-imagine-template-preview-media.is-asset-transitioning .playground-imagine-template-preview-image.is-previous,
+      .playground-imagine-template-preview-media.is-asset-transitioning .playground-imagine-template-preview-video.is-previous,
+      .playground-imagine-template-preview-media.is-asset-transitioning .playground-imagine-template-preview-fallback.is-previous {
+        z-index: 1;
+        animation: playgroundImagineTemplateDetailAssetOut 240ms ease both !important;
+      }
+
+      @keyframes playgroundImagineTemplateDetailAssetIn {
+        from {
+          opacity: 0;
+          transform: translateX(calc(var(--imagine-template-asset-direction, 1) * 112%));
+        }
+
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes playgroundImagineTemplateDetailAssetOut {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+
+        to {
+          opacity: 0;
+          transform: translateX(calc(var(--imagine-template-asset-direction, 1) * -112%));
+        }
       }
 
       .playground-imagine-template-vertical-nav {
@@ -1740,6 +1917,40 @@ export const IMAGINE_TEMPLATE_PAGE_CSS = String.raw`
 `;
 
 export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
+        function normalizePlaygroundImagineTemplatePageAssets(template) {
+          const normalizedAssets = [];
+          const pushAsset = (asset) => {
+            if (!asset) {
+              return;
+            }
+            const url = String(asset.url || asset.imageUrl || asset.videoUrl || "").trim();
+            if (!url) {
+              return;
+            }
+            const explicitType = String(asset.type || asset.mediaType || "").toLowerCase();
+            const type = explicitType === "video" || /\.(mp4|webm|mov)(?:[?#].*)?$/i.test(url) ? "video" : "image";
+            normalizedAssets.push({
+              ...asset,
+              url,
+              type,
+              title: String(asset.title || template?.title || "").trim(),
+              aspectRatio: String(asset.aspectRatio || template?.aspectRatio || "").trim(),
+            });
+          };
+          (Array.isArray(template?.assets) ? template.assets : []).forEach(pushAsset);
+          (Array.isArray(template?.mediaItems) ? template.mediaItems : []).forEach(pushAsset);
+          if (!normalizedAssets.length) {
+            const imageUrl = String(template?.imageUrl || "").trim();
+            const videoUrl = String(template?.videoUrl || "").trim();
+            if (imageUrl) {
+              pushAsset({ type: "image", url: imageUrl, title: template?.title, aspectRatio: template?.aspectRatio });
+            } else if (videoUrl) {
+              pushAsset({ type: "video", url: videoUrl, title: template?.title, aspectRatio: template?.aspectRatio });
+            }
+          }
+          return normalizedAssets;
+        }
+
         function PlaygroundImagineTemplatePage({
           templates,
           initialTemplateId,
@@ -1754,8 +1965,10 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
           skillDefaults,
           environmentId,
           agentId,
+          mediaMode,
           fetchCustomSkills,
           onThreadStarted,
+          onMediaModeChange,
           onAgentChange,
           onEnvironmentChange,
           onOpenPlansBudget,
@@ -1763,6 +1976,8 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
           onDeleteTemplate,
           favouriteTemplateIds,
           onToggleFavouriteTemplate,
+          canGenerateVideo = true,
+          onUpgradeToIndividual,
           onBack,
         }) {
           const normalizedTemplates = useMemo(() => Array.isArray(templates) ? templates : [], [templates]);
@@ -1789,16 +2004,82 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
           const [shareLoading, setShareLoading] = useState(false);
           const [shareError, setShareError] = useState("");
           const [localLikedTemplateIds, setLocalLikedTemplateIds] = useState([]);
+          const [activeTemplateAssetIndex, setActiveTemplateAssetIndex] = useState(0);
+          const [activeTemplateAssetDirection, setActiveTemplateAssetDirection] = useState(1);
+          const [activeTemplateAssetTransition, setActiveTemplateAssetTransition] = useState({
+            previousIndex: null,
+            direction: 1,
+            token: 0,
+          });
+          const [selectedTemplateAssetKeys, setSelectedTemplateAssetKeys] = useState([]);
           const [settingsFlipped, setSettingsFlipped] = useState(false);
           const [stylePickerOpen, setStylePickerOpen] = useState(false);
+          const [videoUpgradeModalOpen, setVideoUpgradeModalOpen] = useState(false);
+          const [videoUpgradeCheckoutLoading, setVideoUpgradeCheckoutLoading] = useState(false);
           const fileInputRef = useRef(null);
           const projectSelectorRef = useRef(null);
           const aspectRatioSelectorRef = useRef(null);
           const stylePickerRef = useRef(null);
           const previewTransitionTimeoutRef = useRef(null);
+          const assetTransitionTimeoutRef = useRef(null);
           const detailRef = useRef(null);
           const composerWrapRef = useRef(null);
           const [previewSize, setPreviewSize] = useState({ width: 0, height: 0, top: 24 });
+          const imagineTemplateModelStorageKey = "runner_demo_imagine_model_settings_v1";
+          const imagineTemplateImageModelOptions = useMemo(() => [
+            {
+              id: "gpt-image-2",
+              label: "GPT Image 2",
+              description: "Highest-fidelity OpenAI image generation and editing.",
+            },
+            {
+              id: "gemini-3.1-flash-image-preview",
+              label: "Gemini 3.1 Flash Image",
+              description: "Fast multimodal image generation and editing preview.",
+            },
+          ], []);
+          const imagineTemplateVideoModelOptions = useMemo(() => [
+            {
+              id: "seedance-2.0-fast",
+              label: "Seedance 2.0 Fast",
+              description: "Fast default video drafts and short motion clips.",
+            },
+            {
+              id: "seedance-2.0",
+              label: "Seedance 2.0",
+              description: "Higher-quality Seedance video generation.",
+            },
+            {
+              id: "grok-imagine-video",
+              label: "Grok Imagine Video",
+              description: "Alternative video model for imaginative motion.",
+            },
+          ], []);
+          const normalizeImagineTemplateModelId = (mode, modelId) => {
+            const options = String(mode || "") === "video" ? imagineTemplateVideoModelOptions : imagineTemplateImageModelOptions;
+            const normalizedModelId = String(modelId || "").trim();
+            return (options.find((option) => option.id === normalizedModelId) || options[0]).id;
+          };
+          const readStoredImagineTemplateModelSettings = () => {
+            if (typeof window === "undefined" || !window.localStorage) {
+              return {};
+            }
+            try {
+              const parsed = JSON.parse(window.localStorage.getItem(imagineTemplateModelStorageKey) || "{}");
+              return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+            } catch (_error) {
+              return {};
+            }
+          };
+          const storedImagineTemplateModelSettings = readStoredImagineTemplateModelSettings();
+          const [selectedImagineTemplateImageModelId, setSelectedImagineTemplateImageModelId] = useState(() =>
+            normalizeImagineTemplateModelId("image", storedImagineTemplateModelSettings.image || skillDefaults?.imageGeneration?.model || "gpt-image-2")
+          );
+          const [selectedImagineTemplateVideoModelId, setSelectedImagineTemplateVideoModelId] = useState(() =>
+            normalizeImagineTemplateModelId("video", storedImagineTemplateModelSettings.video || skillDefaults?.videoGeneration?.model || "seedance-2.0-fast")
+          );
+          const [imagineTemplateModelSelectorOpen, setImagineTemplateModelSelectorOpen] = useState(false);
+          const imagineTemplateModelSelectorRef = useRef(null);
 
           useEffect(() => {
             const nextTemplateId = String(initialTemplateId || "").trim();
@@ -1810,6 +2091,50 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
           const activeTemplate = useMemo(() => {
             return normalizedTemplates.find((template) => template.id === activeTemplateId) || normalizedTemplates[0] || null;
           }, [activeTemplateId, normalizedTemplates]);
+          const canUseVideoGeneration = canGenerateVideo !== false;
+          const rawActiveMediaMode = String(mediaMode || "").toLowerCase() === "video" ? "video" : "image";
+          const activeMediaMode = rawActiveMediaMode === "video" && !canUseVideoGeneration ? "image" : rawActiveMediaMode;
+          const activeImagineTemplateModelOptions = activeMediaMode === "video" ? imagineTemplateVideoModelOptions : imagineTemplateImageModelOptions;
+          const selectedImagineTemplateImageModel = imagineTemplateImageModelOptions.find((option) => option.id === selectedImagineTemplateImageModelId) || imagineTemplateImageModelOptions[0];
+          const selectedImagineTemplateVideoModel = imagineTemplateVideoModelOptions.find((option) => option.id === selectedImagineTemplateVideoModelId) || imagineTemplateVideoModelOptions[0];
+          const selectedImagineTemplateModel = activeMediaMode === "video" ? selectedImagineTemplateVideoModel : selectedImagineTemplateImageModel;
+          const imagineTemplateSkillDefaults = useMemo(() => {
+            const source = skillDefaults && typeof skillDefaults === "object" ? skillDefaults : {};
+            const imageGeneration = source.imageGeneration && typeof source.imageGeneration === "object" ? source.imageGeneration : {};
+            const videoGeneration = source.videoGeneration && typeof source.videoGeneration === "object" ? source.videoGeneration : {};
+            return {
+              ...source,
+              imageGeneration: {
+                ...imageGeneration,
+                model: selectedImagineTemplateImageModel.id,
+              },
+              videoGeneration: {
+                ...videoGeneration,
+                model: selectedImagineTemplateVideoModel.id,
+              },
+            };
+          }, [selectedImagineTemplateImageModel.id, selectedImagineTemplateVideoModel.id, skillDefaults]);
+          const imagineTemplateRunnerSkills = useMemo(() => {
+            const sourceSkills = Array.isArray(skills) ? skills : [];
+            return sourceSkills.map((skill) => {
+              const normalizedSkillId = String(skill?.id || skill?.name || "").trim().toLowerCase();
+              if (
+                normalizedSkillId === "video_generation"
+                || normalizedSkillId === "video-generation"
+                || normalizedSkillId === "videogeneration"
+                || normalizedSkillId.includes("video-generation")
+              ) {
+                return { ...skill, enabled: canUseVideoGeneration };
+              }
+              return skill;
+            });
+          }, [skills, canUseVideoGeneration]);
+
+          useEffect(() => {
+            if (!canUseVideoGeneration && rawActiveMediaMode === "video" && typeof onMediaModeChange === "function") {
+              onMediaModeChange("image");
+            }
+          }, [canUseVideoGeneration, rawActiveMediaMode, onMediaModeChange]);
 
           const normalizedFavouriteTemplateIds = useMemo(() => {
             if (!Array.isArray(favouriteTemplateIds)) {
@@ -1885,8 +2210,51 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
               if (previewTransitionTimeoutRef.current) {
                 clearTimeout(previewTransitionTimeoutRef.current);
               }
+              if (assetTransitionTimeoutRef.current) {
+                clearTimeout(assetTransitionTimeoutRef.current);
+              }
             };
           }, []);
+
+          useEffect(() => {
+            if (typeof window === "undefined" || !window.localStorage) {
+              return;
+            }
+            try {
+              const current = readStoredImagineTemplateModelSettings();
+              window.localStorage.setItem(imagineTemplateModelStorageKey, JSON.stringify({
+                ...current,
+                image: selectedImagineTemplateImageModel.id,
+                video: selectedImagineTemplateVideoModel.id,
+              }));
+            } catch (_error) {}
+          }, [selectedImagineTemplateImageModel.id, selectedImagineTemplateVideoModel.id]);
+
+          useEffect(() => {
+            if (!imagineTemplateModelSelectorOpen || typeof document === "undefined") {
+              return;
+            }
+            const handlePointerDown = (event) => {
+              const target = event.target;
+              if (imagineTemplateModelSelectorRef.current && target && imagineTemplateModelSelectorRef.current.contains(target)) {
+                return;
+              }
+              setImagineTemplateModelSelectorOpen(false);
+            };
+            const handleKeyDown = (event) => {
+              if (event.key === "Escape") {
+                setImagineTemplateModelSelectorOpen(false);
+              }
+            };
+            document.addEventListener("mousedown", handlePointerDown);
+            document.addEventListener("touchstart", handlePointerDown);
+            document.addEventListener("keydown", handleKeyDown);
+            return () => {
+              document.removeEventListener("mousedown", handlePointerDown);
+              document.removeEventListener("touchstart", handlePointerDown);
+              document.removeEventListener("keydown", handleKeyDown);
+            };
+          }, [imagineTemplateModelSelectorOpen]);
 
           useEffect(() => {
             if (!activeTemplate) {
@@ -2082,10 +2450,47 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             setAspectRatioSelectorOpen(false);
           }, [activeTemplate?.id, aspectRatioOptions, styleOptions]);
 
-          const activeTemplateBackground = activeTemplate?.imageUrl
-            ? "url('" + activeTemplate.imageUrl + "') center / cover no-repeat"
+          const activeTemplateAssets = useMemo(() => normalizePlaygroundImagineTemplatePageAssets(activeTemplate), [activeTemplate]);
+          const normalizedActiveTemplateAssetIndex = activeTemplateAssets.length
+            ? Math.max(0, Math.min(activeTemplateAssetIndex, activeTemplateAssets.length - 1))
+            : 0;
+          const activeTemplatePrimaryAsset = activeTemplateAssets[normalizedActiveTemplateAssetIndex] || activeTemplateAssets[0] || null;
+          const getActiveTemplateAssetKey = useCallback((asset, assetIndex) => String(assetIndex) + ":" + String(asset?.url || ""), []);
+          const selectedTemplateAssets = useMemo(() => {
+            const selectedKeys = new Set(selectedTemplateAssetKeys);
+            const selectedAssets = activeTemplateAssets.filter((asset, assetIndex) => selectedKeys.has(getActiveTemplateAssetKey(asset, assetIndex)));
+            return selectedAssets.length ? selectedAssets : activeTemplateAssets;
+          }, [activeTemplateAssets, getActiveTemplateAssetKey, selectedTemplateAssetKeys]);
+          const setActiveTemplateAsset = useCallback((nextIndex, direction) => {
+            if (activeTemplateAssets.length <= 1) {
+              return;
+            }
+            const normalizedIndex = ((Number(nextIndex) || 0) + activeTemplateAssets.length) % activeTemplateAssets.length;
+            if (normalizedIndex === normalizedActiveTemplateAssetIndex) {
+              return;
+            }
+            const normalizedDirection = Number(direction || 0) < 0 ? -1 : (Number(direction || 0) > 0 ? 1 : (normalizedIndex >= normalizedActiveTemplateAssetIndex ? 1 : -1));
+            if (assetTransitionTimeoutRef.current) {
+              clearTimeout(assetTransitionTimeoutRef.current);
+            }
+            setActiveTemplateAssetDirection(normalizedDirection);
+            setActiveTemplateAssetTransition({
+              previousIndex: normalizedActiveTemplateAssetIndex,
+              direction: normalizedDirection,
+              token: Date.now(),
+            });
+            setActiveTemplateAssetIndex(normalizedIndex);
+            assetTransitionTimeoutRef.current = setTimeout(() => {
+              setActiveTemplateAssetTransition((current) => ({
+                ...current,
+                previousIndex: null,
+              }));
+            }, 300);
+          }, [activeTemplateAssets.length, normalizedActiveTemplateAssetIndex]);
+          const activeTemplateBackground = activeTemplatePrimaryAsset?.type === "image"
+            ? "url('" + activeTemplatePrimaryAsset.url + "') center / cover no-repeat"
             : (activeTemplate?.tone || "linear-gradient(135deg, #141414, #333)");
-          const activeTemplateAspectRatio = String(activeTemplate?.aspectRatio || "4 / 3").replace(":", " / ");
+          const activeTemplateAspectRatio = String(activeTemplatePrimaryAsset?.aspectRatio || activeTemplate?.aspectRatio || "4 / 3").replace(":", " / ");
           const activeTemplateAspectRatioNumber = useMemo(() => {
             const ratioText = String(activeTemplateAspectRatio || "4 / 3");
             const parts = ratioText.split("/").map((part) => Number(String(part || "").trim()));
@@ -2096,6 +2501,20 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             }
             return 4 / 3;
           }, [activeTemplateAspectRatio]);
+
+          useEffect(() => {
+            setActiveTemplateAssetIndex(0);
+            setActiveTemplateAssetDirection(1);
+            setActiveTemplateAssetTransition({
+              previousIndex: null,
+              direction: 1,
+              token: 0,
+            });
+          }, [activeTemplate?.id]);
+
+          useEffect(() => {
+            setSelectedTemplateAssetKeys(activeTemplateAssets.map((asset, assetIndex) => getActiveTemplateAssetKey(asset, assetIndex)));
+          }, [activeTemplate?.id, activeTemplateAssets, getActiveTemplateAssetKey]);
 
           useLayoutEffect(() => {
             const detailNode = detailRef.current;
@@ -2173,64 +2592,229 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             .map((connector) => connector.label);
 
           const imagineTemplateReferenceAttachments = useMemo(() => {
-            const imageUrl = String(activeTemplate?.imageUrl || "").trim();
-            if (!activeTemplate || !imageUrl) {
+            if (!activeTemplate || !selectedTemplateAssets.length) {
               return [];
             }
-            const extensionMatch = imageUrl.match(/\.([a-z0-9]+)(?:[?#].*)?$/i);
-            const rawExtension = String(extensionMatch?.[1] || "webp").toLowerCase();
-            const normalizedExtension = rawExtension === "jpg" ? "jpeg" : rawExtension;
-            const mimeType =
-              normalizedExtension === "jpeg" || normalizedExtension === "png" || normalizedExtension === "webp" || normalizedExtension === "avif"
-                ? "image/" + normalizedExtension
-                : "image/webp";
-            const fileExtension = normalizedExtension === "jpeg" ? "jpg" : normalizedExtension;
             const safeTitle = String(activeTemplate.title || "template")
               .trim()
               .toLowerCase()
               .replace(/[^a-z0-9]+/g, "-")
               .replace(/^-+|-+$/g, "") || "template";
-            return [{
-              url: imageUrl,
-              filename: "imagine-template-" + safeTitle + "." + fileExtension,
-              mimeType,
-              type: "image",
-              runnerAttachmentRole: "imagine_template_reference",
-            }];
-          }, [activeTemplate?.id, activeTemplate?.imageUrl, activeTemplate?.title]);
+            return selectedTemplateAssets.map((asset, assetIndex) => {
+              const referenceUrl = String(asset?.url || "").trim();
+              const isVideoReference = asset?.type === "video";
+              const extensionMatch = referenceUrl.match(/\.([a-z0-9]+)(?:[?#].*)?$/i);
+              const rawExtension = String(extensionMatch?.[1] || (isVideoReference ? "mp4" : "webp")).toLowerCase();
+              const normalizedExtension = rawExtension === "jpg" ? "jpeg" : rawExtension;
+              const mimeType = isVideoReference
+                ? (normalizedExtension === "webm" ? "video/webm" : "video/mp4")
+                : (
+                    normalizedExtension === "jpeg" || normalizedExtension === "png" || normalizedExtension === "webp" || normalizedExtension === "avif"
+                      ? "image/" + normalizedExtension
+                      : "image/webp"
+                  );
+              const fileExtension = normalizedExtension === "jpeg" ? "jpg" : normalizedExtension;
+              const suffix = selectedTemplateAssets.length > 1 ? "-" + String(assetIndex + 1).padStart(2, "0") : "";
+              return {
+                url: referenceUrl,
+                filename: "imagine-template-" + safeTitle + suffix + "." + fileExtension,
+                mimeType,
+                type: isVideoReference ? "video" : "image",
+                runnerAttachmentRole: "imagine_template_reference",
+              };
+            });
+          }, [activeTemplate, selectedTemplateAssets]);
 
-          const imagineTemplateReferenceFilename = imagineTemplateReferenceAttachments[0]?.filename || "the selected template image";
+          const imagineTemplateReferenceSummary = imagineTemplateReferenceAttachments.map((attachment) => attachment.filename).join(", ");
+          const imagineTemplateReferenceLabel = imagineTemplateReferenceAttachments.length > 1
+            ? String(imagineTemplateReferenceAttachments.length) + " selected template references"
+            : "the selected template reference";
           const selectedAspectRatioLabel = aspectRatio || "No fixed aspect ratio";
-          const preferredGenerationAspectRatio = aspectRatio || String(activeTemplate?.aspectRatio || "").trim() || "infer from the template image";
+          const preferredGenerationAspectRatio = aspectRatio || String(activeTemplate?.aspectRatio || "").trim() || "infer from the template media";
           const outputName = String(imageName || "").trim() || (activeTemplate?.title || "Generated image");
           const safeOutputSlug = outputName
             .replace(/[^a-z0-9]+/gi, "-")
             .replace(/^-+|-+$/g, "")
             .toLowerCase() || "generated-image";
+          const multiAssetTemplateOutputDirectory = "/workspace/imagine/" + safeOutputSlug;
           const selectedStyleLabels = selectedStyleOptions.map((option) => option.label).join(", ");
 
+          const setActiveTemplateMediaMode = useCallback((nextMode) => {
+            const normalizedNextMode = String(nextMode || "").toLowerCase() === "video" ? "video" : "image";
+            if (normalizedNextMode === "video" && !canUseVideoGeneration) {
+              setVideoUpgradeModalOpen(true);
+              return;
+            }
+            if (typeof onMediaModeChange === "function") {
+              onMediaModeChange(normalizedNextMode);
+            }
+          }, [canUseVideoGeneration, onMediaModeChange]);
+
+          const selectImagineTemplateModel = (modelId) => {
+            const normalizedModelId = normalizeImagineTemplateModelId(activeMediaMode, modelId);
+            if (activeMediaMode === "video") {
+              setSelectedImagineTemplateVideoModelId(normalizedModelId);
+            } else {
+              setSelectedImagineTemplateImageModelId(normalizedModelId);
+            }
+            setImagineTemplateModelSelectorOpen(false);
+          };
+
+          const renderImagineTemplateMediaModeSwitch = () =>
+            React.createElement("div", { className: "playground-imagine-media-switch", role: "group", "aria-label": "Generation type" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-imagine-media-switch-button" + (activeMediaMode === "image" ? " is-active" : ""),
+                onClick: () => setActiveTemplateMediaMode("image"),
+              }, "Image"),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-imagine-media-switch-button" + (activeMediaMode === "video" ? " is-active" : ""),
+                onClick: () => setActiveTemplateMediaMode("video"),
+              }, "Video")
+            );
+
+          const renderImagineTemplateModelSelector = () =>
+            React.createElement("div", { ref: imagineTemplateModelSelectorRef, className: "tb-selector-anchor playground-imagine-model-selector" },
+              React.createElement("button", {
+                type: "button",
+                className: "tb-inline-selector tb-inline-selector-agent" + (imagineTemplateModelSelectorOpen ? " active" : ""),
+                onClick: () => setImagineTemplateModelSelectorOpen((open) => !open),
+                "aria-haspopup": "menu",
+                "aria-expanded": imagineTemplateModelSelectorOpen ? "true" : "false",
+              },
+                React.createElement("span", null, selectedImagineTemplateModel.label),
+                React.createElement(ChevronDown, { className: "tb-inline-selector-chevron", strokeWidth: 1.8 })
+              ),
+              imagineTemplateModelSelectorOpen
+                ? React.createElement("div", { className: "tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent playground-tasks-toolbar-popup-menu-animate-up-in playground-imagine-model-menu" },
+                    React.createElement("div", { className: "tb-popup-menu-title" }, activeMediaMode === "video" ? "Video model" : "Image model"),
+                    React.createElement("div", { className: "tb-popup-menu-inline-body tb-popup-menu-inline-body-agent" },
+                      activeImagineTemplateModelOptions.map((option) =>
+                        React.createElement("button", {
+                          key: option.id,
+                          type: "button",
+                          className: "tb-popup-row tb-popup-row-select" + (option.id === selectedImagineTemplateModel.id ? " selected" : ""),
+                          onClick: () => selectImagineTemplateModel(option.id),
+                        },
+                          React.createElement(activeMediaMode === "video" ? Film : ImageIcon, { className: "tb-popup-icon", strokeWidth: 1.8 }),
+                          React.createElement("span", { className: "playground-imagine-model-option-copy" },
+                            React.createElement("span", { className: "playground-imagine-model-option-title" }, option.label),
+                            React.createElement("span", { className: "playground-imagine-model-option-description" }, option.description)
+                          ),
+                          React.createElement("span", { className: "tb-popup-check-slot" },
+                            option.id === selectedImagineTemplateModel.id
+                              ? React.createElement(Check, { className: "tb-popup-check", strokeWidth: 1.8 })
+                              : null
+                          )
+                        )
+                      )
+                    )
+                  )
+                : null
+            );
+
+          const handleVideoUpgradeCheckout = useCallback(async () => {
+            if (typeof onUpgradeToIndividual !== "function") {
+              return;
+            }
+            setVideoUpgradeCheckoutLoading(true);
+            try {
+              await Promise.resolve(onUpgradeToIndividual());
+            } finally {
+              setVideoUpgradeCheckoutLoading(false);
+            }
+          }, [onUpgradeToIndividual]);
+
+          const renderImagineTemplateVideoUpgradeModal = () => {
+            if (!videoUpgradeModalOpen) {
+              return null;
+            }
+            return React.createElement("div", {
+              className: "playground-calendar-upgrade-backdrop",
+              onClick: () => setVideoUpgradeModalOpen(false),
+            },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-header-icon-button is-plain playground-calendar-upgrade-close",
+                "aria-label": "Close video generation upgrade prompt",
+                onClick: () => setVideoUpgradeModalOpen(false),
+              }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 })),
+              React.createElement("div", {
+                className: "playground-calendar-upgrade-shell",
+                onClick: (event) => event.stopPropagation(),
+              },
+                React.createElement("div", { className: "playground-calendar-upgrade-pill" }, "Video generation"),
+                React.createElement("h2", { className: "playground-calendar-upgrade-headline" },
+                  "Try Individual for ",
+                  React.createElement("span", { className: "playground-calendar-upgrade-headline-price" }, "$0"),
+                  " for 14 days"
+                ),
+                React.createElement("div", { className: "playground-calendar-upgrade-modal" },
+                  React.createElement("div", { className: "playground-calendar-upgrade-modal-top" },
+                    React.createElement("div", { className: "playground-calendar-upgrade-modal-header" },
+                      React.createElement("div", { className: "playground-calendar-upgrade-modal-title" }, "Individual"),
+                      React.createElement("div", { className: "playground-calendar-upgrade-modal-offer" }, "14 day trial")
+                    ),
+                    React.createElement("p", { className: "playground-calendar-upgrade-modal-copy" },
+                      "Video generation is available on paid plans because it uses premium video models and Compute Tokens."
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-calendar-upgrade-modal-button",
+                      onClick: () => void handleVideoUpgradeCheckout(),
+                      disabled: videoUpgradeCheckoutLoading || typeof onUpgradeToIndividual !== "function",
+                    }, videoUpgradeCheckoutLoading ? "Opening checkout..." : "Try Individual free")
+                  )
+                )
+              )
+            );
+          };
+
           const hiddenSystemPrompt = [
-            "You are running inside Computer Agents Imagine template mode. Treat this as an image creation workflow, not a general chat.",
-            "The selected Imagine template image is attached to this turn as \"" + imagineTemplateReferenceFilename + "\". It is the primary visual reference and must appear above the user message as a normal image attachment.",
-            "Use the exact /workspace/uploads/... path listed for \"" + imagineTemplateReferenceFilename + "\" in the attachment system prompt. Do not guess the uploaded path.",
-            "The user is creating images only. Do not produce video unless the user explicitly asks to leave Imagine mode.",
+            "You are running inside Computer Agents Imagine template mode. Treat this as a visual generation workflow, not a general chat.",
+            imagineTemplateReferenceAttachments.length
+              ? "The selected Imagine template reference asset" + (imagineTemplateReferenceAttachments.length > 1 ? "s are" : " is") + " attached to this turn as " + imagineTemplateReferenceSummary + ". " + (imagineTemplateReferenceAttachments.length > 1 ? "They are the primary visual references" : "It is the primary visual reference") + " and must appear above the user message as normal attachment" + (imagineTemplateReferenceAttachments.length > 1 ? "s." : ".")
+              : "",
+            imagineTemplateReferenceAttachments.length
+              ? "Use the exact /workspace/uploads/... paths listed for " + imagineTemplateReferenceLabel + " in the attachment system prompt. Do not guess uploaded paths."
+              : "",
+            activeMediaMode === "video"
+              ? "The user is creating a video. Use the Video Generation skill when possible and save generated videos into /workspace/generated_videos."
+              : "The user is creating an image. Do not produce video unless the user switches this Imagine request to video or explicitly asks for video.",
+            activeMediaMode === "video"
+              ? "Selected video model: " + selectedImagineTemplateVideoModel.id + " (" + selectedImagineTemplateVideoModel.label + "). Include --model " + selectedImagineTemplateVideoModel.id + " when calling the video generation script unless the user explicitly asks for another model."
+              : "Selected image model: " + selectedImagineTemplateImageModel.id + " (" + selectedImagineTemplateImageModel.label + "). Include --model " + selectedImagineTemplateImageModel.id + " when calling the image generation script unless the user explicitly asks for another model.",
+            activeMediaMode === "video"
+              ? "Generate exactly one final video for this Imagine request. Do not create variations, alternates, or run a second generate-video.py call after a video has been saved."
+              : "",
             activeTemplate ? "Selected template: " + activeTemplate.title + "." : "",
             activeTemplate ? "Template direction: " + activeTemplate.prompt + "." : "",
             activeTemplate?.description ? "Template description: " + activeTemplate.description : "",
-            "Image name: " + outputName + ".",
+            selectedTemplateAssets.length > 1
+              ? "Multi-asset output organization: create one dedicated directory inside the Imagine local workspace at " + multiAssetTemplateOutputDirectory + " and place every generated resource for this thread there. If a generation tool initially saves output elsewhere, copy or move the final deliverables into this directory before summarizing the result."
+              : "",
+            "Output name: " + outputName + ".",
             "Aspect ratio setting: " + selectedAspectRatioLabel + ". Generation aspect ratio: " + preferredGenerationAspectRatio + ".",
             selectedStyleOptions.length
               ? "Style direction: " + selectedStyleLabels + "."
               : "Style direction: no explicit style selected.",
             selectedConnectorLabels.length ? "User selected connector context: " + selectedConnectorLabels.join(", ") + "." : "",
             attachedFiles.length ? "User attached local context filenames: " + attachedFiles.join(", ") + "." : "",
-            selectedProject ? "Project context: attach this image generation thread to project " + selectedProject.name + " (" + selectedProject.id + ") and use that project's strategy, tasks, files, and history as relevant context." : "",
-            "Workflow:",
-            "1. Run exactly one image-understanding command for this Imagine request. Use this form: python3 /workspace/.claude/skills/image-understanding/scripts/view-image.py --image \"<exact uploaded template path>\" \"Analyze the selected Imagine template and any additional user reference images in one pass. Extract the template subject, composition, framing, camera angle, lighting, palette, typography/text treatment if any, brand/editorial mood, aspect ratio, and visual constraints that must stay consistent. If user references are present, identify what they should contribute to subject identity, layout, materials, colors, or style.\" If the user attached additional reference images, append one extra --image \"<exact uploaded user image path>\" argument per reference before the prompt. Do not run a separate template-only analysis and a separate comparison analysis. If this command succeeds, do not call view-image.py again; reuse this analysis for generation.",
-            "2. Create the final image with the image generation skill using GPT Image 2 edit mode, always passing the template image as the first input. Run: python3 /workspace/.claude/skills/image-generation/scripts/generate-image.py \"<final concise generation prompt that includes the user's request, the single image-understanding analysis, template style constraints, selected styles, and output goal>\" --model gpt-image-2 --input \"<exact uploaded template path>\" --input \"<exact uploaded user image path>\" --aspect-ratio \"<chosen aspect ratio>\" --quality high --output \"/workspace/generated_images/" + safeOutputSlug + ".png\" Add one --input argument for each additional uploaded user reference image. If there are no additional user reference images, pass only the template as --input.",
-            "If no explicit aspect ratio is selected, infer the closest supported aspect ratio from the template and pass that value so the output keeps the template shape.",
-            "Do not read image files as text. Do not answer with only a plan. Generate the image, then summarize the result briefly with the output file path.",
+            selectedProject ? "Project context: attach this Imagine generation thread to project " + selectedProject.name + " (" + selectedProject.id + ") and use that project's strategy, tasks, files, and history as relevant context." : "",
+            activeMediaMode === "video"
+              ? "Video workflow: create the final video with the video generation skill using the selected model. If a template image or video reference is attached and the model supports it, pass it as the visual reference. Keep the template subject, composition, motion mood, and selected styles consistent unless the user asks to change them. Do not answer with only a plan; generate the video and summarize the output file path."
+              : "Image workflow: run exactly one image-understanding command for this Imagine request when a template image or additional user reference images are attached, then create the final image with the image generation skill using " + selectedImagineTemplateImageModel.label + " edit mode. If no explicit aspect ratio is selected, infer the closest supported aspect ratio from the template. Do not read image files as text. Do not answer with only a plan; generate the image and summarize the output file path.",
           ].filter(Boolean).join("\\n");
+          const imagineTemplateThreadMetadata = {
+            runnerPlayground: {
+              source: "imagine",
+              mediaMode: activeMediaMode,
+              generationType: activeMediaMode,
+              templateId: activeTemplate?.id || undefined,
+              videoGenerationMaxOutputs: activeMediaMode === "video" ? 1 : undefined,
+            },
+          };
 
           const handleProjectSelect = (nextProjectId) => {
             const normalizedProjectId = String(nextProjectId || "").trim();
@@ -2256,7 +2840,8 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             if (!textarea) {
               return;
             }
-            const prompt = String(activeTemplate?.placeholder || activeTemplate?.prompt || activeTemplate?.title || "Create this image.").trim() || "Create this image.";
+            const fallbackPrompt = activeMediaMode === "video" ? "Create this video." : "Create this image.";
+            const prompt = String(activeTemplate?.placeholder || activeTemplate?.prompt || activeTemplate?.title || fallbackPrompt).trim() || fallbackPrompt;
             const descriptor = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value");
             if (descriptor?.set) {
               descriptor.set.call(textarea, prompt);
@@ -2295,6 +2880,7 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
               token: transitionToken,
             });
             setActiveTemplateId(nextTemplate.id);
+            setActiveTemplateMediaMode(String(nextTemplate.mediaType || "image") === "video" ? "video" : "image");
             setImageName(nextTemplate.title || "");
             setActiveActionPopup("");
             setSettingsFlipped(false);
@@ -2398,6 +2984,25 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             setSelectedStyleIds((current) => current.filter((id) => id !== normalizedStyleId));
           };
 
+          const toggleTemplateAssetSelection = (asset, assetIndex) => {
+            const assetKey = getActiveTemplateAssetKey(asset, assetIndex);
+            if (!assetKey) {
+              return;
+            }
+            setSelectedTemplateAssetKeys((current) => {
+              const currentSet = new Set(current);
+              if (currentSet.has(assetKey)) {
+                if (currentSet.size <= 1) {
+                  return current;
+                }
+                currentSet.delete(assetKey);
+                return Array.from(currentSet);
+              }
+              currentSet.add(assetKey);
+              return Array.from(currentSet);
+            });
+          };
+
           const renderTemplatePreview = (template) => {
             const previewBackground = template?.imageUrl
               ? "url('" + template.imageUrl + "') center / cover no-repeat"
@@ -2407,7 +3012,10 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
               type: "button",
               className: "playground-imagine-template-thumb" + (template.id === activeTemplate?.id ? " is-active" : ""),
               style: { "--imagine-template-thumb-bg": previewBackground },
-              onClick: () => setActiveTemplateId(template.id),
+              onClick: () => {
+                setActiveTemplateId(template.id);
+                setActiveTemplateMediaMode(String(template.mediaType || "image") === "video" ? "video" : "image");
+              },
             },
               React.createElement("span", { className: "playground-imagine-template-thumb-title" }, template.title)
             );
@@ -2567,6 +3175,44 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                   )
                 : null
             ),
+            activeTemplateAssets.length > 1
+              ? React.createElement("section", { className: "playground-imagine-template-asset-picker" },
+                  React.createElement("div", { className: "playground-imagine-template-section-title" }, "Template assets"),
+                  React.createElement("div", { className: "playground-imagine-template-asset-picker-grid" },
+                    activeTemplateAssets.map((asset, assetIndex) => {
+                      const assetKey = getActiveTemplateAssetKey(asset, assetIndex);
+                      const isSelected = selectedTemplateAssetKeys.includes(assetKey);
+                      const isVideoAsset = asset?.type === "video";
+                      return React.createElement("button", {
+                        key: assetKey,
+                        type: "button",
+                        className: "playground-imagine-template-asset-option" + (isSelected ? " is-selected" : ""),
+                        "aria-label": (isSelected ? "Deselect " : "Select ") + (asset?.title || "template asset " + (assetIndex + 1)),
+                        "aria-pressed": isSelected ? "true" : "false",
+                        onClick: () => toggleTemplateAssetSelection(asset, assetIndex),
+                      },
+                        isVideoAsset
+                          ? React.createElement("video", {
+                              src: asset.url,
+                              muted: true,
+                              loop: true,
+                              playsInline: true,
+                              preload: "metadata",
+                            })
+                          : React.createElement("img", {
+                              src: asset.url,
+                              alt: "",
+                              draggable: false,
+                              loading: "lazy",
+                            }),
+                        React.createElement("span", { className: "playground-imagine-template-asset-option-check" },
+                          React.createElement(Check, { width: 12, height: 12, strokeWidth: 2 })
+                        )
+                      );
+                    })
+                  )
+                )
+              : null,
             React.createElement("section", { className: "playground-imagine-template-section is-attachments" },
               React.createElement("div", { className: "playground-imagine-template-attachments-toolbar" },
                 React.createElement("div", { className: "playground-imagine-template-section-title" }, "Attachments"),
@@ -2628,15 +3274,33 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
             )
           );
 
-          const renderPreviewLayer = (template, className, key) => {
+          const renderPreviewLayer = (template, className, key, assetIndex = 0) => {
             if (!template) {
               return null;
             }
-            if (template.imageUrl) {
+            const previewAssets = normalizePlaygroundImagineTemplatePageAssets(template);
+            const safeAssetIndex = previewAssets.length
+              ? Math.max(0, Math.min(Number(assetIndex) || 0, previewAssets.length - 1))
+              : 0;
+            const previewAsset = previewAssets[safeAssetIndex] || previewAssets[0] || null;
+            if (previewAsset?.type === "video") {
+              return React.createElement("video", {
+                key,
+                className: "playground-imagine-template-preview-video " + className,
+                src: previewAsset.url,
+                title: template.title || "Video template",
+                controls: className.includes("is-current"),
+                muted: false,
+                loop: true,
+                playsInline: true,
+                preload: "metadata",
+              });
+            }
+            if (previewAsset?.type === "image") {
               return React.createElement("img", {
                 key,
                 className: "playground-imagine-template-preview-image " + className,
-                src: template.imageUrl,
+                src: previewAsset.url,
                 alt: template.title || "Image template",
               });
             }
@@ -3027,12 +3691,62 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                               className: "playground-imagine-template-preview-stage",
                               style: {
                                 "--imagine-template-preview-bg": activeTemplateBackground,
-                                "--imagine-template-transition-direction": previewTransition.direction,
+                                "--imagine-template-transition-direction": activeTemplateAssetTransition.previousIndex !== null ? activeTemplateAssetTransition.direction : previewTransition.direction,
                               },
                             },
-                              React.createElement("div", { className: "playground-imagine-template-preview-media" },
-                                renderPreviewLayer(activeTemplate, "is-current", "current:" + (activeTemplate?.id || "") + ":" + previewTransition.token)
-                              )
+                              React.createElement("div", {
+                                className: "playground-imagine-template-preview-media" + (activeTemplateAssetTransition.previousIndex !== null ? " is-asset-transitioning" : ""),
+                                style: { "--imagine-template-asset-direction": activeTemplateAssetTransition.previousIndex !== null ? activeTemplateAssetTransition.direction : 1 },
+                              },
+                                activeTemplateAssetTransition.previousIndex !== null
+                                  ? renderPreviewLayer(activeTemplate, "is-previous", "asset-previous:" + activeTemplateAssetTransition.token, activeTemplateAssetTransition.previousIndex)
+                                  : null,
+                                renderPreviewLayer(activeTemplate, "is-current", "asset-current:" + (activeTemplate?.id || "") + ":" + normalizedActiveTemplateAssetIndex + ":" + activeTemplateAssetTransition.token, normalizedActiveTemplateAssetIndex)
+                              ),
+                              activeTemplateAssets.length > 1
+                                ? React.createElement("span", {
+                                    className: "playground-imagine-template-media-controls",
+                                    onClick: (event) => event.stopPropagation(),
+                                  },
+                                    React.createElement("span", { className: "playground-imagine-template-media-dots" },
+                                      activeTemplateAssets.map((asset, assetIndex) =>
+                                        React.createElement("button", {
+                                          key: "detail-asset-dot:" + String(activeTemplate?.id || "template") + ":" + assetIndex,
+                                          type: "button",
+                                          className: "playground-imagine-template-media-dot" + (assetIndex === normalizedActiveTemplateAssetIndex ? " is-active" : ""),
+                                          "aria-label": "Show template asset " + (assetIndex + 1),
+                                          onClick: (event) => {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                            setActiveTemplateAsset(assetIndex, assetIndex >= normalizedActiveTemplateAssetIndex ? 1 : -1);
+                                          },
+                                        })
+                                      )
+                                    ),
+                                    React.createElement("span", { className: "playground-imagine-template-media-arrows" },
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "playground-imagine-template-media-arrow",
+                                        "aria-label": "Previous template asset",
+                                        onClick: (event) => {
+                                          event.preventDefault();
+                                          event.stopPropagation();
+                                          setActiveTemplateAsset(normalizedActiveTemplateAssetIndex - 1, -1);
+                                        },
+                                      }, React.createElement(ChevronLeft, { width: 14, height: 14, strokeWidth: 1.9 })),
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "playground-imagine-template-media-arrow",
+                                        "aria-label": "Next template asset",
+                                        onClick: (event) => {
+                                          event.preventDefault();
+                                          event.stopPropagation();
+                                          setActiveTemplateAsset(normalizedActiveTemplateAssetIndex + 1, 1);
+                                        },
+                                      }, React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.9 }))
+                                    )
+                                  )
+                                : null
                             )
                           ),
                           React.createElement("div", { className: "playground-imagine-template-flip-face is-back" },
@@ -3108,7 +3822,7 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                 React.createElement("div", { className: "playground-imagine-template-composer-wrap", ref: composerWrapRef },
                   React.createElement("div", { className: "playground-imagine-template-composer-shell" },
                     React.createElement(RunnerChat, {
-                      key: "imagine-template-runner",
+                      key: "imagine-template-runner:" + activeMediaMode + ":" + (activeTemplate?.id || "__none__"),
                       className: "playground-imagine-template-runner",
                       backendUrl,
                       apiKey,
@@ -3120,16 +3834,21 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                       computerAgents: computerAgents || undefined,
                       environments: Array.isArray(environments) ? environments : [],
                       agents: Array.isArray(agents) ? agents : [],
-                      skills: Array.isArray(skills) ? skills : [],
-                      skillDefaults,
+                      skills: imagineTemplateRunnerSkills,
+                      skillDefaults: imagineTemplateSkillDefaults,
                       environmentId: environmentId || undefined,
                       agentId: agentId || undefined,
                       projectId: selectedProjectId || undefined,
                       autoFocusComposer: true,
                       keepFocusOnSubmit: true,
                       showUsageInStatus: false,
-                      placeholder: activeTemplate?.placeholder || activeTemplate?.title || "Describe an image",
+                      placeholder: activeMediaMode === "video"
+                        ? "Describe a video"
+                        : activeTemplate?.placeholder || activeTemplate?.title || "Describe an image",
+                      composerLeadingControl: renderImagineTemplateMediaModeSwitch(),
+                      composerBeforeAgentControl: renderImagineTemplateModelSelector(),
                       hiddenSystemPrompt,
+                      threadMetadata: imagineTemplateThreadMetadata,
                       implicitAttachments: imagineTemplateReferenceAttachments,
                       externalFileBrowserRequest: fileBrowserRequest,
                       onThreadIdChange: () => {},
@@ -3164,6 +3883,9 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
               )
             )
           );
-          return templatePageElement;
+          return React.createElement(React.Fragment, null,
+            templatePageElement,
+            renderImagineTemplateVideoUpgradeModal()
+          );
         }
 `;

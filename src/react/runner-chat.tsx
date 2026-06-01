@@ -84,6 +84,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
+import { LazyMediaPreviewMount, RunnerLazyMediaPreviewLoader } from "./runner-lazy-media-preview.js";
 import type { RunnerImageMaskStroke, RunnerImageNaturalSize } from "./runner-image-edit-overlays.js";
 import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, collectRunnerLogFileChangePreviews, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
@@ -984,6 +985,8 @@ function sanitizeRunnerBudgetMessage(value: string): string {
 
 const AGENT_RUNTIME_INTERRUPTED_MESSAGE =
   "The agent stopped unexpectedly before it could finish. Please retry this turn. If the issue continues, contact support.";
+const LLM_PROVIDER_UNAVAILABLE_MESSAGE =
+  "The selected model provider is temporarily unavailable. Please retry this turn in a moment.";
 
 function isInternalAgentRuntimeFailureMessage(value: string): boolean {
   const normalized = value.replace(/\s+/g, " ").trim();
@@ -998,19 +1001,58 @@ function isInternalAgentRuntimeFailureMessage(value: string): boolean {
   );
 }
 
+function isLlmProviderUnavailableMessage(value: string): boolean {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (!normalized) return false;
+  const hasUnavailableStatus =
+    /\bapi returned\s+503\b/i.test(normalized) ||
+    /\b503\s+service unavailable\b/i.test(normalized) ||
+    /\bservice unavailable\b/i.test(normalized) ||
+    /\btemporarily unavailable\b/i.test(normalized);
+  const hasProviderMarker =
+    /"code"\s*:\s*3045\b/i.test(normalized) ||
+    /\bAiError:\s*AiError:\s*Unknown internal error\b/i.test(normalized) ||
+    /\b(?:cloudflare|workers ai|moonshot|model provider|llm provider)\b/i.test(normalized);
+  const hasRetryWrapper = /\bapi failed after\s+\d+\s+attempts\b/i.test(normalized);
+
+  return (
+    (hasProviderMarker && hasUnavailableStatus) ||
+    (hasRetryWrapper && hasUnavailableStatus)
+  );
+}
+
+function getRunnerFailureReplacement(value: string): string | null {
+  if (isInternalAgentRuntimeFailureMessage(value)) {
+    return AGENT_RUNTIME_INTERRUPTED_MESSAGE;
+  }
+  if (isLlmProviderUnavailableMessage(value)) {
+    return LLM_PROVIDER_UNAVAILABLE_MESSAGE;
+  }
+  return null;
+}
+
 function sanitizeRunnerMessage(value: string): string {
   const normalized = sanitizeRunnerBudgetMessage(value);
-  if (!isInternalAgentRuntimeFailureMessage(normalized)) {
+  const replacementMessage = getRunnerFailureReplacement(normalized);
+  if (!replacementMessage) {
     return normalized;
   }
-  const replacement = `Execution failed: ${AGENT_RUNTIME_INTERRUPTED_MESSAGE}`;
+  const replacement = `Execution failed: ${replacementMessage}`;
   if (/\[Execution failed\]/i.test(normalized)) {
     return normalized.replace(/\[Execution failed\][\s\S]*$/i, `[Execution failed]\n${replacement}`);
   }
   if (/^execution failed\b/i.test(normalized.trim())) {
     return replacement;
   }
-  return AGENT_RUNTIME_INTERRUPTED_MESSAGE;
+  return replacementMessage;
+}
+
+function isRunnerModelProviderUnavailableMessage(value: unknown): boolean {
+  if (typeof value !== "string") {
+    return false;
+  }
+  const normalized = sanitizeRunnerBudgetMessage(value);
+  return isLlmProviderUnavailableMessage(normalized) || sanitizeRunnerMessage(normalized).includes(LLM_PROVIDER_UNAVAILABLE_MESSAGE);
 }
 
 function isComputeTokenBudgetErrorMessage(value: unknown): boolean {
@@ -1909,10 +1951,16 @@ export interface RunnerChatComputerAgentsConfig {
 }
 
 export interface RunnerChatSkillDefaults {
+  deepResearch?: {
+    model?: string;
+  };
   imageGeneration?: {
     model?: string;
     quality?: string;
     computeTokensPerImage?: number;
+  };
+  videoGeneration?: {
+    model?: string;
   };
 }
 
@@ -1936,6 +1984,7 @@ export interface RunnerChatProps {
   emptyState?: ReactNode;
   emptyStateAfterComposer?: ReactNode;
   composerLeadingControl?: ReactNode;
+  composerBeforeAgentControl?: ReactNode;
   className?: string;
   disabled?: boolean;
   autoCreateThread?: boolean;
@@ -4138,6 +4187,24 @@ function buildEnabledSkillsPayload(
     }
   }
 
+  if (enabled.has("video_generation") && skillDefaults?.videoGeneration) {
+    const videoGeneration = skillDefaults.videoGeneration;
+    const normalizedModel = typeof videoGeneration.model === "string" ? videoGeneration.model.trim() : "";
+    if (normalizedModel) {
+      payload.videoGenerationModel = normalizedModel;
+      payload.videoGenerationConfig = { model: normalizedModel };
+    }
+  }
+
+  if (enabled.has("deep_research") && skillDefaults?.deepResearch) {
+    const deepResearch = skillDefaults.deepResearch;
+    const normalizedModel = typeof deepResearch.model === "string" ? deepResearch.model.trim() : "";
+    if (normalizedModel) {
+      payload.deepResearchModel = normalizedModel;
+      payload.deepResearchConfig = { model: normalizedModel };
+    }
+  }
+
   if (enabled.has("computer_agents")) {
     payload.computerAgents = true;
   }
@@ -4846,7 +4913,7 @@ async function fetchAllThreadMessages(params: {
 
   while (true) {
     const response = await fetch(
-      `${backendUrl}/threads/${encodeURIComponent(params.threadId)}/messages?limit=${pageSize}&offset=${offset}`,
+      `${backendUrl}/threads/${encodeURIComponent(params.threadId)}/messages?limit=${pageSize}&offset=${offset}&compact=1`,
       {
         method: "GET",
         headers,
@@ -5167,16 +5234,25 @@ async function fetchHydratedStepDiffEntries(params: {
   headers: Headers;
   steps: RunnerParsedThreadStep[];
 }): Promise<RunnerThreadDiffEntry[]> {
+  const isGeneratedMediaPath = (value: unknown): boolean => {
+    if (typeof value !== "string" || !value.trim()) {
+      return false;
+    }
+    const normalizedPath = normalizeRunnerHydratedFilePath(value);
+    return /\.(?:png|jpe?g|gif|webp|svg|avif|bmp|mp4|mov|webm|mkv|avi)$/i.test(normalizedPath.split(/[?#]/)[0] || "");
+  };
+
   const candidateSteps = params.steps.filter((step) => {
     if (step.id.trim().length === 0) {
       return false;
     }
     const metadata = step.metadata || {};
-    const hasFilePaths = Array.isArray(metadata.filePaths) && metadata.filePaths.some((value) => typeof value === "string" && value.trim().length > 0);
+    const hasDiffableFilePaths = Array.isArray(metadata.filePaths)
+      && metadata.filePaths.some((value) => typeof value === "string" && value.trim().length > 0 && !isGeneratedMediaPath(value));
     const hasInlineDiffs = Boolean(metadata.diffs && typeof metadata.diffs === "object");
     const stepKind = String(step.stepKind || "").toLowerCase();
     const eventType = String(step.eventType || "").toLowerCase();
-    return hasFilePaths || hasInlineDiffs || stepKind === "file_change" || eventType === "file_change";
+    return hasDiffableFilePaths || hasInlineDiffs || stepKind === "file_change" || eventType === "file_change";
   });
   if (candidateSteps.length === 0) {
     return [];
@@ -5271,10 +5347,20 @@ function mergeThreadStepsIntoLogs(
   diffEntries: RunnerThreadDiffEntry[],
   startedAtMs: number | null
 ): RunnerLog[] {
-  const hasFileChangeLogs = logs.some((log) => log.eventType === "file_change" && !isInternalFileChangeLog(log));
-  if (hasFileChangeLogs) {
-    return logs;
+  const existingFileChangePaths = new Set<string>();
+  for (const log of logs) {
+    if (log.eventType !== "file_change" || isInternalFileChangeLog(log)) {
+      continue;
+    }
+    const filePaths = Array.isArray(log.metadata?.filePaths) ? log.metadata.filePaths : [];
+    for (const filePath of filePaths) {
+      if (typeof filePath !== "string" || !filePath.trim() || isRunnerHydratedNullDevicePath(filePath)) {
+        continue;
+      }
+      existingFileChangePaths.add(normalizeRunnerHydratedFilePath(filePath));
+    }
   }
+  const hasFileChangeLogs = existingFileChangePaths.size > 0;
 
   const syntheticLogsFromSteps = steps
     .filter((step) => step.eventType === "file_change" || step.stepKind === "file_change")
@@ -5337,18 +5423,31 @@ function mergeThreadStepsIntoLogs(
             : null
         ).filter((entry): entry is RunnerLog => Boolean(entry));
 
-  if (syntheticLogs.length === 0) {
+  const hydratedSyntheticLogs = hasFileChangeLogs
+    ? syntheticLogs.filter((syntheticLog) => {
+        const filePaths = Array.isArray(syntheticLog.metadata?.filePaths) ? syntheticLog.metadata.filePaths : [];
+        return filePaths.some((filePath) => {
+          if (typeof filePath !== "string" || !filePath.trim() || isRunnerHydratedNullDevicePath(filePath)) {
+            return false;
+          }
+          const normalizedPath = normalizeRunnerHydratedFilePath(filePath);
+          return isRunnerHydratedVideoFilePath(normalizedPath) && !existingFileChangePaths.has(normalizedPath);
+        });
+      })
+    : syntheticLogs;
+
+  if (hydratedSyntheticLogs.length === 0) {
     return logs;
   }
 
   const firstAgentMessageIndex = logs.findIndex((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
   if (firstAgentMessageIndex === -1) {
-    return [...logs, ...syntheticLogs];
+    return [...logs, ...hydratedSyntheticLogs];
   }
 
   return [
     ...logs.slice(0, firstAgentMessageIndex),
-    ...syntheticLogs,
+    ...hydratedSyntheticLogs,
     ...logs.slice(firstAgentMessageIndex),
   ];
 }
@@ -5463,23 +5562,18 @@ async function fetchThreadHydrationPayload(params: {
       requestHeaders: params.requestHeaders,
     }).catch(() => []);
 
-  const [threadResponse, logsResponse, diffsResponse, stepsResponse, messages] = await Promise.all([
+  const [threadResponse, logsResponse, stepsResponse, messages] = await Promise.all([
     fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}`, {
       method: "GET",
       headers,
       cache: "no-store",
     }),
-    fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/logs`, {
+    fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/logs?compact=1&includeConversation=0`, {
       method: "GET",
       headers,
       cache: "no-store",
     }),
-    fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/diffs`, {
-      method: "GET",
-      headers,
-      cache: "no-store",
-    }).catch(() => null),
-    fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/steps?limit=500`, {
+    fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/steps?limit=500&compact=1`, {
       method: "GET",
       headers,
       cache: "no-store",
@@ -5487,10 +5581,9 @@ async function fetchThreadHydrationPayload(params: {
     messagesPromise,
   ]);
 
-  const [threadBody, logsBody, diffsBody, stepsBody] = await Promise.all([
+  const [threadBody, logsBody, stepsBody] = await Promise.all([
     threadResponse.text(),
     logsResponse.text(),
-    diffsResponse ? diffsResponse.text() : Promise.resolve(""),
     stepsResponse ? stepsResponse.text() : Promise.resolve(""),
   ]);
 
@@ -5523,11 +5616,6 @@ async function fetchThreadHydrationPayload(params: {
     message?: string;
     error?: string;
   } = {};
-  let parsedDiffs: {
-    diffs?: RunnerThreadDiffEntry[];
-    message?: string;
-    error?: string;
-  } = {};
   let parsedSteps: {
     data?: RunnerThreadStep[];
     message?: string;
@@ -5544,14 +5632,6 @@ async function fetchThreadHydrationPayload(params: {
     parsedLogs = logsBody ? JSON.parse(logsBody) : {};
   } catch {
     parsedLogs = {};
-  }
-
-  if (diffsResponse?.ok) {
-    try {
-      parsedDiffs = diffsBody ? JSON.parse(diffsBody) : {};
-    } catch {
-      parsedDiffs = {};
-    }
   }
 
   if (stepsResponse?.ok) {
@@ -5572,7 +5652,7 @@ async function fetchThreadHydrationPayload(params: {
 
   const startedAtMs = parseIsoTimestampMs(parsedThread.thread?.startedAt);
   const parsedStepsData = parseThreadSteps(parsedSteps.data);
-  let diffEntries = parseThreadDiffEntries(parsedDiffs.diffs);
+  let diffEntries: RunnerThreadDiffEntry[] = [];
   const completedAtMs = parseIsoTimestampMs(parsedThread.thread?.completedAt);
   const rawThreadStatus =
     typeof parsedLogs.status === "string" && parsedLogs.status.trim()
@@ -5614,15 +5694,24 @@ async function fetchThreadHydrationPayload(params: {
     return true;
   });
 
-  if (hydrationLogs.length === 0 || !hydrationLogs.some((log) => log.eventType === "file_change")) {
-    if (diffEntries.length === 0 && parsedStepsData.length > 0) {
-      diffEntries = await fetchHydratedStepDiffEntries({
-        backendUrl,
-        threadId: params.threadId,
-        headers,
-        steps: parsedStepsData,
-      });
-    }
+  const shouldHydrateStepDiffs =
+    hydrationLogs.some((log) => log.eventType === "file_change") ||
+    parsedStepsData.some((step) => {
+      const metadata = step.metadata || {};
+      const stepKind = String(step.stepKind || "").toLowerCase();
+      const eventType = String(step.eventType || "").toLowerCase();
+      return stepKind === "file_change"
+        || eventType === "file_change"
+        || Boolean(metadata.diffs && typeof metadata.diffs === "object");
+    });
+
+  if (shouldHydrateStepDiffs && diffEntries.length === 0 && parsedStepsData.length > 0) {
+    diffEntries = await fetchHydratedStepDiffEntries({
+      backendUrl,
+      threadId: params.threadId,
+      headers,
+      steps: parsedStepsData,
+    });
   }
   const mergedLogs = mergeThreadStepsIntoLogs(
     mergeThreadDiffsIntoLogs(hydrationLogs, diffEntries),
@@ -5668,7 +5757,7 @@ async function fetchThreadLogsSnapshot(params: {
   environmentName: string | null;
 }> {
   const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/logs`, {
+  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/logs?compact=1&includeConversation=0`, {
     method: "GET",
     headers: buildRunnerHeaders(params.requestHeaders, params.apiKey),
     cache: "no-store",
@@ -7898,26 +7987,47 @@ function extractImageGenerationPromptIdentity(log: RunnerLog): string {
   }
 
   const output = typeof log.metadata?.output === "string" ? log.metadata.output : log.message;
-  const promptMatch = String(output || "").match(/(?:Generating|Editing) image with [^:]+:\s*(.+?)(?:\.\.\.)?(?:\r?\n|$)/i);
+  const promptMatch = shouldScanRunnerMediaLogText(output)
+    ? output.match(/(?:Generating|Editing) image with [^:]+:\s*(.+?)(?:\.\.\.)?(?:\r?\n|$)/i)
+    : null;
   return sanitizeImageGenerationPromptCandidate(promptMatch?.[1] || "");
 }
 
+const runnerImageGenerationLogIdentityCache = new WeakMap<RunnerLog, string | null>();
+const runnerVideoGenerationLogIdentityCache = new WeakMap<RunnerLog, string | null>();
+const runnerGeneratedVideoPathCache = new WeakMap<RunnerLog, string>();
+const RUNNER_MEDIA_LOG_TEXT_SCAN_LIMIT = 200_000;
+
+function shouldScanRunnerMediaLogText(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0 && value.length <= RUNNER_MEDIA_LOG_TEXT_SCAN_LIMIT;
+}
+
 function normalizedImageGenerationLogIdentity(log: RunnerLog): string | null {
+  if (runnerImageGenerationLogIdentityCache.has(log)) {
+    return runnerImageGenerationLogIdentityCache.get(log) ?? null;
+  }
   const command = typeof log.metadata?.command === "string" ? log.metadata.command.trim() : "";
   const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
+  const outputHasImageMarker = shouldScanRunnerMediaLogText(output)
+    ? /(?:Generating|Editing) image with|Generated with|Image saved to:/i.test(output)
+    : false;
+  const messageHasImageMarker = shouldScanRunnerMediaLogText(log.message)
+    ? /(?:Generating|Editing) image with|Generated with|Image saved to:/i.test(log.message)
+    : false;
   const savedImagePath = typeof log.metadata?.savedImagePath === "string" ? log.metadata.savedImagePath.trim() : "";
   const metadataFilePaths = Array.isArray(log.metadata?.filePaths)
     ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
     : [];
   const looksLikeImageGeneration =
     log.metadata?.isImageGeneration
+    || command.includes("generate-image.py")
+    || command.includes(".claude/skills/image-generation/")
     || Boolean(savedImagePath)
     || metadataFilePaths.some((filePath) => /\.(?:png|jpe?g|gif|webp|svg|avif|bmp)$/i.test(filePath))
-    || /(?:Generating|Editing) image with|Generated with|Image saved to:/i.test(output)
-    || /(?:Generating|Editing) image with|Generated with|Image saved to:/i.test(log.message || "")
-    || command.includes("generate-image.py")
-    || command.includes(".claude/skills/image-generation/");
+    || outputHasImageMarker
+    || messageHasImageMarker;
   if (!looksLikeImageGeneration) {
+    runnerImageGenerationLogIdentityCache.set(log, null);
     return null;
   }
 
@@ -7927,12 +8037,237 @@ function normalizedImageGenerationLogIdentity(log: RunnerLog): string | null {
       ? String((log.metadata.args as Record<string, unknown>).inputPath).trim()
       : "";
 
-  return stableRunnerLogValue({
+  const identity = stableRunnerLogValue({
     kind: "image_generation",
     prompt,
     inputPath,
     command: prompt || inputPath || savedImagePath || metadataFilePaths.length > 0 ? "" : command || String(log.message || "").trim(),
   });
+  runnerImageGenerationLogIdentityCache.set(log, identity);
+  return identity;
+}
+
+function sanitizeVideoGenerationPromptCandidate(value: unknown): string {
+  return sanitizeImageGenerationPromptCandidate(value);
+}
+
+function extractVideoGenerationPromptIdentity(log: RunnerLog): string {
+  const metadataPrompt =
+    log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).prompt === "string"
+      ? sanitizeVideoGenerationPromptCandidate((log.metadata.args as Record<string, unknown>).prompt)
+      : "";
+  if (metadataPrompt) {
+    return metadataPrompt;
+  }
+  const metadataText =
+    log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).text === "string"
+      ? sanitizeVideoGenerationPromptCandidate((log.metadata.args as Record<string, unknown>).text)
+      : "";
+  if (metadataText) {
+    return metadataText;
+  }
+  const toolInputPrompt =
+    log.metadata?.toolInput && typeof log.metadata.toolInput === "object" && typeof (log.metadata.toolInput as Record<string, unknown>).prompt === "string"
+      ? sanitizeVideoGenerationPromptCandidate((log.metadata.toolInput as Record<string, unknown>).prompt)
+      : "";
+  if (toolInputPrompt) {
+    return toolInputPrompt;
+  }
+  const toolInputText =
+    log.metadata?.toolInput && typeof log.metadata.toolInput === "object" && typeof (log.metadata.toolInput as Record<string, unknown>).text === "string"
+      ? sanitizeVideoGenerationPromptCandidate((log.metadata.toolInput as Record<string, unknown>).text)
+      : "";
+  if (toolInputText) {
+    return toolInputText;
+  }
+
+  const output = typeof log.metadata?.output === "string" ? log.metadata.output : log.message;
+  const promptMatch = shouldScanRunnerMediaLogText(output)
+    ? output.match(/Generating video(?:\s+with [^:]+)?:\s*(.+?)(?:\.\.\.)?(?:\r?\n|$)/i)
+      || output.match(/^\s*Video Generation\s+(.+?)(?:\s+generating\.{3}|(?:\r?\n|$))/i)
+    : null;
+  const promptFromOutput = sanitizeVideoGenerationPromptCandidate(promptMatch?.[1] || "");
+  if (promptFromOutput) {
+    return promptFromOutput;
+  }
+
+  const command = typeof log.metadata?.command === "string" ? log.metadata.command : log.message || "";
+  const quoted = [...String(command || "").matchAll(/"([^"]+)"/g), ...String(command || "").matchAll(/'([^']+)'/g)]
+    .map((match) => sanitizeVideoGenerationPromptCandidate(match[1]))
+    .filter(
+      (value) =>
+        value.length >= 3 &&
+        !value.match(/\.(mp4|mov|webm|mkv|avi|png|jpg|jpeg|gif|webp|py|sh|txt|md)$/i) &&
+        !value.startsWith("/") &&
+        !value.startsWith(".") &&
+        !value.startsWith("-") &&
+        !value.match(/^\d+:\d+$/) &&
+        !value.match(/^(720P|1080P)$/i)
+    );
+  return quoted.length > 0 ? quoted.reduce((longest, current) => (current.length > longest.length ? current : longest)) : "";
+}
+
+function isRunnerHydratedVideoFilePath(filePath?: string | null): boolean {
+  return /\.(?:mp4|mov|webm|mkv|avi)$/i.test(String(filePath || "").trim().split(/[?#]/)[0] || "");
+}
+
+function normalizeGeneratedVideoPathCandidate(value: unknown): string {
+  return String(value || "")
+    .trim()
+    .replace(/^\/workspace\//, "")
+    .replace(/^workspace\//, "");
+}
+
+function extractGeneratedVideoPathFromOutputText(output: unknown): string {
+  if (typeof output !== "string" || !output.trim()) {
+    return "";
+  }
+  const patterns = [
+    /video saved to:\s*["']?([^\s"'\n]+\.(?:mp4|mov|webm|mkv|avi))["']?/i,
+    /saved to:\s*["']?([^\s"'\n]+\.(?:mp4|mov|webm|mkv|avi))["']?/i,
+    /((?:\/workspace\/|workspace\/)?[A-Za-z0-9_./-]+\.(?:mp4|mov|webm|mkv|avi))/i,
+  ];
+  for (const pattern of patterns) {
+    const match = output.match(pattern);
+    const candidate = normalizeGeneratedVideoPathCandidate(match?.[1] || "");
+    if (isRunnerHydratedVideoFilePath(candidate)) {
+      return candidate;
+    }
+  }
+  return "";
+}
+
+function extractGeneratedVideoPathFromStructuredResult(result: unknown): string {
+  const candidates: string[] = [];
+  const visit = (value: unknown): void => {
+    if (!value) return;
+    if (typeof value === "string") {
+      const direct = normalizeGeneratedVideoPathCandidate(value);
+      if (isRunnerHydratedVideoFilePath(direct)) {
+        candidates.push(direct);
+        return;
+      }
+      const fromText = extractGeneratedVideoPathFromOutputText(value);
+      if (fromText) {
+        candidates.push(fromText);
+      }
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    if (typeof value === "object") {
+      Object.values(value as Record<string, unknown>).forEach(visit);
+    }
+  };
+  visit(result);
+  return candidates[0] || "";
+}
+
+function extractGeneratedVideoPathFromLog(log: RunnerLog): string {
+  const cached = runnerGeneratedVideoPathCache.get(log);
+  if (typeof cached === "string") {
+    return cached;
+  }
+  const savedVideoPath = extractDirectGeneratedVideoPathFromMetadata(log);
+  if (isRunnerHydratedVideoFilePath(savedVideoPath)) {
+    runnerGeneratedVideoPathCache.set(log, savedVideoPath);
+    return savedVideoPath;
+  }
+  const metadataFilePath = Array.isArray(log.metadata?.filePaths)
+    ? log.metadata.filePaths
+        .map((value) => normalizeGeneratedVideoPathCandidate(value))
+        .find((value) => isRunnerHydratedVideoFilePath(value))
+    : "";
+  if (metadataFilePath) {
+    runnerGeneratedVideoPathCache.set(log, metadataFilePath);
+    return metadataFilePath;
+  }
+  const outputForPath = shouldScanRunnerMediaLogText(log.metadata?.output) ? log.metadata?.output : undefined;
+  const messageForPath = shouldScanRunnerMediaLogText(log.message) ? log.message : undefined;
+  const resolvedPath = (
+    extractGeneratedVideoPathFromStructuredResult(log.metadata?.result)
+    || extractGeneratedVideoPathFromStructuredResult(outputForPath)
+    || extractGeneratedVideoPathFromOutputText(outputForPath)
+    || extractGeneratedVideoPathFromOutputText(messageForPath)
+  );
+  runnerGeneratedVideoPathCache.set(log, resolvedPath);
+  return resolvedPath;
+}
+
+function extractDirectGeneratedVideoPathFromMetadata(log: RunnerLog): string {
+  const metadata = log.metadata && typeof log.metadata === "object" && !Array.isArray(log.metadata)
+    ? log.metadata as Record<string, unknown>
+    : null;
+  if (!metadata) {
+    return "";
+  }
+  const directCandidates = [
+    metadata.savedVideoPath,
+    metadata.saved_video_path,
+    metadata.outputVideoPath,
+    metadata.output_video_path,
+  ];
+  for (const candidate of directCandidates) {
+    const normalized = normalizeGeneratedVideoPathCandidate(candidate);
+    if (isRunnerHydratedVideoFilePath(normalized)) {
+      return normalized;
+    }
+  }
+  return "";
+}
+
+function normalizedVideoGenerationLogIdentity(log: RunnerLog): string | null {
+  if (runnerVideoGenerationLogIdentityCache.has(log)) {
+    return runnerVideoGenerationLogIdentityCache.get(log) ?? null;
+  }
+  const command = typeof log.metadata?.command === "string" ? log.metadata.command.trim() : "";
+  const rawLog = log as RunnerLog & { event_type?: unknown; type?: unknown };
+  const normalizedEventType = String(rawLog.eventType || rawLog.event_type || rawLog.type || "").trim().toLowerCase();
+  const metadataToolName = String(log.metadata?.toolName || log.metadata?.toolId || "").trim().toLowerCase();
+  const metadataServerName = String(log.metadata?.serverName || "").trim().toLowerCase();
+  const metadataFilePaths = Array.isArray(log.metadata?.filePaths)
+    ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && isRunnerHydratedVideoFilePath(value))
+    : [];
+  const directSavedVideoPath = extractDirectGeneratedVideoPathFromMetadata(log);
+  const hasExplicitVideoSignal =
+    Boolean(
+      log.metadata?.isVideoGeneration
+      || normalizedEventType === "video_generation_skill"
+      || normalizedEventType === "video_generation"
+      || normalizedEventType === "generate_video"
+      || metadataToolName === "generate_video"
+      || metadataToolName === "video_generation"
+      || metadataServerName === "video-generation-skill"
+      || metadataServerName === "video_generation_skill"
+      || directSavedVideoPath
+      || command.includes("generate-video.py")
+      || command.includes(".claude/skills/video-generation/")
+    );
+  const savedVideoPath = hasExplicitVideoSignal
+    ? extractGeneratedVideoPathFromLog(log)
+    : "";
+  if (!hasExplicitVideoSignal) {
+    runnerVideoGenerationLogIdentityCache.set(log, null);
+    return null;
+  }
+
+  const prompt = extractVideoGenerationPromptIdentity(log);
+  const inputPath =
+    log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).inputPath === "string"
+      ? String((log.metadata.args as Record<string, unknown>).inputPath).trim()
+      : "";
+
+  const identity = stableRunnerLogValue({
+    kind: "video_generation",
+    prompt: prompt || "",
+    inputPath: inputPath || "",
+    savedVideoPath: prompt || inputPath ? "" : savedVideoPath || metadataFilePaths[0] || "",
+    command: prompt || inputPath || savedVideoPath || metadataFilePaths.length > 0 ? "" : command || String(log.message || "").trim(),
+  });
+  runnerVideoGenerationLogIdentityCache.set(log, identity);
+  return identity;
 }
 
 function normalizeHydratedLog(log: RunnerLog): RunnerLog {
@@ -7997,6 +8332,10 @@ function normalizedToolLogIdentity(log: RunnerLog): string | null {
   const normalizedImageIdentity = normalizedImageGenerationLogIdentity(log);
   if (normalizedImageIdentity) {
     return normalizedImageIdentity;
+  }
+  const normalizedVideoIdentity = normalizedVideoGenerationLogIdentity(log);
+  if (normalizedVideoIdentity) {
+    return normalizedVideoIdentity;
   }
 
   if (log.eventType === "command_execution") {
@@ -8142,16 +8481,32 @@ function runnerLogReplacementScore(log: RunnerLog): number {
       score += 30;
     }
   }
+  const videoIdentity = normalizedVideoGenerationLogIdentity(log);
+  if (videoIdentity) {
+    const savedVideoPath = extractGeneratedVideoPathFromLog(log);
+    if (savedVideoPath) {
+      score += 100;
+    }
+    if (log.metadata?.status === "completed") {
+      score += 10;
+    }
+    if (typeof log.metadata?.output === "string" && /Video saved to:/i.test(log.metadata.output)) {
+      score += 20;
+    }
+    if (log.metadata?.error) {
+      score += 30;
+    }
+  }
   return score;
 }
 
-function pruneSupersededImageGenerationLogs(logs: RunnerLog[]): RunnerLog[] {
+function pruneSupersededMediaGenerationLogs(logs: RunnerLog[]): RunnerLog[] {
   const bestScoreByIdentity = new Map<string, number>();
   const keptFromEnd: RunnerLog[] = [];
 
   for (let index = logs.length - 1; index >= 0; index -= 1) {
     const log = logs[index];
-    const identity = normalizedImageGenerationLogIdentity(log);
+    const identity = normalizedImageGenerationLogIdentity(log) || normalizedVideoGenerationLogIdentity(log);
     if (!identity) {
       keptFromEnd.push(log);
       continue;
@@ -8167,11 +8522,53 @@ function pruneSupersededImageGenerationLogs(logs: RunnerLog[]): RunnerLog[] {
     keptFromEnd.push(log);
   }
 
-  return keptFromEnd.reverse();
+  const kept = keptFromEnd.reverse();
+  const laterCompletedVideoCounts = new Array<number>(kept.length).fill(0);
+  let completedVideoLogsToRight = 0;
+  for (let index = kept.length - 1; index >= 0; index -= 1) {
+    laterCompletedVideoCounts[index] = completedVideoLogsToRight;
+    const log = kept[index];
+    if (normalizedVideoGenerationLogIdentity(log) && extractGeneratedVideoPathFromLog(log)) {
+      completedVideoLogsToRight += 1;
+    }
+  }
+  const videoPathsCoveredByCommandLogs = new Set<string>();
+  for (const log of kept) {
+    if (log.eventType === "file_change") {
+      continue;
+    }
+    if (!normalizedVideoGenerationLogIdentity(log)) {
+      continue;
+    }
+    const path = extractGeneratedVideoPathFromLog(log);
+    if (path) {
+      videoPathsCoveredByCommandLogs.add(path);
+    }
+  }
+
+  return kept.filter((log, index) => {
+    const videoIdentity = normalizedVideoGenerationLogIdentity(log);
+    if (
+      videoIdentity &&
+      log.eventType !== "file_change" &&
+      !extractGeneratedVideoPathFromLog(log) &&
+      laterCompletedVideoCounts[index] > 0
+    ) {
+      return false;
+    }
+    if (log.eventType !== "file_change" || !videoIdentity) {
+      return true;
+    }
+    if (videoPathsCoveredByCommandLogs.size === 0) {
+      return true;
+    }
+    const path = extractGeneratedVideoPathFromLog(log);
+    return !path || !videoPathsCoveredByCommandLogs.has(path);
+  });
 }
 
 function dedupeAdjacentRunnerLogs(logs: RunnerLog[]): RunnerLog[] {
-  const prunedLogs = pruneSupersededImageGenerationLogs(logs);
+  const prunedLogs = pruneSupersededMediaGenerationLogs(logs);
   const deduped: RunnerLog[] = [];
   let lastSignature = "";
 
@@ -8590,6 +8987,7 @@ export function RunnerChat({
   emptyState,
   emptyStateAfterComposer,
   composerLeadingControl,
+  composerBeforeAgentControl,
   className,
   disabled = false,
   autoCreateThread = true,
@@ -10980,6 +11378,27 @@ export function RunnerChat({
         softBreaks={options.softBreaks}
         onWorkspacePathClick={options.canPreviewSummaryWorkspacePaths ? (path) => handleSummaryWorkspacePathClick(turn, path, "run_summary") : undefined}
       />
+    );
+  }
+
+  function renderModelProviderRetryAction(turn: RunnerTurn, message: string) {
+    if (!isRunnerModelProviderUnavailableMessage(message)) {
+      return null;
+    }
+    const normalizedPrompt = stripSystemTags(turn.prompt).trim();
+    const isRetryDisabled = disabled || isPreparingRun || hasRunningTurn || isRunning || isStoppingRun || !normalizedPrompt;
+    return (
+      <div className="tb-provider-retry" role="group" aria-label="Retry model provider outage">
+        <button
+          type="button"
+          className="tb-provider-retry-button"
+          onClick={() => rerunTurnFromSummary(turn)}
+          disabled={isRetryDisabled}
+        >
+          <LucideRefreshCw className="tb-provider-retry-icon" strokeWidth={1.8} />
+          <span>Retry turn</span>
+        </button>
+      </div>
     );
   }
 
@@ -16860,16 +17279,27 @@ export function RunnerChat({
           <>
             <span className="runner-attachment-image-frame">
               {previewUrl ? (
-                <RunnerImagePreviewSurface
-                  src={previewUrl}
-                  alt={filename}
-                  mimeType={isLocalAttachmentRecord(attachment) ? attachment.file.type : attachment.mimeType}
-                  className={`runner-attachment-image-button ${previewUrl && isImagePreviewable ? "is-clickable" : ""}`.trim()}
-                  imageClassName="runner-attachment-image-preview"
-                  fetchHeaders={imageFetchHeaders}
-                  interactive={Boolean(previewUrl && isImagePreviewable)}
-                  onActivate={previewUrl && isImagePreviewable ? openAttachmentPreview : undefined}
-                />
+                <LazyMediaPreviewMount
+                  mediaKey={`${attachment.id}:${previewUrl}`}
+                  className="runner-attachment-image-lazy-preview"
+                  placeholder={
+                    <span className="runner-attachment-image-placeholder" aria-hidden="true">
+                      <RunnerLazyMediaPreviewLoader dotSize={3} gap={2} />
+                    </span>
+                  }
+                >
+                  <RunnerImagePreviewSurface
+                    src={previewUrl}
+                    alt={filename}
+                    mimeType={isLocalAttachmentRecord(attachment) ? attachment.file.type : attachment.mimeType}
+                    className={`runner-attachment-image-button ${previewUrl && isImagePreviewable ? "is-clickable" : ""}`.trim()}
+                    imageClassName="runner-attachment-image-preview"
+                    fetchHeaders={imageFetchHeaders}
+                    loadStrategy="immediate"
+                    interactive={Boolean(previewUrl && isImagePreviewable)}
+                    onActivate={previewUrl && isImagePreviewable ? openAttachmentPreview : undefined}
+                  />
+                </LazyMediaPreviewMount>
               ) : (
                 <span className="runner-attachment-image-placeholder" aria-hidden="true">
                   <img src={RUNNER_IMAGE_FILE_ICON_URL} alt="" aria-hidden="true" draggable={false} />
@@ -19534,6 +19964,7 @@ export function RunnerChat({
                             canPreviewSummaryWorkspacePaths,
                           })}
                         </div>
+                        {renderModelProviderRetryAction(turn, agentMessage.message)}
                         {renderRunSummaryActionLine(turn, agentMessage.message, { isLatest: isLatestTurn, canEditTurn })}
                         {shouldRenderFollowUpEngine ? (
                           <div className="tb-follow-up-engine" role="group" aria-label="Follow-up actions">
@@ -19757,6 +20188,7 @@ export function RunnerChat({
                           canPreviewSummaryWorkspacePaths,
                         })}
                       </div>
+                      {renderModelProviderRetryAction(turn, agentMessage.message)}
                       {renderRunSummaryActionLine(turn, agentMessage.message, { isLatest: isLatestTurn, canEditTurn })}
                       {shouldRenderFollowUpEngine ? (
                         <div className="tb-follow-up-engine" role="group" aria-label="Follow-up actions">
@@ -20523,6 +20955,10 @@ export function RunnerChat({
                       <div className="tb-composer-leading-control">{composerLeadingControl}</div>
                     ) : null}
                     {renderContextIndicatorControl()}
+
+                    {composerBeforeAgentControl ? (
+                      <div className="tb-composer-leading-control">{composerBeforeAgentControl}</div>
+                    ) : null}
 
                     {renderAgentSelectorControl()}
 

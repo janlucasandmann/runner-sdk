@@ -1660,6 +1660,46 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   white-space: normal;
 }
 
+.tb-runner-chat .tb-provider-retry {
+  display: flex;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.tb-runner-chat .tb-provider-retry-button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+.tb-runner-chat .tb-provider-retry-button:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.tb-runner-chat .tb-provider-retry-button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.tb-runner-chat .tb-provider-retry-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
 .tb-runner-chat .tb-compute-token-log-box {
   width: min(100%, 560px);
   display: flex;
@@ -2276,6 +2316,18 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   backdrop-filter: none;
 }
 
+.tb-runner-chat .tb-log-card.tb-log-card-task-create .tb-log-card-panel,
+.tb-runner-chat .tb-log-card.tb-log-card-task-update .tb-log-card-panel {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 .tb-runner-chat .tb-log-card.tb-log-card-browser .tb-log-card-panel {
   padding: 12px;
 }
@@ -2331,34 +2383,163 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview {
-  width: min(300px, 100%);
-  max-width: 300px;
+  width: min(400px, 100%);
+  max-width: min(400px, 100%);
+  justify-content: flex-start;
+}
+
+.tb-runner-chat .tb-log-media-preview-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.tb-runner-chat .tb-log-media-preview-visual {
+  width: fit-content;
+  max-width: 100%;
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.tb-runner-chat .tb-log-media-preview-layout-image,
+.tb-runner-chat .tb-log-media-preview-layout-image .tb-log-media-preview-visual,
+.tb-runner-chat .tb-log-media-preview-layout-image .tb-log-media-lazy-preview,
+.tb-runner-chat .tb-log-media-preview-layout-image .tb-runner-lazy-media-preview,
+.tb-runner-chat .tb-log-media-preview-layout-image .tb-log-media-lazy-preview > .tb-runner-image-preview-surface {
+  width: min(400px, 100%);
+  max-width: min(400px, 100%);
+}
+
+.tb-runner-chat .tb-log-media-preview-layout-video,
+.tb-runner-chat .tb-log-media-preview-layout-video .tb-log-media-preview-visual,
+.tb-runner-chat .tb-log-media-preview-layout-video .tb-log-media-lazy-preview,
+.tb-runner-chat .tb-log-media-preview-layout-video .tb-runner-lazy-media-preview,
+.tb-runner-chat .tb-log-media-preview-layout-video .tb-video-generation-preview-shell {
+  width: 100%;
+  max-width: 100%;
+}
+
+.tb-runner-chat .tb-log-media-lazy-preview {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.tb-runner-chat .tb-log-media-lazy-preview > .tb-runner-image-preview-surface {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.tb-runner-chat .tb-runner-lazy-media-preview {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.tb-runner-chat .tb-log-image-preview-loading {
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+}
+
+.tb-runner-chat .tb-log-media-prompt {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview {
   display: block;
-  width: min(520px, 100%);
-  max-width: 520px;
-  max-height: 420px;
+  width: 100%;
+  max-width: 100%;
+  max-height: 872px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
   object-fit: contain;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview:disabled,
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview-loading,
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview-loading {
+.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview-loading {
   aspect-ratio: 1 / 1;
-  height: auto;
-  max-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(400px, 100%);
+  max-width: min(400px, 100%);
+  height: min(400px, 80vw);
+  min-height: min(400px, 80vw);
+  max-height: 400px;
+  flex: 0 0 auto;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.1);
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview-image {
-  max-width: 300px;
-  max-height: 300px;
+.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview-loading {
+  aspect-ratio: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  height: 200px;
+  min-height: 200px;
+  max-height: 200px;
   border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview-shell {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview-error {
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+}
+
+.tb-runner-chat .tb-runner-media-preview-loader,
+.tb-runner-chat .tb-runner-image-preview-surface-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview-image {
+  width: auto;
+  height: auto;
+  max-width: min(400px, 100%);
+  max-height: 400px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+@media (max-width: 760px) {
+  .tb-runner-chat .tb-log-media-prompt {
+    max-width: 100%;
+  }
 }
 
 .tb-runner-chat .tb-log-card.tb-log-card-image-generation .tb-log-card-empty,
@@ -2398,6 +2579,12 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-image-understanding-layout.is-landscape .tb-image-understanding-preview {
   flex-basis: auto;
   width: 100%;
+}
+
+.tb-runner-chat .tb-image-understanding-lazy-preview {
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
 }
 
 .tb-runner-chat .tb-image-understanding-preview-surface {
@@ -4519,10 +4706,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   word-break: break-word;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-task-update .tb-log-card-panel {
-  padding: 14px 16px;
-}
-
 .tb-runner-chat .tb-log-task-update-summary {
   margin-bottom: 10px;
   color: rgba(255, 255, 255, 0.76);
@@ -5991,6 +6174,32 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   color: #ffffff;
 }
 
+.tb-runner-chat .tb-log-card-help .tb-log-card-header {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tb-runner-chat .tb-log-card-help .tb-log-card-label {
+  color: #ffffff;
+}
+
+.tb-runner-chat .tb-log-card-help .tb-log-card-panel {
+  padding-top: 0;
+}
+
+.tb-runner-chat .tb-log-help-output {
+  margin: 0 0 12px;
+  padding: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: rgba(255, 255, 255, 0.86);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+
 .tb-runner-chat .tb-log-web-search-footer {
   display: flex;
   align-items: center;
@@ -6214,6 +6423,15 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   min-width: 72px;
   min-height: 72px;
   color: rgba(255, 255, 255, 0.56);
+}
+
+.tb-runner-image-preview-surface-state-error {
+  min-width: 160px;
+  min-height: 120px;
+  padding: 16px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  text-align: center;
 }
 
 .tb-runner-image-preview-surface-spinner {
@@ -6447,6 +6665,19 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   height: auto;
   margin: 8px 0;
   border-radius: 10px;
+}
+
+.tb-runner-chat .tb-message-markdown-image-lazy-preview {
+  display: block;
+  max-width: 100%;
+}
+
+.tb-runner-chat .tb-message-markdown-image-loading {
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .tb-runner-chat .tb-attachment-preview-markdown .tb-message-markdown-image {
@@ -7184,6 +7415,16 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .runner-attachment-image-frame > .tb-runner-image-preview-surface {
+  width: 100%;
+  height: 100%;
+}
+
+.tb-runner-chat .runner-attachment-image-lazy-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.tb-runner-chat .runner-attachment-image-lazy-preview > .tb-runner-image-preview-surface {
   width: 100%;
   height: 100%;
 }
@@ -8241,7 +8482,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-docx-shell {
   min-height: 100%;
   padding: 24px 22px 30px;
-  background: #171717;
+  background: #fff;
+  color: #111;
 }
 
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-docx-stage {
@@ -8259,6 +8501,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-docx-stage .tb-attachment-docx {
+  background: #fff;
+  color: #111;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
 }
 
@@ -9219,6 +9463,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  max-height: 180px;
 }
 
 .tb-runner-chat .tb-popup-menu-inline-empty {

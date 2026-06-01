@@ -21,6 +21,7 @@ import {
   Clock,
   Circle,
   CircleCheckBig,
+  CircleHelp,
   Ellipsis,
   Equal,
   Eye,
@@ -86,6 +87,8 @@ import { GitDiffLogBox, parseGitDiffLogDetails } from "./runner-git-diff-log-box
 import { GitStatusLogBox, parseGitStatusLogDetails } from "./runner-git-status-log-box.js";
 import { LogHeader, LogPanel } from "./runner-log-card.js";
 import { RunnerMarkdown, stripRunnerSystemTags } from "./runner-markdown.js";
+import { DotLoader } from "./dot-loader.js";
+import { LazyMediaPreviewMount, RunnerLazyMediaPreviewLoader } from "./runner-lazy-media-preview.js";
 
 const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.url).toString();
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
@@ -408,6 +411,66 @@ function extractShellPayload(command: string): string | null {
 function formatShellCommandForDisplay(command: string): string {
   const payload = extractShellPayload(command);
   return payload ? payload.trim() : command.trim();
+}
+
+function formatRunnerCommandResourceName(value: string): string {
+  const basename = String(value || "")
+    .split(/[\\/]/)
+    .pop()
+    ?.replace(/\.(?:py|mjs|cjs|js|ts|tsx|sh|bash|zsh)$/i, "")
+    ?.trim() || "Command";
+  return basename
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function normalizeRunnerHelpCommandCandidate(command: string): string {
+  let normalized = formatShellCommandForDisplay(stripRunnerSystemTags(command || ""))
+    .trim()
+    .replace(/^\$\s*/, "")
+    .trim();
+  let previous = "";
+  while (previous !== normalized) {
+    previous = normalized;
+    normalized = normalized
+      .replace(/\s+\d?>&\d+\s*$/g, "")
+      .replace(/\s+\d?>\s*(?:"[^"]*"|'[^']*'|\S+)\s*$/g, "")
+      .replace(/\s+2>\s*&1\s*$/g, "")
+      .replace(/\s+1>\s*&2\s*$/g, "")
+      .replace(/\s*[;&]\s*$/g, "")
+      .trim();
+  }
+  return normalized;
+}
+
+type RunnerHelpCommandDetails = {
+  resourceName: string;
+  normalizedCommand: string;
+};
+
+function parseRunnerHelpCommandDetails(command: string): RunnerHelpCommandDetails | null {
+  const normalizedCommand = normalizeRunnerHelpCommandCandidate(command);
+  if (!/(?:^|\s)--help$/i.test(normalizedCommand)) {
+    return null;
+  }
+
+  const skillMatch = normalizedCommand.match(/(?:^|\s)\S*\/\.claude\/skills\/([^/\s]+)\//i);
+  if (skillMatch?.[1]) {
+    return {
+      resourceName: formatRunnerCommandResourceName(skillMatch[1]),
+      normalizedCommand,
+    };
+  }
+
+  const tokens = tokenizeShellLikeArguments(normalizedCommand);
+  const scriptToken = tokens.find((token) => /\.(?:py|mjs|cjs|js|ts|tsx|sh|bash|zsh)$/i.test(token));
+  const commandToken = scriptToken || tokens.find((token) => !token.startsWith("-") && !/^(?:python3?|node|deno|bun|bash|sh|zsh|npx|pnpm|npm|yarn)$/i.test(token));
+  return {
+    resourceName: formatRunnerCommandResourceName(commandToken || "Command"),
+    normalizedCommand,
+  };
 }
 
 function escapeRunnerHtml(value: string): string {
@@ -984,6 +1047,36 @@ function RunnerTerminalStatus({
   );
 }
 
+function RunnerHelpOutput({
+  content,
+  onWorkspacePathClick,
+}: {
+  content: string;
+  onWorkspacePathClick?: (path: string) => void;
+}) {
+  const segments = useMemo(() => parseRunnerAnsiSegments(content), [content]);
+
+  return (
+    <pre className="tb-log-help-output">
+      {segments.map((segment, index) => {
+        const segmentStyle = {
+          color: segment.color || undefined,
+          fontWeight: segment.bold ? 600 : undefined,
+        } satisfies CSSProperties;
+        return (
+          <span key={`${index}-${segment.text.length}`} style={segmentStyle}>
+            {renderTextWithWorkspacePathLinks(segment.text, {
+              onWorkspacePathClick,
+              keyPrefix: `help-${index}`,
+              style: segmentStyle,
+            })}
+          </span>
+        );
+      })}
+    </pre>
+  );
+}
+
 type RunnerFileDiffMetadata = {
   diff?: string;
   changes?: string;
@@ -999,6 +1092,8 @@ export type RunnerLogFileChangePreview = {
   additions?: number;
   deletions?: number;
 };
+
+const runnerLogFileChangePreviewCache = new WeakMap<RunnerLog, RunnerLogFileChangePreview[]>();
 
 function resolveFileMapValue<T>(map: Record<string, T> | undefined, filePath?: string): T | undefined {
   if (!map || !filePath) return undefined;
@@ -2562,6 +2657,27 @@ function normalizeCreatedResourcePreview(
 
   const id =
     asOptionalTrimmedString(record.id)
+    || (normalizedType === "agent"
+      ? (
+          asOptionalTrimmedString(record.agentId)
+          || asOptionalTrimmedString(record.agent_id)
+          || asOptionalTrimmedString(record.agentID)
+        )
+      : "")
+    || (normalizedType === "skill"
+      ? (
+          asOptionalTrimmedString(record.skillId)
+          || asOptionalTrimmedString(record.skill_id)
+          || asOptionalTrimmedString(record.skillID)
+        )
+      : "")
+    || (normalizedType === "project"
+      ? (
+          asOptionalTrimmedString(record.projectId)
+          || asOptionalTrimmedString(record.project_id)
+          || asOptionalTrimmedString(record.projectID)
+        )
+      : "")
     || asOptionalTrimmedString(record.environmentId)
     || asOptionalTrimmedString(record.environment_id)
     || asOptionalTrimmedString(record.releaseId)
@@ -2681,7 +2797,7 @@ function extractCreatedResourcePreviewsFromText(
 
   const previews: RunnerCreatedResourcePreview[] = [];
   const patterns: Array<{ type: RunnerCreatedResourceType; pattern: RegExp }> = [
-    { type: "agent", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:agent created|created agent)\b[:\s-]*(.+?)(?:\s+\((agent_[^)]+)\))?\s*$/i },
+    { type: "agent", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:agent created|created agent)\b[:\s-]*(.+?)(?:\s+\(([^)]+)\))?\s*$/i },
     { type: "skill", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:skill created|created skill)\b[:\s-]*(.+?)(?:\s+\((skill_[^)]+)\))?\s*$/i },
     { type: "environment", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:environment created|created environment)\b[:\s-]*(.+?)(?:\s+\(((?:env|environment)_[^)]+)\))?\s*$/i },
     { type: "release", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:release created|created release)\b[:\s-]*(.+?)(?:\s+\((release_[^)]+)\))?\s*$/i },
@@ -2802,7 +2918,12 @@ export function collectComputerAgentsCreatedResources(log: RunnerLog): RunnerCre
     return [];
   }
   return [{
-    id: extractQuotedArgument(command, "--id") || `${fallbackType}:${fallbackName}`,
+    id:
+      extractQuotedArgument(command, "--id")
+      || (fallbackType === "agent" ? extractQuotedArgument(command, "--agent-id") : "")
+      || (fallbackType === "skill" ? extractQuotedArgument(command, "--skill-id") : "")
+      || (fallbackType === "project" ? extractQuotedArgument(command, "--project-id") : "")
+      || `${fallbackType}:${fallbackName}`,
     name: fallbackName,
     resourceType: fallbackType,
     mutationVerb,
@@ -3409,7 +3530,7 @@ function TaskManagementCreateLogBox({
   }, [backendUrl, displayTasks, requestHeaders]);
 
   return (
-    <div className="tb-log-card">
+    <div className="tb-log-card tb-log-card-task-create">
       <LogHeader
         icon={<ListTodo className="tb-log-card-small-icon" strokeWidth={1.5} />}
         label="Task Management"
@@ -4443,6 +4564,8 @@ type StructuredCommandExecutionOutput = {
   noOutputExpected: boolean | null;
 };
 
+const STRUCTURED_COMMAND_JSON_PARSE_LIMIT = 200_000;
+
 function parseStructuredCommandExecutionOutput(output: unknown): StructuredCommandExecutionOutput | null {
   const hasEnvelopeKeys = (record: Record<string, unknown>): boolean =>
     [
@@ -4490,11 +4613,24 @@ function parseStructuredCommandExecutionOutput(output: unknown): StructuredComma
       if (!trimmed || (!trimmed.startsWith("{") && !trimmed.startsWith("["))) {
         return null;
       }
-      try {
-        return visit(JSON.parse(trimmed));
-      } catch {
+      if (trimmed.length <= STRUCTURED_COMMAND_JSON_PARSE_LIMIT) {
+        try {
+          return visit(JSON.parse(trimmed));
+        } catch {
+          return null;
+        }
+      }
+      if (!/"(?:stdout|stderr|returnCodeInterpretation|backgroundTaskId|interrupted|noOutputExpected)"\s*:/i.test(trimmed)) {
         return null;
       }
+      return {
+        stdout: extractJsonStringFieldValue(trimmed, ["stdout"]) || "",
+        stderr: extractJsonStringFieldValue(trimmed, ["stderr"]) || "",
+        returnCodeInterpretation: extractJsonStringFieldValue(trimmed, ["returnCodeInterpretation"]),
+        backgroundTaskId: extractJsonStringFieldValue(trimmed, ["backgroundTaskId"]),
+        interrupted: extractJsonBooleanFieldValue(trimmed, ["interrupted"]),
+        noOutputExpected: extractJsonBooleanFieldValue(trimmed, ["noOutputExpected"]),
+      };
     }
     if (typeof value !== "object") {
       return null;
@@ -4827,6 +4963,14 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
   if (!log) {
     return [];
   }
+  const cached = runnerLogFileChangePreviewCache.get(log);
+  if (cached) {
+    return cached;
+  }
+  const cacheAndReturn = (previews: RunnerLogFileChangePreview[]): RunnerLogFileChangePreview[] => {
+    runnerLogFileChangePreviewCache.set(log, previews);
+    return previews;
+  };
 
   if (log.eventType === "file_change") {
     const filePaths = Array.isArray(log.metadata?.filePaths)
@@ -4835,7 +4979,7 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
       )
       : [];
     if (filePaths.length === 0) {
-      return [];
+      return cacheAndReturn([]);
     }
 
     const changeKinds = Array.isArray(log.metadata?.changeKinds) ? log.metadata.changeKinds : [];
@@ -4848,7 +4992,7 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
         ? (log.metadata.diffs as Record<string, RunnerFileDiffMetadata>)
         : undefined;
 
-    return filePaths.map((filePath, index) => {
+    return cacheAndReturn(filePaths.map((filePath, index) => {
       const resolvedDiff = resolveFileMapValue(diffs, filePath);
       const normalizedKind = String(changeKinds[index] || "").trim().toLowerCase();
       const kind: "created" | "modified" | "deleted" =
@@ -4883,7 +5027,7 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
             ? { deletions: fallbackStats.deletions }
             : {}),
       };
-    });
+    }));
   }
 
   const imageGenerationCommand = typeof log.metadata?.command === "string" ? log.metadata.command : undefined;
@@ -4920,7 +5064,7 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
 
     const resolvedImagePaths = Array.from(imagePaths);
     if (resolvedImagePaths.length === 0) {
-      return [];
+      return cacheAndReturn([]);
     }
 
     const normalizedKind = String(log.metadata?.changeKinds?.[0] || "").trim().toLowerCase();
@@ -4931,25 +5075,25 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
           ? "modified"
           : "created";
 
-    return resolvedImagePaths.map((filePath) => ({
+    return cacheAndReturn(resolvedImagePaths.map((filePath) => ({
       path: filePath,
       kind,
-    }));
+    })));
   }
 
   if (log.eventType !== "command_execution") {
-    return [];
+    return cacheAndReturn([]);
   }
 
   if (!isWriteFileLog(log)) {
     const deletedFilePath = extractDeletedFilePathFromCommandOutput(log);
     if (!deletedFilePath) {
-      return [];
+      return cacheAndReturn([]);
     }
-    return [{
+    return cacheAndReturn([{
       path: deletedFilePath,
       kind: "deleted",
-    }];
+    }]);
   }
 
   const command = String(log.metadata?.command || "");
@@ -4963,7 +5107,7 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
     extractWriteMessagePath(log.message) ||
     undefined;
   if (!filePath || isRunnerNullDevicePath(filePath)) {
-    return [];
+    return cacheAndReturn([]);
   }
 
   const fileContents = log.metadata?.fileContents as Record<string, string> | undefined;
@@ -4973,7 +5117,7 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
   const diffPreview = resolveWriteDiffPreview(log, filePath, previewSource, operation);
   const effectiveDiffText = String(structuredWrite?.diffText || diffPreview.diffText || "").trim();
 
-  return [{
+  return cacheAndReturn([{
     path: filePath,
     kind: operation,
     ...(typeof content === "string" ? { content } : {}),
@@ -4988,7 +5132,7 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
       : typeof diffPreview.deletions === "number"
         ? { deletions: diffPreview.deletions }
         : {}),
-  }];
+  }]);
 }
 
 function extractDeletedFilePathFromCommandOutput(log: RunnerLog): string | null {
@@ -5185,12 +5329,18 @@ function ReadFileLogBox({
             <div className="tb-log-card-state tb-log-card-state-error">{output || "An error occurred while reading the file."}</div>
           ) : imagePreviewUrl ? (
             <div className="tb-log-image-grid">
-              <RunnerImagePreviewSurface
-                src={imagePreviewUrl}
-                alt={filePath || "Read image"}
-                fetchHeaders={requestHeaders}
-                loadStrategy="visible"
-              />
+              <LazyMediaPreviewMount
+                mediaKey={imagePreviewUrl}
+                className="tb-log-media-lazy-preview"
+                placeholder={<GenericImagePreviewLoadingState />}
+              >
+                <RunnerImagePreviewSurface
+                  src={imagePreviewUrl}
+                  alt={filePath || "Read image"}
+                  fetchHeaders={requestHeaders}
+                  loadStrategy="immediate"
+                />
+              </LazyMediaPreviewMount>
             </div>
           ) : (
             <div className="tb-log-card-empty">No image preview available.</div>
@@ -5455,12 +5605,18 @@ function WriteFileSingleLogBox({
           <div className="tb-log-card-state tb-log-card-state-error">{output || "An error occurred while writing the file."}</div>
         ) : imagePreviewUrl ? (
           <div className="tb-log-image-grid">
-            <RunnerImagePreviewSurface
-              src={imagePreviewUrl}
-              alt={filePath || "Generated image"}
-              fetchHeaders={requestHeaders}
-              loadStrategy="visible"
-            />
+            <LazyMediaPreviewMount
+              mediaKey={imagePreviewUrl}
+              className="tb-log-media-lazy-preview"
+              placeholder={<GenericImagePreviewLoadingState />}
+            >
+              <RunnerImagePreviewSurface
+                src={imagePreviewUrl}
+                alt={filePath || "Generated image"}
+                fetchHeaders={requestHeaders}
+                loadStrategy="immediate"
+              />
+            </LazyMediaPreviewMount>
           </div>
         ) : diffText || output ? (
           <>
@@ -7826,7 +7982,7 @@ function WebSearchLogBox({
                     alt={image.title || `Search image ${index + 1}`}
                     className="tb-log-web-search-image-surface"
                     imageClassName="tb-log-image-thumb"
-                    loadStrategy="visible"
+                    loadStrategy="immediate"
                     referrerPolicy="no-referrer"
                   />
                 ))}
@@ -9886,6 +10042,78 @@ function extractWorkspaceVideoPathFromOutput(output: unknown): string | null {
   return candidates[0] || null;
 }
 
+function extractDirectWorkspaceVideoPathFromMetadata(metadata: RunnerLog["metadata"]): string | null {
+  if (!metadata || typeof metadata !== "object") {
+    return null;
+  }
+  const record = metadata as Record<string, unknown>;
+  const directCandidates = [
+    record.savedVideoPath,
+    record.saved_video_path,
+    record.outputVideoPath,
+    record.output_video_path,
+  ];
+  for (const candidate of directCandidates) {
+    if (typeof candidate !== "string" || !candidate.trim()) {
+      continue;
+    }
+    const normalized = candidate.trim().replace(/^\/workspace\//, "").replace(/^workspace\//, "");
+    if (isRunnerLogVideoFilePath(normalized)) {
+      return normalized;
+    }
+  }
+  return null;
+}
+
+function extractWorkspaceVideoPathFromMetadata(metadata: RunnerLog["metadata"]): string | null {
+  if (!metadata || typeof metadata !== "object") {
+    return null;
+  }
+  const record = metadata as Record<string, unknown>;
+  const directCandidates = [
+    record.savedVideoPath,
+    record.saved_video_path,
+    record.outputPath,
+    record.output_path,
+    record.path,
+  ];
+  for (const candidate of directCandidates) {
+    if (typeof candidate !== "string" || !candidate.trim()) {
+      continue;
+    }
+    const normalized = candidate.trim().replace(/^\/workspace\//, "").replace(/^workspace\//, "");
+    if (isRunnerLogVideoFilePath(normalized)) {
+      return normalized;
+    }
+  }
+  return extractWorkspaceVideoPathFromResult(metadata);
+}
+
+function hasExplicitVideoGenerationSource(log: RunnerLog, command?: string): boolean {
+  const rawLog = log as RunnerLog & { event_type?: unknown; type?: unknown };
+  const normalizedEventType = String(rawLog.eventType || rawLog.event_type || rawLog.type || "").trim().toLowerCase();
+  const metadataToolName = String(log.metadata?.toolName || log.metadata?.toolId || "").trim().toLowerCase();
+  const metadataServerName = String(log.metadata?.serverName || "").trim().toLowerCase();
+  const normalizedCommand =
+    typeof command === "string" && command.trim()
+      ? command.trim()
+      : typeof log.metadata?.command === "string"
+        ? log.metadata.command.trim()
+        : "";
+  return Boolean(
+    (normalizedCommand && isVideoGenerationCommand(normalizedCommand))
+    || normalizedEventType === "video_generation_skill"
+    || normalizedEventType === "video_generation"
+    || normalizedEventType === "generate_video"
+    || metadataToolName === "generate_video"
+    || metadataToolName === "video_generation"
+    || metadataServerName === "video-generation-skill"
+    || metadataServerName === "video_generation_skill"
+    || log.metadata?.isVideoGeneration
+    || extractDirectWorkspaceVideoPathFromMetadata(log.metadata)
+  );
+}
+
 function hasConfirmedGeneratedVideoPathText(output: unknown): boolean {
   if (typeof output !== "string" || !output.trim()) {
     return false;
@@ -9924,15 +10152,26 @@ function isVideoFileChangeLog(log: RunnerLog): boolean {
   if (log.eventType !== "file_change") {
     return false;
   }
-  if (log.metadata?.isVideoGeneration || typeof log.metadata?.savedVideoPath === "string") {
-    return true;
+  if (!hasExplicitVideoGenerationSource(log)) {
+    return false;
   }
   const filePaths = Array.isArray(log.metadata?.filePaths) ? log.metadata?.filePaths : [];
-  return filePaths.some((filePath) => isRunnerLogVideoFilePath(String(filePath || "")));
+  return Boolean(
+    extractWorkspaceVideoPathFromMetadata(log.metadata)
+    || extractWorkspaceVideoPathFromOutput(log.message)
+    || filePaths.some((filePath) => isRunnerLogVideoFilePath(String(filePath || "")))
+  );
 }
 
 function extractVideoPrompt(command?: string): string | undefined {
   if (!command) return undefined;
+  const labeledPromptMatch =
+    command.match(/Generating video(?:\s+with [^:]+)?:\s*(.+?)(?:\.\.\.)?(?:\r?\n|$)/i)
+    || command.match(/^\s*Video Generation\s+(.+?)(?:\s+generating\.{3}|(?:\r?\n|$))/i);
+  const labeledPrompt = sanitizeImagePromptCandidate(labeledPromptMatch?.[1] || "");
+  if (labeledPrompt) {
+    return labeledPrompt;
+  }
   const quoted = [...command.matchAll(/"([^"]+)"/g), ...command.matchAll(/'([^']+)'/g)]
     .map((match) => sanitizeImagePromptCandidate(match[1]))
     .filter(
@@ -9974,25 +10213,89 @@ function extractVideoPromptFromLogMetadata(log: RunnerLog): string | undefined {
 }
 
 export function isLikelyVideoGenerationLog(log: RunnerLog, command?: string): boolean {
+  if (!hasExplicitVideoGenerationSource(log, command)) {
+    return false;
+  }
   const messageHasConfirmedVideoPath =
     hasConfirmedGeneratedVideoPathText(log.message) &&
     Boolean(extractWorkspaceVideoPathFromOutput(log.message));
+  const messageHasVideoGenerationLabel = /\b(?:Video Generation|Generating video)\b/i.test(log.message || "");
+  const rawLog = log as RunnerLog & { event_type?: unknown; type?: unknown };
+  const normalizedEventType = String(rawLog.eventType || rawLog.event_type || rawLog.type || "").trim().toLowerCase();
+  const metadataToolName = String(log.metadata?.toolName || log.metadata?.toolId || "").trim().toLowerCase();
+  const metadataServerName = String(log.metadata?.serverName || "").trim().toLowerCase();
+  const normalizedCommand =
+    typeof command === "string" && command.trim()
+      ? command.trim()
+      : typeof log.metadata?.command === "string"
+        ? log.metadata.command.trim()
+        : "";
   return Boolean(
-    (command && isVideoGenerationCommand(command))
+    (normalizedCommand && isVideoGenerationCommand(normalizedCommand))
+    || normalizedEventType === "video_generation_skill"
+    || normalizedEventType === "video_generation"
+    || normalizedEventType === "generate_video"
+    || metadataToolName === "generate_video"
+    || metadataToolName === "video_generation"
+    || metadataServerName === "video-generation-skill"
+    || metadataServerName === "video_generation_skill"
     || log.metadata?.isVideoGeneration
-    || (typeof log.metadata?.savedVideoPath === "string" && log.metadata.savedVideoPath.trim())
+    || extractDirectWorkspaceVideoPathFromMetadata(log.metadata)
+    || extractWorkspaceVideoPathFromMetadata(log.metadata)
     || hasStructuredVideoPayload(log.metadata?.result)
     || hasStructuredVideoPayload(log.metadata?.output)
     || messageHasConfirmedVideoPath
+    || messageHasVideoGenerationLabel
   );
 }
 
 function ImagePreviewLoadingState() {
   return (
     <div className="tb-runner-image-preview-surface tb-image-generation-preview tb-image-generation-preview-loading is-static" aria-hidden="true">
-      <span className="tb-runner-image-preview-surface-state">
-        <LoaderCircle className="tb-runner-image-preview-surface-spinner" strokeWidth={1.75} />
+      <span className="tb-runner-media-preview-loader">
+        <DotLoader dotCount={9} dotSize={4} gap={3} className="tb-runner-media-dot-loader" />
       </span>
+    </div>
+  );
+}
+
+function GenericImagePreviewLoadingState({ className = "" }: { className?: string }) {
+  return (
+    <div className={`tb-runner-image-preview-surface tb-log-image-preview-loading is-static ${className}`.trim()} aria-hidden="true">
+      <RunnerLazyMediaPreviewLoader />
+    </div>
+  );
+}
+
+function ImageUnderstandingPreviewLoadingState() {
+  return <GenericImagePreviewLoadingState className="tb-image-understanding-preview-surface" />;
+}
+
+function MediaPromptPreview({ prompt }: { prompt?: string | null }) {
+  const normalizedPrompt = String(prompt || "").trim();
+  if (!normalizedPrompt) {
+    return null;
+  }
+  return (
+    <div className="tb-log-media-prompt" aria-label="Generation prompt">
+      "{normalizedPrompt}"
+    </div>
+  );
+}
+
+function MediaPreviewLayout({
+  prompt,
+  children,
+  variant,
+}: {
+  prompt?: string | null;
+  children: ReactNode;
+  variant: "image" | "video";
+}) {
+  return (
+    <div className={`tb-log-media-preview-layout tb-log-media-preview-layout-${variant}`}>
+      <div className="tb-log-media-preview-visual">{children}</div>
+      <MediaPromptPreview prompt={prompt} />
     </div>
   );
 }
@@ -10128,20 +10431,26 @@ function ImageUnderstandingLogBox({
         <div className={layoutClassName}>
           <div className="tb-image-understanding-preview">
             {imagePreviewUrl ? (
-              <RunnerImagePreviewSurface
-                className="tb-image-understanding-preview-surface"
-                imageClassName="tb-image-understanding-preview-image"
-                src={imagePreviewUrl}
-                alt={imageName}
-                maxHeight={360}
-                fetchHeaders={requestHeaders}
-                loadStrategy="visible"
-                onImageLoad={({ naturalWidth, naturalHeight }) => {
-                  if (naturalWidth > 0 && naturalHeight > 0) {
-                    setImageOrientation(naturalWidth > naturalHeight ? "landscape" : "portrait");
-                  }
-                }}
-              />
+              <LazyMediaPreviewMount
+                mediaKey={imagePreviewUrl}
+                className="tb-log-media-lazy-preview tb-image-understanding-lazy-preview"
+                placeholder={<ImageUnderstandingPreviewLoadingState />}
+              >
+                <RunnerImagePreviewSurface
+                  className="tb-image-understanding-preview-surface"
+                  imageClassName="tb-image-understanding-preview-image"
+                  src={imagePreviewUrl}
+                  alt={imageName}
+                  maxHeight={360}
+                  fetchHeaders={requestHeaders}
+                  loadStrategy="immediate"
+                  onImageLoad={({ naturalWidth, naturalHeight }) => {
+                    if (naturalWidth > 0 && naturalHeight > 0) {
+                      setImageOrientation(naturalWidth > naturalHeight ? "landscape" : "portrait");
+                    }
+                  }}
+                />
+              </LazyMediaPreviewMount>
             ) : (
               <div className="tb-log-card-empty">Image preview unavailable.</div>
             )}
@@ -10280,14 +10589,11 @@ function ImageGenerationLogBox({
     || outputImagePath
     || messageImagePath
     || null;
-  const resolvedImageSrc =
-    extractBase64Image(log.metadata?.result)
-    || (!isError ? extractBase64Image(log.metadata?.output) : null)
-    || buildRunnerPreviewDownloadUrl(
-      backendUrl,
-      environmentId,
-      resolvedImagePath
-    );
+  const resolvedImageSrc = buildRunnerPreviewDownloadUrl(
+    backendUrl,
+    environmentId,
+    resolvedImagePath
+  ) || (resolvedImagePath ? null : extractBase64Image(log.metadata?.result) || (!isError ? extractBase64Image(log.metadata?.output) : null));
   const errorMessage =
     typeof log.metadata?.error === "string" && log.metadata.error.trim()
       ? log.metadata.error.trim()
@@ -10303,7 +10609,7 @@ function ImageGenerationLogBox({
     <ImagePreviewLogCard
       icon={<Images className="tb-log-card-small-icon" strokeWidth={1.5} />}
       label="Image Generation"
-      title={prompt}
+      title={null}
       timeLabel={timeLabel}
       meta={isLoading ? <span className="tb-log-card-status">generating...</span> : null}
       body={
@@ -10311,18 +10617,29 @@ function ImageGenerationLogBox({
           <div className="tb-log-card-state tb-log-card-state-error">{errorMessage}</div>
         ) : resolvedImageSrc ? (
           <div className="tb-log-image-grid">
-            <RunnerImagePreviewSurface
-              className="tb-image-generation-preview"
-              imageClassName="tb-image-generation-preview-image"
-              src={resolvedImageSrc}
-              alt={prompt || "Generated image"}
-              fetchHeaders={requestHeaders}
-              loadStrategy="visible"
-            />
+            <MediaPreviewLayout prompt={prompt} variant="image">
+              <LazyMediaPreviewMount
+                mediaKey={resolvedImageSrc}
+                className="tb-log-media-lazy-preview"
+                placeholder={<ImagePreviewLoadingState />}
+              >
+                <RunnerImagePreviewSurface
+                  className="tb-image-generation-preview"
+                  imageClassName="tb-image-generation-preview-image"
+                  src={resolvedImageSrc}
+                  alt={prompt || "Generated image"}
+                  maxHeight={400}
+                  fetchHeaders={requestHeaders}
+                  loadStrategy="immediate"
+                />
+              </LazyMediaPreviewMount>
+            </MediaPreviewLayout>
           </div>
         ) : isLoading ? (
           <div className="tb-log-image-grid">
-            <ImagePreviewLoadingState />
+            <MediaPreviewLayout prompt={prompt} variant="image">
+              <ImagePreviewLoadingState />
+            </MediaPreviewLayout>
           </div>
         ) : null
       }
@@ -10333,9 +10650,122 @@ function ImageGenerationLogBox({
 function VideoPreviewLoadingState() {
   return (
     <div className="tb-video-generation-preview tb-video-generation-preview-loading" aria-hidden="true">
-      <span className="tb-runner-image-preview-surface-state">
-        <LoaderCircle className="tb-runner-image-preview-surface-spinner" strokeWidth={1.75} />
+      <span className="tb-runner-media-preview-loader">
+        <DotLoader dotCount={9} dotSize={4} gap={3} className="tb-runner-media-dot-loader" />
       </span>
+    </div>
+  );
+}
+
+function serializeRunnerMediaFetchHeaders(fetchHeaders?: HeadersInit): string {
+  if (!fetchHeaders || typeof Headers === "undefined") {
+    return "";
+  }
+  try {
+    return JSON.stringify(Array.from(new Headers(fetchHeaders).entries()).sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey)));
+  } catch {
+    return "";
+  }
+}
+
+function VideoPreviewPlayer({
+  src,
+  className,
+  fetchHeaders,
+}: {
+  src: string;
+  className?: string;
+  fetchHeaders?: HeadersInit;
+}) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [objectUrl, setObjectUrl] = useState("");
+  const headersSignature = useMemo(() => serializeRunnerMediaFetchHeaders(fetchHeaders), [fetchHeaders]);
+  const shouldFetchWithHeaders = Boolean(headersSignature);
+  const resolvedSrc = shouldFetchWithHeaders ? objectUrl : src;
+
+  useEffect(() => {
+    setIsLoaded(false);
+    setHasError(false);
+    setObjectUrl("");
+  }, [headersSignature, shouldFetchWithHeaders, src]);
+
+  useEffect(() => {
+    if (!src || !shouldFetchWithHeaders || typeof fetch === "undefined" || typeof URL === "undefined") {
+      return;
+    }
+
+    let cancelled = false;
+    let nextObjectUrl = "";
+    const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const requestHeaders = fetchHeaders && typeof Headers !== "undefined" ? new Headers(fetchHeaders) : undefined;
+    const fetchOptions: RequestInit = requestHeaders ? { headers: requestHeaders } : {};
+    if (controller) {
+      fetchOptions.signal = controller.signal;
+    }
+
+    fetch(src, fetchOptions)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Video preview request failed (${response.status})`);
+        }
+        return response.blob();
+      })
+      .then((blob) => {
+        if (cancelled) {
+          return;
+        }
+        nextObjectUrl = URL.createObjectURL(blob);
+        setObjectUrl(nextObjectUrl);
+      })
+      .catch((error) => {
+        if ((error as { name?: string })?.name === "AbortError") {
+          return;
+        }
+        setHasError(true);
+      });
+
+    return () => {
+      cancelled = true;
+      controller?.abort();
+      if (nextObjectUrl) {
+        URL.revokeObjectURL(nextObjectUrl);
+      }
+    };
+  }, [headersSignature, shouldFetchWithHeaders, src]);
+
+  useEffect(() => {
+    return () => {
+      if (objectUrl && typeof URL !== "undefined") {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [objectUrl]);
+
+  if (hasError) {
+    return (
+      <div className="tb-video-generation-preview tb-video-generation-preview-error">
+        Video preview unavailable.
+      </div>
+    );
+  }
+
+  return (
+    <div className="tb-video-generation-preview-shell">
+      {!isLoaded ? <VideoPreviewLoadingState /> : null}
+      {resolvedSrc ? (
+        <video
+          className={className}
+          src={resolvedSrc}
+          controls
+          playsInline
+          preload="metadata"
+          onLoadedMetadata={() => setIsLoaded(true)}
+          onCanPlay={() => setIsLoaded(true)}
+          onError={() => setHasError(true)}
+          style={isLoaded ? undefined : { display: "none" }}
+        />
+      ) : null}
     </div>
   );
 }
@@ -10345,6 +10775,7 @@ function VideoGenerationLogBox({
   timeLabel,
   backendUrl,
   environmentId,
+  requestHeaders,
 }: {
   log: RunnerLog;
   timeLabel?: string;
@@ -10367,15 +10798,15 @@ function VideoGenerationLogBox({
       : null;
   const outputPathSource = parsedOutput ? parsedStdout : log.metadata?.output;
   const outputVideoPath =
-    !isLoading && !isError && hasConfirmedGeneratedVideoPathText(outputPathSource)
+    !isLoading && !isError
       ? extractWorkspaceVideoPathFromOutput(outputPathSource)
       : null;
   const messageVideoPath =
-    !isLoading && !isError && hasConfirmedGeneratedVideoPathText(log.message)
+    !isLoading && !isError
       ? extractWorkspaceVideoPathFromOutput(log.message)
       : null;
   const resolvedVideoPath =
-    log.metadata?.savedVideoPath
+    extractWorkspaceVideoPathFromMetadata(log.metadata)
     || filePathFromMetadata
     || extractWorkspaceVideoPathFromResult(log.metadata?.result)
     || outputVideoPath
@@ -10401,7 +10832,7 @@ function VideoGenerationLogBox({
     <ImagePreviewLogCard
       icon={<Video className="tb-log-card-small-icon" strokeWidth={1.5} />}
       label="Video Generation"
-      title={prompt}
+      title={null}
       timeLabel={timeLabel}
       meta={isLoading ? <span className="tb-log-card-status">generating...</span> : null}
       body={
@@ -10409,17 +10840,25 @@ function VideoGenerationLogBox({
           <div className="tb-log-card-state tb-log-card-state-error">{errorMessage}</div>
         ) : resolvedVideoSrc ? (
           <div className="tb-log-video-grid">
-            <video
-              className="tb-video-generation-preview"
-              src={resolvedVideoSrc}
-              controls
-              playsInline
-              preload="metadata"
-            />
+            <MediaPreviewLayout prompt={prompt} variant="video">
+              <LazyMediaPreviewMount
+                mediaKey={resolvedVideoSrc}
+                className="tb-log-media-lazy-preview"
+                placeholder={<VideoPreviewLoadingState />}
+              >
+                <VideoPreviewPlayer
+                  className="tb-video-generation-preview"
+                  src={resolvedVideoSrc}
+                  fetchHeaders={requestHeaders}
+                />
+              </LazyMediaPreviewMount>
+            </MediaPreviewLayout>
           </div>
         ) : isLoading ? (
           <div className="tb-log-video-grid">
-            <VideoPreviewLoadingState />
+            <MediaPreviewLayout prompt={prompt} variant="video">
+              <VideoPreviewLoadingState />
+            </MediaPreviewLayout>
           </div>
         ) : null
       }
@@ -10920,15 +11359,21 @@ export function BrowserSkillLogBox({
             )}
             <div className="tb-browser-carousel-frame">
               {currentStep.previewSrc ? (
-                <RunnerImagePreviewSurface
-                  src={currentStep.previewSrc}
-                  alt={currentStep.previewAlt}
-                  className="tb-browser-carousel-surface"
-                  imageClassName="tb-browser-carousel-image"
-                  maxHeight={500}
-                  fetchHeaders={requestHeaders}
-                  loadStrategy="visible"
-                />
+                <LazyMediaPreviewMount
+                  mediaKey={currentStep.previewSrc}
+                  className="tb-log-media-lazy-preview"
+                  placeholder={<GenericImagePreviewLoadingState className="tb-browser-carousel-surface" />}
+                >
+                  <RunnerImagePreviewSurface
+                    src={currentStep.previewSrc}
+                    alt={currentStep.previewAlt}
+                    className="tb-browser-carousel-surface"
+                    imageClassName="tb-browser-carousel-image"
+                    maxHeight={500}
+                    fetchHeaders={requestHeaders}
+                    loadStrategy="immediate"
+                  />
+                </LazyMediaPreviewMount>
               ) : (
                 <div className="tb-browser-carousel-empty">
                   {currentStep.isRunning ? "Capturing browser state..." : "No screenshot captured for this step."}
@@ -11337,6 +11782,37 @@ function MkdirLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string })
   );
 }
 
+function HelpCommandLogBox({
+  details,
+  output,
+  timeLabel,
+  onWorkspacePathClick,
+}: {
+  details: RunnerHelpCommandDetails;
+  output: string;
+  timeLabel?: string;
+  onWorkspacePathClick?: (path: string) => void;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const helpText = output.trim() || "No help output.";
+
+  return (
+    <div className="tb-log-card tb-log-card-help">
+      <LogHeader
+        icon={<CircleHelp className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label={`${details.resourceName} Help`}
+        title={null}
+        timeLabel={timeLabel}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        <RunnerHelpOutput content={helpText} onWorkspacePathClick={onWorkspacePathClick} />
+      </LogPanel>
+    </div>
+  );
+}
+
 function GenericCommandLogBox({
   log,
   timeLabel,
@@ -11451,6 +11927,20 @@ function GenericCommandLogBox({
     }
     return null;
   }, [command, copyPayload, output, outputDisplay, rawOutput, shellCommand, stderr, stderrDisplay, stdout, stdoutDisplay]);
+  const helpCommandDetails = useMemo(() => {
+    const commandCandidates = [command, shellCommand, copyPayload].filter((value) => value.trim().length > 0);
+    for (const commandCandidate of commandCandidates) {
+      const parsedDetails = parseRunnerHelpCommandDetails(commandCandidate);
+      if (parsedDetails) return parsedDetails;
+    }
+    return null;
+  }, [command, copyPayload, shellCommand]);
+  const helpCommandOutput = useMemo(() => {
+    const outputParts = parsedOutput
+      ? [stdout, stderr, statusNotice || ""]
+      : [output || rawOutput];
+    return stripRunnerSystemTags(outputParts.filter((value) => value.trim().length > 0).join("\n")).trim();
+  }, [output, parsedOutput, rawOutput, statusNotice, stderr, stdout]);
 
   useEffect(() => {
     if (!copied) return;
@@ -11492,6 +11982,17 @@ function GenericCommandLogBox({
         details={computerAgentsThreadGetDetails}
         timeLabel={timeLabel}
         availableAgents={availableAgents}
+      />
+    );
+  }
+
+  if (helpCommandDetails) {
+    return (
+      <HelpCommandLogBox
+        details={helpCommandDetails}
+        output={helpCommandOutput}
+        timeLabel={timeLabel}
+        onWorkspacePathClick={onWorkspacePathClick}
       />
     );
   }
@@ -11937,6 +12438,11 @@ export function RunnerWorkLogEntry({
     return <DeepResearchEventLogBox log={log} timeLabel={timeLabel} />;
   }
 
+  const persistedCommand = typeof log.metadata?.command === "string" ? log.metadata.command : "";
+  if (isLikelyVideoGenerationLog(log, persistedCommand)) {
+    return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
+  }
+
   if (log.eventType === "command_execution") {
     const command = log.metadata?.command || "";
     const output = String(log.metadata?.output || "");
@@ -12235,7 +12741,7 @@ export function RunnerWorkLogEntry({
       return null;
     }
     if (isVideoFileChangeLog(log)) {
-      return null;
+      return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
     return (
       <WriteFileLogGroup

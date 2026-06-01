@@ -5,6 +5,7 @@ import { visit } from "unist-util-visit";
 import type { Components } from "react-markdown";
 import { buildRunnerPreviewDownloadUrl } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
+import { LazyMediaPreviewMount, RunnerLazyMediaPreviewLoader } from "./runner-lazy-media-preview.js";
 
 const RUNNER_WORKSPACE_PATH_PROTOCOL = "runner-workspace:";
 const RUNNER_WORKSPACE_PATH_MATCHER = /\/workspace\/\S+/g;
@@ -406,14 +407,24 @@ function createRunnerMarkdownComponents(
       const workspaceImageSrc = resolveRunnerMarkdownImageDownloadUrl(src, imageOptions);
       if (workspaceImageSrc) {
         return (
-          <RunnerImagePreviewSurface
-            src={workspaceImageSrc}
-            alt={typeof alt === "string" ? alt : "Preview image"}
-            className="tb-message-markdown-image"
-            fetchHeaders={imageOptions?.requestHeaders}
-            loadStrategy="visible"
-            maxHeight={imageOptions?.maxHeight ?? 300}
-          />
+          <LazyMediaPreviewMount
+            mediaKey={workspaceImageSrc}
+            className="tb-message-markdown-image-lazy-preview"
+            placeholder={
+              <span className="tb-message-markdown-image tb-message-markdown-image-loading" aria-hidden="true">
+                <RunnerLazyMediaPreviewLoader />
+              </span>
+            }
+          >
+            <RunnerImagePreviewSurface
+              src={workspaceImageSrc}
+              alt={typeof alt === "string" ? alt : "Preview image"}
+              className="tb-message-markdown-image"
+              fetchHeaders={imageOptions?.requestHeaders}
+              loadStrategy="immediate"
+              maxHeight={imageOptions?.maxHeight ?? 300}
+            />
+          </LazyMediaPreviewMount>
         );
       }
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type WheelEventHandler } from "react";
-import { LoaderCircle } from "lucide-react";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
+import { DotLoader } from "./dot-loader.js";
 
 const RUNNER_IMAGE_PREVIEW_OBJECT_URL_CACHE_LIMIT = 80;
 const runnerImagePreviewObjectUrlCache = new Map<string, string>();
@@ -97,7 +97,7 @@ export function RunnerImagePreviewSurface({
   mimeType,
   className,
   imageClassName,
-  maxHeight = 300,
+  maxHeight,
   fetchHeaders,
   fetchCredentials = "same-origin",
   interactive = true,
@@ -114,6 +114,7 @@ export function RunnerImagePreviewSurface({
 
   const [resolvedSrc, setResolvedSrc] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(Boolean(src));
+  const [failed, setFailed] = useState(false);
   const [isVisible, setIsVisible] = useState(loadStrategy !== "visible");
   const [shouldForceFetchFallback, setShouldForceFetchFallback] = useState(false);
   const surfaceRef = useRef<HTMLElement | null>(null);
@@ -138,6 +139,7 @@ export function RunnerImagePreviewSurface({
 
   useEffect(() => {
     setShouldForceFetchFallback(false);
+    setFailed(false);
   }, [src]);
 
   useEffect(() => {
@@ -174,22 +176,25 @@ export function RunnerImagePreviewSurface({
     if (!src) {
       setResolvedSrc("");
       setLoading(false);
+      setFailed(false);
       return;
     }
 
     if (!shouldResolvePreview) {
       setResolvedSrc("");
       setLoading(true);
+      setFailed(false);
       return;
     }
 
     const canAttemptDirectRender =
       isDirectlyRenderableImageSource(src)
-      || (!hasCustomFetchHeaders && !shouldForceFetchFallback && fetchCredentials === "same-origin" && isSameOriginImageSource(src));
+      || (!hasCustomFetchHeaders && !shouldForceFetchFallback && fetchCredentials === "same-origin");
 
     if (canAttemptDirectRender) {
       setResolvedSrc(src);
       setLoading(false);
+      setFailed(false);
       return;
     }
 
@@ -197,19 +202,30 @@ export function RunnerImagePreviewSurface({
     if (cachedObjectUrl) {
       setResolvedSrc(cachedObjectUrl);
       setLoading(false);
+      setFailed(false);
       return;
     }
 
     let cancelled = false;
+    const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timeoutId =
+      typeof window !== "undefined" && controller
+        ? window.setTimeout(() => controller.abort(), 20000)
+        : null;
     const normalizedFetchHeaders = fetchHeaders ? new Headers(fetchHeaders) : undefined;
+    const fetchOptions: RequestInit = {
+      headers: normalizedFetchHeaders,
+      credentials: fetchCredentials,
+    };
+    if (controller) {
+      fetchOptions.signal = controller.signal;
+    }
 
     setResolvedSrc("");
     setLoading(true);
+    setFailed(false);
 
-    fetch(src, {
-      headers: normalizedFetchHeaders,
-      credentials: fetchCredentials,
-    })
+    fetch(src, fetchOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Failed to load image preview (${response.status})`);
@@ -225,13 +241,18 @@ export function RunnerImagePreviewSurface({
         const objectUrl = URL.createObjectURL(normalizedBlob);
         rememberRunnerImagePreviewObjectUrl(objectUrlCacheKey, objectUrl);
         setResolvedSrc(objectUrl);
+        setFailed(false);
       })
       .catch(() => {
         if (!cancelled) {
           setResolvedSrc("");
+          setFailed(true);
         }
       })
       .finally(() => {
+        if (timeoutId !== null) {
+          window.clearTimeout(timeoutId);
+        }
         if (!cancelled) {
           setLoading(false);
         }
@@ -239,6 +260,10 @@ export function RunnerImagePreviewSurface({
 
     return () => {
       cancelled = true;
+      controller?.abort();
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
     };
   }, [fetchCredentials, hasCustomFetchHeaders, headersSignature, objectUrlCacheKey, resolvedMimeType, shouldForceFetchFallback, src, shouldResolvePreview]);
 
@@ -246,7 +271,7 @@ export function RunnerImagePreviewSurface({
     return null;
   }
 
-  if (!loading && !resolvedSrc) {
+  if (!loading && !resolvedSrc && !failed) {
     return null;
   }
 
@@ -255,7 +280,10 @@ export function RunnerImagePreviewSurface({
       src={resolvedSrc}
       alt={normalizedAlt}
       className={joinClassNames("tb-runner-image-preview-surface-image", imageClassName)}
-      style={{ maxHeight, ...imageStyle }}
+      style={{
+        ...(typeof maxHeight === "number" ? { maxHeight } : {}),
+        ...imageStyle,
+      }}
       loading={loadStrategy === "visible" ? "lazy" : undefined}
       referrerPolicy={referrerPolicy}
       onLoad={(event) => {
@@ -274,12 +302,21 @@ export function RunnerImagePreviewSurface({
         ) {
           setShouldForceFetchFallback(true);
           setLoading(true);
+          setFailed(false);
+          return;
         }
+        setResolvedSrc("");
+        setLoading(false);
+        setFailed(true);
       }}
     />
   ) : loading ? (
     <span className="tb-runner-image-preview-surface-state" aria-hidden="true">
-      <LoaderCircle className="tb-runner-image-preview-surface-spinner" strokeWidth={1.75} />
+      <DotLoader dotCount={9} dotSize={4} gap={3} className="tb-runner-media-dot-loader" />
+    </span>
+  ) : failed ? (
+    <span className="tb-runner-image-preview-surface-state tb-runner-image-preview-surface-state-error">
+      Preview unavailable.
     </span>
   ) : null;
 
