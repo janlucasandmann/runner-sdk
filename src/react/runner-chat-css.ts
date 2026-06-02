@@ -2038,26 +2038,17 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .tb-work-label {
   min-width: 0;
-  font-size: 14px;
-  line-height: 1.15;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.95);
-}
-
-.tb-runner-chat .tb-work-toggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-left: auto;
-  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1.15;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.7);
 }
 
-.tb-runner-chat .tb-work-toggle-label {
-  font-size: 12px;
-  line-height: 1;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.7);
+.tb-runner-chat .tb-work-label .tb-chevron {
+  flex-shrink: 0;
 }
 
 .tb-runner-chat .tb-work-header .tb-chevron {

@@ -475,6 +475,15 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         backdrop-filter: blur(50px);
       }
 
+      .playground-project-overview-chart-surface .playground-project-overview-chart-card {
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+      }
+
+      .playground-project-overview-chart-surface .playground-project-overview-summary-kpis.playground-project-overview-chart-kpis {
+        background: transparent;
+      }
+
       .playground-project-overview-chart-card::before {
         content: "";
         pointer-events: none;
@@ -504,8 +513,8 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px 24px;
         margin-top: 12px;
-        padding: 12px 0 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0;
+        border-top: 0;
       }
 
       .playground-project-overview-integration-row {
@@ -580,6 +589,24 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-chart-header .playground-environments-home-comparison-timescale-select {
+        border-radius: 999px;
+      }
+
+      .playground-project-overview-chart-footer-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 30px;
+      }
+
+      .playground-project-overview-chart-footer-row .playground-settings-usage-inline-legend {
+        flex: 1 1 auto;
+        min-width: 0;
+        justify-content: flex-start;
+      }
+
+      .playground-project-overview-chart-footer-row .playground-environments-home-comparison-timescale-select {
         border-radius: 999px;
       }
 
@@ -973,6 +1000,441 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-files-section .playground-tasks-detail-section-title {
         font-size: 13px;
         font-weight: 400;
+      }
+
+      .playground-project-overview-files-overview {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        margin-top: 12px;
+        margin-bottom: 32px;
+      }
+
+      .playground-project-overview-files-kpi-card {
+        --playground-project-overview-files-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        overflow: hidden;
+        border: 0;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-project-overview-files-kpi-card::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-files-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-project-overview-files-kpi-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-project-overview-files-kpi-card {
+        padding: 22px 24px 20px;
+      }
+
+      .playground-project-overview-files-kpi-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-files-kpi-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+        font-size: 13px;
+        line-height: 1.35;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-project-overview-files-kpi-title strong {
+        color: rgba(255, 255, 255, 0.92);
+        font-weight: 500;
+      }
+
+      .playground-project-overview-files-kpi-pill {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 26px;
+        padding: 4px 12px;
+        border-radius: 0;
+        background: rgba(255, 255, 71, 0.12);
+        color: rgb(250, 255, 83);
+        font-size: 12px;
+        line-height: 1;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-weight: 400;
+      }
+
+      .playground-project-overview-files-kpi-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 26px;
+        padding-top: 28px;
+      }
+
+      .playground-project-overview-files-kpi-label {
+        margin-bottom: 8px;
+        font-size: 12px;
+        line-height: 1.35;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-project-overview-files-kpi-value {
+        font-size: clamp(42px, 6vw, 70px);
+        line-height: 0.95;
+        font-weight: 500;
+        letter-spacing: 0;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-files-kpi-value.is-storage {
+        text-align: left;
+      }
+
+      .playground-project-overview-files-storage {
+        padding-top: 26px;
+      }
+
+      .playground-project-overview-files-storage-track {
+        position: relative;
+        height: 15px;
+        overflow: hidden;
+        background:
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.13) 0,
+            rgba(255, 255, 255, 0.13) 7px,
+            transparent 7px,
+            transparent 15px
+          );
+      }
+
+      .playground-project-overview-files-storage-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: var(--project-file-storage-percent, 0%);
+        min-width: 0;
+        background: rgb(250, 255, 83);
+        box-shadow: 0 0 22px rgba(250, 255, 83, 0.28);
+      }
+
+      .playground-project-overview-files-storage-labels {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0;
+        margin-top: 15px;
+        font-size: 12px;
+        line-height: 1.35;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-project-overview-files-storage-labels span:nth-child(1) {
+        text-align: left;
+      }
+
+      .playground-project-overview-files-storage-labels span {
+        text-align: center;
+      }
+
+      .playground-project-overview-files-storage-labels span:last-child {
+        text-align: right;
+      }
+
+      .playground-project-overview-files-connectors {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 28px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-files-connectors-group {
+        min-width: 0;
+      }
+
+      .playground-project-overview-files-connectors-title {
+        margin-bottom: 10px;
+        font-size: 12px;
+        line-height: 1.35;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-project-overview-files-connector-list {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .playground-project-overview-files-connector-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border: 0;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-project-overview-files-connector-pill img,
+      .playground-project-overview-files-connector-pill svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .playground-project-overview-files-connector-empty {
+        font-size: 12px;
+        line-height: 1.35;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-project-overview-files-card-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .playground-project-overview-chart-card .playground-project-overview-files-card-grid {
+        margin-top: 22px;
+      }
+
+      .playground-project-overview-files-nav-card {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        min-height: 150px;
+        padding: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        background: transparent;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 160ms ease, transform 160ms ease;
+      }
+
+      .playground-project-overview-files-nav-card:hover {
+        border-color: rgba(255, 255, 255, 0.16);
+        transform: translateY(-1px);
+      }
+
+      .playground-project-overview-files-nav-card-icon {
+        --playground-project-overview-control-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-project-overview-files-nav-card-icon::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-control-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-project-overview-files-nav-card-icon > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-project-overview-files-nav-card-title {
+        margin-top: 18px;
+        font-size: 13px;
+        line-height: 1.35;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-project-overview-files-nav-card-copy {
+        margin-top: 6px;
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-project-overview-files-subview-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 16px;
+      }
+
+      .playground-project-overview-files-subview-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-files-subview-back:hover {
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-project-overview-files-subview-title {
+        margin-top: 10px;
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-files-subview-copy {
+        margin-top: 5px;
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-project-overview-imagine-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        min-height: 180px;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-project-overview-imagine-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 12px;
+      }
+
+      .playground-project-overview-imagine-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        min-height: 104px;
+        padding: 14px;
+        border: 0;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-imagine-card:hover {
+        background: rgba(255, 255, 255, 0.075);
+      }
+
+      .playground-project-overview-imagine-card-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-project-overview-imagine-card-body {
+        display: block;
+        min-width: 0;
+      }
+
+      .playground-project-overview-imagine-card-title {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 13px;
+        line-height: 1.35;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-project-overview-imagine-card-path,
+      .playground-project-overview-imagine-card-meta {
+        display: block;
+        margin-top: 5px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.5);
       }
 
       .playground-project-overview-files-section .playground-tasks-attachments {
@@ -2660,14 +3122,13 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               ? "Mission Control has generated a strategy snapshot for the current project state."
               : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
           const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
-          const activeProjectOverviewHomeTab = projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "files"
+          const activeProjectOverviewHomeTab = projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules"
             ? projectOverviewHomeTab
             : "general";
           function renderProjectOverviewHomeTabs() {
             const tabs = [
 	              { id: "general", label: "General" },
 	              { id: "strategy", label: "Strategy" },
-	              { id: "files", label: "Files & Resources" },
 	              { id: "rules", label: "Rules" },
 	            ];
             return React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs" },
@@ -2689,6 +3150,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                       }
                       if (typeof setProjectOverviewFileToolbarPopover === "function") {
                         setProjectOverviewFileToolbarPopover("");
+                      }
+                      if (typeof setProjectOverviewFilesSubview === "function") {
+                        setProjectOverviewFilesSubview("overview");
                       }
                       if (tab.id === "strategy") {
                         if (typeof setMissionControlSetupOpen === "function") {
@@ -2946,121 +3410,132 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             });
             return next.size;
           })();
-          const projectActivityMapConfig = (() => {
-            const now = new Date();
-            const unit = projectOverviewTimescaleConfig.unit;
-            const cellCount = unit === "day" ? 140 : unit === "week" ? 52 : 24;
-            const rowCount = unit === "day" ? 7 : unit === "week" ? 4 : 3;
-            const buckets = [];
-            const bucketIndexByKey = new Map();
-            const activityEvents = [];
-
-            if (unit === "day") {
-              const endDate = new Date(now);
-              endDate.setHours(0, 0, 0, 0);
-              for (let index = 0; index < cellCount; index += 1) {
-                const date = new Date(endDate);
-                date.setDate(endDate.getDate() - (cellCount - 1 - index));
-                const key = getProjectOverviewLocalDayKey(date);
-                const bucket = {
-                  key,
-                  label: date.toLocaleDateString("en-US", { month: "short" }),
-                  count: 0,
-                };
-                bucketIndexByKey.set(key, buckets.length);
-                buckets.push(bucket);
-              }
-            } else if (unit === "week") {
-              const endWeek = new Date(now);
-              endWeek.setHours(0, 0, 0, 0);
-              endWeek.setDate(endWeek.getDate() - endWeek.getDay());
-              for (let index = 0; index < cellCount; index += 1) {
-                const date = new Date(endWeek);
-                date.setDate(endWeek.getDate() - (7 * (cellCount - 1 - index)));
-                const key = getProjectOverviewLocalWeekStartKey(date);
-                const bucket = {
-                  key,
-                  label: date.toLocaleDateString("en-US", { month: "short" }),
-                  count: 0,
-                };
-                bucketIndexByKey.set(key, buckets.length);
-                buckets.push(bucket);
-              }
-            } else {
-              const endMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-              for (let index = 0; index < cellCount; index += 1) {
-                const date = new Date(endMonth.getFullYear(), endMonth.getMonth() - (cellCount - 1 - index), 1);
-                const key = getProjectOverviewLocalMonthStartKey(date);
-                const bucket = {
-                  key,
-                  label: date.toLocaleDateString("en-US", { month: "short" }),
-                  count: 0,
-                };
-                bucketIndexByKey.set(key, buckets.length);
-                buckets.push(bucket);
+          function readProjectOverviewFileByteSize(record) {
+            if (!record || typeof record !== "object") {
+              return 0;
+            }
+            const candidateKeys = [
+              "size",
+              "bytes",
+              "byteSize",
+              "sizeBytes",
+              "fileSize",
+              "fileSizeBytes",
+              "contentLength",
+              "contentLengthBytes",
+            ];
+            for (const key of candidateKeys) {
+              const value = Number(record[key]);
+              if (Number.isFinite(value) && value > 0) {
+                return value;
               }
             }
-
-            function pushActivityTimestamp(value) {
-              const timestamp = Date.parse(String(value || ""));
-              if (Number.isFinite(timestamp)) {
-                activityEvents.push(timestamp);
+            const metadata = record.metadata || record.file || record.entry || record.resource || null;
+            if (metadata && metadata !== record) {
+              return readProjectOverviewFileByteSize(metadata);
+            }
+            return 0;
+          }
+          function readProjectOverviewStorageCapacityBytes(environment) {
+            if (!environment || typeof environment !== "object") {
+              return 0;
+            }
+            const bytesKeys = [
+              "storageLimitBytes",
+              "storageQuotaBytes",
+              "storageCapacityBytes",
+              "diskLimitBytes",
+              "diskQuotaBytes",
+              "diskCapacityBytes",
+              "quotaBytes",
+              "capacityBytes",
+              "maxStorageBytes",
+            ];
+            for (const key of bytesKeys) {
+              const value = Number(environment[key]);
+              if (Number.isFinite(value) && value > 0) {
+                return value;
               }
             }
-
-            projectThreads.forEach((thread) => {
-              pushActivityTimestamp(thread?.updatedAt || thread?.createdAt || "");
-            });
-
-            normalizedOverviewTasks.forEach((task) => {
-              pushActivityTimestamp(task?.updatedAt || task?.createdAt || "");
-            });
-
-            (projectOverviewFileActivityState?.items || []).forEach((item) => {
-              const numericTimestamp = Number(item?.timestamp || 0);
-              if (Number.isFinite(numericTimestamp) && numericTimestamp > 0) {
-                activityEvents.push(numericTimestamp);
+            const mbKeys = [
+              "storageLimitMB",
+              "storageQuotaMB",
+              "storageCapacityMB",
+              "diskLimitMB",
+              "diskQuotaMB",
+              "diskCapacityMB",
+              "quotaMB",
+              "capacityMB",
+              "maxStorageMB",
+            ];
+            for (const key of mbKeys) {
+              const value = Number(environment[key]);
+              if (Number.isFinite(value) && value > 0) {
+                return value * 1024 * 1024;
               }
-            });
-
-            allOverviewResourceItems.forEach((resource) => {
-              pushActivityTimestamp(resource?.updatedAt || resource?.createdAt || "");
-            });
-
-            activityEvents.forEach((timestamp) => {
-              const date = new Date(timestamp);
-              const bucketKey = unit === "day"
-                ? getProjectOverviewLocalDayKey(date)
-                : unit === "week"
-                  ? getProjectOverviewLocalWeekStartKey(date)
-                  : getProjectOverviewLocalMonthStartKey(date);
-              const bucketIndex = bucketIndexByKey.get(bucketKey);
-              if (typeof bucketIndex === "number") {
-                buckets[bucketIndex].count += 1;
-              }
-            });
-
-            const labelIndexes = [];
-            let previousLabel = "";
-            buckets.forEach((bucket, index) => {
-              if (bucket.label && bucket.label !== previousLabel) {
-                labelIndexes.push(index);
-                previousLabel = bucket.label;
-              }
-            });
-            if (buckets.length > 0 && !labelIndexes.includes(0)) {
-              labelIndexes.unshift(0);
             }
-            if (buckets.length > 1 && !labelIndexes.includes(buckets.length - 1)) {
-              labelIndexes.push(buckets.length - 1);
+            const gbKeys = [
+              "storageLimitGB",
+              "storageQuotaGB",
+              "storageCapacityGB",
+              "diskLimitGB",
+              "diskQuotaGB",
+              "diskCapacityGB",
+              "quotaGB",
+              "capacityGB",
+              "maxStorageGB",
+            ];
+            for (const key of gbKeys) {
+              const value = Number(environment[key]);
+              if (Number.isFinite(value) && value > 0) {
+                return value * 1024 * 1024 * 1024;
+              }
             }
-
-            return {
-              cells: buckets,
-              rowCount,
-              labelIndexes: Array.from(new Set(labelIndexes)).sort((left, right) => left - right),
-            };
+            const metadata = environment.metadata || environment.resource || environment.details || null;
+            if (metadata && metadata !== environment) {
+              return readProjectOverviewStorageCapacityBytes(metadata);
+            }
+            return 0;
+          }
+          const projectOverviewStorageUsedBytes = (() => {
+            const seen = new Set();
+            let total = 0;
+            function addRecord(record, fallbackKey) {
+              const key = String(
+                record?.path
+                || record?.sourcePath
+                || record?.workspacePath
+                || record?.filename
+                || record?.title
+                || record?.id
+                || fallbackKey
+                || ""
+              ).trim();
+              if (key && seen.has(key)) {
+                return;
+              }
+              if (key) {
+                seen.add(key);
+              }
+              total += readProjectOverviewFileByteSize(record);
+            }
+            (projectOverviewFileActivityState?.items || []).forEach((item, index) => addRecord(item, "activity:" + index));
+            overviewProjectAttachments.forEach((attachment, index) => addRecord(attachment, "attachment:" + index));
+            return total;
           })();
+          const projectOverviewStorageCapacityBytes = Math.max(
+            readProjectOverviewStorageCapacityBytes(activeProjectAttachmentEnvironment),
+            projectOverviewStorageUsedBytes > 0 ? projectOverviewStorageUsedBytes * 4 : 0,
+            1024 * 1024 * 1024
+          );
+          const projectOverviewStoragePercent = projectOverviewStorageCapacityBytes > 0
+            ? Math.max(0, Math.min(100, Math.round((projectOverviewStorageUsedBytes / projectOverviewStorageCapacityBytes) * 1000) / 10))
+            : 0;
+          const activeProjectOverviewConnectors = projectOverviewIntegrationRows.filter((row) => !row.isEmpty);
+          const projectOverviewFilesSubviewId = ["overview", "files", "attachments", "resources", "imagine"].includes(String(projectOverviewFilesSubview || ""))
+            ? String(projectOverviewFilesSubview || "")
+            : "overview";
+          const isProjectOverviewResourceSubviewOpen = activeProjectOverviewHomeTab === "general" && projectOverviewFilesSubviewId !== "overview";
           const visibleOverviewTasks = overviewVisibleTasks.slice(0, 5);
           const normalizedProjectOverviewTaskSearch = String(projectOverviewTaskSearchQuery || "").trim();
           const hasProjectOverviewTaskListFilters = Boolean(
@@ -3248,6 +3723,44 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             || normalizedProjectOverviewFileSearch
             || projectOverviewFileFilterMode !== "all"
           );
+          const projectOverviewImagineResources = (() => {
+            const seen = new Set();
+            const imageExtensions = /\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i;
+            const videoExtensions = /\.(m4v|mkv|mov|mp4|webm)$/i;
+            return (projectOverviewFileActivityState?.items || [])
+              .filter((item) => {
+                const candidate = [
+                  item?.mimeType,
+                  item?.contentType,
+                  item?.type,
+                  item?.fileType,
+                  item?.path,
+                  item?.title,
+                  item?.filename,
+                ].join(" ");
+                const normalizedCandidate = String(candidate || "").trim();
+                return /^image\//i.test(normalizedCandidate)
+                  || /^video\//i.test(normalizedCandidate)
+                  || imageExtensions.test(normalizedCandidate)
+                  || videoExtensions.test(normalizedCandidate);
+              })
+              .filter((item) => {
+                const key = String(item?.path || item?.title || item?.id || "").trim();
+                if (!key) {
+                  return false;
+                }
+                if (seen.has(key)) {
+                  return false;
+                }
+                seen.add(key);
+                return true;
+              })
+              .sort((left, right) => {
+                const leftTimestamp = Number(left?.timestamp || 0);
+                const rightTimestamp = Number(right?.timestamp || 0);
+                return (Number.isFinite(rightTimestamp) ? rightTimestamp : 0) - (Number.isFinite(leftTimestamp) ? leftTimestamp : 0);
+              });
+          })();
           const projectOverviewKpis = [
             {
               id: "tasks",
@@ -3384,6 +3897,379 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   ? React.createElement("span", null, option.description)
                   : null
               )
+            );
+          }
+
+          function renderProjectOverviewFilesToolbar() {
+            return React.createElement("div", { className: "playground-plugins-search-row", ref: projectOverviewFilesToolbarRef },
+              React.createElement("div", { className: "playground-plugins-search-shell" },
+                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("input", {
+                  type: "search",
+                  value: projectOverviewFileSearchQuery,
+                  onChange: (event) => setProjectOverviewFileSearchQuery(event.target.value),
+                  className: "playground-plugins-search",
+                  placeholder: "Search files",
+                  "aria-label": "Search project files",
+                })
+              ),
+              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-sort" + (projectOverviewFileToolbarPopover === "sort" || projectOverviewFileSortMode !== "recent-desc" ? " is-active" : ""),
+                    onClick: () => setProjectOverviewFileToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                    title: activeProjectOverviewFileSortOption.label,
+                  },
+                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Sort")
+                  ),
+                  projectOverviewFileToolbarPopover === "sort"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        projectOverviewFileSortOptions.map((option) =>
+                          renderProjectOverviewTaskToolbarOption({
+                            option,
+                            active: projectOverviewFileSortMode === option.id,
+                            onClick: () => {
+                              setProjectOverviewFileSortMode(option.id);
+                              setProjectOverviewFileToolbarPopover("");
+                            },
+                          })
+                        )
+                      )
+                    : null
+                ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-filter" + (projectOverviewFileToolbarPopover === "filter" || projectOverviewFileFilterMode !== "all" ? " is-active" : ""),
+                    onClick: () => setProjectOverviewFileToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                    title: activeProjectOverviewFileFilterOption.label,
+                  },
+                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Filter")
+                  ),
+                  projectOverviewFileToolbarPopover === "filter"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        projectOverviewFileFilterOptions.map((option) =>
+                          renderProjectOverviewTaskToolbarOption({
+                            option,
+                            active: projectOverviewFileFilterMode === option.id,
+                            onClick: () => {
+                              setProjectOverviewFileFilterMode(option.id);
+                              setProjectOverviewFileToolbarPopover("");
+                            },
+                          })
+                        )
+                      )
+                    : null
+                )
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-control-button playground-project-overview-toolbar-action",
+                onClick: () => {
+                  const normalizedProjectId = String(selectedProjectId || "").trim();
+                  const normalizedEnvironmentId = String(
+                    selectedProject?.defaultEnvironmentId
+                    || activeProjectAttachmentEnvironmentId
+                    || ""
+                  ).trim();
+                  if (typeof onOpenFilesPage === "function") {
+                    onOpenFilesPage({
+                      token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                      projectId: normalizedProjectId,
+                      environmentId: normalizedEnvironmentId,
+                    });
+                  }
+                },
+              },
+                React.createElement(FolderOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Open Files")
+              )
+            );
+          }
+
+          function renderProjectOverviewFilesActivityPanel() {
+            return React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-project-overview-files-activity" },
+                filteredProjectFileActivityItems.length > 0
+                  ? React.createElement(React.Fragment, null,
+                      React.createElement("div", { className: "playground-project-overview-files-table-header" },
+                        React.createElement("div", null, "File Title"),
+                        React.createElement("div", null, "Operation"),
+                        React.createElement("div", null, "Modified by"),
+                        React.createElement("div", null, "Task"),
+                        React.createElement("div", null, "Date"),
+                        React.createElement("div", null)
+                      ),
+                      filteredProjectFileActivityItems.map((row) => renderOverviewFileActivityRow(row))
+                    )
+                  : projectOverviewFileActivityState?.status === "error"
+                      ? React.createElement("div", { className: "playground-environments-error" }, projectOverviewFileActivityState.error || "Failed to load project file activity.")
+                      : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                          hasProjectOverviewFileListFilters ? "No matching project file activity." : "No project file activity yet."
+                        )
+              ),
+              projectOverviewFileMutationState?.error
+                ? React.createElement("div", { className: "playground-environments-error" }, projectOverviewFileMutationState.error)
+                : null
+            );
+          }
+
+          function renderProjectOverviewAttachmentsPanel() {
+            return React.createElement("div", { className: "playground-tasks-attachments" },
+              React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),
+                React.createElement("div", { className: "playground-tasks-attachments-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button playground-tasks-attachments-environment-button",
+                    onClick: openProjectEnvironmentFilePicker,
+                    disabled: projectAttachmentTransferState.isProcessing || !activeProjectAttachmentEnvironmentId,
+                    title: activeProjectAttachmentEnvironmentId
+                      ? "Add files from " + (activeProjectAttachmentEnvironment?.name || "the selected environment")
+                      : "Select an environment first",
+                  }, "From Environment")
+                )
+              ),
+              React.createElement("input", {
+                ref: projectAttachmentInputRef,
+                type: "file",
+                multiple: true,
+                hidden: true,
+                onChange: (event) => void handleProjectAttachmentInputChange(event),
+              }),
+              React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
+                React.createElement("div", {
+                  className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isProjectAttachmentDragging ? " dragging" : "") + (hasOverviewProjectAttachments ? " is-filled" : ""),
+                  onDragOver: (event) => {
+                    event.preventDefault();
+                    if (!activeProjectAttachmentEnvironmentId) {
+                      return;
+                    }
+                    setIsProjectAttachmentDragging(true);
+                  },
+                  onDragLeave: (event) => {
+                    if (event.currentTarget.contains(event.relatedTarget)) {
+                      return;
+                    }
+                    setIsProjectAttachmentDragging(false);
+                  },
+                  onDrop: (event) => void handleProjectAttachmentDrop(event),
+                },
+                  hasOverviewProjectAttachments
+                    ? React.createElement(React.Fragment, null,
+                        React.createElement("div", { className: "playground-tasks-attachments-topline" },
+                          React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                          React.createElement("span", null, isProjectAttachmentDragging ? "Drop files here" : "Drop files to attach, or"),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-tasks-attachments-browse",
+                            onClick: openProjectAttachmentPicker,
+                          }, "browse.")
+                        ),
+                        React.createElement("div", { className: "runner-attachments" },
+                          overviewProjectAttachments.map((attachment) =>
+                            renderTaskAttachmentChip(attachment, {
+                              removable: true,
+                              activeAttachmentId: projectPreviewedAttachmentId,
+                              onPreview: openOverviewAttachmentInFiles,
+                              onRemove: handleRemoveProjectAttachment,
+                            })
+                          )
+                        )
+                      )
+                    : React.createElement("button", {
+                        type: "button",
+                        className: "playground-tasks-attachments-empty-button",
+                        onClick: openProjectAttachmentPicker,
+                      },
+                        React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                        React.createElement("span", { className: "tb-popup-dropzone-title" }, isProjectAttachmentDragging ? "Drop files here" : "Drag & drop files here"),
+                        React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
+                      )
+                )
+              ),
+              projectAttachmentTransferState.isProcessing
+                ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Uploading attachments...")
+                : null,
+              projectAttachmentTransferState.error
+                ? React.createElement("div", { className: "playground-environments-error" }, projectAttachmentTransferState.error)
+                : null
+            );
+          }
+
+          function renderProjectOverviewResourcesPanel() {
+            return React.createElement("div", { className: "playground-project-overview-resources-block" },
+              React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Server Resources")
+              ),
+              projectOverviewServerResourcesState?.status === "loading"
+                ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Loading project resources...")
+                : projectOverviewServerResourcesState?.status === "error"
+                  ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, projectOverviewServerResourcesState.error || "Failed to load project resources.")
+                  : overviewResourceItems.length > 0
+                    ? React.createElement("div", { className: "playground-project-overview-resources-table" },
+                        React.createElement("div", { className: "playground-project-overview-resources-table-header" },
+                          React.createElement("div", null, "Title"),
+                          React.createElement("div", null, "Type"),
+                          React.createElement("div", null, "Endpoint"),
+                          React.createElement("div", null, "Status"),
+                          React.createElement("div", null, "Date")
+                        ),
+                        overviewResourceItems.slice(0, 12).map((resource) => renderOverviewResourceRow(resource))
+                      )
+                    : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                        normalizedSearchQuery ? "No matching resources." : "No project resources have been created yet."
+                      )
+            );
+          }
+
+          function renderProjectOverviewImagineResourceCard(resource) {
+            const resourcePath = String(resource?.path || resource?.sourcePath || resource?.workspacePath || "").trim();
+            const resourceTitle = String(resource?.title || resource?.filename || getHistoryPathName(resourcePath) || "Untitled visual").trim();
+            const candidate = [resource?.mimeType, resource?.contentType, resource?.type, resource?.fileType, resourcePath, resourceTitle].join(" ");
+            const isVideoResource = /^video\//i.test(String(candidate || "")) || /\.(m4v|mkv|mov|mp4|webm)$/i.test(String(candidate || ""));
+            return React.createElement("button", {
+                key: String(resource?.id || resourcePath || resourceTitle),
+                type: "button",
+                className: "playground-project-overview-imagine-card",
+                onClick: () => typeof navigateProjectOverviewFileToFiles === "function" && navigateProjectOverviewFileToFiles(resource),
+              },
+              React.createElement("span", { className: "playground-project-overview-imagine-card-icon" },
+                React.createElement(isVideoResource ? Film : ImageIcon, { width: 16, height: 16, strokeWidth: 1.8 })
+              ),
+              React.createElement("span", { className: "playground-project-overview-imagine-card-body" },
+                React.createElement("span", { className: "playground-project-overview-imagine-card-title" }, resourceTitle),
+                resourcePath
+                  ? React.createElement("span", { className: "playground-project-overview-imagine-card-path" }, resourcePath)
+                  : null,
+                React.createElement("span", { className: "playground-project-overview-imagine-card-meta" },
+                  [resource?.operation || "Created", resource?.dateLabel || ""].filter(Boolean).join(" · ")
+                )
+              )
+            );
+          }
+
+          function renderProjectOverviewImagineResourcesPanel() {
+            if (projectOverviewFileActivityState?.status === "loading") {
+              return React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Loading imagine resources...");
+            }
+            if (projectOverviewFileActivityState?.status === "error") {
+              return React.createElement("div", { className: "playground-environments-error" }, projectOverviewFileActivityState.error || "Failed to load imagine resources.");
+            }
+            if (projectOverviewImagineResources.length > 0) {
+              return React.createElement("div", { className: "playground-project-overview-imagine-grid" },
+                projectOverviewImagineResources.map((resource) => renderProjectOverviewImagineResourceCard(resource))
+              );
+            }
+            return React.createElement("div", { className: "playground-project-overview-imagine-empty" },
+              React.createElement(ImageIcon, { width: 22, height: 22, strokeWidth: 1.7 }),
+              React.createElement("div", null, "No imagine resources yet."),
+              React.createElement("div", null, "Images and visual assets created from this project will appear here.")
+            );
+          }
+
+          function renderProjectOverviewFilesSubviewHeader(title, description) {
+            return React.createElement("div", { className: "playground-project-overview-files-subview-header" },
+              React.createElement("div", null,
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-project-overview-files-subview-back",
+                  onClick: () => typeof setProjectOverviewFilesSubview === "function" && setProjectOverviewFilesSubview("overview"),
+                },
+                  React.createElement(ChevronLeft, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Back to General")
+                ),
+                React.createElement("div", { className: "playground-project-overview-files-subview-title" }, title),
+                description
+                  ? React.createElement("div", { className: "playground-project-overview-files-subview-copy" }, description)
+                  : null
+              )
+            );
+          }
+
+          function renderProjectOverviewFilesConnectorBadge(row) {
+            return React.createElement("span", {
+                key: row.id || row.source || row.label,
+                className: "playground-project-overview-files-connector-pill",
+                title: row.label,
+              },
+              renderTaskConnectorServiceIcon(row.source, "playground-project-overview-files-connector-icon")
+            );
+          }
+
+          function renderProjectOverviewFilesNavCard({ id, title, copy, Icon }) {
+            return React.createElement("button", {
+                key: id,
+                type: "button",
+                className: "playground-project-overview-files-nav-card",
+                onClick: () => typeof setProjectOverviewFilesSubview === "function" && setProjectOverviewFilesSubview(id),
+              },
+              React.createElement("div", { className: "playground-project-overview-files-nav-card-icon" },
+                React.createElement(Icon, { width: 17, height: 17, strokeWidth: 1.8 })
+              ),
+              React.createElement("div", { className: "playground-project-overview-files-nav-card-title" }, title),
+              React.createElement("div", { className: "playground-project-overview-files-nav-card-copy" }, copy)
+            );
+          }
+
+          function renderProjectOverviewFilesNavCards() {
+            return React.createElement("div", { className: "playground-project-overview-files-card-grid" },
+              renderProjectOverviewFilesNavCard({
+                id: "files",
+                title: "Files",
+                copy: "Review file activity generated by project tasks and agents.",
+                Icon: FolderOpen,
+              }),
+              renderProjectOverviewFilesNavCard({
+                id: "attachments",
+                title: "Attachments",
+                copy: "Manage project context files and direct uploads.",
+                Icon: Paperclip,
+              }),
+              renderProjectOverviewFilesNavCard({
+                id: "resources",
+                title: "Server Resources",
+                copy: "Inspect web apps, functions, databases, auth, and secrets.",
+                Icon: Server,
+              }),
+              renderProjectOverviewFilesNavCard({
+                id: "imagine",
+                title: "Imagine Resources",
+                copy: "Review images and visual assets created in this project.",
+                Icon: Clapperboard,
+              })
+            );
+          }
+
+          function renderProjectOverviewFilesTab() {
+            if (projectOverviewFilesSubviewId === "overview") {
+              return null;
+            }
+            if (projectOverviewFilesSubviewId === "files") {
+              return React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
+                renderProjectOverviewFilesSubviewHeader("Files", "Review file changes and generated project artifacts."),
+                renderProjectOverviewFilesToolbar(),
+                renderProjectOverviewFilesActivityPanel()
+              );
+            }
+            if (projectOverviewFilesSubviewId === "attachments") {
+              return React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
+                renderProjectOverviewFilesSubviewHeader("Attachments", "Attach source material and project context files."),
+                renderProjectOverviewAttachmentsPanel()
+              );
+            }
+            if (projectOverviewFilesSubviewId === "resources") {
+              return React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
+                renderProjectOverviewFilesSubviewHeader("Server Resources", "Track the deployable resources connected to this project."),
+                renderProjectOverviewResourcesPanel()
+              );
+            }
+            return React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
+              renderProjectOverviewFilesSubviewHeader("Imagine Resources", "Visual resources created in the scope of this project."),
+              renderProjectOverviewImagineResourcesPanel()
             );
           }
 
@@ -4423,11 +5309,11 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 			                : activeProjectOverviewHomeTab === "rules"
 			                  ? renderProjectOverviewRulesPanel()
 			                  : React.createElement(React.Fragment, null,
-		              activeProjectOverviewHomeTab === "general"
+              activeProjectOverviewHomeTab === "general" && !isProjectOverviewResourceSubviewOpen
 		                ? React.createElement("div", { className: "playground-project-overview-chart-surface" },
                 React.createElement("div", { className: "playground-project-overview-chart-grid" },
                   React.createElement("section", {
-                    className: "playground-settings-usage-chart-card playground-project-overview-chart-card" + (projectOverviewChartMode === "cost" && !projectHasCostData ? " is-cost-empty" : ""),
+                    className: "playground-settings-usage-chart-card playground-project-overview-chart-card" + (!projectHasCostData ? " is-cost-empty" : ""),
                   },
                     React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
                       projectOverviewKpis.map((item) =>
@@ -4441,18 +5327,36 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     ),
                     React.createElement("div", { className: "playground-project-overview-chart-header" },
                       React.createElement("div", { className: "playground-project-overview-chart-header-main" },
-                        React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-project-overview-chart-tab" + (projectOverviewChartMode === "cost" ? " is-active" : ""),
-                            onClick: () => typeof setProjectOverviewChartMode === "function" && setProjectOverviewChartMode("cost"),
-                          }, "Cost by Resource"),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-project-overview-chart-tab" + (projectOverviewChartMode === "activity" ? " is-active" : ""),
-                            onClick: () => typeof setProjectOverviewChartMode === "function" && setProjectOverviewChartMode("activity"),
-                          }, "Activity")
-                        ),
+                        React.createElement("div", { className: "playground-project-overview-chart-title" }, "Cost by Resource")
+                      )
+                    ),
+                    React.createElement(React.Fragment, null,
+                      renderProjectOverviewMultiStackedChart({
+                        labels: projectThreadTimeline.map((bucket) => bucket.label),
+                        series: projectComputeSeries,
+                        yMax: maxProjectDailyCt,
+                        tickFormatter: formatProjectOverviewAxisCt,
+                        tall: true,
+                        ariaLabel: "Project compute token usage by resource type",
+                        emptyText: "No project compute usage yet",
+                        emptyContent: renderProjectOverviewCostEmptyState(),
+                      }),
+                      React.createElement("div", { className: "playground-project-overview-chart-footer-row" },
+                        projectHasCostData
+                          ? React.createElement("div", {
+                              className: "playground-settings-usage-inline-legend",
+                            },
+                              projectComputeSeries.map((entry) =>
+                                React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
+                                  React.createElement("span", {
+                                    className: "playground-settings-usage-legend-swatch",
+                                    style: { background: entry.color },
+                                  }),
+                                  React.createElement("span", null, entry.label)
+                                )
+                              )
+                            )
+                          : React.createElement("div", { className: "playground-settings-usage-inline-legend" }),
                         React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
                           React.createElement("select", {
                             className: "playground-environments-home-comparison-timescale-select",
@@ -4467,65 +5371,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         )
                       )
                     ),
-                    projectOverviewChartMode === "activity"
-                      ? React.createElement(React.Fragment, null,
-                          renderProjectOverviewActivityMap({
-                            cells: projectActivityMapConfig.cells,
-                            rowCount: projectActivityMapConfig.rowCount,
-                            labelIndexes: projectActivityMapConfig.labelIndexes,
-                            emptyText: "No project activity yet",
-                          }),
-                          React.createElement("div", { className: "playground-project-overview-chart-footer" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-project-overview-chart-footer-link",
-                              onClick: () => {
-                                const normalizedProjectId = String(selectedProjectId || "").trim();
-                                const normalizedEnvironmentId = String(
-                                  selectedProject?.defaultEnvironmentId
-                                  || activeProjectAttachmentEnvironmentId
-                                  || ""
-                                ).trim();
-                                if (typeof onOpenFilesPage === "function") {
-                                  onOpenFilesPage({
-                                    token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                                    projectId: normalizedProjectId,
-                                    environmentId: normalizedEnvironmentId,
-                                    contentMode: "changes",
-                                  });
-                                }
-                              },
-                            }, "View all Changes")
-                          )
-                        )
-                      : React.createElement(React.Fragment, null,
-                          renderProjectOverviewMultiStackedChart({
-                            labels: projectThreadTimeline.map((bucket) => bucket.label),
-                            series: projectComputeSeries,
-                            yMax: maxProjectDailyCt,
-                            tickFormatter: formatProjectOverviewAxisCt,
-                            tall: true,
-                            ariaLabel: "Project compute token usage by resource type",
-                            emptyText: "No project compute usage yet",
-                            emptyContent: renderProjectOverviewCostEmptyState(),
-                          }),
-                          projectHasCostData
-                            ? React.createElement("div", {
-                                className: "playground-settings-usage-inline-legend",
-                                style: { justifyContent: "flex-start" },
-                              },
-                                projectComputeSeries.map((entry) =>
-                                  React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
-                                    React.createElement("span", {
-                                      className: "playground-settings-usage-legend-swatch",
-                                      style: { background: entry.color },
-                                    }),
-                                    React.createElement("span", null, entry.label)
-                                  )
-                                )
-                              )
-                            : null
-                        ),
+                    renderProjectOverviewFilesNavCards(),
                     React.createElement("div", { className: "playground-project-overview-integration-facts" },
                       projectOverviewIntegrationRows.map((row) => renderProjectOverviewIntegrationRow(row))
                     )
@@ -4534,7 +5380,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	              )
 		                : null,
 	            React.createElement("div", { className: "playground-tasks-project-panel-grid" },
-	              activeProjectOverviewHomeTab === "general"
+	              activeProjectOverviewHomeTab === "general" && !isProjectOverviewResourceSubviewOpen
 	                ? React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section" },
                 React.createElement("div", { className: "playground-plugins-section-header playground-project-overview-list-tabs-header" },
                   React.createElement("div", { className: "playground-project-overview-chart-tabs playground-project-overview-list-tabs" },
@@ -4762,227 +5608,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     )
 	              )
 	                : null,
-	              activeProjectOverviewHomeTab === "files"
-	                ? React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
-                renderOverviewSectionHeader(
-                  "Files & Resources",
-                  null
-                ),
-                React.createElement("div", { className: "playground-plugins-search-row", ref: projectOverviewFilesToolbarRef },
-                  React.createElement("div", { className: "playground-plugins-search-shell" },
-                    React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("input", {
-                      type: "search",
-                      value: projectOverviewFileSearchQuery,
-                      onChange: (event) => setProjectOverviewFileSearchQuery(event.target.value),
-                      className: "playground-plugins-search",
-                      placeholder: "Search files",
-                      "aria-label": "Search project files",
-                    })
-                  ),
-                  React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button is-bare is-backlog-sort" + (projectOverviewFileToolbarPopover === "sort" || projectOverviewFileSortMode !== "recent-desc" ? " is-active" : ""),
-                        onClick: () => setProjectOverviewFileToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                        title: activeProjectOverviewFileSortOption.label,
-                      },
-                        React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Sort")
-                      ),
-                      projectOverviewFileToolbarPopover === "sort"
-                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                            projectOverviewFileSortOptions.map((option) =>
-                              renderProjectOverviewTaskToolbarOption({
-                                option,
-                                active: projectOverviewFileSortMode === option.id,
-                                onClick: () => {
-                                  setProjectOverviewFileSortMode(option.id);
-                                  setProjectOverviewFileToolbarPopover("");
-                                },
-                              })
-                            )
-                          )
-                        : null
-                    ),
-                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button is-bare is-backlog-filter" + (projectOverviewFileToolbarPopover === "filter" || projectOverviewFileFilterMode !== "all" ? " is-active" : ""),
-                        onClick: () => setProjectOverviewFileToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                        title: activeProjectOverviewFileFilterOption.label,
-                      },
-                        React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Filter")
-                      ),
-                      projectOverviewFileToolbarPopover === "filter"
-                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                            projectOverviewFileFilterOptions.map((option) =>
-                              renderProjectOverviewTaskToolbarOption({
-                                option,
-                                active: projectOverviewFileFilterMode === option.id,
-                                onClick: () => {
-                                  setProjectOverviewFileFilterMode(option.id);
-                                  setProjectOverviewFileToolbarPopover("");
-                                },
-                              })
-                            )
-                          )
-                      : null
-                    )
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button playground-project-overview-toolbar-action",
-                    onClick: () => {
-                      const normalizedProjectId = String(selectedProjectId || "").trim();
-                      const normalizedEnvironmentId = String(
-                        selectedProject?.defaultEnvironmentId
-                        || activeProjectAttachmentEnvironmentId
-                        || ""
-                      ).trim();
-                      if (typeof onOpenFilesPage === "function") {
-                        onOpenFilesPage({
-                          token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                          projectId: normalizedProjectId,
-                          environmentId: normalizedEnvironmentId,
-                        });
-                      }
-                    },
-                  },
-                    React.createElement(FolderOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Show all on Files & Resources")
-                  )
-                ),
-                React.createElement("div", { className: "playground-project-overview-files-activity" },
-                  filteredProjectFileActivityItems.length > 0
-                    ? React.createElement(React.Fragment, null,
-                        React.createElement("div", { className: "playground-project-overview-files-table-header" },
-                          React.createElement("div", null, "File Title"),
-                          React.createElement("div", null, "Operation"),
-                          React.createElement("div", null, "Modified by"),
-                          React.createElement("div", null, "Task"),
-                          React.createElement("div", null, "Date"),
-                          React.createElement("div", null)
-                        ),
-                        filteredProjectFileActivityItems.map((row) => renderOverviewFileActivityRow(row))
-                      )
-                    : projectOverviewFileActivityState?.status === "error"
-                        ? React.createElement("div", { className: "playground-environments-error" }, projectOverviewFileActivityState.error || "Failed to load project file activity.")
-                        : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                            hasProjectOverviewFileListFilters ? "No matching project file activity." : "No project file activity yet."
-                          )
-                ),
-                projectOverviewFileMutationState?.error
-                  ? React.createElement("div", { className: "playground-environments-error" }, projectOverviewFileMutationState.error)
-                  : null,
-                React.createElement("div", { className: "playground-tasks-attachments" },
-                  React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),
-                    React.createElement("div", { className: "playground-tasks-attachments-actions" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button playground-tasks-attachments-environment-button",
-                        onClick: openProjectEnvironmentFilePicker,
-                        disabled: projectAttachmentTransferState.isProcessing || !activeProjectAttachmentEnvironmentId,
-                        title: activeProjectAttachmentEnvironmentId
-                          ? "Add files from " + (activeProjectAttachmentEnvironment?.name || "the selected environment")
-                          : "Select an environment first",
-                      }, "From Environment")
-                    )
-                  ),
-                  React.createElement("input", {
-                    ref: projectAttachmentInputRef,
-                    type: "file",
-                    multiple: true,
-                    hidden: true,
-                    onChange: (event) => void handleProjectAttachmentInputChange(event),
-                  }),
-                  React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
-                    React.createElement("div", {
-                      className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isProjectAttachmentDragging ? " dragging" : "") + (hasOverviewProjectAttachments ? " is-filled" : ""),
-                      onDragOver: (event) => {
-                        event.preventDefault();
-                        if (!activeProjectAttachmentEnvironmentId) {
-                          return;
-                        }
-                        setIsProjectAttachmentDragging(true);
-                      },
-                      onDragLeave: (event) => {
-                        if (event.currentTarget.contains(event.relatedTarget)) {
-                          return;
-                        }
-                        setIsProjectAttachmentDragging(false);
-                      },
-                      onDrop: (event) => void handleProjectAttachmentDrop(event),
-                    },
-                      hasOverviewProjectAttachments
-                        ? React.createElement(React.Fragment, null,
-                            React.createElement("div", { className: "playground-tasks-attachments-topline" },
-                              React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
-                              React.createElement("span", null, isProjectAttachmentDragging ? "Drop files here" : "Drop files to attach, or"),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-tasks-attachments-browse",
-                                onClick: openProjectAttachmentPicker,
-                              }, "browse.")
-                            ),
-                            React.createElement("div", { className: "runner-attachments" },
-                              overviewProjectAttachments.map((attachment) =>
-                                renderTaskAttachmentChip(attachment, {
-                                  removable: true,
-                                  activeAttachmentId: projectPreviewedAttachmentId,
-                                  onPreview: openOverviewAttachmentInFiles,
-                                  onRemove: handleRemoveProjectAttachment,
-                                })
-                              )
-                            )
-                          )
-                        : React.createElement("button", {
-                            type: "button",
-                            className: "playground-tasks-attachments-empty-button",
-                            onClick: openProjectAttachmentPicker,
-                          },
-                            React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
-                            React.createElement("span", { className: "tb-popup-dropzone-title" }, isProjectAttachmentDragging ? "Drop files here" : "Drag & drop files here"),
-                            React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
-                          )
-                    )
-                  ),
-                  projectAttachmentTransferState.isProcessing
-                    ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Uploading attachments...")
-                    : null,
-                  projectAttachmentTransferState.error
-                  ? React.createElement("div", { className: "playground-environments-error" }, projectAttachmentTransferState.error)
-                  : null
-                ),
-                React.createElement("div", { className: "playground-project-overview-resources-block" },
-                  React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Resources")
-                  ),
-                  projectOverviewServerResourcesState?.status === "loading"
-                    ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Loading project resources...")
-                    : projectOverviewServerResourcesState?.status === "error"
-                      ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, projectOverviewServerResourcesState.error || "Failed to load project resources.")
-                      : overviewResourceItems.length > 0
-                        ? React.createElement("div", { className: "playground-project-overview-resources-table" },
-                            React.createElement("div", { className: "playground-project-overview-resources-table-header" },
-                              React.createElement("div", null, "Title"),
-                              React.createElement("div", null, "Type"),
-                              React.createElement("div", null, "Endpoint"),
-                              React.createElement("div", null, "Status"),
-                              React.createElement("div", null, "Date")
-                            ),
-                            overviewResourceItems.slice(0, 12).map((resource) => renderOverviewResourceRow(resource))
-                          )
-	                        : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-	                            normalizedSearchQuery ? "No matching resources." : "No project resources have been created yet."
-	                          )
-		                )
-		              )
-		                  : null,
-	                renderProjectOverviewFileMenu()
+	              isProjectOverviewResourceSubviewOpen
+	                ? React.createElement(React.Fragment, null,
+	                    renderProjectOverviewFilesTab(),
+	                    renderProjectOverviewFileMenu()
+	                  )
+	                : null
               )
 	                )
             )

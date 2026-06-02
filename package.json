@@ -47,7 +47,7 @@
     "docx-preview": "^0.3.7",
     "dompurify": "^3.3.3",
     "jszip": "^3.10.1",
-    "lucide-react": "^0.547.0",
+    "lucide-react": "^0.575.0",
     "novnc-next": "^1.0.0",
     "pdfjs-dist": "^5.4.624",
     "pptx-preview": "^1.0.7",

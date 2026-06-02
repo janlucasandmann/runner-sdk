@@ -11,6 +11,7 @@ import { PROJECT_OVERVIEW_CSS, PROJECT_OVERVIEW_SCRIPT } from "./demo-project-ov
 import { ENVIRONMENT_CHANGES_CSS, ENVIRONMENT_CHANGES_SCRIPT } from "./demo-environment-changes.mjs";
 import { IMAGINE_PAGE_CSS, IMAGINE_PAGE_SCRIPT } from "./demo-imagine-page.mjs";
 import { IMAGINE_TEMPLATE_PAGE_CSS, IMAGINE_TEMPLATE_PAGE_SCRIPT } from "./demo-imagine-template-page.mjs";
+import { METRONOME_PAGE_CSS, METRONOME_PAGE_SCRIPT } from "./demo-metronome-page.mjs";
 import { MODELS_PAGE_CSS, MODELS_PAGE_SCRIPT } from "./demo-models-page.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -204,6 +205,7 @@ const html = `<!doctype html>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/react-big-calendar@1.19.4/lib/css/react-big-calendar.css" />
+    <link rel="stylesheet" href="https://esm.sh/@xyflow/react@12.8.4/dist/style.css" />
     <style>
       :root {
         --bg-0: #000000;
@@ -2309,6 +2311,7 @@ const html = `<!doctype html>
       .playground-content-shell.is-thread-task-detail-open > .playground-content-nav,
       .playground-content-shell.is-thread-side-detail-open > .playground-content-nav,
       .playground-content-shell.is-resources-side-detail-open > .playground-content-nav,
+      .playground-content-shell.is-metronome-node-detail-open > .playground-content-nav,
       .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview) > .playground-content-nav,
       .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail) > .playground-content-nav {
         padding-right: calc(6px + var(--playground-thread-task-detail-width));
@@ -4470,6 +4473,8 @@ const html = `<!doctype html>
       .playground-content-shell.is-thread-side-detail-open > .playground-content-nav > .playground-content-nav-right,
       .playground-content-shell.is-resources-side-detail-open > .playground-content-nav > .playground-content-nav-center,
       .playground-content-shell.is-resources-side-detail-open > .playground-content-nav > .playground-content-nav-right,
+      .playground-content-shell.is-metronome-node-detail-open > .playground-content-nav > .playground-content-nav-center,
+      .playground-content-shell.is-metronome-node-detail-open > .playground-content-nav > .playground-content-nav-right,
       .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview) > .playground-content-nav > .playground-content-nav-center,
       .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview) > .playground-content-nav > .playground-content-nav-right,
       .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview) > .playground-content-nav .playground-top-nav-left-extra,
@@ -5380,7 +5385,8 @@ const html = `<!doctype html>
       }
 
       .playground-content-body.is-thread-task-detail-open,
-      .playground-content-body.is-thread-side-detail-open {
+      .playground-content-body.is-thread-side-detail-open,
+      .playground-content-body.is-metronome-node-detail-open {
         margin-right: calc(var(--playground-thread-task-detail-width) + 6px);
       }
 
@@ -5416,6 +5422,32 @@ const html = `<!doctype html>
       }
 
       .playground-thread-task-drawer.is-open {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+
+      .playground-metronome-node-drawer {
+        position: absolute;
+        top: 0;
+        right: 6px;
+        bottom: 6px;
+        z-index: 120;
+        width: var(--playground-thread-task-detail-width);
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        border-left: 0;
+        background: transparent;
+        opacity: 0;
+        transform: translateX(100%);
+        pointer-events: none;
+        transition:
+          transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+          opacity 220ms ease;
+      }
+
+      .playground-metronome-node-drawer.is-open {
         opacity: 1;
         transform: translateX(0);
         pointer-events: auto;
@@ -5800,6 +5832,13 @@ const html = `<!doctype html>
       .playground-shell.is-initial-thread-page .tb-runner-chat.playground-thread-runner .task-input-box {
         --tb-task-input-overlay: transparent;
         --tb-task-input-base-bg: transparent;
+      }
+
+      .playground-shell:not(.is-initial-thread-page) .tb-runner-chat.playground-thread-runner .task-input-box {
+        --tb-task-input-overlay: transparent;
+        --tb-task-input-base-bg: rgba(30, 30, 30, 0.9);
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
       }
 
       .playground-thread-runner.is-initial-welcome-runner {
@@ -19185,6 +19224,20 @@ const html = `<!doctype html>
         object-fit: contain;
       }
 
+      .playground-files-entry-icon.is-thumbnail {
+        width: 34px;
+        height: 34px;
+        border-radius: 6px;
+        object-fit: cover;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-files-entry-icon.is-large.is-thumbnail {
+        width: 64px;
+        height: 64px;
+        border-radius: 8px;
+      }
+
       .playground-files-entry-icon.is-folder {
         color: rgba(255, 255, 255, 0.74);
       }
@@ -19918,9 +19971,8 @@ const html = `<!doctype html>
       }
 
       .playground-files-image-thread-composer .task-input-box {
-        --tb-task-input-base-bg: transparent;
+        --tb-task-input-base-bg: rgba(0, 0, 0, 0.95);
         --tb-task-input-overlay: transparent;
-        background: transparent;
       }
 
       .playground-files-image-thread-composer .sidebar-textarea {
@@ -20273,6 +20325,104 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         padding: 18px;
+      }
+
+      .playground-files-presentation-preview-shell {
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+        padding: 0;
+        background: transparent;
+      }
+
+      .playground-files-presentation-preview-header {
+        flex-shrink: 0;
+        min-height: var(--playground-files-preview-nav-height);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 10px;
+      }
+
+      .playground-files-presentation-preview-title-row {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-files-presentation-preview-title-row .playground-files-entry-icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+      }
+
+      .playground-files-presentation-preview-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-files-presentation-preview-body {
+        min-height: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 30px 24px var(--playground-files-preview-composer-reserved-bottom);
+        text-align: center;
+      }
+
+      .playground-files-presentation-preview-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.76);
+      }
+
+      .playground-files-presentation-preview-icon svg {
+        width: 26px;
+        height: 26px;
+      }
+
+      .playground-files-presentation-preview-name {
+        max-width: min(420px, 100%);
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.35;
+        word-break: break-word;
+      }
+
+      .playground-files-presentation-preview-copy {
+        max-width: min(460px, 100%);
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.55;
+      }
+
+      .playground-files-presentation-preview-actions {
+        margin-top: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-files-presentation-preview-actions .playground-files-preview-button {
+        width: auto;
+        min-width: 120px;
       }
 
       .playground-code-preview-drawer {
@@ -36725,6 +36875,7 @@ ${PROJECT_OVERVIEW_CSS}
 ${ENVIRONMENT_CHANGES_CSS}
 ${IMAGINE_TEMPLATE_PAGE_CSS}
 ${IMAGINE_PAGE_CSS}
+${METRONOME_PAGE_CSS}
 
       .playground-agents-page .playground-environments-home-summary,
       .playground-agents-overview-page .playground-environments-home-summary,
@@ -43195,7 +43346,8 @@ ${MODELS_PAGE_CSS}
           "pdfjs-dist/build/pdf.mjs": "https://esm.sh/pdfjs-dist@5.4.624/build/pdf.mjs?bundle",
           "date-fns": "https://esm.sh/date-fns@4.1.0?bundle",
           "date-fns/locale/en-US": "https://esm.sh/date-fns@4.1.0/locale/en-US?bundle",
-          "lucide-react": "https://esm.sh/lucide-react@0.547.0?external=react",
+          "lucide-react": "https://esm.sh/lucide-react@0.575.0?external=react",
+          "@xyflow/react": "https://esm.sh/@xyflow/react@12.8.4?external=react,react-dom",
           "react-big-calendar": "https://esm.sh/react-big-calendar@1.19.4?bundle&external=react,react-dom",
           "react-markdown": "https://esm.sh/react-markdown@10.1.0?bundle&external=react",
           "rehype-raw": "https://esm.sh/rehype-raw@7.0.0?bundle",
@@ -43237,9 +43389,10 @@ ${MODELS_PAGE_CSS}
       import rehypeRaw from "rehype-raw";
       import remarkGfm from "remark-gfm";
       import { visit as unistVisit } from "unist-util-visit";
+      import { addEdge, Background, Controls, Handle, MarkerType, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, Paperclip, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, Paperclip, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -52936,6 +53089,41 @@ ${MODELS_PAGE_CSS}
         return data && typeof data === "object" ? data : {};
       }
 
+      function isPlaygroundPresentationFile(entry) {
+        if (!entry || entry.isFolder) return false;
+        const mimeType = String(entry.mimeType || entry.type || entry.contentType || "").toLowerCase();
+        const fileName = String(entry.name || entry.filename || entry.path || entry.url || "").trim().toLowerCase();
+        const extension = fileName.includes(".")
+          ? fileName.split(".").pop().toLowerCase()
+          : "";
+        return (
+          ["ppt", "pptx", "pps", "ppsx", "pot", "potx"].includes(extension)
+          || mimeType.includes("powerpoint")
+          || mimeType.includes("presentationml")
+          || mimeType.includes("vnd.ms-powerpoint")
+        );
+      }
+
+      function buildPlaygroundStableDocumentPreviewToken(threadId, attachment, fallback = "") {
+        const normalizedThreadId = String(threadId || "").trim();
+        const tokenParts = [
+          "file-preview",
+          normalizedThreadId,
+          attachment?.id,
+          attachment?.fileId,
+          attachment?.environmentId,
+          attachment?.workspacePath,
+          attachment?.sourcePath,
+          attachment?.path,
+          attachment?.filename,
+          attachment?.name,
+          fallback,
+        ]
+          .map((value) => String(value || "").trim())
+          .filter(Boolean);
+        return tokenParts.length > 1 ? tokenParts.join(":") : "file-preview:" + (normalizedThreadId || "thread");
+      }
+
       function getPlaygroundFileKind(entry) {
         if (!entry || entry.isFolder) return "folder";
 
@@ -52967,6 +53155,10 @@ ${MODELS_PAGE_CSS}
           ["csv", "tsv", "xls", "xlsx", "xlsm", "xlsb", "ods", "numbers"].includes(extension)
         ) {
           return "spreadsheet";
+        }
+
+        if (isPlaygroundPresentationFile(entry)) {
+          return "presentation";
         }
 
         if (mimeType.includes("json") || extension === "json") {
@@ -53057,6 +53249,13 @@ ${MODELS_PAGE_CSS}
         if (kind === "markdown") return "text/markdown";
         if (kind === "html") return "text/html";
         if (kind === "pdf") return "application/pdf";
+        if (kind === "presentation") {
+          const fileName = String(entry.name || entry.path || "").trim().toLowerCase();
+          if (fileName.endsWith(".ppt")) return "application/vnd.ms-powerpoint";
+          if (fileName.endsWith(".pps")) return "application/vnd.ms-powerpoint";
+          if (fileName.endsWith(".pot")) return "application/vnd.ms-powerpoint";
+          return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+        }
         if (kind === "video") {
           const fileName = String(entry.name || entry.path || "").trim().toLowerCase();
           if (fileName.endsWith(".webm")) return "video/webm";
@@ -53193,6 +53392,84 @@ ${MODELS_PAGE_CSS}
             };
           })
           .filter(Boolean);
+      }
+
+      const PLAYGROUND_RUNNER_WORKSPACE_SELECTION_STORAGE_KEY_PREFIX = "tb_runner_chat_workspace_selection_v1";
+      const PLAYGROUND_RUNNER_CHAT_APP_ID = "runner-web-sdk-demo";
+
+      function sanitizePlaygroundBackendUrl(url) {
+        return String(url || "").trim().replace(/\\/+$/, "");
+      }
+
+      function buildPlaygroundWorkspaceSelectionStorageKey(appId, backendUrl) {
+        return PLAYGROUND_RUNNER_WORKSPACE_SELECTION_STORAGE_KEY_PREFIX
+          + ":"
+          + (appId || "runner-web-sdk")
+          + ":"
+          + (sanitizePlaygroundBackendUrl(backendUrl) || "default");
+      }
+
+      function normalizePlaygroundWorkspaceSelectorMode(value) {
+        return value === "projects" ? "projects" : "computers";
+      }
+
+      function loadPlaygroundPersistedWorkspaceSelection(appId, backendUrl) {
+        if (typeof window === "undefined") {
+          return null;
+        }
+        try {
+          const raw = window.localStorage.getItem(buildPlaygroundWorkspaceSelectionStorageKey(appId, backendUrl));
+          if (!raw) {
+            return null;
+          }
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+            return null;
+          }
+          return {
+            mode: normalizePlaygroundWorkspaceSelectorMode(parsed.mode),
+            environmentId: typeof parsed.environmentId === "string" ? parsed.environmentId.trim() : "",
+            projectId: typeof parsed.projectId === "string" ? parsed.projectId.trim() : "",
+          };
+        } catch {
+          return null;
+        }
+      }
+
+      function persistPlaygroundWorkspaceSelection(appId, backendUrl, selection) {
+        if (typeof window === "undefined") {
+          return;
+        }
+        try {
+          window.localStorage.setItem(
+            buildPlaygroundWorkspaceSelectionStorageKey(appId, backendUrl),
+            JSON.stringify({
+              mode: normalizePlaygroundWorkspaceSelectorMode(selection?.mode),
+              environmentId: String(selection?.environmentId || "").trim(),
+              projectId: String(selection?.projectId || "").trim(),
+            })
+          );
+        } catch {
+          // Local persistence is best effort only.
+        }
+      }
+
+      function resolvePlaygroundPersistedWorkspaceEnvironmentId(appId, backendUrl, environments = [], projects = []) {
+        const persisted = loadPlaygroundPersistedWorkspaceSelection(appId, backendUrl);
+        if (!persisted) {
+          return "";
+        }
+        if (persisted.mode === "projects" && persisted.projectId) {
+          const persistedProject = projects.find((project) => project?.id === persisted.projectId) || null;
+          const projectEnvironmentId = String(persistedProject?.defaultEnvironmentId || "").trim();
+          return projectEnvironmentId && environments.some((environment) => environment?.id === projectEnvironmentId)
+            ? projectEnvironmentId
+            : "";
+        }
+        const persistedEnvironmentId = String(persisted.environmentId || "").trim();
+        return persistedEnvironmentId && environments.some((environment) => environment?.id === persistedEnvironmentId)
+          ? persistedEnvironmentId
+          : "";
       }
 
       function buildPlaygroundEnvironmentFilesListUrl(backendUrl, environmentId, folderPath = "", depth = 1) {
@@ -54385,6 +54662,25 @@ ${MODELS_PAGE_CSS}
           .map((segment) => encodeURIComponent(segment))
           .join("/");
         return backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/files/download/" + encodedPath;
+      }
+
+      function buildPlaygroundEnvironmentThumbnailUrl(backendUrl, environmentId, filePath, size = 64) {
+        if (!backendUrl || !environmentId || !filePath) return "";
+        const normalizedSize = Math.max(16, Math.min(256, Number.parseInt(String(size || 64), 10) || 64));
+        const encodedPath = normalizeHistoryPath(filePath)
+          .split("/")
+          .filter(Boolean)
+          .map((segment) => encodeURIComponent(segment))
+          .join("/");
+        return backendUrl
+          + "/environments/"
+          + encodeURIComponent(environmentId)
+          + "/files/thumbnail/"
+          + encodedPath
+          + "?w="
+          + normalizedSize
+          + "&h="
+          + normalizedSize;
       }
 
       function buildPlaygroundEnvironmentHtmlPreviewUrl(backendUrl, environmentId, filePath) {
@@ -59530,9 +59826,37 @@ ${MODELS_PAGE_CSS}
         );
       }
 
-      function PlaygroundFileIcon({ entry, size = "small", className = "" }) {
+      function isPlaygroundRasterThumbnailCandidate(entry) {
+        if (!entry || entry.isFolder) return false;
+        const fileName = String(entry.name || entry.path || "").trim().toLowerCase();
+        const extension = fileName.includes(".")
+          ? fileName.split(".").pop().toLowerCase()
+          : "";
+        return ["avif", "bmp", "gif", "jpeg", "jpg", "png", "tif", "tiff", "webp"].includes(extension);
+      }
+
+      function PlaygroundFileIcon({
+        entry,
+        size = "small",
+        className = "",
+        environmentId = "",
+        backendUrl = "",
+        useThumbnail = false,
+      }) {
         const kind = getPlaygroundFileKind(entry);
         const baseClassName = ("playground-files-entry-icon" + (size === "large" ? " is-large" : "") + (className ? " " + className : "")).trim();
+        const [thumbnailFailed, setThumbnailFailed] = useState(false);
+        const thumbnailUrl = useMemo(() => {
+          if (!useThumbnail || kind !== "image" || !isPlaygroundRasterThumbnailCandidate(entry) || !environmentId || !backendUrl || !entry?.path) {
+            return "";
+          }
+          return buildPlaygroundEnvironmentThumbnailUrl(backendUrl, environmentId, entry.path, size === "large" ? 128 : 64);
+        }, [backendUrl, entry?.path, environmentId, kind, size, useThumbnail]);
+
+        useEffect(() => {
+          setThumbnailFailed(false);
+        }, [thumbnailUrl]);
+
         if (kind === "folder") {
           return React.createElement("img", {
             className: baseClassName + " is-asset is-folder",
@@ -59541,6 +59865,16 @@ ${MODELS_PAGE_CSS}
           });
         }
         if (kind === "image") {
+          if (thumbnailUrl && !thumbnailFailed) {
+            return React.createElement("img", {
+              className: baseClassName + " is-thumbnail",
+              src: thumbnailUrl,
+              alt: entry?.name || "Image",
+              loading: "lazy",
+              decoding: "async",
+              onError: () => setThumbnailFailed(true),
+            });
+          }
           return React.createElement(ImageIcon, { className: baseClassName + " is-image", strokeWidth: 1.75 });
         }
         return React.createElement("img", {
@@ -60010,6 +60344,7 @@ ${MODELS_PAGE_CSS}
 ${ENVIRONMENT_CHANGES_SCRIPT}
 ${IMAGINE_TEMPLATE_PAGE_SCRIPT}
 ${IMAGINE_PAGE_SCRIPT}
+${METRONOME_PAGE_SCRIPT}
 ${MODELS_PAGE_SCRIPT}
 
       function getPlaygroundImageMaskViewportRect(containerWidth, containerHeight, naturalWidth, naturalHeight) {
@@ -60376,7 +60711,7 @@ ${MODELS_PAGE_SCRIPT}
         }));
       }
 
-      function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, agents = [], onFileChatThreadMutated, onThreadOpen, onThreadStarted, onRequestSidebarCollapse, navigationRequest, onNavigationRequestHandled, onOpenEnvironmentSettings, onCreateEnvironment, onEnvironmentMutated, onTopNavChange }) {
+      function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, agents = [], onFileChatThreadMutated, onThreadOpen, onThreadStarted, onRequestSidebarCollapse, navigationRequest, onNavigationRequestHandled, onOpenEnvironmentSettings, onCreateEnvironment, onEnvironmentMutated, onEnvironmentChange, onTopNavChange }) {
         const FILE_CHAT_PANEL_DEFAULT_WIDTH = 420;
         const FILES_BROWSER_RESTORE_WIDTH = 320;
         const FILES_PANE_CLOSE_THRESHOLD = 100;
@@ -60611,6 +60946,18 @@ ${MODELS_PAGE_SCRIPT}
         }, [environments, selectedEnvironmentId]);
 
         useEffect(() => {
+          const normalizedInitialEnvironmentId = String(initialEnvironmentId || "").trim();
+          if (
+            !normalizedInitialEnvironmentId
+            || normalizedInitialEnvironmentId === selectedEnvironmentId
+            || !environments.some((environment) => environment.id === normalizedInitialEnvironmentId)
+          ) {
+            return;
+          }
+          setSelectedEnvironmentId(normalizedInitialEnvironmentId);
+        }, [environments, initialEnvironmentId, selectedEnvironmentId]);
+
+        useEffect(() => {
           setCurrentPath("");
           setPathHistory([""]);
           setPathHistoryIndex(0);
@@ -60680,6 +61027,9 @@ ${MODELS_PAGE_SCRIPT}
 
           if (requestedEnvironmentId && requestedEnvironmentId !== selectedEnvironmentId) {
             setSelectedEnvironmentId(requestedEnvironmentId);
+            if (typeof onEnvironmentChange === "function") {
+              onEnvironmentChange(requestedEnvironmentId);
+            }
             return;
           }
 
@@ -60728,6 +61078,7 @@ ${MODELS_PAGE_SCRIPT}
           loadEnvironmentFolder,
           navigationRequest,
           onNavigationRequestHandled,
+          onEnvironmentChange,
           selectedEnvironmentId,
         ]);
 
@@ -64182,9 +64533,27 @@ ${MODELS_PAGE_SCRIPT}
           closeContextMenu();
         }
 
+        function applyFilesEnvironmentSelection(nextEnvironmentId, options = {}) {
+          const normalizedEnvironmentId = String(nextEnvironmentId || "").trim();
+          if (!normalizedEnvironmentId) {
+            return;
+          }
+          setSelectedEnvironmentId(normalizedEnvironmentId);
+          if (options?.persist !== false) {
+            persistPlaygroundWorkspaceSelection(PLAYGROUND_RUNNER_CHAT_APP_ID, backendUrl, {
+              mode: "computers",
+              environmentId: normalizedEnvironmentId,
+              projectId: "",
+            });
+          }
+          if (typeof onEnvironmentChange === "function") {
+            onEnvironmentChange(normalizedEnvironmentId);
+          }
+        }
+
         function handleEnvironmentSelect(nextEnvironmentId) {
           setToolbarPopover("");
-          setSelectedEnvironmentId(nextEnvironmentId);
+          applyFilesEnvironmentSelection(nextEnvironmentId);
         }
 
         function buildFilesEnvironmentClonePayload(environment, nextName) {
@@ -64533,7 +64902,7 @@ ${MODELS_PAGE_SCRIPT}
                       : React.createElement(ChevronRight, { className: "playground-files-entry-chevron", strokeWidth: 1.8 }))
                 : React.createElement("div", { className: "playground-files-entry-chevron is-placeholder" }),
               React.createElement("div", { className: "playground-files-entry-main" },
-                React.createElement(PlaygroundFileIcon, { entry }),
+                React.createElement(PlaygroundFileIcon, { entry, environmentId: selectedEnvironmentId, backendUrl, useThumbnail: true }),
                 React.createElement("div", { className: "playground-files-entry-copy" }, renderEntryName(entry))
               ),
               React.createElement("div", { className: "playground-files-entry-meta" },
@@ -64574,7 +64943,7 @@ ${MODELS_PAGE_SCRIPT}
               onDragLeave: handleDragLeave,
               onDrop: entry.isFolder ? (event) => void handleFolderDrop(event, entry) : undefined,
             },
-              React.createElement(PlaygroundFileIcon, { entry, size: "large" }),
+              React.createElement(PlaygroundFileIcon, { entry, size: "large", environmentId: selectedEnvironmentId, backendUrl, useThumbnail: true }),
               renamingPath === entry.path
                 ? (() => {
                     const renameParts = splitPlaygroundProtectedFilename(entry.name || "", entry.isFolder);
@@ -64970,6 +65339,65 @@ ${MODELS_PAGE_SCRIPT}
             });
             return React.createElement("div", { className: "playground-files-image-thread-shell" },
               codePreview,
+              renderFilePreviewThreadComposer(activePreviewEntry),
+              isStartingImagePreviewThread
+                ? React.createElement("div", { className: "playground-files-image-thread-loading", "aria-live": "polite" },
+                    React.createElement(Loader2, { className: "is-spinning", strokeWidth: 1.85 }),
+                    React.createElement("span", null, "Opening thread...")
+                  )
+              : null
+            );
+          }
+
+          if (!activePreviewEntry.isFolder && singleSelectedEntryPreviewAttachment && singleSelectedEntryFileKind === "presentation") {
+            const presentationPreview = React.createElement("div", { className: "playground-files-preview-shell playground-files-presentation-preview-shell" },
+              React.createElement("div", { className: "playground-files-presentation-preview-header" },
+                React.createElement("div", { className: "playground-files-presentation-preview-title-row" },
+                  React.createElement(PlaygroundFileIcon, { entry: activePreviewEntry }),
+                  React.createElement("span", {
+                    className: "playground-files-presentation-preview-title",
+                    title: activePreviewEntry.name,
+                  }, activePreviewEntry.name)
+                ),
+                React.createElement("div", { className: "playground-files-preview-top-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "tb-attachment-preview-drawer-action",
+                    onClick: (event) => handleEntryContextMenuButtonClick(activePreviewEntry, event),
+                    title: "File actions",
+                    "aria-label": "File actions",
+                  }, React.createElement(Ellipsis, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })),
+                  renderFilePreviewMaximizeButton(),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-chat-close",
+                    onClick: closePreviewPane,
+                    "aria-label": "Close file preview",
+                  }, React.createElement(X, { className: "playground-files-chat-close-icon", strokeWidth: 1.9 }))
+                )
+              ),
+              React.createElement("div", { className: "playground-files-presentation-preview-body" },
+                React.createElement("div", { className: "playground-files-presentation-preview-icon", "aria-hidden": "true" },
+                  React.createElement(FileText, { strokeWidth: 1.7 })
+                ),
+                React.createElement("div", { className: "playground-files-presentation-preview-name" }, activePreviewEntry.name),
+                React.createElement("div", { className: "playground-files-presentation-preview-copy" },
+                  "PowerPoint preview is not available in this browser. Download the file or ask an agent to inspect it from the workspace."
+                ),
+                React.createElement("div", { className: "playground-files-presentation-preview-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-preview-button is-primary",
+                    onClick: () => void handleDownloadEntry(activePreviewEntry),
+                  },
+                    React.createElement(Download, { width: 12, height: 12, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Download")
+                  )
+                )
+              )
+            );
+            return React.createElement("div", { className: "playground-files-image-thread-shell" },
+              presentationPreview,
               renderFilePreviewThreadComposer(activePreviewEntry),
               isStartingImagePreviewThread
                 ? React.createElement("div", { className: "playground-files-image-thread-loading", "aria-live": "polite" },
@@ -94739,7 +95167,9 @@ ${MODELS_PAGE_SCRIPT}
                 !agentCreationSetupOpen
                   ? React.createElement("button", {
                   type: "button",
-                  className: "playground-files-header-icon-button is-plain",
+                  className: shouldShowAgentsHome && embeddedInResources
+                    ? "playground-top-nav-private-chat-button"
+                    : "playground-files-header-icon-button is-plain",
                   onClick: () => {
                     if (agentListMode === "teams") {
                       handleCreateTeam();
@@ -94749,7 +95179,12 @@ ${MODELS_PAGE_SCRIPT}
                   },
                   title: agentListMode === "teams" ? "Create team" : "Create agent",
                   "aria-label": agentListMode === "teams" ? "Create team" : "Create agent",
-                  }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  },
+                    React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }),
+                    shouldShowAgentsHome && embeddedInResources
+                      ? React.createElement("span", null, agentListMode === "teams" ? "Team" : "Agent")
+                      : null
+                  )
                   : null
               ),
               topNavActionsContainer
@@ -99982,8 +100417,8 @@ ${MODELS_PAGE_SCRIPT}
         const [projectEnvironmentFilePickerSelectedPaths, setProjectEnvironmentFilePickerSelectedPaths] = useState([]);
         const [taskView, setTaskView] = useState(() => isStandaloneCalendarMode ? "calendar" : "overview");
         const [projectOverviewChartTimescale, setProjectOverviewChartTimescale] = useState("day");
-        const [projectOverviewChartMode, setProjectOverviewChartMode] = useState("cost");
         const [projectOverviewHomeTab, setProjectOverviewHomeTab] = useState("general");
+        const [projectOverviewFilesSubview, setProjectOverviewFilesSubview] = useState("overview");
         const [projectOverviewListMode, setProjectOverviewListMode] = useState("tasks");
         const [projectOverviewTaskSearchQuery, setProjectOverviewTaskSearchQuery] = useState("");
         const [projectOverviewTaskSortMode, setProjectOverviewTaskSortMode] = useState("default");
@@ -123858,6 +124293,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const initialSidebarWorkspaceMode = "work";
         const [sidebarOpen, setSidebarOpen] = useState(true);
         const [activePage, setActivePage] = useState("thread");
+        const [metronomeTopNavState, setMetronomeTopNavState] = useState(null);
+        const [metronomeTopNavMenuOpen, setMetronomeTopNavMenuOpen] = useState(false);
+        const [isMetronomeNodeDetailOpen, setIsMetronomeNodeDetailOpen] = useState(false);
+        const metronomeTopNavMenuRef = useRef(null);
+        const metronomeTopNavActionsRef = useRef({
+          edit: null,
+          rename: null,
+          duplicate: null,
+          delete: null,
+          publish: null,
+          goOverview: null,
+          setMode: null,
+        });
         const [environmentsOpenToken, setEnvironmentsOpenToken] = useState(0);
         const [environmentsNavigationTargetId, setEnvironmentsNavigationTargetId] = useState("");
         const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -126203,6 +126651,51 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setImagineToolbarPopover("");
         }, [activePage, imagineActiveView]);
 
+        useEffect(() => {
+          if (activePage === "metronome") {
+            return;
+          }
+          setMetronomeTopNavState(null);
+          setMetronomeTopNavMenuOpen(false);
+          setIsMetronomeNodeDetailOpen(false);
+          metronomeTopNavActionsRef.current = {
+            edit: null,
+            rename: null,
+            duplicate: null,
+            delete: null,
+            publish: null,
+            goOverview: null,
+            setMode: null,
+          };
+        }, [activePage]);
+
+        useEffect(() => {
+          if (!metronomeTopNavMenuOpen) {
+            return;
+          }
+          const handleMetronomeTopNavMenuPointerDown = (event) => {
+            const target = event.target;
+            if (
+              metronomeTopNavMenuRef.current
+              && target
+              && !metronomeTopNavMenuRef.current.contains(target)
+            ) {
+              setMetronomeTopNavMenuOpen(false);
+            }
+          };
+          document.addEventListener("mousedown", handleMetronomeTopNavMenuPointerDown);
+          return () => {
+            document.removeEventListener("mousedown", handleMetronomeTopNavMenuPointerDown);
+          };
+        }, [metronomeTopNavMenuOpen]);
+
+        useEffect(() => {
+          if (!isMetronomeNodeDetailOpen || !sidebarOpen) {
+            return;
+          }
+          setSidebarOpen(false);
+        }, [isMetronomeNodeDetailOpen, sidebarOpen]);
+
         function openPluginsPage() {
           setAccountMenuOpen(false);
           setSidebarWorkspaceMode("configure");
@@ -126220,6 +126713,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setAccountMenuOpen(false);
           setSidebarWorkspaceMode("work");
           setActivePage("imagine");
+        }
+
+        function openMetronomePage() {
+          setAccountMenuOpen(false);
+          setSidebarWorkspaceMode("work");
+          setActivePage("metronome");
         }
 
         function openHelpPage() {
@@ -131310,12 +131809,21 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (environmentId.trim()) {
             return environmentId.trim();
           }
+          const persistedEnvironmentId = resolvePlaygroundPersistedWorkspaceEnvironmentId(
+            PLAYGROUND_RUNNER_CHAT_APP_ID,
+            proxyBackendBase,
+            runtimeEnvironments,
+            runnerWorkspaceProjects
+          );
+          if (persistedEnvironmentId) {
+            return persistedEnvironmentId;
+          }
           if (hasRealAccess && realEnvironments.length > 0) {
             const defaultEnvironment = realEnvironments.find((environment) => environment.isDefault) || realEnvironments[0];
             return defaultEnvironment?.id || "";
           }
           return hasRealAccess ? "" : computerAgentsMode ? "env_default" : "";
-        }, [computerAgentsMode, environmentId, hasRealAccess, realEnvironments]);
+        }, [computerAgentsMode, environmentId, hasRealAccess, proxyBackendBase, realEnvironments, runnerWorkspaceProjects, runtimeEnvironments]);
         const defaultShellEnvironmentId = useMemo(() => {
           if (!hasRealAccess || realEnvironments.length === 0) {
             return "";
@@ -134078,6 +134586,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (mode === "work") {
             return activePage === "tasks"
               || activePage === "files"
+              || activePage === "metronome"
               || activePage === "calendar";
           }
           if (mode === "configure") {
@@ -145698,6 +146207,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return renderUnifiedTopNav({
             className: "playground-resources-page",
             pathItems: resourcesPathItems,
+            includeSearchDivider: activeResourcesView === "agents" && !isResourcesDetailView,
             extraActions: React.createElement("div", {
               id: "playground-resources-nav-actions",
               className: "playground-resources-nav-actions-slot",
@@ -145797,6 +146307,31 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 onClick: () => setImagineActiveView(tab.id),
               }, tab.label);
             })
+          );
+        }
+
+        function renderMetronomeModeSwitch() {
+          const state = metronomeTopNavState && metronomeTopNavState.mode === "editor"
+            ? metronomeTopNavState
+            : null;
+          if (!state) {
+            return null;
+          }
+          const activeMode = state.editorMode === "run" ? "run" : "edit";
+          return React.createElement("div", { className: "content-mode-switch playground-thread-mode-switch playground-metronome-top-nav-switch", role: "tablist", "aria-label": "Metronome modes" },
+            [
+              { id: "edit", label: "Edit" },
+              { id: "run", label: "Run" },
+            ].map((tab) =>
+              React.createElement("button", {
+                key: tab.id,
+                type: "button",
+                role: "tab",
+                className: "content-mode-button" + (activeMode === tab.id ? " is-active" : ""),
+                "aria-selected": activeMode === tab.id ? "true" : "false",
+                onClick: () => metronomeTopNavActionsRef.current?.setMode?.(tab.id),
+              }, tab.label)
+            )
           );
         }
 
@@ -145917,16 +146452,89 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
+        function renderMetronomeTopNavActions() {
+          const state = metronomeTopNavState && metronomeTopNavState.mode === "editor"
+            ? metronomeTopNavState
+            : null;
+          if (!state) {
+            return null;
+          }
+          const menuRows = [
+            { id: "rename", label: "Rename", icon: SquarePen, action: () => metronomeTopNavActionsRef.current?.rename?.() },
+            { id: "duplicate", label: "Duplicate", icon: Copy, action: () => metronomeTopNavActionsRef.current?.duplicate?.() },
+            { id: "delete", label: "Delete", icon: Trash2, action: () => metronomeTopNavActionsRef.current?.delete?.(), danger: true },
+          ];
+          return React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "playground-metronome-top-nav-menu-shell", ref: metronomeTopNavMenuRef },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-top-nav-private-chat-button playground-metronome-top-nav-menu-trigger" + (metronomeTopNavMenuOpen ? " is-active" : ""),
+                "aria-label": "Metronome actions",
+                "aria-expanded": metronomeTopNavMenuOpen ? "true" : "false",
+                onClick: () => setMetronomeTopNavMenuOpen((current) => !current),
+              },
+                React.createElement(Ellipsis, { strokeWidth: 1.8 })
+              ),
+              metronomeTopNavMenuOpen
+                ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-metronome-top-nav-menu" },
+                    menuRows.map((row) => {
+                      const Icon = row.icon;
+                      return React.createElement("button", {
+                        key: row.id,
+                        type: "button",
+                        className: "tb-popup-row" + (row.danger ? " is-danger" : ""),
+                        onClick: () => {
+                          setMetronomeTopNavMenuOpen(false);
+                          row.action();
+                        },
+                      },
+                        React.createElement(Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, row.label)
+                      );
+                    })
+                  )
+                : null
+            ),
+            React.createElement("button", {
+              type: "button",
+              className: "playground-top-nav-private-chat-button",
+              onClick: () => metronomeTopNavActionsRef.current?.publish?.(),
+            },
+              React.createElement(Rocket, { strokeWidth: 1.8 }),
+              React.createElement("span", null, state.status === "active" ? "Unpublish" : "Publish")
+            )
+          );
+        }
+
         function renderGenericPageNav() {
+          const isMetronomeEditor = activePage === "metronome" && metronomeTopNavState?.mode === "editor";
+          const metronomePathItems = isMetronomeEditor
+            ? [
+                { label: "Create" },
+                { label: "Metronome", onClick: () => metronomeTopNavActionsRef.current?.goOverview?.() },
+                { label: metronomeTopNavState?.title || "Untitled Metronome" },
+              ]
+            : [{ label: "Create" }, { label: "Metronome" }];
           return renderUnifiedTopNav({
             pathItems: activePage === "calendar"
               ? [{ label: "Create" }, { label: "Calendar" }]
               : activePage === "imagine"
                 ? [{ label: "Create" }, { label: "Imagine" }]
+              : activePage === "metronome"
+                ? metronomePathItems
               : [{ label: selectedThreadTitle || "Home" }],
             leftExtra: null,
-            center: activePage === "imagine" ? renderImagineModeSwitch() : null,
-            extraActions: activePage === "imagine" ? renderImagineTopNavControls() : null,
+            center: activePage === "imagine"
+              ? renderImagineModeSwitch()
+              : isMetronomeEditor
+                ? renderMetronomeModeSwitch()
+                : null,
+            includeSearchDivider: isMetronomeEditor,
+            extraActions: activePage === "imagine"
+              ? renderImagineTopNavControls()
+              : isMetronomeEditor
+                ? renderMetronomeTopNavActions()
+                : null,
           });
         }
 
@@ -147913,6 +148521,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
               onClick: handleOpenFilesShortcut,
             },
             {
+              id: "metronome",
+              label: "Metronome",
+              Icon: Metronome,
+              active: activePage === "metronome",
+              onClick: openMetronomePage,
+            },
+            {
               id: "calendar",
               label: "Calendar",
               Icon: CalendarIcon,
@@ -148359,7 +148974,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                }, renderCollapsedSidebarRail())
 	              ),
 	              React.createElement("main", { className: "playground-main" },
-	                React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isResourcesSideDetailOpen ? " is-resources-side-detail-open" : "") },
+	                React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isResourcesSideDetailOpen ? " is-resources-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") },
 	                  activePage === "tools"
 	                    ? renderPluginsPageNav()
 	                    : activePage === "configure"
@@ -148383,6 +148998,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                    : activePage === "files"
 	                      ? renderFilesPageNav()
 	                    : activePage === "imagine"
+	                      ? renderGenericPageNav()
+	                    : activePage === "metronome"
 	                      ? renderGenericPageNav()
 	                    : activePage === "calendar"
 	                      ? renderGenericPageNav()
@@ -148631,7 +149248,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             : null
                         )
                       ),
-	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (activePage === "files" ? " is-files-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
+	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (activePage === "files" ? " is-files-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
 	                    activePage === "settings"
 	                      ? renderSettingsPage()
 	                      : activePage === "team"
@@ -148695,7 +149312,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 setPendingThreadRunRequest(null);
                                 setPendingThreadDocumentPreviewRequest(options?.documentPreviewAttachment ? {
                                   threadId: normalizedThreadId,
-                                  token: options.documentPreviewToken || ("file-preview:" + normalizedThreadId + ":" + Date.now().toString(36)),
+                                  token: options.documentPreviewToken || buildPlaygroundStableDocumentPreviewToken(normalizedThreadId, options.documentPreviewAttachment),
                                   attachment: options.documentPreviewAttachment,
                                 } : null);
                                 setThreadTaskOpenRequest(null);
@@ -148718,7 +149335,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 setThreadAgentSelectionOverride(null);
                                 setPendingThreadDocumentPreviewRequest(options?.documentPreviewAttachment ? {
                                   threadId: normalizedThreadId,
-                                  token: options.documentPreviewToken || ("file-preview:" + normalizedThreadId + ":" + Date.now().toString(36)),
+                                  token: options.documentPreviewToken || buildPlaygroundStableDocumentPreviewToken(normalizedThreadId, options.documentPreviewAttachment),
                                   attachment: options.documentPreviewAttachment,
                                 } : null);
                                 if (options?.taskRunRequest?.prompt) {
@@ -148781,6 +149398,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               },
                               onEnvironmentMutated: async () => {
                                 await refreshEnvironments();
+                              },
+                              onEnvironmentChange: (nextEnvironmentId) => {
+                                const normalizedEnvironmentId = String(nextEnvironmentId || "").trim();
+                                if (normalizedEnvironmentId) {
+                                  setEnvironmentId(normalizedEnvironmentId);
+                                }
                               },
                               onRequestSidebarCollapse: () => {
                                 setSidebarOpen(false);
@@ -148891,6 +149514,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             })
                           : hasDemoAccess
                             ? renderDemoFeaturePage("imagine")
+                            : renderAuthGate()
+                      : activePage === "metronome"
+                        ? hasRealAccess
+                          ? React.createElement(PlaygroundMetronomePage, {
+                              onTopNavStateChange: setMetronomeTopNavState,
+                              topNavActionsRef: metronomeTopNavActionsRef,
+                              onNodeDetailOpenChange: setIsMetronomeNodeDetailOpen,
+                              inspectorPortalId: "playground-metronome-node-drawer-root",
+                              agents: realAgents,
+                              environments: realEnvironments,
+                              projects: realProjects,
+                            })
+                          : hasDemoAccess
+                            ? renderDemoFeaturePage("resources")
                             : renderAuthGate()
                       : isResourcesPage
                         ? renderResourcesPage()
@@ -149385,6 +150022,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           )
                         )
                   )
+                  ,
+                  activePage === "metronome"
+                    ? React.createElement("aside", {
+                        id: "playground-metronome-node-drawer-root",
+                        className: "playground-metronome-node-drawer" + (isMetronomeNodeDetailOpen ? " is-open" : ""),
+                      })
+                    : null
                   ,
                   activePage === "thread" && hasRealAccess
                     ? React.createElement("aside", { className: "playground-thread-task-drawer" + (threadTaskOpenRequest ? " is-open" : "") },
@@ -155108,6 +155752,19 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const metronomesProxyMatch = url.pathname.match(/^\/api\/real\/metronomes(?:\/(.*))?$/);
+  if (metronomesProxyMatch && ["GET", "POST", "PATCH", "PUT", "DELETE"].includes(req.method || "")) {
+    const suffix = metronomesProxyMatch[1]
+      ? "/" + metronomesProxyMatch[1].split("/").map((segment) => encodeURIComponent(decodeURIComponent(segment))).join("/")
+      : "";
+    if (req.method === "GET") {
+      void proxyUpstreamGet(req, res, "/metronomes" + suffix);
+    } else {
+      void proxyUpstreamJsonRequest(req, res, "/metronomes" + suffix, req.method);
+    }
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/api/real/admin/feedback-summary") {
     void proxyFeedbackSummaryGet(req, res);
     return;
@@ -156667,6 +157324,19 @@ const server = http.createServer((req, res) => {
       `/environments/${encodeURIComponent(decodeURIComponent(environmentFilesMoveMatch[1]))}/files/move`,
       "POST",
     );
+    return;
+  }
+
+  const environmentThumbnailMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/files\/thumbnail\/(.+)$/);
+  if (req.method === "GET" && environmentThumbnailMatch) {
+    const environmentId = encodeURIComponent(decodeURIComponent(environmentThumbnailMatch[1]));
+    const filePath = environmentThumbnailMatch[2]
+      .split("/")
+      .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
+      .join("/");
+    void proxyUpstreamBinaryGet(req, res, `/environments/${environmentId}/files/thumbnail/${filePath}`, {
+      contentType: "image/webp",
+    });
     return;
   }
 

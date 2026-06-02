@@ -9652,7 +9652,6 @@ export function RunnerChat({
   }, [apiKey, currentThreadId, hasApiKey, normalizedBackendUrl, requestHeaders]);
   const summaryPreviewEnvironmentId = scopedActiveThreadEnvironmentId || selectedEnvironmentId || environmentId || null;
   const canPreviewSummaryWorkspacePaths = Boolean(summaryPreviewEnvironmentId);
-  const retainedSummaryPreviewPaths = useMemo(() => collectThreadRetainedSummaryPreviewPaths(turns), [turns]);
   const workspaceItems = hasApiKey ? remoteWorkspaceItems : workspaceConfig?.items || [];
   const availableEnvironments = useMemo(
     () =>
@@ -19611,19 +19610,6 @@ export function RunnerChat({
                 turn.presentation === "context-action-notice"
                   ? turn.logs.find((log) => log.eventType === "action_summary") || null
                   : null;
-              const changedFilePathsForTurn = new Set(
-                collectTurnChangedFiles(turn.logs)
-                  .map((file) => normalizeRunnerPreviewPath(file.path))
-                  .filter((value): value is string => Boolean(value))
-              );
-              const summaryPreviewItems = collectTurnSummaryPreviewItems(turn.logs, {
-                backendUrl: normalizedBackendUrl,
-                environmentId: summaryPreviewEnvironmentId,
-              }).filter((item) => {
-                if (item.kind !== "attachment") return true;
-                const normalizedPath = normalizeRunnerPreviewPath(item.attachment.workspacePath || "");
-                return !normalizedPath || retainedSummaryPreviewPaths.has(normalizedPath) || changedFilePathsForTurn.has(normalizedPath);
-              });
               const visibleTimelineItemCount = visibleTimelineItemCountsByTurn[turn.id];
               const revealedTimelineItems =
                 visibleTimelineItemCount === undefined
@@ -19667,7 +19653,6 @@ export function RunnerChat({
                   : isTurnRunning
                   ? "Working..."
                   : `Worked for ${formatElapsedDurationLabel(turnSeconds)}`;
-              const workToggleLabel = isExpanded ? "Collapse" : "Expand";
               const shouldRenderWorkSection = isTurnRunning || isTurnPermissionAsked || revealedTimelineItems.length > 0 || isWorkLogsLoading;
               const userThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "user");
               const assistantThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "assistant");
@@ -19876,9 +19861,8 @@ export function RunnerChat({
                           aria-expanded={isExpanded}
                           onClick={() => toggleWorkingLogs(turn.id, isExpanded)}
                         >
-                          <span className="tb-work-label">{workLabel}</span>
-                          <span className="tb-work-toggle">
-                            <span className="tb-work-toggle-label">{workToggleLabel}</span>
+                          <span className="tb-work-label">
+                            <span>{workLabel}</span>
                             {isExpanded ? <IconChevronUp className="tb-chevron" /> : <IconChevronDown className="tb-chevron" />}
                           </span>
                         </button>
@@ -19933,31 +19917,11 @@ export function RunnerChat({
                     ) : null}
 
                     {agentMessage?.message ? (
-                      <div
-                        ref={(node) => setThreadHistoryAnchorElement(assistantThreadHistoryItemId, node)}
-                        className={`tb-turn-summary tb-thread-history-anchor ${isLatestTurn ? "is-latest-summary" : ""}`.trim()}
-                        style={responseStyle}
-                      >
-                        {summaryPreviewItems.length > 0 ? (
-                          <div className="runner-attachments-summary-strip" aria-label="Created resources and changed files">
-                            {summaryPreviewItems.map((item) => (
-                              <Fragment key={`${turn.id}:${item.id}`}>
-                                {item.kind === "attachment"
-                                  ? renderAttachmentPreviewChip(item.attachment, {
-                                      onPreview: (attachment) => {
-                                        const normalizedPath = normalizeRunnerPreviewPath(attachment.workspacePath || "");
-                                        if (normalizedPath) {
-                                          handleSummaryWorkspacePathClick(turn, normalizedPath, "run_summary");
-                                        } else {
-                                          toggleDocumentAttachmentPreview(attachment);
-                                        }
-                                      },
-                                    })
-                                  : renderRunnerSummaryResourceChip(item.resource, { onClick: onResourcePreviewClick })}
-                              </Fragment>
-                            ))}
-                          </div>
-                        ) : null}
+                    <div
+                      ref={(node) => setThreadHistoryAnchorElement(assistantThreadHistoryItemId, node)}
+                      className={`tb-turn-summary tb-thread-history-anchor ${isLatestTurn ? "is-latest-summary" : ""}`.trim()}
+                      style={responseStyle}
+                    >
                         <div className="tb-turn-response">
                           {renderAgentSummaryContent(turn, agentMessage, {
                             className: "tb-message-markdown tb-message-markdown-summary",
@@ -20100,9 +20064,8 @@ export function RunnerChat({
                           aria-expanded={isExpanded}
                           onClick={() => toggleWorkingLogs(turn.id, isExpanded)}
                         >
-                          <span className="tb-work-label">{workLabel}</span>
-                          <span className="tb-work-toggle">
-                            <span className="tb-work-toggle-label">{workToggleLabel}</span>
+                          <span className="tb-work-label">
+                            <span>{workLabel}</span>
                             {isExpanded ? <IconChevronUp className="tb-chevron" /> : <IconChevronDown className="tb-chevron" />}
                           </span>
                         </button>
@@ -20162,26 +20125,6 @@ export function RunnerChat({
                       className={`tb-turn-summary tb-thread-history-anchor ${isLatestTurn ? "is-latest-summary" : ""}`.trim()}
                       style={responseStyle}
                     >
-                      {summaryPreviewItems.length > 0 ? (
-                        <div className="runner-attachments-summary-strip" aria-label="Created resources and changed files">
-                          {summaryPreviewItems.map((item) => (
-                            <Fragment key={`${turn.id}:${item.id}`}>
-                              {item.kind === "attachment"
-                                ? renderAttachmentPreviewChip(item.attachment, {
-                                    onPreview: (attachment) => {
-                                      const normalizedPath = normalizeRunnerPreviewPath(attachment.workspacePath || "");
-                                      if (normalizedPath) {
-                                        handleSummaryWorkspacePathClick(turn, normalizedPath, "run_summary");
-                                      } else {
-                                        toggleDocumentAttachmentPreview(attachment);
-                                      }
-                                    },
-                                  })
-                                : renderRunnerSummaryResourceChip(item.resource, { onClick: onResourcePreviewClick })}
-                            </Fragment>
-                          ))}
-                        </div>
-                      ) : null}
                       <div className="tb-turn-response">
                         {renderAgentSummaryContent(turn, agentMessage, {
                           className: "tb-message-markdown tb-message-markdown-summary",
