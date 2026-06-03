@@ -18,7 +18,6 @@ import {
   Code2,
   Copy,
   Cpu,
-  Clock,
   Circle,
   CircleCheckBig,
   CircleHelp,
@@ -31,7 +30,6 @@ import {
   FileText,
   Folder,
   FolderOpen,
-  FolderPlus,
   Globe,
   HardDrive,
   Images,
@@ -3924,20 +3922,7 @@ function ComputerAgentsThreadSnapshotLogBox({
     : <MessageSquare className="tb-log-card-small-icon" strokeWidth={1.5} />;
 
   if (kind === "messages" && entries.length === 0 && !isLoading) {
-    return (
-      <div className="tb-log-card tb-log-card-thread-snapshot">
-        <div className="tb-log-card-header tb-log-card-header-static">
-          <span className="tb-log-card-icon">{icon}</span>
-          <div className="tb-log-card-header-copy">
-            <span className="tb-log-card-label">{label}</span>
-            <span className="tb-log-card-title">{`${snapshotTitle} - No thread messages were parsed.`}</span>
-          </div>
-          <div className="tb-log-card-header-right">
-            {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -4039,9 +4024,6 @@ function ReasoningLogBox({
   if (!content) return null;
   return (
     <div className="tb-log-reasoning">
-      <span className="tb-log-reasoning-icon">
-        <Lightbulb className="tb-log-card-small-icon" strokeWidth={1.5} />
-      </span>
       <RunnerMarkdown content={content} className="tb-log-reasoning-copy tb-message-markdown" onWorkspacePathClick={onWorkspacePathClick} />
     </div>
   );
@@ -4269,22 +4251,9 @@ function isWaitLog(log?: RunnerLog): boolean {
 }
 
 function WaitLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
-  const seconds = extractWaitDurationSeconds(log) || 0;
-  return (
-    <div className="tb-log-card tb-log-card-wait">
-      <div className="tb-log-card-header tb-log-card-header-static">
-        <span className="tb-log-card-icon">
-          <Clock className="tb-log-card-small-icon" strokeWidth={1.5} />
-        </span>
-        <div className="tb-log-card-header-copy">
-          <span className="tb-log-card-label">{`Waited for ${seconds.toLocaleString()} ${seconds === 1 ? "second" : "seconds"}`}</span>
-        </div>
-        <div className="tb-log-card-header-right">
-          {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
-        </div>
-      </div>
-    </div>
-  );
+  void log;
+  void timeLabel;
+  return null;
 }
 
 export function isReadFileLog(log?: RunnerLog): boolean {
@@ -5297,23 +5266,8 @@ function ReadFileLogBox({
   }
 
   if (readFailureMessage) {
-    return (
-      <div className="tb-log-card">
-        <div className="tb-log-card-header tb-log-card-header-static">
-          <span className="tb-log-card-icon">
-            <ScanText className="tb-log-card-small-icon" strokeWidth={1.5} />
-          </span>
-          <div className="tb-log-card-header-copy">
-            <span className="tb-log-card-label">Read File</span>
-            <span className="tb-log-card-title">{`${filePath ? getFileName(filePath) : "file"} - ${readFailureMessage}`}</span>
-          </div>
-          <div className="tb-log-card-header-right">
-            {lineRange ? <span className="tb-log-card-pill">{lineRange}</span> : null}
-            {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
-          </div>
-        </div>
-      </div>
-    );
+    void readFailureMessage;
+    return null;
   }
 
   if (isImageReadWithoutText) {
@@ -5568,6 +5522,12 @@ function WriteFileSingleLogBox({
   const detectedLanguage = detectCodeLanguage(output, filePath || undefined);
   const languageLabel = formatCodeLanguageLabel(detectedLanguage);
   const imageLabel = operation === "created" ? "Generated Image" : "Updated Image";
+  const fileActionLabel =
+    operation === "created"
+      ? "Created file"
+      : operation === "deleted"
+        ? "Deleted file"
+        : "Edited file";
 
   useEffect(() => {
     if (!copied) return;
@@ -5622,7 +5582,10 @@ function WriteFileSingleLogBox({
           <>
             <div className="tb-log-file-preview-frame">
               <div className="tb-log-file-preview-topbar">
-                <span className="tb-log-file-preview-language">{languageLabel}</span>
+                <div className="tb-log-file-preview-heading">
+                  <span className="tb-log-file-preview-action-label">{fileActionLabel}</span>
+                  <span className="tb-log-file-preview-language">{languageLabel}</span>
+                </div>
                 <div className="tb-log-file-preview-actions">
                   {codePreviewAttachment ? (
                     <button
@@ -6435,23 +6398,7 @@ function ListFilesLogBox({
   }
 
   if (!isError && allItems.length === 0) {
-    const emptyTitle = formatEmptyListFilesTitle(directoryPath);
-    return (
-      <div className="tb-log-card tb-log-card-agent-list tb-log-card-file-list">
-        <div className="tb-log-card-header tb-log-card-header-static">
-          <span className="tb-log-card-icon">
-            <FolderOpen className="tb-log-card-small-icon" strokeWidth={1.5} />
-          </span>
-          <div className="tb-log-card-header-copy">
-            <span className="tb-log-card-label">List Files</span>
-            <span className="tb-log-card-title">{emptyTitle}</span>
-          </div>
-          <div className="tb-log-card-header-right">
-            {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -10355,11 +10302,71 @@ function tokenizeImageUnderstandingCommand(command: string): string[] {
   return tokens;
 }
 
-function extractImageUnderstandingImagePath(command?: string): string | null {
-  if (!command) return null;
-  const token = tokenizeImageUnderstandingCommand(command)
-    .find((candidate) => isRunnerLogImageFilePath(candidate));
-  return normalizeRunnerFilePath(token) || null;
+function collectImageUnderstandingImagePathsFromValue(value: unknown, paths: string[]) {
+  if (typeof value === "string") {
+    const normalized = normalizeRunnerFilePath(value);
+    if (normalized && isRunnerLogImageFilePath(normalized)) {
+      paths.push(normalized);
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((entry) => collectImageUnderstandingImagePathsFromValue(entry, paths));
+    return;
+  }
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    [
+      record.path,
+      record.filePath,
+      record.file_path,
+      record.workspacePath,
+      record.workspace_path,
+      record.imagePath,
+      record.image_path,
+      record.url,
+    ].forEach((entry) => collectImageUnderstandingImagePathsFromValue(entry, paths));
+  }
+}
+
+function extractImageUnderstandingImagePaths(log: RunnerLog, command?: string): string[] {
+  const paths: string[] = [];
+  if (command) {
+    tokenizeImageUnderstandingCommand(command)
+      .filter((candidate) => isRunnerLogImageFilePath(candidate))
+      .forEach((candidate) => {
+        const normalized = normalizeRunnerFilePath(candidate);
+        if (normalized) {
+          paths.push(normalized);
+        }
+      });
+  }
+
+  const metadata = log.metadata as Record<string, unknown> | undefined;
+  if (metadata) {
+    [
+      metadata.imagePath,
+      metadata.image_path,
+      metadata.imagePaths,
+      metadata.image_paths,
+      metadata.images,
+      metadata.inputs,
+      metadata.input,
+      metadata.filePaths,
+      metadata.file_paths,
+      metadata.files,
+      metadata.paths,
+    ].forEach((entry) => collectImageUnderstandingImagePathsFromValue(entry, paths));
+  }
+
+  const seen = new Set<string>();
+  return paths.filter((path) => {
+    if (seen.has(path)) {
+      return false;
+    }
+    seen.add(path);
+    return true;
+  });
 }
 
 function resolveImageUnderstandingResultText(log: RunnerLog): string {
@@ -10401,22 +10408,38 @@ function ImageUnderstandingLogBox({
   requestHeaders?: HeadersInit;
 }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [imageOrientation, setImageOrientation] = useState<"landscape" | "portrait" | null>(null);
+  const [imageOrientations, setImageOrientations] = useState<Record<string, "landscape" | "portrait">>({});
   const command = String(log.metadata?.command || log.message || "");
-  const imagePath = extractImageUnderstandingImagePath(command);
-  const imageName = imagePath ? getFileName(imagePath) : "image";
-  const imagePreviewUrl = imagePath ? buildRunnerPreviewDownloadUrl(backendUrl, environmentId, imagePath) : null;
+  const imagePaths = extractImageUnderstandingImagePaths(log, command);
+  const imagePreviews = imagePaths
+    .map((imagePath) => {
+      const url = buildRunnerPreviewDownloadUrl(backendUrl, environmentId, imagePath);
+      return url
+        ? {
+            path: imagePath,
+            name: getFileName(imagePath),
+            url,
+          }
+        : null;
+    })
+    .filter((preview): preview is { path: string; name: string; url: string } => Boolean(preview));
+  const imageName = imagePreviews.length === 1 ? imagePreviews[0]?.name || "image" : `${imagePreviews.length || "No"} images`;
   const resultText = resolveImageUnderstandingResultText(log);
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
+  const primaryImageOrientation =
+    imagePreviews.length === 1 && imagePreviews[0]?.url
+      ? imageOrientations[imagePreviews[0].url] || null
+      : null;
   const layoutClassName = [
     "tb-image-understanding-layout",
-    imageOrientation === "landscape" ? "is-landscape" : "",
-    imageOrientation === "portrait" ? "is-portrait" : "",
+    primaryImageOrientation === "landscape" ? "is-landscape" : "",
+    primaryImageOrientation === "portrait" ? "is-portrait" : "",
+    imagePreviews.length > 1 ? "is-multiple" : "",
   ].filter(Boolean).join(" ");
 
   useEffect(() => {
-    setImageOrientation(null);
-  }, [imagePreviewUrl]);
+    setImageOrientations({});
+  }, [imagePreviews.map((preview) => preview.url).join("|")]);
 
   return (
     <div className="tb-log-card tb-log-card-image-understanding">
@@ -10430,27 +10453,37 @@ function ImageUnderstandingLogBox({
       <LogPanel collapsed={collapsed}>
         <div className={layoutClassName}>
           <div className="tb-image-understanding-preview">
-            {imagePreviewUrl ? (
-              <LazyMediaPreviewMount
-                mediaKey={imagePreviewUrl}
-                className="tb-log-media-lazy-preview tb-image-understanding-lazy-preview"
-                placeholder={<ImageUnderstandingPreviewLoadingState />}
-              >
-                <RunnerImagePreviewSurface
-                  className="tb-image-understanding-preview-surface"
-                  imageClassName="tb-image-understanding-preview-image"
-                  src={imagePreviewUrl}
-                  alt={imageName}
-                  maxHeight={360}
-                  fetchHeaders={requestHeaders}
-                  loadStrategy="immediate"
-                  onImageLoad={({ naturalWidth, naturalHeight }) => {
-                    if (naturalWidth > 0 && naturalHeight > 0) {
-                      setImageOrientation(naturalWidth > naturalHeight ? "landscape" : "portrait");
-                    }
-                  }}
-                />
-              </LazyMediaPreviewMount>
+            <div className="tb-image-understanding-preview-title">Image Understanding</div>
+            {imagePreviews.length > 0 ? (
+              <div className="tb-image-understanding-preview-list">
+                {imagePreviews.map((preview) => (
+                  <div key={preview.url} className="tb-image-understanding-preview-item">
+                    <LazyMediaPreviewMount
+                      mediaKey={preview.url}
+                      className="tb-log-media-lazy-preview tb-image-understanding-lazy-preview"
+                      placeholder={<ImageUnderstandingPreviewLoadingState />}
+                    >
+                      <RunnerImagePreviewSurface
+                        className="tb-image-understanding-preview-surface"
+                        imageClassName="tb-image-understanding-preview-image"
+                        src={preview.url}
+                        alt={preview.name}
+                        maxHeight={360}
+                        fetchHeaders={requestHeaders}
+                        loadStrategy="immediate"
+                        onImageLoad={({ naturalWidth, naturalHeight }) => {
+                          if (naturalWidth > 0 && naturalHeight > 0) {
+                            setImageOrientations((previousOrientations) => ({
+                              ...previousOrientations,
+                              [preview.url]: naturalWidth > naturalHeight ? "landscape" : "portrait",
+                            }));
+                          }
+                        }}
+                      />
+                    </LazyMediaPreviewMount>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="tb-log-card-empty">Image preview unavailable.</div>
             )}
@@ -11744,42 +11777,9 @@ function TodoListLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string
 }
 
 function MkdirLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
-  const command = [log.metadata?.command, log.message]
-    .filter((value) => typeof value === "string" && value.trim().length > 0)
-    .join("\n");
-  const paths = extractMkdirPaths(command);
-  const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
-  const output = resolveCommandOutputText(log.metadata?.output, "combined");
-  const stderr = stripRunnerSystemTags(parsedOutput?.stderr || "");
-  const exitCode = typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
-  const isError = Boolean((exitCode !== null && exitCode !== 0) || stderr.trim());
-  const title =
-    paths.length === 1
-      ? paths[0]
-      : paths.length > 1
-        ? `${paths.length} folders`
-        : "folder";
-  const statusText = isError
-    ? (stderr || output || "Failed to create folder.")
-    : "Directory ready";
-  const displayTitle = isError ? `${title} - ${statusText}` : title;
-
-  return (
-    <div className="tb-log-card tb-log-card-mkdir">
-      <div className="tb-log-card-header tb-log-card-header-static">
-        <span className="tb-log-card-icon">
-          <FolderPlus className="tb-log-card-small-icon" strokeWidth={1.5} />
-        </span>
-        <div className="tb-log-card-header-copy">
-          <span className="tb-log-card-label">Create Folder</span>
-          <span className="tb-log-card-title">{displayTitle}</span>
-        </div>
-        <div className="tb-log-card-header-right">
-          {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
-        </div>
-      </div>
-    </div>
-  );
+  void log;
+  void timeLabel;
+  return null;
 }
 
 function HelpCommandLogBox({
@@ -12075,25 +12075,12 @@ function GenericMcpToolLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: 
 }
 
 function ComputerUseEventLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
-  const parsed = parseComputerUseOutput(log.metadata?.result || log.message);
-  const actionLabel = formatBrowserSkillStepAction(parsed);
-
-  return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<MousePointerClick className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Computer Use"
-        title={actionLabel}
-        timeLabel={timeLabel}
-        collapsed
-        onToggle={() => undefined}
-      />
-    </div>
-  );
+  void log;
+  void timeLabel;
+  return null;
 }
 
 export function InlineStatusLogBox({
-  icon,
   label,
   pending = false,
 }: {
@@ -12103,7 +12090,6 @@ export function InlineStatusLogBox({
 }) {
   return (
     <div className={`tb-log-reasoning ${pending ? "tb-log-reasoning-pending" : ""}`.trim()}>
-      {!pending ? <span className="tb-log-reasoning-icon">{icon}</span> : null}
       <div className={`tb-log-reasoning-copy ${pending ? "tb-log-reasoning-copy-pending" : ""}`.trim()}>
         {pending ? (
           <span className="tb-log-inline-status-spinner-slot" aria-hidden="true">
@@ -12312,35 +12298,13 @@ function PermissionRequestLogBox({
   };
 
   if (!isPending) {
-    const resolvedTitle = `Permission ${isApproved ? "granted" : "denied"} for ${toolName}`;
-    const ResolvedIcon = isApproved ? Check : X;
-
-    return (
-      <div className="tb-log-card tb-log-card-permission is-resolved">
-        <div className="tb-log-card-header tb-log-card-header-static">
-          <span className="tb-log-card-icon">
-            <ResolvedIcon className="tb-log-card-small-icon" strokeWidth={1.7} />
-          </span>
-          <div className="tb-log-card-header-copy">
-            <div className="tb-log-card-title">{resolvedTitle}</div>
-          </div>
-          {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
-        </div>
-      </div>
-    );
+    void isApproved;
+    void timeLabel;
+    return null;
   }
 
   return (
     <div className="tb-log-card tb-log-card-permission is-pending">
-      <div className="tb-log-card-header tb-log-card-header-static">
-        <span className="tb-log-card-icon">
-          <AlertCircle className="tb-log-card-small-icon" strokeWidth={1.7} />
-        </span>
-        <div className="tb-log-card-header-copy">
-          <div className="tb-log-card-title">{`Permission asked for ${toolName}`}</div>
-        </div>
-        {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
-      </div>
       <div className="tb-log-card-panel tb-log-permission-panel">
         <div className="tb-log-permission-summary">{permissionPreview.summary}</div>
         {permissionPreview.details.length > 0 ? (
@@ -12436,6 +12400,25 @@ export function RunnerWorkLogEntry({
 
   if (log.eventType === "deep_research" && log.metadata?.deepResearch) {
     return <DeepResearchEventLogBox log={log} timeLabel={timeLabel} />;
+  }
+
+  if (log.eventType === "metronome_workflow" || log.metadata?.metronomeWorkflow) {
+    const workflow = log.metadata?.metronomeWorkflow && typeof log.metadata.metronomeWorkflow === "object"
+      ? log.metadata.metronomeWorkflow as { metronomeName?: unknown }
+      : null;
+    const workflowTitle = typeof workflow?.metronomeName === "string" && workflow.metronomeName.trim()
+      ? workflow.metronomeName.trim()
+      : "Workflow result";
+    return (
+      <GenericTextLogBox
+        log={log}
+        timeLabel={timeLabel}
+        label="Metronome Workflow"
+        title={workflowTitle}
+        icon={<Route className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        onWorkspacePathClick={onWorkspacePathClick}
+      />
+    );
   }
 
   const persistedCommand = typeof log.metadata?.command === "string" ? log.metadata.command : "";

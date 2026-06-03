@@ -100,6 +100,7 @@ const RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH = 15;
 const RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH = 10;
 const RUNNER_THREAD_HISTORY_SMALL_LINE_WIDTH = 5;
 const RUNNER_WORK_LOG_PAGE_SIZE = 10;
+const RUNNER_LIVE_WORK_LOG_PREVIEW_COUNT = 2;
 
 export interface RunnerAttachment {
   id: string;
@@ -10780,7 +10781,7 @@ export function RunnerChat({
     setTurns((prev) => prev.map((turn) => (turn.id === turnId ? updater(turn) : turn)));
   }
 
-  function collapseAllWorkingLogs(extraTurnId?: string) {
+  function collapseAllWorkingLogs(extraTurnId?: string, options?: { preserveExpandedTurnId?: string }) {
     const turnIds = Array.from(new Set([
       ...turnsRef.current.map((turn) => turn.id).filter(Boolean),
       ...(extraTurnId ? [extraTurnId] : []),
@@ -10792,6 +10793,9 @@ export function RunnerChat({
       let didChange = false;
       const nextExpandedTurns = { ...previousExpandedTurns };
       turnIds.forEach((turnId) => {
+        if (turnId === options?.preserveExpandedTurnId && previousExpandedTurns[turnId] === true) {
+          return;
+        }
         if (nextExpandedTurns[turnId] !== false) {
           nextExpandedTurns[turnId] = false;
           didChange = true;
@@ -10803,6 +10807,9 @@ export function RunnerChat({
       let didChange = false;
       const nextCounts = { ...previousCounts };
       turnIds.forEach((turnId) => {
+        if (turnId === options?.preserveExpandedTurnId) {
+          return;
+        }
         if (turnId in nextCounts) {
           delete nextCounts[turnId];
           didChange = true;
@@ -10851,7 +10858,7 @@ export function RunnerChat({
       logs: [...turn.logs, timestampedLog],
     }));
     if (isTurnResponseLog(timestampedLog)) {
-      collapseAllWorkingLogs(turnId);
+      collapseAllWorkingLogs(turnId, { preserveExpandedTurnId: turnId });
     }
   }
 
@@ -10876,7 +10883,7 @@ export function RunnerChat({
       };
     });
     if (message.trim()) {
-      collapseAllWorkingLogs(turnId);
+      collapseAllWorkingLogs(turnId, { preserveExpandedTurnId: turnId });
     }
   }
 
@@ -19615,10 +19622,15 @@ export function RunnerChat({
                 visibleTimelineItemCount === undefined
                   ? rawDisplayedTimelineItems
                   : rawDisplayedTimelineItems.slice(0, visibleTimelineItemCount);
-              const visibleWorkLogItemCount = visibleWorkLogItemCountsByTurn[turn.id] ?? RUNNER_WORK_LOG_PAGE_SIZE;
+              const isLiveWorkLogPreviewTurn = isTurnRunning && !agentMessage?.message;
+              const isExpanded = expandedTurns[turn.id] ?? (isLiveWorkLogPreviewTurn ? false : !isThreadHistoryLoading);
+              const visibleWorkLogItemCount = isExpanded
+                ? visibleWorkLogItemCountsByTurn[turn.id] ?? RUNNER_WORK_LOG_PAGE_SIZE
+                : RUNNER_LIVE_WORK_LOG_PREVIEW_COUNT;
               const firstDisplayedTimelineItemIndex = Math.max(0, revealedTimelineItems.length - visibleWorkLogItemCount);
               const displayedTimelineItems = revealedTimelineItems.slice(firstDisplayedTimelineItemIndex);
-              const hasMoreWorkingLogs = firstDisplayedTimelineItemIndex > 0;
+              const hasMoreWorkingLogs = isExpanded && firstDisplayedTimelineItemIndex > 0;
+              const shouldShowCollapsedLivePreview = !isExpanded && isLiveWorkLogPreviewTurn && displayedTimelineItems.length > 0;
               const thinkingStatusPhase =
                 thinkingStatusPhaseByTurn[turn.id] ??
                 (isTurnRunning && rawDisplayedTimelineItems.length > 0 && !agentMessage?.message ? "visible" : "hidden");
@@ -19626,13 +19638,13 @@ export function RunnerChat({
                 isTurnRunning &&
                 rawDisplayedTimelineItems.length > 0 &&
                 !agentMessage?.message &&
-                thinkingStatusPhase !== "hidden";
+                thinkingStatusPhase !== "hidden" &&
+                (isExpanded || displayedTimelineItems.length === 0);
               const isWorkLogsLoading =
                 isThreadHistoryLoading &&
                 !isTurnRunning &&
                 Boolean(agentMessage?.message) &&
                 revealedTimelineItems.length === 0;
-              const isExpanded = expandedTurns[turn.id] ?? !isThreadHistoryLoading;
               const baseDelay = turnIndex * 140;
               const promptStyle = turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay) : undefined;
               const metaHeaderStyle = turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 40) : undefined;
@@ -19867,11 +19879,10 @@ export function RunnerChat({
                           </span>
                         </button>
 
-                        <div className={`tb-work-collapse ${isExpanded ? "" : "collapsed"}`}>
-                          {isExpanded ? (
+                        <div className={`tb-work-collapse ${isExpanded || shouldShowCollapsedLivePreview ? "" : "collapsed"}`}>
+                          {isExpanded || shouldShowCollapsedLivePreview ? (
                             <div className="tb-work-collapse-inner">
                               <div className="agent-steps-container">
-                                <div className="agent-steps-line" />
                                 {hasMoreWorkingLogs ? (
                                   <div className="agent-step-item tb-work-load-more-item">
                                     <div className="agent-step-content">
@@ -19895,21 +19906,21 @@ export function RunnerChat({
                                     <div className="agent-step-content">{renderTimelineItem(turn, item, firstDisplayedTimelineItemIndex + index)}</div>
                                   </div>
                                 ))}
-                              </div>
-                              {shouldRenderThinkingStatus ? (
-                                <div
-                                  className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
-                                  style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
-                                >
-                                  <div className="agent-step-content">
-                                    <InlineStatusLogBox
-                                      label="Thinking..."
-                                      icon={<LucideTerminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
-                                      pending
-                                    />
+                                {shouldRenderThinkingStatus ? (
+                                  <div
+                                    className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
+                                    style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
+                                  >
+                                    <div className="agent-step-content">
+                                      <InlineStatusLogBox
+                                        label="Thinking..."
+                                        icon={<LucideTerminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
+                                        pending
+                                      />
+                                    </div>
                                   </div>
-                                </div>
-                              ) : null}
+                                ) : null}
+                              </div>
                             </div>
                           ) : null}
                         </div>
@@ -20070,11 +20081,10 @@ export function RunnerChat({
                           </span>
                         </button>
 
-                      <div className={`tb-work-collapse ${isExpanded ? "" : "collapsed"}`}>
-                        {isExpanded ? (
+                      <div className={`tb-work-collapse ${isExpanded || shouldShowCollapsedLivePreview ? "" : "collapsed"}`}>
+                        {isExpanded || shouldShowCollapsedLivePreview ? (
                           <div className="tb-work-collapse-inner">
                             <div className="agent-steps-container">
-                              <div className="agent-steps-line" />
                               {hasMoreWorkingLogs ? (
                                 <div className="agent-step-item tb-work-load-more-item">
                                   <div className="agent-step-content">
@@ -20098,21 +20108,21 @@ export function RunnerChat({
                                   <div className="agent-step-content">{renderTimelineItem(turn, item, firstDisplayedTimelineItemIndex + index)}</div>
                                 </div>
                               ))}
-                            </div>
-                            {shouldRenderThinkingStatus ? (
-                              <div
-                                className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
-                                style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
-                              >
-                                <div className="agent-step-content">
-                                  <InlineStatusLogBox
-                                    label="Thinking..."
-                                    icon={<LucideTerminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
-                                    pending
-                                  />
+                              {shouldRenderThinkingStatus ? (
+                                <div
+                                  className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
+                                  style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
+                                >
+                                  <div className="agent-step-content">
+                                    <InlineStatusLogBox
+                                      label="Thinking..."
+                                      icon={<LucideTerminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
+                                      pending
+                                    />
+                                  </div>
                                 </div>
-                              </div>
-                            ) : null}
+                              ) : null}
+                            </div>
                           </div>
                         ) : null}
                       </div>

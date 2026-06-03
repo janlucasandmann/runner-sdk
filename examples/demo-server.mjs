@@ -18313,15 +18313,324 @@ const html = `<!doctype html>
         color: #fff;
       }
 
-      .playground-files-browser-header {
+      .playground-files-page .playground-files-browser-header {
+        width: min(100%, calc(var(--playground-thread-content-max-width) + 48px));
+        max-width: calc(var(--playground-thread-content-max-width) + 48px);
         display: flex;
         flex-direction: column;
         align-items: stretch;
-        gap: 10px;
-        padding: 10px 12px 8px;
+        gap: 0;
+        margin: 0 auto;
+        padding: 24px 24px 24px;
         position: relative;
         z-index: 320;
         overflow: visible;
+        box-sizing: border-box;
+      }
+
+      .playground-files-library-header {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .playground-files-library-title-row,
+      .playground-files-library-nav-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .playground-files-library-nav-row {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center;
+        position: relative;
+        min-height: 30px;
+      }
+
+      .playground-files-library-path-row {
+        width: 100%;
+        min-height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 0 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        box-sizing: border-box;
+      }
+
+      .playground-files-library-path-row .playground-files-breadcrumbs {
+        justify-content: flex-start;
+        font-size: 12px;
+      }
+
+      .playground-files-library-path-row .playground-files-breadcrumb {
+        font-size: 12px;
+      }
+
+      .playground-files-breadcrumb-segment {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .playground-files-breadcrumb-separator-icon {
+        width: 12px;
+        height: 12px;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.34);
+      }
+
+      .playground-files-library-path-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex: 0 0 auto;
+      }
+
+      .playground-files-library-title {
+        margin: 0;
+        color: #fff;
+        font-size: 18px;
+        line-height: 1.15;
+        font-weight: 500;
+        letter-spacing: -0.04em;
+      }
+
+      .playground-files-library-actions {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .playground-files-library-search-anchor,
+      .playground-files-library-new-anchor,
+      .playground-files-library-control-anchor {
+        position: relative;
+        z-index: 341;
+      }
+
+      .playground-files-library-search {
+        --playground-files-library-search-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        width: min(100%, 360px);
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.88);
+        box-sizing: border-box;
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-files-library-search::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-files-library-search-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-files-library-search > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-files-library-search-icon {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-files-library-search-input {
+        min-width: 0;
+        flex: 1;
+        border: 0;
+        outline: none;
+        background: transparent;
+        color: #fff;
+        font: inherit;
+        font-size: 12px;
+        line-height: 1;
+      }
+
+      .playground-files-library-search-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-files-library-search-popover {
+        left: 0;
+        right: auto;
+        top: calc(100% + 10px);
+        width: min(420px, calc(100vw - 32px));
+      }
+
+      .playground-files-library-new-button {
+        --playground-files-library-new-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: #fff;
+        cursor: pointer;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 400;
+        white-space: nowrap;
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+      }
+
+      .playground-files-library-new-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-files-library-new-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-files-library-new-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-files-library-tabs {
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        position: static !important;
+        left: auto;
+        top: auto;
+        transform: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+      }
+
+      .playground-files-library-tabs.content-mode-switch {
+        gap: 8px;
+        height: 30px;
+        padding: 2px;
+      }
+
+      .playground-files-library-tab {
+        min-width: 64px;
+        height: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 12px;
+        border: 0;
+        border-radius: 20px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1rem;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-files-library-tab:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+
+      .playground-files-library-tab.is-active {
+        background: rgba(255, 255, 255, 0.3);
+        color: #fff;
+      }
+
+      .playground-files-library-controls {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        flex: 0 0 auto;
+        margin-left: 0 !important;
+      }
+
+      .playground-files-library-icon-button {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.68);
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-files-library-icon-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+
+      .playground-files-library-icon-button.is-active {
+        background: rgba(255, 255, 255, 0.22);
+        color: #fff;
+      }
+
+      .playground-files-library-icon-button svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .playground-files-library-divider {
+        width: 1px;
+        height: 28px;
+        background: rgba(255, 255, 255, 0.08);
       }
 
       .playground-files-topbar {
@@ -19020,13 +19329,15 @@ const html = `<!doctype html>
         color: #fff;
       }
 
-      .playground-files-browser-body {
+      .playground-files-page .playground-files-browser-body {
+        width: min(100%, calc(var(--playground-thread-content-max-width) + 24px));
+        max-width: calc(var(--playground-thread-content-max-width) + 24px);
         position: relative;
         z-index: 1;
         min-height: 0;
         flex: 1;
         overflow: auto;
-        margin: 0;
+        margin: 0 auto;
         padding: 0 12px 18px;
         border: 0;
         border-radius: 0;
@@ -19199,6 +19510,11 @@ const html = `<!doctype html>
         opacity: 0;
       }
 
+      .playground-files-entry-row .playground-files-entry-chevron-button,
+      .playground-files-entry-row .playground-files-entry-chevron.is-placeholder {
+        display: none;
+      }
+
       .playground-files-entry-main {
         min-width: 0;
         flex: 1;
@@ -19230,6 +19546,24 @@ const html = `<!doctype html>
         border-radius: 6px;
         object-fit: cover;
         background: rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-files-entry-row .playground-files-entry-icon:not(.is-large):not(.is-thumbnail) {
+        width: 34px;
+        height: 34px;
+        box-sizing: border-box;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-files-entry-row svg.playground-files-entry-icon:not(.is-large):not(.is-thumbnail) {
+        padding: 10px;
+      }
+
+      .playground-files-entry-row .playground-files-entry-icon.is-asset:not(.is-large):not(.is-thumbnail) {
+        padding: 7px;
+        object-fit: contain;
       }
 
       .playground-files-entry-icon.is-large.is-thumbnail {
@@ -54459,6 +54793,7 @@ ${MODELS_PAGE_CSS}
 
       function matchesPlaygroundEnvironmentEntryFilter(entry, filterMode = "all") {
         if (filterMode === "folders") return Boolean(entry?.isFolder);
+        if (filterMode === "images") return !entry?.isFolder && getPlaygroundFileKind(entry) === "image";
         if (filterMode === "files") return !entry?.isFolder;
         return true;
       }
@@ -63508,19 +63843,7 @@ ${MODELS_PAGE_SCRIPT}
           if (!targetPath) return;
 
           if (entry.isFolder && !event.shiftKey && !event.metaKey && !event.ctrlKey) {
-            setSelectedPaths((current) => {
-              if (!current.has(targetPath)) {
-                return current;
-              }
-              const next = new Set(current);
-              next.delete(targetPath);
-              return next;
-            });
-            setSelectionAnchorPath((current) => current === targetPath ? "" : current);
-            if (singleSelectedEntry?.isFolder && normalizeHistoryPath(singleSelectedEntry.path) === targetPath) {
-              setIsPreviewOpen(false);
-            }
-            toggleFolderExpansion(targetPath);
+            navigateToPath(targetPath);
             setContextMenu(null);
             return;
           }
@@ -64473,6 +64796,7 @@ ${MODELS_PAGE_SCRIPT}
 
         const filterOptions = [
           { id: "all", label: "All Items", description: "Show files and folders" },
+          { id: "images", label: "Images", description: "Only show image files" },
           { id: "folders", label: "Folders", description: "Only show folders" },
           { id: "files", label: "Files", description: "Only show files" },
         ];
@@ -66207,6 +66531,302 @@ ${MODELS_PAGE_SCRIPT}
           );
         }
 
+        function renderFilesSearchPopover(extraClassName = "") {
+          return React.createElement("div", {
+              className: "playground-files-search-popover" + (extraClassName ? " " + extraClassName : ""),
+            },
+              React.createElement("div", { className: "playground-files-search-popover-header" },
+                React.createElement("div", { className: "playground-files-search-popover-title" }, "Search Files"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-search-popover-close",
+                  onClick: () => setToolbarPopover(""),
+                }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
+              ),
+              React.createElement("div", { className: "playground-files-search-popover-body" },
+                React.createElement("div", { className: "playground-files-search-field" },
+                  React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
+                  React.createElement("input", {
+                    ref: searchPopupInputRef,
+                    type: "text",
+                    className: "playground-files-search-field-input",
+                    placeholder: "Search by file name or path...",
+                    value: searchPopupQuery,
+                    onChange: (event) => setSearchPopupQuery(event.target.value),
+                  })
+                ),
+                searchPopupQuery.trim()
+                  ? searchResults.length > 0
+                    ? React.createElement("div", { className: "playground-files-search-results" },
+                        searchResults.map((entry) =>
+                          React.createElement("button", {
+                              key: entry.path,
+                              type: "button",
+                              className: "playground-files-search-result",
+                              onClick: () => handleSearchResultSelect(entry),
+                            },
+                              React.createElement(PlaygroundFileIcon, { entry }),
+                              React.createElement("div", { className: "playground-files-search-result-copy" },
+                                React.createElement("div", { className: "playground-files-search-result-name" }, entry.name),
+                                React.createElement("div", { className: "playground-files-search-result-path" }, "/" + entry.path)
+                              )
+                            )
+                        )
+                      )
+                    : isSearchInventoryLoading
+                      ? React.createElement("div", { className: "playground-files-state" },
+                          React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                          React.createElement("span", null, "Searching files...")
+                        )
+                      : React.createElement("div", { className: "playground-files-search-empty" }, "No matching files found.")
+                  : React.createElement("div", { className: "playground-files-search-empty" }, "Type a file name or path to search this environment.")
+              )
+            );
+        }
+
+        function renderFilesCreateMenu(extraClassName = "") {
+          return React.createElement("div", {
+              className: "playground-files-toolbar-menu" + (extraClassName ? " " + extraClassName : ""),
+            },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-toolbar-menu-item",
+                onClick: () => void handleCreateFile(currentPath),
+                disabled: !selectedEnvironmentId || isCreatingFile,
+              },
+                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                  React.createElement("span", null, isCreatingFile ? "Creating..." : "Create File"),
+                  React.createElement("span", null, "Start a new file here")
+                )
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-toolbar-menu-item",
+                onClick: () => void handleCreateFolder(currentPath),
+                disabled: !selectedEnvironmentId || isCreatingFolder,
+              },
+                React.createElement(Folder, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                  React.createElement("span", null, isCreatingFolder ? "Creating..." : "New Folder"),
+                  React.createElement("span", null, "Create in the current folder")
+                )
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-toolbar-menu-item",
+                onClick: () => openUploadPicker(currentPath),
+                disabled: !selectedEnvironmentId || isUploadingFiles,
+              },
+                React.createElement(ArrowUpFromLine, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                  React.createElement("span", null, isUploadingFiles ? "Uploading..." : "Upload Files"),
+                  React.createElement("span", null, "Add files to this location")
+                )
+              )
+            );
+        }
+
+        function renderFilesLibraryPathRow() {
+          return React.createElement("div", { className: "playground-files-library-path-row" },
+            React.createElement("div", { className: "playground-files-breadcrumbs", "aria-label": "Current folder path" },
+              breadcrumbs.map((crumb, index) =>
+                React.createElement("span", {
+                    key: crumb.id || "root",
+                    className: "playground-files-breadcrumb-segment",
+                  },
+                  index > 0
+                    ? React.createElement(ChevronRight, {
+                        className: "playground-files-breadcrumb-separator-icon",
+                        strokeWidth: 1.8,
+                        "aria-hidden": "true",
+                      })
+                    : null,
+                  React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-breadcrumb" + (index === breadcrumbs.length - 1 ? " is-active" : ""),
+                      onClick: () => handleBreadcrumbClick(crumb.id),
+                      disabled: index === breadcrumbs.length - 1,
+                    },
+                      React.createElement("span", null, index === 0 ? "Home" : crumb.name)
+                    )
+                  )
+              )
+            ),
+            React.createElement("div", { className: "playground-files-library-path-actions" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-nav-button",
+                onClick: handleGoBack,
+                disabled: !canGoBack,
+                title: "Go back",
+                "aria-label": "Go back",
+              }, React.createElement(ChevronLeft, { strokeWidth: 1.8, width: 14, height: 14 })),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-nav-button",
+                onClick: handleGoForward,
+                disabled: !canGoForward,
+                title: "Go forward",
+                "aria-label": "Go forward",
+              }, React.createElement(ChevronRight, { strokeWidth: 1.8, width: 14, height: 14 }))
+            )
+          );
+        }
+
+        function renderFilesLibraryHeader() {
+          const libraryTabs = [
+            { id: "all", label: "All" },
+            { id: "images", label: "Images" },
+            { id: "files", label: "Files" },
+          ];
+          const selectedComputerName = String(selectedEnvironment?.name || "Default").trim() || "Default";
+          const selectedComputerLabel = /computer$/i.test(selectedComputerName)
+            ? selectedComputerName
+            : selectedComputerName + " Computer";
+
+          return React.createElement("div", { className: "playground-files-library-header" },
+            React.createElement("div", { className: "playground-files-library-title-row" },
+              React.createElement("h1", { className: "playground-files-library-title" }, "Files on " + selectedComputerLabel),
+              React.createElement("div", { className: "playground-files-library-actions" },
+                React.createElement("div", { className: "playground-files-library-search-anchor" },
+                  React.createElement("label", { className: "playground-files-library-search" },
+                    React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
+                    React.createElement("input", {
+                      ref: searchPopupInputRef,
+                      type: "text",
+                      className: "playground-files-library-search-input",
+                      placeholder: "Search files",
+                      value: searchPopupQuery,
+                      onFocus: () => setToolbarPopover("search"),
+                      onChange: (event) => {
+                        setSearchPopupQuery(event.target.value);
+                        setToolbarPopover("search");
+                      },
+                    })
+                  ),
+                  toolbarPopover === "search"
+                    ? renderFilesSearchPopover("playground-files-library-search-popover")
+                    : null
+                ),
+                React.createElement("div", { className: "playground-files-library-new-anchor" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-library-new-button",
+                    onClick: () => toggleToolbarPopover("create"),
+                  },
+                    React.createElement("span", null, "New"),
+                    React.createElement(ChevronDown, { width: 18, height: 18, strokeWidth: 1.8 })
+                  ),
+                  toolbarPopover === "create"
+                    ? renderFilesCreateMenu("playground-files-toolbar-menu-align-right")
+                    : null
+                )
+              )
+            ),
+            React.createElement("div", { className: "playground-files-library-nav-row" },
+              React.createElement("div", { className: "content-mode-switch playground-files-topbar-mode-switch playground-files-library-tabs" },
+                libraryTabs.map((tab) =>
+                  React.createElement("button", {
+                    key: tab.id,
+                    type: "button",
+                    className: "playground-files-library-tab" + (filterMode === tab.id ? " is-active" : ""),
+                    onClick: () => {
+                      setFilterMode(tab.id);
+                      setToolbarPopover("");
+                    },
+                  }, tab.label)
+                )
+              ),
+              React.createElement("div", { className: "playground-files-library-controls" },
+                React.createElement("div", { className: "playground-files-library-control-anchor" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-library-icon-button" + (toolbarPopover === "sort" ? " is-active" : ""),
+                    onClick: () => toggleToolbarPopover("sort"),
+                    title: "Sort files",
+                    "aria-label": "Sort files",
+                  }, React.createElement(ArrowUpDown, { width: 19, height: 19, strokeWidth: 1.8 })),
+                  toolbarPopover === "sort"
+                    ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-align-right" },
+                        React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeSortOption.label),
+                        sortOptions.map((option) =>
+                          React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "playground-files-toolbar-menu-item" + (sortMode === option.id ? " is-active" : ""),
+                              onClick: () => {
+                                setSortMode(option.id);
+                                setToolbarPopover("");
+                              },
+                            },
+                              React.createElement("span", { className: "playground-files-toolbar-menu-check" }, sortMode === option.id ? "•" : ""),
+                              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                React.createElement("span", null, option.label)
+                              )
+                            )
+                        )
+                      )
+                    : null
+                ),
+                React.createElement("div", { className: "playground-files-library-control-anchor" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-library-icon-button" + (toolbarPopover === "filter" || filterMode !== "all" ? " is-active" : ""),
+                    onClick: () => toggleToolbarPopover("filter"),
+                    title: "Filter files",
+                    "aria-label": "Filter files",
+                  }, React.createElement(SlidersHorizontal, { width: 19, height: 19, strokeWidth: 1.8 })),
+                  toolbarPopover === "filter"
+                    ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-align-right playground-files-toolbar-menu-wide" },
+                        React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeFilterOption.label),
+                        filterOptions.map((option) =>
+                          React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "playground-files-toolbar-menu-item" + (filterMode === option.id ? " is-active" : ""),
+                              onClick: () => {
+                                setFilterMode(option.id);
+                                setToolbarPopover("");
+                              },
+                            },
+                              React.createElement("span", { className: "playground-files-toolbar-menu-check" }, filterMode === option.id ? "•" : ""),
+                              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                React.createElement("span", null, option.label),
+                                React.createElement("span", null, option.description)
+                              )
+                            )
+                        )
+                      )
+                    : null
+                ),
+                React.createElement("span", { className: "playground-files-library-divider", "aria-hidden": "true" }),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-library-icon-button" + (viewMode === "grid" ? " is-active" : ""),
+                  onClick: () => {
+                    setViewMode("grid");
+                    setToolbarPopover("");
+                  },
+                  title: "Grid view",
+                  "aria-label": "Grid view",
+                }, React.createElement(LayoutGrid, { width: 20, height: 20, strokeWidth: 1.8 })),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-library-icon-button" + (viewMode === "list" ? " is-active" : ""),
+                  onClick: () => {
+                    setViewMode("list");
+                    setToolbarPopover("");
+                  },
+                  title: "List view",
+                  "aria-label": "List view",
+                }, React.createElement(List, { width: 21, height: 21, strokeWidth: 1.8 }))
+              )
+            ),
+            renderFilesLibraryPathRow()
+          );
+        }
+
         function renderFilesCreateButton() {
           if (isChangesMode) {
             return null;
@@ -66222,44 +66842,7 @@ ${MODELS_PAGE_SCRIPT}
               React.createElement("span", null, "Add Files")
             ),
             toolbarPopover === "create"
-              ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-align-right" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-toolbar-menu-item",
-                    onClick: () => void handleCreateFile(currentPath),
-                    disabled: !selectedEnvironmentId || isCreatingFile,
-                  },
-                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                      React.createElement("span", null, isCreatingFile ? "Creating..." : "Create File"),
-                      React.createElement("span", null, "Start a new file here")
-                    )
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-toolbar-menu-item",
-                    onClick: () => void handleCreateFolder(currentPath),
-                    disabled: !selectedEnvironmentId || isCreatingFolder,
-                  },
-                    React.createElement(Folder, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                      React.createElement("span", null, isCreatingFolder ? "Creating..." : "New Folder"),
-                      React.createElement("span", null, "Create in the current folder")
-                    )
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-toolbar-menu-item",
-                    onClick: () => openUploadPicker(currentPath),
-                    disabled: !selectedEnvironmentId || isUploadingFiles,
-                  },
-                    React.createElement(ArrowUpFromLine, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                      React.createElement("span", null, isUploadingFiles ? "Uploading..." : "Upload Files"),
-                      React.createElement("span", null, "Add files to this location")
-                    )
-                  )
-                )
+              ? renderFilesCreateMenu("playground-files-toolbar-menu-align-right")
               : null
           );
         }
@@ -66636,7 +67219,10 @@ ${MODELS_PAGE_SCRIPT}
                       : null
                   )
                 ),
-                !(isChangesMode && changesViewMode === "detail")
+                !isChangesMode
+                  ? renderFilesLibraryHeader()
+                  : null,
+                isChangesMode && changesViewMode !== "detail"
                   ? React.createElement("div", { className: "playground-files-control-row" },
                       React.createElement("div", { className: "playground-files-control-actions" },
                         React.createElement("div", { className: "playground-files-toolbar-anchor" },
@@ -124303,6 +124889,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           duplicate: null,
           delete: null,
           publish: null,
+          run: null,
           goOverview: null,
           setMode: null,
         });
@@ -126664,6 +127251,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             duplicate: null,
             delete: null,
             publish: null,
+            run: null,
             goOverview: null,
             setMode: null,
           };
@@ -146317,11 +146905,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (!state) {
             return null;
           }
-          const activeMode = state.editorMode === "run" ? "run" : "edit";
+          const activeMode = state.editorMode === "runs" ? "runs" : state.editorMode === "code" ? "code" : "edit";
           return React.createElement("div", { className: "content-mode-switch playground-thread-mode-switch playground-metronome-top-nav-switch", role: "tablist", "aria-label": "Metronome modes" },
             [
               { id: "edit", label: "Edit" },
-              { id: "run", label: "Run" },
+              { id: "code", label: "Code" },
+              { id: "runs", label: "Runs" },
             ].map((tab) =>
               React.createElement("button", {
                 key: tab.id,
@@ -146494,6 +147083,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     })
                   )
                 : null
+            ),
+            React.createElement("button", {
+              type: "button",
+              className: "playground-top-nav-private-chat-button",
+              onClick: () => metronomeTopNavActionsRef.current?.run?.(),
+            },
+              React.createElement(Play, { strokeWidth: 1.8 }),
+              React.createElement("span", null, "Run")
             ),
             React.createElement("button", {
               type: "button",

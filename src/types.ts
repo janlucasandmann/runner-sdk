@@ -17,6 +17,7 @@ export type RunnerEventType =
   | "planning"
   | "llm_response"
   | "deep_research"
+  | "metronome_workflow"
   | "permission_request";
 
 export interface RunnerUsage {
@@ -148,6 +149,7 @@ export interface RunnerLog {
       reportLength?: number;
       timestamp?: string;
     };
+    metronomeWorkflow?: unknown;
     actionType?: "compact" | "clear" | "fork" | "btw" | "revert" | "reapply";
     isPending?: boolean;
     failed?: boolean;
