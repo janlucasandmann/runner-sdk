@@ -11,7 +11,47 @@ export type RunnerDocumentPreviewKind =
   | "presentation"
   | "video"
   | "directory"
+  | "image-understanding"
+  | "web-search"
   | "unsupported";
+
+export interface RunnerImageUnderstandingPreviewItem {
+  path: string;
+  name: string;
+  url?: string;
+}
+
+export interface RunnerImageUnderstandingPreviewData {
+  imageName: string;
+  images: RunnerImageUnderstandingPreviewItem[];
+  resultText: string;
+  isError?: boolean;
+}
+
+export interface RunnerWebSearchPreviewSource {
+  url: string;
+  title: string;
+  domain?: string;
+  snippet?: string;
+  thumbnail?: string;
+}
+
+export interface RunnerWebSearchPreviewImage {
+  url: string;
+  thumbnail?: string;
+  title?: string;
+  source?: string;
+}
+
+export interface RunnerWebSearchPreviewData {
+  query: string | null;
+  summary: string | null;
+  sources: RunnerWebSearchPreviewSource[];
+  images: RunnerWebSearchPreviewImage[];
+  rawJsonText: string;
+  isError?: boolean;
+  errorMessage?: string;
+}
 
 export interface RunnerPreviewAttachment {
   id: string;
@@ -32,6 +72,13 @@ export interface RunnerPreviewAttachment {
   githubSelectionType?: "repo" | "file";
   htmlPreviewUrl?: string;
   htmlSandbox?: string | null;
+  changeKind?: "created" | "modified" | "deleted";
+  diffContent?: string;
+  fileContent?: string;
+  diffAdditions?: number;
+  diffDeletions?: number;
+  imageUnderstandingPreview?: RunnerImageUnderstandingPreviewData;
+  webSearchPreview?: RunnerWebSearchPreviewData;
 }
 
 export interface RunnerPreviewDirectoryEntry {

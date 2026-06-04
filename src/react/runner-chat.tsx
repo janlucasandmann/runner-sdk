@@ -81,7 +81,12 @@ import {
   normalizeRunnerPreviewPath,
   normalizeRunnerPreviewWorkspacePath,
   resolveRunnerPreviewAssetUrl,
+  type RunnerImageUnderstandingPreviewData,
+  type RunnerImageUnderstandingPreviewItem,
   type RunnerPreviewAttachment,
+  type RunnerWebSearchPreviewData,
+  type RunnerWebSearchPreviewImage,
+  type RunnerWebSearchPreviewSource,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
 import { LazyMediaPreviewMount, RunnerLazyMediaPreviewLoader } from "./runner-lazy-media-preview.js";
@@ -1506,6 +1511,12 @@ function isAttachmentDocumentPreviewable(attachment: RunnerTurnAttachment): bool
   if (isGithubAttachmentSelection(attachment)) {
     return false;
   }
+  if (attachment.previewKindOverride === "image-understanding" && attachment.imageUnderstandingPreview) {
+    return true;
+  }
+  if (attachment.previewKindOverride === "web-search" && attachment.webSearchPreview) {
+    return true;
+  }
   if (attachment.type === "image" || String(attachment.mimeType || "").toLowerCase().startsWith("image/")) {
     return true;
   }
@@ -2028,6 +2039,7 @@ export interface RunnerChatProps {
   onComposerProjectTaskSubmit?: (payload: RunnerChatProjectTaskSubmitPayload) => Promise<boolean | void> | boolean | void;
   activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
+  onOpenTaskList?: () => void;
   onResourcePreviewClick?: (resource: RunnerCreatedResourcePreview) => void;
   onAgentTurnClick?: (payload: RunnerChatAgentTurnClickPayload) => void;
   onSummaryWorkspacePathClick?: (payload: RunnerChatSummaryWorkspacePathClickPayload) => void;
@@ -3284,6 +3296,11 @@ function buildTurnSummaryPreviewAttachment(
       idPrefix: "summary-preview",
     }),
     workspacePath: file.path,
+    changeKind: file.kind,
+    ...(typeof file.diff === "string" && file.diff.trim() ? { diffContent: file.diff } : {}),
+    ...(typeof file.content === "string" ? { fileContent: file.content } : {}),
+    ...(typeof file.additions === "number" ? { diffAdditions: file.additions } : {}),
+    ...(typeof file.deletions === "number" ? { diffDeletions: file.deletions } : {}),
   };
 }
 
@@ -6584,6 +6601,133 @@ function resolveAttachmentAssetUrl(url: string | undefined, backendUrl?: string,
   return resolveRunnerPreviewAssetUrl(url, backendUrl, attachmentId);
 }
 
+function normalizeImageUnderstandingPreviewItem(value: unknown, backendUrl?: string, attachmentId?: string): RunnerImageUnderstandingPreviewItem | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const candidate = value as { path?: unknown; name?: unknown; url?: unknown };
+  const path = typeof candidate.path === "string" ? candidate.path.trim() : "";
+  const url = resolveAttachmentAssetUrl(typeof candidate.url === "string" ? candidate.url : undefined, backendUrl, attachmentId) || undefined;
+  const name = typeof candidate.name === "string" && candidate.name.trim()
+    ? candidate.name.trim()
+    : path
+      ? path.split("/").pop() || "image"
+      : "image";
+  if (!path && !url) {
+    return null;
+  }
+  return {
+    path,
+    name,
+    url,
+  };
+}
+
+function normalizeImageUnderstandingPreviewData(value: unknown, backendUrl?: string, attachmentId?: string): RunnerImageUnderstandingPreviewData | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+  const candidate = value as { imageName?: unknown; images?: unknown; resultText?: unknown; isError?: unknown };
+  const images = Array.isArray(candidate.images)
+    ? candidate.images
+        .map((entry) => normalizeImageUnderstandingPreviewItem(entry, backendUrl, attachmentId))
+        .filter((entry): entry is RunnerImageUnderstandingPreviewItem => Boolean(entry))
+    : [];
+  const resultText = typeof candidate.resultText === "string" ? candidate.resultText : "";
+  if (images.length === 0 && !resultText.trim()) {
+    return undefined;
+  }
+  return {
+    imageName: typeof candidate.imageName === "string" && candidate.imageName.trim()
+      ? candidate.imageName.trim()
+      : images.length === 1
+        ? images[0]?.name || "image"
+        : `${images.length || "No"} images`,
+    images,
+    resultText,
+    isError: candidate.isError === true,
+  };
+}
+
+function normalizeWebSearchPreviewSource(value: unknown): RunnerWebSearchPreviewSource | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const candidate = value as { url?: unknown; title?: unknown; domain?: unknown; snippet?: unknown; thumbnail?: unknown };
+  const url = typeof candidate.url === "string" ? candidate.url.trim() : "";
+  if (!url) {
+    return null;
+  }
+  return {
+    url,
+    title: typeof candidate.title === "string" ? candidate.title.trim() : url,
+    domain: typeof candidate.domain === "string" && candidate.domain.trim() ? candidate.domain.trim() : undefined,
+    snippet: typeof candidate.snippet === "string" && candidate.snippet.trim() ? candidate.snippet.trim() : undefined,
+    thumbnail: typeof candidate.thumbnail === "string" && candidate.thumbnail.trim() ? candidate.thumbnail.trim() : undefined,
+  };
+}
+
+function normalizeWebSearchPreviewImage(value: unknown): RunnerWebSearchPreviewImage | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const candidate = value as { url?: unknown; thumbnail?: unknown; title?: unknown; source?: unknown };
+  const url = typeof candidate.url === "string" && candidate.url.trim()
+    ? candidate.url.trim()
+    : typeof candidate.thumbnail === "string" && candidate.thumbnail.trim()
+      ? candidate.thumbnail.trim()
+      : "";
+  if (!url) {
+    return null;
+  }
+  return {
+    url,
+    thumbnail: typeof candidate.thumbnail === "string" && candidate.thumbnail.trim() ? candidate.thumbnail.trim() : undefined,
+    title: typeof candidate.title === "string" && candidate.title.trim() ? candidate.title.trim() : undefined,
+    source: typeof candidate.source === "string" && candidate.source.trim() ? candidate.source.trim() : undefined,
+  };
+}
+
+function normalizeWebSearchPreviewData(value: unknown): RunnerWebSearchPreviewData | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+  const candidate = value as {
+    query?: unknown;
+    summary?: unknown;
+    sources?: unknown;
+    images?: unknown;
+    rawJsonText?: unknown;
+    isError?: unknown;
+    errorMessage?: unknown;
+  };
+  const sources = Array.isArray(candidate.sources)
+    ? candidate.sources
+        .map(normalizeWebSearchPreviewSource)
+        .filter((source): source is RunnerWebSearchPreviewSource => Boolean(source))
+    : [];
+  const images = Array.isArray(candidate.images)
+    ? candidate.images
+        .map(normalizeWebSearchPreviewImage)
+        .filter((image): image is RunnerWebSearchPreviewImage => Boolean(image))
+    : [];
+  const summary = typeof candidate.summary === "string" && candidate.summary.trim() ? candidate.summary : null;
+  const rawJsonText = typeof candidate.rawJsonText === "string" ? candidate.rawJsonText : "";
+  const errorMessage = typeof candidate.errorMessage === "string" ? candidate.errorMessage : "";
+  if (sources.length === 0 && images.length === 0 && !summary && !rawJsonText && !errorMessage) {
+    return undefined;
+  }
+  return {
+    query: typeof candidate.query === "string" && candidate.query.trim() ? candidate.query.trim() : null,
+    summary,
+    sources,
+    images,
+    rawJsonText,
+    isError: candidate.isError === true,
+    errorMessage,
+  };
+}
+
 function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTurnAttachment | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return null;
@@ -6610,6 +6754,9 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
     hiddenFromTurnDisplay?: unknown;
     runnerAttachmentRole?: unknown;
     purpose?: unknown;
+    previewKindOverride?: unknown;
+    imageUnderstandingPreview?: unknown;
+    webSearchPreview?: unknown;
   };
   if (isRunnerTurnDisplayHiddenAttachment(candidate)) {
     return null;
@@ -6663,6 +6810,12 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
   const htmlPreviewUrl = explicitHtmlPreviewUrl
     || resolveAttachmentAssetUrl(threadHtmlPreviewUrl, backendUrl, attachmentId)
     || environmentHtmlPreviewUrl;
+  const imageUnderstandingPreview = candidate.previewKindOverride === "image-understanding"
+    ? normalizeImageUnderstandingPreviewData(candidate.imageUnderstandingPreview, backendUrl, attachmentId)
+    : undefined;
+  const webSearchPreview = candidate.previewKindOverride === "web-search"
+    ? normalizeWebSearchPreviewData(candidate.webSearchPreview)
+    : undefined;
   return {
     id: attachmentId,
     filename,
@@ -6707,6 +6860,9 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
     githubSelectionType: candidate.githubSelectionType === "repo" || candidate.githubSelectionType === "file"
       ? candidate.githubSelectionType
       : undefined,
+    previewKindOverride: imageUnderstandingPreview ? "image-understanding" : webSearchPreview ? "web-search" : undefined,
+    imageUnderstandingPreview,
+    webSearchPreview,
   };
 }
 
@@ -9027,6 +9183,7 @@ export function RunnerChat({
   onComposerProjectTaskSubmit,
   activeTaskPreviewId = null,
   onTaskPreviewClick,
+  onOpenTaskList,
   onResourcePreviewClick,
   onAgentTurnClick,
   onSummaryWorkspacePathClick,
@@ -17011,11 +17168,18 @@ export function RunnerChat({
   }
 
   function renderNestedTimelineItems(turn: RunnerTurn, items: RunnerTimelineItem[], options?: { renderBrowserSkillAsGeneric?: boolean }) {
-    return items.map((nestedItem, nestedIndex) => (
-      <div key={timelineItemKey(turn.id, nestedIndex, nestedItem)} className="agent-step-item">
-        <div className="agent-step-content">{renderTimelineItem(turn, nestedItem, nestedIndex, { renderComputerUseMcpAsGeneric: true, renderBrowserSkillAsGeneric: options?.renderBrowserSkillAsGeneric })}</div>
-      </div>
-    ));
+    return items.map((nestedItem, nestedIndex) => {
+      const content = renderTimelineItem(turn, nestedItem, nestedIndex, {
+        renderComputerUseMcpAsGeneric: true,
+        renderBrowserSkillAsGeneric: options?.renderBrowserSkillAsGeneric,
+      });
+      if (!content) return null;
+      return (
+        <div key={timelineItemKey(turn.id, nestedIndex, nestedItem)} className="agent-step-item">
+          <div className="agent-step-content">{content}</div>
+        </div>
+      );
+    });
   }
 
   async function handlePermissionDecision(log: RunnerLog, decision: "allow" | "deny") {
@@ -17177,6 +17341,7 @@ export function RunnerChat({
         availableProjects={availableProjects}
         onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
         onTaskPreviewClick={onTaskPreviewClick}
+        onOpenTaskList={onOpenTaskList}
         onAgentPreviewClick={(agent) => {
           if (typeof onAgentTurnClick !== "function") return;
           onAgentTurnClick({
@@ -19879,7 +20044,7 @@ export function RunnerChat({
                           </span>
                         </button>
 
-                        <div className={`tb-work-collapse ${isExpanded || shouldShowCollapsedLivePreview ? "" : "collapsed"}`}>
+                        <div className={`tb-work-collapse ${isExpanded ? "is-expanded" : ""} ${isExpanded || shouldShowCollapsedLivePreview ? "" : "collapsed"}`.trim()}>
                           {isExpanded || shouldShowCollapsedLivePreview ? (
                             <div className="tb-work-collapse-inner">
                               <div className="agent-steps-container">
@@ -19897,15 +20062,20 @@ export function RunnerChat({
                                     </div>
                                   </div>
                                 ) : null}
-                                {displayedTimelineItems.map((item, index) => (
-                                  <div
-                                    key={timelineItemKey(turn.id, firstDisplayedTimelineItemIndex + index, item)}
-                                    className="agent-step-item"
-                                    style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
-                                  >
-                                    <div className="agent-step-content">{renderTimelineItem(turn, item, firstDisplayedTimelineItemIndex + index)}</div>
-                                  </div>
-                                ))}
+                                {displayedTimelineItems.map((item, index) => {
+                                  const timelineIndex = firstDisplayedTimelineItemIndex + index;
+                                  const content = renderTimelineItem(turn, item, timelineIndex);
+                                  if (!content) return null;
+                                  return (
+                                    <div
+                                      key={timelineItemKey(turn.id, timelineIndex, item)}
+                                      className="agent-step-item"
+                                      style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
+                                    >
+                                      <div className="agent-step-content">{content}</div>
+                                    </div>
+                                  );
+                                })}
                                 {shouldRenderThinkingStatus ? (
                                   <div
                                     className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
@@ -20081,7 +20251,7 @@ export function RunnerChat({
                           </span>
                         </button>
 
-                      <div className={`tb-work-collapse ${isExpanded || shouldShowCollapsedLivePreview ? "" : "collapsed"}`}>
+                      <div className={`tb-work-collapse ${isExpanded ? "is-expanded" : ""} ${isExpanded || shouldShowCollapsedLivePreview ? "" : "collapsed"}`.trim()}>
                         {isExpanded || shouldShowCollapsedLivePreview ? (
                           <div className="tb-work-collapse-inner">
                             <div className="agent-steps-container">
@@ -20099,15 +20269,20 @@ export function RunnerChat({
                                   </div>
                                 </div>
                               ) : null}
-                              {displayedTimelineItems.map((item, index) => (
-                                <div
-                                  key={timelineItemKey(turn.id, firstDisplayedTimelineItemIndex + index, item)}
-                                  className="agent-step-item"
-                                  style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
-                                >
-                                  <div className="agent-step-content">{renderTimelineItem(turn, item, firstDisplayedTimelineItemIndex + index)}</div>
-                                </div>
-                              ))}
+                              {displayedTimelineItems.map((item, index) => {
+                                const timelineIndex = firstDisplayedTimelineItemIndex + index;
+                                const content = renderTimelineItem(turn, item, timelineIndex);
+                                if (!content) return null;
+                                return (
+                                  <div
+                                    key={timelineItemKey(turn.id, timelineIndex, item)}
+                                    className="agent-step-item"
+                                    style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
+                                  >
+                                    <div className="agent-step-content">{content}</div>
+                                  </div>
+                                );
+                              })}
                               {shouldRenderThinkingStatus ? (
                                 <div
                                   className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}

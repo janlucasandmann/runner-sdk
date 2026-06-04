@@ -6,7 +6,9 @@ import {
   Code2 as LucideCode2,
   Crop as LucideCrop,
   Eye as LucideEye,
+  FileDiff as LucideFileDiff,
   FileText as LucideFileText,
+  Globe as LucideGlobe,
   HardDrive as LucideHardDrive,
   Check as LucideCheck,
   LassoSelect as LucideLassoSelect,
@@ -28,10 +30,15 @@ import {
   normalizeRunnerPreviewWorkspacePath,
   resolveRunnerPreviewAssetUrl,
   type RunnerDocumentPreviewKind,
+  type RunnerImageUnderstandingPreviewData,
+  type RunnerImageUnderstandingPreviewItem,
   type RunnerPreviewDirectoryEntry,
   type RunnerPreviewAttachment,
+  type RunnerWebSearchPreviewData,
+  type RunnerWebSearchPreviewSource,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
+import { RunnerFileDiffSurface } from "./runner-file-diff-surface.js";
 import {
   RunnerImageCropOverlay,
   RunnerImageSelectionMaskOverlay,
@@ -67,6 +74,178 @@ interface AttachmentDirectoryPreviewState {
   folderPath: string;
   entries: RunnerPreviewDirectoryEntry[];
   error?: string | null;
+}
+
+function getWebSearchPreviewSourceDomain(source: RunnerWebSearchPreviewSource): string {
+  if (source.domain) {
+    return source.domain;
+  }
+  try {
+    return new URL(source.url).hostname.replace(/^www\./i, "");
+  } catch {
+    return "";
+  }
+}
+
+function getWebSearchPreviewFaviconUrl(domain: string): string {
+  return domain ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32` : "";
+}
+
+function RunnerWebSearchSidebarSourceLink({ source }: { source: RunnerWebSearchPreviewSource }) {
+  const [faviconFailed, setFaviconFailed] = useState(false);
+  const domain = getWebSearchPreviewSourceDomain(source);
+  const faviconUrl = faviconFailed ? "" : getWebSearchPreviewFaviconUrl(domain);
+  const label = source.title || domain || source.url;
+
+  return (
+    <a className="tb-web-search-sidebar-source" href={source.url} target="_blank" rel="noopener noreferrer">
+      {faviconUrl ? (
+        <img
+          src={faviconUrl}
+          alt=""
+          className="tb-web-search-sidebar-source-favicon"
+          onError={() => setFaviconFailed(true)}
+          referrerPolicy="no-referrer"
+        />
+      ) : (
+        <LucideGlobe className="tb-web-search-sidebar-source-icon" strokeWidth={1.5} />
+      )}
+      <span title={label}>{label}</span>
+    </a>
+  );
+}
+
+function RunnerWebSearchSidebarPreview({ data }: { data: RunnerWebSearchPreviewData }) {
+  const images = Array.isArray(data.images) ? data.images.filter((image) => image && (image.url || image.thumbnail)).slice(0, 4) : [];
+  const sources = Array.isArray(data.sources) ? data.sources.filter((source) => source?.url) : [];
+  const hasRawJson = Boolean(data.rawJsonText && data.rawJsonText.trim());
+
+  return (
+    <main className="tb-web-search-sidebar-preview">
+      <header className="tb-web-search-sidebar-title">
+        <h1>Web Search</h1>
+        {data.query ? <p>{data.query}</p> : null}
+      </header>
+      {data.isError ? (
+        <section className="tb-web-search-sidebar-error">
+          {data.errorMessage || "Web search failed."}
+        </section>
+      ) : null}
+      {images.length > 0 ? (
+        <section className="tb-web-search-sidebar-section">
+          <div className="tb-web-search-sidebar-image-grid">
+            {images.map((image, index) => {
+              const imageUrl = image.url || image.thumbnail || "";
+              return (
+                <figure key={`${imageUrl}:${index}`} className="tb-web-search-sidebar-image-card">
+                  <img
+                    src={imageUrl}
+                    alt={image.title || `Search image ${index + 1}`}
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                  />
+                  {image.title ? <figcaption>{image.title}</figcaption> : null}
+                </figure>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+      {data.summary ? (
+        <section className="tb-web-search-sidebar-summary">
+          <RunnerMarkdown
+            content={data.summary}
+            className="tb-message-markdown tb-message-markdown-summary"
+            softBreaks
+          />
+        </section>
+      ) : null}
+      {sources.length > 0 ? (
+        <section className="tb-web-search-sidebar-section">
+          <h2>Sources</h2>
+          <div className="tb-web-search-sidebar-source-list">
+            {sources.map((source, index) => (
+              <RunnerWebSearchSidebarSourceLink key={`${source.url}:${index}`} source={source} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+      {hasRawJson ? (
+        <details className="tb-web-search-sidebar-raw">
+          <summary>Raw JSON</summary>
+          <pre>{data.rawJsonText}</pre>
+        </details>
+      ) : null}
+    </main>
+  );
+}
+
+function RunnerImageUnderstandingSidebarPreview({
+  data,
+  requestHeaders,
+}: {
+  data: RunnerImageUnderstandingPreviewData;
+  requestHeaders: HeadersInit;
+}) {
+  const images = Array.isArray(data.images) ? data.images.filter((image) => image && (image.url || image.path)) : [];
+  const layoutClassName = [
+    "tb-image-understanding-layout",
+    images.length > 1 ? "is-multiple" : "",
+  ].filter(Boolean).join(" ");
+
+  return (
+    <main className="tb-image-understanding-sidebar-preview">
+      <header className="tb-image-understanding-title">
+        <h1>Image Understanding</h1>
+        <p>{data.imageName || (images.length === 1 ? images[0]?.name : `${images.length} images`)}</p>
+      </header>
+      <section className={layoutClassName}>
+        <div className="tb-image-understanding-preview">
+          <div className="tb-image-understanding-preview-title">Image Understanding</div>
+          {images.length > 0 ? (
+            <div className="tb-image-understanding-preview-list">
+              {images.map((image, index) => {
+                const imageId = image.path || image.url || image.name || `image-${index}`;
+                return (
+                  <figure key={`${imageId}:${index}`} className="tb-image-understanding-preview-item">
+                    {image.url ? (
+                      <RunnerImagePreviewSurface
+                        src={image.url}
+                        alt={image.name || "Image"}
+                        fetchHeaders={requestHeaders}
+                        className="tb-image-understanding-preview-surface"
+                        imageClassName="tb-image-understanding-preview-image"
+                      />
+                    ) : (
+                      <div className="tb-image-understanding-empty">Image preview unavailable.</div>
+                    )}
+                    <figcaption>{image.name || image.path || "Image"}</figcaption>
+                  </figure>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="tb-image-understanding-empty">Image preview unavailable.</div>
+          )}
+        </div>
+        <div className="tb-image-understanding-result">
+          {data.resultText ? (
+            data.isError ? (
+              <div className="tb-image-understanding-error">{data.resultText}</div>
+            ) : (
+              <RunnerMarkdown
+                content={data.resultText}
+                className="tb-image-understanding-markdown tb-message-markdown tb-message-markdown-summary"
+                softBreaks
+              />
+            )
+          ) : (
+            <div className="tb-image-understanding-empty">No image description returned.</div>
+          )}
+        </div>
+      </section>
+    </main>
+  );
 }
 
 export interface RunnerDocumentPreviewDrawerProps {
@@ -206,6 +385,7 @@ export function RunnerDocumentPreviewDrawer({
   const [pdfPreviewError, setPdfPreviewError] = useState<string | null>(null);
   const [markdownPreviewMode, setMarkdownPreviewMode] = useState<"rendered" | "code">("rendered");
   const [spreadsheetPreviewMode, setSpreadsheetPreviewMode] = useState<"preview" | "code">("preview");
+  const [attachmentDiffMode, setAttachmentDiffMode] = useState(false);
   const [spreadsheetPreviewControls, setSpreadsheetPreviewControls] = useState<RunnerSpreadsheetPreviewControls | null>(null);
   const [imagePreviewZoom, setImagePreviewZoom] = useState(1);
   const [imagePreviewToolMode, setImagePreviewToolMode] = useState<"idle" | "select" | "crop">("idle");
@@ -246,6 +426,8 @@ export function RunnerDocumentPreviewDrawer({
   const attachmentPreviewKind = !isImageAttachment
     ? attachment.previewKindOverride ?? getRunnerDocumentPreviewKind(attachment)
     : null;
+  const isImageUnderstandingAttachment = attachmentPreviewKind === "image-understanding" && Boolean(attachment.imageUnderstandingPreview);
+  const isWebSearchAttachment = attachmentPreviewKind === "web-search" && Boolean(attachment.webSearchPreview);
 
   useEffect(() => {
     imageCropHistoryRef.current = imageCropHistory;
@@ -275,6 +457,12 @@ export function RunnerDocumentPreviewDrawer({
   const isPreviewCodeMode = isSpreadsheetAttachment
     ? spreadsheetPreviewMode === "code"
     : markdownPreviewMode === "code";
+  const canShowAttachmentDiff = Boolean(
+    !isImageAttachment &&
+    typeof attachment.diffContent === "string" &&
+    attachment.diffContent.trim()
+  );
+  const isAttachmentDiffMode = canShowAttachmentDiff && attachmentDiffMode;
   const requestHeadersWithApiKey = useMemo(
     () => buildRunnerPreviewHeaders(requestHeaders, apiKey),
     [apiKey, requestHeaders]
@@ -379,6 +567,7 @@ export function RunnerDocumentPreviewDrawer({
     setIsPdfPreviewRendering(false);
     setMarkdownPreviewMode("rendered");
     setSpreadsheetPreviewMode("preview");
+    setAttachmentDiffMode(false);
     setSpreadsheetPreviewControls(null);
     setImagePreviewZoom(1);
     setImagePreviewToolMode("idle");
@@ -510,7 +699,7 @@ export function RunnerDocumentPreviewDrawer({
     }
     documentPreviewLoadKeyRef.current = nextLoadKey;
 
-    if (isImageAttachment) {
+    if (isImageAttachment || previewKind === "image-understanding" || previewKind === "web-search") {
       setDocumentPreviewState({
         status: "idle",
         kind: null,
@@ -1683,9 +1872,11 @@ export function RunnerDocumentPreviewDrawer({
   }
 
   const imagePreviewRootClassName = isImageAttachment ? " tb-attachment-preview-image-drawer" : "";
+  const imageUnderstandingPreviewRootClassName = isImageUnderstandingAttachment ? " tb-attachment-preview-image-understanding-drawer" : "";
+  const webSearchPreviewRootClassName = isWebSearchAttachment ? " tb-attachment-preview-web-search-drawer" : "";
   const previewRootClassName = surface
-    ? `tb-attachment-preview-surface${inline ? " tb-attachment-preview-surface-inline" : ""}${imagePreviewRootClassName}${className ? ` ${className}` : ""}`
-    : `tb-attachment-preview-drawer${inline ? " tb-attachment-preview-drawer-inline" : ""}${imagePreviewRootClassName}${className ? ` ${className}` : ""}`;
+    ? `tb-attachment-preview-surface${inline ? " tb-attachment-preview-surface-inline" : ""}${imagePreviewRootClassName}${imageUnderstandingPreviewRootClassName}${webSearchPreviewRootClassName}${className ? ` ${className}` : ""}`
+    : `tb-attachment-preview-drawer${inline ? " tb-attachment-preview-drawer-inline" : ""}${imagePreviewRootClassName}${imageUnderstandingPreviewRootClassName}${webSearchPreviewRootClassName}${className ? ` ${className}` : ""}`;
   const canUseBuiltInImageTools = Boolean(enableImagePreviewTools && isImageAttachment && effectiveImagePreviewUrl);
   const isBuiltInImageToolModeActive = canUseBuiltInImageTools && imagePreviewToolMode !== "idle";
   const canSaveImageCrop = Boolean(
@@ -1879,7 +2070,7 @@ export function RunnerDocumentPreviewDrawer({
     : null;
   const hasDrawerHeaderActions = Boolean(
     (isBuiltInImageToolModeActive ? builtInImagePreviewHeaderActions : (
-      spreadsheetPreviewHeaderActions || headerActions || builtInImagePreviewHeaderActions || canTogglePreviewCode || headerActionsAfterPreviewToggle || (showCloseButton && onClose)
+      spreadsheetPreviewHeaderActions || headerActions || builtInImagePreviewHeaderActions || canShowAttachmentDiff || canTogglePreviewCode || headerActionsAfterPreviewToggle || (showCloseButton && onClose)
     ))
   );
   const shouldRenderImagePreviewZoomControl = Boolean(imagePreviewFullscreen && isImageAttachment && effectiveImagePreviewUrl);
@@ -1963,17 +2154,35 @@ export function RunnerDocumentPreviewDrawer({
               {isBuiltInImageToolModeActive ? (
                 builtInImagePreviewHeaderActions
               ) : (
-                <>
-                  {spreadsheetPreviewHeaderActions}
-                  {builtInImagePreviewHeaderActions}
-                  {canTogglePreviewCode ? (
-                    <button
-                      type="button"
-                      className={`tb-image-preview-select-button tb-document-preview-mode-toggle${isPreviewCodeMode ? " is-active" : ""}`}
-                      onClick={() => {
-                        if (isSpreadsheetAttachment) {
-                          setSpreadsheetPreviewMode((current) => current === "code" ? "preview" : "code");
-                          return;
+	                <>
+	                  {spreadsheetPreviewHeaderActions}
+	                  {builtInImagePreviewHeaderActions}
+	                  {canShowAttachmentDiff ? (
+	                    <button
+	                      type="button"
+	                      className={`tb-image-preview-select-button tb-document-preview-mode-toggle${isAttachmentDiffMode ? " is-active" : ""}`}
+	                      onClick={() => setAttachmentDiffMode((current) => !current)}
+	                      aria-label={isAttachmentDiffMode ? "Show preview" : "Show diff"}
+	                      aria-pressed={isAttachmentDiffMode}
+	                      title={isAttachmentDiffMode ? "Show preview" : "Show diff"}
+	                    >
+	                      {isAttachmentDiffMode ? (
+	                        <LucideEye width={14} height={14} strokeWidth={1.9} />
+	                      ) : (
+	                        <LucideFileDiff width={14} height={14} strokeWidth={1.9} />
+	                      )}
+	                      <span>{isAttachmentDiffMode ? "Preview" : "Diff"}</span>
+	                    </button>
+	                  ) : null}
+	                  {canTogglePreviewCode ? (
+	                    <button
+	                      type="button"
+	                      className={`tb-image-preview-select-button tb-document-preview-mode-toggle${isPreviewCodeMode ? " is-active" : ""}`}
+	                      onClick={() => {
+	                        setAttachmentDiffMode(false);
+	                        if (isSpreadsheetAttachment) {
+	                          setSpreadsheetPreviewMode((current) => current === "code" ? "preview" : "code");
+	                          return;
                         }
                         setMarkdownPreviewMode((current) => current === "code" ? "rendered" : "code");
                       }}
@@ -2010,7 +2219,24 @@ export function RunnerDocumentPreviewDrawer({
           ) : null}
         </div>
         <div className="tb-attachment-preview-drawer-body">
-          {shouldRenderDirectoryPreview ? (
+          {isImageUnderstandingAttachment && attachment.imageUnderstandingPreview ? (
+            <RunnerImageUnderstandingSidebarPreview
+              data={attachment.imageUnderstandingPreview}
+              requestHeaders={requestHeadersWithApiKey}
+            />
+          ) : isWebSearchAttachment && attachment.webSearchPreview ? (
+            <RunnerWebSearchSidebarPreview data={attachment.webSearchPreview} />
+          ) : isAttachmentDiffMode ? (
+            <RunnerFileDiffSurface
+              filePath={resolvedWorkspacePath || attachment.workspacePath || attachment.filename}
+              diffContent={attachment.diffContent || ""}
+              fileContent={attachment.fileContent}
+              additions={typeof attachment.diffAdditions === "number" ? attachment.diffAdditions : undefined}
+              deletions={typeof attachment.diffDeletions === "number" ? attachment.diffDeletions : undefined}
+              emptyMessage="Diff unavailable."
+              embedded
+            />
+          ) : shouldRenderDirectoryPreview ? (
             renderDirectoryPreview()
           ) : isImageAttachment && effectiveImagePreviewUrl ? (
             <div ref={imagePreviewWheelRegionRef} className="tb-attachment-preview-image-zoom-region">

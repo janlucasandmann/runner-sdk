@@ -46,7 +46,6 @@ import {
   Paperclip,
   RefreshCw,
   ScanEye,
-  ScanText,
   Search,
   SlidersHorizontal,
   Telescope,
@@ -63,7 +62,9 @@ import {
   buildRunnerPreviewDownloadUrl,
   buildRunnerPreviewHtmlDocument,
   getRunnerDocumentPreviewKind,
+  type RunnerImageUnderstandingPreviewItem,
   type RunnerPreviewAttachment,
+  type RunnerWebSearchPreviewData,
 } from "./runner-document-preview.js";
 import { RunnerFileDiffSurface } from "./runner-file-diff-surface.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
@@ -225,6 +226,7 @@ interface RunnerWorkLogEntryProps {
   onAgentPreviewClick?: (agent: { agentId: string; agentName?: string }) => void;
   onEnvironmentPreviewClick?: (environment: { environmentId: string; environmentName?: string }) => void;
   onProjectPreviewClick?: (project: { projectId: string; projectName?: string }) => void;
+  onOpenTaskList?: () => void;
 }
 
 function isRunnerLogImageFilePath(filePath?: string | null): boolean {
@@ -4087,6 +4089,7 @@ function isReadFileCommand(command?: string): boolean {
   }
   return [
     /app-platform(?:\.py)?\s+files\s+read\b/i,
+    /computer-agents(?:\.py)?\s+files\s+read\b/i,
     /^\$?\s*read_file\b/i,
     /^reading:\s+/i,
     /sed\s+-n\s+['"][^'"]*['"]\s+/,
@@ -4351,8 +4354,10 @@ function extractReadFilePath(command?: string): string | null {
     return headTailPath;
   }
   const patterns = [
-    /app-platform(?:\.py)?\s+files\s+read\b[\s\S]*?\s--path\s+["']([^"']+)["']/i,
-    /app-platform(?:\.py)?\s+files\s+read\b[\s\S]*?\s--path\s+([^\s|&;>"']+)/i,
+    /(?:app-platform|computer-agents)(?:\.py)?\s+files\s+read\b[\s\S]*?\s--path\s+["']([^"']+)["']/i,
+    /(?:app-platform|computer-agents)(?:\.py)?\s+files\s+read\b[\s\S]*?\s--path\s+([^\s|&;>"']+)/i,
+    /(?:app-platform|computer-agents)(?:\.py)?\s+files\s+read\b\s+["']([^"'-][^"']*)["']/i,
+    /(?:app-platform|computer-agents)(?:\.py)?\s+files\s+read\b\s+(?!-)([^\s|&;>"']+)/i,
     /sed\s+-n\s+['"][^'"]*['"]\s+["']([^"']+)["']/,
     /sed\s+-n\s+['"][^'"]*['"]\s+(\S+)/,
     /\b(?:cat|less)\s+["']([^"']+)["']/,
@@ -5193,14 +5198,63 @@ function resolveReadCodePreviewAttachment(
   };
 }
 
+function isRenderableReadFilePath(filePath?: string | null): filePath is string {
+  const normalizedPath = normalizeRunnerFilePath(filePath);
+  if (!normalizedPath || isRunnerNullDevicePath(normalizedPath)) {
+    return false;
+  }
+
+  const fileName = getFileName(normalizedPath).trim().toLowerCase();
+  return Boolean(fileName && fileName !== "file");
+}
+
+function buildReadFilePreviewAttachment(
+  filePath: string,
+  content: string,
+  backendUrl?: string,
+  environmentId?: string | null
+): RunnerPreviewAttachment {
+  const normalizedPath = normalizeRunnerFilePath(filePath) || filePath;
+  const normalizedContent = String(content || "").trim().toLowerCase();
+  if (
+    isRunnerLogImageFilePath(normalizedPath) ||
+    normalizedContent === "read completed (no textual content found)."
+  ) {
+    return {
+      ...buildRunnerPreviewAttachmentFromPath(normalizedPath, {
+        backendUrl,
+        environmentId,
+        idPrefix: "log-read-file",
+      }),
+      workspacePath: normalizedPath,
+    };
+  }
+
+  const documentPreviewAttachment = resolveReadDocumentPreviewAttachment(normalizedPath, content, backendUrl, environmentId);
+  if (documentPreviewAttachment) {
+    return documentPreviewAttachment;
+  }
+
+  const codePreviewAttachment = resolveReadCodePreviewAttachment(normalizedPath, content, backendUrl, environmentId);
+  if (codePreviewAttachment) {
+    return codePreviewAttachment;
+  }
+
+  return {
+    ...buildRunnerPreviewAttachmentFromPath(normalizedPath, {
+      backendUrl,
+      environmentId,
+      idPrefix: "log-read-file",
+    }),
+    workspacePath: normalizedPath,
+  };
+}
+
 function ReadFileLogBox({
   log,
-  timeLabel,
   backendUrl,
   environmentId,
-  requestHeaders,
   onPreviewDocument,
-  onWorkspacePathClick,
 }: {
   log: RunnerLog;
   timeLabel?: string;
@@ -5210,8 +5264,6 @@ function ReadFileLogBox({
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
   onWorkspacePathClick?: (path: string) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [copied, setCopied] = useState(false);
   const command = log.metadata?.command || "";
   const output = stripRunnerSystemTags(resolveCommandOutputText(log.metadata?.output, "stdout"));
   const commandOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
@@ -5226,161 +5278,34 @@ function ReadFileLogBox({
     normalizeRunnerFilePath(extractReadFilePath(command)) ||
     normalizeRunnerFilePath(extractWorkspacePathFromText(log.message)) ||
     normalizeRunnerFilePath(extractWorkspacePathFromText(command));
-  const lineRange = extractReadLineRange(command);
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
   const content = stripLineNumbers(structuredReadPayload?.content ?? commandOutput?.stdout ?? output);
   const stderr = stripRunnerSystemTags(commandOutput?.stderr || "");
   const readFailureMessage = normalizeReadFileFailureMessage({ content, output, stderr, isError });
-  const normalizedContent = content.trim().toLowerCase();
-  const isImageFile = Boolean(filePath && isRunnerLogImageFilePath(filePath));
-  const imagePreviewUrl = isImageFile ? buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath) : null;
-  const codePreviewAttachment = resolveReadCodePreviewAttachment(filePath || undefined, content, backendUrl, environmentId);
-  const previewAttachment = resolveReadDocumentPreviewAttachment(filePath || undefined, content, backendUrl, environmentId);
-  const isImageReadWithoutText =
-    isImageFile
-    && (
-      normalizedContent.length === 0
-      || normalizedContent === "read completed (no textual content found)."
-    );
-  const detectedLanguage = detectCodeLanguage(content, filePath || undefined);
-  const languageLabel = formatCodeLanguageLabel(detectedLanguage);
-  const shouldRenderMarkdownPreview = detectedLanguage === "markdown";
-  const openCodePreviewLabel =
-    shouldRenderMarkdownPreview && codePreviewAttachment
-      ? `Open Markdown preview for ${codePreviewAttachment.filename}`
-      : codePreviewAttachment
-        ? `Open code preview for ${codePreviewAttachment.filename}`
-        : "";
 
-  useEffect(() => {
-    if (!copied) return;
-    const timeoutId = window.setTimeout(() => setCopied(false), 1200);
-    return () => window.clearTimeout(timeoutId);
-  }, [copied]);
-
-  async function handleCopy() {
-    try {
-      await copyRunnerText(content);
-      setCopied(true);
-    } catch {}
-  }
-
-  if (readFailureMessage) {
-    void readFailureMessage;
+  if (readFailureMessage || isError || !isRenderableReadFilePath(filePath)) {
     return null;
   }
 
-  if (isImageReadWithoutText) {
-    return (
-      <ImagePreviewLogCard
-        icon={<FileImage className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Read File"
-        title={filePath ? getFileName(filePath) : "file"}
-        timeLabel={timeLabel}
-        meta={lineRange ? <span className="tb-log-card-pill">{lineRange}</span> : null}
-        body={
-          isError ? (
-            <div className="tb-log-card-state tb-log-card-state-error">{output || "An error occurred while reading the file."}</div>
-          ) : imagePreviewUrl ? (
-            <div className="tb-log-image-grid">
-              <LazyMediaPreviewMount
-                mediaKey={imagePreviewUrl}
-                className="tb-log-media-lazy-preview"
-                placeholder={<GenericImagePreviewLoadingState />}
-              >
-                <RunnerImagePreviewSurface
-                  src={imagePreviewUrl}
-                  alt={filePath || "Read image"}
-                  fetchHeaders={requestHeaders}
-                  loadStrategy="immediate"
-                />
-              </LazyMediaPreviewMount>
-            </div>
-          ) : (
-            <div className="tb-log-card-empty">No image preview available.</div>
-          )
-        }
-      />
-    );
-  }
+  const normalizedPath = normalizeRunnerFilePath(filePath) || filePath;
+  const fileName = getFileName(normalizedPath);
+  const previewAttachment = buildReadFilePreviewAttachment(normalizedPath, content, backendUrl, environmentId);
 
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<ScanText className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Read File"
-        title={filePath ? getFileName(filePath) : "file"}
-        timeLabel={timeLabel}
-        meta={lineRange ? <span className="tb-log-card-pill">{lineRange}</span> : null}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{output || "An error occurred while reading the file."}</div>
-        ) : content ? (
-          <>
-            <div className="tb-log-file-preview-frame">
-              <div className="tb-log-file-preview-topbar">
-                <span className="tb-log-file-preview-language">{languageLabel}</span>
-                <div className="tb-log-file-preview-actions">
-                  {codePreviewAttachment ? (
-                    <button
-                      type="button"
-                      className="tb-log-file-preview-icon-button"
-                      onClick={() => onPreviewDocument?.(codePreviewAttachment)}
-                      aria-label={openCodePreviewLabel}
-                      title={openCodePreviewLabel}
-                    >
-                      <ListChevronsUpDown className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
-                    </button>
-                  ) : null}
-                  {previewAttachment ? (
-                    <button
-                      type="button"
-                      className="tb-log-file-preview-icon-button"
-                      onClick={() => onPreviewDocument?.(previewAttachment)}
-                      aria-label={`Preview ${previewAttachment.filename}`}
-                      title={`Preview ${previewAttachment.filename}`}
-                    >
-                      <Eye className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
-                    </button>
-                  ) : null}
-                  <button type="button" className="tb-log-file-preview-copy" onClick={handleCopy}>
-                    <Copy className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
-                    <span>{copied ? "Copied" : "Copy"}</span>
-                  </button>
-                </div>
-              </div>
-              <div className="tb-log-file-preview-body">
-                {shouldRenderMarkdownPreview ? (
-                  <RunnerMarkdown
-                    content={content}
-                    className="tb-log-file-markdown-preview tb-message-markdown"
-                    onWorkspacePathClick={onWorkspacePathClick}
-                    imageBackendUrl={backendUrl}
-                    imageEnvironmentId={environmentId}
-                    imageRequestHeaders={requestHeaders}
-                    imageBaseWorkspacePath={filePath}
-                  />
-                ) : (
-                  <RunnerCodeViewer
-                    key={`${filePath || "inline"}:${detectedLanguage}:file-preview`}
-                    content={content}
-                    filePath={filePath}
-                    language={detectedLanguage}
-                    maxHeight={500}
-                    showLineNumbers
-                    className="tb-log-card-code-hide-scrollbars"
-                  />
-                )}
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="tb-log-card-empty">File was empty.</div>
-        )}
-      </LogPanel>
+    <div className="tb-log-file-change-summary tb-log-file-read-summary">
+      <div className="tb-log-file-change-summary-title">Read file</div>
+      <ul className="tb-log-file-change-summary-list">
+        <li className="tb-log-file-change-summary-item">
+          <button
+            type="button"
+            className="tb-log-file-change-summary-link"
+            onClick={() => onPreviewDocument?.(previewAttachment)}
+            title={normalizedPath}
+          >
+            {fileName}
+          </button>
+        </li>
+      </ul>
     </div>
   );
 }
@@ -5466,192 +5391,25 @@ function resolveWriteDocumentPreviewAttachment(
   return attachment;
 }
 
-function WriteFileSingleLogBox({
-  log,
-  timeLabel,
-  backendUrl,
-  environmentId,
-  requestHeaders,
-  onPreviewDocument,
-}: {
-  log: RunnerLog;
-  timeLabel?: string;
-  backendUrl?: string;
-  environmentId?: string | null;
-  requestHeaders?: HeadersInit;
-  onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
-}) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const command = log.metadata?.command || "";
-  const structuredWrite = extractStructuredWriteFilePayload(stripRunnerSystemTags(String(log.metadata?.output || "")));
-  const filePath =
-    (log.metadata?.filePaths?.[0] as string | undefined)
-    || structuredWrite?.filePath
-    || extractWriteFilePath(command)
-    || extractWorkspacePathFromText(log.message)
-    || extractWriteMessagePath(log.message)
-    || undefined;
-  if (isRunnerNullDevicePath(filePath)) {
-    return null;
+function getWriteFileSummaryTitle(items: RunnerLogFileChangePreview[]): string {
+  if (items.length === 0) {
+    return "Files updated";
   }
-  const fileContents = log.metadata?.fileContents as Record<string, string> | undefined;
-  const fileContent = resolveFileMapValue(fileContents, filePath) ?? structuredWrite?.content;
-  const output = stripRunnerSystemTags(String(fileContent || log.metadata?.output || ""));
-  const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
-  const operation = structuredWrite?.operation || deriveWriteOperation(command, log.metadata?.changeKinds?.[0]);
-  const diffPreview = resolveWriteDiffPreview(log, filePath, output, operation);
-  const diffText = String(structuredWrite?.diffText || diffPreview.diffText || "").trim();
-  const additions =
-    typeof structuredWrite?.additions === "number"
-      ? structuredWrite.additions
-      : diffPreview.additions;
-  const deletions =
-    typeof structuredWrite?.deletions === "number"
-      ? structuredWrite.deletions
-      : diffPreview.deletions;
-  const hasKnownCounts =
-    typeof structuredWrite?.additions === "number" ||
-    typeof structuredWrite?.deletions === "number" ||
-    diffPreview.hasKnownCounts;
-  const imagePreviewUrl = isRunnerLogImageFilePath(filePath)
-    ? buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath)
-    : null;
-  const previewAttachment = resolveWriteDocumentPreviewAttachment(filePath, backendUrl, environmentId);
-  const codePreviewAttachment = resolveReadCodePreviewAttachment(filePath || undefined, output, backendUrl, environmentId);
-  const detectedLanguage = detectCodeLanguage(output, filePath || undefined);
-  const languageLabel = formatCodeLanguageLabel(detectedLanguage);
-  const imageLabel = operation === "created" ? "Generated Image" : "Updated Image";
-  const fileActionLabel =
-    operation === "created"
-      ? "Created file"
-      : operation === "deleted"
-        ? "Deleted file"
-        : "Edited file";
-
-  useEffect(() => {
-    if (!copied) return;
-    const timeoutId = window.setTimeout(() => setCopied(false), 1200);
-    return () => window.clearTimeout(timeoutId);
-  }, [copied]);
-
-  async function handleCopy() {
-    try {
-      await copyRunnerText(output || diffText || "");
-      setCopied(true);
-    } catch {}
+  const kinds = new Set(items.map((item) => item.kind));
+  const isSingular = items.length === 1;
+  if (kinds.size === 1 && kinds.has("created")) {
+    return isSingular ? "File created" : "Files created";
   }
-
-  return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={(imagePreviewUrl ? <FileImage className="tb-log-card-small-icon" strokeWidth={1.5} /> : <FilePlus className="tb-log-card-small-icon" strokeWidth={1.5} />)}
-        label={
-          imagePreviewUrl
-            ? imageLabel
-            : operation === "created"
-              ? "Create File"
-              : operation === "deleted"
-                ? "Delete File"
-                : "Edit File"
-        }
-        title={filePath || "file"}
-        timeLabel={timeLabel}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{output || "An error occurred while writing the file."}</div>
-        ) : imagePreviewUrl ? (
-          <div className="tb-log-image-grid">
-            <LazyMediaPreviewMount
-              mediaKey={imagePreviewUrl}
-              className="tb-log-media-lazy-preview"
-              placeholder={<GenericImagePreviewLoadingState />}
-            >
-              <RunnerImagePreviewSurface
-                src={imagePreviewUrl}
-                alt={filePath || "Generated image"}
-                fetchHeaders={requestHeaders}
-                loadStrategy="immediate"
-              />
-            </LazyMediaPreviewMount>
-          </div>
-        ) : diffText || output ? (
-          <>
-            <div className="tb-log-file-preview-frame">
-              <div className="tb-log-file-preview-topbar">
-                <div className="tb-log-file-preview-heading">
-                  <span className="tb-log-file-preview-action-label">{fileActionLabel}</span>
-                  <span className="tb-log-file-preview-language">{languageLabel}</span>
-                </div>
-                <div className="tb-log-file-preview-actions">
-                  {codePreviewAttachment ? (
-                    <button
-                      type="button"
-                      className="tb-log-file-preview-icon-button"
-                      onClick={() => onPreviewDocument?.(codePreviewAttachment)}
-                      aria-label={`Open code preview for ${codePreviewAttachment.filename}`}
-                      title={`Open code preview for ${codePreviewAttachment.filename}`}
-                    >
-                      <ListChevronsUpDown className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
-                    </button>
-                  ) : null}
-                  {previewAttachment ? (
-                    <button
-                      type="button"
-                      className="tb-log-file-preview-icon-button"
-                      onClick={() => onPreviewDocument?.(previewAttachment)}
-                      aria-label={`Preview ${previewAttachment.filename}`}
-                      title={`Preview ${previewAttachment.filename}`}
-                    >
-                      <Eye className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
-                    </button>
-                  ) : null}
-                  <button type="button" className="tb-log-file-preview-copy" onClick={handleCopy}>
-                    <Copy className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
-                    <span>{copied ? "Copied" : "Copy"}</span>
-                  </button>
-                </div>
-              </div>
-              <div className="tb-log-file-preview-body">
-                {diffText ? (
-                  <RunnerFileDiffSurface
-                    filePath={filePath}
-                    diffContent={diffText}
-                    fileContent={output}
-                    additions={hasKnownCounts ? additions : undefined}
-                    deletions={hasKnownCounts ? deletions : undefined}
-                    emptyMessage="Diff unavailable for this log."
-                    maxHeight={500}
-                    hideTopbar
-                    embedded
-                  />
-                ) : (
-                  <RunnerStaticCodeViewer
-                    content={output}
-                    language={detectedLanguage}
-                    className="tb-log-card-code-hide-scrollbars"
-                  />
-                )}
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="tb-log-card-empty">Diff unavailable for this log.</div>
-        )}
-      </LogPanel>
-    </div>
-  );
+  if (kinds.size === 1 && kinds.has("deleted")) {
+    return isSingular ? "File deleted" : "Files deleted";
+  }
+  return isSingular ? "File updated" : "Files updated";
 }
 
 function WriteFileLogGroup({
   log,
-  timeLabel,
   backendUrl,
   environmentId,
-  requestHeaders,
   onPreviewDocument,
 }: {
   log: RunnerLog;
@@ -5661,55 +5419,71 @@ function WriteFileLogGroup({
   requestHeaders?: HeadersInit;
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
-  const filePaths = (log.metadata?.filePaths || []).filter((filePath) => !isRunnerNullDevicePath(filePath));
-  if (filePaths.length === 0 && Array.isArray(log.metadata?.filePaths) && log.metadata.filePaths.length > 0) {
+  const itemsByPath = new Map<string, RunnerLogFileChangePreview>();
+  for (const preview of collectRunnerLogFileChangePreviews(log)) {
+    const normalizedPath = normalizeRunnerFilePath(preview.path);
+    if (!normalizedPath || isRunnerNullDevicePath(normalizedPath)) {
+      continue;
+    }
+    itemsByPath.set(normalizedPath, {
+      ...preview,
+      path: normalizedPath,
+    });
+  }
+  const items = Array.from(itemsByPath.values());
+  if (items.length === 0) {
     return null;
   }
-  if (filePaths.length <= 1) {
-    return (
-      <WriteFileSingleLogBox
-        log={log}
-        timeLabel={timeLabel}
-        backendUrl={backendUrl}
-        environmentId={environmentId}
-        requestHeaders={requestHeaders}
-        onPreviewDocument={onPreviewDocument}
-      />
-    );
+
+  function openFilePreview(item: RunnerLogFileChangePreview) {
+    if (item.kind === "deleted") {
+      return;
+    }
+    const normalizedPath = normalizeRunnerFilePath(item.path);
+    if (!normalizedPath) {
+      return;
+    }
+    onPreviewDocument?.({
+      ...buildRunnerPreviewAttachmentFromPath(normalizedPath, {
+        backendUrl,
+        environmentId,
+        idPrefix: "log-file-change",
+      }),
+      workspacePath: normalizedPath,
+      changeKind: item.kind,
+      ...(typeof item.diff === "string" && item.diff.trim() ? { diffContent: item.diff } : {}),
+      ...(typeof item.content === "string" ? { fileContent: item.content } : {}),
+      ...(typeof item.additions === "number" ? { diffAdditions: item.additions } : {}),
+      ...(typeof item.deletions === "number" ? { diffDeletions: item.deletions } : {}),
+    });
   }
+
   return (
-    <div className="tb-log-group-stack">
-      {filePaths.map((filePath, index) => {
-        const singleLog: RunnerLog = {
-          ...log,
-          metadata: {
-            ...log.metadata,
-            filePaths: [filePath],
-            changeKinds: log.metadata?.changeKinds ? [log.metadata.changeKinds[index] || "modified"] : undefined,
-            fileContents: (() => {
-              const source = log.metadata?.fileContents as Record<string, string> | undefined;
-              const value = resolveFileMapValue(source, filePath);
-              return value ? { [filePath]: value } : undefined;
-            })(),
-            diffs: (() => {
-              const source = log.metadata?.diffs as Record<string, RunnerFileDiffMetadata> | undefined;
-              const value = resolveFileMapValue(source, filePath);
-              return value ? { [filePath]: value } : undefined;
-            })(),
-          },
-        };
-        return (
-          <WriteFileSingleLogBox
-            key={`${filePath}-${index}`}
-            log={singleLog}
-            timeLabel={index === 0 ? timeLabel : undefined}
-            backendUrl={backendUrl}
-            environmentId={environmentId}
-            requestHeaders={requestHeaders}
-            onPreviewDocument={onPreviewDocument}
-          />
-        );
-      })}
+    <div className="tb-log-file-change-summary">
+      <div className="tb-log-file-change-summary-title">{getWriteFileSummaryTitle(items)}</div>
+      <ul className="tb-log-file-change-summary-list">
+        {items.map((item) => {
+          const canPreview = item.kind !== "deleted";
+          const fileName = getFileName(item.path);
+          const label = item.path || fileName;
+          return (
+            <li key={`${item.kind}:${item.path}`} className="tb-log-file-change-summary-item">
+              {canPreview ? (
+                <button
+                  type="button"
+                  className="tb-log-file-change-summary-link"
+                  onClick={() => openFilePreview(item)}
+                  title={label}
+                >
+                  {fileName}
+                </button>
+              ) : (
+                <span className="tb-log-file-change-summary-deleted" title={label}>{fileName}</span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
@@ -7802,6 +7576,32 @@ function WebSearchSourceCountButton({
   );
 }
 
+function WebSearchSourceCountBadge({ sources }: { sources: WebSearchResult[] }) {
+  const visibleSources = sources.slice(0, 3);
+  return (
+    <span className="tb-log-web-search-source-count tb-log-web-search-source-count-badge" aria-hidden="true">
+      <span className="tb-log-web-search-source-count-icons">
+        {visibleSources.map((source, index) => {
+          const domain = getWebSearchSourceDomain(source);
+          const faviconUrl = getWebSearchFaviconUrl(domain);
+          return faviconUrl ? (
+            <img
+              key={`${source.url}-${index}`}
+              src={faviconUrl}
+              alt=""
+              className="tb-log-web-search-source-count-favicon"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <Globe key={`${source.url}-${index}`} className="tb-log-web-search-source-count-icon" strokeWidth={1.5} />
+          );
+        })}
+      </span>
+      <span>{sources.length} {sources.length === 1 ? "source" : "sources"}</span>
+    </span>
+  );
+}
+
 function buildWebSearchDisplaySummaryFromSources(sources: WebSearchResult[]): string | null {
   const lines = sources
     .map((source) => {
@@ -7816,18 +7616,54 @@ function buildWebSearchDisplaySummaryFromSources(sources: WebSearchResult[]): st
   return lines.length > 0 ? lines.join("\n") : null;
 }
 
+function buildWebSearchPreviewAttachmentId(query: string | null, rawJsonText: string): string {
+  const source = `${query || ""}:${String(rawJsonText || "").slice(0, 4096)}`;
+  let hash = 0;
+  for (let index = 0; index < source.length; index += 1) {
+    hash = ((hash << 5) - hash + source.charCodeAt(index)) | 0;
+  }
+  return `web-search-preview:${Math.abs(hash).toString(36) || "0"}`;
+}
+
+function buildWebSearchPreviewAttachment(params: {
+  query: string | null;
+  parsed: { summary: string | null; sources: WebSearchResult[]; images: WebSearchImage[] };
+  displaySummary: string | null;
+  rawJsonText: string;
+  isError: boolean;
+  errorMessage: string;
+}): RunnerPreviewAttachment {
+  const { query, parsed, displaySummary, rawJsonText, isError, errorMessage } = params;
+  const webSearchPreview: RunnerWebSearchPreviewData = {
+    query,
+    summary: displaySummary,
+    sources: parsed.sources,
+    images: parsed.images,
+    rawJsonText,
+    isError,
+    errorMessage,
+  };
+  return {
+    ...buildRunnerPreviewAttachmentFromPath("/workspace/web-search-results.html", {
+      idPrefix: "web-search-preview",
+    }),
+    id: buildWebSearchPreviewAttachmentId(query, rawJsonText),
+    filename: "Web Search",
+    mimeType: "application/x.computer-agents.web-search",
+    type: "document",
+    previewKindOverride: "web-search",
+    webSearchPreview,
+  };
+}
+
 function WebSearchLogBox({
   log,
-  timeLabel,
   onPreviewDocument,
 }: {
   log: RunnerLog;
   timeLabel?: string;
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [showSources, setShowSources] = useState(false);
-  const [copied, setCopied] = useState(false);
   const rawOutput = typeof log.metadata?.output === "string" ? log.metadata.output : "";
   const structuredCommandOutput = parseStructuredCommandExecutionOutput(rawOutput);
   const output = structuredCommandOutput
@@ -7877,120 +7713,30 @@ function WebSearchLogBox({
     resultValue,
     fullReport,
   }), [displaySummary, fullReport, output, parsed, query, rawOutput, resultValue]);
-  const rawJsonAttachment = useMemo<RunnerPreviewAttachment>(() => ({
-    ...buildRunnerPreviewAttachmentFromPath("/workspace/web-search-response.json", {
-      idPrefix: "web-search-raw-response",
-    }),
-    filename: "web-search-response.json",
-    mimeType: "application/json",
-    type: "document",
-    previewKindOverride: "text",
-    url: `data:application/json;charset=utf-8,${encodeURIComponent(rawJsonText)}`,
-    previewUrl: `data:application/json;charset=utf-8,${encodeURIComponent(rawJsonText)}`,
-  }), [rawJsonText]);
-
-  useEffect(() => {
-    if (!copied) return;
-    const timeoutId = window.setTimeout(() => setCopied(false), 1200);
-    return () => window.clearTimeout(timeoutId);
-  }, [copied]);
-
-  async function copyWebSearchSummary() {
-    try {
-      await copyRunnerText(displaySummary || rawJsonText);
-      setCopied(true);
-    } catch {}
-  }
+  const previewAttachment = useMemo(() => buildWebSearchPreviewAttachment({
+    query,
+    parsed: { ...parsed, summary: displaySummary },
+    displaySummary,
+    rawJsonText,
+    isError,
+    errorMessage,
+  }), [displaySummary, errorMessage, isError, parsed, query, rawJsonText]);
 
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<Search className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        className="tb-log-card-header-web-search"
-        label="Web Search"
-        title={null}
-        timeLabel={timeLabel}
-        meta={isRunning ? <span className="tb-log-card-status">searching...</span> : null}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{errorMessage || "Web search failed."}</div>
-        ) : (
-          <>
-            {query ? <div className="tb-log-web-search-query">{query}</div> : null}
-            {parsed.images.length > 0 ? (
-              <div className="tb-log-image-grid tb-log-web-search-images">
-                {parsed.images.slice(0, 4).map((image, index) => (
-                  <RunnerImagePreviewSurface
-                    key={`${image.url}-${index}`}
-                    src={image.url || image.thumbnail || ""}
-                    alt={image.title || `Search image ${index + 1}`}
-                    className="tb-log-web-search-image-surface"
-                    imageClassName="tb-log-image-thumb"
-                    loadStrategy="immediate"
-                    referrerPolicy="no-referrer"
-                  />
-                ))}
-              </div>
-            ) : null}
-            {displaySummary ? <RunnerMarkdown content={displaySummary} className="tb-message-markdown tb-log-web-search-summary" /> : null}
-            <div className="tb-log-web-search-footer">
-              <div className="tb-run-summary-action-line tb-log-web-search-action-line is-latest" aria-label="Web search actions">
-                <button
-                  type="button"
-                  className="tb-run-summary-action-button"
-                  data-label={copied ? "Copied" : "Copy"}
-                  title="Copy web search summary"
-                  aria-label="Copy web search summary"
-                  onClick={() => void copyWebSearchSummary()}
-                >
-                  <Copy className="tb-run-summary-action-icon" strokeWidth={2} />
-                </button>
-                <button
-                  type="button"
-                  className="tb-run-summary-action-button"
-                  data-label="Code"
-                  title="Open raw web search JSON"
-                  aria-label="Open raw web search JSON"
-                  onClick={() => onPreviewDocument?.(rawJsonAttachment)}
-                >
-                  <Code2 className="tb-run-summary-action-icon" strokeWidth={2} />
-                </button>
-                <button type="button" className="tb-run-summary-action-button" data-label="Good" title="Mark as helpful" aria-label="Mark as helpful">
-                  <ThumbsUp className="tb-run-summary-action-icon" strokeWidth={2} />
-                </button>
-                <button type="button" className="tb-run-summary-action-button" data-label="Bad" title="Mark as not helpful" aria-label="Mark as not helpful">
-                  <ThumbsDown className="tb-run-summary-action-icon" strokeWidth={2} />
-                </button>
-                <button type="button" className="tb-run-summary-action-button" data-label="Refresh" title="Refresh search" aria-label="Refresh search">
-                  <RefreshCw className="tb-run-summary-action-icon" strokeWidth={2} />
-                </button>
-                <button type="button" className="tb-run-summary-action-button" data-label="More" title="More" aria-label="More">
-                  <Ellipsis className="tb-run-summary-action-icon" strokeWidth={2} />
-                </button>
-              </div>
-              {parsed.sources.length > 0 ? (
-                <WebSearchSourceCountButton
-                  sources={parsed.sources}
-                  expanded={showSources}
-                  onClick={() => setShowSources((value) => !value)}
-                />
-              ) : null}
-            </div>
-            {parsed.sources.length > 0 && showSources ? (
-              <div className={displaySummary ? "tb-log-web-search-source-list is-after-summary" : "tb-log-web-search-source-list"}>
-                {parsed.sources.map((source) => (
-                  <WebSearchSourceChip key={`${source.url}-${source.title}`} source={source} />
-                ))}
-              </div>
-            ) : null}
-            {!displaySummary && parsed.sources.length === 0 && !isRunning ? <div className="tb-log-card-empty">No search results were parsed.</div> : null}
-          </>
-        )}
-      </LogPanel>
-    </div>
+    <button
+      type="button"
+      className="tb-log-web-search-compact"
+      onClick={() => onPreviewDocument?.(previewAttachment)}
+      aria-label={query ? `Open web search results for ${query}` : "Open web search results"}
+    >
+      <span className="tb-log-web-search-compact-main">
+        <Globe className="tb-log-web-search-compact-icon" strokeWidth={1.6} />
+        <span className="tb-log-web-search-compact-title">Web Search</span>
+        {query ? <span className="tb-log-web-search-compact-query">{query}</span> : null}
+        {parsed.sources.length > 0 ? <WebSearchSourceCountBadge sources={parsed.sources} /> : null}
+        {isRunning ? <span className="tb-log-web-search-compact-status">searching...</span> : null}
+      </span>
+    </button>
   );
 }
 
@@ -10394,21 +10140,61 @@ function resolveImageUnderstandingResultText(log: RunnerLog): string {
   return stripRunnerSystemTags(log.message || "").replace(/^Executed:\s*/i, "").trim();
 }
 
+function buildImageUnderstandingPreviewAttachmentId(imageName: string, resultText: string, imagePreviews: RunnerImageUnderstandingPreviewItem[]): string {
+  const source = [
+    imageName,
+    resultText.slice(0, 4096),
+    imagePreviews.map((preview) => preview.path || preview.url).join("|"),
+  ].join(":");
+  let hash = 0;
+  for (let index = 0; index < source.length; index += 1) {
+    hash = ((hash << 5) - hash + source.charCodeAt(index)) | 0;
+  }
+  return `image-understanding-preview:${Math.abs(hash).toString(36) || "0"}`;
+}
+
+function buildImageUnderstandingPreviewAttachment({
+  imageName,
+  imagePreviews,
+  resultText,
+  isError,
+}: {
+  imageName: string;
+  imagePreviews: RunnerImageUnderstandingPreviewItem[];
+  resultText: string;
+  isError: boolean;
+}): RunnerPreviewAttachment {
+  return {
+    ...buildRunnerPreviewAttachmentFromPath("/workspace/image-understanding.html", {
+      idPrefix: "image-understanding-preview",
+    }),
+    id: buildImageUnderstandingPreviewAttachmentId(imageName, resultText, imagePreviews),
+    filename: "Image Understanding",
+    mimeType: "application/x.computer-agents.image-understanding",
+    type: "document",
+    previewKindOverride: "image-understanding",
+    imageUnderstandingPreview: {
+      imageName,
+      images: imagePreviews,
+      resultText,
+      isError,
+    },
+  };
+}
+
 function ImageUnderstandingLogBox({
   log,
-  timeLabel,
   backendUrl,
   environmentId,
-  requestHeaders,
+  onPreviewDocument,
 }: {
   log: RunnerLog;
   timeLabel?: string;
   backendUrl?: string;
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
+  onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [imageOrientations, setImageOrientations] = useState<Record<string, "landscape" | "portrait">>({});
   const command = String(log.metadata?.command || log.message || "");
   const imagePaths = extractImageUnderstandingImagePaths(log, command);
   const imagePreviews = imagePaths
@@ -10426,85 +10212,23 @@ function ImageUnderstandingLogBox({
   const imageName = imagePreviews.length === 1 ? imagePreviews[0]?.name || "image" : `${imagePreviews.length || "No"} images`;
   const resultText = resolveImageUnderstandingResultText(log);
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
-  const primaryImageOrientation =
-    imagePreviews.length === 1 && imagePreviews[0]?.url
-      ? imageOrientations[imagePreviews[0].url] || null
-      : null;
-  const layoutClassName = [
-    "tb-image-understanding-layout",
-    primaryImageOrientation === "landscape" ? "is-landscape" : "",
-    primaryImageOrientation === "portrait" ? "is-portrait" : "",
-    imagePreviews.length > 1 ? "is-multiple" : "",
-  ].filter(Boolean).join(" ");
-
-  useEffect(() => {
-    setImageOrientations({});
-  }, [imagePreviews.map((preview) => preview.url).join("|")]);
+  const previewAttachment = useMemo(() => buildImageUnderstandingPreviewAttachment({
+    imageName,
+    imagePreviews,
+    resultText,
+    isError,
+  }), [imageName, imagePreviews, resultText, isError]);
 
   return (
-    <div className="tb-log-card tb-log-card-image-understanding">
-      <LogHeader
-        icon={<ScanEye className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label={`View image - ${imageName}`}
-        timeLabel={timeLabel}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        <div className={layoutClassName}>
-          <div className="tb-image-understanding-preview">
-            <div className="tb-image-understanding-preview-title">Image Understanding</div>
-            {imagePreviews.length > 0 ? (
-              <div className="tb-image-understanding-preview-list">
-                {imagePreviews.map((preview) => (
-                  <div key={preview.url} className="tb-image-understanding-preview-item">
-                    <LazyMediaPreviewMount
-                      mediaKey={preview.url}
-                      className="tb-log-media-lazy-preview tb-image-understanding-lazy-preview"
-                      placeholder={<ImageUnderstandingPreviewLoadingState />}
-                    >
-                      <RunnerImagePreviewSurface
-                        className="tb-image-understanding-preview-surface"
-                        imageClassName="tb-image-understanding-preview-image"
-                        src={preview.url}
-                        alt={preview.name}
-                        maxHeight={360}
-                        fetchHeaders={requestHeaders}
-                        loadStrategy="immediate"
-                        onImageLoad={({ naturalWidth, naturalHeight }) => {
-                          if (naturalWidth > 0 && naturalHeight > 0) {
-                            setImageOrientations((previousOrientations) => ({
-                              ...previousOrientations,
-                              [preview.url]: naturalWidth > naturalHeight ? "landscape" : "portrait",
-                            }));
-                          }
-                        }}
-                      />
-                    </LazyMediaPreviewMount>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="tb-log-card-empty">Image preview unavailable.</div>
-            )}
-          </div>
-          <div className="tb-image-understanding-result">
-            {isError ? (
-              <div className="tb-log-card-state tb-log-card-state-error">
-                {resultText || "Image understanding failed."}
-              </div>
-            ) : resultText ? (
-              <RunnerMarkdown
-                content={resultText}
-                className="tb-message-markdown tb-message-markdown-summary tb-image-understanding-markdown"
-              />
-            ) : (
-              <div className="tb-log-card-empty">No image description returned.</div>
-            )}
-          </div>
-        </div>
-      </LogPanel>
-    </div>
+    <button
+      type="button"
+      className={`tb-log-image-understanding-compact${isError ? " is-error" : ""}`.trim()}
+      onClick={() => onPreviewDocument?.(previewAttachment)}
+      aria-label={`Open image understanding results for ${imageName}`}
+    >
+      <ScanEye className="tb-log-image-understanding-compact-icon" strokeWidth={1.6} />
+      <span className="tb-log-image-understanding-compact-title">Analyzed Image</span>
+    </button>
   );
 }
 
@@ -11738,41 +11462,27 @@ export function SubagentDetailDrawer({
   );
 }
 
-function TodoListLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const todos = Array.isArray((log.metadata as { todos?: Array<{ text: string; completed: boolean }> } | undefined)?.todos)
-    ? ((log.metadata as { todos?: Array<{ text: string; completed: boolean }> }).todos || [])
-    : [];
-  const completedCount = todos.filter((todo) => todo.completed).length;
+function TodoListLogBox({ onOpenTaskList }: { onOpenTaskList?: () => void }) {
+  function handleOpenTaskList() {
+    if (onOpenTaskList) {
+      onOpenTaskList();
+      return;
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("playground:open-thread-task-list"));
+    }
+  }
+
   return (
-    <div className="tb-log-card tb-log-card-task-list">
-      <LogHeader
-        icon={<ListTodo className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Task List"
-        title={todos.length > 0 ? `${completedCount}/${todos.length} completed` : log.message}
-        timeLabel={timeLabel}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        <div className="tb-log-checklist-header">
-          <span className="tb-log-checklist-heading">Task List</span>
-          {todos.length > 0 ? <span className="tb-log-checklist-count">{completedCount}/{todos.length} completed</span> : null}
-        </div>
-        {todos.length > 0 ? (
-          <div className="tb-log-checklist">
-            {todos.map((todo, index) => (
-              <div key={`${todo.text}-${index}`} className="tb-log-checklist-item">
-                {todo.completed ? <CircleCheckBig className="tb-log-checklist-icon tb-log-status-icon-success" strokeWidth={1.5} /> : <Circle className="tb-log-checklist-icon" strokeWidth={1.5} />}
-                <span className={`tb-log-checklist-text ${todo.completed ? "is-complete" : ""}`}>{todo.text}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="tb-log-card-empty">No task items available.</div>
-        )}
-      </LogPanel>
-    </div>
+    <button
+      type="button"
+      className="tb-log-task-list-compact"
+      onClick={handleOpenTaskList}
+      aria-label="Open task list"
+    >
+      <ListTodo className="tb-log-task-list-compact-icon" strokeWidth={1.6} />
+      <span className="tb-log-task-list-compact-title">Updated Task List</span>
+    </button>
   );
 }
 
@@ -11813,22 +11523,80 @@ function HelpCommandLogBox({
   );
 }
 
+function buildCompactLogPreviewId(prefix: string, content: string): string {
+  const source = String(content || "").slice(0, 8192);
+  let hash = 0;
+  for (let index = 0; index < source.length; index += 1) {
+    hash = ((hash << 5) - hash + source.charCodeAt(index)) | 0;
+  }
+  return `${prefix}:${Math.abs(hash).toString(36) || "0"}`;
+}
+
+function buildBashCommandPreviewText(params: {
+  command: string;
+  stdout: string;
+  stderr: string;
+  output: string;
+  statusNotice: string | null;
+  exitCode: number | null;
+  parsedOutput: ReturnType<typeof parseStructuredCommandExecutionOutput>;
+}): string {
+  const { command, stdout, stderr, output, statusNotice, exitCode, parsedOutput } = params;
+  const sections: string[] = [];
+  const normalizedCommand = formatShellCommandForDisplay(command).trim();
+  if (normalizedCommand) {
+    sections.push(["Command", normalizedCommand.startsWith("$") ? normalizedCommand : `$ ${normalizedCommand}`].join("\n"));
+  }
+  if (parsedOutput) {
+    if (stdout.trim()) {
+      sections.push(["Output", stdout.trimEnd()].join("\n"));
+    }
+    if (stderr.trim()) {
+      sections.push(["Error output", stderr.trimEnd()].join("\n"));
+    }
+    if (statusNotice) {
+      sections.push(["Status", statusNotice].join("\n"));
+    }
+  } else if (output.trim()) {
+    sections.push(["Output", output.trimEnd()].join("\n"));
+  }
+  if (typeof exitCode === "number") {
+    sections.push(["Exit code", String(exitCode)].join("\n"));
+  }
+  return sections.length > 0 ? sections.join("\n\n") : "No command output.";
+}
+
+function buildBashCommandPreviewAttachment(previewText: string): RunnerPreviewAttachment {
+  const previewUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(previewText)}`;
+  return {
+    ...buildRunnerPreviewAttachmentFromPath("/workspace/bash-command-output.txt", {
+      idPrefix: "bash-command-preview",
+    }),
+    id: buildCompactLogPreviewId("bash-command-preview", previewText),
+    filename: "bash-command-output.txt",
+    mimeType: "text/plain",
+    type: "document",
+    previewKindOverride: "text",
+    url: previewUrl,
+    previewUrl,
+  };
+}
+
 function GenericCommandLogBox({
   log,
   timeLabel,
   onWorkspacePathClick,
   availableAgents,
   onAgentClick,
+  onPreviewDocument,
 }: {
   log: RunnerLog;
   timeLabel?: string;
   onWorkspacePathClick?: (path: string) => void;
   availableAgents?: ComputerAgentsListAvailableAgent[];
   onAgentClick?: (agent: ComputerAgentsListAgent) => void;
+  onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const [copied, setCopied] = useState(false);
   const command = stripRunnerSystemTags(log.metadata?.command || log.message || "");
   const exitCode = typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
   const parsedOutput = useMemo(
@@ -11855,24 +11623,15 @@ function GenericCommandLogBox({
     }
     return null;
   })();
-  const hasStructuredTerminalOutput = hasStdout || hasStderr || Boolean(statusNotice);
   const output = parsedOutput ? "" : rawOutput;
-  const hasOutput = hasStructuredTerminalOutput || output.trim().length > 0;
   const isError =
     (typeof exitCode === "number" && exitCode !== 0) ||
     parsedOutput?.returnCodeInterpretation === "timeout" ||
     hasStderr;
   const shellCommand = formatShellCommandForDisplay(command);
-  const commandDisplay = expanded || shellCommand.length <= 700 ? shellCommand : `${shellCommand.slice(0, 700)}...`;
-  const stdoutDisplay = expanded || stdout.length <= 700 ? stdout : `${stdout.slice(0, 700)}...`;
-  const stderrDisplay = expanded || stderr.length <= 700 ? stderr : `${stderr.slice(0, 700)}...`;
-  const outputDisplay = expanded || output.length <= 700 ? output : `${output.slice(0, 700)}...`;
-  const isSkillLaunchOutput = !parsedOutput && hasOutput && isSkillLaunchNotice(outputDisplay);
-  const shouldShowExpandToggle =
-    shellCommand.length > 700 ||
-    stdout.length > 700 ||
-    stderr.length > 700 ||
-    output.length > 700;
+  const stdoutDisplay = stdout;
+  const stderrDisplay = stderr;
+  const outputDisplay = output;
   const copyPayload = useMemo(() => {
     const normalizedCommand = shellCommand.trim()
       ? shellCommand.trim().startsWith("$")
@@ -11887,13 +11646,6 @@ function GenericCommandLogBox({
     ].filter((value) => typeof value === "string" && value.trim().length > 0);
     return parts.join("\n");
   }, [output, parsedOutput, shellCommand, statusNotice, stderr, stdout]);
-  const title = parsedOutput?.backgroundTaskId
-    ? "backgrounded"
-    : parsedOutput?.returnCodeInterpretation === "timeout"
-      ? "timed out"
-      : exitCode !== null && exitCode !== 0
-        ? `exit ${exitCode}`
-        : undefined;
   const computerAgentsListDetails = useMemo(() => {
     const commandCandidates = [command, shellCommand, copyPayload].filter((value) => value.trim().length > 0);
     const outputText = [stdout, stderr, output, rawOutput, stdoutDisplay, stderrDisplay, outputDisplay, copyPayload]
@@ -11941,19 +11693,16 @@ function GenericCommandLogBox({
       : [output || rawOutput];
     return stripRunnerSystemTags(outputParts.filter((value) => value.trim().length > 0).join("\n")).trim();
   }, [output, parsedOutput, rawOutput, statusNotice, stderr, stdout]);
-
-  useEffect(() => {
-    if (!copied) return;
-    const timeoutId = window.setTimeout(() => setCopied(false), 1200);
-    return () => window.clearTimeout(timeoutId);
-  }, [copied]);
-
-  async function handleCopy() {
-    try {
-      await copyRunnerText(copyPayload);
-      setCopied(true);
-    } catch {}
-  }
+  const bashPreviewText = useMemo(() => buildBashCommandPreviewText({
+    command,
+    stdout,
+    stderr,
+    output,
+    statusNotice,
+    exitCode,
+    parsedOutput,
+  }), [command, exitCode, output, parsedOutput, statusNotice, stderr, stdout]);
+  const bashPreviewAttachment = useMemo(() => buildBashCommandPreviewAttachment(bashPreviewText), [bashPreviewText]);
 
   if (computerAgentsListDetails) {
     return (
@@ -11998,56 +11747,15 @@ function GenericCommandLogBox({
   }
 
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<Terminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        className={`tb-log-card-header-command${isError ? " is-error" : ""}`}
-        label="Tool Call"
-        title={title}
-        timeLabel={timeLabel}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {command || hasOutput ? (
-          <>
-            <div className="tb-log-file-preview-frame tb-log-terminal-frame">
-              <div className="tb-log-file-preview-topbar">
-                <span className="tb-log-file-preview-language">Bash</span>
-                <div className="tb-log-file-preview-actions">
-                  <button type="button" className="tb-log-file-preview-copy" onClick={handleCopy}>
-                    <Copy className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
-                    <span>{copied ? "Copied" : "Copy"}</span>
-                  </button>
-                </div>
-              </div>
-              <div className="tb-log-terminal-body">
-                {command ? <RunnerShellCommandViewer command={commandDisplay} /> : null}
-                {parsedOutput ? (
-                  <>
-                    {hasStdout ? <RunnerAnsiOutput content={stdoutDisplay} onWorkspacePathClick={onWorkspacePathClick} /> : null}
-                    {hasStderr ? <RunnerAnsiOutput content={stderrDisplay} isError onWorkspacePathClick={onWorkspacePathClick} /> : null}
-                    {!hasStdout && !hasStderr && statusNotice ? <RunnerTerminalStatus content={statusNotice} onWorkspacePathClick={onWorkspacePathClick} /> : null}
-                  </>
-                ) : hasOutput ? (
-                  isSkillLaunchOutput
-                    ? <RunnerTerminalStatus content={outputDisplay} onWorkspacePathClick={onWorkspacePathClick} />
-                    : <RunnerAnsiOutput content={outputDisplay} isError={isError} onWorkspacePathClick={onWorkspacePathClick} />
-                ) : null}
-                {!hasOutput ? <div className="tb-log-card-empty">No command output.</div> : null}
-              </div>
-            </div>
-            {shouldShowExpandToggle ? (
-              <button type="button" className="tb-log-card-link-button" onClick={() => setExpanded((value) => !value)}>
-                {expanded ? "Show less" : "Show more..."}
-              </button>
-            ) : null}
-          </>
-        ) : (
-          <div className="tb-log-card-empty">No command output.</div>
-        )}
-      </LogPanel>
-    </div>
+    <button
+      type="button"
+      className={`tb-log-command-compact${isError ? " is-error" : ""}`.trim()}
+      onClick={() => onPreviewDocument?.(bashPreviewAttachment)}
+      aria-label="Open Bash command output"
+    >
+      <Terminal className="tb-log-command-compact-icon" strokeWidth={1.6} />
+      <span className="tb-log-command-compact-title">Ran Bash Command</span>
+    </button>
   );
 }
 
@@ -12375,6 +12083,7 @@ export function RunnerWorkLogEntry({
   onAgentPreviewClick,
   onEnvironmentPreviewClick,
   onProjectPreviewClick,
+  onOpenTaskList,
 }: RunnerWorkLogEntryProps) {
   const normalizedMessage = stripRunnerSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
 
@@ -12569,6 +12278,7 @@ export function RunnerWorkLogEntry({
           backendUrl={backendUrl}
           environmentId={environmentId}
           requestHeaders={requestHeaders}
+          onPreviewDocument={onPreviewDocument}
         />
       );
     }
@@ -12592,6 +12302,7 @@ export function RunnerWorkLogEntry({
         onWorkspacePathClick={onWorkspacePathClick}
         availableAgents={availableAgents}
         onAgentClick={(agent) => onAgentPreviewClick?.({ agentId: agent.id, agentName: agent.name })}
+        onPreviewDocument={onPreviewDocument}
       />
     );
   }
@@ -12739,7 +12450,7 @@ export function RunnerWorkLogEntry({
   }
 
   if (log.eventType === "todo_list") {
-    return <TodoListLogBox log={log} timeLabel={timeLabel} />;
+    return <TodoListLogBox onOpenTaskList={onOpenTaskList} />;
   }
 
   if (log.eventType === "setup" || log.eventType === "startup") {
