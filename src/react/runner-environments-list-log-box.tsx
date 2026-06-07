@@ -16,7 +16,6 @@ type EnvironmentComputeProfile = {
 export type ComputerAgentsListEnvironment = {
   id: string;
   name: string;
-  description: string;
   profileId: string;
   profileLabel: string;
   profileDescription: string;
@@ -300,14 +299,10 @@ function normalizeEnvironmentRecord(record: Record<string, unknown>): ComputerAg
   const isActive = readRecordBoolean(record, ["isActive", "is_active", "active"]);
   const minutePrice = getEnvironmentMinutePrice(record, profile);
   const isDefault = readRecordBoolean(record, ["isDefault", "is_default"]) === true;
-  const rawDescription =
-    readRecordString(record, ["description", "summary", "purpose"]) ||
-    readNestedRecordString(record, [["metadata", "description"], ["metadata", "summary"]]);
 
   return {
     id: id || rawName,
     name: rawName || id || "Untitled Environment",
-    description: rawDescription || (isDefault ? "Default environment" : "Computer environment"),
     profileId: profile.id,
     profileLabel: profile.label,
     profileDescription: profile.description,
@@ -452,15 +447,10 @@ function enrichEnvironmentWithAvailableRecord(
   const isDefault = readRecordBoolean(availableRecord, ["isDefault", "is_default"]) ?? environment.isDefault;
   const statusValue = readRecordString(availableRecord, ["status", "state", "phase"]);
   const isActive = readRecordBoolean(availableRecord, ["isActive", "is_active", "active"]);
-  const description =
-    readRecordString(availableRecord, ["description", "summary", "purpose"]) ||
-    readNestedRecordString(availableRecord, [["metadata", "description"], ["metadata", "summary"]]) ||
-    environment.description;
 
   return {
     ...environment,
     name: readRecordString(availableRecord, ["name", "title", "displayName", "display_name"]) || environment.name,
-    description,
     profileId: profile.id,
     profileLabel: profile.label,
     profileDescription: profile.description,
@@ -576,7 +566,6 @@ export function ComputerAgentsEnvironmentsListLogBox({
       ? matchingProfile.filter((environment) => {
           const haystack = [
             environment.name,
-            environment.description,
             environment.id,
             environment.profileLabel,
             environment.statusLabel,

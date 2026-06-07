@@ -41,7 +41,7 @@ export type ComputerAgentsListLogDetails = {
 export type ComputerAgentsListAvailableAgent = unknown;
 
 const DEFAULT_AGENT_MODEL_ID = "claude-haiku-4-5";
-const DEFAULT_AGENT_PHOTO_URL = "/img/agent-profile-pics/assistantastro-1.webp";
+const DEFAULT_AGENT_PHOTO_URL = "/img/agent-profile-pics/spark.webp";
 const AGENTS_LIST_PAGE_SIZE = 5;
 
 type AgentListMode = "agents" | "teams";
@@ -531,11 +531,11 @@ function getExplicitAgentPhotoUrl(record: Record<string, unknown>): string {
 function getFallbackAgentPhotoUrl(record: Record<string, unknown>): string {
   const normalizedName = readRecordString(record, ["name", "title", "displayName", "display_name"]).toLowerCase();
   const normalizedId = readRecordString(record, ["id", "agentId", "agent_id", "uid"]).toLowerCase();
-  if (normalizedName === "developer" || normalizedId === "agent_default" || normalizedId === "agent-default") {
-    return "/img/agent-profile-pics/devastro.webp";
+  if (normalizedName === "developer" || normalizedName === "forge" || normalizedId === "agent_default" || normalizedId === "agent-default") {
+    return "/img/agent-profile-pics/forge.webp";
   }
-  if (normalizedName.includes("research") || normalizedId.includes("research")) {
-    return "/img/agent-profile-pics/researchastro.webp";
+  if (normalizedName === "foundry" || normalizedName.includes("research") || normalizedId.includes("research")) {
+    return "/img/agent-profile-pics/foundry.webp";
   }
   return DEFAULT_AGENT_PHOTO_URL;
 }
@@ -836,6 +836,7 @@ function getProviderIcon(providerType: string): { src: string; alt: string; clas
   if (normalized === "google" || normalized === "gemini") return { src: "/img/05-model-provider-icons/gemini.png", alt: "Google" };
   if (normalized === "openai") return { src: "/img/05-model-provider-icons/openai.svg", alt: "OpenAI", className: "is-openai" };
   if (normalized === "deepseek") return { src: "/img/05-model-provider-icons/deepseek.png", alt: "DeepSeek" };
+  if (normalized === "minimax") return { src: "/img/05-model-provider-icons/minimax.svg", alt: "MiniMax" };
   if (normalized === "kimi" || normalized === "moonshot" || normalized === "cloudflare") return { src: "/img/05-model-provider-icons/kimi.png", alt: "Moonshot" };
   return null;
 }

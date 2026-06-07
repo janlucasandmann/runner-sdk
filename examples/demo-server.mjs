@@ -18419,6 +18419,32 @@ const html = `<!doctype html>
         letter-spacing: -0.04em;
       }
 
+      .playground-files-library-title-heading {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .playground-files-library-title-computer-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.64);
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 400;
+        letter-spacing: 0;
+        white-space: nowrap;
+      }
+
+      .playground-files-library-title-computer-badge svg {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
       .playground-files-library-actions {
         min-width: 0;
         display: inline-flex;
@@ -18772,6 +18798,70 @@ const html = `<!doctype html>
         background: #323232;
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
         backdrop-filter: blur(10px);
+      }
+
+      .playground-files-environment-scope-menu {
+        width: 336px;
+        max-height: 420px;
+      }
+
+      .playground-files-environment-menu-switch {
+        width: calc(100% - 24px);
+        margin: 10px 12px 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        height: 34px;
+        padding: 2px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        overflow: hidden;
+        transform: none;
+        position: relative;
+        box-sizing: border-box;
+      }
+
+      .playground-files-environment-menu-switch::before {
+        display: none;
+      }
+
+      .playground-files-environment-menu-switch-button {
+        appearance: none;
+        border: 0;
+        flex: 1;
+        min-width: 0;
+        min-height: 0;
+        height: 28px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        background: transparent;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.72);
+        cursor: pointer;
+      }
+
+      .playground-files-environment-menu-switch-button.is-active {
+        background: rgba(255, 255, 255, 0.35);
+        color: #fff;
+      }
+
+      .playground-files-environment-menu-switch-button:disabled {
+        cursor: default;
+        opacity: 0.55;
+      }
+
+      .playground-files-environment-menu-empty {
+        padding: 14px 16px 16px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.4;
       }
 
       .playground-imagine-media-mode-selector {
@@ -26047,7 +26137,8 @@ const html = `<!doctype html>
       }
 
       .playground-resources-page.is-develop-configure-page .playground-computer-detail-metrics .playground-project-overview-chart-kpis {
-        background: rgba(255, 255, 255, 0.05);
+        background: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
       }
 
       .playground-resources-page.is-develop-configure-page .playground-computer-detail-metrics .playground-project-overview-chart-header {
@@ -37358,6 +37449,20 @@ ${METRONOME_PAGE_CSS}
         border-bottom: 0;
       }
 
+      .playground-agents-page .playground-agents-overview-table-shell,
+      .playground-agents-overview-page .playground-agents-overview-table-shell,
+      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview .playground-resources-overview-table-shell {
+        padding: 0;
+        border-radius: 0;
+      }
+
+      .playground-agents-page .playground-agents-overview-table-shell::before,
+      .playground-agents-overview-page .playground-agents-overview-table-shell::before,
+      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview .playground-resources-overview-table-shell::before {
+        content: none;
+        display: none;
+      }
+
       .playground-agents-overview-table-controls {
         min-width: 0;
         flex: 1 1 auto;
@@ -38597,42 +38702,21 @@ ${METRONOME_PAGE_CSS}
 		      }
 
 		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-table-section {
-		        --playground-project-overview-chart-border: linear-gradient(
-		          -10deg,
-		          rgba(200, 200, 200, 0.25),
-		          rgba(255, 255, 255, 0.1),
-		          rgba(255, 255, 255, 0.15),
-		          rgba(255, 255, 255, 0.375)
-		        );
 		        position: relative;
 		        isolation: isolate;
 		        gap: 0;
 		        margin-bottom: 24px;
-		        padding: 20px;
+		        padding: 0;
 		        border: 0;
-		        border-radius: 15px;
+		        border-radius: 0;
 		        overflow: hidden;
 		        background: transparent;
-		        -webkit-backdrop-filter: blur(50px);
-		        backdrop-filter: blur(50px);
+		        -webkit-backdrop-filter: none;
+		        backdrop-filter: none;
 		      }
 
 		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-table-section::before {
-		        content: "";
-		        pointer-events: none;
-		        position: absolute;
-		        inset: 0;
-		        z-index: 5;
-		        border-radius: inherit;
-		        padding: 1px;
-		        background: var(--playground-project-overview-chart-border);
-		        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-		        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-		        mask-clip: content-box, border-box;
-		        mask-composite: exclude;
-		        mask-origin: content-box, border-box;
-		        mask-repeat: repeat, repeat;
-		        mask-size: auto, auto;
+		        content: none;
 		      }
 
 		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-table-section > * {
@@ -38669,42 +38753,21 @@ ${METRONOME_PAGE_CSS}
 		      }
 
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list {
-		        --playground-project-overview-chart-border: linear-gradient(
-		          -10deg,
-		          rgba(200, 200, 200, 0.25),
-		          rgba(255, 255, 255, 0.1),
-		          rgba(255, 255, 255, 0.15),
-		          rgba(255, 255, 255, 0.375)
-		        );
 		        position: relative;
 		        isolation: isolate;
 		        gap: 0;
 		        margin-bottom: 24px;
-		        padding: 20px;
+		        padding: 0;
 		        border: 0;
-		        border-radius: 15px;
+		        border-radius: 0;
 		        overflow: hidden;
 		        background: transparent;
-		        -webkit-backdrop-filter: blur(50px);
-		        backdrop-filter: blur(50px);
+		        -webkit-backdrop-filter: none;
+		        backdrop-filter: none;
 		      }
 
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list::before {
-		        content: "";
-		        pointer-events: none;
-		        position: absolute;
-		        inset: 0;
-		        z-index: 5;
-		        border-radius: inherit;
-		        padding: 1px;
-		        background: var(--playground-project-overview-chart-border);
-		        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-		        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-		        mask-clip: content-box, border-box;
-		        mask-composite: exclude;
-		        mask-origin: content-box, border-box;
-		        mask-repeat: repeat, repeat;
-		        mask-size: auto, auto;
+		        content: none;
 		      }
 
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list > * {
@@ -39041,6 +39104,36 @@ ${METRONOME_PAGE_CSS}
         max-width: var(--playground-centered-page-max-width);
       }
 
+      .playground-agents-detail-main-pane.is-agent-background-active,
+      .playground-environments-detail > .playground-environments-editor-main.playground-tasks-detail-main.is-agent-background-active {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .playground-agents-detail-main-pane.is-agent-background-active::before,
+      .playground-environments-detail > .playground-environments-editor-main.playground-tasks-detail-main.is-agent-background-active::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 450px;
+        pointer-events: none;
+        z-index: 0;
+        background-image:
+          linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.62) 64%, #000 100%),
+          var(--playground-agent-detail-bg-image);
+        background-position: center top;
+        background-size: cover;
+        background-repeat: no-repeat;
+      }
+
+      .playground-agents-detail-main-pane.is-agent-background-active > .playground-environments-detail-scroll,
+      .playground-environments-detail > .playground-environments-editor-main.playground-tasks-detail-main.is-agent-background-active > .playground-environments-detail-scroll {
+        position: relative;
+        z-index: 1;
+      }
+
       .playground-agents-detail-content .playground-tasks-detail-facts,
       .playground-agents-detail-content .playground-environments-section,
       .playground-agents-detail-content .playground-environments-mcp-card,
@@ -39155,7 +39248,8 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-page .playground-agents-detail-metrics .playground-project-overview-chart-kpis,
       .playground-agents-detail-assistant-page .playground-agents-detail-metrics .playground-project-overview-chart-kpis {
-        background: rgba(255, 255, 255, 0.05);
+        background: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
       }
 
       .playground-agents-page .playground-agents-detail-metrics .playground-project-overview-chart-header,
@@ -43819,7 +43913,7 @@ ${MODELS_PAGE_CSS}
       import rehypeRaw from "rehype-raw";
       import remarkGfm from "remark-gfm";
       import { visit as unistVisit } from "unist-util-visit";
-      import { addEdge, Background, Controls, Handle, MarkerType, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
+      import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
 	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, Paperclip, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
@@ -47033,6 +47127,10 @@ ${MODELS_PAGE_CSS}
         },
       }, null, 2) + "\\n";
       const PLAYGROUND_AGENT_DRAFT_ID = "__playground_new_agent__";
+      const PLAYGROUND_SPARK_AGENT_PROFILE_URL = "/img/agent-profile-pics/spark.webp";
+      const PLAYGROUND_FORGE_AGENT_PROFILE_URL = "/img/agent-profile-pics/forge.webp";
+      const PLAYGROUND_FOUNDRY_AGENT_PROFILE_URL = "/img/agent-profile-pics/foundry.webp";
+      const PLAYGROUND_FOUNDRY_AGENT_BACKGROUND_URL = "/img/agent-backgrounds/foundry.webp";
       const PLAYGROUND_AGENT_CREATOR_METADATA_ROLE = "agent_creator";
       const PLAYGROUND_AGENT_CREATOR_NAME = "Agent Creator";
       const PLAYGROUND_AGENT_CREATOR_DESCRIPTION = "Creates and improves ACP agent instructions from a requested use case.";
@@ -47179,6 +47277,15 @@ ${MODELS_PAGE_CSS}
           intelligence: "High",
           contextWindow: "1M",
           speed: "Very Fast",
+        },
+        {
+          id: "minimax-m3",
+          label: "MiniMax M3",
+          description: "MiniMax long-context model via Cloudflare for efficient coding, tool use, and digital work.",
+          intelligence: "Highest",
+          contextWindow: "1M",
+          speed: "Fast",
+          providerType: "minimax",
         },
         {
           id: "kimi-k2.6",
@@ -47357,6 +47464,9 @@ ${MODELS_PAGE_CSS}
       const PLAYGROUND_AGENT_TEAM_EXECUTION_MODE = "claude_subagents_v1";
       const PLAYGROUND_AGENT_EMAIL_DOMAIN = "agent.computer-agents.com";
       const PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS = [
+        { id: "spark", label: "Spark", url: PLAYGROUND_SPARK_AGENT_PROFILE_URL },
+        { id: "forge", label: "Forge", url: PLAYGROUND_FORGE_AGENT_PROFILE_URL },
+        { id: "foundry", label: "Foundry", url: PLAYGROUND_FOUNDRY_AGENT_PROFILE_URL },
         { id: "assistantastro", label: "Assistant Astro", url: "/img/agent-profile-pics/assistantastro-1.webp" },
         { id: "devastro", label: "Developer Astro", url: "/img/agent-profile-pics/devastro.webp" },
         { id: "researchastro", label: "Research Astro", url: "/img/agent-profile-pics/researchastro.webp" },
@@ -47613,16 +47723,18 @@ ${MODELS_PAGE_CSS}
       function isPlaygroundDeveloperAgent(agent) {
         const normalizedName = String(agent?.name || "").trim().toLowerCase();
         const normalizedId = String(agent?.id || "").trim().toLowerCase();
-        return normalizedName === "developer"
+        return normalizedName === "forge"
+          || normalizedName === "developer"
           || normalizedId === "agent_default"
           || normalizedId === "agent-default"
-          || (normalizedId.startsWith("agent-default-") && normalizedName.includes("developer"));
+          || (normalizedId.startsWith("agent-default-") && (normalizedName.includes("forge") || normalizedName.includes("developer")));
       }
 
       function isPlaygroundResearcherAgent(agent) {
         const normalizedName = String(agent?.name || "").trim().toLowerCase();
         const normalizedId = String(agent?.id || "").trim().toLowerCase();
-        return normalizedName === "researcher agent"
+        return normalizedName === "foundry"
+          || normalizedName === "researcher agent"
           || normalizedName === "researcher"
           || normalizedName === "research agent"
           || normalizedId === "agent_research"
@@ -47633,7 +47745,8 @@ ${MODELS_PAGE_CSS}
       function isPlaygroundAssistantAgent(agent) {
         const normalizedName = String(agent?.name || "").trim().toLowerCase();
         const normalizedId = String(agent?.id || "").trim().toLowerCase();
-        return normalizedName === "assistant"
+        return normalizedName === "spark"
+          || normalizedName === "assistant"
           || normalizedName === "default"
           || normalizedName === "default agent"
           || normalizedId === "agent_assistant"
@@ -47647,13 +47760,13 @@ ${MODELS_PAGE_CSS}
       }
 
       function getPlaygroundSystemAgentSortRank(agent) {
-        if (isPlaygroundDeveloperAgent(agent)) {
+        if (isPlaygroundAssistantAgent(agent)) {
           return 0;
         }
-        if (isPlaygroundResearcherAgent(agent)) {
+        if (isPlaygroundDeveloperAgent(agent)) {
           return 1;
         }
-        if (isPlaygroundAssistantAgent(agent)) {
+        if (isPlaygroundResearcherAgent(agent)) {
           return 2;
         }
         return 10;
@@ -47707,11 +47820,11 @@ ${MODELS_PAGE_CSS}
         }
 
         if (isPlaygroundDeveloperAgent(agent)) {
-          return "/img/agent-profile-pics/devastro.webp";
+          return PLAYGROUND_FORGE_AGENT_PROFILE_URL;
         }
 
         if (isPlaygroundResearcherAgent(agent)) {
-          return "/img/agent-profile-pics/researchastro.webp";
+          return PLAYGROUND_FOUNDRY_AGENT_PROFILE_URL;
         }
 
         if (isPlaygroundAgentCreatorAgent(agent)) {
@@ -47719,14 +47832,36 @@ ${MODELS_PAGE_CSS}
         }
 
         if (isPlaygroundAssistantAgent(agent)) {
-          return "/img/agent-profile-pics/assistantastro-1.webp";
+          return PLAYGROUND_SPARK_AGENT_PROFILE_URL;
         }
 
         if (isPlaygroundDefaultNamedAgent(agent)) {
-          return "/img/agent-profile-pics/assistantastro-1.webp";
+          return PLAYGROUND_SPARK_AGENT_PROFILE_URL;
         }
 
-        return "/img/agent-profile-pics/assistantastro-1.webp";
+        return PLAYGROUND_SPARK_AGENT_PROFILE_URL;
+      }
+
+      function getPlaygroundAgentBackgroundImageUrl(agent) {
+        const metadata = agent?.metadata && typeof agent.metadata === "object" && !Array.isArray(agent.metadata)
+          ? agent.metadata
+          : null;
+        const explicitBackgroundUrl = typeof metadata?.backgroundImageUrl === "string" && metadata.backgroundImageUrl.trim()
+          ? metadata.backgroundImageUrl.trim()
+          : typeof metadata?.backgroundUrl === "string" && metadata.backgroundUrl.trim()
+            ? metadata.backgroundUrl.trim()
+            : typeof metadata?.wallpaperUrl === "string" && metadata.wallpaperUrl.trim()
+              ? metadata.wallpaperUrl.trim()
+              : "";
+        if (explicitBackgroundUrl) {
+          return explicitBackgroundUrl;
+        }
+
+        if (isPlaygroundResearcherAgent(agent) && (agent?.isDefault === true || agent?.isSystem === true || String(agent?.name || "").trim().toLowerCase() === "foundry")) {
+          return PLAYGROUND_FOUNDRY_AGENT_BACKGROUND_URL;
+        }
+
+        return "";
       }
 
       function getPlaygroundAgentRunnerPhotoUrl(agent) {
@@ -47835,14 +47970,16 @@ ${MODELS_PAGE_CSS}
 
       function getPlaygroundAgentModelProviderType(model) {
         const explicitProvider = String(model?.providerType || "").trim().toLowerCase();
+        const modelId = String(model?.id || "").trim().toLowerCase();
+        if (modelId.startsWith("minimax-") || modelId === "minimax/m3") return "minimax";
         if (explicitProvider) {
           if (explicitProvider.includes("anthropic")) return "anthropic";
           if (explicitProvider.includes("google") || explicitProvider.includes("gemini")) return "google";
           if (explicitProvider.includes("openai")) return "openai";
           if (explicitProvider.includes("deepseek")) return "deepseek";
+          if (explicitProvider.includes("minimax")) return "minimax";
           if (explicitProvider.includes("moonshot") || explicitProvider.includes("kimi") || explicitProvider.includes("cloudflare")) return "kimi";
         }
-        const modelId = String(model?.id || "").trim().toLowerCase();
         if (modelId.startsWith("claude-")) return "anthropic";
         if (modelId.startsWith("gemini-")) return "google";
         if (modelId.startsWith("gpt-")) return "openai";
@@ -47857,6 +47994,7 @@ ${MODELS_PAGE_CSS}
         if (providerType === "google") return "Google";
         if (providerType === "openai") return "OpenAI";
         if (providerType === "deepseek") return "DeepSeek";
+        if (providerType === "minimax") return "MiniMax";
         if (providerType === "kimi") return "Moonshot";
         return "Provider";
       }
@@ -47867,7 +48005,7 @@ ${MODELS_PAGE_CSS}
           return "custom";
         }
         const providerType = getPlaygroundAgentModelProviderType(model);
-        if (providerType === "anthropic" || providerType === "google" || providerType === "openai" || providerType === "deepseek" || providerType === "kimi") {
+        if (providerType === "anthropic" || providerType === "google" || providerType === "openai" || providerType === "deepseek" || providerType === "minimax" || providerType === "kimi") {
           return providerType;
         }
         const normalizedSource = String(model?.source || "").trim().toLowerCase();
@@ -47897,6 +48035,9 @@ ${MODELS_PAGE_CSS}
         if (providerType === "deepseek") {
           return { src: "/img/05-model-provider-icons/deepseek.png", alt: "DeepSeek", className: "" };
         }
+        if (providerType === "minimax") {
+          return { src: "/img/05-model-provider-icons/minimax.svg", alt: "MiniMax", className: "" };
+        }
         if (providerType === "kimi") {
           return { src: "/img/05-model-provider-icons/kimi.png", alt: "Moonshot", className: "" };
         }
@@ -47919,6 +48060,7 @@ ${MODELS_PAGE_CSS}
         "gemini-3-1-pro": { input: 3.0, cached: 0.3, output: 15.0 },
         "deepseek-v4-pro": { input: 0.435, cached: 0.03625, output: 0.87 },
         "deepseek-v4-flash": { input: 0.14, cached: 0.028, output: 0.28 },
+        "minimax-m3": { input: 0.6, cached: 0.12, output: 2.4 },
         "kimi-k2.6": { input: 0.95, cached: 0.16, output: 4.0 },
       };
 
@@ -48126,7 +48268,6 @@ ${MODELS_PAGE_CSS}
           id: "",
           userId: "",
           name: "New Environment",
-          description: "",
           runtimes: defaultRuntimes,
           packageVersions: defaultRuntimes,
           packages: {
@@ -48367,7 +48508,7 @@ ${MODELS_PAGE_CSS}
           modelOptions,
           isFreeTier
             ? ["claude-haiku-4-5", "gemini-3-flash", "gemini-3-1-flash", "gemini-3-flash-preview"]
-            : ["kimi-k2.6", "deepseek-v4-pro", "claude-sonnet-4-5", "claude-haiku-4-5", "gemini-3-flash", "gemini-3-1-flash"]
+            : ["minimax-m3", "deepseek-v4-pro", "claude-sonnet-4-5", "claude-haiku-4-5", "gemini-3-flash", "gemini-3-1-flash"]
         );
       }
 
@@ -48621,7 +48762,6 @@ ${MODELS_PAGE_CSS}
           id: typeof environment.id === "string" ? environment.id : draft.id,
           userId: typeof environment.userId === "string" ? environment.userId : draft.userId,
           name: typeof environment.name === "string" && environment.name.trim() ? environment.name : draft.name,
-          description: typeof environment.description === "string" ? environment.description : draft.description,
           runtimes,
           packageVersions: {
             ...(runtimes || {}),
@@ -50582,6 +50722,67 @@ ${MODELS_PAGE_CSS}
       function hasPlaygroundTaskConnectorSelections(items) {
         const normalized = normalizePlaygroundTaskConnectorSelections(items);
         return PLAYGROUND_TASK_CONNECTOR_OPTIONS.some((option) => Boolean(normalized[option.key]));
+      }
+
+      function buildPlaygroundProjectResourcePromptSection(projectRecord, options = {}) {
+        const normalizedProject = projectRecord && typeof projectRecord === "object"
+          ? projectRecord
+          : {};
+        const newline = String.fromCharCode(10);
+        const normalizedProjectId = String(options?.projectId || normalizedProject.id || "").trim();
+        const normalizedProjectName = String(options?.projectName || normalizedProject.name || "").trim();
+        const normalizedAttachments = normalizePlaygroundTaskAttachmentList(
+          options?.projectAttachments || normalizedProject.attachments
+        );
+        const normalizedConnectors = normalizePlaygroundTaskConnectorSelections(normalizedProject.connectors);
+        const connectorLabels = PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => {
+          const selection = normalizedConnectors[option.key];
+          if (!selection) {
+            return null;
+          }
+          return option.label;
+        }).filter(Boolean);
+        const projectLabel = [normalizedProjectName, normalizedProjectId ? "(" + normalizedProjectId + ")" : ""]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+
+        const resourceLines = [
+          projectLabel ? "- Project: " + projectLabel : "",
+          normalizedAttachments.length > 0
+            ? "- Files: " + normalizedAttachments.length + " project-scoped file" + (normalizedAttachments.length === 1 ? "" : "s") + " listed under Project attachments."
+            : "- Files: no project-scoped files are listed in this prompt.",
+          connectorLabels.length > 0
+            ? "- Connectors: " + connectorLabels.join(", ")
+            : "- Connectors: none configured for this project.",
+          normalizedProjectId
+            ? "- Complete API index: GET /api/real/projects/" + normalizedProjectId + "/resource-index returns files, connectors, server resources, metronomes, and imagine resources for this project."
+            : "- Complete API index: GET /api/real/projects/<projectId>/resource-index returns files, connectors, server resources, metronomes, and imagine resources for this project.",
+          normalizedProjectId
+            ? "- Server resources: use the project id " + normalizedProjectId + " when listing web apps, functions, databases, APIs, agent runtime resources, or secrets."
+            : "- Server resources: use the current project id when listing web apps, functions, databases, APIs, agent runtime resources, or secrets.",
+          normalizedProjectId
+            ? "- Metronomes: use the project id " + normalizedProjectId + " when listing recurring project workflows."
+            : "- Metronomes: use the current project id when listing recurring project workflows.",
+          normalizedProjectId
+            ? "- Imagine Resources: use the project id " + normalizedProjectId + " when listing generated visual assets and reusable imagine resources."
+            : "- Imagine Resources: use the current project id when listing generated visual assets and reusable imagine resources.",
+        ].filter(Boolean);
+
+        const accessLines = [
+          "Resource access rules:",
+          "- Treat the project id above as authoritative. Do not list all projects just to discover this project.",
+          "- Before creating or mutating a project resource, inspect the complete resource index endpoint first, then use the project-scoped endpoint for the relevant resource type when more detail is needed.",
+          "- Keep newly created files, attachments, server resources, metronomes, and imagine resources in the project scope when the work belongs to this ticket.",
+          "- If a needed project resource is missing, say exactly what is missing or create the appropriate resource request instead of inventing resource ids.",
+        ];
+
+        return [
+          "Project resource index:",
+          ...resourceLines,
+          "",
+          ...accessLines,
+        ].join(newline);
       }
 
       function normalizePlaygroundEnabledSkillIds(items) {
@@ -61183,6 +61384,8 @@ ${MODELS_PAGE_SCRIPT}
         const [changesActorFilter, setChangesActorFilter] = useState("__all__");
         const [sortMode, setSortMode] = useState("name-asc");
         const [projectFilterScope, setProjectFilterScope] = useState("");
+        const [projectFilterScopeLabel, setProjectFilterScopeLabel] = useState("");
+        const [filesEnvironmentMenuMode, setFilesEnvironmentMenuMode] = useState("computers");
         const [availableProjectFilters, setAvailableProjectFilters] = useState([]);
         const [availableChangeActors, setAvailableChangeActors] = useState([]);
         const [projectLinkedPathsByEnvironmentId, setProjectLinkedPathsByEnvironmentId] = useState({});
@@ -61224,7 +61427,25 @@ ${MODELS_PAGE_SCRIPT}
         const [fileProjectPickerState, setFileProjectPickerState] = useState(null);
         const [fileProjectPickerValue, setFileProjectPickerValue] = useState("");
         const [fileProjectPickerError, setFileProjectPickerError] = useState("");
+        const [fileComputerPickerState, setFileComputerPickerState] = useState(null);
+        const [fileComputerPickerValue, setFileComputerPickerValue] = useState("");
+        const [fileComputerPickerError, setFileComputerPickerError] = useState("");
+        const [fileTeamPickerState, setFileTeamPickerState] = useState(null);
+        const [fileTeamPickerValue, setFileTeamPickerValue] = useState("");
+        const [fileTeamPickerError, setFileTeamPickerError] = useState("");
+        const [availableFileTeams, setAvailableFileTeams] = useState([]);
+        const [isLoadingFileTeams, setIsLoadingFileTeams] = useState(false);
         const [fileProjectMutationState, setFileProjectMutationState] = useState({
+          path: "",
+          action: "",
+          error: "",
+        });
+        const [fileComputerTransferState, setFileComputerTransferState] = useState({
+          path: "",
+          action: "",
+          error: "",
+        });
+        const [fileTeamShareState, setFileTeamShareState] = useState({
           path: "",
           action: "",
           error: "",
@@ -61410,7 +61631,6 @@ ${MODELS_PAGE_SCRIPT}
           setChangesOperationFilter("all");
           setChangesActorFilter("__all__");
           setSortMode("name-asc");
-          setProjectFilterScope("");
           setAvailableChangeActors([]);
           setIsPreviewOpen(true);
           setIsFileChatOpen(false);
@@ -61456,6 +61676,7 @@ ${MODELS_PAGE_SCRIPT}
 
           const requestToken = typeof navigationRequest?.token === "string" ? navigationRequest.token : "";
           const requestedProjectId = String(navigationRequest?.projectId || "").trim();
+          const requestedProjectLabel = String(navigationRequest?.projectName || navigationRequest?.projectLabel || "").trim();
           const requestedEnvironmentId = String(navigationRequest?.environmentId || "").trim();
           const requestedContentMode = navigationRequest?.contentMode === "changes" ? "changes" : "files";
           const requestedPath = normalizeHistoryPath(navigationRequest?.path || "");
@@ -61463,6 +61684,11 @@ ${MODELS_PAGE_SCRIPT}
           const targetEnvironmentId = requestedEnvironmentId || selectedEnvironmentId;
 
           if (requestedEnvironmentId && requestedEnvironmentId !== selectedEnvironmentId) {
+            if (requestedProjectId) {
+              setProjectFilterScope(requestedProjectId);
+              setProjectFilterScopeLabel(requestedProjectLabel);
+              setFilesEnvironmentMenuMode("projects");
+            }
             setSelectedEnvironmentId(requestedEnvironmentId);
             if (typeof onEnvironmentChange === "function") {
               onEnvironmentChange(requestedEnvironmentId);
@@ -61480,6 +61706,8 @@ ${MODELS_PAGE_SCRIPT}
             try {
               if (requestedProjectId) {
                 setProjectFilterScope(requestedProjectId);
+                setProjectFilterScopeLabel(requestedProjectLabel);
+                setFilesEnvironmentMenuMode("projects");
               }
               setContentMode(requestedContentMode);
               if (requestedContentMode === "changes") {
@@ -61796,6 +62024,34 @@ ${MODELS_PAGE_SCRIPT}
         }, [fileProjectPickerState]);
 
         useEffect(() => {
+          if (!fileComputerPickerState) return;
+
+          function handleKeyDown(event) {
+            if (event.key === "Escape") {
+              setFileComputerPickerState(null);
+              setFileComputerPickerValue("");
+              setFileComputerPickerError("");
+            }
+          }
+
+          window.addEventListener("keydown", handleKeyDown);
+          return () => window.removeEventListener("keydown", handleKeyDown);
+        }, [fileComputerPickerState]);
+
+        useEffect(() => {
+          if (!fileTeamPickerState) return;
+
+          function handleKeyDown(event) {
+            if (event.key === "Escape") {
+              closeFileTeamPickerDialog();
+            }
+          }
+
+          window.addEventListener("keydown", handleKeyDown);
+          return () => window.removeEventListener("keydown", handleKeyDown);
+        }, [fileTeamPickerState]);
+
+        useEffect(() => {
           if (!renamingPath || !renameInputRef.current) return;
           const frame = window.requestAnimationFrame(() => {
             renameInputRef.current?.focus();
@@ -61888,7 +62144,7 @@ ${MODELS_PAGE_SCRIPT}
             const matchingProject = availableProjectFilters.find((project) => project.id === projectFilterScope) || null;
             return {
               id: projectFilterScope,
-              label: matchingProject?.name || "Project",
+              label: matchingProject?.name || projectFilterScopeLabel || "Project",
               description: isChangesProjectMode
                 ? "Show only changes made in this project"
                 : "Show only files linked to this project",
@@ -61901,7 +62157,7 @@ ${MODELS_PAGE_SCRIPT}
               ? "Show every recorded change in this environment"
               : "Show every file in this environment",
           };
-        }, [availableProjectFilters, contentMode, projectFilterScope]);
+        }, [availableProjectFilters, contentMode, projectFilterScope, projectFilterScopeLabel]);
         const environmentTree = useMemo(() => buildPlaygroundEnvironmentTree(currentInventory), [currentInventory]);
         const currentFolderNode = (environmentTree.nodesByPath.get(normalizedCurrentPath || "") || environmentTree.root || null);
         const currentEntries = useMemo(
@@ -62439,6 +62695,8 @@ ${MODELS_PAGE_SCRIPT}
               || toolbarPopover
               || contextMenu
               || fileProjectPickerState
+              || fileComputerPickerState
+              || fileTeamPickerState
               || isFilesKeyboardNavigationEditableTarget(event.target)
             ) {
               return;
@@ -62457,7 +62715,9 @@ ${MODELS_PAGE_SCRIPT}
         }, [
           contentMode,
           contextMenu,
+          fileComputerPickerState,
           fileProjectPickerState,
+          fileTeamPickerState,
           renamingPath,
           environmentTree,
           selectedEntries,
@@ -63784,6 +64044,18 @@ ${MODELS_PAGE_SCRIPT}
           setFileProjectPickerError("");
         }
 
+        function closeFileComputerPickerDialog() {
+          setFileComputerPickerState(null);
+          setFileComputerPickerValue("");
+          setFileComputerPickerError("");
+        }
+
+        function closeFileTeamPickerDialog() {
+          setFileTeamPickerState(null);
+          setFileTeamPickerValue("");
+          setFileTeamPickerError("");
+        }
+
         function setSingleSelection(path, options = {}) {
           const normalizedPath = normalizeHistoryPath(path);
           const next = normalizedPath ? new Set([normalizedPath]) : new Set();
@@ -63918,6 +64190,7 @@ ${MODELS_PAGE_SCRIPT}
           const normalizedRequest = request && typeof request === "object" ? request : null;
           const requestedEnvironmentId = String(normalizedRequest?.environmentId || selectedEnvironmentId || "").trim();
           const requestedProjectId = String(normalizedRequest?.projectId || "").trim();
+          const requestedProjectLabel = String(normalizedRequest?.projectName || normalizedRequest?.projectLabel || "").trim();
           const requestedContentMode = normalizedRequest?.contentMode === "changes" ? "changes" : "files";
           const requestedPath = normalizeHistoryPath(normalizedRequest?.path || "");
           const requestedIsFolder = Boolean(normalizedRequest?.isFolder);
@@ -63932,6 +64205,8 @@ ${MODELS_PAGE_SCRIPT}
           setActionError("");
           if (requestedProjectId) {
             setProjectFilterScope(requestedProjectId);
+            setProjectFilterScopeLabel(requestedProjectLabel);
+            setFilesEnvironmentMenuMode("projects");
           }
           if (requestedContentMode === "changes") {
             if (requestedEnvironmentId && requestedEnvironmentId !== selectedEnvironmentId) {
@@ -64299,6 +64574,85 @@ ${MODELS_PAGE_SCRIPT}
           closeContextMenu();
         }
 
+        function openFileComputerPickerDialog(entryOrEntries) {
+          const entries = (Array.isArray(entryOrEntries) ? entryOrEntries : [entryOrEntries])
+            .filter((entry) => entry && !entry.isFolder);
+          if (!entries.length) {
+            return;
+          }
+          const normalizedPath = normalizeHistoryPath(entries[0].path);
+          const normalizedPaths = entries.map((entry) => normalizeHistoryPath(entry.path)).filter(Boolean);
+          const defaultDestinationId = String(availableDestinationComputers[0]?.id || "").trim();
+          setFileComputerPickerState({
+            path: normalizedPath,
+            paths: normalizedPaths,
+            title: entries.length === 1
+              ? (entries[0].name || normalizedPath || "file")
+              : (entries.length + " files"),
+          });
+          setFileComputerPickerValue(defaultDestinationId);
+          setFileComputerPickerError("");
+          closeContextMenu();
+        }
+
+        async function loadAvailableFileTeamsForPicker() {
+          setIsLoadingFileTeams(true);
+          try {
+            const response = await fetch(backendUrl + "/teams", {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load teams.");
+            }
+            const rows = Array.isArray(data?.data)
+              ? data.data
+              : (Array.isArray(data?.teams) ? data.teams : []);
+            const adminTeams = rows
+              .map((team) => ({
+                id: String(team?.id || "").trim(),
+                name: String(team?.name || "Team").trim() || "Team",
+                role: String(team?.role || "").trim(),
+              }))
+              .filter((team) => team.id && team.role === "admin");
+            setAvailableFileTeams(adminTeams);
+            setFileTeamPickerError((current) => current === "Failed to load teams." ? "" : current);
+            return adminTeams;
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to load teams.";
+            setAvailableFileTeams([]);
+            setFileTeamPickerError(message);
+            return [];
+          } finally {
+            setIsLoadingFileTeams(false);
+          }
+        }
+
+        function openFileTeamPickerDialog(entryOrEntries) {
+          const entries = (Array.isArray(entryOrEntries) ? entryOrEntries : [entryOrEntries])
+            .filter((entry) => entry && !entry.isFolder);
+          if (!entries.length) {
+            return;
+          }
+          const normalizedPath = normalizeHistoryPath(entries[0].path);
+          const normalizedPaths = entries.map((entry) => normalizeHistoryPath(entry.path)).filter(Boolean);
+          const defaultTeamId = String(availableFileTeams[0]?.id || "").trim();
+          setFileTeamPickerState({
+            path: normalizedPath,
+            paths: normalizedPaths,
+            title: entries.length === 1
+              ? (entries[0].name || normalizedPath || "file")
+              : (entries.length + " files"),
+          });
+          setFileTeamPickerValue(defaultTeamId);
+          setFileTeamPickerError("");
+          closeContextMenu();
+          void loadAvailableFileTeamsForPicker().then((teams) => {
+            setFileTeamPickerValue((current) => current || String(teams[0]?.id || "").trim());
+          });
+        }
+
         async function handleRemoveFileFromProject(entry, projectIdOverride = "") {
           const normalizedPath = normalizeHistoryPath(entry?.path || "");
           const normalizedProjectId = String(projectIdOverride || contextTargetAttachmentProjectId || "").trim();
@@ -64397,6 +64751,142 @@ ${MODELS_PAGE_SCRIPT}
           });
         }
 
+        async function handleFileComputerPickerSubmit(event) {
+          event.preventDefault();
+          if (!fileComputerPickerState?.path || !selectedEnvironmentId) {
+            return;
+          }
+          const normalizedDestinationId = String(fileComputerPickerValue || "").trim();
+          if (!normalizedDestinationId) {
+            setFileComputerPickerError("Choose a destination computer first.");
+            return;
+          }
+          const pickerPaths = Array.isArray(fileComputerPickerState.paths) && fileComputerPickerState.paths.length
+            ? fileComputerPickerState.paths
+            : [fileComputerPickerState.path];
+          const pickerEntries = pickerPaths
+            .map((path) => environmentTree.nodesByPath.get(normalizeHistoryPath(path)) || null)
+            .filter((entry) => entry && !entry.isFolder);
+          if (!pickerEntries.length) {
+            setFileComputerPickerError("The selected files are no longer available.");
+            return;
+          }
+
+          setFileComputerPickerError("");
+          setFileComputerTransferState({
+            path: fileComputerPickerState.path,
+            action: "send",
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              backendUrl + "/environments/" + encodeURIComponent(selectedEnvironmentId) + "/files/send",
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  destinationEnvironmentId: normalizedDestinationId,
+                  paths: pickerEntries.map((entry) => normalizeHistoryPath(entry.path)).filter(Boolean),
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to send files to another computer.");
+            }
+            const destinationFolders = Array.from(new Set(
+              pickerEntries.map((entry) => getPlaygroundEntryParentPath(entry.path))
+            ));
+            await refreshEnvironmentFolders(normalizedDestinationId, destinationFolders.length ? destinationFolders : [""]);
+            closeFileComputerPickerDialog();
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to send files to another computer.";
+            setFileComputerPickerError(errorMessage);
+            setFileComputerTransferState({
+              path: fileComputerPickerState.path,
+              action: "",
+              error: errorMessage,
+            });
+            return;
+          }
+
+          setFileComputerTransferState({
+            path: "",
+            action: "",
+            error: "",
+          });
+        }
+
+        async function handleFileTeamPickerSubmit(event) {
+          event.preventDefault();
+          if (!fileTeamPickerState?.path || !selectedEnvironmentId) {
+            return;
+          }
+          const normalizedTeamId = String(fileTeamPickerValue || "").trim();
+          if (!normalizedTeamId) {
+            setFileTeamPickerError("Choose a team first.");
+            return;
+          }
+          const pickerPaths = Array.isArray(fileTeamPickerState.paths) && fileTeamPickerState.paths.length
+            ? fileTeamPickerState.paths
+            : [fileTeamPickerState.path];
+          const pickerEntries = pickerPaths
+            .map((path) => environmentTree.nodesByPath.get(normalizeHistoryPath(path)) || null)
+            .filter((entry) => entry && !entry.isFolder);
+          if (!pickerEntries.length) {
+            setFileTeamPickerError("The selected files are no longer available.");
+            return;
+          }
+
+          setFileTeamPickerError("");
+          setFileTeamShareState({
+            path: fileTeamPickerState.path,
+            action: "share",
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              backendUrl + "/environments/" + encodeURIComponent(selectedEnvironmentId) + "/files/share-with-team",
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  teamId: normalizedTeamId,
+                  paths: pickerEntries.map((entry) => normalizeHistoryPath(entry.path)).filter(Boolean),
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to make files available to the team.");
+            }
+            closeFileTeamPickerDialog();
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to make files available to the team.";
+            setFileTeamPickerError(errorMessage);
+            setFileTeamShareState({
+              path: fileTeamPickerState.path,
+              action: "",
+              error: errorMessage,
+            });
+            return;
+          }
+
+          setFileTeamShareState({
+            path: "",
+            action: "",
+            error: "",
+          });
+        }
+
         function openContextMenuAt(targetEntry, nextX, nextY, options = {}) {
           const shouldSelectTarget = options.selectTarget !== false;
           if (shouldSelectTarget && targetEntry && !selectedPaths.has(targetEntry.path)) {
@@ -64407,8 +64897,8 @@ ${MODELS_PAGE_SCRIPT}
 
           const isMultiFileSelectionMenu = Boolean(options.multiFileSelection);
           const menuWidth = isMultiFileSelectionMenu ? 232 : (targetEntry && !targetEntry.isFolder ? 264 : 232);
-          const menuHeight = isMultiFileSelectionMenu ? 204 : (targetEntry
-            ? (!targetEntry.isFolder ? 336 : 240)
+          const menuHeight = isMultiFileSelectionMenu ? 272 : (targetEntry
+            ? (!targetEntry.isFolder ? 408 : 240)
             : 138);
           const x = Math.min(nextX, window.innerWidth - menuWidth - 12);
           const y = Math.min(nextY, window.innerHeight - menuHeight - 12);
@@ -64565,6 +65055,7 @@ ${MODELS_PAGE_SCRIPT}
 
           const destinationPath = normalizeHistoryPath(targetPath || currentPath);
           const uploadedPaths = [];
+          const uploadedFileRecords = [];
           setIsUploadingFiles(true);
           setActionError("");
 
@@ -64591,10 +65082,36 @@ ${MODELS_PAGE_SCRIPT}
               );
               if (uploadedPath) {
                 uploadedPaths.push(uploadedPath);
+                uploadedFileRecords.push({
+                  id: uploadedPath,
+                  path: uploadedPath,
+                  name: file.name,
+                  filename: file.name,
+                  title: file.name,
+                  size: Number(file.size || 0) || 0,
+                  byteSize: Number(file.size || 0) || 0,
+                  mimeType: file.type || data?.mimeType || "",
+                  environmentId: selectedEnvironmentId,
+                  workspacePath: uploadedPath,
+                  sourcePath: uploadedPath,
+                  source: "upload",
+                });
               }
             }
 
             await refreshEnvironmentFolders(selectedEnvironmentId, [destinationPath]);
+            const normalizedProjectScopeId = String(projectFilterScope || "").trim();
+            const targetProject = normalizedProjectScopeId && normalizedProjectScopeId !== "__all__"
+              ? availableProjectFilters.find((project) => project.id === normalizedProjectScopeId) || null
+              : null;
+            if (targetProject && uploadedFileRecords.length > 0) {
+              const uploadedAttachments = [];
+              for (const entry of uploadedFileRecords) {
+                uploadedAttachments.push(await buildProjectAttachmentForEntry(entry, targetProject));
+              }
+              const nextAttachments = mergeFilesProjectAttachmentLists(targetProject.attachments, uploadedAttachments);
+              await persistFilesProjectAttachments(targetProject.id, nextAttachments);
+            }
             const uniqueUploadedPaths = Array.from(new Set(uploadedPaths));
             if (uniqueUploadedPaths.length > 0) {
               const activeUploadedPath = uniqueUploadedPaths[uniqueUploadedPaths.length - 1];
@@ -65014,6 +65531,14 @@ ${MODELS_PAGE_SCRIPT}
           if (!pinnedEnvironment) return [...environments];
           return [pinnedEnvironment].concat(environments.filter((environment) => environment.id !== pinnedId));
         }, [environments, selectedEnvironment]);
+        const availableDestinationComputers = useMemo(() => {
+          const currentId = String(selectedEnvironmentId || "").trim();
+          return (Array.isArray(environments) ? environments : [])
+            .filter((environment) => {
+              const environmentId = String(environment?.id || "").trim();
+              return environmentId && environmentId !== currentId;
+            });
+        }, [environments, selectedEnvironmentId]);
         const shouldRenderFilesToolbarMenu = (popoverId) =>
           toolbarPopover === popoverId || filesToolbarMenuAnimation.popover === popoverId;
         const getFilesToolbarMenuAnimationClass = (popoverId) =>
@@ -65045,6 +65570,9 @@ ${MODELS_PAGE_SCRIPT}
         }
 
         function handleEnvironmentSelect(nextEnvironmentId) {
+          setProjectFilterScope("");
+          setProjectFilterScopeLabel("");
+          setFilesEnvironmentMenuMode("computers");
           setToolbarPopover("");
           applyFilesEnvironmentSelection(nextEnvironmentId);
         }
@@ -65101,7 +65629,6 @@ ${MODELS_PAGE_SCRIPT}
           pricing.minutePrice = profile.minutePrice;
           return {
             name: String(nextName || "").trim() || "Forked Computer",
-            description: typeof normalizedEnvironment?.description === "string" ? normalizedEnvironment.description : "",
             runtimes,
             packages,
             dockerfileExtensions: typeof normalizedEnvironment?.dockerfileExtensions === "string" ? normalizedEnvironment.dockerfileExtensions : "",
@@ -65135,7 +65662,6 @@ ${MODELS_PAGE_SCRIPT}
             },
             body: JSON.stringify({
               name: payload.name,
-              description: payload.description,
               environmentVariables: payload.environmentVariables,
               secrets: payload.secrets,
               setupScripts: payload.setupScripts,
@@ -65569,18 +66095,12 @@ ${MODELS_PAGE_SCRIPT}
           const sourceEnvironmentId = String(selectedEnvironmentId || "").trim();
           const fileKind = getPlaygroundFileKind(entry);
           const composerAgents = (Array.isArray(agents) ? agents : [])
-            .map((agent) => ({
-              id: String(agent?.id || "").trim(),
-              name: String(agent?.name || agent?.label || "Agent").trim() || "Agent",
-              description: String(agent?.description || "").trim(),
-              isDefault: String(agent?.id || "").trim() === String(agentId || "").trim(),
-            }))
+            .map((agent) => buildPlaygroundRunnerAgentOption(agent, String(agent?.id || "").trim() === String(agentId || "").trim() ? { isDefault: true } : {}))
             .filter((agent) => agent.id);
           const composerEnvironments = (Array.isArray(environments) ? environments : [])
             .map((environment) => ({
               id: String(environment?.id || "").trim(),
               name: String(environment?.name || environment?.label || "Computer").trim() || "Computer",
-              description: String(environment?.description || "").trim(),
               isDefault: String(environment?.id || "").trim() === sourceEnvironmentId,
             }))
             .filter((environment) => environment.id);
@@ -66159,6 +66679,8 @@ ${MODELS_PAGE_SCRIPT}
             && fileProjectMutationState.path === normalizeHistoryPath(contextTargetEntry.path)
             && fileProjectMutationState.action.startsWith("project-")
           );
+          const isComputerSendPending = Boolean(fileComputerTransferState.action === "send");
+          const isTeamSharePending = Boolean(fileTeamShareState.action === "share");
           const isFileContextTarget = Boolean(contextTargetEntry && !contextTargetEntry.isFolder);
           const isFolderContextTarget = Boolean(contextTargetEntry && contextTargetEntry.isFolder);
           const contextMetadataCacheKey = isFileContextTarget
@@ -66206,6 +66728,24 @@ ${MODELS_PAGE_SCRIPT}
                     },
                       React.createElement(FolderOpen, { width: 13, height: 13, strokeWidth: 1.8 }),
                       React.createElement("span", null, "Add to Project")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-context-item",
+                      disabled: isComputerSendPending || availableDestinationComputers.length === 0,
+                      onClick: () => openFileComputerPickerDialog(contextSelectedFileEntries),
+                    },
+                      React.createElement(Monitor, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, isComputerSendPending ? "Sending..." : "Send to another computer")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-context-item",
+                      disabled: isTeamSharePending,
+                      onClick: () => openFileTeamPickerDialog(contextSelectedFileEntries),
+                    },
+                      React.createElement(UsersRound, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, isTeamSharePending ? "Sharing..." : "Make available to team")
                     ),
                     React.createElement("div", { className: "playground-files-context-divider" },
                       React.createElement("button", {
@@ -66301,6 +66841,24 @@ ${MODELS_PAGE_SCRIPT}
                           )
                         )
                       : null,
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-context-item",
+                      disabled: isComputerSendPending || availableDestinationComputers.length === 0,
+                      onClick: () => openFileComputerPickerDialog(contextTargetEntry),
+                    },
+                      React.createElement(Monitor, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, isComputerSendPending ? "Sending..." : "Send to another computer")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-context-item",
+                      disabled: isTeamSharePending,
+                      onClick: () => openFileTeamPickerDialog(contextTargetEntry),
+                    },
+                      React.createElement(UsersRound, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, isTeamSharePending ? "Sharing..." : "Make available to team")
+                    ),
                     canDelete
                       ? React.createElement("div", { className: "playground-files-context-divider" },
                           React.createElement("button", {
@@ -66445,6 +67003,158 @@ ${MODELS_PAGE_SCRIPT}
             );
         }
 
+        function renderFileComputerPickerModal() {
+          if (!fileComputerPickerState) {
+            return null;
+          }
+
+          const isComputerSendPending = fileComputerTransferState.action === "send"
+            && fileComputerTransferState.path === fileComputerPickerState.path;
+
+          return React.createElement("div", {
+              className: "sidebar-thread-rename-scrim",
+              onClick: closeFileComputerPickerDialog,
+            },
+              React.createElement("form", {
+                className: "sidebar-thread-rename-modal sidebar-thread-project-picker-modal",
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => {
+                  void handleFileComputerPickerSubmit(event);
+                },
+              },
+                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Send to another computer"),
+                React.createElement("div", { className: "sidebar-thread-rename-copy" },
+                  "Copy ",
+                  React.createElement("strong", null, fileComputerPickerState.title || "these files"),
+                  " to another computer. Files keep their workspace paths and replace matching files there."
+                ),
+                availableDestinationComputers.length > 0
+                  ? React.createElement("div", { className: "sidebar-thread-project-picker-list" },
+                      availableDestinationComputers.map((environment) => {
+                        const environmentId = String(environment?.id || "").trim();
+                        const isSelected = environmentId === fileComputerPickerValue;
+                        const environmentName = String(environment?.name || environment?.label || "Computer").trim() || "Computer";
+                        return React.createElement("button", {
+                            key: environmentId,
+                            type: "button",
+                            className: "sidebar-thread-project-picker-row" + (isSelected ? " is-selected" : ""),
+                            disabled: isComputerSendPending,
+                            onClick: () => setFileComputerPickerValue(environmentId),
+                          },
+                            React.createElement("div", { className: "playground-tasks-project-row" },
+                              React.createElement(Monitor, {
+                                width: 14,
+                                height: 14,
+                                strokeWidth: 1.8,
+                                style: { color: "#fff" },
+                              }),
+                              React.createElement("div", { className: "playground-tasks-project-row-main" },
+                                React.createElement("div", { className: "playground-tasks-project-row-title" }, environmentName)
+                              )
+                            )
+                          );
+                      })
+                    )
+                  : React.createElement("div", { className: "sidebar-thread-project-picker-empty" },
+                      "No other computers are available yet."
+                    ),
+                fileComputerPickerError
+                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, fileComputerPickerError)
+                  : null,
+                React.createElement("div", { className: "sidebar-thread-rename-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "sidebar-thread-rename-button is-secondary",
+                    onClick: closeFileComputerPickerDialog,
+                    disabled: isComputerSendPending,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "sidebar-thread-rename-button is-primary",
+                    disabled: isComputerSendPending || availableDestinationComputers.length === 0 || !fileComputerPickerValue,
+                  }, isComputerSendPending ? "Sending..." : "Send")
+                )
+              )
+            );
+        }
+
+        function renderFileTeamPickerModal() {
+          if (!fileTeamPickerState) {
+            return null;
+          }
+
+          const isTeamSharePending = fileTeamShareState.action === "share"
+            && fileTeamShareState.path === fileTeamPickerState.path;
+
+          return React.createElement("div", {
+              className: "sidebar-thread-rename-scrim",
+              onClick: closeFileTeamPickerDialog,
+            },
+              React.createElement("form", {
+                className: "sidebar-thread-rename-modal sidebar-thread-project-picker-modal",
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => {
+                  void handleFileTeamPickerSubmit(event);
+                },
+              },
+                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Make available to team"),
+                React.createElement("div", { className: "sidebar-thread-rename-copy" },
+                  "Share ",
+                  React.createElement("strong", null, fileTeamPickerState.title || "these files"),
+                  " with a team. Team members can access the selected files from this computer workspace."
+                ),
+                isLoadingFileTeams
+                  ? React.createElement("div", { className: "sidebar-thread-project-picker-empty" }, "Loading teams...")
+                  : availableFileTeams.length > 0
+                    ? React.createElement("div", { className: "sidebar-thread-project-picker-list" },
+                        availableFileTeams.map((team) => {
+                          const teamId = String(team?.id || "").trim();
+                          const isSelected = teamId === fileTeamPickerValue;
+                          const teamName = String(team?.name || "Team").trim() || "Team";
+                          return React.createElement("button", {
+                              key: teamId,
+                              type: "button",
+                              className: "sidebar-thread-project-picker-row" + (isSelected ? " is-selected" : ""),
+                              disabled: isTeamSharePending,
+                              onClick: () => setFileTeamPickerValue(teamId),
+                            },
+                              React.createElement("div", { className: "playground-tasks-project-row" },
+                                React.createElement(UsersRound, {
+                                  width: 14,
+                                  height: 14,
+                                  strokeWidth: 1.8,
+                                  style: { color: "#fff" },
+                                }),
+                                React.createElement("div", { className: "playground-tasks-project-row-main" },
+                                  React.createElement("div", { className: "playground-tasks-project-row-title" }, teamName)
+                                )
+                              )
+                            );
+                        })
+                      )
+                    : React.createElement("div", { className: "sidebar-thread-project-picker-empty" },
+                        "No teams are available yet."
+                      ),
+                fileTeamPickerError
+                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, fileTeamPickerError)
+                  : null,
+                React.createElement("div", { className: "sidebar-thread-rename-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "sidebar-thread-rename-button is-secondary",
+                    onClick: closeFileTeamPickerDialog,
+                    disabled: isTeamSharePending,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "sidebar-thread-rename-button is-primary",
+                    disabled: isTeamSharePending || isLoadingFileTeams || availableFileTeams.length === 0 || !fileTeamPickerValue,
+                  }, isTeamSharePending ? "Sharing..." : "Share")
+                )
+              )
+            );
+        }
+
         function renderChangesFilterMenu() {
           return React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
             React.createElement("div", { className: "playground-files-toolbar-menu-title" }, "Changes Filter"),
@@ -66485,73 +67195,6 @@ ${MODELS_PAGE_SCRIPT}
                   )
                 )
             )
-          );
-        }
-
-        function renderProjectScopeMenu(extraClassName = "") {
-          return React.createElement("div", {
-              className: [
-                "playground-files-toolbar-menu",
-                "playground-files-toolbar-menu-wide",
-                extraClassName,
-              ].filter(Boolean).join(" "),
-            },
-            React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeProjectFilterOption.label),
-            React.createElement("button", {
-              type: "button",
-              className: "playground-files-toolbar-menu-item" + (projectFilterScope === "" ? " is-active" : ""),
-              onClick: () => {
-                setProjectFilterScope("");
-                setToolbarPopover("");
-              },
-            },
-              React.createElement("span", { className: "playground-files-toolbar-menu-check" }, projectFilterScope === "" ? "•" : ""),
-              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                React.createElement("span", null, isChangesMode ? "All Changes" : "All Files"),
-                React.createElement("span", null, isChangesMode ? "Show every recorded change in this environment" : "Show every file in this environment")
-              )
-            ),
-            React.createElement("button", {
-              type: "button",
-              className: "playground-files-toolbar-menu-item" + (projectFilterScope === "__all__" ? " is-active" : ""),
-              onClick: () => {
-                setProjectFilterScope("__all__");
-                setToolbarPopover("");
-              },
-            },
-              React.createElement("span", { className: "playground-files-toolbar-menu-check" }, projectFilterScope === "__all__" ? "•" : ""),
-              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                React.createElement("span", null, isChangesMode ? "All Project Changes" : "All Project Files"),
-                React.createElement("span", null, isChangesMode ? "Show only changes made in the scope of a project" : "Show files created, updated, or attached through any project")
-              )
-            ),
-            availableProjectFilters.map((project) =>
-              React.createElement("button", {
-                  key: project.id,
-                  type: "button",
-                  className: "playground-files-toolbar-menu-item" + (projectFilterScope === project.id ? " is-active" : ""),
-                  onClick: () => {
-                    setProjectFilterScope(project.id);
-                    setToolbarPopover("");
-                  },
-                },
-                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, projectFilterScope === project.id ? "•" : ""),
-                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                    React.createElement("span", null, project.name || "Project"),
-                    React.createElement("span", null, isChangesMode ? "Show only changes made within this project" : "Show only files linked to this project")
-                  )
-                )
-            )
-          );
-        }
-
-        function renderAnimatedFilesProjectScopeMenu(extraClassName = "") {
-          return renderProjectScopeMenu(
-            [
-              "playground-files-floating-menu",
-              getFilesToolbarMenuAnimationClass("projects"),
-              extraClassName,
-            ].filter(Boolean).join(" ")
           );
         }
 
@@ -66620,41 +67263,117 @@ ${MODELS_PAGE_SCRIPT}
           }
         }
 
-        function renderFilesEnvironmentSelectMenu(title = "Computer") {
-          return React.createElement("div", { className: "playground-files-environment-menu" },
-            React.createElement("div", { className: "playground-files-environment-menu-title" }, title),
-            React.createElement("div", { className: "playground-files-environment-menu-body" },
-              orderedEnvironments.map((environment) =>
-                React.createElement("button", {
-                    key: environment.id,
-                    type: "button",
-                    className: "playground-files-environment-menu-row" + (selectedEnvironmentId === environment.id ? " selected" : ""),
-                    onClick: () => handleEnvironmentSelect(environment.id),
-                  },
-                    React.createElement("span", { className: "playground-files-environment-menu-label" }, environment.name),
-                    React.createElement("span", { className: "playground-files-environment-menu-check-slot" },
-                      selectedEnvironmentId === environment.id
-                        ? React.createElement(Check, {
-                            className: "playground-files-environment-menu-check",
-                            width: 16,
-                            height: 16,
-                            strokeWidth: 2,
-                          })
-                        : null
-                    )
-                  )
-              )
+        function renderFilesEnvironmentSelectMenu() {
+          const isProjectMode = filesEnvironmentMenuMode === "projects";
+          const switchFilesEnvironmentMenuMode = (nextMode, event = null) => {
+            if (event) {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+            setFilesEnvironmentMenuMode(nextMode === "projects" ? "projects" : "computers");
+            setToolbarPopover("environment");
+          };
+          const renderCheck = (isSelected) =>
+            React.createElement("span", { className: "playground-files-environment-menu-check-slot" },
+              isSelected
+                ? React.createElement(Check, {
+                    className: "playground-files-environment-menu-check",
+                    width: 16,
+                    height: 16,
+                    strokeWidth: 2,
+                  })
+                : null
+            );
+          const renderProjectOption = (id, label) =>
+            React.createElement("button", {
+                key: id || "all-files",
+                type: "button",
+                className: "playground-files-environment-menu-row" + (projectFilterScope === id ? " selected" : ""),
+                onClick: () => {
+                  setProjectFilterScope(id);
+                  setProjectFilterScopeLabel(id ? label : "");
+                  setFilesEnvironmentMenuMode(id ? "projects" : "computers");
+                  setToolbarPopover("");
+                },
+              },
+                React.createElement("span", { className: "playground-files-environment-menu-label" }, label),
+                renderCheck(projectFilterScope === id)
+              );
+
+          const stopFilesEnvironmentMenuEvent = (event) => {
+            event.stopPropagation();
+            event.nativeEvent?.stopImmediatePropagation?.();
+          };
+
+          return React.createElement("div", {
+              className: "playground-files-environment-menu playground-files-environment-scope-menu",
+              onPointerDown: stopFilesEnvironmentMenuEvent,
+              onMouseDown: stopFilesEnvironmentMenuEvent,
+              onClick: stopFilesEnvironmentMenuEvent,
+            },
+            React.createElement("div", { className: "playground-files-environment-menu-title" },
+              isProjectMode ? activeProjectFilterOption.label : selectedEnvironment?.name || "Computer"
             ),
-            React.createElement("div", { className: "playground-files-environment-menu-footer" },
+            React.createElement("div", { className: "playground-files-environment-menu-switch" },
               React.createElement("button", {
                 type: "button",
-                className: "playground-files-environment-create-button",
-                onClick: handleCreateEnvironmentFromFilesMenu,
-              },
-                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Create Computer")
-              )
-            )
+                className: "playground-files-environment-menu-switch-button" + (!isProjectMode ? " is-active" : ""),
+                onPointerDownCapture: (event) => switchFilesEnvironmentMenuMode("computers", event),
+                onMouseDownCapture: (event) => switchFilesEnvironmentMenuMode("computers", event),
+                onClickCapture: (event) => switchFilesEnvironmentMenuMode("computers", event),
+                onPointerDown: (event) => switchFilesEnvironmentMenuMode("computers", event),
+                onMouseDown: (event) => switchFilesEnvironmentMenuMode("computers", event),
+                onClick: (event) => switchFilesEnvironmentMenuMode("computers", event),
+              }, "Computers"),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-environment-menu-switch-button" + (isProjectMode ? " is-active" : ""),
+                onPointerDownCapture: (event) => switchFilesEnvironmentMenuMode("projects", event),
+                onMouseDownCapture: (event) => switchFilesEnvironmentMenuMode("projects", event),
+                onClickCapture: (event) => switchFilesEnvironmentMenuMode("projects", event),
+                onPointerDown: (event) => switchFilesEnvironmentMenuMode("projects", event),
+                onMouseDown: (event) => switchFilesEnvironmentMenuMode("projects", event),
+                onClick: (event) => switchFilesEnvironmentMenuMode("projects", event),
+              }, "Projects")
+            ),
+            React.createElement("div", { className: "playground-files-environment-menu-body" },
+              isProjectMode
+                ? [
+                    renderProjectOption("", isChangesMode ? "All Changes" : "All Files"),
+                    renderProjectOption("__all__", isChangesMode ? "All Project Changes" : "All Project Files"),
+                    availableProjectFilters.length > 0
+                      ? availableProjectFilters.map((project) =>
+                          renderProjectOption(project.id, project.name || "Project")
+                        )
+                      : React.createElement("div", {
+                          key: "empty-projects",
+                          className: "playground-files-environment-menu-empty",
+                        }, "No projects are available yet.")
+                  ]
+                : orderedEnvironments.map((environment) =>
+                    React.createElement("button", {
+                        key: environment.id,
+                        type: "button",
+                        className: "playground-files-environment-menu-row" + (selectedEnvironmentId === environment.id ? " selected" : ""),
+                        onClick: () => handleEnvironmentSelect(environment.id),
+                      },
+                        React.createElement("span", { className: "playground-files-environment-menu-label" }, environment.name),
+                        renderCheck(selectedEnvironmentId === environment.id)
+                      )
+                  )
+            ),
+            !isProjectMode
+              ? React.createElement("div", { className: "playground-files-environment-menu-footer" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-environment-create-button",
+                    onClick: handleCreateEnvironmentFromFilesMenu,
+                  },
+                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Create Computer")
+                  )
+                )
+              : null
           );
         }
 
@@ -66663,16 +67382,23 @@ ${MODELS_PAGE_SCRIPT}
             React.createElement("button", {
               type: "button",
               className: "playground-files-inline-selector" + (toolbarPopover === "environment" ? " active" : ""),
-              onClick: () => toggleToolbarPopover("environment"),
+              onClick: () => {
+                setFilesEnvironmentMenuMode(projectFilterScope ? "projects" : "computers");
+                toggleToolbarPopover("environment");
+              },
             },
-              React.createElement("span", null, selectedEnvironment?.name || "No environments available"),
+              React.createElement("span", null,
+                projectFilterScope
+                  ? activeProjectFilterOption.label
+                  : selectedEnvironment?.name || "No environments available"
+              ),
               React.createElement(ChevronDown, {
                 className: "playground-files-inline-selector-chevron",
                 strokeWidth: 1.85,
               })
             ),
             toolbarPopover === "environment"
-              ? renderFilesEnvironmentSelectMenu("Computer")
+              ? renderFilesEnvironmentSelectMenu()
               : null,
             React.createElement("div", { className: "playground-files-toolbar-anchor" },
               React.createElement("button", {
@@ -66931,14 +67657,39 @@ ${MODELS_PAGE_SCRIPT}
         }
 
         function renderFilesLibraryHeader() {
+          const scopedProjectRecord = projectFilterScope && projectFilterScope !== "__all__"
+            ? availableProjectFilters.find((project) => String(project?.id || "").trim() === projectFilterScope) || null
+            : null;
+          const scopedProjectName = String(scopedProjectRecord?.name || projectFilterScopeLabel || "").trim();
+          const hasConcreteProjectScope = Boolean(projectFilterScope && projectFilterScope !== "__all__" && scopedProjectName);
+          const scopedProjectTitle = hasConcreteProjectScope
+            ? (/project$/i.test(scopedProjectName) ? scopedProjectName : scopedProjectName + " Project")
+            : "";
           const selectedComputerName = String(selectedEnvironment?.name || "Default").trim() || "Default";
           const selectedComputerLabel = /computer$/i.test(selectedComputerName)
             ? selectedComputerName
             : selectedComputerName + " Computer";
+          const scopedProjectEnvironmentId = String(scopedProjectRecord?.defaultEnvironmentId || selectedEnvironmentId || "").trim();
+          const scopedProjectEnvironment = scopedProjectEnvironmentId
+            ? orderedEnvironments.find((environment) => String(environment?.id || "").trim() === scopedProjectEnvironmentId)
+              || environments.find((environment) => String(environment?.id || "").trim() === scopedProjectEnvironmentId)
+              || null
+            : null;
+          const scopedProjectComputerName = String(scopedProjectEnvironment?.name || selectedEnvironment?.name || "Computer").trim() || "Computer";
 
           return React.createElement("div", { className: "playground-files-library-header" },
             React.createElement("div", { className: "playground-files-library-title-row" },
-              React.createElement("h1", { className: "playground-files-library-title" }, "Files on " + selectedComputerLabel),
+              React.createElement("h1", { className: "playground-files-library-title" },
+                hasConcreteProjectScope
+                  ? React.createElement("span", { className: "playground-files-library-title-heading" },
+                      React.createElement("span", null, "Files on " + scopedProjectTitle),
+                      React.createElement("span", { className: "playground-files-library-title-computer-badge" },
+                        React.createElement(Cloud, { strokeWidth: 1.8, "aria-hidden": "true" }),
+                        React.createElement("span", null, scopedProjectComputerName)
+                      )
+                    )
+                  : "Files on " + selectedComputerLabel
+              ),
               React.createElement("div", { className: "playground-files-library-actions" },
                 React.createElement("div", { className: "playground-files-library-search-anchor" },
                   React.createElement("label", { className: "playground-files-library-search" },
@@ -66981,18 +67732,6 @@ ${MODELS_PAGE_SCRIPT}
             React.createElement("div", { className: "playground-files-library-nav-row" },
               renderFilesLibraryPathRow(),
               React.createElement("div", { className: "playground-files-library-controls" },
-                React.createElement("div", { className: "playground-files-library-control-anchor" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-library-icon-button" + (toolbarPopover === "projects" || projectFilterScope ? " is-active" : ""),
-                    onClick: () => toggleToolbarPopover("projects"),
-                    title: "Filter by project",
-                    "aria-label": "Filter by project",
-                  }, React.createElement(Rocket, { width: 19, height: 19, strokeWidth: 1.8 })),
-                  shouldRenderFilesToolbarMenu("projects")
-                    ? renderAnimatedFilesProjectScopeMenu("playground-files-toolbar-menu-align-right")
-                    : null
-                ),
                 React.createElement("div", { className: "playground-files-library-control-anchor" },
                   React.createElement("button", {
                     type: "button",
@@ -67073,11 +67812,17 @@ ${MODELS_PAGE_SCRIPT}
           center: isPreviewMaximized ? null : renderFilesModeSwitch(),
         }), [
           contentMode,
+          activeProjectFilterOption.id,
+          activeProjectFilterOption.label,
+          availableProjectFilters.length,
           environments.length,
           fileEnvironmentMutationState,
+          filesEnvironmentMenuMode,
           hasPreviewPanel,
           isPreviewMaximized,
           orderedEnvironments,
+          projectFilterScope,
+          projectFilterScopeLabel,
           selectedEnvironment?.id,
           selectedEnvironment?.isDefault,
           selectedEnvironment?.isSystem,
@@ -67265,19 +68010,24 @@ ${MODELS_PAGE_SCRIPT}
                 React.createElement("div", { className: "playground-files-topbar" },
                   React.createElement("div", { className: "playground-files-toolbar-anchor playground-files-environment-select-shell" },
                     React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-inline-selector" + (toolbarPopover === "environment" ? " active" : ""),
-                      onClick: () => toggleToolbarPopover("environment"),
-                    },
-                      React.createElement("span", null, selectedEnvironment?.name || "No environments available"),
+	                      type: "button",
+	                      className: "playground-files-inline-selector" + (toolbarPopover === "environment" ? " active" : ""),
+	                      onClick: () => {
+	                        setFilesEnvironmentMenuMode(projectFilterScope ? "projects" : "computers");
+	                        toggleToolbarPopover("environment");
+	                      },
+	                    },
+                      React.createElement("span", null,
+                        projectFilterScope
+                          ? activeProjectFilterOption.label
+                          : selectedEnvironment?.name || "No environments available"
+                      ),
                       React.createElement(ChevronDown, {
                         className: "playground-files-inline-selector-chevron",
                         strokeWidth: 1.85,
                       })
-                    ),
-                    toolbarPopover === "environment"
-                      ? renderFilesEnvironmentSelectMenu("Computer")
-                      : null,
+	                    ),
+	                    null,
                     React.createElement("div", { className: "playground-files-toolbar-anchor" },
                       React.createElement("button", {
                         type: "button",
@@ -67437,20 +68187,6 @@ ${MODELS_PAGE_SCRIPT}
                                   )
                                 )
                             : null
-                        ),
-                        React.createElement("div", { className: "playground-files-toolbar-anchor" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-files-control-button" + (toolbarPopover === "projects" || projectFilterScope ? " is-active" : ""),
-                            onClick: () => toggleToolbarPopover("projects"),
-                            title: isChangesMode ? "Filter changes by project" : "Filter files by project",
-                          },
-                            React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Projects")
-                          ),
-                          toolbarPopover === "projects"
-                            ? renderProjectScopeMenu()
-                            : null
                         )
                       ),
                       React.createElement("div", { className: "playground-files-control-spacer" }),
@@ -67560,7 +68296,9 @@ ${MODELS_PAGE_SCRIPT}
             }, hasPreviewPanel ? renderPreviewPanel() : null)
           ),
           renderContextMenu(),
-          renderFileProjectPickerModal()
+          renderFileProjectPickerModal(),
+          renderFileComputerPickerModal(),
+          renderFileTeamPickerModal()
         );
       }
 
@@ -67644,7 +68382,6 @@ ${MODELS_PAGE_SCRIPT}
         const environmentDetailMainRef = useRef(null);
         const serverDetailMainRef = useRef(null);
         const serverDetailSelectPopoverRef = useRef(null);
-        const environmentDescriptionTextareaRef = useRef(null);
         const serverDescriptionTextareaRef = useRef(null);
         const databaseDescriptionTextareaRef = useRef(null);
         const serverSecretDescriptionTextareaRef = useRef(null);
@@ -67655,7 +68392,6 @@ ${MODELS_PAGE_SCRIPT}
         const serverRenameInputRef = useRef(null);
         const serverFileUploadInputRef = useRef(null);
         const environmentDockerfileTextareaRef = useRef(null);
-        const environmentComposerDescriptionTextareaRef = useRef(null);
         const serverComposerDescriptionTextareaRef = useRef(null);
         const environmentGuiImageRef = useRef(null);
         const environmentGuiClickTimerRef = useRef(null);
@@ -67798,7 +68534,6 @@ ${MODELS_PAGE_SCRIPT}
           message: "",
         });
         const [databaseExporting, setDatabaseExporting] = useState(false);
-        const [isEnvironmentDescriptionEditing, setIsEnvironmentDescriptionEditing] = useState(false);
         const [isServerDescriptionEditing, setIsServerDescriptionEditing] = useState(false);
         const [isDatabaseDescriptionEditing, setIsDatabaseDescriptionEditing] = useState(false);
         const [environmentDetailsCollapsed, setEnvironmentDetailsCollapsed] = useState(false);
@@ -67872,7 +68607,6 @@ ${MODELS_PAGE_SCRIPT}
           isSaving: false,
           error: "",
         });
-        const [isEnvironmentComposerDescriptionEditing, setIsEnvironmentComposerDescriptionEditing] = useState(false);
         const [isServerComposerDescriptionEditing, setIsServerComposerDescriptionEditing] = useState(false);
         const [environmentComposerRuntimePopover, setEnvironmentComposerRuntimePopover] = useState("");
         const [environmentListActionMenuState, setEnvironmentListActionMenuState] = useState(null);
@@ -68336,7 +69070,7 @@ ${MODELS_PAGE_SCRIPT}
           }
           return displayEnvironments
             .filter((environment) => {
-              const haystack = [environment?.name || "", environment?.description || ""].join(" ").toLowerCase();
+              const haystack = [environment?.name || ""].join(" ").toLowerCase();
               return haystack.includes(query);
             })
             .slice(0, 12);
@@ -68347,7 +69081,7 @@ ${MODELS_PAGE_SCRIPT}
             return displayEnvironments;
           }
           return displayEnvironments.filter((environment) => {
-            const haystack = [environment?.name || "", environment?.description || ""].join(" ").toLowerCase();
+            const haystack = [environment?.name || ""].join(" ").toLowerCase();
             return haystack.includes(normalizedResourcesSearchQuery);
           });
         }, [displayEnvironments, normalizedResourcesSearchQuery]);
@@ -68481,7 +69215,7 @@ ${MODELS_PAGE_SCRIPT}
           const environmentItems = orderedEnvironments.map((environment) => ({
             id: environment.id,
             name: environment.name || "Untitled Computer",
-            description: environment.description || "",
+            description: "",
             resourceType: "computer",
             kind: "computer",
             updatedAt: environment.updatedAt || environment.createdAt || "",
@@ -69013,22 +69747,6 @@ ${MODELS_PAGE_SCRIPT}
           textarea.style.height = nextHeight + "px";
         }
 
-        function applyEnvironmentDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-          updateEnvironmentField("description", nextValue);
-          window.requestAnimationFrame(() => {
-            const textarea = environmentDescriptionTextareaRef.current;
-            if (!textarea) {
-              return;
-            }
-            const maxLength = nextValue.length;
-            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
-            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
-            textarea.focus();
-            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
-            resizeEnvironmentDescriptionTextarea(textarea);
-          });
-        }
-
         function buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, prefix, suffix = prefix) {
           const safeStart = Math.max(0, selectionStart);
           const safeEnd = Math.max(safeStart, selectionEnd);
@@ -69115,33 +69833,6 @@ ${MODELS_PAGE_SCRIPT}
             selectionStart: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart,
             selectionEnd: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart + nextBlock.length,
           };
-        }
-
-        function handleEnvironmentDescriptionFormat(formatType) {
-          const textarea = environmentDescriptionTextareaRef.current;
-          if (!textarea || !draftEnvironment) {
-            return;
-          }
-          const value = String(draftEnvironment?.description || "");
-          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
-          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
-          let edit = null;
-
-          if (formatType === "bold") {
-            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
-          } else if (formatType === "italic") {
-            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
-          } else if (formatType === "underline") {
-            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
-          } else if (formatType === "list") {
-            edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
-          }
-
-          if (!edit) {
-            return;
-          }
-
-          applyEnvironmentDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
         function commitDraftEnvironmentIfDirty() {
@@ -71901,19 +72592,8 @@ ${MODELS_PAGE_SCRIPT}
         ]);
 
         useLayoutEffect(() => {
-          resizeEnvironmentDescriptionTextarea(environmentDescriptionTextareaRef.current);
-        }, [draftEnvironment?.description, draftEnvironment?.id]);
-
-        useLayoutEffect(() => {
           resizeEnvironmentDescriptionTextarea(environmentDockerfileTextareaRef.current);
         }, [draftEnvironment?.dockerfileExtensions, draftEnvironment?.id]);
-
-        useLayoutEffect(() => {
-          if (!environmentComposerOpen) {
-            return;
-          }
-          resizeEnvironmentDescriptionTextarea(environmentComposerDescriptionTextareaRef.current);
-        }, [environmentComposerDraft?.description, environmentComposerOpen]);
 
         useLayoutEffect(() => {
           if (!serverComposerOpen) {
@@ -71927,9 +72607,8 @@ ${MODELS_PAGE_SCRIPT}
         }, [draftDatabase?.description, draftDatabase?.id]);
 
         useEffect(() => {
-          const textarea = environmentDescriptionTextareaRef.current;
           const detailMain = environmentDetailMainRef.current;
-          if (!textarea || !detailMain) return undefined;
+          if (!detailMain) return undefined;
 
           let frameId = 0;
           const timeoutIds = [];
@@ -71938,7 +72617,6 @@ ${MODELS_PAGE_SCRIPT}
               window.cancelAnimationFrame(frameId);
             }
             frameId = window.requestAnimationFrame(() => {
-              resizeEnvironmentDescriptionTextarea(environmentDescriptionTextareaRef.current);
               resizeEnvironmentDescriptionTextarea(environmentDockerfileTextareaRef.current);
             });
           };
@@ -73557,7 +74235,6 @@ ${MODELS_PAGE_SCRIPT}
 
           return {
             name: String(normalizedEnvironment?.name || "").trim() || "Untitled Environment",
-            description: typeof normalizedEnvironment?.description === "string" ? normalizedEnvironment.description : "",
             runtimes,
             packages,
             dockerfileExtensions: typeof normalizedEnvironment?.dockerfileExtensions === "string" ? normalizedEnvironment.dockerfileExtensions : "",
@@ -76799,49 +77476,6 @@ ${MODELS_PAGE_SCRIPT}
           }));
         }
 
-        function applyEnvironmentComposerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-          updateEnvironmentComposerField("description", nextValue);
-          window.requestAnimationFrame(() => {
-            const textarea = environmentComposerDescriptionTextareaRef.current;
-            if (!textarea) {
-              return;
-            }
-            const maxLength = nextValue.length;
-            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
-            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
-            textarea.focus();
-            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
-            resizeEnvironmentDescriptionTextarea(textarea);
-          });
-        }
-
-        function handleEnvironmentComposerDescriptionFormat(formatType) {
-          const textarea = environmentComposerDescriptionTextareaRef.current;
-          if (!textarea) {
-            return;
-          }
-          const value = String(environmentComposerDraft?.description || "");
-          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
-          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
-          let edit = null;
-
-          if (formatType === "bold") {
-            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
-          } else if (formatType === "italic") {
-            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
-          } else if (formatType === "underline") {
-            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
-          } else if (formatType === "list") {
-            edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
-          }
-
-          if (!edit) {
-            return;
-          }
-
-          applyEnvironmentComposerDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
-        }
-
         async function handleEnvironmentComposerSubmit(event) {
           event.preventDefault();
           const nextDraft = normalizePlaygroundEnvironmentRecord(environmentComposerDraft || buildPlaygroundDefaultEnvironmentDraft());
@@ -77174,64 +77808,6 @@ ${MODELS_PAGE_SCRIPT}
             );
         }
 
-        function renderEnvironmentComposerDescriptionSection(composerDraft, isSaving, placeholderText) {
-          const descriptionPlaceholder = placeholderText || "Add a short description about what this computer is used for.";
-          return React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-            React.createElement("div", { className: "playground-tasks-detail-section-header" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                [
-                  { id: "bold", label: "Bold", icon: Bold },
-                  { id: "italic", label: "Italic", icon: Italic },
-                  { id: "underline", label: "Underline", icon: Underline },
-                  { id: "list", label: "List", icon: List },
-                ].map((action) =>
-                  React.createElement("button", {
-                    key: action.id,
-                    type: "button",
-                    className: "playground-tasks-detail-format-button",
-                    title: action.label,
-                    "aria-label": action.label,
-                    disabled: isSaving,
-                    onMouseDown: (event) => event.preventDefault(),
-                    onClick: () => handleEnvironmentComposerDescriptionFormat(action.id),
-                  }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                )
-              )
-            ),
-            React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isEnvironmentComposerDescriptionEditing ? " is-editing" : " is-preview") },
-              !isEnvironmentComposerDescriptionEditing
-                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                    String(composerDraft.description || "").trim()
-                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                          content: composerDraft.description,
-                          className: "playground-tasks-detail-description-preview tb-message-markdown",
-                        })
-                      : React.createElement("div", {
-                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                        }, descriptionPlaceholder)
-                  )
-                : null,
-              React.createElement("textarea", {
-                ref: environmentComposerDescriptionTextareaRef,
-                className: "playground-tasks-detail-description-input " + (isEnvironmentComposerDescriptionEditing ? "is-editing" : "is-preview"),
-                rows: 1,
-                placeholder: isEnvironmentComposerDescriptionEditing ? descriptionPlaceholder : "",
-                value: composerDraft.description || "",
-                disabled: isSaving,
-                onFocus: () => setIsEnvironmentComposerDescriptionEditing(true),
-                onChange: (event) => {
-                  updateEnvironmentComposerField("description", event.target.value);
-                  resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                },
-                onBlur: () => {
-                  setIsEnvironmentComposerDescriptionEditing(false);
-                },
-              })
-            )
-          );
-        }
-
         function renderEnvironmentComposerRuntimeSettings(composerDraft, isSaving) {
           return React.createElement("div", { className: "playground-environment-composer-runtime-facts playground-computer-creation-settings" },
             PLAYGROUND_RUNTIME_DEFINITIONS
@@ -77337,7 +77913,6 @@ ${MODELS_PAGE_SCRIPT}
                     onChange: (event) => updateEnvironmentComposerField("name", event.target.value),
                   })
                 ),
-                renderEnvironmentComposerDescriptionSection(composerDraft, isSaving, "Add Description here"),
                 React.createElement("div", { className: "playground-computer-creation-field" },
                   React.createElement("div", { className: "playground-tasks-project-modal-label playground-computer-creation-label" }, "Computer Profile"),
                   renderEnvironmentComputeProfileSelector(
@@ -77437,60 +78012,6 @@ ${MODELS_PAGE_SCRIPT}
                   }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 ),
                 React.createElement("div", { className: "playground-environment-composer-modal-body" },
-                  React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                      React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                        [
-                          { id: "bold", label: "Bold", icon: Bold },
-                          { id: "italic", label: "Italic", icon: Italic },
-                          { id: "underline", label: "Underline", icon: Underline },
-                          { id: "list", label: "List", icon: List },
-                        ].map((action) =>
-                          React.createElement("button", {
-                            key: action.id,
-                            type: "button",
-                            className: "playground-tasks-detail-format-button",
-                            title: action.label,
-                            "aria-label": action.label,
-                            disabled: environmentComposerSaveState.isSaving,
-                            onMouseDown: (event) => event.preventDefault(),
-                            onClick: () => handleEnvironmentComposerDescriptionFormat(action.id),
-                          }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                        )
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isEnvironmentComposerDescriptionEditing ? " is-editing" : " is-preview") },
-                      !isEnvironmentComposerDescriptionEditing
-                        ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                            String(composerDraft.description || "").trim()
-                              ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                  content: composerDraft.description,
-                                  className: "playground-tasks-detail-description-preview tb-message-markdown",
-                                })
-                              : React.createElement("div", {
-                                  className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                }, "Add a short description about what this environment is used for.")
-                          )
-                        : null,
-                      React.createElement("textarea", {
-                        ref: environmentComposerDescriptionTextareaRef,
-                        className: "playground-tasks-detail-description-input " + (isEnvironmentComposerDescriptionEditing ? "is-editing" : "is-preview"),
-                        rows: 1,
-                        placeholder: isEnvironmentComposerDescriptionEditing ? "Add a short description about what this environment is used for." : "",
-                        value: composerDraft.description || "",
-                        disabled: environmentComposerSaveState.isSaving,
-                        onFocus: () => setIsEnvironmentComposerDescriptionEditing(true),
-                        onChange: (event) => {
-                          updateEnvironmentComposerField("description", event.target.value);
-                          resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                        },
-                        onBlur: () => {
-                          setIsEnvironmentComposerDescriptionEditing(false);
-                        },
-                      })
-                    )
-                  ),
                   React.createElement("div", { className: "playground-tasks-project-modal-field" },
                     React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Computer Profile"),
                     renderEnvironmentComputeProfileSelector(
@@ -85284,66 +85805,7 @@ ${MODELS_PAGE_SCRIPT}
                 )
               )
             : null;
-          const environmentDescriptionFormatActions = React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-            [
-              { id: "bold", label: "Bold", icon: Bold },
-              { id: "italic", label: "Italic", icon: Italic },
-              { id: "underline", label: "Underline", icon: Underline },
-              { id: "list", label: "List", icon: List },
-            ].map((action) =>
-              React.createElement("button", {
-                key: action.id,
-                type: "button",
-                className: "playground-tasks-detail-format-button",
-                title: action.label,
-                "aria-label": action.label,
-                disabled: isEnvironmentDescriptionLocked,
-                onMouseDown: (event) => event.preventDefault(),
-                onClick: () => handleEnvironmentDescriptionFormat(action.id),
-              }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-            )
-          );
-          const environmentDescriptionEditor = React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isEnvironmentDescriptionEditing ? " is-editing" : " is-preview") },
-              !isEnvironmentDescriptionEditing
-                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                    String(draftEnvironment.description || "").trim()
-                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                          content: draftEnvironment.description,
-                          className: "playground-tasks-detail-description-preview tb-message-markdown",
-                        })
-                      : React.createElement("div", {
-                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                        }, "Add Description here")
-                  )
-                : null,
-              React.createElement("textarea", {
-                ref: environmentDescriptionTextareaRef,
-                className: "playground-tasks-detail-description-input " + (isEnvironmentDescriptionEditing ? "is-editing" : "is-preview"),
-                rows: 1,
-                placeholder: isEnvironmentDescriptionEditing ? "Add Description here" : "",
-                value: draftEnvironment.description || "",
-                readOnly: isEnvironmentDescriptionLocked,
-                onFocus: () => {
-                  if (!isEnvironmentDescriptionLocked) {
-                    setIsEnvironmentDescriptionEditing(true);
-                  }
-                },
-                onChange: (event) => {
-                  updateEnvironmentField("description", event.target.value);
-                  resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                },
-                onBlur: () => {
-                  setIsEnvironmentDescriptionEditing(false);
-                  commitDraftEnvironmentIfDirty();
-                },
-              })
-          );
-          const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-            React.createElement("div", { className: "playground-server-description-inline-row" },
-              environmentDescriptionEditor,
-              environmentDescriptionFormatActions
-            )
-          );
+          const descriptionSection = null;
 
           const runtimesSection = React.createElement("div", { className: "playground-tasks-connectors playground-environments-runtimes-section" },
             React.createElement("div", { className: "playground-tasks-connectors-list" },
@@ -87781,9 +88243,9 @@ ${MODELS_PAGE_SCRIPT}
         const currentServerResourcesLabel = embeddedServerKindPluralLabel || "Resources";
         const currentSearchTitle = isServersMode ? "Search " + currentServerResourcesLabel : "Search Computers";
         const currentSearchEmpty = isServersMode ? "No matching " + currentServerResourcesLabel.toLowerCase() + " found." : "No matching computers found.";
-        const currentSearchPlaceholder = isServersMode
-          ? "Search " + currentServerResourcesLabel.toLowerCase() + " by name or description..."
-          : "Search by computer name or description...";
+          const currentSearchPlaceholder = isServersMode
+            ? "Search " + currentServerResourcesLabel.toLowerCase() + " by name or description..."
+          : "Search by computer name...";
         const getEmbeddedServerKindLabel = (item) => {
           if (item?.resourceType === "database" || item?.kind === "database") {
             return "Database";
@@ -87947,16 +88409,23 @@ ${MODELS_PAGE_SCRIPT}
           }
           return null;
         };
-        const renderCurrentResourceCreateControl = (buttonClassName) =>
-          React.createElement("div", { className: "playground-files-toolbar-anchor" },
+        const renderCurrentResourceCreateControl = (buttonClassName) => {
+          const shouldShowCreateLabel = String(buttonClassName || "").includes("playground-top-nav-private-chat-button");
+          return React.createElement("div", { className: "playground-files-toolbar-anchor" },
             React.createElement("button", {
               type: "button",
               className: buttonClassName + ((isServersMode ? serverComposerOpen : environmentComposerOpen) ? " is-active" : ""),
               onClick: isServersMode ? () => handleCreateServer(normalizedEmbeddedServerKind) : handleCreateEnvironment,
               title: isServersMode ? "Create " + (embeddedServerKindLabel || "resource") : "Create computer",
               "aria-label": isServersMode ? "Create " + (embeddedServerKindLabel || "resource") : "Create computer",
-            }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
+            },
+              React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }),
+              shouldShowCreateLabel
+                ? React.createElement("span", null, isServersMode ? (embeddedServerKindLabel || "Resource") : "Computer")
+                : null
+            )
           );
+        };
         const renderResourcesTopActionControl = (buttonClassName) => {
           if (isServersMode && !shouldShowEnvironmentHome && (selectedServerId || selectedDatabaseId)) {
             return renderCurrentResourceSettingsControl(buttonClassName);
@@ -87965,7 +88434,7 @@ ${MODELS_PAGE_SCRIPT}
         };
         const resourcesTopNavActions = topNavActionsContainer
           ? createPortal(
-              renderResourcesTopActionControl("playground-files-header-icon-button is-plain"),
+              renderResourcesTopActionControl(isServersMode ? "playground-files-header-icon-button is-plain" : "playground-top-nav-private-chat-button"),
               topNavActionsContainer
             )
           : null;
@@ -89269,6 +89738,7 @@ ${MODELS_PAGE_SCRIPT}
         onThreadStarted,
         onAgentMutated,
         onStartThreadWithAgent,
+        onUpgradeToIndividual,
         embeddedInResources = false,
         topNavActionsPortalId = "",
         onResourcesHeaderChange,
@@ -89285,9 +89755,7 @@ ${MODELS_PAGE_SCRIPT}
         const agentAutosaveInFlightRef = useRef(false);
         const agentDetailMainRef = useRef(null);
         const agentResourcesDetailScrollRef = useRef(null);
-        const agentDescriptionTextareaRef = useRef(null);
         const agentInstructionsTextareaRef = useRef(null);
-        const agentComposerDescriptionTextareaRef = useRef(null);
         const agentComposerInstructionsTextareaRef = useRef(null);
         const agentProfileAvatarPickerRef = useRef(null);
         const agentActionsPopoverRef = useRef(null);
@@ -89358,7 +89826,6 @@ ${MODELS_PAGE_SCRIPT}
           error: "",
           message: "",
         });
-        const [isAgentDescriptionEditing, setIsAgentDescriptionEditing] = useState(false);
         const [isAgentInstructionsEditing, setIsAgentInstructionsEditing] = useState(false);
         const [agentProfileAvatarBroken, setAgentProfileAvatarBroken] = useState(false);
         const [agentProfileAvatarPickerOpen, setAgentProfileAvatarPickerOpen] = useState(false);
@@ -89384,6 +89851,8 @@ ${MODELS_PAGE_SCRIPT}
         const [agentCreationPermissionModalOpen, setAgentCreationPermissionModalOpen] = useState(false);
         const [agentCreationInstructionRunRequest, setAgentCreationInstructionRunRequest] = useState(null);
         const [agentCreationInstructionContext, setAgentCreationInstructionContext] = useState(null);
+        const [agentUpgradeModalOpen, setAgentUpgradeModalOpen] = useState(false);
+        const [agentUpgradeCheckoutLoading, setAgentUpgradeCheckoutLoading] = useState(false);
         const [agentAssistantPresetRunState, setAgentAssistantPresetRunState] = useState({
           isStarting: false,
           actionType: "",
@@ -89394,7 +89863,6 @@ ${MODELS_PAGE_SCRIPT}
         const [agentCreationAssistantError, setAgentCreationAssistantError] = useState("");
         const [topNavActionsContainer, setTopNavActionsContainer] = useState(null);
         const [agentModelOptions, setAgentModelOptions] = useState(() => PLAYGROUND_AGENT_MODEL_OPTIONS);
-        const [isAgentComposerDescriptionEditing, setIsAgentComposerDescriptionEditing] = useState(false);
         const [isAgentComposerInstructionsEditing, setIsAgentComposerInstructionsEditing] = useState(false);
         const [agentComposerModelPopover, setAgentComposerModelPopover] = useState("");
         const [deepResearchSkillDefaultModel, setDeepResearchSkillDefaultModel] = useState(() => getDemoDefaultDeepResearchModel(readDemoSettingsPlatformConfig()));
@@ -89409,6 +89877,7 @@ ${MODELS_PAGE_SCRIPT}
             ? agentModelOptions
             : PLAYGROUND_AGENT_MODEL_OPTIONS
         ), [agentModelOptions]);
+        const isFreeAgentPlan = (normalizeSettingsTierId(subscriptionTierId) || "free") === "free";
 
         useEffect(() => {
           const requestToken = String(overviewTabRequest?.token || "").trim();
@@ -89757,6 +90226,13 @@ ${MODELS_PAGE_SCRIPT}
           ? rawAgentProfilePhotoUrl
           : "";
         const hasExplicitAgentProfilePhoto = Boolean(explicitAgentProfilePhotoUrl);
+        const canEditAgentProfilePhoto = Boolean(
+          draftAgent
+          && (
+            draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID
+            || (draftAgent.isSystem !== true && draftAgent.isDefault !== true)
+          )
+        );
         const normalizedFocusedAgentSelectionToken = String(focusedAgentSelectionToken || "").trim();
         const normalizedFocusedAgentId = String(focusedAgentId || "").trim();
         const hasPendingFocusedAgentSelection = Boolean(
@@ -89805,7 +90281,6 @@ ${MODELS_PAGE_SCRIPT}
 
         function resetEditorAuxiliaryState() {
           editorDirtyRef.current = false;
-          setIsAgentDescriptionEditing(false);
           setIsAgentInstructionsEditing(false);
           setAgentActionsPopoverOpen(false);
           setAgentModelPopover("");
@@ -90196,13 +90671,16 @@ ${MODELS_PAGE_SCRIPT}
         }
 
         function handleAgentProfilePhotoSelection(nextPhotoUrl) {
-          if (!nextPhotoUrl) {
+          if (!canEditAgentProfilePhoto || !nextPhotoUrl) {
             return;
           }
           void persistAgentProfilePhotoSelection(nextPhotoUrl);
         }
 
         function handleAgentProfilePhotoRemove() {
+          if (!canEditAgentProfilePhoto) {
+            return;
+          }
           void persistAgentProfilePhotoSelection("");
         }
 
@@ -90655,6 +91133,63 @@ ${MODELS_PAGE_SCRIPT}
           return nextDetails;
         }, [agentsObservabilityThreadDetailsById, backendUrl, requestHeaders]);
 
+        function openAgentUpgradeModal() {
+          setToolbarPopover("");
+          setSearchPopupQuery("");
+          setAgentListActionMenuState(null);
+          setAgentActionsPopoverOpen(false);
+          setAgentComposerOpen(false);
+          setAgentCreationSetupOpen(false);
+          setAgentCreationSetupError("");
+          setAgentCreationPermissionModalOpen(false);
+          setAgentsHomeActiveCreationCommand("");
+          setAgentsHomeCreationCommandRequest(null);
+          setAgentUpgradeCheckoutLoading(false);
+          setAgentUpgradeModalOpen(true);
+        }
+
+        function closeAgentUpgradeModal() {
+          if (agentUpgradeCheckoutLoading) {
+            return;
+          }
+          setAgentUpgradeModalOpen(false);
+        }
+
+        function isAgentAllowedOnCurrentPlan(agentRecord) {
+          if (!isFreeAgentPlan) {
+            return true;
+          }
+          return isPlaygroundAssistantAgent(agentRecord);
+        }
+
+        function canUseAgentOnCurrentPlan(agentRecord) {
+          if (isAgentAllowedOnCurrentPlan(agentRecord)) {
+            return true;
+          }
+          openAgentUpgradeModal();
+          return false;
+        }
+
+        function canCreateAgentOnCurrentPlan() {
+          if (!isFreeAgentPlan) {
+            return true;
+          }
+          openAgentUpgradeModal();
+          return false;
+        }
+
+        async function handleAgentUpgradeCheckout() {
+          if (agentUpgradeCheckoutLoading || typeof onUpgradeToIndividual !== "function") {
+            return;
+          }
+          setAgentUpgradeCheckoutLoading(true);
+          try {
+            await Promise.resolve(onUpgradeToIndividual());
+          } catch {
+            setAgentUpgradeCheckoutLoading(false);
+          }
+        }
+
         function showAgentsHome() {
           setToolbarPopover("");
           setSearchPopupQuery("");
@@ -90682,6 +91217,9 @@ ${MODELS_PAGE_SCRIPT}
         function stageAgentsHomeCreationCommand(commandType) {
           const normalizedCommandType = String(commandType || "").trim().toLowerCase();
           if (normalizedCommandType !== "agent" && normalizedCommandType !== "team") {
+            return;
+          }
+          if (!canCreateAgentOnCurrentPlan()) {
             return;
           }
           setToolbarPopover("");
@@ -90759,6 +91297,9 @@ ${MODELS_PAGE_SCRIPT}
           const normalizedThreadId = String(runRequest?.threadId || "").trim();
           const normalizedPrompt = String(runRequest?.prompt || "").trim();
           if (!normalizedThreadId || !normalizedPrompt || typeof onThreadStarted !== "function") {
+            return false;
+          }
+          if (agentsHomeActiveCreationCommand && !canCreateAgentOnCurrentPlan()) {
             return false;
           }
           setAgentsHomeActiveCreationCommand("");
@@ -90984,7 +91525,6 @@ ${MODELS_PAGE_SCRIPT}
           setAgentListMode("agents");
           setSelectedAgentId(savedAgent.id);
           setDraftAgent(savedAgent);
-          setIsAgentDescriptionEditing(false);
           setIsAgentInstructionsEditing(false);
           setIsHomeViewActive(false);
           return savedAgent;
@@ -91181,9 +91721,9 @@ ${MODELS_PAGE_SCRIPT}
                         )
                       )
                     : null
-                )
-            )
-          ),
+                  )
+              )
+            ),
             React.createElement("div", { className: "playground-agents-profile-name-wrap" },
               React.createElement("input", {
                 ref: agentCreationNameInputRef,
@@ -91196,59 +91736,6 @@ ${MODELS_PAGE_SCRIPT}
                 disabled: isSubmitting,
                 onKeyDown: (event) => event.stopPropagation(),
                 onChange: (event) => updateAgentField("name", event.target.value),
-              })
-            )
-          );
-
-          const setupDescriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-            React.createElement("div", { className: "playground-tasks-detail-section-header" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                [
-                  { id: "bold", label: "Bold", icon: Bold },
-                  { id: "italic", label: "Italic", icon: Italic },
-                  { id: "underline", label: "Underline", icon: Underline },
-                  { id: "list", label: "List", icon: List },
-                ].map((action) =>
-                  React.createElement("button", {
-                    key: action.id,
-                    type: "button",
-                    className: "playground-tasks-detail-format-button",
-                    title: action.label,
-                    "aria-label": action.label,
-                    disabled: isSubmitting,
-                    onMouseDown: (event) => event.preventDefault(),
-                    onClick: () => handleAgentMarkdownFormat("description", agentDescriptionTextareaRef, action.id),
-                  }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                )
-              )
-            ),
-            React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isAgentDescriptionEditing ? " is-editing" : " is-preview") },
-              !isAgentDescriptionEditing
-                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                    String(setupDraft.description || "").trim()
-                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                          content: setupDraft.description,
-                          className: "playground-tasks-detail-description-preview tb-message-markdown",
-                        })
-                      : React.createElement("div", {
-                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                        }, "Add Description here")
-                  )
-                : null,
-              React.createElement("textarea", {
-                ref: agentDescriptionTextareaRef,
-                className: "playground-tasks-detail-description-input " + (isAgentDescriptionEditing ? "is-editing" : "is-preview"),
-                rows: 1,
-                placeholder: isAgentDescriptionEditing ? "Add Description here" : "",
-                value: setupDraft.description || "",
-                disabled: isSubmitting,
-                onFocus: () => setIsAgentDescriptionEditing(true),
-                onChange: (event) => {
-                  updateAgentField("description", event.target.value);
-                  resizeAgentDescriptionTextarea(event.currentTarget);
-                },
-                onBlur: () => setIsAgentDescriptionEditing(false),
               })
             )
           );
@@ -91278,7 +91765,6 @@ ${MODELS_PAGE_SCRIPT}
           return React.createElement("div", { className: "playground-agents-creation-form" },
             setupProfileSection,
             React.createElement("div", { className: "playground-agents-creation-config-box" },
-              setupDescriptionSection,
               React.createElement("div", { className: "playground-environment-composer-runtime-facts playground-agents-creation-settings" },
                 renderSetupFactRow("Model",
                   renderPlaygroundAgentModelButton(
@@ -91478,6 +91964,11 @@ ${MODELS_PAGE_SCRIPT}
             allKnownAgents.find((agent) => agent?.id === normalizedFocusedAgentId)
             || agents.find((agent) => agent?.id === normalizedFocusedAgentId)
             || null;
+
+          if (focusedAgent && !isAgentAllowedOnCurrentPlan(focusedAgent)) {
+            openAgentUpgradeModal();
+            return;
+          }
 
           if (focusedAgent) {
             setAgentListMode(getPlaygroundAgentListMode(focusedAgent));
@@ -91805,19 +92296,8 @@ ${MODELS_PAGE_SCRIPT}
         }, [agentCreationSetupOpen, agentCreationSetupResetToken]);
 
         useLayoutEffect(() => {
-          resizeAgentDescriptionTextarea(agentDescriptionTextareaRef.current);
-        }, [draftAgent?.description, draftAgent?.id]);
-
-        useLayoutEffect(() => {
           resizeAgentDescriptionTextarea(agentInstructionsTextareaRef.current);
         }, [draftAgent?.instructions, draftAgent?.id]);
-
-        useLayoutEffect(() => {
-          if (!agentComposerOpen) {
-            return;
-          }
-          resizeAgentDescriptionTextarea(agentComposerDescriptionTextareaRef.current);
-        }, [agentComposerDraft?.description, agentComposerOpen]);
 
         useLayoutEffect(() => {
           if (!agentComposerOpen) {
@@ -91827,7 +92307,7 @@ ${MODELS_PAGE_SCRIPT}
         }, [agentComposerDraft?.instructions, agentComposerOpen]);
 
         useEffect(() => {
-          const textarea = agentDescriptionTextareaRef.current;
+          const textarea = agentInstructionsTextareaRef.current;
           const detailMain = agentDetailMainRef.current;
           if (!textarea || !detailMain) return undefined;
 
@@ -91838,7 +92318,6 @@ ${MODELS_PAGE_SCRIPT}
               window.cancelAnimationFrame(frameId);
             }
             frameId = window.requestAnimationFrame(() => {
-              resizeAgentDescriptionTextarea(agentDescriptionTextareaRef.current);
               resizeAgentDescriptionTextarea(agentInstructionsTextareaRef.current);
             });
           };
@@ -91960,6 +92439,12 @@ ${MODELS_PAGE_SCRIPT}
         }, [isHomeViewActive, loadAgentsHomeThreads, selectedAgentId]);
 
         function handleAgentSelect(agentId) {
+          const targetAgent = allKnownAgents.find((agent) => agent?.id === agentId)
+            || orderedAgents.find((agent) => agent?.id === agentId)
+            || null;
+          if (targetAgent && !canUseAgentOnCurrentPlan(targetAgent)) {
+            return;
+          }
           if (draftAgent?.id && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID && editorDirtyRef.current) {
             agentAutosaveQueuedRef.current = normalizePlaygroundAgentRecord(draftAgent);
             if (agentAutosaveTimerRef.current) {
@@ -92181,6 +92666,9 @@ ${MODELS_PAGE_SCRIPT}
         }
 
         function openAgentDraftDetail(kind = "single", options = {}) {
+          if (!canCreateAgentOnCurrentPlan()) {
+            return;
+          }
           const normalizedKind = kind === "team" ? "team" : "single";
           const seedDraft = buildAgentComposerSeedDraft(normalizedKind, options?.draft || null);
           resetEditorAuxiliaryState();
@@ -92218,6 +92706,9 @@ ${MODELS_PAGE_SCRIPT}
         }
 
         function openAgentComposer(kind = "single", options = {}) {
+          if (!canCreateAgentOnCurrentPlan()) {
+            return;
+          }
           const draftOverrides = options && typeof options === "object" ? options.draft : null;
           resetEditorAuxiliaryState();
           setToolbarPopover("");
@@ -92233,7 +92724,6 @@ ${MODELS_PAGE_SCRIPT}
             isSaving: false,
             error: "",
           });
-          setIsAgentComposerDescriptionEditing(false);
           setIsAgentComposerInstructionsEditing(false);
           setAgentComposerModelPopover("");
           setAgentComposerOpen(true);
@@ -92250,16 +92740,21 @@ ${MODELS_PAGE_SCRIPT}
             isSaving: false,
             error: "",
           });
-          setIsAgentComposerDescriptionEditing(false);
           setIsAgentComposerInstructionsEditing(false);
           setAgentComposerModelPopover("");
         }
 
         function handleCreateAgent() {
+          if (!canCreateAgentOnCurrentPlan()) {
+            return;
+          }
           openAgentDraftDetail("single");
         }
 
         function handleCreateTeam() {
+          if (!canCreateAgentOnCurrentPlan()) {
+            return;
+          }
           openAgentDraftDetail("team");
         }
 
@@ -92356,6 +92851,7 @@ ${MODELS_PAGE_SCRIPT}
             { id: "google", label: "Google", description: "Show Gemini models" },
             { id: "openai", label: "OpenAI", description: "Show GPT models" },
             { id: "deepseek", label: "DeepSeek", description: "Show DeepSeek models" },
+            { id: "minimax", label: "MiniMax", description: "Show MiniMax models" },
             { id: "kimi", label: "Kimi", description: "Show Moonshot models" },
             { id: "custom", label: "Custom", description: "Show external and custom models" },
           ];
@@ -93246,6 +93742,7 @@ ${MODELS_PAGE_SCRIPT}
             { id: "google", label: "Google" },
             { id: "openai", label: "OpenAI" },
             { id: "deepseek", label: "DeepSeek" },
+            { id: "minimax", label: "MiniMax" },
             { id: "kimi", label: "Kimi" },
             { id: "custom", label: "Custom" },
             { id: "available", label: "Available" },
@@ -94032,7 +94529,6 @@ ${MODELS_PAGE_SCRIPT}
               name: String(normalizedCurrentAgent.name || "").trim()
                 ? String(normalizedCurrentAgent.name || "").trim() + " Copy"
                 : "New Agent",
-              description: normalizedCurrentAgent.description || "",
               instructions: normalizedCurrentAgent.instructions || "",
               model: normalizedCurrentAgent.model || buildPlaygroundDefaultAgentDraft("single").model,
               binary: normalizedCurrentAgent.binary || "Claude Code CLI",
@@ -94062,7 +94558,6 @@ ${MODELS_PAGE_SCRIPT}
           openAgentComposer(isTeamCopy ? "team" : "single", {
             draft: {
               name: nextName,
-              description: normalizedAgent.description || "",
               instructions: isTeamCopy ? "" : (normalizedAgent.instructions || ""),
               model: normalizedAgent.model || buildPlaygroundDefaultAgentDraft(isTeamCopy ? "team" : "single").model,
               binary: normalizedAgent.binary || "Claude Code CLI",
@@ -94163,7 +94658,6 @@ ${MODELS_PAGE_SCRIPT}
 
           return {
             name: String(agent?.name || "").trim() || (isTeamAgent ? "New Team" : "New Agent"),
-            description: typeof agent?.description === "string" ? agent.description : "",
             model: getPlaygroundAgentModelMeta(
               typeof orchestratorAgent?.model === "string" && orchestratorAgent.model
                 ? orchestratorAgent.model
@@ -94218,6 +94712,9 @@ ${MODELS_PAGE_SCRIPT}
           }
 
           const isCreating = agentRecord.id === PLAYGROUND_AGENT_DRAFT_ID || !agentRecord.id;
+          if (isCreating && !canCreateAgentOnCurrentPlan()) {
+            throw new Error("Upgrade to Individual to create custom agents and teams.");
+          }
           const response = await fetch(
             isCreating
               ? backendUrl + "/agents"
@@ -94233,6 +94730,9 @@ ${MODELS_PAGE_SCRIPT}
           );
           const data = await response.json().catch(() => ({}));
           if (!response.ok) {
+            if (data?.code === "AGENT_PLAN_REQUIRED") {
+              openAgentUpgradeModal();
+            }
             throw new Error(data?.message || data?.error || "Failed to save agent.");
           }
 
@@ -94283,7 +94783,6 @@ ${MODELS_PAGE_SCRIPT}
               isSaving: false,
               error: "",
             });
-            setIsAgentComposerDescriptionEditing(false);
             setIsAgentComposerInstructionsEditing(false);
             setAgentComposerModelPopover("");
             if (onAgentMutated) {
@@ -94688,60 +95187,6 @@ ${MODELS_PAGE_SCRIPT}
                   }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 ),
                 React.createElement("div", { className: "playground-agent-composer-modal-body" },
-                  React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                      React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                        [
-                          { id: "bold", label: "Bold", icon: Bold },
-                          { id: "italic", label: "Italic", icon: Italic },
-                          { id: "underline", label: "Underline", icon: Underline },
-                          { id: "list", label: "List", icon: List },
-                        ].map((action) =>
-                          React.createElement("button", {
-                            key: action.id,
-                            type: "button",
-                            className: "playground-tasks-detail-format-button",
-                            title: action.label,
-                            "aria-label": action.label,
-                            disabled: agentComposerSaveState.isSaving,
-                            onMouseDown: (event) => event.preventDefault(),
-                            onClick: () => handleAgentComposerMarkdownFormat("description", agentComposerDescriptionTextareaRef, action.id),
-                          }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                        )
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isAgentComposerDescriptionEditing ? " is-editing" : " is-preview") },
-                      !isAgentComposerDescriptionEditing
-                        ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                            String(composerDraft.description || "").trim()
-                              ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                  content: composerDraft.description,
-                                  className: "playground-tasks-detail-description-preview tb-message-markdown",
-                                })
-                              : React.createElement("div", {
-                                  className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                }, isTeamComposer ? "Add a short description for this team." : "Add a short description for this agent.")
-                          )
-                        : null,
-                      React.createElement("textarea", {
-                        ref: agentComposerDescriptionTextareaRef,
-                        className: "playground-tasks-detail-description-input " + (isAgentComposerDescriptionEditing ? "is-editing" : "is-preview"),
-                        rows: 1,
-                        placeholder: isAgentComposerDescriptionEditing
-                          ? (isTeamComposer ? "Add a short description for this team." : "Add a short description for this agent.")
-                          : "",
-                        value: composerDraft.description || "",
-                        disabled: agentComposerSaveState.isSaving,
-                        onFocus: () => setIsAgentComposerDescriptionEditing(true),
-                        onChange: (event) => {
-                          updateAgentComposerField("description", event.target.value);
-                          resizeAgentDescriptionTextarea(event.currentTarget);
-                        },
-                        onBlur: () => setIsAgentComposerDescriptionEditing(false),
-                      })
-                    )
-                  ),
                   isTeamComposer
                     ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
                         React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Team Setup"),
@@ -95326,61 +95771,6 @@ ${MODELS_PAGE_SCRIPT}
             )
           );
 
-          const agentDescriptionFormatActions = React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-            [
-              { id: "bold", label: "Bold", icon: Bold },
-              { id: "italic", label: "Italic", icon: Italic },
-              { id: "underline", label: "Underline", icon: Underline },
-              { id: "list", label: "List", icon: List },
-            ].map((action) =>
-              React.createElement("button", {
-                key: action.id,
-                type: "button",
-                className: "playground-tasks-detail-format-button",
-                title: action.label,
-                "aria-label": action.label,
-                onMouseDown: (event) => event.preventDefault(),
-                onClick: () => handleAgentMarkdownFormat("description", agentDescriptionTextareaRef, action.id),
-              }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-            )
-          );
-          const agentDescriptionEditor = React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isAgentDescriptionEditing ? " is-editing" : " is-preview") },
-              !isAgentDescriptionEditing
-                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                    String(draftAgent.description || "").trim()
-                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                          content: draftAgent.description,
-                          className: "playground-tasks-detail-description-preview tb-message-markdown",
-                        })
-                      : React.createElement("div", {
-                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                        }, "Add Description here")
-                  )
-                : null,
-              React.createElement("textarea", {
-                ref: agentDescriptionTextareaRef,
-                className: "playground-tasks-detail-description-input " + (isAgentDescriptionEditing ? "is-editing" : "is-preview"),
-                rows: 1,
-                placeholder: isAgentDescriptionEditing ? "Add Description here" : "",
-                value: draftAgent.description || "",
-                onFocus: () => {
-                  setIsAgentDescriptionEditing(true);
-                },
-                onChange: (event) => {
-                  updateAgentField("description", event.target.value);
-                  resizeAgentDescriptionTextarea(event.currentTarget);
-                },
-                onBlur: () => {
-                  setIsAgentDescriptionEditing(false);
-                },
-              })
-          );
-	          const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-	            React.createElement("div", { className: "playground-server-description-inline-row" },
-	              agentDescriptionEditor,
-	              agentDescriptionFormatActions
-	            )
-	          );
 	          const agentResourceDetailBackButton = embeddedInResources
 	            ? React.createElement("button", {
 	                type: "button",
@@ -95406,7 +95796,8 @@ ${MODELS_PAGE_SCRIPT}
                       })
                     : React.createElement("span", { className: "profile-editor-avatar-fallback" }, getAccountInitials(draftAgent.name || (isTeamAgent ? "Team" : "Agent")))
                 ),
-                React.createElement("div", {
+                canEditAgentProfilePhoto
+                  ? React.createElement("div", {
                     className: "playground-agents-avatar-picker-shell playground-tasks-toolbar-popup-shell" + (agentProfileAvatarPickerOpen ? " is-open" : ""),
                     ref: agentProfileAvatarPickerOpen ? agentProfileAvatarPickerRef : null,
                   },
@@ -95443,6 +95834,7 @@ ${MODELS_PAGE_SCRIPT}
                         )
                       : null
                   )
+                  : null
               )
             ),
             React.createElement("div", { className: "playground-agents-profile-name-wrap" },
@@ -95787,7 +96179,14 @@ ${MODELS_PAGE_SCRIPT}
             )
           );
 
-          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: agentDetailMainRef },
+          const agentDetailBackgroundImageUrl = getPlaygroundAgentBackgroundImageUrl(draftAgent);
+          const agentDetailMainClassName = "playground-environments-editor-main playground-tasks-detail-main"
+            + (agentDetailBackgroundImageUrl ? " is-agent-background-active" : "");
+          const agentDetailMainStyle = agentDetailBackgroundImageUrl
+            ? { "--playground-agent-detail-bg-image": "url(" + JSON.stringify(agentDetailBackgroundImageUrl) + ")" }
+            : undefined;
+
+          return React.createElement("div", { className: agentDetailMainClassName, ref: agentDetailMainRef, style: agentDetailMainStyle },
             React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
               React.createElement("div", { className: "playground-agents-detail-content" },
                 saveState.error
@@ -95797,7 +96196,6 @@ ${MODELS_PAGE_SCRIPT}
 	                  : null,
 	                agentResourceDetailBackButton,
 	                agentProfileSection,
-	                descriptionSection,
                 agentDetailTabs,
                 agentDetailTab === "permissions"
                   ? agentPermissionsSection
@@ -95854,23 +96252,42 @@ ${MODELS_PAGE_SCRIPT}
                       ref: agentActionsPopoverRef,
                     },
                       React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-header-icon-button is-plain" + (agentActionsPopoverOpen ? " is-active" : ""),
-                        title: "Agent settings",
-                        "aria-label": "Agent settings",
-                        "aria-expanded": agentActionsPopoverOpen ? "true" : "false",
-                        onClick: () => setAgentActionsPopoverOpen((current) => !current),
-                        disabled: saveState.isSaving,
-                      }, React.createElement(Settings2, { width: 16, height: 16, strokeWidth: 1.8 })),
-                      agentActionsPopoverOpen
-                        ? React.createElement("div", {
-                            className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                            onClick: (event) => event.stopPropagation(),
-                          },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "tb-popup-row",
-                              onClick: () => {
+	                      type: "button",
+	                      className: "playground-files-header-icon-button is-plain" + (agentActionsPopoverOpen ? " is-active" : ""),
+	                        title: "Agent actions",
+	                        "aria-label": "Agent actions",
+	                        "aria-expanded": agentActionsPopoverOpen ? "true" : "false",
+	                        onClick: () => setAgentActionsPopoverOpen((current) => !current),
+	                        disabled: saveState.isSaving,
+	                      }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
+	                      agentActionsPopoverOpen
+	                        ? React.createElement("div", {
+	                            className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	                            onClick: (event) => event.stopPropagation(),
+	                          },
+	                            canShowAgentAssistant
+	                              ? React.createElement("button", {
+	                                  type: "button",
+	                                  className: "tb-popup-row",
+	                                  onClick: () => {
+	                                    setAgentActionsPopoverOpen(false);
+	                                    if (agentAssistantOpen) {
+	                                      setAgentAssistantOpen(false);
+	                                      return;
+	                                    }
+	                                    openAgentAssistant(selectedAgentAssistantCommandType);
+	                                  },
+	                                },
+	                                  React.createElement(MessageCircle, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                                    React.createElement("span", null, "Improve")
+	                                  )
+	                                )
+	                              : null,
+	                            React.createElement("button", {
+	                              type: "button",
+	                              className: "tb-popup-row",
+	                              onClick: () => {
                                 setAgentActionsPopoverOpen(false);
                                 openAgentRenameDialog(draftAgent);
                               },
@@ -95896,26 +96313,10 @@ ${MODELS_PAGE_SCRIPT}
                           )
                         : null
                     )
-                  : null,
-                canShowAgentAssistant
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-header-icon-button is-plain" + (agentAssistantOpen ? " is-active" : ""),
-                      onClick: () => {
-                        if (agentAssistantOpen) {
-                          setAgentAssistantOpen(false);
-                          return;
-                        }
-                        openAgentAssistant(selectedAgentAssistantCommandType);
-                      },
-                      title: agentAssistantOpen ? "Close agent assistant" : "Open agent assistant",
-                      "aria-label": agentAssistantOpen ? "Close agent assistant" : "Open agent assistant",
-                      "aria-pressed": agentAssistantOpen ? "true" : "false",
-                    }, React.createElement(MessageCircle, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  : null,
-                isDraftAgentSelected
-                && !agentCreationSetupOpen
-                  ? React.createElement("button", {
+	                  : null,
+	                isDraftAgentSelected
+	                && !agentCreationSetupOpen
+	                  ? React.createElement("button", {
                       type: "button",
                       className: "playground-environments-action-button is-primary playground-agents-nav-create-button",
                       onClick: () => {
@@ -95932,9 +96333,7 @@ ${MODELS_PAGE_SCRIPT}
                 !agentCreationSetupOpen
                   ? React.createElement("button", {
                   type: "button",
-                  className: shouldShowAgentsHome && embeddedInResources
-                    ? "playground-top-nav-private-chat-button"
-                    : "playground-files-header-icon-button is-plain",
+                  className: "playground-top-nav-private-chat-button",
                   onClick: () => {
                     if (agentListMode === "teams") {
                       handleCreateTeam();
@@ -95946,9 +96345,7 @@ ${MODELS_PAGE_SCRIPT}
                   "aria-label": agentListMode === "teams" ? "Create team" : "Create agent",
                   },
                     React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }),
-                    shouldShowAgentsHome && embeddedInResources
-                      ? React.createElement("span", null, agentListMode === "teams" ? "Team" : "Agent")
-                      : null
+                    React.createElement("span", null, agentListMode === "teams" ? "Team" : "Agent")
                   )
                   : null
               ),
@@ -96490,7 +96887,97 @@ ${MODELS_PAGE_SCRIPT}
           );
         }
 
+        function renderAgentUpgradeModal() {
+          if (!agentUpgradeModalOpen) {
+            return null;
+          }
+
+          const features = [
+            { icon: Bot, title: "Forge and Foundry", copy: "Use higher-capacity default agents for implementation, synthesis, and reasoning-heavy work." },
+            { icon: Plus, title: "Custom agents", copy: "Create specialized agents with their own instructions, skills, permissions, and models." },
+            { icon: UsersRound, title: "Agent teams", copy: "Coordinate fixed teams with orchestrators and subagents for repeatable workflows." },
+            { icon: Brain, title: "Premium models", copy: "Access the managed model catalog beyond Spark, including long-context and frontier models." },
+            { icon: Sparkles, title: "Compute included", copy: "Start with 1,500 Compute Tokens and upgrade controls built into settings." },
+            { icon: Key, title: "API access", copy: "Use Computer Agents APIs and budget controls for production workflows." },
+          ];
+
+          return React.createElement("div", {
+              className: "playground-calendar-upgrade-backdrop",
+              role: "dialog",
+              "aria-modal": "true",
+              "aria-labelledby": "playground-agent-upgrade-title",
+            },
+            React.createElement("button", {
+              type: "button",
+              className: "playground-files-header-icon-button is-plain playground-calendar-upgrade-close",
+              onClick: closeAgentUpgradeModal,
+              "aria-label": "Close upgrade modal",
+              disabled: agentUpgradeCheckoutLoading,
+            }, React.createElement(X, { width: 18, height: 18, strokeWidth: 1.8 })),
+            React.createElement("div", { className: "playground-calendar-upgrade-shell" },
+              React.createElement("h2", {
+                id: "playground-agent-upgrade-title",
+                className: "playground-calendar-upgrade-headline",
+              },
+                "Try Individual for ",
+                React.createElement("span", { className: "playground-calendar-upgrade-headline-price" }, "$0.00"),
+                " for 14 Days"
+              ),
+              React.createElement("div", { className: "playground-calendar-upgrade-pill" }, "Unlock Forge, Foundry, teams, and custom agents"),
+              React.createElement("div", {
+                  className: "playground-calendar-upgrade-modal",
+                  role: "document",
+                },
+                React.createElement("div", { className: "playground-calendar-upgrade-modal-top" },
+                  React.createElement("div", { className: "playground-calendar-upgrade-modal-header" },
+                    React.createElement("div", { className: "playground-calendar-upgrade-modal-title" }, "Individual"),
+                    React.createElement("div", { className: "playground-calendar-upgrade-modal-offer" }, "Limited Time Offer")
+                  ),
+                  React.createElement("div", { className: "playground-calendar-upgrade-price-row" },
+                    React.createElement("span", { className: "playground-calendar-upgrade-price-old" }, "$19.99"),
+                    React.createElement("span", { className: "playground-calendar-upgrade-price-new" }, "$0")
+                  ),
+                  React.createElement("p", { className: "playground-calendar-upgrade-modal-copy" },
+                    "Use Spark on Free. Upgrade to create custom agents and run Forge or Foundry for larger digital work."
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-calendar-upgrade-modal-button",
+                    onClick: handleAgentUpgradeCheckout,
+                    disabled: agentUpgradeCheckoutLoading || typeof onUpgradeToIndividual !== "function",
+                  }, agentUpgradeCheckoutLoading ? "Opening checkout..." : "Claim $0.00 offer")
+                ),
+                React.createElement("div", { className: "playground-calendar-upgrade-feature-list" },
+                  features.map((feature) => {
+                    const Icon = feature.icon;
+                    return React.createElement("div", {
+                        key: feature.title,
+                        className: "playground-calendar-upgrade-modal-feature",
+                      },
+                      React.createElement("span", { className: "playground-calendar-upgrade-modal-feature-icon" },
+                        React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.8 })
+                      ),
+                      React.createElement("div", null,
+                        React.createElement("div", null, feature.title),
+                        React.createElement("small", null, feature.copy)
+                      )
+                    );
+                  })
+                )
+              )
+            )
+          );
+        }
+
         if (embeddedInResources) {
+          const embeddedAgentBackgroundImageUrl = !agentCreationSetupOpen && !shouldShowAgentsHome && draftAgent
+            ? getPlaygroundAgentBackgroundImageUrl(draftAgent)
+            : "";
+          const embeddedAgentDetailMainPaneClassName = "playground-agents-detail-main-pane"
+            + (embeddedAgentBackgroundImageUrl ? " is-agent-background-active" : "");
+          const embeddedAgentDetailMainPaneStyle = embeddedAgentBackgroundImageUrl
+            ? { "--playground-agent-detail-bg-image": "url(" + JSON.stringify(embeddedAgentBackgroundImageUrl) + ")" }
+            : undefined;
           return React.createElement(React.Fragment, null,
             agentsTopNavActions,
             agentCreationSetupOpen
@@ -96505,7 +96992,7 @@ ${MODELS_PAGE_SCRIPT}
                 )
               : React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-agents-detail-assistant-page" },
                   React.createElement("div", { className: agentDetailLayoutClass },
-                    React.createElement("div", { className: "playground-agents-detail-main-pane" },
+                    React.createElement("div", { className: embeddedAgentDetailMainPaneClassName, style: embeddedAgentDetailMainPaneStyle },
                       React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll", ref: agentResourcesDetailScrollRef },
                         React.createElement("div", { className: "playground-resources-detail-content" },
                           isLoadingCurrentAgent && !draftAgent
@@ -96523,7 +97010,8 @@ ${MODELS_PAGE_SCRIPT}
             renderAgentRenameModal(),
             renderAgentComposerDialog(),
             renderAgentCreationPermissionModal(),
-            renderAgentModelPickerDialog()
+            renderAgentModelPickerDialog(),
+            renderAgentUpgradeModal()
           );
         }
 
@@ -96760,7 +97248,7 @@ ${MODELS_PAGE_SCRIPT}
                           keepFocusOnSubmit: true,
                           showUsageInStatus: false,
                           placeholder: "Type /agent or /team",
-                          enableAgentCreationCommand: true,
+                          enableAgentCreationCommand: !isFreeAgentPlan,
                           agentCreationCommand: agentsHomeCreationCommandRequest,
                           agentCreationCommandHiddenPrompt: buildAgentsHomeCreationHiddenPrompt,
                           onExternalRunRequestCreate: handleAgentsHomeThreadStartRequest,
@@ -96796,7 +97284,8 @@ ${MODELS_PAGE_SCRIPT}
           renderAgentRenameModal(),
           renderAgentComposerDialog(),
           renderAgentCreationPermissionModal(),
-          renderAgentModelPickerDialog()
+          renderAgentModelPickerDialog(),
+          renderAgentUpgradeModal()
         );
       }
 
@@ -101050,6 +101539,7 @@ ${MODELS_PAGE_SCRIPT}
         onProjectScopeChange,
         onProjectRecordCommitted,
         onOpenFilesPage,
+        onOpenProjectMetronomes,
         onRequireAuth,
         onRequestSidebarCollapse,
         useUnifiedProjectNav = false,
@@ -101819,6 +102309,63 @@ ${MODELS_PAGE_SCRIPT}
           return projectComposerAvailableEnvironments.find((environment) => environment.id === activeProjectAttachmentEnvironmentId) || null;
         }, [activeProjectAttachmentEnvironmentId, projectComposerAvailableEnvironments]);
 
+        useEffect(() => {
+          const shouldOpenProjectFilesGlobally = projectOverviewHomeTab === "files" || projectOverviewFilesSubview === "files";
+          if (!shouldOpenProjectFilesGlobally) {
+            return;
+          }
+          if (projectOverviewHomeTab === "files") {
+            setProjectOverviewHomeTab("general");
+          }
+          if (projectOverviewFilesSubview === "files") {
+            setProjectOverviewFilesSubview("overview");
+          }
+          if (typeof onOpenFilesPage !== "function") {
+            return;
+          }
+          const normalizedProjectId = String(
+            selectedProjectId
+            || selectedProject?.id
+            || projectAttachmentHostRecord?.id
+            || projectDraft?.id
+            || ""
+          ).trim();
+          const normalizedProjectName = String(
+            selectedProject?.name
+            || projectAttachmentHostRecord?.name
+            || projectDraft?.name
+            || ""
+          ).trim();
+          const normalizedEnvironmentId = String(
+            activeProjectAttachmentEnvironmentId
+            || selectedProject?.defaultEnvironmentId
+            || projectAttachmentHostRecord?.defaultEnvironmentId
+            || projectDraft?.defaultEnvironmentId
+            || ""
+          ).trim();
+          onOpenFilesPage({
+            token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+            projectId: normalizedProjectId,
+            projectName: normalizedProjectName,
+            environmentId: normalizedEnvironmentId,
+          });
+        }, [
+          activeProjectAttachmentEnvironmentId,
+          onOpenFilesPage,
+          projectOverviewHomeTab,
+          projectOverviewFilesSubview,
+          projectAttachmentHostRecord?.defaultEnvironmentId,
+          projectAttachmentHostRecord?.id,
+          projectAttachmentHostRecord?.name,
+          projectDraft?.defaultEnvironmentId,
+          projectDraft?.id,
+          projectDraft?.name,
+          selectedProject?.defaultEnvironmentId,
+          selectedProject?.id,
+          selectedProject?.name,
+          selectedProjectId,
+        ]);
+
         const isCalendarScheduleDetailMode = Boolean(!draftTask && isCalendarContext && scheduleViewMode === "setup");
         const projectWallpaperActive = !isStandaloneCalendarMode && Boolean(selectedProjectShellBackground);
 
@@ -102268,7 +102815,7 @@ ${MODELS_PAGE_SCRIPT}
 
         const loadProjectOverviewFileActivity = useCallback(async function loadProjectOverviewFileActivity() {
           const normalizedProjectId = String(selectedProjectId || "").trim();
-          if (!normalizedProjectId || taskView !== "overview" || projectOverviewHomeTab !== "files") {
+          if (!normalizedProjectId || taskView !== "overview" || projectOverviewFilesSubview !== "imagine") {
             projectOverviewFileActivityLoadKeyRef.current = "";
             setProjectOverviewThreadRecords([]);
             setProjectOverviewFileActivityState((current) => ({
@@ -102280,13 +102827,13 @@ ${MODELS_PAGE_SCRIPT}
             return;
           }
 
-	          const loadKey = [
-	            normalizedProjectId,
-	            taskView,
-	            projectOverviewHomeTab,
-	            backendUrl,
-	            requestHeadersKey,
-	            selectedProjectOverviewDeletedFileKeysKey,
+		          const loadKey = [
+		            normalizedProjectId,
+		            taskView,
+		            projectOverviewFilesSubview,
+		            backendUrl,
+		            requestHeadersKey,
+		            selectedProjectOverviewDeletedFileKeysKey,
 	            activeProjectAttachmentEnvironmentId,
 	            String(projectOverviewFileActivityReloadNonce || 0),
           ].join("|");
@@ -102412,14 +102959,14 @@ ${MODELS_PAGE_SCRIPT}
           });
         }, [
           activeProjectAttachmentEnvironmentId,
-          agentsById,
-          backendUrl,
-          projectOverviewHistoryClient,
-          projectOverviewFileActivityReloadNonce,
-          projectOverviewHomeTab,
-	          requestHeaders,
-	          requestHeadersKey,
-	          selectedProject?.defaultEnvironmentId,
+	          agentsById,
+	          backendUrl,
+	          projectOverviewHistoryClient,
+	          projectOverviewFileActivityReloadNonce,
+	          projectOverviewFilesSubview,
+		          requestHeaders,
+		          requestHeadersKey,
+		          selectedProject?.defaultEnvironmentId,
           selectedProjectOverviewDeletedFileKeysKey,
           selectedProjectId,
           taskView,
@@ -102447,9 +102994,9 @@ ${MODELS_PAGE_SCRIPT}
 
 	        const loadProjectOverviewServerResources = useCallback(async function loadProjectOverviewServerResources() {
 	          const normalizedProjectId = String(selectedProjectId || "").trim();
-	          if (!normalizedProjectId || taskView !== "overview" || projectOverviewHomeTab !== "files") {
-	            projectOverviewServerResourcesLoadKeyRef.current = "";
-	            setProjectOverviewServerResourcesState((current) => ({
+		          if (!normalizedProjectId || taskView !== "overview" || projectOverviewFilesSubview !== "resources") {
+		            projectOverviewServerResourcesLoadKeyRef.current = "";
+		            setProjectOverviewServerResourcesState((current) => ({
               ...current,
               status: "idle",
               error: "",
@@ -102457,13 +103004,13 @@ ${MODELS_PAGE_SCRIPT}
 	            }));
 	            return;
 	          }
-	          const loadKey = [
-	            normalizedProjectId,
-	            taskView,
-	            projectOverviewHomeTab,
-	            backendUrl,
-	            requestHeadersKey,
-	          ].join("|");
+		          const loadKey = [
+		            normalizedProjectId,
+		            taskView,
+		            projectOverviewFilesSubview,
+		            backendUrl,
+		            requestHeadersKey,
+		          ].join("|");
 	          if (projectOverviewServerResourcesLoadKeyRef.current === loadKey) {
 	            return;
 	          }
@@ -102527,7 +103074,7 @@ ${MODELS_PAGE_SCRIPT}
               items: [],
             });
           }
-	        }, [backendUrl, projectOverviewHomeTab, requestHeaders, requestHeadersKey, selectedProjectId, taskView]);
+		        }, [backendUrl, projectOverviewFilesSubview, requestHeaders, requestHeadersKey, selectedProjectId, taskView]);
 
         useEffect(() => {
           let cancelled = false;
@@ -102619,10 +103166,22 @@ ${MODELS_PAGE_SCRIPT}
         }
 
         function navigateProjectOverviewFileToFiles(row) {
-          const normalizedProjectId = String(selectedProjectId || row?.projectId || "").trim();
+          const normalizedProjectId = String(
+            selectedProjectId
+            || selectedProject?.id
+            || projectAttachmentHostRecord?.id
+            || row?.projectId
+            || ""
+          ).trim();
+          const normalizedProjectName = String(
+            selectedProject?.name
+            || projectAttachmentHostRecord?.name
+            || ""
+          ).trim();
           const normalizedEnvironmentId = String(
             row?.environmentId
             || selectedProject?.defaultEnvironmentId
+            || projectAttachmentHostRecord?.defaultEnvironmentId
             || activeProjectAttachmentEnvironmentId
             || ""
           ).trim();
@@ -102634,6 +103193,7 @@ ${MODELS_PAGE_SCRIPT}
             onOpenFilesPage({
               token: Date.now().toString(36) + Math.random().toString(36).slice(2),
               projectId: normalizedProjectId,
+              projectName: normalizedProjectName,
               environmentId: normalizedEnvironmentId,
               path: normalizedPath,
               isFolder: false,
@@ -103346,7 +103906,6 @@ ${MODELS_PAGE_SCRIPT}
             if (!normalizedSearchQuery) return true;
             const haystack = [
               environment.name || "",
-              environment.description || "",
             ]
               .join(" ")
               .toLowerCase();
@@ -104375,11 +104934,16 @@ ${MODELS_PAGE_SCRIPT}
 		              ? selectedProject.name || ""
 		              : selectedProject?.name || ""
 		          ).trim();
-		          const projectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(selectedProject, {
-		            taskRecord: normalizedTask,
-		          });
-		          const projectRulesSection = buildPlaygroundProjectRulesPromptSection(selectedProject);
-		          const directResponseTask = isPlaygroundDirectResponseTask(normalizedTask);
+			          const projectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(selectedProject, {
+			            taskRecord: normalizedTask,
+			          });
+			          const projectRulesSection = buildPlaygroundProjectRulesPromptSection(selectedProject);
+			          const projectResourcesSection = buildPlaygroundProjectResourcePromptSection(selectedProject, {
+			            projectId,
+			            projectName,
+			            projectAttachments: options?.projectAttachments,
+			          });
+			          const directResponseTask = isPlaygroundDirectResponseTask(normalizedTask);
 	          const independentReviewerId = getPlaygroundIndependentReviewerId(normalizedTask);
 	          const inReviewImplementationGuard = normalizedTaskStatus === "in_review" && !reviewRequestBody
 	            ? [
@@ -104442,9 +105006,10 @@ ${MODELS_PAGE_SCRIPT}
 			              ? (directResponseTask ? "Skills: None needed for this response-only ticket." : "Skills: " + skillNames.join(", "))
 			              : "",
 			            connectorLines.length > 0 ? "Connectors:" + newline + connectorLines.join(newline) : "",
-			            projectStrategySection,
-			            projectRulesSection,
-			            [
+				            projectStrategySection,
+				            projectRulesSection,
+				            projectResourcesSection,
+				            [
 	              "Execution expectations:",
 	              "- The project id and task id above are authoritative. Do not list projects or tasks just to discover this ticket.",
 	              "- Use Task Management, Computer Agents, filesystem, browser, or shell tools only when the ticket cannot be completed from the provided title, description, attachments, and comments.",
@@ -105091,9 +105656,9 @@ ${MODELS_PAGE_SCRIPT}
             availableBacklogEnvironments,
             projectDefaultEnvironmentId
           );
-          const projectAttachmentsSection = buildPlaygroundAttachmentPromptSection(
-            "Project attachments:",
-            normalizedProject.attachments,
+		          const projectAttachmentsSection = buildPlaygroundAttachmentPromptSection(
+		            "Project attachments:",
+		            normalizedProject.attachments,
             {
               copy: "These files belong to the entire project and describe the shared scope, requirements, or design direction.",
             }
@@ -105105,10 +105670,15 @@ ${MODELS_PAGE_SCRIPT}
               copy: "These files were attached specifically for this Mission Control run.",
             }
           );
-	          const projectConnectorsSection = buildPlaygroundConnectorPromptSection(
-	            "Project connectors",
-	            normalizedProject.connectors
-	          );
+		          const projectConnectorsSection = buildPlaygroundConnectorPromptSection(
+		            "Project connectors",
+		            normalizedProject.connectors
+		          );
+		          const projectResourcesSection = buildPlaygroundProjectResourcePromptSection(normalizedProject, {
+		            projectId: normalizedProject.id,
+		            projectName: normalizedProject.name,
+		            projectAttachments: normalizedProject.attachments,
+		          });
 	          const operatorPrompt = String(options?.userPrompt || "").trim();
 	          const projectContextDescription = getPlaygroundProjectMissionInstructions(normalizedProject);
 	          const currentProjectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(normalizedProject);
@@ -105123,10 +105693,11 @@ ${MODELS_PAGE_SCRIPT}
             projectContextDescription
               ? ("Project goal:" + newline + projectContextDescription)
               : "Project goal: None provided.",
-	            projectAttachmentsSection,
-	            runAttachmentsSection,
-	            projectConnectorsSection,
-	            currentProjectStrategySection
+		            projectAttachmentsSection,
+		            runAttachmentsSection,
+		            projectConnectorsSection,
+		            projectResourcesSection,
+		            currentProjectStrategySection
 	              ? ("Current structured project strategy:" + newline + currentProjectStrategySection)
 	              : "Current structured project strategy: None yet.",
 	            currentProjectRulesSection
@@ -117853,7 +118424,7 @@ ${MODELS_PAGE_SCRIPT}
               ),
               React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                 React.createElement("span", null, environment.name + (environment.isDefault ? " (Default)" : "")),
-                React.createElement("span", null, environment.description || "Use this environment for project-wide files.")
+                React.createElement("span", null, "Use this computer for project-wide files.")
               )
             );
           }
@@ -118586,7 +119157,7 @@ ${MODELS_PAGE_SCRIPT}
                         React.createElement("div", { key: environment.id, className: "playground-tasks-project-row" },
                           React.createElement("div", { className: "playground-tasks-project-row-main" },
                             React.createElement("div", { className: "playground-tasks-project-row-title" }, environment.name || "Untitled Environment"),
-                            React.createElement("div", { className: "playground-tasks-project-row-copy" }, environment.description || "Project runtime environment")
+                            React.createElement("div", { className: "playground-tasks-project-row-copy" }, "Project runtime computer")
                           ),
                           environment.id === selectedProject.defaultEnvironmentId
                             ? React.createElement("span", { className: "playground-tasks-chip" }, "Default")
@@ -124306,24 +124877,24 @@ ${PROJECT_OVERVIEW_SCRIPT}
             renderSplitRows([
               {
                 icon: MessageSquare,
-                title: "Assistant Agent",
-                copy: "General coordination and day-to-day help.",
-                profileUrl: "/img/agent-profile-pics/assistantastro-1.webp",
-                modelId: "deepseek-v4-pro",
+                title: "Spark",
+                copy: "Fast everyday execution for digital work.",
+                profileUrl: PLAYGROUND_SPARK_AGENT_PROFILE_URL,
+                modelId: "deepseek-v4-flash",
               },
               {
                 icon: Code2,
-                title: "Developer Agent",
-                copy: "Implementation, debugging, and code changes.",
-                profileUrl: "/img/agent-profile-pics/devastro.webp",
-                modelId: "kimi-k2.6",
+                title: "Forge",
+                copy: "Implementation-heavy execution and technical work.",
+                profileUrl: PLAYGROUND_FORGE_AGENT_PROFILE_URL,
+                modelId: "minimax-m3",
               },
               {
                 icon: Shield,
-                title: "Reviewer Agent",
-                copy: "Review, acceptance checks, and change requests.",
-                profileUrl: "/img/agent-profile-pics/researchastro.webp",
-                modelId: "deepseek-v4-pro",
+                title: "Foundry",
+                copy: "High-rigor synthesis, reasoning, and review.",
+                profileUrl: PLAYGROUND_FOUNDRY_AGENT_PROFILE_URL,
+                modelId: "claude-opus-4-8",
               },
             ])
           );
@@ -124765,7 +125336,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             visual: React.createElement("div", { className: "playground-onboarding-concept-visual" },
               React.createElement("img", {
                 className: "playground-onboarding-concept-image",
-                src: "/img/agent-profile-pics/devastro.webp",
+                src: PLAYGROUND_FORGE_AGENT_PROFILE_URL,
                 alt: "Agents",
               })
             ),
@@ -125058,6 +125629,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const initialSidebarWorkspaceMode = "work";
         const [sidebarOpen, setSidebarOpen] = useState(true);
         const [activePage, setActivePage] = useState("thread");
+        const [metronomeProjectFilterId, setMetronomeProjectFilterId] = useState("");
         const [metronomeTopNavState, setMetronomeTopNavState] = useState(null);
         const [metronomeTopNavMenuOpen, setMetronomeTopNavMenuOpen] = useState(false);
         const [isMetronomeNodeDetailOpen, setIsMetronomeNodeDetailOpen] = useState(false);
@@ -125591,9 +126163,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         const proxyBackendBase = window.location.origin + "/api/real";
         const demoAgents = [
-          { id: "agent_default", name: "Developer", isDefault: true, isSystem: true },
-          { id: "agent_research", name: "Researcher Agent", isDefault: true, isSystem: true },
-          { id: "agent_assistant", name: "Assistant", isDefault: true, isSystem: true }
+          { id: "agent_assistant", name: "Spark", isDefault: true, isSystem: true },
+          { id: "agent_default", name: "Forge", isDefault: true, isSystem: true },
+          { id: "agent_research", name: "Foundry", isDefault: true, isSystem: true }
         ];
         const demoEnvironments = [
           { id: "env_default", name: "Default", isDefault: true },
@@ -127482,9 +128054,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setActivePage("imagine");
         }
 
-        function openMetronomePage() {
+        function openMetronomePage(options = {}) {
+          const normalizedProjectId = String(options?.projectId || "").trim();
           setAccountMenuOpen(false);
           setSidebarWorkspaceMode("work");
+          setMetronomeProjectFilterId(normalizedProjectId);
           setActivePage("metronome");
         }
 
@@ -128029,11 +128603,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
 		          const projectRecord = options?.projectRecord && typeof options.projectRecord === "object"
 		            ? options.projectRecord
 		            : welcomeWidgetProject;
-		          const projectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(projectRecord, {
-		            taskRecord: normalizedTask,
-		          });
-		          const projectRulesSection = buildPlaygroundProjectRulesPromptSection(projectRecord);
-		          const directResponseTask = isPlaygroundDirectResponseTask(normalizedTask);
+			          const projectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(projectRecord, {
+			            taskRecord: normalizedTask,
+			          });
+			          const projectRulesSection = buildPlaygroundProjectRulesPromptSection(projectRecord);
+			          const projectResourcesSection = buildPlaygroundProjectResourcePromptSection(projectRecord, {
+			            projectId,
+			            projectName,
+			            projectAttachments: options?.projectAttachments,
+			          });
+			          const directResponseTask = isPlaygroundDirectResponseTask(normalizedTask);
 	          const independentReviewerId = getPlaygroundIndependentReviewerId(normalizedTask);
 	          const taskAttachmentsSection = buildPlaygroundAttachmentPromptSection("Task attachments:", normalizedTask.attachments, {
 	            copy: "These files are attached specifically to this task.",
@@ -128063,9 +128642,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            "Assignee: " + getWelcomeWidgetTaskAssigneeName(normalizedTask),
 			            "Review: " + reviewerName,
 			            "Environment: " + getWelcomeWidgetTaskEnvironmentName(normalizedTask),
-			            projectStrategySection,
-			            projectRulesSection,
-			            [
+				            projectStrategySection,
+				            projectRulesSection,
+				            projectResourcesSection,
+				            [
 	              "Execution expectations:",
 	              "- The project id and task id above are authoritative. Do not list projects or tasks just to discover this ticket.",
 	              "- Use Task Management, Computer Agents, filesystem, browser, or shell tools only when the ticket cannot be completed from the provided title, description, attachments, and comments.",
@@ -143956,6 +144536,41 @@ ${PROJECT_OVERVIEW_SCRIPT}
           selectedThreadAgentId,
           threadAgentSelectionOverride,
         ]);
+        const isFreeComposerAgentPlan = hasShellAccess
+          && (normalizeSettingsTierId(settingsCurrentTierId || accountTierId || "free") || "free") === "free";
+        const runtimeAgentsForComposer = useMemo(() => {
+          const visibleAgents = Array.isArray(runtimeAgents) ? runtimeAgents : [];
+          if (!isFreeComposerAgentPlan) {
+            return visibleAgents;
+          }
+          const sparkAgents = visibleAgents.filter((agent) => isPlaygroundAssistantAgent(agent));
+          return sparkAgents.length > 0 ? sparkAgents : visibleAgents.slice(0, 1);
+        }, [isFreeComposerAgentPlan, runtimeAgents]);
+        const resolvedComposerAgentId = useMemo(() => {
+          const normalizedAgentId = String(resolvedTaskInputAgentId || "").trim();
+          if (!isFreeComposerAgentPlan) {
+            return normalizedAgentId;
+          }
+          if (normalizedAgentId && runtimeAgentsForComposer.some((agent) => String(agent?.id || "").trim() === normalizedAgentId)) {
+            return normalizedAgentId;
+          }
+          return String(runtimeAgentsForComposer[0]?.id || "").trim();
+        }, [isFreeComposerAgentPlan, resolvedTaskInputAgentId, runtimeAgentsForComposer]);
+        useEffect(() => {
+          if (!isFreeComposerAgentPlan) {
+            return;
+          }
+          const normalizedPreferredAgentId = String(preferredAgentId || "").trim();
+          if (!normalizedPreferredAgentId) {
+            return;
+          }
+          if (runtimeAgentsForComposer.some((agent) => String(agent?.id || "").trim() === normalizedPreferredAgentId)) {
+            return;
+          }
+          const nextAgentId = String(runtimeAgentsForComposer[0]?.id || "").trim();
+          setPreferredAgentId(nextAgentId);
+          setThreadAgentSelectionOverride(null);
+        }, [isFreeComposerAgentPlan, preferredAgentId, runtimeAgentsForComposer]);
         const openAgentDetailsInResources = useCallback((nextAgentId, options = {}) => {
           const normalizedAgentId = String(nextAgentId || "").trim();
           if (!normalizedAgentId) {
@@ -144113,13 +144728,17 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            status: selectedThreadTaskPreview?.status || "todo",
 	            metadata: selectedThreadTaskPreview?.metadata,
 	          });
-	          return [
-	            buildPlaygroundProjectStrategyBriefPromptSection(selectedThreadProjectRecord, {
-	              taskRecord: previewTaskRecord,
-	            }),
-	            buildPlaygroundProjectRulesPromptSection(selectedThreadProjectRecord),
-	          ].filter(Boolean).join(String.fromCharCode(10) + String.fromCharCode(10));
-	        }, [selectedThreadProjectId, selectedThreadProjectRecord, selectedThreadTaskPreview]);
+		          return [
+		            buildPlaygroundProjectStrategyBriefPromptSection(selectedThreadProjectRecord, {
+		              taskRecord: previewTaskRecord,
+		            }),
+		            buildPlaygroundProjectRulesPromptSection(selectedThreadProjectRecord),
+		            buildPlaygroundProjectResourcePromptSection(selectedThreadProjectRecord, {
+		              projectId: selectedThreadProjectId,
+		              projectName: selectedThreadProjectName,
+		            }),
+		          ].filter(Boolean).join(String.fromCharCode(10) + String.fromCharCode(10));
+		        }, [selectedThreadProjectId, selectedThreadProjectName, selectedThreadProjectRecord, selectedThreadTaskPreview]);
 	        const selectedThreadTaskTitle = useMemo(() => {
           if (!selectedThreadTaskPreview?.taskId || selectedThreadTaskPreview?.isDeleted) {
             return "";
@@ -146998,7 +147617,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return renderUnifiedTopNav({
             className: "playground-resources-page",
             pathItems: resourcesPathItems,
-            includeSearchDivider: activeResourcesView === "agents" && !isResourcesDetailView,
+            includeSearchDivider: activeResourcesView === "agents" || activeResourcesView === "computers",
             extraActions: React.createElement("div", {
               id: "playground-resources-nav-actions",
               className: "playground-resources-nav-actions-slot",
@@ -147359,6 +147978,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   focusedAgentSelectionToken: agentPageSelectionRequest?.token || "",
                   createAgentRequestToken: agentCreationPageRequestToken,
                   subscriptionTierId: accountTierId || "",
+                  onUpgradeToIndividual: () => handleSettingsSubscribe("individual"),
                   onPreferredAgentChange: (nextAgentId) => {
                     setPreferredAgentId(String(nextAgentId || "").trim());
                   },
@@ -150095,8 +150715,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               environments: realEnvironments,
                               initialEnvironmentId: resolvedEnvironmentId || "",
                               apiKey: effectiveApiKey,
-                              agentId: resolvedPreferredAgentId || "",
-                              agents: runtimeAgents,
+                              agentId: resolvedComposerAgentId || "",
+                              agents: runtimeAgentsForComposer,
                               onFileChatThreadMutated: () => {
                                 void refreshThreads();
                               },
@@ -150236,15 +150856,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 ...environment,
                                 ...(resolvedEnvironmentId && environment.id === resolvedEnvironmentId ? { isDefault: true } : {})
                               })) : [],
-                              agents: computerAgentsMode ? runtimeAgents.map((agent) => (
-                                buildPlaygroundRunnerAgentOption(agent, resolvedTaskInputAgentId && agent.id === resolvedTaskInputAgentId ? { isDefault: true } : {})
+                              agents: computerAgentsMode ? runtimeAgentsForComposer.map((agent) => (
+                                buildPlaygroundRunnerAgentOption(agent, resolvedComposerAgentId && agent.id === resolvedComposerAgentId ? { isDefault: true } : {})
                               )) : [],
                               skills: computerAgentsMode ? demoSkills : [],
                               skillDefaults: getDemoImageGenerationSkillDefaults(),
                               canGenerateVideo: canGenerateImagineVideo,
                               onUpgradeToIndividual: () => handleSettingsSubscribe("individual"),
                               environmentId: resolvedEnvironmentId || "",
-                              agentId: resolvedTaskInputAgentId || "",
+                              agentId: resolvedComposerAgentId || "",
                               onAgentChange: (nextAgentId) => {
                                 setThreadAgentSelectionOverride(String(nextAgentId || "").trim() || null);
                               },
@@ -150325,6 +150945,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               agents: realAgents,
                               environments: realEnvironments,
                               projects: realProjects,
+                              projectFilterId: metronomeProjectFilterId,
                               backendUrl: proxyBackendBase,
                               apiKey: effectiveApiKey,
                               requestHeaders,
@@ -150403,6 +151024,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               }
                               setFilesPageNavigationRequest(request || null);
                               setActivePage("files");
+                            },
+                            onOpenProjectMetronomes: (request = {}) => {
+                              const normalizedProjectId = String(request?.projectId || "").trim();
+                              openMetronomePage({ projectId: normalizedProjectId });
                             },
                             onThreadOpen: (threadId, options = {}) => {
                               const normalizedThreadId = String(threadId || "").trim();
@@ -150530,15 +151155,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                       ...environment,
                                       ...(resolvedEnvironmentId && environment.id === resolvedEnvironmentId ? { isDefault: true } : {})
                                     })) : undefined,
-                                    agents: computerAgentsMode ? runtimeAgents.map((agent) => (
-                                      buildPlaygroundRunnerAgentOption(agent, resolvedTaskInputAgentId && agent.id === resolvedTaskInputAgentId ? { isDefault: true } : {})
+                                    agents: computerAgentsMode ? runtimeAgentsForComposer.map((agent) => (
+                                      buildPlaygroundRunnerAgentOption(agent, resolvedComposerAgentId && agent.id === resolvedComposerAgentId ? { isDefault: true } : {})
                                     )) : undefined,
                                     skills: computerAgentsMode ? demoSkills : undefined,
                                     enabledSkillIds: computerAgentsMode ? runnerEnabledSkillIds : undefined,
                                     onSkillsChange: computerAgentsMode ? setRunnerEnabledSkillIds : undefined,
                                     skillDefaults: getDemoImageGenerationSkillDefaults(),
                                     environmentId: resolvedEnvironmentId || undefined,
-                                    agentId: resolvedTaskInputAgentId || undefined,
+                                    agentId: resolvedComposerAgentId || undefined,
                                     autoFocusComposer: true,
                                     keepFocusOnSubmit: true,
                                     showUsageInStatus: false,
@@ -150550,7 +151175,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                                      : selectedThreadProjectContextPrompt,
 	                                    enableResourceCreationCommand: true,
                                     resourceCreationCommandHiddenPrompt: buildThreadRunnerResourceHiddenPrompt,
-                                    enableAgentCreationCommand: true,
+                                    enableAgentCreationCommand: !isFreeComposerAgentPlan,
                                     agentCreationCommandHiddenPrompt: buildThreadRunnerAgentHiddenPrompt,
                                     enableSkillCreationCommand: true,
                                     skillCreationCommandHiddenPrompt: buildThreadRunnerSkillHiddenPrompt,
@@ -150558,8 +151183,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     emptyStateAfterComposer: showInitialThreadWelcome ? renderInitialThreadWelcome("after") : undefined,
                                     composerProjectTasks: showInitialThreadWelcome ? welcomeComposerTaskPreviews : undefined,
                                     selectedComposerProjectTask: showInitialThreadWelcome ? selectedWelcomeComposerTaskPreview : null,
-                                    showComposerCreateAgentAction: showWelcomeComposerCreateAgentAction,
-                                    onComposerCreateAgentClick: showInitialThreadWelcome ? openAgentCreationInResources : undefined,
+                                    showComposerCreateAgentAction: showWelcomeComposerCreateAgentAction && !isFreeComposerAgentPlan,
+                                    onComposerCreateAgentClick: showInitialThreadWelcome && !isFreeComposerAgentPlan ? openAgentCreationInResources : undefined,
                                     onComposerProjectTaskChange: showInitialThreadWelcome
                                       ? (taskPreview) => {
                                           setSelectedWelcomeComposerTaskId(String(taskPreview?.taskId || "").trim());
@@ -150948,6 +151573,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 }
                                 setFilesPageNavigationRequest(request || null);
                                 setActivePage("files");
+                              },
+                              onOpenProjectMetronomes: (request = {}) => {
+                                const normalizedProjectId = String(request?.projectId || "").trim();
+                                openMetronomePage({ projectId: normalizedProjectId });
                               },
                               onThreadOpen: (threadId, options = {}) => {
                                 const normalizedThreadId = String(threadId || "").trim();
@@ -152687,6 +153316,127 @@ async function proxyUpstreamGet(req, res, upstreamPath, options = {}) {
   }
 }
 
+async function proxyProjectResourceIndexGet(req, res, projectId) {
+  const normalizedProjectId = String(projectId || "").trim();
+  if (!normalizedProjectId) {
+    return sendJson(res, 400, {
+      error: "Project id is required",
+      message: "A project id is required to load the project resource index.",
+    });
+  }
+
+  const encodedProjectId = encodeURIComponent(normalizedProjectId);
+  try {
+    const projectResponse = await fetchUpstreamJsonForProxyExactPath(req, `/projects/${encodedProjectId}`, "GET");
+    if (projectResponse.status === 401 || projectResponse.status === 403 || projectResponse.status === 404) {
+      return sendJson(res, projectResponse.status, projectResponse.data);
+    }
+    if (projectResponse.status >= 400) {
+      return sendJson(res, projectResponse.status, projectResponse.data);
+    }
+
+    const project = getProjectResourceIndexProject(projectResponse.data);
+    const projectMetadata = getProjectResourceIndexMetadata(project);
+    const attachments = getProjectResourceIndexAttachments(project);
+    const connectors = getProjectResourceIndexConnectors(project);
+    const errors = [];
+
+    const [serversResponse, metronomesResponse] = await Promise.all([
+      fetchUpstreamJsonForProxyExactPath(req, `/servers?projectId=${encodedProjectId}`, "GET").catch((error) => ({
+        status: 502,
+        data: { error: "Failed to load server resources", message: error instanceof Error ? error.message : String(error) },
+      })),
+      fetchUpstreamJsonForProxyExactPath(req, `/metronomes?projectId=${encodedProjectId}`, "GET").catch((error) => ({
+        status: 502,
+        data: { error: "Failed to load metronomes", message: error instanceof Error ? error.message : String(error) },
+      })),
+    ]);
+
+    let serverResources = [];
+    if (serversResponse.status < 400) {
+      serverResources = filterProjectResourceIndexRecordsByProjectId(
+        getProjectResourceIndexArray(serversResponse.data, ["servers", "resources"]),
+        normalizedProjectId,
+      );
+    } else {
+      errors.push({
+        resource: "serverResources",
+        status: serversResponse.status,
+        message: serversResponse.data?.message || serversResponse.data?.error || "Server resources are unavailable.",
+      });
+    }
+
+    let metronomes = [];
+    if (metronomesResponse.status < 400) {
+      metronomes = filterProjectResourceIndexRecordsByProjectId(
+        getProjectResourceIndexArray(metronomesResponse.data, ["metronomes", "workflows"]),
+        normalizedProjectId,
+      );
+    } else {
+      errors.push({
+        resource: "metronomes",
+        status: metronomesResponse.status,
+        message: metronomesResponse.data?.message || metronomesResponse.data?.error || "Metronomes are unavailable.",
+      });
+    }
+
+    const imagineResources = filterProjectResourceIndexImagineResources(attachments, normalizedProjectId);
+    const defaultEnvironmentId = String(
+      project.defaultEnvironmentId ||
+      project.default_environment_id ||
+      project.environmentId ||
+      project.environment_id ||
+      projectMetadata.defaultEnvironmentId ||
+      projectMetadata.default_environment_id ||
+      ""
+    ).trim();
+    const projectName = String(project.name || project.title || projectMetadata.name || "").trim();
+
+    return sendJson(res, 200, {
+      object: "project_resource_index",
+      id: normalizedProjectId,
+      projectId: normalizedProjectId,
+      project: {
+        id: normalizedProjectId,
+        name: projectName,
+        title: String(project.title || projectName || "").trim(),
+        description: String(project.description || projectMetadata.description || "").trim(),
+        defaultEnvironmentId,
+        connectors,
+      },
+      files: attachments,
+      attachments,
+      connectors,
+      serverResources,
+      servers: serverResources,
+      metronomes,
+      imagineResources,
+      counts: {
+        files: attachments.length,
+        attachments: attachments.length,
+        connectors: connectors.length,
+        serverResources: serverResources.length,
+        servers: serverResources.length,
+        metronomes: metronomes.length,
+        imagineResources: imagineResources.length,
+      },
+      routes: {
+        project: `/api/real/projects/${encodedProjectId}`,
+        resourceIndex: `/api/real/projects/${encodedProjectId}/resource-index`,
+        files: `/api/real/projects/${encodedProjectId}`,
+        serverResources: `/api/real/servers?projectId=${encodedProjectId}`,
+        metronomes: `/api/real/metronomes?projectId=${encodedProjectId}`,
+      },
+      errors,
+    });
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to load project resource index",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 function readAdminKey(req) {
   const authHeader = req.headers.authorization || "";
   if (authHeader.startsWith("Bearer ")) {
@@ -153565,6 +154315,194 @@ async function fetchUpstreamJsonForProxy(req, upstreamPath, method, body) {
     data = { message: text };
   }
   return { status: upstream.status, data };
+}
+
+async function fetchUpstreamJsonForProxyExactPath(req, upstreamPath, method = "GET", body) {
+  const upstreamUrl = parseUpstreamUrl(req, body || {});
+  const apiKey = readOptionalApiKey(req, body || {});
+  const normalizedPath = upstreamPath.startsWith("/") ? upstreamPath : `/${upstreamPath}`;
+  let upstream;
+
+  if (apiKey) {
+    const upstreamTarget = new URL(`${upstreamUrl}${normalizedPath}`);
+    upstream = await fetch(upstreamTarget.toString(), {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": apiKey,
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } else if (hasAiosSession(req)) {
+    const targetUrl = new URL(`${aiosOrigin}/api/playground/cloud${normalizedPath}`);
+    const headers = {
+      cookie: req.headers.cookie || "",
+      authorization: req.headers.authorization || "",
+      "content-type": "application/json",
+    };
+    if (shouldForwardLocalCloudApiOverride && !headers["x-runner-upstream-url"]) {
+      headers["x-runner-upstream-url"] = defaultUpstreamOrigin;
+    }
+    upstream = await fetch(targetUrl.toString(), {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } else {
+    return {
+      status: 401,
+      data: {
+        error: "Unauthorized",
+        message: "Sign in with Computer Agents or provide an API key.",
+      },
+    };
+  }
+
+  const text = await upstream.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { message: text };
+  }
+  return { status: upstream.status, data };
+}
+
+function unwrapProxyDataRecord(data, keys = []) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return {};
+  }
+  for (const key of keys) {
+    const value = data[key];
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      return value;
+    }
+  }
+  if (data.data && typeof data.data === "object" && !Array.isArray(data.data)) {
+    return data.data;
+  }
+  return data;
+}
+
+function getProjectResourceIndexArray(data, keys = []) {
+  if (Array.isArray(data)) {
+    return data;
+  }
+  if (!data || typeof data !== "object") {
+    return [];
+  }
+  for (const key of keys) {
+    if (Array.isArray(data[key])) {
+      return data[key];
+    }
+  }
+  if (Array.isArray(data.data)) {
+    return data.data;
+  }
+  if (Array.isArray(data.items)) {
+    return data.items;
+  }
+  if (Array.isArray(data.results)) {
+    return data.results;
+  }
+  return [];
+}
+
+function getProjectResourceIndexProject(data) {
+  return unwrapProxyDataRecord(data, ["project"]);
+}
+
+function getProjectResourceIndexMetadata(record) {
+  if (!record || typeof record !== "object") {
+    return {};
+  }
+  if (record.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata)) {
+    return record.metadata;
+  }
+  return {};
+}
+
+function readProjectResourceProjectId(record) {
+  if (!record || typeof record !== "object") {
+    return "";
+  }
+  const metadata = getProjectResourceIndexMetadata(record);
+  const runnerPlayground = metadata.runnerPlayground && typeof metadata.runnerPlayground === "object"
+    ? metadata.runnerPlayground
+    : {};
+  return String(
+    record.projectId ||
+    record.project_id ||
+    record.project ||
+    metadata.projectId ||
+    metadata.project_id ||
+    runnerPlayground.projectId ||
+    runnerPlayground.project_id ||
+    ""
+  ).trim();
+}
+
+function filterProjectResourceIndexRecordsByProjectId(records, projectId) {
+  const normalizedProjectId = String(projectId || "").trim();
+  const normalizedRecords = Array.isArray(records) ? records : [];
+  if (!normalizedProjectId) {
+    return normalizedRecords;
+  }
+  const recordsWithProjectIds = normalizedRecords.filter((record) => readProjectResourceProjectId(record));
+  if (!recordsWithProjectIds.length) {
+    return normalizedRecords;
+  }
+  return normalizedRecords.filter((record) => readProjectResourceProjectId(record) === normalizedProjectId);
+}
+
+function getProjectResourceIndexConnectors(project) {
+  const projectRecord = project && typeof project === "object" ? project : {};
+  const metadata = getProjectResourceIndexMetadata(projectRecord);
+  const connectors = projectRecord.connectors || metadata.connectors || {};
+  if (Array.isArray(connectors)) {
+    return connectors;
+  }
+  if (!connectors || typeof connectors !== "object") {
+    return [];
+  }
+  return Object.entries(connectors)
+    .filter(([, value]) => Boolean(value))
+    .map(([key, value]) => ({
+      key,
+      source: key,
+      ...((value && typeof value === "object" && !Array.isArray(value)) ? value : { value }),
+    }));
+}
+
+function getProjectResourceIndexAttachments(project) {
+  const projectRecord = project && typeof project === "object" ? project : {};
+  const metadata = getProjectResourceIndexMetadata(projectRecord);
+  if (Array.isArray(projectRecord.attachments)) {
+    return projectRecord.attachments;
+  }
+  if (Array.isArray(projectRecord.files)) {
+    return projectRecord.files;
+  }
+  if (Array.isArray(metadata.attachments)) {
+    return metadata.attachments;
+  }
+  if (Array.isArray(metadata.files)) {
+    return metadata.files;
+  }
+  return [];
+}
+
+function filterProjectResourceIndexImagineResources(records, projectId) {
+  const normalizedProjectId = String(projectId || "").trim();
+  return (Array.isArray(records) ? records : []).filter((record) => {
+    const metadata = getProjectResourceIndexMetadata(record);
+    const source = String(record?.source || record?.type || record?.category || metadata.source || metadata.type || metadata.category || "").toLowerCase();
+    if (!source.includes("imagine")) {
+      return false;
+    }
+    const recordProjectId = readProjectResourceProjectId(record);
+    return !normalizedProjectId || !recordProjectId || recordProjectId === normalizedProjectId;
+  });
 }
 
 function normalizeProxyPermissionDecision(value) {
@@ -156586,7 +157524,7 @@ const server = http.createServer((req, res) => {
       ? "/" + metronomesProxyMatch[1].split("/").map((segment) => encodeURIComponent(decodeURIComponent(segment))).join("/")
       : "";
     if (req.method === "GET") {
-      void proxyUpstreamGet(req, res, "/metronomes" + suffix);
+      void proxyUpstreamGet(req, res, "/metronomes" + suffix + (url.search || ""));
     } else {
       void proxyUpstreamJsonRequest(req, res, "/metronomes" + suffix, req.method);
     }
@@ -157025,7 +157963,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === "GET" && url.pathname === "/api/real/servers") {
-    void proxyUpstreamGet(req, res, "/servers");
+    void proxyUpstreamGet(req, res, "/servers" + (url.search || ""));
     return;
   }
 
@@ -157574,6 +158512,12 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "POST" && url.pathname === "/api/real/projects") {
     void proxyUpstreamJsonRequest(req, res, "/projects", "POST");
+    return;
+  }
+
+  const projectResourceIndexMatch = url.pathname.match(/^\/api\/real\/projects\/([^/]+)\/resource-index$/);
+  if (req.method === "GET" && projectResourceIndexMatch) {
+    void proxyProjectResourceIndexGet(req, res, decodeURIComponent(projectResourceIndexMatch[1]));
     return;
   }
 
@@ -158150,6 +159094,28 @@ const server = http.createServer((req, res) => {
       req,
       res,
       `/environments/${encodeURIComponent(decodeURIComponent(environmentFilesMoveMatch[1]))}/files/move`,
+      "POST",
+    );
+    return;
+  }
+
+  const environmentFilesSendMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/files\/send$/);
+  if (req.method === "POST" && environmentFilesSendMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentFilesSendMatch[1]))}/files/send`,
+      "POST",
+    );
+    return;
+  }
+
+  const environmentFilesShareWithTeamMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/files\/share-with-team$/);
+  if (req.method === "POST" && environmentFilesShareWithTeamMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentFilesShareWithTeamMatch[1]))}/files/share-with-team`,
       "POST",
     );
     return;

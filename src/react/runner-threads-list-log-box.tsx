@@ -224,13 +224,13 @@ function getExplicitAgentPhotoUrl(record: Record<string, unknown>): string {
 function getFallbackAgentPhotoUrl(agentName: string, agentId: string): string {
   const normalizedName = agentName.trim().toLowerCase();
   const normalizedId = agentId.trim().toLowerCase();
-  if (normalizedName === "developer" || normalizedId === "agent_default" || normalizedId === "agent-default") {
-    return "/img/agent-profile-pics/devastro.webp";
+  if (normalizedName === "developer" || normalizedName === "forge" || normalizedId === "agent_default" || normalizedId === "agent-default") {
+    return "/img/agent-profile-pics/forge.webp";
   }
-  if (normalizedName.includes("research") || normalizedId.includes("research")) {
-    return "/img/agent-profile-pics/researchastro.webp";
+  if (normalizedName === "foundry" || normalizedName.includes("research") || normalizedId.includes("research")) {
+    return "/img/agent-profile-pics/foundry.webp";
   }
-  return "/img/agent-profile-pics/assistantastro-1.webp";
+  return "/img/agent-profile-pics/spark.webp";
 }
 
 function normalizeThreadDate(value: string): string {

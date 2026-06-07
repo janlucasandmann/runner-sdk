@@ -2106,6 +2106,20 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               mediaType: "video",
             },
             {
+              id: "cell-division-video",
+              title: "Cell division",
+              description: "Close-up microscopic motion for biology, science, and research visuals.",
+              prompt: "Create a close-up microscopic video of cell division with organic motion, subtle depth, clean scientific detail, and a polished research-film finish.",
+              placeholder: "Create a cell division video",
+              defaultStyles: ["cinematic", "technical", "premium", "exploratory"],
+              Icon: Film,
+              videoUrl: "/img/imagine/cell-division.mp4",
+              tone: "linear-gradient(135deg, rgba(5, 12, 10, 0.96), rgba(20, 52, 45, 0.74))",
+              aspectRatio: "16 / 9",
+              size: "wide",
+              mediaType: "video",
+            },
+            {
               id: "youtube-intro-video",
               title: "YouTube intro",
               description: "Polished creator intros with cinematic pacing, title energy, and channel-ready motion.",
@@ -2501,7 +2515,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             campaign: ["product-ads", "multi-asset-campaign-set", "luxury-watch-ads", "video-product-launch", "akita-space-video", "youtube-intro-video", "fragrance-ads", "coffee-ads", "beauty-ads", "metal-typography-ads", "text-led-ads", "payment-ads", "logo-branding", "furniture-campaigns", "sneaker-campaigns", "brand-campaigns", "social-posts", "restaurant-ads", "comparison-ads"],
             product: ["product-ads", "multi-asset-campaign-set", "luxury-watch-ads", "video-product-launch", "fragrance-ads", "coffee-ads", "beauty-ads", "metal-typography-ads", "text-led-ads", "payment-ads", "furniture-campaigns", "sneaker-campaigns", "technical-drawings", "app-screens", "data-visuals"],
             editorial: ["editorial", "logo-branding", "fashion-campaigns", "portrait-studio"],
-            concept: ["akita-space-video", "youtube-intro-video", "video-cinematic-scene", "infographics", "technical-drawings", "concept-art", "animated-characters", "cinematic-wildlife"],
+            concept: ["akita-space-video", "cell-division-video", "youtube-intro-video", "video-cinematic-scene", "infographics", "technical-drawings", "concept-art", "animated-characters", "cinematic-wildlife"],
           }), []);
 
           const filterOptions = useMemo(() => [

@@ -12,7 +12,9 @@ export type RunnerDocumentPreviewKind =
   | "video"
   | "directory"
   | "image-understanding"
+  | "image-generation-prompt"
   | "web-search"
+  | "video-generation-prompt"
   | "unsupported";
 
 export interface RunnerImageUnderstandingPreviewItem {
@@ -53,6 +55,11 @@ export interface RunnerWebSearchPreviewData {
   errorMessage?: string;
 }
 
+export interface RunnerMediaGenerationPromptPreviewData {
+  title: string;
+  prompt: string;
+}
+
 export interface RunnerPreviewAttachment {
   id: string;
   filename: string;
@@ -62,9 +69,11 @@ export interface RunnerPreviewAttachment {
   environmentId?: string;
   isFolder?: boolean;
   uploadStatus?: "idle" | "uploading" | "uploaded" | "failed";
+  runnerAttachmentRole?: string;
   url?: string;
   previewUrl?: string;
   workspacePath?: string;
+  gcsPath?: string;
   integrationSource?: "google-drive" | "one-drive" | "github";
   githubRepoFullName?: string;
   githubRef?: string | null;
@@ -77,8 +86,10 @@ export interface RunnerPreviewAttachment {
   fileContent?: string;
   diffAdditions?: number;
   diffDeletions?: number;
+  imageGenerationPromptPreview?: RunnerMediaGenerationPromptPreviewData;
   imageUnderstandingPreview?: RunnerImageUnderstandingPreviewData;
   webSearchPreview?: RunnerWebSearchPreviewData;
+  videoGenerationPromptPreview?: RunnerMediaGenerationPromptPreviewData;
 }
 
 export interface RunnerPreviewDirectoryEntry {

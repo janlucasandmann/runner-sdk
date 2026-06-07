@@ -83,6 +83,7 @@ import {
   resolveRunnerPreviewAssetUrl,
   type RunnerImageUnderstandingPreviewData,
   type RunnerImageUnderstandingPreviewItem,
+  type RunnerMediaGenerationPromptPreviewData,
   type RunnerPreviewAttachment,
   type RunnerWebSearchPreviewData,
   type RunnerWebSearchPreviewImage,
@@ -91,12 +92,14 @@ import {
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
 import { LazyMediaPreviewMount, RunnerLazyMediaPreviewLoader } from "./runner-lazy-media-preview.js";
 import type { RunnerImageMaskStroke, RunnerImageNaturalSize } from "./runner-image-edit-overlays.js";
-import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, collectRunnerLogFileChangePreviews, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, collectRunnerLogFileChangePreviews, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand, shouldRenderRunnerReasoningLog } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
+import { DotLoader } from "./dot-loader.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
 const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.url).toString();
 const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
+const RUNNER_EMAIL_ATTACHMENT_FILE_ICON_URL = new URL("./assets/email-attachment.webp", import.meta.url).toString();
 const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
 const RUNNER_THINKING_STATUS_FADE_DURATION_MS = 120;
 const RUNNER_THINKING_STATUS_REAPPEAR_DELAY_MS = 500;
@@ -153,6 +156,37 @@ interface LocalAttachment {
   resolvedAttachment?: RunnerAttachment;
   uploadStatus?: "idle" | "uploading" | "uploaded" | "failed";
   uploadError?: string | null;
+}
+
+interface RunnerEmailPromptDisplay {
+  content: string;
+  emailFrom: string;
+  isEmailPrompt: boolean;
+}
+
+function getRunnerEmailPromptDisplay(prompt: string): RunnerEmailPromptDisplay {
+  const strippedPrompt = stripSystemTags(String(prompt || ""));
+  const emailMatch = strippedPrompt.match(/\[Email task from:\s*([^\]\r\n]+)\]\s*$/i);
+  const emailFrom = emailMatch ? emailMatch[1].trim() : "";
+  if (!emailFrom) {
+    return {
+      content: strippedPrompt,
+      emailFrom: "",
+      isEmailPrompt: false,
+    };
+  }
+
+  const content = strippedPrompt
+    .replace(/\n*\[Email task from:\s*[^\]\r\n]+\]\s*$/i, "")
+    .replace(/\n*\[Email task from:\s*[^\]\r\n]+\]\s*/gi, "\n")
+    .replace(/\n{2,}Attached files:\s*(?:\r?\n\s*-\s+.*)+\s*$/i, "")
+    .trim();
+
+  return {
+    content,
+    emailFrom,
+    isEmailPrompt: true,
+  };
 }
 
 function CollapsibleRunnerUserPrompt({
@@ -1517,6 +1551,12 @@ function isAttachmentDocumentPreviewable(attachment: RunnerTurnAttachment): bool
   if (attachment.previewKindOverride === "web-search" && attachment.webSearchPreview) {
     return true;
   }
+  if (attachment.previewKindOverride === "image-generation-prompt" && attachment.imageGenerationPromptPreview) {
+    return true;
+  }
+  if (attachment.previewKindOverride === "video-generation-prompt" && attachment.videoGenerationPromptPreview) {
+    return true;
+  }
   if (attachment.type === "image" || String(attachment.mimeType || "").toLowerCase().startsWith("image/")) {
     return true;
   }
@@ -1598,6 +1638,13 @@ export interface RunnerChatProjectsConfig {
 
 type RunnerAgentOptionRecord = RunnerChatOption & {
   agentType?: string | null;
+  model?: string | null;
+  modelId?: string | null;
+  modelProvider?: string | null;
+  modelProviderType?: string | null;
+  provider?: string | null;
+  providerType?: string | null;
+  source?: string | null;
   photoUrl?: string | null;
   photoURL?: string | null;
   avatarUrl?: string | null;
@@ -1797,6 +1844,165 @@ function getRunnerAgentOptionPhotoUrl(option: RunnerChatOption | null | undefine
   }
 
   return "";
+}
+
+function getRunnerAgentOptionModelId(option: RunnerChatOption | null | undefined): string {
+  if (!option) {
+    return "";
+  }
+
+  const candidate = option as RunnerAgentOptionRecord;
+  const directModel = getRecordString(candidate as unknown as Record<string, unknown>, [
+    "model",
+    "modelId",
+    "model_id",
+    "lastUsedModel",
+    "last_used_model",
+    "defaultModel",
+    "default_model",
+  ]).trim();
+  if (directModel) {
+    return directModel;
+  }
+
+  const metadata = normalizeRecordObject(candidate.metadata);
+  const metadataModel = getRecordString(metadata || {}, [
+    "model",
+    "modelId",
+    "model_id",
+    "lastUsedModel",
+    "last_used_model",
+    "defaultModel",
+    "default_model",
+  ]).trim();
+  if (metadataModel) {
+    return metadataModel;
+  }
+
+  const nestedModel = getRecordObject(metadata, ["model", "modelMeta", "model_meta", "llm", "llmModel", "llm_model"]);
+  return getRecordString(nestedModel || {}, ["id", "model", "modelId", "model_id", "name"]).trim();
+}
+
+function getRunnerAgentOptionExplicitProvider(option: RunnerChatOption | null | undefined): string {
+  if (!option) {
+    return "";
+  }
+
+  const candidate = option as RunnerAgentOptionRecord;
+  const directProvider = getRecordString(candidate as unknown as Record<string, unknown>, [
+    "modelProvider",
+    "model_provider",
+    "modelProviderType",
+    "model_provider_type",
+    "provider",
+    "providerType",
+    "provider_type",
+    "source",
+  ]).trim();
+  if (directProvider) {
+    return directProvider;
+  }
+
+  const metadata = normalizeRecordObject(candidate.metadata);
+  const metadataProvider = getRecordString(metadata || {}, [
+    "modelProvider",
+    "model_provider",
+    "modelProviderType",
+    "model_provider_type",
+    "provider",
+    "providerType",
+    "provider_type",
+    "source",
+  ]).trim();
+  if (metadataProvider) {
+    return metadataProvider;
+  }
+
+  const nestedModel = getRecordObject(metadata, ["model", "modelMeta", "model_meta", "llm", "llmModel", "llm_model"]);
+  return getRecordString(nestedModel || {}, [
+    "modelProvider",
+    "model_provider",
+    "modelProviderType",
+    "model_provider_type",
+    "provider",
+    "providerType",
+    "provider_type",
+    "source",
+  ]).trim();
+}
+
+function inferRunnerAgentProviderTypeFromModelId(modelId: string): string {
+  const normalized = modelId.trim().toLowerCase();
+  if (!normalized) {
+    return "";
+  }
+  if (normalized.startsWith("external:")) {
+    const [, providerType] = normalized.split(":");
+    return providerType || "";
+  }
+  if (normalized.startsWith("minimax-") || normalized === "minimax/m3" || normalized.includes("minimax")) return "minimax";
+  if (normalized.startsWith("claude-") || normalized.includes("anthropic")) return "anthropic";
+  if (normalized.startsWith("gemini-") || normalized.includes("google")) return "google";
+  if (normalized.startsWith("gpt-") || normalized.startsWith("o1") || normalized.startsWith("o3") || normalized.startsWith("o4") || normalized.includes("openai")) return "openai";
+  if (normalized.startsWith("deepseek-") || normalized.includes("deepseek")) return "deepseek";
+  if (normalized.startsWith("kimi-") || normalized.includes("moonshot") || normalized.includes("kimi")) return "kimi";
+  if (normalized.startsWith("grok-") || normalized.includes("xai")) return "xai";
+  return "";
+}
+
+function getRunnerAgentOptionProviderType(option: RunnerChatOption | null | undefined): string {
+  const modelProvider = inferRunnerAgentProviderTypeFromModelId(getRunnerAgentOptionModelId(option));
+  if (modelProvider === "minimax") {
+    return modelProvider;
+  }
+
+  const explicitProvider = getRunnerAgentOptionExplicitProvider(option).trim().toLowerCase();
+  if (!explicitProvider) {
+    return modelProvider;
+  }
+  if (explicitProvider.includes("minimax")) return "minimax";
+  if (explicitProvider.includes("anthropic") || explicitProvider.includes("claude")) return "anthropic";
+  if (explicitProvider.includes("google") || explicitProvider.includes("gemini")) return "google";
+  if (explicitProvider.includes("openai") || explicitProvider === "open-ai") return "openai";
+  if (explicitProvider.includes("deepseek")) return "deepseek";
+  if (explicitProvider.includes("moonshot") || explicitProvider.includes("kimi")) return "kimi";
+  if (explicitProvider.includes("xai") || explicitProvider.includes("grok")) return "xai";
+  if (explicitProvider.includes("cloudflare")) {
+    return modelProvider || "kimi";
+  }
+  return modelProvider || explicitProvider;
+}
+
+function getRunnerAgentProviderIcon(providerType: string): { src: string; alt: string; className?: string } | null {
+  const normalized = providerType.trim().toLowerCase();
+  if (normalized === "anthropic") return { src: "/img/05-model-provider-icons/claude.png", alt: "Anthropic" };
+  if (normalized === "google" || normalized === "gemini") return { src: "/img/05-model-provider-icons/gemini.png", alt: "Google" };
+  if (normalized === "openai") return { src: "/img/05-model-provider-icons/openai.svg", alt: "OpenAI", className: "is-openai" };
+  if (normalized === "deepseek") return { src: "/img/05-model-provider-icons/deepseek.png", alt: "DeepSeek" };
+  if (normalized === "minimax") return { src: "/img/05-model-provider-icons/minimax.svg", alt: "MiniMax" };
+  if (normalized === "kimi" || normalized === "moonshot" || normalized === "cloudflare") return { src: "/img/05-model-provider-icons/kimi.png", alt: "Moonshot" };
+  if (normalized === "xai" || normalized === "grok") return { src: "/img/05-model-provider-icons/xai.svg", alt: "xAI" };
+  return null;
+}
+
+function renderRunnerAgentOptionIcon(agent: RunnerChatOption): ReactNode {
+  const providerIcon = getRunnerAgentProviderIcon(getRunnerAgentOptionProviderType(agent));
+  if (!providerIcon) {
+    return <IconUser className="tb-popup-icon" />;
+  }
+  const className = ["tb-popup-icon", "tb-popup-provider-icon", providerIcon.className || ""]
+    .filter(Boolean)
+    .join(" ");
+  return (
+    <img
+      className={className}
+      src={providerIcon.src}
+      alt=""
+      title={providerIcon.alt}
+      aria-hidden="true"
+      draggable={false}
+    />
+  );
 }
 
 function getRunnerAgentSelectorMode(option: RunnerChatOption | null | undefined): RunnerAgentSelectorMode {
@@ -2845,6 +3051,11 @@ function renderTurnAgentAvatar(name: string, photoUrl?: string | null) {
           </span>}
     </span>
   );
+}
+
+function getRunnerComputerDisplayLabel(environmentName: string | null | undefined) {
+  const normalizedName = String(environmentName || "").trim() || "Default";
+  return /\bcomputer\b/i.test(normalizedName) ? normalizedName : `${normalizedName} Computer`;
 }
 
 function renderRunnerTaskPreviewCard(
@@ -6728,6 +6939,28 @@ function normalizeWebSearchPreviewData(value: unknown): RunnerWebSearchPreviewDa
   };
 }
 
+function normalizeMediaGenerationPromptPreviewData(value: unknown): RunnerMediaGenerationPromptPreviewData | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+  const candidate = value as {
+    title?: unknown;
+    prompt?: unknown;
+  };
+  const prompt = typeof candidate.prompt === "string" && candidate.prompt.trim()
+    ? candidate.prompt.trim()
+    : "";
+  if (!prompt) {
+    return undefined;
+  }
+  return {
+    title: typeof candidate.title === "string" && candidate.title.trim()
+      ? candidate.title.trim()
+      : "Generation Prompt",
+    prompt,
+  };
+}
+
 function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTurnAttachment | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return null;
@@ -6746,6 +6979,7 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
     environmentId?: unknown;
     workspacePath?: unknown;
     sourcePath?: unknown;
+    gcsPath?: unknown;
     integrationSource?: unknown;
     githubRepoFullName?: unknown;
     githubRef?: unknown;
@@ -6755,8 +6989,10 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
     runnerAttachmentRole?: unknown;
     purpose?: unknown;
     previewKindOverride?: unknown;
+    imageGenerationPromptPreview?: unknown;
     imageUnderstandingPreview?: unknown;
     webSearchPreview?: unknown;
+    videoGenerationPromptPreview?: unknown;
   };
   if (isRunnerTurnDisplayHiddenAttachment(candidate)) {
     return null;
@@ -6816,6 +7052,12 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
   const webSearchPreview = candidate.previewKindOverride === "web-search"
     ? normalizeWebSearchPreviewData(candidate.webSearchPreview)
     : undefined;
+  const imageGenerationPromptPreview = candidate.previewKindOverride === "image-generation-prompt"
+    ? normalizeMediaGenerationPromptPreviewData(candidate.imageGenerationPromptPreview)
+    : undefined;
+  const videoGenerationPromptPreview = candidate.previewKindOverride === "video-generation-prompt"
+    ? normalizeMediaGenerationPromptPreviewData(candidate.videoGenerationPromptPreview)
+    : undefined;
   return {
     id: attachmentId,
     filename,
@@ -6828,6 +7070,10 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
       candidate.uploadStatus === "failed"
         ? candidate.uploadStatus
         : undefined,
+    runnerAttachmentRole:
+      typeof candidate.runnerAttachmentRole === "string" && candidate.runnerAttachmentRole.trim()
+        ? candidate.runnerAttachmentRole.trim()
+        : undefined,
     url,
     previewUrl,
     htmlPreviewUrl,
@@ -6839,6 +7085,10 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
           : undefined,
     environmentId,
     workspacePath,
+    gcsPath:
+      typeof candidate.gcsPath === "string" && candidate.gcsPath.trim()
+        ? candidate.gcsPath.trim()
+        : undefined,
     integrationSource:
       candidate.integrationSource === "google-drive" || candidate.integrationSource === "one-drive" || candidate.integrationSource === "github"
         ? candidate.integrationSource
@@ -6860,9 +7110,19 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
     githubSelectionType: candidate.githubSelectionType === "repo" || candidate.githubSelectionType === "file"
       ? candidate.githubSelectionType
       : undefined,
-    previewKindOverride: imageUnderstandingPreview ? "image-understanding" : webSearchPreview ? "web-search" : undefined,
+    previewKindOverride: imageUnderstandingPreview
+      ? "image-understanding"
+      : webSearchPreview
+        ? "web-search"
+        : imageGenerationPromptPreview
+          ? "image-generation-prompt"
+          : videoGenerationPromptPreview
+            ? "video-generation-prompt"
+            : undefined,
+    imageGenerationPromptPreview,
     imageUnderstandingPreview,
     webSearchPreview,
+    videoGenerationPromptPreview,
   };
 }
 
@@ -6903,6 +7163,7 @@ function buildTurnAttachmentsFromLocalAttachments(attachments: LocalAttachment[]
     githubItemPath: attachment.githubItemPath,
     githubSelectionType: attachment.githubSelectionType,
     uploadStatus: attachment.uploadStatus,
+    runnerAttachmentRole: attachment.runnerAttachmentRole,
   }));
 }
 
@@ -6943,6 +7204,83 @@ function isRunnerTurnDisplayHiddenAttachment(value: unknown): boolean {
       : candidate.file?.type || ""
   ).trim().toLowerCase();
   return filename.endsWith("-selected-region-mask.png") && (!mimeType || mimeType === "image/png");
+}
+
+function isRunnerEmailContextAttachment(value: unknown): boolean {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  const file = candidate.file && typeof candidate.file === "object"
+    ? candidate.file as Record<string, unknown>
+    : null;
+  const metadata = candidate.metadata && typeof candidate.metadata === "object"
+    ? candidate.metadata as Record<string, unknown>
+    : null;
+  const strings: string[] = [];
+  const addString = (entry: unknown) => {
+    if (typeof entry === "string" && entry.trim()) {
+      strings.push(entry.trim().toLowerCase());
+    }
+  };
+  [
+    candidate.runnerAttachmentRole,
+    candidate.purpose,
+    candidate.attachmentRole,
+    candidate.contextType,
+    candidate.sourceType,
+    candidate.workspacePath,
+    candidate.sourcePath,
+    candidate.gcsPath,
+    candidate.filename,
+    candidate.name,
+    file?.name,
+    file?.type,
+    metadata?.runnerAttachmentRole,
+    metadata?.purpose,
+    metadata?.attachmentRole,
+    metadata?.contextType,
+    metadata?.sourceType,
+    metadata?.workspacePath,
+    metadata?.sourcePath,
+    metadata?.gcsPath,
+  ].forEach(addString);
+
+  const roleMatch = strings.some((entry) =>
+    entry === "email_context" ||
+    entry === "email-context" ||
+    entry === "email history" ||
+    entry === "email_history" ||
+    entry === "forwarded_email" ||
+    entry === "forwarded-email" ||
+    entry === "forwarded_email_context" ||
+    entry === "forwarded-email-context"
+  );
+  if (roleMatch) {
+    return true;
+  }
+  const filename = String(
+    typeof candidate.filename === "string"
+      ? candidate.filename
+      : typeof candidate.name === "string"
+        ? candidate.name
+        : file?.name || ""
+  ).trim().toLowerCase();
+  const mimeType = String(
+    typeof candidate.mimeType === "string"
+      ? candidate.mimeType
+      : file?.type || ""
+  ).trim().toLowerCase();
+  const looksLikeGeneratedEmailContextHtml =
+    /^\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-.+\.html$/.test(filename) &&
+    (!mimeType || mimeType === "text/html" || mimeType === "application/html");
+  if (looksLikeGeneratedEmailContextHtml) {
+    return true;
+  }
+  return strings.some((entry) =>
+    entry.includes("/workspace/email/") ||
+    entry.includes("/email/") && entry.endsWith(".html")
+  );
 }
 
 function buildTurnAttachmentsForExecution(
@@ -8812,6 +9150,7 @@ function shouldDisplayTimelineLog(log: RunnerLog): boolean {
   if (log.eventType === "setup" || log.eventType === "startup") return false;
   if (isInternalFileChangeLog(log)) return false;
   if (isSyntheticProgressReasoningLog(log)) return false;
+  if (isReasoningLikeTimelineLog(log) && !shouldRenderRunnerReasoningLog(log)) return false;
   if (isInternalUserMessageToolLog(log)) return false;
   if (isTrivialSkillLaunchLog(log)) return false;
   if (log.eventType === "command_execution" && isBrowserSkillLaunchCommand(log.metadata?.command || log.message || "")) return false;
@@ -17419,6 +17758,7 @@ export function RunnerChat({
     const previewUrl = getAttachmentPreviewUrl(attachment);
     const isImage = attachment.type === "image";
     const isGithubAttachment = isGithubAttachmentSelection(attachment);
+    const isEmailContextAttachment = isRunnerEmailContextAttachment(attachment);
     const isUploading = attachment.uploadStatus === "uploading";
     const isAttachmentPreviewable =
       !isGithubAttachment && !options?.removable && !isLocalAttachmentRecord(attachment) && isAttachmentDocumentPreviewable(attachment);
@@ -17439,6 +17779,34 @@ export function RunnerChat({
         return;
       }
       toggleDocumentAttachmentPreview(attachment);
+    };
+    const renderAttachmentFileIcon = () => {
+      if (isUploading) {
+        return <LucideLoaderCircle className="runner-attachment-file-upload-indicator tb-context-action-notice-icon-spinner" strokeWidth={1.9} />;
+      }
+      if (isGithubAttachment) {
+        return <IconGithub className="runner-attachment-file-brand-icon runner-attachment-file-brand-icon-github" />;
+      }
+      if (isEmailContextAttachment) {
+        return (
+          <img
+            src={RUNNER_EMAIL_ATTACHMENT_FILE_ICON_URL}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="runner-attachment-file-icon runner-attachment-file-email-icon"
+          />
+        );
+      }
+      return (
+        <img
+          src={RUNNER_TEXT_FILE_ICON_URL}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          className="runner-attachment-file-icon"
+        />
+      );
     };
 
     return (
@@ -17512,19 +17880,7 @@ export function RunnerChat({
                 aria-label={`Preview ${filename}`}
               >
                 <span className="runner-attachment-file-icon-slot" aria-hidden="true">
-                  {isUploading ? (
-                    <LucideLoaderCircle className="runner-attachment-file-upload-indicator tb-context-action-notice-icon-spinner" strokeWidth={1.9} />
-                  ) : isGithubAttachment ? (
-                    <IconGithub className="runner-attachment-file-brand-icon runner-attachment-file-brand-icon-github" />
-                  ) : (
-                    <img
-                      src={RUNNER_TEXT_FILE_ICON_URL}
-                      alt=""
-                      aria-hidden="true"
-                      draggable={false}
-                      className="runner-attachment-file-icon"
-                    />
-                  )}
+                  {renderAttachmentFileIcon()}
                 </span>
                 <div className="runner-attachment-file-copy">
                   <div className="runner-attachment-file-name" title={filename}>
@@ -17540,19 +17896,7 @@ export function RunnerChat({
             ) : (
               <>
                 <span className="runner-attachment-file-icon-slot" aria-hidden="true">
-                  {isUploading ? (
-                    <LucideLoaderCircle className="runner-attachment-file-upload-indicator tb-context-action-notice-icon-spinner" strokeWidth={1.9} />
-                  ) : isGithubAttachment ? (
-                    <IconGithub className="runner-attachment-file-brand-icon runner-attachment-file-brand-icon-github" />
-                  ) : (
-                    <img
-                      src={RUNNER_TEXT_FILE_ICON_URL}
-                      alt=""
-                      aria-hidden="true"
-                      draggable={false}
-                      className="runner-attachment-file-icon"
-                    />
-                  )}
+                  {renderAttachmentFileIcon()}
                 </span>
                 <div className="runner-attachment-file-copy">
                   <div className="runner-attachment-file-name" title={filename}>
@@ -18650,7 +18994,7 @@ export function RunnerChat({
                           className={`tb-popup-row tb-popup-row-select tb-popup-row-agent ${selectedAgentId === agent.id ? "selected" : ""}`}
                           onClick={() => selectAgent(agent.id)}
                         >
-                          {isTeamAgent ? <IconLayers className="tb-popup-icon" /> : <IconUser className="tb-popup-icon" />}
+                          {isTeamAgent ? <IconLayers className="tb-popup-icon" /> : renderRunnerAgentOptionIcon(agent)}
                           <span className="tb-popup-label">{agent.name}</span>
                           <span className="tb-popup-check-slot">
                             {selectedAgentId === agent.id ? <IconCheck className="tb-popup-check" /> : null}
@@ -19750,6 +20094,11 @@ export function RunnerChat({
               const turnSeconds = getTurnDurationSeconds(turn);
               const { agentMessage, displayedTimelineItems: rawDisplayedTimelineItems } = getTurnTimelineState(turn);
               const normalizedPrompt = turn.prompt.trim();
+              const emailPromptDisplay = getRunnerEmailPromptDisplay(turn.prompt);
+              const displayedUserPrompt = emailPromptDisplay.content;
+              const emailPromptLabel = emailPromptDisplay.isEmailPrompt ? (
+                <div className="tb-user-turn-email-label">Email from {emailPromptDisplay.emailFrom}</div>
+              ) : null;
               const isBtwTurn = turn.presentation === "btw" || normalizedPrompt.toLowerCase().startsWith("/btw");
               const isEditingTurn = editingTurnId === turn.id;
               const canEditTurn = isEditableUserTurn(turn);
@@ -19823,13 +20172,22 @@ export function RunnerChat({
                 : turn.agentName || displayedAgentLabel || "Agent";
               const turnAgentPhotoUrl = resolveTurnAgentPhotoUrl(turnAgentLabel);
               const turnEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
+              const turnComputerLabel = getRunnerComputerDisplayLabel(turnEnvironmentLabel);
               const workLabel = isWorkLogsLoading
-                ? "Loading Working Logs..."
+                ? `${turnAgentLabel} loading working logs...`
                 : turn.status === "permission_asked"
-                  ? "Permission asked"
+                  ? `${turnAgentLabel} needs permission`
                   : isTurnRunning
-                  ? "Working..."
-                  : `Worked for ${formatElapsedDurationLabel(turnSeconds)}`;
+                  ? `${turnAgentLabel} working...`
+                  : `${turnAgentLabel} worked for ${formatElapsedDurationLabel(turnSeconds)}`;
+              const workComputerLabel = (
+                <span className="tb-work-computer-label" title={turnComputerLabel}>
+                  <span className="tb-work-computer-label-icons" aria-hidden="true">
+                    <LucideMonitor className="tb-work-computer-label-icon" strokeWidth={1.55} />
+                  </span>
+                  <span className="tb-work-computer-label-text">{turnComputerLabel}</span>
+                </span>
+              );
               const shouldRenderWorkSection = isTurnRunning || isTurnPermissionAsked || revealedTimelineItems.length > 0 || isWorkLogsLoading;
               const userThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "user");
               const assistantThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "assistant");
@@ -19925,16 +20283,19 @@ export function RunnerChat({
                 return (
                   <div key={turn.id} className="tb-turn tb-turn-context-action-notice">
                     {turn.prompt.trim() ? (
-                      <div
-                        ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
-                        className="task-prompt-in-session-context tb-thread-history-anchor"
-                        style={promptStyle}
-                      >
-                        <CollapsibleRunnerUserPrompt
-                          content={stripSystemTags(turn.prompt)}
-                          className="tb-message-markdown tb-message-markdown-user"
-                        />
-                      </div>
+                      <>
+                        <div
+                          ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
+                          className={`task-prompt-in-session-context tb-thread-history-anchor ${emailPromptDisplay.isEmailPrompt ? "is-email-origin" : ""}`.trim()}
+                          style={promptStyle}
+                        >
+                          {emailPromptLabel}
+                          <CollapsibleRunnerUserPrompt
+                            content={displayedUserPrompt}
+                            className="tb-message-markdown tb-message-markdown-user"
+                          />
+                        </div>
+                      </>
                     ) : null}
                     <div
                       ref={(node) => setThreadHistoryAnchorElement(assistantThreadHistoryItemId, node)}
@@ -19957,14 +20318,17 @@ export function RunnerChat({
                         ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
                         className="tb-btw-turn-prompt tb-thread-history-anchor"
                       >
+                        {emailPromptLabel}
                         <CollapsibleRunnerUserPrompt
-                          content={stripSystemTags(turn.prompt)}
+                          content={displayedUserPrompt}
                           className="tb-message-markdown tb-message-markdown-user"
                         />
                       </div>
                       {isTurnRunning && !agentMessage?.message ? (
                         <div className="tb-btw-turn-pending tb-thinking-status" style={responseStyle}>
-                          <LucideLoaderCircle className="tb-btw-turn-pending-icon tb-context-action-notice-icon-spinner" strokeWidth={1.5} />
+                          <span className="tb-btw-turn-pending-loader" aria-hidden="true">
+                            <DotLoader dotCount={9} dotSize={3} gap={2} className="tb-btw-turn-pending-dot-loader" />
+                          </span>
                           <span>Thinking...</span>
                         </div>
                       ) : null}
@@ -20010,16 +20374,17 @@ export function RunnerChat({
                         style={promptStyle}
                       >
                         {runModeLabel}
-                        <div className="task-prompt-in-session-context">
+                        <div className={`task-prompt-in-session-context ${emailPromptDisplay.isEmailPrompt ? "is-email-origin" : ""}`.trim()}>
+                          {emailPromptLabel}
                           <CollapsibleRunnerUserPrompt
-                            content={stripSystemTags(turn.prompt)}
+                            content={displayedUserPrompt}
                             className="tb-message-markdown tb-message-markdown-user"
                           />
                         </div>
                       </div>
                     ) : null}
 
-                    {!isQueuedTurn ? (
+                    {!isQueuedTurn && !shouldRenderWorkSection ? (
                       <div className="tb-turn-meta" style={metaHeaderStyle}>
                         {renderTurnAgentTrigger(turn, turnAgentLabel, turnAgentPhotoUrl)}
                         <div className="tb-turn-environment-pill">
@@ -20042,6 +20407,7 @@ export function RunnerChat({
                             <span>{workLabel}</span>
                             {isExpanded ? <IconChevronUp className="tb-chevron" /> : <IconChevronDown className="tb-chevron" />}
                           </span>
+                          {workComputerLabel}
                         </button>
 
                         <div className={`tb-work-collapse ${isExpanded ? "is-expanded" : ""} ${isExpanded || shouldShowCollapsedLivePreview ? "" : "collapsed"}`.trim()}>
@@ -20161,7 +20527,7 @@ export function RunnerChat({
                     ) : null}
                     {runModeLabel}
                     <div
-                      className={`task-prompt-in-session-context ${isEditablePromptTurn ? "tb-user-turn-editable" : ""} ${isEditingTurn ? "tb-user-turn-editing" : ""}`.trim()}
+                      className={`task-prompt-in-session-context ${emailPromptDisplay.isEmailPrompt ? "is-email-origin" : ""} ${isEditablePromptTurn ? "tb-user-turn-editable" : ""} ${isEditingTurn ? "tb-user-turn-editing" : ""}`.trim()}
                     >
                       {isEditingTurn ? (
                         <>
@@ -20192,10 +20558,13 @@ export function RunnerChat({
                       ) : missionControlPreviewForTurn ? (
                         renderRunnerMissionControlPreviewCard(missionControlPreviewForTurn)
                       ) : (
-                        <CollapsibleRunnerUserPrompt
-                          content={stripSystemTags(turn.prompt)}
-                          className="tb-message-markdown tb-message-markdown-user"
-                        />
+                        <>
+                          {emailPromptLabel}
+                          <CollapsibleRunnerUserPrompt
+                            content={displayedUserPrompt}
+                            className="tb-message-markdown tb-message-markdown-user"
+                          />
+                        </>
                       )}
                     </div>
                     {showTurnActions ? (
@@ -20226,7 +20595,7 @@ export function RunnerChat({
                     ) : null}
                   </div>
 
-                  {!isQueuedTurn ? (
+                  {!isQueuedTurn && !shouldRenderWorkSection ? (
                     <div className="tb-turn-meta" style={metaHeaderStyle}>
                       {renderTurnAgentTrigger(turn, turnAgentLabel, turnAgentPhotoUrl)}
                       <div className="tb-turn-environment-pill">
@@ -20249,6 +20618,7 @@ export function RunnerChat({
                             <span>{workLabel}</span>
                             {isExpanded ? <IconChevronUp className="tb-chevron" /> : <IconChevronDown className="tb-chevron" />}
                           </span>
+                          {workComputerLabel}
                         </button>
 
                       <div className={`tb-work-collapse ${isExpanded ? "is-expanded" : ""} ${isExpanded || shouldShowCollapsedLivePreview ? "" : "collapsed"}`.trim()}>

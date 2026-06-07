@@ -32,6 +32,7 @@ import {
   type RunnerDocumentPreviewKind,
   type RunnerImageUnderstandingPreviewData,
   type RunnerImageUnderstandingPreviewItem,
+  type RunnerMediaGenerationPromptPreviewData,
   type RunnerPreviewDirectoryEntry,
   type RunnerPreviewAttachment,
   type RunnerWebSearchPreviewData,
@@ -248,6 +249,23 @@ function RunnerImageUnderstandingSidebarPreview({
   );
 }
 
+function RunnerMediaGenerationPromptSidebarPreview({ data }: { data: RunnerMediaGenerationPromptPreviewData }) {
+  return (
+    <main className="tb-video-generation-prompt-sidebar-preview">
+      <header className="tb-video-generation-prompt-title">
+        <h1>{data.title || "Generation Prompt"}</h1>
+      </header>
+      <section className="tb-video-generation-prompt-body">
+        <RunnerMarkdown
+          content={data.prompt || "No prompt available."}
+          className="tb-video-generation-prompt-markdown tb-message-markdown tb-message-markdown-summary"
+          softBreaks
+        />
+      </section>
+    </main>
+  );
+}
+
 export interface RunnerDocumentPreviewDrawerProps {
   attachment: RunnerPreviewAttachment;
   backendUrl?: string;
@@ -428,6 +446,8 @@ export function RunnerDocumentPreviewDrawer({
     : null;
   const isImageUnderstandingAttachment = attachmentPreviewKind === "image-understanding" && Boolean(attachment.imageUnderstandingPreview);
   const isWebSearchAttachment = attachmentPreviewKind === "web-search" && Boolean(attachment.webSearchPreview);
+  const isImageGenerationPromptAttachment = attachmentPreviewKind === "image-generation-prompt" && Boolean(attachment.imageGenerationPromptPreview);
+  const isVideoGenerationPromptAttachment = attachmentPreviewKind === "video-generation-prompt" && Boolean(attachment.videoGenerationPromptPreview);
 
   useEffect(() => {
     imageCropHistoryRef.current = imageCropHistory;
@@ -699,7 +719,13 @@ export function RunnerDocumentPreviewDrawer({
     }
     documentPreviewLoadKeyRef.current = nextLoadKey;
 
-    if (isImageAttachment || previewKind === "image-understanding" || previewKind === "web-search") {
+    if (
+      isImageAttachment
+      || previewKind === "image-understanding"
+      || previewKind === "web-search"
+      || previewKind === "image-generation-prompt"
+      || previewKind === "video-generation-prompt"
+    ) {
       setDocumentPreviewState({
         status: "idle",
         kind: null,
@@ -1874,9 +1900,10 @@ export function RunnerDocumentPreviewDrawer({
   const imagePreviewRootClassName = isImageAttachment ? " tb-attachment-preview-image-drawer" : "";
   const imageUnderstandingPreviewRootClassName = isImageUnderstandingAttachment ? " tb-attachment-preview-image-understanding-drawer" : "";
   const webSearchPreviewRootClassName = isWebSearchAttachment ? " tb-attachment-preview-web-search-drawer" : "";
+  const mediaGenerationPromptPreviewRootClassName = isImageGenerationPromptAttachment || isVideoGenerationPromptAttachment ? " tb-attachment-preview-media-generation-prompt-drawer" : "";
   const previewRootClassName = surface
-    ? `tb-attachment-preview-surface${inline ? " tb-attachment-preview-surface-inline" : ""}${imagePreviewRootClassName}${imageUnderstandingPreviewRootClassName}${webSearchPreviewRootClassName}${className ? ` ${className}` : ""}`
-    : `tb-attachment-preview-drawer${inline ? " tb-attachment-preview-drawer-inline" : ""}${imagePreviewRootClassName}${imageUnderstandingPreviewRootClassName}${webSearchPreviewRootClassName}${className ? ` ${className}` : ""}`;
+    ? `tb-attachment-preview-surface${inline ? " tb-attachment-preview-surface-inline" : ""}${imagePreviewRootClassName}${imageUnderstandingPreviewRootClassName}${webSearchPreviewRootClassName}${mediaGenerationPromptPreviewRootClassName}${className ? ` ${className}` : ""}`
+    : `tb-attachment-preview-drawer${inline ? " tb-attachment-preview-drawer-inline" : ""}${imagePreviewRootClassName}${imageUnderstandingPreviewRootClassName}${webSearchPreviewRootClassName}${mediaGenerationPromptPreviewRootClassName}${className ? ` ${className}` : ""}`;
   const canUseBuiltInImageTools = Boolean(enableImagePreviewTools && isImageAttachment && effectiveImagePreviewUrl);
   const isBuiltInImageToolModeActive = canUseBuiltInImageTools && imagePreviewToolMode !== "idle";
   const canSaveImageCrop = Boolean(
@@ -2226,6 +2253,10 @@ export function RunnerDocumentPreviewDrawer({
             />
           ) : isWebSearchAttachment && attachment.webSearchPreview ? (
             <RunnerWebSearchSidebarPreview data={attachment.webSearchPreview} />
+          ) : isImageGenerationPromptAttachment && attachment.imageGenerationPromptPreview ? (
+            <RunnerMediaGenerationPromptSidebarPreview data={attachment.imageGenerationPromptPreview} />
+          ) : isVideoGenerationPromptAttachment && attachment.videoGenerationPromptPreview ? (
+            <RunnerMediaGenerationPromptSidebarPreview data={attachment.videoGenerationPromptPreview} />
           ) : isAttachmentDiffMode ? (
             <RunnerFileDiffSurface
               filePath={resolvedWorkspacePath || attachment.workspacePath || attachment.filename}

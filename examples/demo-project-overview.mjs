@@ -556,6 +556,30 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         flex: 0 0 auto;
       }
 
+      .playground-project-overview-plugins-panel {
+        width: 100%;
+        margin-top: 18px;
+      }
+
+      .playground-project-overview-plugins-panel .playground-plugins-section-header {
+        padding-bottom: 14px;
+      }
+
+      .playground-project-overview-plugins-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        width: 100%;
+        margin-top: 4px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-plugins-list .playground-project-overview-integration-row {
+        min-height: 64px;
+        padding: 14px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
       .playground-project-overview-chart-empty {
         min-height: 220px;
         display: flex;
@@ -3122,7 +3146,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               ? "Mission Control has generated a strategy snapshot for the current project state."
               : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
           const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
-          const activeProjectOverviewHomeTab = projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules"
+          const activeProjectOverviewHomeTab = projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "plugins"
             ? projectOverviewHomeTab
             : "general";
           function renderProjectOverviewHomeTabs() {
@@ -3130,6 +3154,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	              { id: "general", label: "General" },
 	              { id: "strategy", label: "Strategy" },
 	              { id: "rules", label: "Rules" },
+	              { id: "plugins", label: "Plugins" },
 	            ];
             return React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs" },
               React.createElement("div", { className: "playground-project-overview-chart-tabs" },
@@ -3531,8 +3556,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const projectOverviewStoragePercent = projectOverviewStorageCapacityBytes > 0
             ? Math.max(0, Math.min(100, Math.round((projectOverviewStorageUsedBytes / projectOverviewStorageCapacityBytes) * 1000) / 10))
             : 0;
-          const activeProjectOverviewConnectors = projectOverviewIntegrationRows.filter((row) => !row.isEmpty);
-          const projectOverviewFilesSubviewId = ["overview", "files", "attachments", "resources", "imagine"].includes(String(projectOverviewFilesSubview || ""))
+          const projectOverviewFilesSubviewId = ["overview", "resources", "imagine"].includes(String(projectOverviewFilesSubview || ""))
             ? String(projectOverviewFilesSubview || "")
             : "overview";
           const isProjectOverviewResourceSubviewOpen = activeProjectOverviewHomeTab === "general" && projectOverviewFilesSubviewId !== "overview";
@@ -3817,6 +3841,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               });
               requestProjectConnectorBrowserOpen(row.source, {
                 projectId: rowProjectId,
+                projectRecord: selectedProject,
               });
             };
             return React.createElement("button", {
@@ -3876,6 +3901,25 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron playground-project-overview-integration-chevron", strokeWidth: 1.8 })
                 )
               )
+            );
+          }
+
+          function renderProjectOverviewPluginsPanel() {
+            const hasProjectPlugins = projectOverviewIntegrationRows.length > 0;
+            return React.createElement("section", {
+                className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-plugins-panel",
+              },
+              renderOverviewSectionHeader(
+                "Project Plugins",
+                "Connect project-scoped plugin access so agents can read and write the right repositories, drives, and workspaces while they work."
+              ),
+              hasProjectPlugins
+                ? React.createElement("div", { className: "playground-project-overview-plugins-list" },
+                    projectOverviewIntegrationRows.map((row) => renderProjectOverviewIntegrationRow(row))
+                  )
+                : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                    "No plugins are available yet."
+                  )
             );
           }
 
@@ -4200,12 +4244,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
-          function renderProjectOverviewFilesNavCard({ id, title, copy, Icon }) {
+          function renderProjectOverviewFilesNavCard({ id, title, copy, Icon, onClick }) {
             return React.createElement("button", {
                 key: id,
                 type: "button",
                 className: "playground-project-overview-files-nav-card",
-                onClick: () => typeof setProjectOverviewFilesSubview === "function" && setProjectOverviewFilesSubview(id),
+                onClick: typeof onClick === "function"
+                  ? onClick
+                  : () => typeof setProjectOverviewFilesSubview === "function" && setProjectOverviewFilesSubview(id),
               },
               React.createElement("div", { className: "playground-project-overview-files-nav-card-icon" },
                 React.createElement(Icon, { width: 17, height: 17, strokeWidth: 1.8 })
@@ -4220,14 +4266,28 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               renderProjectOverviewFilesNavCard({
                 id: "files",
                 title: "Files",
-                copy: "Review file activity generated by project tasks and agents.",
+                copy: "Open project-scoped files, attachments, and generated artifacts.",
                 Icon: FolderOpen,
+                onClick: () => {
+                  if (typeof onOpenFilesPage !== "function") return;
+                  onOpenFilesPage({
+                    token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                    projectId: normalizedSelectedProjectId,
+                    environmentId: activeProjectAttachmentEnvironmentId || selectedProject?.defaultEnvironmentId || "",
+                  });
+                },
               }),
               renderProjectOverviewFilesNavCard({
-                id: "attachments",
-                title: "Attachments",
-                copy: "Manage project context files and direct uploads.",
-                Icon: Paperclip,
+                id: "metronomes",
+                title: "Metronomes",
+                copy: "Manage recurring project workflows and automated agent routines.",
+                Icon: Metronome,
+                onClick: () => {
+                  if (typeof onOpenProjectMetronomes !== "function") return;
+                  onOpenProjectMetronomes({
+                    projectId: normalizedSelectedProjectId,
+                  });
+                },
               }),
               renderProjectOverviewFilesNavCard({
                 id: "resources",
@@ -4248,29 +4308,19 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             if (projectOverviewFilesSubviewId === "overview") {
               return null;
             }
-            if (projectOverviewFilesSubviewId === "files") {
-              return React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
-                renderProjectOverviewFilesSubviewHeader("Files", "Review file changes and generated project artifacts."),
-                renderProjectOverviewFilesToolbar(),
-                renderProjectOverviewFilesActivityPanel()
-              );
-            }
-            if (projectOverviewFilesSubviewId === "attachments") {
-              return React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
-                renderProjectOverviewFilesSubviewHeader("Attachments", "Attach source material and project context files."),
-                renderProjectOverviewAttachmentsPanel()
-              );
-            }
             if (projectOverviewFilesSubviewId === "resources") {
               return React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
                 renderProjectOverviewFilesSubviewHeader("Server Resources", "Track the deployable resources connected to this project."),
                 renderProjectOverviewResourcesPanel()
               );
             }
-            return React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
-              renderProjectOverviewFilesSubviewHeader("Imagine Resources", "Visual resources created in the scope of this project."),
-              renderProjectOverviewImagineResourcesPanel()
-            );
+            if (projectOverviewFilesSubviewId === "imagine") {
+              return React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
+                renderProjectOverviewFilesSubviewHeader("Imagine Resources", "Visual resources created in the scope of this project."),
+                renderProjectOverviewImagineResourcesPanel()
+              );
+            }
+            return null;
           }
 
           function renderProjectOverviewHeaderResource(resource) {
@@ -5308,7 +5358,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 			                ? renderProjectOverviewStrategyPanel()
 			                : activeProjectOverviewHomeTab === "rules"
 			                  ? renderProjectOverviewRulesPanel()
-			                  : React.createElement(React.Fragment, null,
+			                  : activeProjectOverviewHomeTab === "plugins"
+			                    ? renderProjectOverviewPluginsPanel()
+			                    : React.createElement(React.Fragment, null,
               activeProjectOverviewHomeTab === "general" && !isProjectOverviewResourceSubviewOpen
 		                ? React.createElement("div", { className: "playground-project-overview-chart-surface" },
                 React.createElement("div", { className: "playground-project-overview-chart-grid" },
@@ -5371,10 +5423,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         )
                       )
                     ),
-                    renderProjectOverviewFilesNavCards(),
-                    React.createElement("div", { className: "playground-project-overview-integration-facts" },
-                      projectOverviewIntegrationRows.map((row) => renderProjectOverviewIntegrationRow(row))
-                    )
+                    renderProjectOverviewFilesNavCards()
                   )
 	                )
 	              )

@@ -31,10 +31,10 @@ import {
   Folder,
   FolderOpen,
   Globe,
+  Github,
   HardDrive,
   Images,
   Lightbulb,
-  LoaderCircle,
   ListChevronsUpDown,
   ListTodo,
   Mail,
@@ -45,8 +45,10 @@ import {
   Music,
   Paperclip,
   RefreshCw,
+  Rocket,
   ScanEye,
   Search,
+  Server,
   SlidersHorizontal,
   Telescope,
   Terminal,
@@ -63,27 +65,26 @@ import {
   buildRunnerPreviewHtmlDocument,
   getRunnerDocumentPreviewKind,
   type RunnerImageUnderstandingPreviewItem,
+  type RunnerMediaGenerationPromptPreviewData,
   type RunnerPreviewAttachment,
   type RunnerWebSearchPreviewData,
 } from "./runner-document-preview.js";
 import { RunnerFileDiffSurface } from "./runner-file-diff-surface.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
 import { RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS, getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
-import { ComputerAgentsListLogBox, parseComputerAgentsListCommandOutput, parseComputerAgentsListLogDetails, type ComputerAgentsListAgent, type ComputerAgentsListAvailableAgent } from "./runner-agents-list-log-box.js";
-import { ComputerAgentsEnvironmentsListLogBox, parseComputerAgentsEnvironmentsListLogDetails, type ComputerAgentsListAvailableEnvironment } from "./runner-environments-list-log-box.js";
-import { TaskManagementProjectsListLogBox, parseTaskManagementProjectsListLogDetails, type TaskManagementListAvailableEnvironment, type TaskManagementListAvailableProject } from "./runner-projects-list-log-box.js";
-import { AppPlatformResourcesListLogBox, parseAppPlatformResourcesListLogDetails } from "./runner-resources-list-log-box.js";
+import { parseComputerAgentsListCommandOutput, parseComputerAgentsListLogDetails, type ComputerAgentsListAgent, type ComputerAgentsListAvailableAgent } from "./runner-agents-list-log-box.js";
+import { parseComputerAgentsEnvironmentsListLogDetails, type ComputerAgentsListAvailableEnvironment } from "./runner-environments-list-log-box.js";
+import { parseTaskManagementProjectsListLogDetails, type TaskManagementListAvailableProject } from "./runner-projects-list-log-box.js";
+import { parseAppPlatformResourcesListLogDetails } from "./runner-resources-list-log-box.js";
 import {
-  ComputerAgentsThreadGetLogBox,
-  ComputerAgentsThreadsListLogBox,
   parseComputerAgentsThreadGetCommandOutput,
   parseComputerAgentsThreadGetLogDetails,
   parseComputerAgentsThreadsListCommandOutput,
   parseComputerAgentsThreadsListLogDetails,
 } from "./runner-threads-list-log-box.js";
-import { GitCommitLogBox, parseGitCommitLogDetails } from "./runner-git-commit-log-box.js";
-import { GitDiffLogBox, parseGitDiffLogDetails } from "./runner-git-diff-log-box.js";
-import { GitStatusLogBox, parseGitStatusLogDetails } from "./runner-git-status-log-box.js";
+import { parseGitCommitLogDetails } from "./runner-git-commit-log-box.js";
+import { parseGitDiffLogDetails } from "./runner-git-diff-log-box.js";
+import { parseGitStatusLogDetails } from "./runner-git-status-log-box.js";
 import { LogHeader, LogPanel } from "./runner-log-card.js";
 import { RunnerMarkdown, stripRunnerSystemTags } from "./runner-markdown.js";
 import { DotLoader } from "./dot-loader.js";
@@ -190,6 +191,56 @@ function renderTextWithWorkspacePathLinks(
   return nodes.length > 0 ? nodes : text;
 }
 
+function CompactActionLogLine({
+  icon,
+  title,
+  detail,
+  onClick,
+  className,
+  ariaLabel,
+}: {
+  icon: ReactNode;
+  title: string;
+  detail?: string | null;
+  onClick?: (() => void) | null;
+  className?: string;
+  ariaLabel?: string;
+}) {
+  const normalizedDetail = String(detail || "").trim();
+  const content = (
+    <>
+      <span className="tb-log-compact-action-icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="tb-log-compact-action-title">{title}</span>
+      {normalizedDetail ? (
+        <span className="tb-log-compact-action-detail" title={normalizedDetail}>
+          {normalizedDetail}
+        </span>
+      ) : null}
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={`tb-log-compact-action ${className || ""}`.trim()}
+        onClick={onClick}
+        aria-label={ariaLabel || [title, normalizedDetail].filter(Boolean).join(" ")}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className={`tb-log-compact-action is-static ${className || ""}`.trim()}>
+      {content}
+    </div>
+  );
+}
+
 interface RunnerWorkLogEntryProps {
   log: RunnerLog;
   timeLabel?: string;
@@ -227,6 +278,133 @@ interface RunnerWorkLogEntryProps {
   onEnvironmentPreviewClick?: (environment: { environmentId: string; environmentName?: string }) => void;
   onProjectPreviewClick?: (project: { projectId: string; projectName?: string }) => void;
   onOpenTaskList?: () => void;
+}
+
+function formatCompactListCount(count: number, singular: string, plural = `${singular}s`): string {
+  const safeCount = Number.isFinite(count) ? Math.max(0, count) : 0;
+  return `${safeCount.toLocaleString()} ${safeCount === 1 ? singular : plural}`;
+}
+
+function renderComputerAgentsListCompactLog(
+  details: NonNullable<ReturnType<typeof parseComputerAgentsListLogDetails>>,
+  onAgentPreviewClick?: RunnerWorkLogEntryProps["onAgentPreviewClick"]
+) {
+  const agents = details.agents || [];
+  const firstAgent = agents.length === 1 ? agents[0] : null;
+  return (
+    <CompactActionLogLine
+      icon={<Bot className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Listed Agents"
+      detail={firstAgent?.name || formatCompactListCount(agents.length, "agent")}
+      onClick={firstAgent ? () => onAgentPreviewClick?.({ agentId: firstAgent.id, agentName: firstAgent.name }) : null}
+    />
+  );
+}
+
+function renderComputerAgentsThreadsListCompactLog(
+  details: NonNullable<ReturnType<typeof parseComputerAgentsThreadsListLogDetails>>
+) {
+  const threads = details.threads || [];
+  const firstThread = threads.length === 1 ? threads[0] : null;
+  return (
+    <CompactActionLogLine
+      icon={<MessageSquare className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Listed Threads"
+      detail={firstThread?.title || firstThread?.id || formatCompactListCount(threads.length, "thread")}
+    />
+  );
+}
+
+function renderComputerAgentsThreadGetCompactLog(
+  details: NonNullable<ReturnType<typeof parseComputerAgentsThreadGetLogDetails>>
+) {
+  const thread = details.thread;
+  return (
+    <CompactActionLogLine
+      icon={<MessageSquare className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Retrieved Thread"
+      detail={thread?.title || thread?.id || ""}
+    />
+  );
+}
+
+function renderAppPlatformResourcesListCompactLog(
+  details: NonNullable<ReturnType<typeof parseAppPlatformResourcesListLogDetails>>
+) {
+  const resources = details.resources || [];
+  const firstResource = resources.length === 1 ? resources[0] : null;
+  return (
+    <CompactActionLogLine
+      icon={<Server className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Listed Resources"
+      detail={firstResource?.name || formatCompactListCount(resources.length, "resource")}
+    />
+  );
+}
+
+function renderTaskManagementProjectsListCompactLog(
+  details: NonNullable<ReturnType<typeof parseTaskManagementProjectsListLogDetails>>,
+  onProjectPreviewClick?: RunnerWorkLogEntryProps["onProjectPreviewClick"]
+) {
+  const projects = details.projects || [];
+  const firstProject = projects.length === 1 ? projects[0] : null;
+  return (
+    <CompactActionLogLine
+      icon={<Rocket className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Listed Projects"
+      detail={firstProject?.name || formatCompactListCount(projects.length, "project")}
+      onClick={firstProject ? () => onProjectPreviewClick?.({ projectId: firstProject.id, projectName: firstProject.name }) : null}
+    />
+  );
+}
+
+function renderComputerAgentsEnvironmentsListCompactLog(
+  details: NonNullable<ReturnType<typeof parseComputerAgentsEnvironmentsListLogDetails>>,
+  onEnvironmentPreviewClick?: RunnerWorkLogEntryProps["onEnvironmentPreviewClick"]
+) {
+  const environments = details.environments || [];
+  const firstEnvironment = environments.length === 1 ? environments[0] : null;
+  return (
+    <CompactActionLogLine
+      icon={<HardDrive className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Listed Computers"
+      detail={firstEnvironment?.name || formatCompactListCount(environments.length, "computer")}
+      onClick={firstEnvironment ? () => onEnvironmentPreviewClick?.({ environmentId: firstEnvironment.id, environmentName: firstEnvironment.name }) : null}
+    />
+  );
+}
+
+function renderGitDiffCompactLog(details: NonNullable<ReturnType<typeof parseGitDiffLogDetails>>) {
+  const detail = details.filesChanged > 0
+    ? `${formatCompactListCount(details.filesChanged, "file")} changed`
+    : `${details.linesChanged.toLocaleString()} lines changed`;
+  return (
+    <CompactActionLogLine
+      icon={<Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Viewed Git Diff"
+      detail={detail}
+    />
+  );
+}
+
+function renderGitCommitCompactLog(details: NonNullable<ReturnType<typeof parseGitCommitLogDetails>>) {
+  return (
+    <CompactActionLogLine
+      icon={<Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Created Git Commit"
+      detail={[details.shortSha, details.message].filter(Boolean).join(" - ")}
+    />
+  );
+}
+
+function renderGitStatusCompactLog(details: NonNullable<ReturnType<typeof parseGitStatusLogDetails>>) {
+  return (
+    <CompactActionLogLine
+      icon={<Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Checked Git Status"
+      detail={details.clean ? "Working tree clean" : `${formatCompactListCount(details.totalCount, "file")} changed`}
+    />
+  );
 }
 
 function isRunnerLogImageFilePath(filePath?: string | null): boolean {
@@ -2602,6 +2780,7 @@ function getCreatedResourceTypeLabel(resourceType: RunnerCreatedResourceType): s
   if (resourceType === "agent") return "Agent";
   if (resourceType === "skill") return "Skill";
   if (resourceType === "environment") return "Environment";
+  if (resourceType === "project") return "Project";
   return "Release";
 }
 
@@ -2609,6 +2788,7 @@ function renderCreatedResourceIcon(resourceType: RunnerCreatedResourceType, clas
   if (resourceType === "agent") return <Bot className={className} strokeWidth={1.8} />;
   if (resourceType === "skill") return <Cpu className={className} strokeWidth={1.8} />;
   if (resourceType === "environment") return <HardDrive className={className} strokeWidth={1.8} />;
+  if (resourceType === "project") return <Rocket className={className} strokeWidth={1.8} />;
   return <Calendar className={className} strokeWidth={1.8} />;
 }
 
@@ -3186,61 +3366,26 @@ function shouldRenderTaskManagementCreateLog(log: RunnerLog): boolean {
 
 function TaskManagementCommentLogBox({
   log,
-  timeLabel,
 }: {
   log: RunnerLog;
   timeLabel?: string;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
   const comments = useMemo(() => collectTaskManagementComments(log), [log]);
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
   const title =
     comments.length === 1
-      ? comments[0]?.taskTitle || "Comment added"
+      ? "Added ticket comment"
       : comments.length > 1
         ? `${comments.length} comments added`
         : "Add ticket comment";
+  const detail = comments[0]?.taskTitle || (isLoading ? "commenting..." : "");
 
   return (
-    <div className="tb-log-card tb-log-card-task-comment">
-      <LogHeader
-        icon={<MessageSquare className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Ticket Comment"
-        title={title}
-        timeLabel={timeLabel}
-        meta={isLoading ? <span className="tb-log-card-status">commenting...</span> : null}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {comments.length > 0 ? (
-          <div className="tb-log-task-comment-list">
-            {comments.map((comment, index) => {
-              const authorName = comment.authorName || "Agent";
-              const authorInitial = (authorName.trim().charAt(0) || "A").toUpperCase();
-              return (
-                <div key={comment.id || `${comment.taskId || "task"}:${index}`} className="tb-log-task-comment-item">
-                  <div className="tb-log-task-comment-avatar" aria-hidden="true">
-                    <span className="tb-log-task-comment-avatar-fallback">{authorInitial}</span>
-                  </div>
-                  <div className="tb-log-task-comment-body">
-                    <div className="tb-log-task-comment-meta">
-                      <span className="tb-log-task-comment-author">{authorName}</span>
-                      <span className="tb-log-task-comment-time">{formatTaskManagementCommentTimestamp(comment.createdAt)}</span>
-                    </div>
-                    <div className="tb-log-task-comment-text">{comment.body}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="tb-log-card-empty">
-            {isLoading ? "Adding ticket comment..." : "No ticket comment was parsed."}
-          </div>
-        )}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<MessageSquare className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title={title}
+      detail={detail}
+    />
   );
 }
 
@@ -3325,12 +3470,39 @@ function TaskManagementPreviewCard({
   );
 }
 
+function buildTaskManagementPreviewClickPayload(
+  task: RunnerTaskManagementCreatedTaskPreview,
+  fallbackTicketLabel = "TASK"
+): Parameters<NonNullable<RunnerWorkLogEntryProps["onTaskPreviewClick"]>>[0] {
+  return {
+    taskId: task.id,
+    projectId: task.projectId || "",
+    ...(task.projectName ? { projectName: task.projectName } : {}),
+    ticketNumber: task.ticketNumber || fallbackTicketLabel,
+    title: task.title,
+    ...(task.taskColor ? { taskColor: task.taskColor } : {}),
+    ...(task.status ? { status: task.status } : {}),
+    ...(task.priority ? { priority: task.priority } : {}),
+    ...(task.taskType ? { taskType: task.taskType } : {}),
+    ...(task.assigneeAgentId ? { assigneeAgentId: task.assigneeAgentId } : {}),
+    ...(task.assigneeName ? { assigneeName: task.assigneeName } : {}),
+  };
+}
+
+function formatTaskManagementCompactDetail(
+  task: RunnerTaskManagementCreatedTaskPreview | undefined,
+  fallbackTicketLabel = "TASK"
+): string {
+  if (!task) {
+    return "";
+  }
+  return [task.ticketNumber || fallbackTicketLabel, task.title].filter(Boolean).join(" ");
+}
+
 function TaskManagementCreateLogBox({
   log,
-  timeLabel,
   backendUrl,
   requestHeaders,
-  activeTaskPreviewId,
   onTaskPreviewClick,
 }: {
   log: RunnerLog;
@@ -3340,7 +3512,6 @@ function TaskManagementCreateLogBox({
   activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: RunnerWorkLogEntryProps["onTaskPreviewClick"];
 }) {
-  const [collapsed, setCollapsed] = useState(false);
   const [enrichedTasksById, setEnrichedTasksById] = useState<Record<string, RunnerTaskManagementCreatedTaskPreview>>({});
   const [ticketNumbersByTaskId, setTicketNumbersByTaskId] = useState<Record<string, string>>({});
   const createdTasks = useMemo(() => collectTaskManagementCreatedTasks(log), [log]);
@@ -3529,52 +3700,21 @@ function TaskManagementCreateLogBox({
     };
   }, [backendUrl, displayTasks, requestHeaders]);
 
+  const firstTask = displayTasks[0];
   return (
-    <div className="tb-log-card tb-log-card-task-create">
-      <LogHeader
-        icon={<ListTodo className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Task Management"
-        title={title}
-        timeLabel={timeLabel}
-        meta={
-          createdCount > 0
-            ? <span className="tb-log-card-pill">{createdCount} created</span>
-            : isLoading
-              ? <span className="tb-log-card-status">creating...</span>
-              : null
-        }
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {createdCount > 0 ? (
-          <div className="tb-log-task-create-list">
-            {displayTasks.map((task) => (
-              <TaskManagementPreviewCard
-                key={task.id}
-                task={task}
-                activeTaskPreviewId={activeTaskPreviewId}
-                onTaskPreviewClick={onTaskPreviewClick}
-                fallbackTicketLabel="NEW"
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="tb-log-card-empty">
-            {isLoading ? "Creating tasks..." : "No created tasks were parsed."}
-          </div>
-        )}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<ListTodo className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title={createdCount === 1 ? "Created task" : title}
+      detail={firstTask ? formatTaskManagementCompactDetail(firstTask, "NEW") : isLoading ? "creating..." : ""}
+      onClick={firstTask?.id ? () => onTaskPreviewClick?.(buildTaskManagementPreviewClickPayload(firstTask, "NEW")) : undefined}
+    />
   );
 }
 
 function TaskManagementUpdateLogBox({
   log,
-  timeLabel,
   backendUrl,
   requestHeaders,
-  activeTaskPreviewId,
   onTaskPreviewClick,
 }: {
   log: RunnerLog;
@@ -3584,7 +3724,6 @@ function TaskManagementUpdateLogBox({
   activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: RunnerWorkLogEntryProps["onTaskPreviewClick"];
 }) {
-  const [collapsed, setCollapsed] = useState(false);
   const [enrichedTasksById, setEnrichedTasksById] = useState<Record<string, RunnerTaskManagementCreatedTaskPreview>>({});
   const updatedTasks = useMemo(() => collectTaskManagementUpdatedTasks(log), [log]);
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
@@ -3672,7 +3811,6 @@ function TaskManagementUpdateLogBox({
     [enrichedTasksById, updatedTasks]
   );
   const updatedCount = displayTasks.length;
-  const summary = formatTaskManagementUpdateSummary(log, displayTasks);
   const title =
     updatedCount === 1
       ? "1 ticket updated"
@@ -3680,45 +3818,14 @@ function TaskManagementUpdateLogBox({
         ? `${updatedCount} tickets updated`
         : "Update ticket";
 
+  const firstTask = displayTasks[0];
   return (
-    <div className="tb-log-card tb-log-card-task-update">
-      <LogHeader
-        icon={<CheckCircle2 className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Ticket Update"
-        title={title}
-        timeLabel={timeLabel}
-        meta={
-          updatedCount > 0
-            ? <span className="tb-log-card-pill">{updatedCount} updated</span>
-            : isLoading
-              ? <span className="tb-log-card-status">updating...</span>
-              : null
-        }
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {updatedCount > 0 ? (
-          <>
-            <div className="tb-log-task-update-summary">{summary}</div>
-            <div className="tb-log-task-create-list">
-              {displayTasks.map((task) => (
-                <TaskManagementPreviewCard
-                  key={task.id}
-                  task={task}
-                  activeTaskPreviewId={activeTaskPreviewId}
-                  onTaskPreviewClick={onTaskPreviewClick}
-                />
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="tb-log-card-empty">
-            {isLoading ? "Updating ticket..." : "No updated ticket was parsed."}
-          </div>
-        )}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<CheckCircle2 className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title={updatedCount === 1 ? "Updated ticket" : title}
+      detail={firstTask ? formatTaskManagementCompactDetail(firstTask) : isLoading ? "updating..." : ""}
+      onClick={firstTask?.id ? () => onTaskPreviewClick?.(buildTaskManagementPreviewClickPayload(firstTask)) : undefined}
+    />
   );
 }
 
@@ -3809,12 +3916,16 @@ function ResourceCreateLogList({
 
 function ComputerAgentsCreateLogBox({
   log,
-  timeLabel,
+  onAgentPreviewClick,
+  onEnvironmentPreviewClick,
+  onProjectPreviewClick,
 }: {
   log: RunnerLog;
   timeLabel?: string;
+  onAgentPreviewClick?: RunnerWorkLogEntryProps["onAgentPreviewClick"];
+  onEnvironmentPreviewClick?: RunnerWorkLogEntryProps["onEnvironmentPreviewClick"];
+  onProjectPreviewClick?: RunnerWorkLogEntryProps["onProjectPreviewClick"];
 }) {
-  const [collapsed, setCollapsed] = useState(false);
   const resources = useMemo(() => collectComputerAgentsCreatedResources(log), [log]);
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
   const mutationVerb = getComputerAgentsMutationVerb(log);
@@ -3826,42 +3937,43 @@ function ComputerAgentsCreateLogBox({
         : mutationVerb === "updated"
           ? "Update resources"
           : "Create resources";
+  const firstResource = resources[0];
+  const compactTitle =
+    firstResource && resources.length === 1
+      ? `${mutationVerb === "updated" ? "Updated" : "Created"} ${getCreatedResourceTypeLabel(firstResource.resourceType).toLowerCase()}`
+      : title;
+  const detail = firstResource
+    ? firstResource.name
+    : isLoading
+      ? mutationVerb === "updated" ? "updating..." : "creating..."
+      : "";
+  const onClick =
+    firstResource?.resourceType === "agent" && firstResource.id
+      ? () => onAgentPreviewClick?.({ agentId: firstResource.id, agentName: firstResource.name })
+      : firstResource?.resourceType === "environment" && firstResource.id
+        ? () => onEnvironmentPreviewClick?.({ environmentId: firstResource.id, environmentName: firstResource.name })
+        : firstResource?.resourceType === "project" && firstResource.id
+          ? () => onProjectPreviewClick?.({ projectId: firstResource.id, projectName: firstResource.name })
+          : undefined;
 
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<img className="tb-log-card-small-icon tb-log-card-small-icon-runner" src={RUNNER_TRANSPARENT_LOGO_URL} alt="" aria-hidden="true" />}
-        label="Computer Agents"
-        title={title}
-        timeLabel={timeLabel}
-        meta={
-          resources.length > 0
-            ? <span className="tb-log-card-pill">{resources.length} {mutationVerb}</span>
-            : isLoading
-              ? <span className="tb-log-card-status">{mutationVerb === "updated" ? "updating..." : "creating..."}</span>
-              : null
-        }
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        <ResourceCreateLogList
-          resources={resources}
-          emptyLabel={isLoading ? "Creating resources..." : "No created resources were parsed."}
-        />
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={firstResource
+        ? renderCreatedResourceIcon(firstResource.resourceType, "tb-log-compact-action-icon-svg")
+        : <img className="tb-log-compact-action-runner-icon" src={RUNNER_TRANSPARENT_LOGO_URL} alt="" aria-hidden="true" />}
+      title={compactTitle}
+      detail={detail}
+      onClick={onClick}
+    />
   );
 }
 
 function TaskManagementReleaseCreateLogBox({
   log,
-  timeLabel,
 }: {
   log: RunnerLog;
   timeLabel?: string;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
   const releases = useMemo(() => collectTaskManagementCreatedReleases(log), [log]);
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
   const title =
@@ -3870,39 +3982,15 @@ function TaskManagementReleaseCreateLogBox({
       : releases.length > 1
         ? `${releases.length} releases created`
         : "Create releases";
+  const firstRelease = releases[0];
 
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<Calendar className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Task Management"
-        title={title}
-        timeLabel={timeLabel}
-        meta={
-          releases.length > 0
-            ? <span className="tb-log-card-pill">{releases.length} created</span>
-            : isLoading
-              ? <span className="tb-log-card-status">creating...</span>
-              : null
-        }
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        <ResourceCreateLogList
-          resources={releases}
-          emptyLabel={isLoading ? "Creating releases..." : "No created releases were parsed."}
-        />
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<Calendar className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title={releases.length === 1 ? "Created release" : title}
+      detail={firstRelease?.name || (isLoading ? "creating..." : "")}
+    />
   );
-}
-
-function renderComputerAgentsThreadSnapshotLogIcon(tone: RunnerComputerAgentsThreadSnapshotItem["tone"]) {
-  if (tone === "reasoning") return <Lightbulb className="tb-log-thread-snapshot-log-icon-svg" strokeWidth={1.5} />;
-  if (tone === "command") return <Terminal className="tb-log-thread-snapshot-log-icon-svg" strokeWidth={1.5} />;
-  if (tone === "error") return <AlertCircle className="tb-log-thread-snapshot-log-icon-svg" strokeWidth={1.5} />;
-  return <MessageSquare className="tb-log-thread-snapshot-log-icon-svg" strokeWidth={1.5} />;
 }
 
 function ComputerAgentsThreadSnapshotLogBox({
@@ -3912,107 +4000,43 @@ function ComputerAgentsThreadSnapshotLogBox({
   log: RunnerLog;
   timeLabel?: string;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
+  void timeLabel;
   const details = useMemo(() => parseComputerAgentsThreadSnapshotDetails(log), [log]);
   const entries = details?.entries || [];
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
   const kind = details?.kind || "messages";
-  const label = kind === "logs" ? "Thread Logs" : "Thread Messages";
-  const snapshotTitle = details?.threadId || (kind === "logs" ? "Thread activity" : "Thread transcript");
-  const icon = kind === "logs"
-    ? <Terminal className="tb-log-card-small-icon" strokeWidth={1.5} />
-    : <MessageSquare className="tb-log-card-small-icon" strokeWidth={1.5} />;
 
   if (kind === "messages" && entries.length === 0 && !isLoading) {
     return null;
   }
 
+  const title = kind === "logs" ? "Retrieved Thread Logs" : "Retrieved Thread";
+  const detailParts = [
+    details?.threadId || "",
+    entries.length > 0
+      ? `${entries.length.toLocaleString()} ${kind === "logs" ? "logs" : "messages"}`
+      : isLoading
+        ? "loading..."
+        : "",
+  ].filter(Boolean);
+
   return (
-    <div className="tb-log-card tb-log-card-thread-snapshot">
-      <LogHeader
-        icon={icon}
-        label={label}
-        title={snapshotTitle}
-        timeLabel={timeLabel}
-        meta={
-          entries.length > 0
-            ? <span className="tb-log-card-pill">{entries.length} {kind === "logs" ? "logs" : "messages"}</span>
-            : isLoading
-              ? <span className="tb-log-card-status">loading...</span>
-              : null
-        }
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {entries.length > 0 ? (
-          <div className={`tb-log-thread-snapshot-body is-${kind}`.trim()}>
-            {kind === "messages" ? (
-              entries.map((entry) => {
-                const role = entry.role === "user" ? "user" : entry.role === "system" ? "system" : "assistant";
-                const timestamp = formatComputerAgentsThreadSnapshotTimestamp(entry.createdAt);
-                return (
-                  <div key={entry.id} className={`tb-log-thread-snapshot-message is-${role}`.trim()}>
-                    <div className="tb-log-thread-snapshot-message-avatar" aria-hidden="true">
-                      {role === "user"
-                        ? <User className="tb-log-thread-snapshot-message-avatar-icon" strokeWidth={1.5} />
-                        : <Bot className="tb-log-thread-snapshot-message-avatar-icon" strokeWidth={1.5} />}
-                    </div>
-                    <div className="tb-log-thread-snapshot-message-stack">
-                      <div className="tb-log-thread-snapshot-message-meta">
-                        <span>{entry.label}</span>
-                        {timestamp ? <span>{timestamp}</span> : null}
-                      </div>
-                      <div className="tb-log-thread-snapshot-message-bubble">
-                        <RunnerMarkdown
-                          content={entry.content}
-                          className="tb-message-markdown tb-message-markdown-summary tb-log-thread-snapshot-markdown"
-                          softBreaks
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              entries.map((entry) => {
-                const timestamp = formatComputerAgentsThreadSnapshotTimestamp(entry.createdAt);
-                return (
-                  <div key={entry.id} className={`tb-log-thread-snapshot-log-row is-${entry.tone || "log"}`.trim()}>
-                    <span className="tb-log-thread-snapshot-log-icon" aria-hidden="true">
-                      {renderComputerAgentsThreadSnapshotLogIcon(entry.tone)}
-                    </span>
-                    <div className="tb-log-thread-snapshot-log-main">
-                      <div className="tb-log-thread-snapshot-log-meta">
-                        <span>{entry.label}</span>
-                        {timestamp ? <span>{timestamp}</span> : null}
-                      </div>
-                      <div className="tb-log-thread-snapshot-log-content">
-                        {entry.tone === "command" ? (
-                          <RunnerShellCommandViewer command={entry.content} />
-                        ) : (
-                          <RunnerMarkdown
-                            content={entry.content}
-                            className="tb-message-markdown tb-message-markdown-summary tb-log-thread-snapshot-markdown"
-                            softBreaks
-                            disallowHeadings
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        ) : (
-          <div className="tb-log-card-empty">
-            {isLoading ? `Loading ${kind === "logs" ? "thread logs" : "thread messages"}...` : `No ${kind === "logs" ? "thread logs" : "thread messages"} were parsed.`}
-          </div>
-        )}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={kind === "logs"
+        ? <Terminal className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
+        : <MessageSquare className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title={title}
+      detail={detailParts.join(" - ")}
+    />
   );
+}
+
+export function getRunnerReasoningLogContent(log: RunnerLog): string {
+  return stripRunnerSystemTags(log.message || "").replace(/^\*\*[^*]+\*\*\s*/, "").trim();
+}
+
+export function shouldRenderRunnerReasoningLog(log: RunnerLog): boolean {
+  return getRunnerReasoningLogContent(log).length > 0;
 }
 
 function ReasoningLogBox({
@@ -4022,7 +4046,7 @@ function ReasoningLogBox({
   log: RunnerLog;
   onWorkspacePathClick?: (path: string) => void;
 }) {
-  const content = stripRunnerSystemTags(log.message).replace(/^\*\*[^*]+\*\*\s*/, "").trim();
+  const content = getRunnerReasoningLogContent(log);
   if (!content) return null;
   return (
     <div className="tb-log-reasoning">
@@ -4033,11 +4057,9 @@ function ReasoningLogBox({
 
 function GenericTextLogBox({
   log,
-  timeLabel,
   label,
   title,
   icon,
-  onWorkspacePathClick,
 }: {
   log: RunnerLog;
   timeLabel?: string;
@@ -4046,15 +4068,14 @@ function GenericTextLogBox({
   icon: ReactNode;
   onWorkspacePathClick?: (path: string) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
   const content = stripRunnerSystemTags(log.message || log.metadata?.output || "");
+  const detail = content.replace(/\s+/g, " ").trim();
   return (
-    <div className="tb-log-card">
-      <LogHeader icon={icon} label={label} title={title} timeLabel={timeLabel} collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} />
-      <LogPanel collapsed={collapsed}>
-        {content ? <RunnerMarkdown content={content} className="tb-message-markdown" softBreaks onWorkspacePathClick={onWorkspacePathClick} /> : <div className="tb-log-card-empty">No details available.</div>}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={icon}
+      title={title || label}
+      detail={detail || "No details available."}
+    />
   );
 }
 
@@ -5288,25 +5309,15 @@ function ReadFileLogBox({
   }
 
   const normalizedPath = normalizeRunnerFilePath(filePath) || filePath;
-  const fileName = getFileName(normalizedPath);
   const previewAttachment = buildReadFilePreviewAttachment(normalizedPath, content, backendUrl, environmentId);
 
   return (
-    <div className="tb-log-file-change-summary tb-log-file-read-summary">
-      <div className="tb-log-file-change-summary-title">Read file</div>
-      <ul className="tb-log-file-change-summary-list">
-        <li className="tb-log-file-change-summary-item">
-          <button
-            type="button"
-            className="tb-log-file-change-summary-link"
-            onClick={() => onPreviewDocument?.(previewAttachment)}
-            title={normalizedPath}
-          >
-            {fileName}
-          </button>
-        </li>
-      </ul>
-    </div>
+    <CompactActionLogLine
+      icon={<FileText className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Read file"
+      detail={normalizedPath}
+      onClick={onPreviewDocument ? () => onPreviewDocument(previewAttachment) : undefined}
+    />
   );
 }
 
@@ -5406,6 +5417,21 @@ function getWriteFileSummaryTitle(items: RunnerLogFileChangePreview[]): string {
   return isSingular ? "File updated" : "Files updated";
 }
 
+function getWriteFileCompactTitle(items: RunnerLogFileChangePreview[]): string {
+  if (items.length === 0) {
+    return "Updated files";
+  }
+  const kinds = new Set(items.map((item) => item.kind));
+  const isSingular = items.length === 1;
+  if (kinds.size === 1 && kinds.has("created")) {
+    return isSingular ? "Created file" : "Created files";
+  }
+  if (kinds.size === 1 && kinds.has("deleted")) {
+    return isSingular ? "Deleted file" : "Deleted files";
+  }
+  return isSingular ? "Edited file" : "Edited files";
+}
+
 function WriteFileLogGroup({
   log,
   backendUrl,
@@ -5458,33 +5484,21 @@ function WriteFileLogGroup({
     });
   }
 
+  const firstItem = items[0];
+  const detail = items.length === 1 && firstItem
+    ? firstItem.path
+    : `${items.length} files`;
+  const canPreview = items.length === 1 && firstItem?.kind !== "deleted";
+  const icon = firstItem?.kind === "created"
+    ? <FilePlus className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
+    : <FileText className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />;
   return (
-    <div className="tb-log-file-change-summary">
-      <div className="tb-log-file-change-summary-title">{getWriteFileSummaryTitle(items)}</div>
-      <ul className="tb-log-file-change-summary-list">
-        {items.map((item) => {
-          const canPreview = item.kind !== "deleted";
-          const fileName = getFileName(item.path);
-          const label = item.path || fileName;
-          return (
-            <li key={`${item.kind}:${item.path}`} className="tb-log-file-change-summary-item">
-              {canPreview ? (
-                <button
-                  type="button"
-                  className="tb-log-file-change-summary-link"
-                  onClick={() => openFilePreview(item)}
-                  title={label}
-                >
-                  {fileName}
-                </button>
-              ) : (
-                <span className="tb-log-file-change-summary-deleted" title={label}>{fileName}</span>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <CompactActionLogLine
+      icon={icon}
+      title={getWriteFileCompactTitle(items)}
+      detail={detail}
+      onClick={canPreview && firstItem ? () => openFilePreview(firstItem) : undefined}
+    />
   );
 }
 
@@ -5715,6 +5729,42 @@ function getListFileDisplayName(pathOrName: string): string {
   const normalized = normalizeListFileName(pathOrName).replace(/\/+$/, "");
   const parts = normalized.split("/").filter(Boolean);
   return parts[parts.length - 1] || normalized;
+}
+
+function normalizeListFilesPreviewDirectoryPath(directoryPath?: string | null): string {
+  const normalizedPath = String(directoryPath || "").trim();
+  if (!normalizedPath || normalizedPath === "." || /[*?[\]{}]/.test(normalizedPath)) {
+    return DEFAULT_LIST_FILES_DIRECTORY;
+  }
+  if (normalizedPath.startsWith("/workspace")) {
+    return normalizedPath.replace(/\/+$/, "") || DEFAULT_LIST_FILES_DIRECTORY;
+  }
+  if (normalizedPath.startsWith("/") || normalizedPath.startsWith("~")) {
+    return DEFAULT_LIST_FILES_DIRECTORY;
+  }
+  return `${DEFAULT_LIST_FILES_DIRECTORY}/${normalizedPath.replace(/^\/+|\/+$/g, "")}`;
+}
+
+function buildListFilesPreviewAttachment(
+  directoryPath: string | null,
+  backendUrl?: string,
+  environmentId?: string | null
+): RunnerPreviewAttachment {
+  const workspacePath = normalizeListFilesPreviewDirectoryPath(directoryPath);
+  const baseAttachment = buildRunnerPreviewAttachmentFromPath(workspacePath, {
+    backendUrl,
+    environmentId,
+    idPrefix: "list-files",
+  });
+  return {
+    ...baseAttachment,
+    filename: workspacePath === DEFAULT_LIST_FILES_DIRECTORY ? "workspace" : getListFileDisplayName(workspacePath),
+    mimeType: "inode/directory",
+    type: "document",
+    previewKindOverride: "directory",
+    isFolder: true,
+    workspacePath,
+  };
 }
 
 function normalizeListFileWorkspaceRelativePath(pathOrName: string): string {
@@ -6039,11 +6089,9 @@ function filterListFiles(items: ListFileItem[], filterMode: ListFileFilter): Lis
 
 function ListFilesLogBox({
   log,
-  timeLabel,
   backendUrl,
   environmentId,
-  requestHeaders,
-  onWorkspacePathClick,
+  onPreviewDocument,
 }: {
   log: RunnerLog;
   timeLabel?: string;
@@ -6051,340 +6099,25 @@ function ListFilesLogBox({
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
   onWorkspacePathClick?: (path: string) => void;
+  onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterMode, setFilterMode] = useState<ListFileFilter>("visible");
-  const [sortMode, setSortMode] = useState<ListFileSort>("name");
-  const [openPopover, setOpenPopover] = useState<ListFilePopover>(null);
-  const [visibleCount, setVisibleCount] = useState(LIST_FILES_PAGE_SIZE);
-  const [fileMetadataByPath, setFileMetadataByPath] = useState<Record<string, ListFileMetadata>>({});
-  const requestedMetadataFoldersRef = useRef<Set<string>>(new Set());
-  const command = log.metadata?.command || "";
-  const output = resolveCommandOutputText(log.metadata?.output, "stdout");
-  const isFindingFiles = isFindingFilesCommand(command);
-  const directoryPath = extractDirectoryPath(command);
-  const allItems = useMemo(() => parseListOutput(output), [output]);
-  const normalizedSearchQuery = normalizeListFileSearchText(searchQuery);
-  const filteredItems = useMemo(() => {
-    const matchingFilter = filterListFiles(allItems, filterMode);
-    const matchingSearch = normalizedSearchQuery
-      ? matchingFilter.filter((item) => {
-          const location = getListFileLocationLabel(directoryPath, item);
-          const haystack = [
-            item.name,
-            location,
-            getListFileTypeLabel(item),
-            item.size || "",
-            item.isHidden ? "hidden" : "",
-          ].join(" ").toLowerCase();
-          return haystack.includes(normalizedSearchQuery);
-        })
-      : matchingFilter;
-    return sortListFiles(matchingSearch, sortMode);
-  }, [allItems, directoryPath, filterMode, normalizedSearchQuery, sortMode]);
-  const displayItems = filteredItems.slice(0, visibleCount);
-  const hasMoreItems = filteredItems.length > displayItems.length;
-  const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
-
-  useEffect(() => {
-    setVisibleCount(LIST_FILES_PAGE_SIZE);
-  }, [filterMode, normalizedSearchQuery, sortMode]);
-
-  useEffect(() => {
-    const normalizedEnvironmentId = String(environmentId || "").trim();
-    if (!backendUrl || !normalizedEnvironmentId || displayItems.length === 0) {
-      return;
-    }
-    const folderPaths = new Set<string>();
-    for (const item of displayItems) {
-      if (item.sizeBytes != null || item.size) continue;
-      const location = getListFileLocationLabel(directoryPath, item);
-      const relativePath = normalizeListFileWorkspaceRelativePath(location);
-      if (!relativePath || item.type === "folder") continue;
-      folderPaths.add(getListFileParentDirectory(relativePath));
-    }
-    const pendingFolders = Array.from(folderPaths).filter((folderPath) => {
-      const requestKey = `${normalizedEnvironmentId}:${folderPath}`;
-      if (requestedMetadataFoldersRef.current.has(requestKey)) return false;
-      requestedMetadataFoldersRef.current.add(requestKey);
-      return true;
-    });
-    if (pendingFolders.length === 0) {
-      return;
-    }
-
-    let cancelled = false;
-    void Promise.all(pendingFolders.map(async (folderPath) => {
-      const url = buildListFileMetadataUrl(backendUrl, normalizedEnvironmentId, folderPath);
-      if (!url) return [];
-      try {
-        const response = await fetch(url, { headers: requestHeaders });
-        if (!response.ok) return [];
-        const payload = await response.json();
-        return Array.isArray(payload?.files) ? payload.files : [];
-      } catch {
-        return [];
-      }
-    })).then((results) => {
-      if (cancelled) return;
-      const nextMetadata: Record<string, ListFileMetadata> = {};
-      for (const files of results) {
-        for (const file of files) {
-          const rawPath = String(file?.path || "").trim();
-          if (!rawPath) continue;
-          const size = Number(file?.size);
-          nextMetadata[getListFileMetadataLookupKey(rawPath)] = {
-            sizeBytes: Number.isFinite(size) ? size : undefined,
-            type: file?.type === "directory" || file?.type === "folder" ? "directory" : "file",
-          };
-        }
-      }
-      if (Object.keys(nextMetadata).length > 0) {
-        setFileMetadataByPath((current) => ({ ...current, ...nextMetadata }));
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [backendUrl, directoryPath, displayItems, environmentId, requestHeaders]);
-
-  const sortOptions: Array<{ id: ListFileSort; label: string }> = [
-    { id: "name", label: "Name" },
-    { id: "type", label: "Type" },
-    { id: "size", label: "Size" },
-  ];
-  const filterOptions: Array<{ id: ListFileFilter; label: string }> = [
-    { id: "visible", label: "Visible items" },
-    { id: "files", label: "Files" },
-    { id: "folders", label: "Folders" },
-    { id: "hidden", label: "Hidden items" },
-  ];
-  const selectedSortLabel = sortOptions.find((option) => option.id === sortMode)?.label || "Name";
-  const selectedFilterLabel = filterOptions.find((option) => option.id === filterMode)?.label || "Visible items";
-
-  function handleListFileOpen(item: ListFileItem) {
-    if (typeof onWorkspacePathClick !== "function") return;
-    const location = getListFileLocationLabel(directoryPath, item);
-    if (!location) return;
-    onWorkspacePathClick(location);
-  }
-
-  if (!isError && allItems.length === 0) {
+  const compactCommand = log.metadata?.command || "";
+  const compactOutput = resolveCommandOutputText(log.metadata?.output, "stdout");
+  const compactDirectoryPath = extractDirectoryPath(compactCommand);
+  const compactItems = parseListOutput(compactOutput);
+  const compactIsError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
+  if (!compactIsError && compactItems.length === 0) {
     return null;
   }
-
   return (
-    <div className="tb-log-card tb-log-card-agent-list tb-log-card-file-list">
-      <LogHeader
-        icon={<FolderOpen className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="List Files"
-        title={directoryPath}
-        timeLabel={timeLabel}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{output || "Failed to list files."}</div>
-        ) : allItems.length > 0 ? (
-          <>
-            <div className="tb-log-agent-list-toolbar">
-              <div className="tb-log-agent-list-summary">{getListFileCountLabel(filteredItems.length)}</div>
-              <div className="tb-log-agent-list-controls">
-                <div className="tb-log-agent-list-search-shell">
-                  <Search className="tb-log-agent-list-search-icon" strokeWidth={1.8} />
-                  <input
-                    type="search"
-                    value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
-                    className="tb-log-agent-list-search"
-                    placeholder="Search files"
-                  />
-                </div>
-                <div className="tb-log-agent-list-toolbar-controls">
-                  <div className="tb-log-agent-list-popup-shell">
-                    <button
-                      type="button"
-                      className={`tb-log-agent-list-control-button ${openPopover === "sort" || sortMode !== "name" ? "is-active" : ""}`.trim()}
-                      onClick={() => setOpenPopover((current) => current === "sort" ? null : "sort")}
-                    >
-                      <ArrowUpDown className="tb-log-agent-list-control-icon" strokeWidth={1.8} />
-                      <span>Sort</span>
-                    </button>
-                    {openPopover === "sort" ? (
-                      <div className="tb-log-agent-list-popup-menu">
-                        <div className="tb-log-agent-list-popup-title">Sort by</div>
-                        {sortOptions.map((option) => (
-                          <button
-                            key={option.id}
-                            type="button"
-                            className={`tb-log-agent-list-popup-row ${sortMode === option.id ? "selected" : ""}`.trim()}
-                            onClick={() => {
-                              setSortMode(option.id);
-                              setOpenPopover(null);
-                            }}
-                          >
-                            <span className="tb-log-agent-list-popup-check-slot">
-                              {sortMode === option.id ? <Check className="tb-log-agent-list-popup-check" strokeWidth={1.8} /> : null}
-                            </span>
-                            <span>{option.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="tb-log-agent-list-popup-shell">
-                    <button
-                      type="button"
-                      className={`tb-log-agent-list-control-button ${openPopover === "filter" || filterMode !== "visible" ? "is-active" : ""}`.trim()}
-                      onClick={() => setOpenPopover((current) => current === "filter" ? null : "filter")}
-                    >
-                      <SlidersHorizontal className="tb-log-agent-list-control-icon" strokeWidth={1.8} />
-                      <span>Filter</span>
-                    </button>
-                    {openPopover === "filter" ? (
-                      <div className="tb-log-agent-list-popup-menu">
-                        <div className="tb-log-agent-list-popup-title">Type</div>
-                        {filterOptions.map((option) => (
-                          <button
-                            key={option.id}
-                            type="button"
-                            className={`tb-log-agent-list-popup-row ${filterMode === option.id ? "selected" : ""}`.trim()}
-                            onClick={() => {
-                              setFilterMode(option.id);
-                              setOpenPopover(null);
-                            }}
-                          >
-                            <span className="tb-log-agent-list-popup-check-slot">
-                              {filterMode === option.id ? <Check className="tb-log-agent-list-popup-check" strokeWidth={1.8} /> : null}
-                            </span>
-                            <span>{option.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-              <div className="tb-log-agent-list-active-filters" aria-live="polite">
-                {sortMode !== "name" ? <span>{`Sorted by ${selectedSortLabel}`}</span> : null}
-                {filterMode !== "visible" ? <span>{selectedFilterLabel}</span> : null}
-              </div>
-            </div>
-            <div className="tb-log-agent-list-table-shell">
-              {displayItems.length > 0 ? (
-                <table className="tb-log-agent-list-table">
-                  <colgroup>
-                    <col className="tb-log-agent-list-col-name" />
-                    <col className="tb-log-agent-list-col-model" />
-                    <col className="tb-log-agent-list-col-context" />
-                    <col className="tb-log-agent-list-col-cost" />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Location</th>
-                      <th>Type</th>
-                      <th className="is-right">Size</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayItems.map((item) => {
-                      const location = getListFileLocationLabel(directoryPath, item);
-                      const fileMetadata = fileMetadataByPath[getListFileMetadataLookupKey(location)];
-                      const sizeLabel = item.size || (fileMetadata?.sizeBytes != null && fileMetadata.type !== "directory"
-                        ? formatBytes(fileMetadata.sizeBytes)
-                        : "-");
-                      return (
-                        <tr
-                          key={`${item.type}-${item.path || item.name}`}
-                          role={onWorkspacePathClick ? "button" : undefined}
-                          tabIndex={onWorkspacePathClick ? 0 : undefined}
-                          onClick={() => handleListFileOpen(item)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
-                              handleListFileOpen(item);
-                            }
-                          }}
-                        >
-                          <td>
-                            <div className="tb-log-agent-list-name-cell">
-                              <span className="tb-log-agent-list-avatar" aria-hidden="true">
-                                <FileKindIcon item={item} />
-                              </span>
-                              <div className="tb-log-agent-list-name-copy">
-                                <div className="tb-log-agent-list-name-title" title={item.name}>{item.name}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div className="tb-log-agent-list-model-cell">
-                              <div className="tb-log-agent-list-model-copy">
-                                <div className="tb-log-agent-list-model-provider" title="Path">Path</div>
-                                <div className="tb-log-agent-list-model-name" title={location}>{location}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div className="tb-log-agent-list-context">{getResolvedListFileTypeLabel(item, fileMetadata)}</div>
-                          </td>
-                          <td>
-                            <div className="tb-log-agent-list-cost">{sizeLabel}</div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="tb-log-agent-list-empty">
-                  {normalizedSearchQuery || filterMode !== "visible" ? "No matching files found." : "No visible files available."}
-                </div>
-              )}
-            </div>
-            {hasMoreItems || visibleCount > LIST_FILES_PAGE_SIZE ? (
-              <div className="tb-log-agent-list-more-row tb-log-file-list-more-row">
-                <div className="tb-log-file-list-more-summary">
-                  {`Showing ${displayItems.length.toLocaleString()} of ${filteredItems.length.toLocaleString()} ${filteredItems.length === 1 ? "Item" : "Items"}`}
-                </div>
-                <div className="tb-log-file-list-more-actions">
-                  {visibleCount > LIST_FILES_PAGE_SIZE ? (
-                    <button
-                      type="button"
-                      className="tb-log-agent-list-load-more"
-                      onClick={() => setVisibleCount(LIST_FILES_PAGE_SIZE)}
-                    >
-                      Collapse
-                    </button>
-                  ) : null}
-                  {hasMoreItems ? (
-                    <button
-                      type="button"
-                      className="tb-log-agent-list-load-more"
-                      onClick={() => setVisibleCount((current) => current + LIST_FILES_PAGE_SIZE)}
-                    >
-                      Load more
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          isFindingFiles ? (
-            <div className="tb-log-file-list-empty-state">
-              <img src={RUNNER_TEXT_FILE_ICON_URL} alt="" className="tb-log-file-list-empty-icon" aria-hidden="true" />
-              <div className="tb-log-file-list-empty-title">No files found.</div>
-            </div>
-          ) : (
-            <div className="tb-log-card-empty">Folder is empty.</div>
-          )
-        )}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<FolderOpen className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="List Files"
+      detail={compactIsError ? "failed" : compactDirectoryPath || getListFileCountLabel(compactItems.length)}
+      onClick={!compactIsError && onPreviewDocument
+        ? () => onPreviewDocument(buildListFilesPreviewAttachment(compactDirectoryPath, backendUrl, environmentId))
+        : undefined}
+    />
   );
 }
 
@@ -6513,57 +6246,20 @@ function parseGrepSearchMatches(output: string): GrepSearchMatch[] {
 }
 
 function GrepSearchLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [showAll, setShowAll] = useState(false);
-  const command = String(log.metadata?.command || "");
-  const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
-  const stdout = resolveCommandOutputText(log.metadata?.output, "stdout");
-  const stderr = stripRunnerSystemTags(parsedOutput?.stderr || "");
-  const pattern = formatGrepSearchPattern(extractGrepSearchPattern(command));
-  const matches = useMemo(() => parseGrepSearchMatches(stdout), [stdout]);
-  const visibleMatches = showAll ? matches : matches.slice(0, 12);
-  const exitCode = typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
-  const hasError = Boolean(stderr.trim()) && exitCode !== 1;
-
+  const compactCommand = String(log.metadata?.command || "");
+  const compactStdout = resolveCommandOutputText(log.metadata?.output, "stdout");
+  const compactPattern = formatGrepSearchPattern(extractGrepSearchPattern(compactCommand));
+  const compactMatches = parseGrepSearchMatches(compactStdout);
+  const compactExitCode = typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
+  const compactParsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const compactStderr = stripRunnerSystemTags(compactParsedOutput?.stderr || "");
+  const compactHasError = Boolean(compactStderr.trim()) && compactExitCode !== 1;
   return (
-    <div className="tb-log-card tb-log-card-grep-search">
-      <LogHeader
-        icon={<Search className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Search Files"
-        title={pattern}
-        timeLabel={timeLabel}
-        meta={matches.length > 0 ? <span className="tb-log-card-pill">{matches.length} {matches.length === 1 ? "match" : "matches"}</span> : null}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {hasError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{stderr || "Search failed."}</div>
-        ) : matches.length > 0 ? (
-          <>
-            <div className="tb-log-list tb-log-search-match-list">
-              {visibleMatches.map((match, index) => (
-                <div key={`${match.source || match.title}-${match.lineNumber || index}`} className="tb-log-list-item tb-log-list-item-column tb-log-search-match">
-                  <div className="tb-log-list-copy">
-                    <div className="tb-log-list-title">{match.title}</div>
-                    {match.subtitle ? <div className="tb-log-list-subtitle">{match.subtitle}</div> : null}
-                  </div>
-                </div>
-              ))}
-            </div>
-            {matches.length > 12 ? (
-              <div className="tb-log-card-actions">
-                <button type="button" className="tb-log-card-link-button" onClick={() => setShowAll((value) => !value)}>
-                  {showAll ? "Show fewer" : `Show ${matches.length - 12} more`}
-                </button>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <div className="tb-log-card-empty">No matches found.</div>
-        )}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<Search className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Searched files"
+      detail={compactHasError ? "failed" : `${compactPattern}${compactMatches.length > 0 ? ` - ${compactMatches.length} ${compactMatches.length === 1 ? "match" : "matches"}` : ""}`}
+    />
   );
 }
 
@@ -7928,84 +7624,33 @@ function WebScrapeMarkdownLogBox({
   timeLabel?: string;
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const parsed = useMemo(() => parseWebScrapeLog(log), [log]);
+  void timeLabel;
+  const parsed = parseWebScrapeLog(log);
   const commandUrl = extractWebScrapeUrlFromCommand(log.metadata?.command || "");
   const markdown = parsed?.markdown || "";
   const title = formatWebScrapeTitle(parsed, commandUrl);
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
   const output = stripRunnerSystemTags(String(log.metadata?.output || ""));
-  const previewAttachment = useMemo<RunnerPreviewAttachment>(() => ({
+  const previewAttachment: RunnerPreviewAttachment = {
     ...buildRunnerPreviewAttachmentFromPath("/workspace/firecrawl-scrape.md", {
       idPrefix: "firecrawl-scrape-markdown",
     }),
+    id: buildCompactLogPreviewId("firecrawl-scrape-markdown", markdown || output || title),
     filename: "firecrawl-scrape.md",
     mimeType: "text/markdown",
     type: "document",
     previewKindOverride: "markdown",
     url: `data:text/markdown;charset=utf-8,${encodeURIComponent(markdown)}`,
     previewUrl: `data:text/markdown;charset=utf-8,${encodeURIComponent(markdown)}`,
-  }), [markdown]);
-
-  useEffect(() => {
-    if (!copied) return;
-    const timeoutId = window.setTimeout(() => setCopied(false), 1200);
-    return () => window.clearTimeout(timeoutId);
-  }, [copied]);
-
-  async function handleCopy() {
-    try {
-      await copyRunnerText(markdown || parsed?.rawText || output);
-      setCopied(true);
-    } catch {}
-  }
+  };
 
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<FileSearch className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Scrape Page"
-        title={title}
-        timeLabel={timeLabel}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{output || "Web scrape failed."}</div>
-        ) : markdown ? (
-          <div className="tb-log-file-preview-frame tb-log-scrape-markdown-frame">
-            <div className="tb-log-file-preview-topbar">
-              <span className="tb-log-file-preview-language">Markdown</span>
-              <div className="tb-log-file-preview-actions">
-                <button
-                  type="button"
-                  className="tb-log-file-preview-icon-button"
-                  onClick={() => onPreviewDocument?.(previewAttachment)}
-                  aria-label="Open scraped markdown preview"
-                  title="Open scraped markdown preview"
-                >
-                  <ListChevronsUpDown className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
-                </button>
-                <button type="button" className="tb-log-file-preview-copy" onClick={handleCopy}>
-                  <Copy className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
-                  <span>{copied ? "Copied" : "Copy"}</span>
-                </button>
-              </div>
-            </div>
-            <div className="tb-log-file-preview-body">
-              <RunnerMarkdown
-                content={markdown}
-                className="tb-log-file-markdown-preview tb-message-markdown"
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="tb-log-card-empty">No scraped markdown was parsed.</div>
-        )}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<FileSearch className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Scraped Page"
+      detail={isError ? "failed" : title}
+      onClick={!isError && markdown && onPreviewDocument ? () => onPreviewDocument(previewAttachment) : undefined}
+    />
   );
 }
 
@@ -8065,48 +7710,17 @@ function WebScrapeJsonLogBox({
   log: RunnerLog;
   timeLabel?: string;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const parsed = useMemo(() => parseWebScrapeLog(log), [log]);
+  void timeLabel;
+  const parsed = parseWebScrapeLog(log);
   const commandUrl = extractWebScrapeUrlFromCommand(log.metadata?.command || "");
-  const table = useMemo(() => buildJsonExtractTable(parsed?.json), [parsed?.json]);
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
-  const output = stripRunnerSystemTags(String(log.metadata?.output || ""));
 
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<Code2 className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Extract Data"
-        title={formatWebScrapeTitle(parsed, commandUrl)}
-        timeLabel={timeLabel}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{output || "Web extraction failed."}</div>
-        ) : table.rows.length > 0 ? (
-          <div className="tb-log-json-extract-table-wrap">
-            <table className="tb-log-json-extract-table">
-              <thead>
-                <tr>
-                  {table.columns.map((column) => <th key={column}>{column}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {table.rows.map((row, rowIndex) => (
-                  <tr key={`${rowIndex}-${row.join(":").slice(0, 30)}`}>
-                    {row.map((cell, cellIndex) => <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>)}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="tb-log-card-empty">No extracted data was parsed.</div>
-        )}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<Code2 className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Extracted Data"
+      detail={isError ? "failed" : formatWebScrapeTitle(parsed, commandUrl)}
+    />
   );
 }
 
@@ -8158,44 +7772,19 @@ function formatRelativeDate(dateStr: string): string {
 }
 
 function MemoryLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
-  const [collapsed, setCollapsed] = useState(false);
+  void timeLabel;
   const query = extractMemoryQuery(log.metadata?.command || "");
   const output = String(log.metadata?.output || log.metadata?.result || "");
-  const parsed = useMemo(() => parseMemoryOutput(output), [output]);
+  const parsed = parseMemoryOutput(output);
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
 
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<Brain className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Memory Search"
-        title={query}
-        timeLabel={timeLabel}
-        meta={isLoading ? <span className="tb-log-card-status">searching...</span> : parsed.total > 0 ? <span className="tb-log-card-pill">{parsed.total} found</span> : null}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{output || "Memory search failed."}</div>
-        ) : parsed.results.length > 0 ? (
-          <div className="tb-log-list">
-            {parsed.results.map((result) => (
-              <div key={result.threadId} className="tb-log-list-item">
-                <div className="tb-log-list-copy">
-                  <div className="tb-log-list-title">{result.title}</div>
-                  {result.task ? <div className="tb-log-list-subtitle">{result.task}</div> : null}
-                </div>
-                <div className="tb-log-list-meta">{formatRelativeDate(result.createdAt)}</div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="tb-log-card-empty">{isLoading ? "Searching through past conversations..." : "No matching threads found."}</div>
-        )}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<Brain className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Searched Memory"
+      detail={isError ? "failed" : isLoading ? "searching..." : query || `${parsed.total} ${parsed.total === 1 ? "result" : "results"}`}
+    />
   );
 }
 
@@ -8257,68 +7846,20 @@ function parseEmailOutput(output?: string): { success: boolean; recipient: strin
 }
 
 function EmailLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
-  const [collapsed, setCollapsed] = useState(false);
+  void timeLabel;
   const command = log.metadata?.command || log.message || "";
   const output = String(log.metadata?.output || "");
   const parsed = parseEmailOutput(output);
   const subject = extractQuotedArgument(command, "--subject|-s") || parsed.subject;
-  const body = extractQuotedArgument(command, "--body|-b");
-  const attachments = extractAttachments(command);
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
   const isError = (typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0) || Boolean(parsed.errorMessage);
 
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<Mail className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Send Email"
-        title={subject ? `"${subject}"` : parsed.recipient}
-        timeLabel={timeLabel}
-        meta={attachments.length > 0 ? <span className="tb-log-card-pill">{attachments.length} attachments</span> : isLoading ? <span className="tb-log-card-status">sending...</span> : parsed.success ? <CheckCircle2 className="tb-log-status-icon tb-log-status-icon-success" strokeWidth={1.5} /> : null}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{parsed.errorMessage || output || "Email sending failed."}</div>
-        ) : (
-          <div className="tb-log-meta-grid">
-            {parsed.recipient ? (
-              <div className="tb-log-meta-row">
-                <span className="tb-log-meta-label">To</span>
-                <span className="tb-log-meta-value">{parsed.recipient}</span>
-              </div>
-            ) : null}
-            {subject ? (
-              <div className="tb-log-meta-row">
-                <span className="tb-log-meta-label">Subject</span>
-                <span className="tb-log-meta-value">{subject}</span>
-              </div>
-            ) : null}
-            {body ? (
-              <div className="tb-log-meta-row">
-                <span className="tb-log-meta-label">Body</span>
-                <span className="tb-log-meta-value tb-log-meta-value-wrap">{body}</span>
-              </div>
-            ) : null}
-            {attachments.length > 0 ? (
-              <div className="tb-log-meta-row">
-                <span className="tb-log-meta-label">Attachments</span>
-                <div className="tb-log-pill-list">
-                  {attachments.map((attachment) => (
-                    <span key={attachment} className="tb-log-pill">
-                      <Paperclip className="tb-log-pill-icon" strokeWidth={1.5} />
-                      <span className="tb-log-pill-label">{getFileName(attachment)}</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {!subject && !body && !attachments.length && !parsed.recipient && !isLoading ? <div className="tb-log-card-empty">Email queued without additional details.</div> : null}
-          </div>
-        )}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<Mail className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Sent Email"
+      detail={isError ? (parsed.errorMessage || "failed") : isLoading ? "sending..." : subject || parsed.recipient || "queued"}
+    />
   );
 }
 
@@ -8360,7 +7901,7 @@ function parseDocumentParseOutput(output?: string): Record<string, unknown> | nu
 }
 
 function DocumentParseLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
-  const [collapsed, setCollapsed] = useState(false);
+  void timeLabel;
   const command = log.metadata?.command || "";
   const output = String(log.metadata?.output || "");
   const parsed = parseDocumentParseOutput(output);
@@ -8368,51 +7909,15 @@ function DocumentParseLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: s
     (typeof parsed?.file_name === "string" ? parsed.file_name : null) ||
     (typeof parsed?.title === "string" ? parsed.title : null) ||
     extractDocumentParsePath(command);
-  const summary = typeof parsed?.summary === "string" ? parsed.summary : null;
-  const markdown = typeof parsed?.markdown === "string" ? parsed.markdown : null;
-  const pageCount =
-    (typeof parsed?.page_count === "number" ? parsed.page_count : null) ||
-    (typeof parsed?.total_pages === "number" ? parsed.total_pages : null);
-  const wordCount = typeof parsed?.word_count === "number" ? parsed.word_count : null;
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
   const isError = (typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0) || parsed?.success === false;
-  const content = markdown || summary || "";
 
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<FileSearch className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Document Parsing"
-        title={fileName || undefined}
-        timeLabel={timeLabel}
-        meta={pageCount ? <span className="tb-log-card-pill">{pageCount} pages</span> : isLoading ? <span className="tb-log-card-status">parsing...</span> : null}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{(typeof parsed?.error === "string" ? parsed.error : null) || output || "Failed to parse document."}</div>
-        ) : (
-          <>
-            <div className="tb-log-meta-grid">
-              {pageCount ? (
-                <div className="tb-log-meta-row">
-                  <span className="tb-log-meta-label">Pages</span>
-                  <span className="tb-log-meta-value">{pageCount}</span>
-                </div>
-              ) : null}
-              {wordCount ? (
-                <div className="tb-log-meta-row">
-                  <span className="tb-log-meta-label">Words</span>
-                  <span className="tb-log-meta-value">{wordCount}</span>
-                </div>
-              ) : null}
-            </div>
-            {content ? <RunnerMarkdown content={content} className="tb-message-markdown" /> : <div className="tb-log-card-empty">{isLoading ? "Parsing document..." : "No parsed content available."}</div>}
-          </>
-        )}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<FileSearch className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Parsed Document"
+      detail={isError ? "failed" : isLoading ? "parsing..." : fileName || "document"}
+    />
   );
 }
 
@@ -9113,7 +8618,7 @@ export function hasActiveDeepResearchLogGroup(logs: RunnerLog[]): boolean {
 }
 
 function DeepResearchEventLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
-  const [collapsed, setCollapsed] = useState(false);
+  void timeLabel;
   const data = log.metadata?.deepResearch;
   if (!isVisibleDeepResearchDisplayEvent(data?.event)) {
     return null;
@@ -9127,95 +8632,25 @@ function DeepResearchEventLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel
           ? "error"
           : data?.event || "starting";
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<Telescope className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Deep Research"
-        title={data?.topic || undefined}
-        timeLabel={timeLabel}
-        meta={<span className="tb-log-card-pill">{statusLabel}</span>}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {data?.thinkingSummary ? <RunnerMarkdown content={data.thinkingSummary} className="tb-message-markdown" /> : null}
-        {data?.reportFile ? (
-          <div className="tb-log-meta-row">
-            <span className="tb-log-meta-label">Report</span>
-            <span className="tb-log-meta-value">{data.reportFile}</span>
-          </div>
-        ) : null}
-        {typeof data?.sourcesCount === "number" ? (
-          <div className="tb-log-meta-row">
-            <span className="tb-log-meta-label">Sources</span>
-            <span className="tb-log-meta-value">{data.sourcesCount}</span>
-          </div>
-        ) : null}
-        {typeof data?.elapsedSeconds === "number" ? (
-          <div className="tb-log-meta-row">
-            <span className="tb-log-meta-label">Elapsed</span>
-            <span className="tb-log-meta-value">{data.elapsedSeconds}s</span>
-          </div>
-        ) : null}
-        {data?.errorMessage ? <div className="tb-log-card-state tb-log-card-state-error">{data.errorMessage}</div> : null}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<Telescope className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Deep Research"
+      detail={[String(data?.topic || "").trim(), statusLabel].filter(Boolean).join(" - ")}
+    />
   );
 }
 
 function DeepResearchCommandLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
-  const [collapsed, setCollapsed] = useState(false);
+  void timeLabel;
   const parsed = parseDeepResearchOutput(String(log.metadata?.output || ""));
   const topic = extractResearchTopic(log.metadata?.command || "") || parsed.topic;
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<Telescope className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Deep Research"
-        title={topic}
-        timeLabel={timeLabel}
-        meta={<span className="tb-log-card-pill">{parsed.status}</span>}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {isError || parsed.errorMessage ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{parsed.errorMessage || "Deep research failed."}</div>
-        ) : (
-          <>
-            {parsed.thinkingSummaries.length > 0 ? (
-              <div className="tb-log-list">
-                {parsed.thinkingSummaries.map((summary, index) => (
-                  <div key={`${summary.slice(0, 32)}-${index}`} className="tb-log-list-item tb-log-list-item-column">
-                    <RunnerMarkdown content={summary} className="tb-message-markdown" />
-                  </div>
-                ))}
-              </div>
-            ) : null}
-            {parsed.reportFile ? (
-              <div className="tb-log-meta-row">
-                <span className="tb-log-meta-label">Report</span>
-                <span className="tb-log-meta-value">{parsed.reportFile}</span>
-              </div>
-            ) : null}
-            {parsed.sourcesCount > 0 ? (
-              <div className="tb-log-meta-row">
-                <span className="tb-log-meta-label">Sources</span>
-                <span className="tb-log-meta-value">{parsed.sourcesCount}</span>
-              </div>
-            ) : null}
-            {parsed.elapsedSeconds > 0 ? (
-              <div className="tb-log-meta-row">
-                <span className="tb-log-meta-label">Elapsed</span>
-                <span className="tb-log-meta-value">{parsed.elapsedSeconds}s</span>
-              </div>
-            ) : null}
-            {!parsed.reportFile && parsed.thinkingSummaries.length === 0 && parsed.sourcesCount === 0 ? <div className="tb-log-card-empty">Research started.</div> : null}
-          </>
-        )}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<Telescope className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title={isError ? "Deep Research Failed" : "Deep Research"}
+      detail={[String(topic || "").trim(), parsed.status].filter(Boolean).join(" - ")}
+    />
   );
 }
 
@@ -9238,90 +8673,27 @@ export function DeepResearchLogBox({
   isDetailOpen?: boolean;
   fallbackTopic?: string | null;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
   const {
     streamingLogs,
-    hasStreamingLogs,
-    effectiveCommandLog,
     parsed,
     topic,
     isError,
-    isComplete,
-    isLoading,
     statusLabel,
   } = useMemo(
       () => getDeepResearchLogState({ log, logs, runningCommandLog, session }),
     [log, logs, runningCommandLog, session]
   );
   const resolvedTopic = topic || parsed.topic || String(fallbackTopic || "").trim() || null;
-  const taskCopy = truncateSubagentPreviewText(resolvedTopic || "Deep research task", 280);
-  const previewLogs = useMemo(
-    () =>
-      buildDeepResearchDisplayLogs({
-        streamingLogs,
-        parsed,
-        topic,
-        isError,
-        isComplete,
-        isLoading,
-      })
-        .filter((entry) => !(taskCopy && entry.label === "Started" && entry.message.trim() === taskCopy.trim()))
-        .slice(-2),
-    [isComplete, isError, isLoading, parsed, streamingLogs, taskCopy, topic]
-  );
-  const transitionedPreviewLogs = useDeepResearchPreviewDisplayLogs(previewLogs);
+  void streamingLogs;
+  void isDetailOpen;
 
   return (
-    <div className={`tb-log-card tb-log-card-deep-research ${isDetailOpen ? "is-detail-open" : ""}`.trim()}>
-      <LogHeader
-        icon={<Telescope className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="Deep Research"
-        title={resolvedTopic || undefined}
-        timeLabel={timeLabel}
-        meta={<span className={`tb-log-card-pill ${isError ? "is-error" : ""}`.trim()}>{statusLabel}</span>}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        <div className="tb-subagent-log-preview tb-deep-research-log-preview">
-          <div className={`tb-subagent-log-preview-copy tb-deep-research-log-preview-copy ${isLoading ? "is-running" : ""}`.trim()}>
-            {taskCopy ? (
-              <>
-                <div className="tb-subagent-log-preview-prompt tb-deep-research-log-task">
-                  <RunnerMarkdown
-                    content={taskCopy}
-                    className="tb-message-markdown tb-message-markdown-summary tb-deep-research-log-task-markdown"
-                    softBreaks
-                    disallowHeadings
-                  />
-                </div>
-                <div className="tb-subagent-log-preview-divider" aria-hidden="true" />
-              </>
-            ) : null}
-            <div className="tb-deep-research-log-events tb-deep-research-log-events-preview">
-              {transitionedPreviewLogs.map((entry) => (
-                <DeepResearchDisplayEventRow
-                  key={entry.key}
-                  entry={entry}
-                  className={`tb-deep-research-log-event-preview is-${entry.transitionPhase}`.trim()}
-                  style={
-                    entry.transitionPhase === "entering"
-                      ? getRunnerChatEnterAnimationStyle()
-                      : undefined
-                  }
-                />
-              ))}
-            </div>
-          </div>
-          <div className="tb-subagent-log-preview-footer">
-            <button type="button" className="tb-subagent-log-open-button" onClick={onOpenDetails}>
-              <span>View all logs</span>
-              <ChevronRight className="tb-subagent-log-open-button-icon" strokeWidth={1.6} />
-            </button>
-          </div>
-        </div>
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<Telescope className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title={isError ? "Deep Research Failed" : "Deep Research"}
+      detail={[resolvedTopic || "", statusLabel].filter(Boolean).join(" - ")}
+      onClick={onOpenDetails}
+    />
   );
 }
 
@@ -9980,15 +9352,17 @@ function MediaPreviewLayout({
   prompt,
   children,
   variant,
+  showPrompt = true,
 }: {
   prompt?: string | null;
   children: ReactNode;
   variant: "image" | "video";
+  showPrompt?: boolean;
 }) {
   return (
     <div className={`tb-log-media-preview-layout tb-log-media-preview-layout-${variant}`}>
       <div className="tb-log-media-preview-visual">{children}</div>
-      <MediaPromptPreview prompt={prompt} />
+      {showPrompt ? <MediaPromptPreview prompt={prompt} /> : null}
     </div>
   );
 }
@@ -10000,6 +9374,8 @@ function ImagePreviewLogCard({
   timeLabel,
   meta,
   body,
+  className,
+  hideHeader = false,
 }: {
   icon: ReactNode;
   label: string;
@@ -10007,21 +9383,25 @@ function ImagePreviewLogCard({
   timeLabel?: string;
   meta?: ReactNode;
   body: ReactNode;
+  className?: string;
+  hideHeader?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="tb-log-card tb-log-card-image-preview">
-      <LogHeader
-        icon={icon}
-        label={label}
-        title={title}
-        timeLabel={timeLabel}
-        meta={meta}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>{body}</LogPanel>
+    <div className={`tb-log-card tb-log-card-image-preview${className ? ` ${className}` : ""}`}>
+      {hideHeader ? null : (
+        <LogHeader
+          icon={icon}
+          label={label}
+          title={title}
+          timeLabel={timeLabel}
+          meta={meta}
+          collapsed={collapsed}
+          onToggle={() => setCollapsed((value) => !value)}
+        />
+      )}
+      <LogPanel collapsed={hideHeader ? false : collapsed}>{body}</LogPanel>
     </div>
   );
 }
@@ -10310,12 +9690,14 @@ function ImageGenerationLogBox({
   backendUrl,
   environmentId,
   requestHeaders,
+  onPreviewDocument,
 }: {
   log: RunnerLog;
   timeLabel?: string;
   backendUrl?: string;
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
+  onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
   const prompt = extractImagePrompt(log.metadata?.command || log.message || "") || extractImagePromptFromLogMetadata(log);
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
@@ -10351,6 +9733,34 @@ function ImageGenerationLogBox({
     environmentId,
     resolvedImagePath
   ) || (resolvedImagePath ? null : extractBase64Image(log.metadata?.result) || (!isError ? extractBase64Image(log.metadata?.output) : null));
+  const imagePreviewAttachment = useMemo<RunnerPreviewAttachment | null>(() => {
+    if (!resolvedImageSrc) {
+      return null;
+    }
+    if (resolvedImagePath) {
+      const baseAttachment = buildRunnerPreviewAttachmentFromPath(resolvedImagePath, {
+        backendUrl,
+        environmentId,
+        idPrefix: "log-image-generation",
+      });
+      return {
+        ...baseAttachment,
+        type: "image",
+        url: resolvedImageSrc,
+        previewUrl: resolvedImageSrc,
+        workspacePath: resolvedImagePath,
+      };
+    }
+    const mimeType = resolvedImageSrc.match(/^data:([^;,]+)/)?.[1] || "image/png";
+    return {
+      id: `log-image-generation:data:${resolvedImageSrc.slice(0, 96)}`,
+      filename: "generated-image.png",
+      mimeType,
+      type: "image",
+      url: resolvedImageSrc,
+      previewUrl: resolvedImageSrc,
+    };
+  }, [backendUrl, environmentId, resolvedImagePath, resolvedImageSrc]);
   const errorMessage =
     typeof log.metadata?.error === "string" && log.metadata.error.trim()
       ? log.metadata.error.trim()
@@ -10369,33 +9779,43 @@ function ImageGenerationLogBox({
       title={null}
       timeLabel={timeLabel}
       meta={isLoading ? <span className="tb-log-card-status">generating...</span> : null}
+      className="tb-log-card-image-generation-preview"
+      hideHeader
       body={
         isError ? (
           <div className="tb-log-card-state tb-log-card-state-error">{errorMessage}</div>
         ) : resolvedImageSrc ? (
           <div className="tb-log-image-grid">
-            <MediaPreviewLayout prompt={prompt} variant="image">
-              <LazyMediaPreviewMount
-                mediaKey={resolvedImageSrc}
-                className="tb-log-media-lazy-preview"
-                placeholder={<ImagePreviewLoadingState />}
-              >
-                <RunnerImagePreviewSurface
-                  className="tb-image-generation-preview"
-                  imageClassName="tb-image-generation-preview-image"
-                  src={resolvedImageSrc}
-                  alt={prompt || "Generated image"}
-                  maxHeight={400}
-                  fetchHeaders={requestHeaders}
-                  loadStrategy="immediate"
-                />
-              </LazyMediaPreviewMount>
+            <MediaPreviewLayout prompt={prompt} variant="image" showPrompt={false}>
+              <div className="tb-image-generation-preview-shell">
+                <MediaGenerationPromptButton kind="image" prompt={prompt} onPreviewDocument={onPreviewDocument} />
+                <LazyMediaPreviewMount
+                  mediaKey={resolvedImageSrc}
+                  className="tb-log-media-lazy-preview"
+                  placeholder={<ImagePreviewLoadingState />}
+	                >
+	                  <RunnerImagePreviewSurface
+	                    className={`tb-image-generation-preview${imagePreviewAttachment && onPreviewDocument ? " is-clickable" : ""}`.trim()}
+	                    imageClassName="tb-image-generation-preview-image"
+	                    src={resolvedImageSrc}
+	                    alt={prompt || "Generated image"}
+	                    maxHeight={500}
+	                    fetchHeaders={requestHeaders}
+	                    loadStrategy="immediate"
+	                    interactive={Boolean(imagePreviewAttachment && onPreviewDocument)}
+	                    onActivate={imagePreviewAttachment && onPreviewDocument ? () => onPreviewDocument(imagePreviewAttachment) : undefined}
+	                  />
+	                </LazyMediaPreviewMount>
+	              </div>
             </MediaPreviewLayout>
           </div>
         ) : isLoading ? (
           <div className="tb-log-image-grid">
-            <MediaPreviewLayout prompt={prompt} variant="image">
-              <ImagePreviewLoadingState />
+            <MediaPreviewLayout prompt={prompt} variant="image" showPrompt={false}>
+              <div className="tb-image-generation-preview-shell">
+                <MediaGenerationPromptButton kind="image" prompt={prompt} onPreviewDocument={onPreviewDocument} />
+                <ImagePreviewLoadingState />
+              </div>
             </MediaPreviewLayout>
           </div>
         ) : null
@@ -10429,10 +9849,12 @@ function VideoPreviewPlayer({
   src,
   className,
   fetchHeaders,
+  overlayAction,
 }: {
   src: string;
   className?: string;
   fetchHeaders?: HeadersInit;
+  overlayAction?: ReactNode;
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -10509,6 +9931,7 @@ function VideoPreviewPlayer({
 
   return (
     <div className="tb-video-generation-preview-shell">
+      {overlayAction}
       {!isLoaded ? <VideoPreviewLoadingState /> : null}
       {resolvedSrc ? (
         <video
@@ -10527,18 +9950,69 @@ function VideoPreviewPlayer({
   );
 }
 
+function buildMediaGenerationPromptPreviewAttachment(kind: "image" | "video", prompt: string): RunnerPreviewAttachment {
+  const title = kind === "image" ? "Image Generation Prompt" : "Video Generation Prompt";
+  const mediaGenerationPromptPreview: RunnerMediaGenerationPromptPreviewData = {
+    title,
+    prompt,
+  };
+  const workspacePath = kind === "image" ? "/workspace/image-generation-prompt.md" : "/workspace/video-generation-prompt.md";
+  const idPrefix = kind === "image" ? "image-generation-prompt" : "video-generation-prompt";
+  return {
+    ...buildRunnerPreviewAttachmentFromPath(workspacePath, {
+      idPrefix,
+    }),
+    id: buildCompactLogPreviewId(idPrefix, prompt),
+    filename: title,
+    mimeType: `application/x.computer-agents.${idPrefix}`,
+    type: "document",
+    previewKindOverride: kind === "image" ? "image-generation-prompt" : "video-generation-prompt",
+    imageGenerationPromptPreview: kind === "image" ? mediaGenerationPromptPreview : undefined,
+    videoGenerationPromptPreview: kind === "video" ? mediaGenerationPromptPreview : undefined,
+  };
+}
+
+function MediaGenerationPromptButton({
+  kind,
+  prompt,
+  onPreviewDocument,
+}: {
+  kind: "image" | "video";
+  prompt?: string | null;
+  onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
+}) {
+  const normalizedPrompt = String(prompt || "").trim();
+  if (!normalizedPrompt || !onPreviewDocument) {
+    return null;
+  }
+  return (
+    <button
+      type="button"
+      className="tb-video-generation-show-prompt-button"
+      onClick={(event) => {
+        event.stopPropagation();
+        onPreviewDocument(buildMediaGenerationPromptPreviewAttachment(kind, normalizedPrompt));
+      }}
+    >
+      <span>Show Prompt</span>
+    </button>
+  );
+}
+
 function VideoGenerationLogBox({
   log,
   timeLabel,
   backendUrl,
   environmentId,
   requestHeaders,
+  onPreviewDocument,
 }: {
   log: RunnerLog;
   timeLabel?: string;
   backendUrl?: string;
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
+  onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
   const prompt = extractVideoPrompt(log.metadata?.command || log.message || "") || extractVideoPromptFromLogMetadata(log);
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
@@ -10592,29 +10066,40 @@ function VideoGenerationLogBox({
       title={null}
       timeLabel={timeLabel}
       meta={isLoading ? <span className="tb-log-card-status">generating...</span> : null}
+      className="tb-log-card-video-generation"
+      hideHeader
       body={
         isError ? (
           <div className="tb-log-card-state tb-log-card-state-error">{errorMessage}</div>
         ) : resolvedVideoSrc ? (
           <div className="tb-log-video-grid">
-            <MediaPreviewLayout prompt={prompt} variant="video">
+            <MediaPreviewLayout prompt={prompt} variant="video" showPrompt={false}>
               <LazyMediaPreviewMount
                 mediaKey={resolvedVideoSrc}
                 className="tb-log-media-lazy-preview"
-                placeholder={<VideoPreviewLoadingState />}
+                placeholder={(
+                  <div className="tb-video-generation-preview-shell">
+                    <MediaGenerationPromptButton kind="video" prompt={prompt} onPreviewDocument={onPreviewDocument} />
+                    <VideoPreviewLoadingState />
+                  </div>
+                )}
               >
                 <VideoPreviewPlayer
                   className="tb-video-generation-preview"
                   src={resolvedVideoSrc}
                   fetchHeaders={requestHeaders}
+                  overlayAction={<MediaGenerationPromptButton kind="video" prompt={prompt} onPreviewDocument={onPreviewDocument} />}
                 />
               </LazyMediaPreviewMount>
             </MediaPreviewLayout>
           </div>
         ) : isLoading ? (
           <div className="tb-log-video-grid">
-            <MediaPreviewLayout prompt={prompt} variant="video">
-              <VideoPreviewLoadingState />
+            <MediaPreviewLayout prompt={prompt} variant="video" showPrompt={false}>
+              <div className="tb-video-generation-preview-shell">
+                <MediaGenerationPromptButton kind="video" prompt={prompt} onPreviewDocument={onPreviewDocument} />
+                <VideoPreviewLoadingState />
+              </div>
             </MediaPreviewLayout>
           </div>
         ) : null
@@ -10693,6 +10178,91 @@ function guessBrowserSkillAction(command?: string): string {
   return match?.[1] || "browser";
 }
 
+function isUsableBrowserSkillUrl(value?: string | null): boolean {
+  const normalized = String(value || "").trim();
+  return Boolean(normalized && normalized.toLowerCase() !== "about:blank");
+}
+
+function extractBrowserSkillUrlFromCommand(command?: string): string | undefined {
+  const normalized = String(command || "");
+  const explicitUrlMatch = normalized.match(/(?:--url\s+|navigate\s+)(["']?)(https?:\/\/[^\s"']+|file:\/\/[^\s"']+)\1/i);
+  if (explicitUrlMatch?.[2]) {
+    return explicitUrlMatch[2];
+  }
+  const looseUrlMatch = normalized.match(/\b(?:https?:\/\/|file:\/\/)[^\s"']+/i);
+  return looseUrlMatch?.[0];
+}
+
+function extractBrowserSkillUrlFromText(value?: string): string | undefined {
+  const normalized = String(value || "");
+  const labeledMatch = normalized.match(
+    /(?:current\s+url|page\s+url|browser\s+url|url)\s*[:=]\s*["']?((?:https?:\/\/|file:\/\/)[^\s"',)]+)/i
+  );
+  if (labeledMatch?.[1]) {
+    return labeledMatch[1];
+  }
+  const looseUrlMatch = normalized.match(/\b(?:https?:\/\/|file:\/\/)[^\s"',)]+/i);
+  return looseUrlMatch?.[0];
+}
+
+function getBrowserSkillString(record: Record<string, unknown> | null, keys: string[]): string | undefined {
+  if (!record) return undefined;
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return undefined;
+}
+
+function getNestedBrowserSkillString(record: Record<string, unknown> | null, parentKey: string, keys: string[]): string | undefined {
+  const parent = record?.[parentKey];
+  if (!parent || typeof parent !== "object" || Array.isArray(parent)) {
+    return undefined;
+  }
+  return getBrowserSkillString(parent as Record<string, unknown>, keys);
+}
+
+function resolveBrowserSkillUrl(parsed: Record<string, unknown> | null, command?: string, output?: string): string | undefined {
+  const candidates = [
+    getBrowserSkillString(parsed, [
+      "url",
+      "currentUrl",
+      "current_url",
+      "pageUrl",
+      "page_url",
+      "browserUrl",
+      "browser_url",
+      "href",
+      "location",
+    ]),
+    getNestedBrowserSkillString(parsed, "page", ["url", "currentUrl", "href", "location"]),
+    getNestedBrowserSkillString(parsed, "browser", ["url", "currentUrl", "href", "location"]),
+    getNestedBrowserSkillString(parsed, "context", ["url", "currentUrl", "href", "location"]),
+    getNestedBrowserSkillString(parsed, "result", ["url", "currentUrl", "href", "location"]),
+    getNestedBrowserSkillString(parsed, "state", ["url", "currentUrl", "href", "location"]),
+    extractBrowserSkillUrlFromText(output),
+    extractBrowserSkillUrlFromCommand(command),
+  ];
+  const usable = candidates.find(isUsableBrowserSkillUrl);
+  if (usable) {
+    return usable.trim();
+  }
+  const explicitUrl = getBrowserSkillString(parsed, ["url"]);
+  return explicitUrl && explicitUrl.toLowerCase() !== "about:blank" ? explicitUrl : undefined;
+}
+
+function resolveBrowserSkillTitle(parsed: Record<string, unknown> | null): string | undefined {
+  return (
+    getBrowserSkillString(parsed, ["title", "pageTitle", "page_title", "displayLabel"]) ||
+    getNestedBrowserSkillString(parsed, "page", ["title", "pageTitle", "displayLabel"]) ||
+    getNestedBrowserSkillString(parsed, "browser", ["title", "pageTitle", "displayLabel"]) ||
+    getNestedBrowserSkillString(parsed, "result", ["title", "pageTitle", "displayLabel"]) ||
+    getNestedBrowserSkillString(parsed, "state", ["title", "pageTitle", "displayLabel"])
+  );
+}
+
 function parseBrowserSkillOutput(output?: string, command?: string): BrowserSkillResult {
   const marker = "BROWSER_SKILL_RESULT::";
   const normalizedOutput = typeof output === "string" ? output : "";
@@ -10721,12 +10291,14 @@ function parseBrowserSkillOutput(output?: string, command?: string): BrowserSkil
         .filter((value): value is string => Boolean(value))
     : [];
   const screenshotPaths = Array.from(new Set([explicitPath, ...listedPaths].filter((value): value is string => Boolean(value))));
+  const resolvedUrl = resolveBrowserSkillUrl(parsed, command, normalizedOutput);
+  const resolvedTitle = resolveBrowserSkillTitle(parsed);
 
   return {
     ok: parsed?.ok !== false,
     action: typeof parsed?.action === "string" && parsed.action.trim() ? parsed.action.trim() : guessBrowserSkillAction(command),
-    url: typeof parsed?.url === "string" ? parsed.url : undefined,
-    title: typeof parsed?.title === "string" ? parsed.title : undefined,
+    url: resolvedUrl,
+    title: resolvedTitle,
     selector: typeof parsed?.selector === "string" ? parsed.selector : null,
     text: typeof parsed?.text === "string" ? parsed.text : null,
     key: typeof parsed?.key === "string" ? parsed.key : null,
@@ -10886,8 +10458,8 @@ function safeDecodeBrowserSkillPath(value: string): string {
 
 function formatBrowserSkillLocationLabel(url?: string, fallbackTitle?: string): string {
   const normalizedUrl = String(url || "").trim();
-  if (!normalizedUrl) {
-    return fallbackTitle?.trim() || "about:blank";
+  if (!isUsableBrowserSkillUrl(normalizedUrl)) {
+    return fallbackTitle?.trim() || "Browser";
   }
   try {
     const parsedUrl = new URL(normalizedUrl);
@@ -11036,40 +10608,44 @@ export function BrowserSkillLogBox({
       ),
     [backendUrl, environmentId, sourceLogs, variant]
   );
+  const visibleSteps = useMemo(
+    () => steps.filter((step): step is BrowserSkillStep & { previewSrc: string } => Boolean(step.previewSrc)),
+    [steps]
+  );
   const [collapsed, setCollapsed] = useState(false);
   const [isFollowingLatest, setIsFollowingLatest] = useState(true);
-  const [selectedIndex, setSelectedIndex] = useState(() => Math.max(0, steps.length - 1));
+  const [selectedIndex, setSelectedIndex] = useState(() => Math.max(0, visibleSteps.length - 1));
 
   useEffect(() => {
-    if (steps.length === 0) {
+    if (visibleSteps.length === 0) {
       setSelectedIndex(0);
       return;
     }
     setSelectedIndex((currentIndex) => {
       if (isFollowingLatest) {
-        return steps.length - 1;
+        return visibleSteps.length - 1;
       }
-      return Math.min(currentIndex, steps.length - 1);
+      return Math.min(currentIndex, visibleSteps.length - 1);
     });
-  }, [isFollowingLatest, steps.length]);
+  }, [isFollowingLatest, visibleSteps.length]);
 
-  const currentStep = steps[selectedIndex] || steps[steps.length - 1] || null;
+  const currentStep = visibleSteps[selectedIndex] || visibleSteps[visibleSteps.length - 1] || null;
   const lastLog = sourceLogs[sourceLogs.length - 1];
   const isRunning = Boolean(lastLog && (lastLog.metadata?.status === "running" || lastLog.metadata?.status === "started"));
   const canMoveBackward = selectedIndex > 0;
-  const canMoveForward = selectedIndex < steps.length - 1;
+  const canMoveForward = selectedIndex < visibleSteps.length - 1;
   const cardLabel = variant === "computer-use" ? "Computer Use" : "Browser";
-  const cardTitle = steps.length > 1
-    ? `${steps.length} interactions`
+  const cardTitle = visibleSteps.length > 1
+    ? `${visibleSteps.length} interactions`
     : currentStep?.actionLabel || (variant === "computer-use" ? "Computer use session" : "Browser session");
   const computerLabel = `${String(environmentName || "Environment").trim() || "Environment"} Computer`;
 
   function moveToStep(nextIndex: number) {
     setSelectedIndex(nextIndex);
-    setIsFollowingLatest(nextIndex >= steps.length - 1);
+    setIsFollowingLatest(nextIndex >= visibleSteps.length - 1);
   }
 
-  if (sourceLogs.length === 0) {
+  if (sourceLogs.length === 0 || visibleSteps.length === 0) {
     return null;
   }
 
@@ -11115,7 +10691,6 @@ export function BrowserSkillLogBox({
               </div>
             )}
             <div className="tb-browser-carousel-frame">
-              {currentStep.previewSrc ? (
                 <LazyMediaPreviewMount
                   mediaKey={currentStep.previewSrc}
                   className="tb-log-media-lazy-preview"
@@ -11131,11 +10706,6 @@ export function BrowserSkillLogBox({
                     loadStrategy="immediate"
                   />
                 </LazyMediaPreviewMount>
-              ) : (
-                <div className="tb-browser-carousel-empty">
-                  {currentStep.isRunning ? "Capturing browser state..." : "No screenshot captured for this step."}
-                </div>
-              )}
             </div>
             {currentStep.parsed.error && !currentStep.isRunning ? (
               <div className="tb-log-card-state tb-log-card-state-error">{currentStep.parsed.error}</div>
@@ -11200,54 +10770,19 @@ export function SubagentLogBox({
   onOpenDetails?: () => void;
   isDetailOpen?: boolean;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
   const cleanedPrompt = truncateSubagentPreviewText(prompt);
   const cleanedSummaryMessage = truncateSubagentPreviewText(summaryMessage) || `${title} is working`;
+  void timeLabel;
+  void isDetailOpen;
+  void cleanedPrompt;
 
   return (
-    <div className={`tb-log-card tb-log-card-subagent ${isDetailOpen ? "is-detail-open" : ""}`.trim()}>
-      <LogHeader
-        icon={<Bot className="tb-log-card-small-icon tb-log-card-small-icon-subagent" strokeWidth={1.5} />}
-        label="Subagent"
-        title={title}
-        timeLabel={timeLabel}
-        meta={running ? <span className="tb-log-card-status">running...</span> : null}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        <div className="tb-subagent-log-preview">
-          <div className={`tb-subagent-log-preview-copy ${running ? "is-running" : ""}`.trim()}>
-            {cleanedPrompt ? (
-              <>
-                <div className="tb-subagent-log-preview-prompt">
-                  <RunnerMarkdown
-                    content={cleanedPrompt}
-                    className="tb-message-markdown tb-message-markdown-summary tb-subagent-log-preview-prompt-markdown"
-                    softBreaks
-                    disallowHeadings
-                  />
-                </div>
-                <div className="tb-subagent-log-preview-divider" aria-hidden="true" />
-              </>
-            ) : null}
-            <div className="tb-subagent-log-preview-response">
-              <RunnerMarkdown
-                content={cleanedSummaryMessage}
-                className="tb-message-markdown tb-message-markdown-summary tb-subagent-log-preview-markdown"
-                softBreaks
-              />
-            </div>
-          </div>
-          <div className="tb-subagent-log-preview-footer">
-            <button type="button" className="tb-subagent-log-open-button" onClick={onOpenDetails}>
-              <span>Open details</span>
-              <ChevronRight className="tb-subagent-log-open-button-icon" strokeWidth={1.6} />
-            </button>
-          </div>
-        </div>
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<Bot className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Subagent"
+      detail={[title, running ? "running..." : cleanedSummaryMessage].filter(Boolean).join(" - ")}
+      onClick={onOpenDetails}
+    />
   );
 }
 
@@ -11503,23 +11038,16 @@ function HelpCommandLogBox({
   timeLabel?: string;
   onWorkspacePathClick?: (path: string) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const helpText = output.trim() || "No help output.";
+  void output;
+  void timeLabel;
+  void onWorkspacePathClick;
 
   return (
-    <div className="tb-log-card tb-log-card-help">
-      <LogHeader
-        icon={<CircleHelp className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label={`${details.resourceName} Help`}
-        title={null}
-        timeLabel={timeLabel}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        <RunnerHelpOutput content={helpText} onWorkspacePathClick={onWorkspacePathClick} />
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<CircleHelp className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Showed Help"
+      detail={details.resourceName}
+    />
   );
 }
 
@@ -11705,34 +11233,18 @@ function GenericCommandLogBox({
   const bashPreviewAttachment = useMemo(() => buildBashCommandPreviewAttachment(bashPreviewText), [bashPreviewText]);
 
   if (computerAgentsListDetails) {
-    return (
-      <ComputerAgentsListLogBox
-        details={computerAgentsListDetails}
-        timeLabel={timeLabel}
-        availableAgents={availableAgents}
-        onAgentClick={onAgentClick}
-      />
-    );
+    return renderComputerAgentsListCompactLog(computerAgentsListDetails, (agent) => onAgentClick?.({
+      id: agent.agentId,
+      name: agent.agentName,
+    } as ComputerAgentsListAgent));
   }
 
   if (computerAgentsThreadsListDetails) {
-    return (
-      <ComputerAgentsThreadsListLogBox
-        details={computerAgentsThreadsListDetails}
-        timeLabel={timeLabel}
-        availableAgents={availableAgents}
-      />
-    );
+    return renderComputerAgentsThreadsListCompactLog(computerAgentsThreadsListDetails);
   }
 
   if (computerAgentsThreadGetDetails) {
-    return (
-      <ComputerAgentsThreadGetLogBox
-        details={computerAgentsThreadGetDetails}
-        timeLabel={timeLabel}
-        availableAgents={availableAgents}
-      />
-    );
+    return renderComputerAgentsThreadGetCompactLog(computerAgentsThreadGetDetails);
   }
 
   if (helpCommandDetails) {
@@ -11760,25 +11272,17 @@ function GenericCommandLogBox({
 }
 
 function GenericMcpToolLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
-  const [collapsed, setCollapsed] = useState(false);
   const serverName = log.metadata?.serverName || "MCP";
   const toolName = log.metadata?.toolName || "tool";
   const result = log.metadata?.result;
   const error = log.metadata?.error;
   const content = typeof result === "string" ? stripRunnerSystemTags(result) : result ? JSON.stringify(result, null, 2) : error ? String(error) : "";
   return (
-    <div className="tb-log-card">
-      <LogHeader
-        icon={<Globe className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label={`${serverName} -> ${toolName}`}
-        timeLabel={timeLabel}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-      <LogPanel collapsed={collapsed}>
-        {content ? <RunnerCodeViewer content={content} /> : <div className="tb-log-card-empty">No tool output.</div>}
-      </LogPanel>
-    </div>
+    <CompactActionLogLine
+      icon={<Globe className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title="Called MCP Tool"
+      detail={[String(serverName || "").trim(), String(toolName || "").trim()].filter(Boolean).join(" -> ") || (content ? "completed" : "")}
+    />
   );
 }
 
@@ -11801,7 +11305,7 @@ export function InlineStatusLogBox({
       <div className={`tb-log-reasoning-copy ${pending ? "tb-log-reasoning-copy-pending" : ""}`.trim()}>
         {pending ? (
           <span className="tb-log-inline-status-spinner-slot" aria-hidden="true">
-            <LoaderCircle className="tb-log-inline-status-spinner tb-context-action-notice-icon-spinner" strokeWidth={1.5} />
+            <DotLoader dotCount={9} dotSize={3} gap={2} className="tb-log-inline-status-dot-loader" />
           </span>
         ) : null}
         <span className={`tb-log-inline-status-copy ${pending ? "tb-log-inline-status-copy-pending" : ""}`.trim()}>{label}</span>
@@ -12132,7 +11636,7 @@ export function RunnerWorkLogEntry({
 
   const persistedCommand = typeof log.metadata?.command === "string" ? log.metadata.command : "";
   if (isLikelyVideoGenerationLog(log, persistedCommand)) {
-    return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
+    return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} onPreviewDocument={onPreviewDocument} />;
   }
 
   if (log.eventType === "command_execution") {
@@ -12153,75 +11657,40 @@ export function RunnerWorkLogEntry({
       return <BrowserSkillLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
     if (isEmailCommand(command)) return <EmailLogBox log={log} timeLabel={timeLabel} />;
-    if (shouldRenderComputerAgentsCreateLog(log)) return <ComputerAgentsCreateLogBox log={log} timeLabel={timeLabel} />;
-    const appPlatformResourcesListDetails = parseAppPlatformResourcesListLogDetails(log);
-    if (appPlatformResourcesListDetails) {
+    if (shouldRenderComputerAgentsCreateLog(log)) {
       return (
-        <AppPlatformResourcesListLogBox
-          details={appPlatformResourcesListDetails}
+        <ComputerAgentsCreateLogBox
+          log={log}
           timeLabel={timeLabel}
+          onAgentPreviewClick={onAgentPreviewClick}
+          onEnvironmentPreviewClick={onEnvironmentPreviewClick}
+          onProjectPreviewClick={onProjectPreviewClick}
         />
       );
+    }
+    const appPlatformResourcesListDetails = parseAppPlatformResourcesListLogDetails(log);
+    if (appPlatformResourcesListDetails) {
+      return renderAppPlatformResourcesListCompactLog(appPlatformResourcesListDetails);
     }
     const taskManagementProjectsListDetails = parseTaskManagementProjectsListLogDetails(log);
     if (taskManagementProjectsListDetails) {
-      return (
-        <TaskManagementProjectsListLogBox
-          details={taskManagementProjectsListDetails}
-          timeLabel={timeLabel}
-          availableProjects={availableProjects}
-          availableEnvironments={availableEnvironments as TaskManagementListAvailableEnvironment[] | undefined}
-          onProjectClick={(project) => onProjectPreviewClick?.({
-            projectId: project.id,
-            projectName: project.name,
-          })}
-        />
-      );
+      return renderTaskManagementProjectsListCompactLog(taskManagementProjectsListDetails, onProjectPreviewClick);
     }
     const computerAgentsEnvironmentsListDetails = parseComputerAgentsEnvironmentsListLogDetails(log);
     if (computerAgentsEnvironmentsListDetails) {
-      return (
-        <ComputerAgentsEnvironmentsListLogBox
-          details={computerAgentsEnvironmentsListDetails}
-          timeLabel={timeLabel}
-          availableEnvironments={availableEnvironments}
-          onEnvironmentClick={(environment) => onEnvironmentPreviewClick?.({
-            environmentId: environment.id,
-            environmentName: environment.name,
-          })}
-        />
-      );
+      return renderComputerAgentsEnvironmentsListCompactLog(computerAgentsEnvironmentsListDetails, onEnvironmentPreviewClick);
     }
     const computerAgentsListDetails = parseComputerAgentsListLogDetails(log);
     if (computerAgentsListDetails) {
-      return (
-        <ComputerAgentsListLogBox
-          details={computerAgentsListDetails}
-          timeLabel={timeLabel}
-          availableAgents={availableAgents}
-          onAgentClick={(agent) => onAgentPreviewClick?.({ agentId: agent.id, agentName: agent.name })}
-        />
-      );
+      return renderComputerAgentsListCompactLog(computerAgentsListDetails, onAgentPreviewClick);
     }
     const computerAgentsThreadsListDetails = parseComputerAgentsThreadsListLogDetails(log);
     if (computerAgentsThreadsListDetails) {
-      return (
-        <ComputerAgentsThreadsListLogBox
-          details={computerAgentsThreadsListDetails}
-          timeLabel={timeLabel}
-          availableAgents={availableAgents}
-        />
-      );
+      return renderComputerAgentsThreadsListCompactLog(computerAgentsThreadsListDetails);
     }
     const computerAgentsThreadGetDetails = parseComputerAgentsThreadGetLogDetails(log);
     if (computerAgentsThreadGetDetails) {
-      return (
-        <ComputerAgentsThreadGetLogBox
-          details={computerAgentsThreadGetDetails}
-          timeLabel={timeLabel}
-          availableAgents={availableAgents}
-        />
-      );
+      return renderComputerAgentsThreadGetCompactLog(computerAgentsThreadGetDetails);
     }
     if (isComputerAgentsThreadSnapshotLog(log)) return <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderTaskManagementReleaseCreateLog(log)) return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
@@ -12238,6 +11707,7 @@ export function RunnerWorkLogEntry({
           environmentId={environmentId}
           requestHeaders={requestHeaders}
           onWorkspacePathClick={onWorkspacePathClick}
+          onPreviewDocument={onPreviewDocument}
         />
       );
     }
@@ -12283,18 +11753,18 @@ export function RunnerWorkLogEntry({
       );
     }
     if (isLikelyImageGenerationLog(log, command)) {
-      return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
+      return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} onPreviewDocument={onPreviewDocument} />;
     }
     if (isLikelyVideoGenerationLog(log, command)) {
-      return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
+      return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} onPreviewDocument={onPreviewDocument} />;
     }
     if (isDeepResearchCommand(command)) return <DeepResearchCommandLogBox log={log} timeLabel={timeLabel} />;
     const gitDiffDetails = parseGitDiffLogDetails(log);
-    if (gitDiffDetails) return <GitDiffLogBox details={gitDiffDetails} timeLabel={timeLabel} />;
+    if (gitDiffDetails) return renderGitDiffCompactLog(gitDiffDetails);
     const gitCommitDetails = parseGitCommitLogDetails(log);
-    if (gitCommitDetails) return <GitCommitLogBox details={gitCommitDetails} timeLabel={timeLabel} />;
+    if (gitCommitDetails) return renderGitCommitCompactLog(gitCommitDetails);
     const gitStatusDetails = parseGitStatusLogDetails(log);
-    if (gitStatusDetails) return <GitStatusLogBox details={gitStatusDetails} timeLabel={timeLabel} />;
+    if (gitStatusDetails) return renderGitStatusCompactLog(gitStatusDetails);
     return (
       <GenericCommandLogBox
         log={log}
@@ -12311,47 +11781,31 @@ export function RunnerWorkLogEntry({
     if (shouldHideNoopReadFileLog(log)) return null;
     if (isWaitLog(log)) return <WaitLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderComputerAgentsCreateLog(log)) {
-      return <ComputerAgentsCreateLogBox log={log} timeLabel={timeLabel} />;
+      return (
+        <ComputerAgentsCreateLogBox
+          log={log}
+          timeLabel={timeLabel}
+          onAgentPreviewClick={onAgentPreviewClick}
+          onEnvironmentPreviewClick={onEnvironmentPreviewClick}
+          onProjectPreviewClick={onProjectPreviewClick}
+        />
+      );
     }
     const appPlatformResourcesListDetails = parseAppPlatformResourcesListLogDetails(log);
     if (appPlatformResourcesListDetails) {
-      return (
-        <AppPlatformResourcesListLogBox
-          details={appPlatformResourcesListDetails}
-          timeLabel={timeLabel}
-        />
-      );
+      return renderAppPlatformResourcesListCompactLog(appPlatformResourcesListDetails);
     }
     const computerAgentsListDetails = parseComputerAgentsListLogDetails(log);
     if (computerAgentsListDetails) {
-      return (
-        <ComputerAgentsListLogBox
-          details={computerAgentsListDetails}
-          timeLabel={timeLabel}
-          availableAgents={availableAgents}
-          onAgentClick={(agent) => onAgentPreviewClick?.({ agentId: agent.id, agentName: agent.name })}
-        />
-      );
+      return renderComputerAgentsListCompactLog(computerAgentsListDetails, onAgentPreviewClick);
     }
     const computerAgentsThreadsListDetails = parseComputerAgentsThreadsListLogDetails(log);
     if (computerAgentsThreadsListDetails) {
-      return (
-        <ComputerAgentsThreadsListLogBox
-          details={computerAgentsThreadsListDetails}
-          timeLabel={timeLabel}
-          availableAgents={availableAgents}
-        />
-      );
+      return renderComputerAgentsThreadsListCompactLog(computerAgentsThreadsListDetails);
     }
     const computerAgentsThreadGetDetails = parseComputerAgentsThreadGetLogDetails(log);
     if (computerAgentsThreadGetDetails) {
-      return (
-        <ComputerAgentsThreadGetLogBox
-          details={computerAgentsThreadGetDetails}
-          timeLabel={timeLabel}
-          availableAgents={availableAgents}
-        />
-      );
+      return renderComputerAgentsThreadGetCompactLog(computerAgentsThreadGetDetails);
     }
     if (isComputerAgentsThreadSnapshotLog(log)) {
       return <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />;
@@ -12365,6 +11819,7 @@ export function RunnerWorkLogEntry({
           environmentId={environmentId}
           requestHeaders={requestHeaders}
           onWorkspacePathClick={onWorkspacePathClick}
+          onPreviewDocument={onPreviewDocument}
         />
       );
     }
@@ -12403,10 +11858,10 @@ export function RunnerWorkLogEntry({
       return <BrowserSkillLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
     if (isLikelyImageGenerationLog(log)) {
-      return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
+      return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} onPreviewDocument={onPreviewDocument} />;
     }
     if (isLikelyVideoGenerationLog(log)) {
-      return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
+      return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} onPreviewDocument={onPreviewDocument} />;
     }
     return <GenericMcpToolLogBox log={log} timeLabel={timeLabel} />;
   }
@@ -12417,7 +11872,15 @@ export function RunnerWorkLogEntry({
 
   if (log.eventType === "file_change") {
     if (shouldRenderComputerAgentsCreateLog(log)) {
-      return <ComputerAgentsCreateLogBox log={log} timeLabel={timeLabel} />;
+      return (
+        <ComputerAgentsCreateLogBox
+          log={log}
+          timeLabel={timeLabel}
+          onAgentPreviewClick={onAgentPreviewClick}
+          onEnvironmentPreviewClick={onEnvironmentPreviewClick}
+          onProjectPreviewClick={onProjectPreviewClick}
+        />
+      );
     }
     if (shouldRenderTaskManagementReleaseCreateLog(log)) {
       return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
@@ -12435,7 +11898,7 @@ export function RunnerWorkLogEntry({
       return null;
     }
     if (isVideoFileChangeLog(log)) {
-      return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
+      return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} onPreviewDocument={onPreviewDocument} />;
     }
     return (
       <WriteFileLogGroup
