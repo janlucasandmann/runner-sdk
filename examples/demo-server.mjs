@@ -3240,7 +3240,9 @@ const html = `<!doctype html>
       }
 
       .playground-develop-home .playground-develop-server-metrics .playground-project-overview-chart-kpis {
-        background: rgba(255, 255, 255, 0.05);
+        background: transparent;
+        padding-left: 1px;
+        padding-right: 1px;
       }
 
       .playground-develop-server-metrics-kpis.playground-settings-usage-chart-kpis {
@@ -4124,32 +4126,14 @@ const html = `<!doctype html>
       }
 
       .playground-content-nav-center .content-mode-switch {
-        --playground-content-nav-center-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        border: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         background: transparent;
         z-index: 0;
       }
 
       .playground-content-nav-center .content-mode-switch::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-content-nav-center-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
+        content: none;
+        display: none;
       }
 
       .playground-content-nav-center .content-mode-switch > * {
@@ -5250,32 +5234,14 @@ const html = `<!doctype html>
       }
 
       .playground-thread-mode-switch {
-        --playground-thread-mode-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        border: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         background: transparent;
         z-index: 0;
       }
 
       .playground-thread-mode-switch::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-thread-mode-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
+        content: none;
+        display: none;
       }
 
       .playground-thread-mode-switch > * {
@@ -13352,8 +13318,8 @@ const html = `<!doctype html>
         justify-content: space-between;
         gap: 16px;
         margin-top: 24px;
-        padding-bottom: 14px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 0 !important;
+        border-bottom: 0;
       }
 
       .playground-plugins-page .playground-plugins-section > .playground-plugins-section-header {
@@ -30472,6 +30438,7 @@ const html = `<!doctype html>
       }
 
       .tb-runner-chat.playground-agents-creation-runner .tb-log-scroll.is-custom-empty-state {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -30499,6 +30466,14 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 0;
+      }
+
+      .tb-runner-chat.playground-agents-creation-runner .playground-agents-creation-form > .playground-resource-detail-back-button {
+        position: absolute;
+        top: 28px;
+        left: 28px;
+        z-index: 2;
+        margin: 0;
       }
 
       .playground-agents-creation-form .playground-agents-profile-avatar-wrap {
@@ -38681,6 +38656,11 @@ ${METRONOME_PAGE_CSS}
 	        background: rgba(255, 255, 255, 0.05);
 	      }
 
+	      .playground-agents-overview-page.is-develop-configure-page .playground-develop-server-kind-metrics .playground-project-overview-chart-kpis,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-metrics .playground-project-overview-chart-kpis {
+	        background: transparent;
+	      }
+
 		      .playground-resources-page.is-develop-server-kind-page .is-develop-server-kind-list,
 		      .playground-resources-page.is-develop-configure-page .is-develop-server-kind-list {
 		        margin-top: 0;
@@ -39053,6 +39033,10 @@ ${METRONOME_PAGE_CSS}
         background: rgba(0, 0, 0, 0.35);
       }
 
+      .playground-agents-overview-page .playground-environments-home-metrics .playground-project-overview-chart-kpis {
+        margin-bottom: 6px;
+      }
+
       .playground-agents-page .playground-environments-home-metrics .playground-settings-usage-chart-card,
       .playground-agents-overview-page .playground-environments-home-metrics .playground-settings-usage-chart-card,
       .playground-resources-page .playground-environments-home-metrics .playground-settings-usage-chart-card {
@@ -39117,11 +39101,11 @@ ${METRONOME_PAGE_CSS}
         top: 0;
         left: 0;
         width: 100%;
-        height: 450px;
+        height: min(760px, 100%);
         pointer-events: none;
         z-index: 0;
         background-image:
-          linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.62) 64%, #000 100%),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, #000 100%),
           var(--playground-agent-detail-bg-image);
         background-position: center top;
         background-size: cover;
@@ -43916,7 +43900,7 @@ ${MODELS_PAGE_CSS}
       import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, Paperclip, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, Paperclip, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -47130,6 +47114,8 @@ ${MODELS_PAGE_CSS}
       const PLAYGROUND_SPARK_AGENT_PROFILE_URL = "/img/agent-profile-pics/spark.webp";
       const PLAYGROUND_FORGE_AGENT_PROFILE_URL = "/img/agent-profile-pics/forge.webp";
       const PLAYGROUND_FOUNDRY_AGENT_PROFILE_URL = "/img/agent-profile-pics/foundry.webp";
+      const PLAYGROUND_SPARK_AGENT_BACKGROUND_URL = "/img/agent-backgrounds/spark.webp";
+      const PLAYGROUND_FORGE_AGENT_BACKGROUND_URL = "/img/agent-backgrounds/forge.webp";
       const PLAYGROUND_FOUNDRY_AGENT_BACKGROUND_URL = "/img/agent-backgrounds/foundry.webp";
       const PLAYGROUND_AGENT_CREATOR_METADATA_ROLE = "agent_creator";
       const PLAYGROUND_AGENT_CREATOR_NAME = "Agent Creator";
@@ -47857,7 +47843,22 @@ ${MODELS_PAGE_CSS}
           return explicitBackgroundUrl;
         }
 
-        if (isPlaygroundResearcherAgent(agent) && (agent?.isDefault === true || agent?.isSystem === true || String(agent?.name || "").trim().toLowerCase() === "foundry")) {
+        const normalizedName = String(agent?.name || "").trim().toLowerCase();
+        const isBuiltinDefaultAgent = agent?.isDefault === true
+          || agent?.isSystem === true
+          || normalizedName === "spark"
+          || normalizedName === "forge"
+          || normalizedName === "foundry";
+
+        if (isBuiltinDefaultAgent && isPlaygroundAssistantAgent(agent)) {
+          return PLAYGROUND_SPARK_AGENT_BACKGROUND_URL;
+        }
+
+        if (isBuiltinDefaultAgent && isPlaygroundDeveloperAgent(agent)) {
+          return PLAYGROUND_FORGE_AGENT_BACKGROUND_URL;
+        }
+
+        if (isBuiltinDefaultAgent && isPlaygroundResearcherAgent(agent)) {
           return PLAYGROUND_FOUNDRY_AGENT_BACKGROUND_URL;
         }
 
@@ -91670,6 +91671,16 @@ ${MODELS_PAGE_SCRIPT}
             ? (isPlaygroundPaidModelSubscriptionError(agentCreationSetupError) ? "" : agentCreationSetupError)
             : (isPlaygroundPaidModelSubscriptionError(agentCreationAssistantError) ? "" : agentCreationAssistantError);
 
+          const setupBackButton = React.createElement("button", {
+              type: "button",
+              className: "playground-resource-detail-back-button",
+              onClick: showAgentsHome,
+              "aria-label": "Back to Agents",
+            },
+            React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }),
+            React.createElement("span", null, "Back")
+          );
+
           const setupProfileSection = React.createElement("div", { className: "playground-agents-profile-section" },
             React.createElement("div", { className: "profile-editor-avatar-wrap playground-agents-profile-avatar-wrap" },
               React.createElement("div", { className: "profile-editor-avatar playground-agents-profile-avatar" },
@@ -91763,6 +91774,7 @@ ${MODELS_PAGE_SCRIPT}
           );
 
           return React.createElement("div", { className: "playground-agents-creation-form" },
+            setupBackButton,
             setupProfileSection,
             React.createElement("div", { className: "playground-agents-creation-config-box" },
               React.createElement("div", { className: "playground-environment-composer-runtime-facts playground-agents-creation-settings" },
@@ -95660,6 +95672,12 @@ ${MODELS_PAGE_SCRIPT}
               },
             ],
             emptyText: agentsHomeThreadsLoading ? "Loading cost data..." : (agentsHomeThreadsError || "No cost data yet"),
+            emptyContent: agentsHomeThreadsLoading
+              ? null
+              : React.createElement("div", { className: "playground-settings-usage-chart-empty is-tall playground-auth-users-empty-state" },
+                  React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "No Agent Usage yet"),
+                  React.createElement("div", { className: "playground-auth-users-empty-state-copy" }, "Agent usage appears here once this agent starts running and consuming compute tokens.")
+                ),
             title: "CT Cost Created by Agent",
             tickFormatter: formatSettingsComputeTokens,
             isLoading: agentsHomeThreadsLoading,
@@ -96314,22 +96332,6 @@ ${MODELS_PAGE_SCRIPT}
                         : null
                     )
 	                  : null,
-	                isDraftAgentSelected
-	                && !agentCreationSetupOpen
-	                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button is-primary playground-agents-nav-create-button",
-                      onClick: () => {
-                        void handleSaveAgent();
-                      },
-                      disabled: saveState.isSaving || !isDraftAgentCreatable,
-                    },
-                      React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.9 }),
-                      React.createElement("span", null, saveState.isSaving
-                        ? "Creating..."
-                        : (selectedAgentAssistantCommandType === "team" ? "Create Team" : "Create Agent"))
-                    )
-                  : null,
                 !agentCreationSetupOpen
                   ? React.createElement("button", {
                   type: "button",

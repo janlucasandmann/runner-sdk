@@ -7,6 +7,12 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         gap: 24px;
       }
 
+      .playground-project-overview-view.is-general,
+      .playground-project-overview-view.is-observability {
+        width: 100%;
+        max-width: none;
+      }
+
       .playground-content-body.is-tasks-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-overview:has(.playground-project-overview-view.is-rules) {
         padding-bottom: 10px;
       }
@@ -508,6 +514,660 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         background: #000;
       }
 
+      .playground-project-overview-general-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 24px;
+        width: 100%;
+      }
+
+      .playground-project-overview-widget-grid {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        align-items: stretch;
+      }
+
+      .playground-project-overview-widget {
+        --playground-home-widget-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+        border: 0;
+        border-radius: 25px;
+        background: transparent;
+        box-shadow: none;
+        color: rgba(255, 255, 255, 0.96);
+        overflow: hidden;
+      }
+
+      .playground-project-overview-widget::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-home-widget-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-project-overview-widget > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-project-overview-widget-header {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-project-overview-widget-title-wrap {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-project-overview-widget-icon {
+        width: 26px;
+        height: 26px;
+        flex: 0 0 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-project-overview-widget-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .playground-project-overview-widget-title {
+        min-width: 0;
+        font-size: 12px;
+        line-height: 1.25;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-project-overview-widget-action {
+        flex: 0 0 auto;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.54);
+        font-size: 11px;
+        line-height: 1.2;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-widget-action:hover {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-project-overview-widget-progress-chart {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .playground-project-overview-widget-progress-svg {
+        width: 100%;
+        height: 86px;
+        display: block;
+        overflow: visible;
+      }
+
+      .playground-project-overview-widget-progress-guide {
+        stroke: rgba(255, 255, 255, 0.08);
+        stroke-width: 1;
+        stroke-dasharray: 4 6;
+      }
+
+      .playground-project-overview-widget-progress-axis {
+        stroke: rgba(255, 255, 255, 0.12);
+        stroke-width: 1;
+      }
+
+      .playground-project-overview-widget-progress-line {
+        fill: none;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .playground-project-overview-widget-progress-line.is-scope {
+        stroke: rgba(255, 255, 255, 0.42);
+        stroke-dasharray: 7 8;
+      }
+
+      .playground-project-overview-widget-progress-line.is-started {
+        stroke: rgb(122, 126, 255);
+      }
+
+      .playground-project-overview-widget-progress-line.is-completed {
+        stroke: rgb(56, 204, 164);
+      }
+
+      .playground-project-overview-widget-progress-dot {
+        stroke: #050505;
+        stroke-width: 2;
+      }
+
+      .playground-project-overview-widget-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-project-overview-widget-row {
+        min-height: 30px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-project-overview-widget-row:last-child {
+        border-bottom: 0;
+      }
+
+      .playground-project-overview-widget-row-name {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        line-height: 1.25;
+        font-weight: 400;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-project-overview-widget-swatch {
+        width: 7px;
+        height: 7px;
+        flex: 0 0 7px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.45);
+      }
+
+      .playground-project-overview-widget-swatch.is-started {
+        background: rgb(122, 126, 255);
+      }
+
+      .playground-project-overview-widget-swatch.is-completed {
+        background: rgb(56, 204, 164);
+      }
+
+      .playground-project-overview-widget-row-percent,
+      .playground-project-overview-widget-row-value {
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 11px;
+        line-height: 1.25;
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-widget-row-value {
+        color: rgba(255, 255, 255, 0.82);
+        text-align: right;
+      }
+
+      .playground-project-overview-cost-widget-main {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-project-overview-cost-widget-value {
+        font-size: 26px;
+        line-height: 1;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-project-overview-cost-widget-label {
+        margin-top: -6px;
+        font-size: 10px;
+        line-height: 1.2;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-project-overview-cost-widget-bars {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        align-items: end;
+        gap: 5px;
+        padding-top: 4px;
+      }
+
+      .playground-project-overview-cost-widget-bar {
+        min-width: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 0;
+      }
+
+      .playground-project-overview-cost-widget-segment {
+        width: 100%;
+        min-height: 1px;
+        border-radius: 3px;
+      }
+
+      .playground-project-overview-widget-list {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        overflow-y: auto;
+        scrollbar-width: none;
+      }
+
+      .playground-project-overview-widget-list::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-project-overview-widget-list-item {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr);
+        align-items: center;
+        gap: 9px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+      }
+
+      button.playground-project-overview-widget-list-item {
+        cursor: pointer;
+      }
+
+      button.playground-project-overview-widget-list-item:hover .playground-project-overview-widget-list-title {
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-project-overview-widget-list-icon {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .playground-project-overview-widget-list-icon svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      .playground-project-overview-widget-list-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-project-overview-widget-list-title {
+        min-width: 0;
+        font-size: 11px;
+        line-height: 1.25;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.88);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-project-overview-widget-list-meta {
+        min-width: 0;
+        font-size: 10px;
+        line-height: 1.2;
+        color: rgba(255, 255, 255, 0.46);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-project-overview-widget-empty {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px;
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 11px;
+        line-height: 1.45;
+        text-align: center;
+      }
+
+      .playground-project-overview-progress-card {
+        min-height: 360px;
+      }
+
+      .playground-project-overview-progress-chart {
+        width: 100%;
+        min-height: 180px;
+        margin-top: 4px;
+      }
+
+      .playground-project-overview-progress-svg {
+        display: block;
+        width: 100%;
+        max-width: none;
+        height: 190px;
+        overflow: visible;
+      }
+
+      .playground-project-overview-progress-axis {
+        stroke: rgba(255, 255, 255, 0.12);
+        stroke-width: 1;
+      }
+
+      .playground-project-overview-progress-weekend {
+        fill: rgba(255, 255, 255, 0.035);
+      }
+
+      .playground-project-overview-progress-guide {
+        stroke: rgba(255, 255, 255, 0.08);
+        stroke-width: 1;
+        stroke-dasharray: 5 7;
+      }
+
+      .playground-project-overview-progress-line {
+        fill: none;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .playground-project-overview-progress-line.is-scope {
+        stroke: rgba(255, 255, 255, 0.42);
+        stroke-dasharray: 7 8;
+      }
+
+      .playground-project-overview-progress-line.is-started {
+        stroke: rgb(122, 126, 255);
+      }
+
+      .playground-project-overview-progress-line.is-completed {
+        stroke: rgb(56, 204, 164);
+      }
+
+      .playground-project-overview-progress-dot {
+        stroke: #050505;
+        stroke-width: 2;
+      }
+
+      .playground-project-overview-progress-labels {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 4px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .playground-project-overview-progress-summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px 24px;
+        padding: 4px 0 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-progress-summary-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        font-size: 13px;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .playground-project-overview-progress-summary-item strong {
+        font-size: 18px;
+        line-height: 1.1;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-progress-swatch {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        flex: 0 0 auto;
+        background: rgba(255, 255, 255, 0.45);
+      }
+
+      .playground-project-overview-progress-swatch.is-started {
+        background: rgb(122, 126, 255);
+      }
+
+      .playground-project-overview-progress-swatch.is-completed {
+        background: rgb(56, 204, 164);
+      }
+
+      .playground-project-overview-progress-swatch.is-scope {
+        background: rgba(255, 255, 255, 0.45);
+      }
+
+      .playground-project-overview-progress-legend {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin-top: 8px;
+      }
+
+      .playground-project-overview-progress-legend-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 70px 72px;
+        gap: 16px;
+        align-items: center;
+        min-height: 52px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .playground-project-overview-progress-legend-row:last-child {
+        border-bottom: 0;
+      }
+
+      .playground-project-overview-progress-legend-name {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-project-overview-progress-legend-percent {
+        text-align: right;
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .playground-project-overview-progress-legend-count {
+        text-align: right;
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-project-overview-activity-card {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .playground-project-overview-activity-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-project-overview-activity-title {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-project-overview-activity-row {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 14px;
+        position: relative;
+        min-height: 54px;
+      }
+
+      .playground-project-overview-activity-row:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        left: 16px;
+        top: 34px;
+        bottom: 0;
+        width: 1px;
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .playground-project-overview-activity-avatar {
+        position: relative;
+        z-index: 1;
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-project-overview-activity-avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .playground-project-overview-activity-avatar-fallback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-project-overview-activity-copy {
+        min-width: 0;
+        padding: 4px 0 18px;
+        font-size: 13px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-project-overview-activity-actor,
+      .playground-project-overview-activity-object {
+        color: rgba(255, 255, 255, 0.94);
+        font-weight: 600;
+      }
+
+      .playground-project-overview-activity-object.is-clickable {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        font: inherit;
+        color: rgba(255, 255, 255, 0.94);
+        font-weight: 600;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-activity-object.is-clickable:hover {
+        color: #fff;
+        text-decoration: underline;
+        text-decoration-color: rgba(255, 255, 255, 0.45);
+        text-underline-offset: 3px;
+      }
+
+      .playground-project-overview-activity-time {
+        color: rgba(255, 255, 255, 0.44);
+      }
+
+      .playground-project-overview-activity-empty {
+        padding: 18px 0;
+        font-size: 13px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
       .playground-project-overview-integration-facts {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -563,6 +1223,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-plugins-panel .playground-plugins-section-header {
         padding-bottom: 14px;
+        border-bottom: 0;
       }
 
       .playground-project-overview-plugins-list {
@@ -761,10 +1422,12 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         border-radius: 0;
         box-shadow: none;
         padding: 0;
+        margin-top: 0 !important;
       }
 
       .playground-project-overview-panel-plain.playground-plugins-section {
         gap: 14px;
+        margin-top: 0;
       }
 
       .playground-project-overview-panel-plain .playground-plugins-section-header {
@@ -3141,17 +3804,25 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const normalizedOverviewTasks = Array.isArray(tasks)
             ? tasks.map((task) => normalizePlaygroundTaskRecord(task))
             : [];
+          const normalizedOverviewTasksById = normalizedOverviewTasks.reduce((acc, task) => {
+            const taskId = String(task?.id || "").trim();
+            if (taskId) {
+              acc[taskId] = task;
+            }
+            return acc;
+          }, Object.create(null));
           const missionControlSummaryText = String(selectedProjectMissionControl.summary || "").trim()
             || (String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim()
               ? "Mission Control has generated a strategy snapshot for the current project state."
               : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
           const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
-          const activeProjectOverviewHomeTab = projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "plugins"
+          const activeProjectOverviewHomeTab = projectOverviewHomeTab === "observability" || projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "plugins"
             ? projectOverviewHomeTab
             : "general";
           function renderProjectOverviewHomeTabs() {
             const tabs = [
 	              { id: "general", label: "General" },
+	              { id: "observability", label: "Observability" },
 	              { id: "strategy", label: "Strategy" },
 	              { id: "rules", label: "Rules" },
 	              { id: "plugins", label: "Plugins" },
@@ -3559,7 +4230,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const projectOverviewFilesSubviewId = ["overview", "resources", "imagine"].includes(String(projectOverviewFilesSubview || ""))
             ? String(projectOverviewFilesSubview || "")
             : "overview";
-          const isProjectOverviewResourceSubviewOpen = activeProjectOverviewHomeTab === "general" && projectOverviewFilesSubviewId !== "overview";
+          const isProjectOverviewResourceSubviewOpen = activeProjectOverviewHomeTab === "observability" && projectOverviewFilesSubviewId !== "overview";
           const visibleOverviewTasks = overviewVisibleTasks.slice(0, 5);
           const normalizedProjectOverviewTaskSearch = String(projectOverviewTaskSearchQuery || "").trim();
           const hasProjectOverviewTaskListFilters = Boolean(
@@ -4717,6 +5388,874 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             return content;
           }
 
+          function renderProjectOverviewObservabilityChart() {
+            return React.createElement("div", { className: "playground-project-overview-chart-surface" },
+              React.createElement("div", { className: "playground-project-overview-chart-grid" },
+                React.createElement("section", {
+                  className: "playground-settings-usage-chart-card playground-project-overview-chart-card" + (!projectHasCostData ? " is-cost-empty" : ""),
+                },
+                  React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
+                    projectOverviewKpis.map((item) =>
+                      React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
+                        React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                          React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+                        ),
+                        React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-project-overview-chart-header" },
+                    React.createElement("div", { className: "playground-project-overview-chart-header-main" },
+                      React.createElement("div", { className: "playground-project-overview-chart-title" }, "Cost by Resource")
+                    )
+                  ),
+                  React.createElement(React.Fragment, null,
+                    renderProjectOverviewMultiStackedChart({
+                      labels: projectThreadTimeline.map((bucket) => bucket.label),
+                      series: projectComputeSeries,
+                      yMax: maxProjectDailyCt,
+                      tickFormatter: formatProjectOverviewAxisCt,
+                      tall: true,
+                      ariaLabel: "Project compute token usage by resource type",
+                      emptyText: "No project compute usage yet",
+                      emptyContent: renderProjectOverviewCostEmptyState(),
+                    }),
+                    React.createElement("div", { className: "playground-project-overview-chart-footer-row" },
+                      projectHasCostData
+                        ? React.createElement("div", {
+                            className: "playground-settings-usage-inline-legend",
+                          },
+                            projectComputeSeries.map((entry) =>
+                              React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
+                                React.createElement("span", {
+                                  className: "playground-settings-usage-legend-swatch",
+                                  style: { background: entry.color },
+                                }),
+                                React.createElement("span", null, entry.label)
+                              )
+                            )
+                          )
+                        : React.createElement("div", { className: "playground-settings-usage-inline-legend" }),
+                      React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
+                        React.createElement("select", {
+                          className: "playground-environments-home-comparison-timescale-select",
+                          value: projectOverviewChartTimescale,
+                          "aria-label": "Project overview chart timeframe",
+                          onChange: (event) => setProjectOverviewChartTimescale(String(event.target.value || "month")),
+                        },
+                          React.createElement("option", { value: "day" }, "Daily"),
+                          React.createElement("option", { value: "week" }, "Weekly"),
+                          React.createElement("option", { value: "month" }, "Monthly")
+                        )
+                      )
+                    )
+                  ),
+                  renderProjectOverviewFilesNavCards()
+                )
+              )
+            );
+          }
+
+          function renderProjectOverviewThreadsSection() {
+            return React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section" },
+              renderOverviewSectionHeader("Threads", null),
+              React.createElement("div", { className: "playground-plugins-search-row", ref: projectOverviewThreadsToolbarRef },
+                React.createElement("div", { className: "playground-plugins-search-shell" },
+                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("input", {
+                    type: "search",
+                    value: projectOverviewThreadSearchQuery,
+                    onChange: (event) => setProjectOverviewThreadSearchQuery(event.target.value),
+                    className: "playground-plugins-search",
+                    placeholder: "Search threads",
+                    "aria-label": "Search project threads",
+                  })
+                ),
+                React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button is-bare is-backlog-sort" + (projectOverviewThreadToolbarPopover === "sort" || projectOverviewThreadSortMode !== "recent-desc" ? " is-active" : ""),
+                      onClick: () => setProjectOverviewThreadToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                      title: activeProjectOverviewThreadSortOption.label,
+                    },
+                      React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Sort")
+                    ),
+                    projectOverviewThreadToolbarPopover === "sort"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                          projectOverviewThreadSortOptions.map((option) =>
+                            renderProjectOverviewTaskToolbarOption({
+                              option,
+                              active: projectOverviewThreadSortMode === option.id,
+                              onClick: () => {
+                                setProjectOverviewThreadSortMode(option.id);
+                                setProjectOverviewThreadToolbarPopover("");
+                              },
+                            })
+                          )
+                        )
+                      : null
+                  ),
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button is-bare is-backlog-filter" + (projectOverviewThreadToolbarPopover === "filter" || projectOverviewThreadFilterMode !== "all" ? " is-active" : ""),
+                      onClick: () => setProjectOverviewThreadToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                      title: activeProjectOverviewThreadFilterOption.label,
+                    },
+                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Filter")
+                    ),
+                    projectOverviewThreadToolbarPopover === "filter"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                          projectOverviewThreadFilterOptions.map((option) =>
+                            renderProjectOverviewTaskToolbarOption({
+                              option,
+                              active: projectOverviewThreadFilterMode === option.id,
+                              onClick: () => {
+                                setProjectOverviewThreadFilterMode(option.id);
+                                setProjectOverviewThreadToolbarPopover("");
+                              },
+                            })
+                          )
+                        )
+                    : null
+                  )
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button playground-project-overview-toolbar-action",
+                  onClick: () => typeof setProjectOverviewVisibleThreadCount === "function" && setProjectOverviewVisibleThreadCount((current) => current + 10),
+                  disabled: !hasMoreProjectThreads,
+                  style: !hasMoreProjectThreads ? { opacity: 0.5 } : undefined,
+                },
+                  React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Show more")
+                )
+              ),
+              projectOverviewFilteredThreads.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-threads-table" },
+                    React.createElement("div", { className: "playground-project-overview-threads-table-header" },
+                      React.createElement("div", null, "Title"),
+                      React.createElement("div", null, "Assignee"),
+                      React.createElement("div", null, "Task"),
+                      React.createElement("div", null, "Date"),
+                      React.createElement("div", null)
+                    ),
+                    React.createElement("div", { className: "playground-project-overview-thread-list" },
+                      visibleProjectThreads.map((thread) => renderOverviewThreadRow(thread))
+                    )
+                  )
+                : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                    hasProjectOverviewThreadListFilters ? "No matching project threads." : "No project threads yet."
+                  )
+            );
+          }
+
+          function renderProjectOverviewObservabilityPanel() {
+            if (isProjectOverviewResourceSubviewOpen) {
+              return React.createElement("div", { className: "playground-tasks-project-panel-grid" },
+                renderProjectOverviewFilesTab(),
+                renderProjectOverviewFileMenu()
+              );
+            }
+            return React.createElement(React.Fragment, null,
+              renderProjectOverviewObservabilityChart(),
+              React.createElement("div", { className: "playground-tasks-project-panel-grid" },
+                renderProjectOverviewThreadsSection()
+              )
+            );
+          }
+
+          function renderProjectOverviewProgressChart() {
+            const scopeCount = Math.max(
+              0,
+              Number(selectedProjectTaskStatusOverview?.total) || 0,
+              Number(selectedProjectSummary?.tasksCount) || 0,
+              normalizedOverviewTasks.length
+            );
+            const completedCount = Math.max(0, Math.min(scopeCount, Number(selectedProjectTaskStatusOverview?.done) || 0));
+            const startedCount = Math.max(0, Math.min(
+              scopeCount,
+              completedCount + (Number(selectedProjectTaskStatusOverview?.inProgress) || 0)
+            ));
+            const rowData = [
+              { id: "scope", label: "Scope", value: scopeCount, percent: 100 },
+              { id: "started", label: "Started", value: startedCount, percent: scopeCount > 0 ? Math.round((startedCount / scopeCount) * 100) : 0 },
+              { id: "completed", label: "Completed", value: completedCount, percent: scopeCount > 0 ? Math.round((completedCount / scopeCount) * 100) : 0 },
+            ];
+            const chartWidth = 1000;
+            const chartHeight = 220;
+            const paddingX = 8;
+            const paddingTop = 18;
+            const paddingBottom = 36;
+            const maxValue = Math.max(1, scopeCount, startedCount, completedCount);
+            const pointCount = 6;
+            function makeValues(target, curve) {
+              return curve.map((factor) => Math.round(Math.max(0, target) * factor));
+            }
+            const series = [
+              { id: "scope", values: makeValues(scopeCount, [0, 0.22, 0.4, 0.58, 0.8, 1]) },
+              { id: "started", values: makeValues(startedCount, [0, 0.18, 0.56, 0.78, 0.9, 1]) },
+              { id: "completed", values: makeValues(completedCount, [0, 0.08, 0.28, 0.54, 0.78, 1]) },
+            ];
+            function getPoint(value, index) {
+              const x = paddingX + (index / Math.max(1, pointCount - 1)) * (chartWidth - paddingX * 2);
+              const y = paddingTop + (1 - (value / maxValue)) * (chartHeight - paddingTop - paddingBottom);
+              return { x, y };
+            }
+            function buildPath(values) {
+              return values.map((value, index) => {
+                const point = getPoint(value, index);
+                return (index === 0 ? "M" : "L") + point.x.toFixed(1) + " " + point.y.toFixed(1);
+              }).join(" ");
+            }
+            const endDate = new Date();
+            const startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+            const startLabel = startDate.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+            const endLabel = endDate.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+            return React.createElement("div", { className: "playground-project-overview-progress-chart" },
+              React.createElement("svg", {
+                className: "playground-project-overview-progress-svg",
+                viewBox: "0 0 " + chartWidth + " " + chartHeight,
+                preserveAspectRatio: "none",
+                role: "img",
+                "aria-label": "Project progress by task status",
+              },
+                [0.25, 0.5, 0.75].map((fraction) =>
+                  React.createElement("line", {
+                    key: "guide:" + fraction,
+                    className: "playground-project-overview-progress-guide",
+                    x1: paddingX,
+                    x2: chartWidth - paddingX,
+                    y1: paddingTop + (chartHeight - paddingTop - paddingBottom) * fraction,
+                    y2: paddingTop + (chartHeight - paddingTop - paddingBottom) * fraction,
+                  })
+                ),
+                React.createElement("line", {
+                  className: "playground-project-overview-progress-axis",
+                  x1: paddingX,
+                  x2: chartWidth - paddingX,
+                  y1: chartHeight - paddingBottom,
+                  y2: chartHeight - paddingBottom,
+                }),
+                series.map((entry) =>
+                  React.createElement("path", {
+                    key: entry.id,
+                    className: "playground-project-overview-progress-line is-" + entry.id,
+                    d: buildPath(entry.values),
+                  })
+                ),
+                series.map((entry) => {
+                  const point = getPoint(entry.values[entry.values.length - 1] || 0, entry.values.length - 1);
+                  return React.createElement("circle", {
+                    key: "dot:" + entry.id,
+                    className: "playground-project-overview-progress-dot is-" + entry.id,
+                    cx: point.x,
+                    cy: point.y,
+                    r: 6,
+                    fill: entry.id === "completed" ? "rgb(56, 204, 164)" : entry.id === "started" ? "rgb(122, 126, 255)" : "rgba(255, 255, 255, 0.7)",
+                  });
+                })
+              ),
+              React.createElement("div", { className: "playground-project-overview-progress-labels" },
+                React.createElement("span", null, startLabel),
+                React.createElement("span", null, endLabel)
+              ),
+              React.createElement("div", { className: "playground-project-overview-progress-legend" },
+                rowData.map((row) =>
+                  React.createElement("div", { key: row.id, className: "playground-project-overview-progress-legend-row" },
+                    React.createElement("div", { className: "playground-project-overview-progress-legend-name" },
+                      React.createElement("span", { className: "playground-project-overview-progress-swatch is-" + row.id }),
+                      React.createElement("span", null, row.label)
+                    ),
+                    React.createElement("div", { className: "playground-project-overview-progress-legend-percent" }, row.percent + "%"),
+                    React.createElement("div", { className: "playground-project-overview-progress-legend-count" }, row.value)
+                  )
+                )
+              )
+            );
+          }
+
+          function resolveProjectOverviewActivityActor(agentId, fallbackName) {
+            const normalizedAgentId = String(agentId || "").trim();
+            const fallback = String(fallbackName || "").trim();
+            let resolvedAgent = normalizedAgentId && agentsById ? agentsById[normalizedAgentId] || null : null;
+            if (!resolvedAgent && normalizedAgentId && typeof assignableActorsById !== "undefined" && assignableActorsById) {
+              resolvedAgent = assignableActorsById[normalizedAgentId] || null;
+            }
+            const fallbackKey = fallback.toLowerCase();
+            if (!resolvedAgent && fallbackKey) {
+              const candidates = []
+                .concat(Object.values(agentsById || {}))
+                .concat(typeof sortedAgents !== "undefined" && Array.isArray(sortedAgents) ? sortedAgents : [])
+                .concat(typeof assignableActors !== "undefined" && Array.isArray(assignableActors) ? assignableActors : []);
+              resolvedAgent = candidates.find((agent) =>
+                String(agent?.name || "").trim().toLowerCase() === fallbackKey
+                || String(agent?.label || "").trim().toLowerCase() === fallbackKey
+              ) || null;
+            }
+            const actorName = String(resolvedAgent?.name || resolvedAgent?.label || fallback || "Agent").trim();
+            let photoUrl = resolvedAgent && typeof getPlaygroundAgentProfilePhotoUrl === "function"
+              ? getPlaygroundAgentProfilePhotoUrl(resolvedAgent)
+              : "";
+            if (!photoUrl) {
+              const defaultPhotoUrls = {
+                spark: "/img/agent-profile-pics/spark.webp",
+                forge: "/img/agent-profile-pics/forge.webp",
+                foundry: "/img/agent-profile-pics/foundry.webp",
+              };
+              photoUrl = defaultPhotoUrls[actorName.toLowerCase()] || "";
+            }
+            return {
+              name: actorName || "Agent",
+              photoUrl: photoUrl && typeof normalizeSessionPhotoUrl === "function" ? normalizeSessionPhotoUrl(photoUrl) : photoUrl,
+            };
+          }
+
+          function buildProjectOverviewActivityItems() {
+            const items = [];
+            projectOverviewFilteredThreads.slice(0, 8).forEach((thread) => {
+              const { safeThread, displayThreadTitle } = typeof getSidebarThreadTitleParts === "function"
+                ? getSidebarThreadTitleParts(thread)
+                : { safeThread: thread, displayThreadTitle: thread?.title || "Untitled thread" };
+              const threadActor = typeof getPlaygroundThreadActorInfo === "function"
+                ? getPlaygroundThreadActorInfo(safeThread, agentsById, "Agent")
+                : { id: String(safeThread?.agentId || "").trim(), name: "Agent" };
+              const threadTaskPreview = typeof getThreadTaskPreview === "function"
+                ? getThreadTaskPreview(safeThread)
+                : null;
+              const threadTaskId = String(threadTaskPreview?.taskId || safeThread?.taskId || "").trim();
+              const threadTask = threadTaskId ? normalizedOverviewTasksById[threadTaskId] || null : null;
+              const threadActivityActor = resolveProjectOverviewActivityActor(threadActor?.id, threadActor?.name || "Agent");
+              const timestamp = Date.parse(String(safeThread?.updatedAt || safeThread?.createdAt || ""));
+              items.push({
+                id: "thread:" + String(safeThread?.id || displayThreadTitle || items.length),
+                actorId: String(threadActor?.id || "").trim(),
+                actor: threadActivityActor.name,
+                photoUrl: threadActivityActor.photoUrl,
+                task: threadTask,
+                verb: "worked on",
+                object: displayThreadTitle || "Untitled thread",
+                taskId: threadTaskId,
+                time: Number.isFinite(timestamp) ? timestamp : 0,
+                timeLabel: typeof formatRelativeThreadTime === "function" ? (formatRelativeThreadTime(safeThread?.updatedAt || safeThread?.createdAt) || "") : "",
+              });
+            });
+            (projectOverviewFileActivityState?.items || []).slice(0, 8).forEach((row, index) => {
+              const assigneeId = String(row?.assigneeId || "").trim();
+              const fileActivityActor = resolveProjectOverviewActivityActor(assigneeId, row?.assignee || "Agent");
+              const fileTaskId = String(row?.taskId || "").trim();
+              const fileTask = fileTaskId ? normalizedOverviewTasksById[fileTaskId] || null : null;
+              const timestamp = Number(row?.timestamp || 0);
+              items.push({
+                id: "file:" + String(row?.id || row?.path || index),
+                actorId: assigneeId,
+                actor: fileActivityActor.name,
+                photoUrl: fileActivityActor.photoUrl,
+                task: fileTask,
+                verb: String(row?.operation || "").trim().toLowerCase() || "updated",
+                object: String(row?.title || row?.path || "file").trim(),
+                taskId: fileTaskId,
+                time: Number.isFinite(timestamp) ? timestamp : 0,
+                timeLabel: String(row?.dateLabel || "").trim(),
+              });
+            });
+            normalizedOverviewTasks.slice(0, 8).forEach((task) => {
+              const assigneeId = String(task?.assigneeAgentId || "").trim();
+              const timestamp = Date.parse(String(task?.updatedAt || task?.createdAt || ""));
+              const actorName = typeof getTaskAssigneeName === "function"
+                ? getTaskAssigneeName(assigneeId, "Agent")
+                : "Agent";
+              const taskActivityActor = resolveProjectOverviewActivityActor(assigneeId, actorName);
+              items.push({
+                id: "task:" + String(task?.id || task?.title || items.length),
+                actorId: assigneeId,
+                actor: taskActivityActor.name,
+                photoUrl: taskActivityActor.photoUrl,
+                task,
+                verb: String(task?.createdAt || "") === String(task?.updatedAt || "") ? "created" : "updated",
+                object: task?.title || "Untitled task",
+                taskId: String(task?.id || "").trim(),
+                time: Number.isFinite(timestamp) ? timestamp : 0,
+                timeLabel: typeof formatRelativeThreadTime === "function" ? (formatRelativeThreadTime(task?.updatedAt || task?.createdAt) || "") : "",
+              });
+            });
+            return items
+              .filter((item) => item.object)
+              .sort((left, right) => (right.time || 0) - (left.time || 0))
+              .slice(0, 8);
+          }
+
+          function renderProjectOverviewActivityAvatar(item) {
+            const className = "playground-project-overview-activity-avatar";
+            const actorId = String(item?.actorId || item?.task?.assigneeAgentId || "").trim();
+            if (actorId && typeof renderTaskActorAvatar === "function") {
+              const avatar = renderTaskActorAvatar(actorId, className);
+              if (avatar) {
+                return avatar;
+              }
+            }
+            if (item?.task && typeof renderTaskAssigneeAvatar === "function") {
+              const avatar = renderTaskAssigneeAvatar(item.task, className);
+              if (avatar) {
+                return avatar;
+              }
+            }
+            if (typeof renderAgentNameAvatar === "function") {
+              return renderAgentNameAvatar(item?.actor, className, item?.photoUrl);
+            }
+            return React.createElement("div", { className });
+          }
+
+          function renderProjectOverviewActivitySection() {
+            const activityItems = buildProjectOverviewActivityItems();
+            return React.createElement("section", { className: "playground-project-overview-activity-card" },
+              React.createElement("div", { className: "playground-project-overview-activity-header" },
+                React.createElement("h2", { className: "playground-project-overview-activity-title" }, "Activity")
+              ),
+              activityItems.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-activity-list" },
+                    activityItems.map((item) =>
+                      React.createElement("div", { key: item.id, className: "playground-project-overview-activity-row" },
+                        renderProjectOverviewActivityAvatar(item),
+                        React.createElement("div", { className: "playground-project-overview-activity-copy" },
+                          React.createElement("span", { className: "playground-project-overview-activity-actor" }, item.actor),
+                          React.createElement("span", null, " " + item.verb + " "),
+                          item.taskId && typeof handleSelectTask === "function"
+                            ? React.createElement("button", {
+                                type: "button",
+                                className: "playground-project-overview-activity-object is-clickable",
+                                onClick: (event) => {
+                                  event.stopPropagation();
+                                  handleSelectTask(item.taskId);
+                                },
+                              }, item.object)
+                            : React.createElement("span", { className: "playground-project-overview-activity-object" }, item.object),
+                          item.timeLabel
+                            ? React.createElement("span", { className: "playground-project-overview-activity-time" }, " · " + item.timeLabel)
+                            : null
+                        )
+                      )
+                    )
+                  )
+                : React.createElement("div", { className: "playground-project-overview-activity-empty" },
+                    "Project activity will appear here once agents create tasks, run threads, or update files."
+                  )
+            );
+          }
+
+          function getProjectOverviewProgressStats() {
+            const scopeCount = Math.max(
+              0,
+              Number(selectedProjectTaskStatusOverview?.total) || 0,
+              Number(selectedProjectSummary?.tasksCount) || 0,
+              normalizedOverviewTasks.length
+            );
+            const completedCount = Math.max(0, Math.min(scopeCount, Number(selectedProjectTaskStatusOverview?.done) || 0));
+            const startedCount = Math.max(0, Math.min(
+              scopeCount,
+              completedCount + (Number(selectedProjectTaskStatusOverview?.inProgress) || 0)
+            ));
+            return {
+              scopeCount,
+              startedCount,
+              completedCount,
+              rows: [
+                { id: "scope", label: "Scope", value: scopeCount, percent: 100 },
+                { id: "started", label: "Started", value: startedCount, percent: scopeCount > 0 ? Math.round((startedCount / scopeCount) * 100) : 0 },
+                { id: "completed", label: "Completed", value: completedCount, percent: scopeCount > 0 ? Math.round((completedCount / scopeCount) * 100) : 0 },
+              ],
+            };
+          }
+
+          function renderProjectOverviewWidgetHeader(title, Icon, action) {
+            return React.createElement("div", { className: "playground-project-overview-widget-header" },
+              React.createElement("div", { className: "playground-project-overview-widget-title-wrap" },
+                React.createElement("span", { className: "playground-project-overview-widget-icon", "aria-hidden": "true" },
+                  Icon ? React.createElement(Icon, { strokeWidth: 1.8 }) : null
+                ),
+                React.createElement("span", { className: "playground-project-overview-widget-title" }, title)
+              ),
+              action ? React.createElement("button", {
+                type: "button",
+                className: "playground-project-overview-widget-action",
+                onClick: action.onClick,
+              }, action.label) : null
+            );
+          }
+
+          function renderProjectOverviewWidgetListItem({ key, Icon, title, meta, onClick }) {
+            const elementType = typeof onClick === "function" ? "button" : "div";
+            return React.createElement(elementType, {
+                key,
+                type: elementType === "button" ? "button" : undefined,
+                className: "playground-project-overview-widget-list-item",
+                onClick,
+              },
+              React.createElement("span", { className: "playground-project-overview-widget-list-icon", "aria-hidden": "true" },
+                Icon ? React.createElement(Icon, { strokeWidth: 1.8 }) : null
+              ),
+              React.createElement("span", { className: "playground-project-overview-widget-list-copy" },
+                React.createElement("span", { className: "playground-project-overview-widget-list-title", title }, title),
+                meta ? React.createElement("span", { className: "playground-project-overview-widget-list-meta", title: meta }, meta) : null
+              )
+            );
+          }
+
+          function renderProjectOverviewProgressWidget() {
+            const progressStats = getProjectOverviewProgressStats();
+            const chartWidth = 220;
+            const chartHeight = 86;
+            const paddingX = 4;
+            const paddingTop = 8;
+            const paddingBottom = 18;
+            const maxValue = Math.max(1, progressStats.scopeCount, progressStats.startedCount, progressStats.completedCount);
+            const pointCount = 5;
+            function makeValues(target, curve) {
+              return curve.map((factor) => Math.round(Math.max(0, target) * factor));
+            }
+            const series = [
+              { id: "scope", values: makeValues(progressStats.scopeCount, [0, 0.28, 0.48, 0.72, 1]) },
+              { id: "started", values: makeValues(progressStats.startedCount, [0, 0.16, 0.55, 0.82, 1]) },
+              { id: "completed", values: makeValues(progressStats.completedCount, [0, 0.08, 0.3, 0.68, 1]) },
+            ];
+            function getPoint(value, index) {
+              const x = paddingX + (index / Math.max(1, pointCount - 1)) * (chartWidth - paddingX * 2);
+              const y = paddingTop + (1 - (value / maxValue)) * (chartHeight - paddingTop - paddingBottom);
+              return { x, y };
+            }
+            function buildPath(values) {
+              return values.map((value, index) => {
+                const point = getPoint(value, index);
+                return (index === 0 ? "M" : "L") + point.x.toFixed(1) + " " + point.y.toFixed(1);
+              }).join(" ");
+            }
+            return React.createElement("section", { className: "playground-project-overview-widget" },
+              renderProjectOverviewWidgetHeader("Progress", ChartNoAxesColumnIncreasing),
+              React.createElement("div", { className: "playground-project-overview-widget-progress-chart" },
+                React.createElement("svg", {
+                  className: "playground-project-overview-widget-progress-svg",
+                  viewBox: "0 0 " + chartWidth + " " + chartHeight,
+                  preserveAspectRatio: "none",
+                  role: "img",
+                  "aria-label": "Project progress by task status",
+                },
+                  [0.33, 0.66].map((fraction) =>
+                    React.createElement("line", {
+                      key: "guide:" + fraction,
+                      className: "playground-project-overview-widget-progress-guide",
+                      x1: paddingX,
+                      x2: chartWidth - paddingX,
+                      y1: paddingTop + (chartHeight - paddingTop - paddingBottom) * fraction,
+                      y2: paddingTop + (chartHeight - paddingTop - paddingBottom) * fraction,
+                    })
+                  ),
+                  React.createElement("line", {
+                    className: "playground-project-overview-widget-progress-axis",
+                    x1: paddingX,
+                    x2: chartWidth - paddingX,
+                    y1: chartHeight - paddingBottom,
+                    y2: chartHeight - paddingBottom,
+                  }),
+                  series.map((entry) =>
+                    React.createElement("path", {
+                      key: entry.id,
+                      className: "playground-project-overview-widget-progress-line is-" + entry.id,
+                      d: buildPath(entry.values),
+                    })
+                  ),
+                  series.map((entry) => {
+                    const point = getPoint(entry.values[entry.values.length - 1] || 0, entry.values.length - 1);
+                    return React.createElement("circle", {
+                      key: "dot:" + entry.id,
+                      className: "playground-project-overview-widget-progress-dot",
+                      cx: point.x,
+                      cy: point.y,
+                      r: 4,
+                      fill: entry.id === "completed" ? "rgb(56, 204, 164)" : entry.id === "started" ? "rgb(122, 126, 255)" : "rgba(255, 255, 255, 0.7)",
+                    });
+                  })
+                ),
+                React.createElement("div", { className: "playground-project-overview-widget-rows" },
+                  progressStats.rows.map((row) =>
+                    React.createElement("div", { key: row.id, className: "playground-project-overview-widget-row" },
+                      React.createElement("div", { className: "playground-project-overview-widget-row-name" },
+                        React.createElement("span", { className: "playground-project-overview-widget-swatch is-" + row.id }),
+                        React.createElement("span", null, row.label)
+                      ),
+                      React.createElement("div", { className: "playground-project-overview-widget-row-percent" }, row.percent + "%"),
+                      React.createElement("div", { className: "playground-project-overview-widget-row-value" }, row.value)
+                    )
+                  )
+                )
+              )
+            );
+          }
+
+          function renderProjectOverviewCostWidget() {
+            const visibleBuckets = projectThreadTimeline.slice(-10);
+            const maxBucketTotal = Math.max(1, ...visibleBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0))));
+            return React.createElement("section", { className: "playground-project-overview-widget" },
+              renderProjectOverviewWidgetHeader("Cost Observability", Coins, {
+                label: "Details",
+                onClick: () => typeof setProjectOverviewHomeTab === "function" && setProjectOverviewHomeTab("observability"),
+              }),
+              React.createElement("div", { className: "playground-project-overview-cost-widget-main" },
+                React.createElement("div", { className: "playground-project-overview-cost-widget-value" }, formatProjectOverviewCt(projectTotalCt) + " CT"),
+                React.createElement("div", { className: "playground-project-overview-cost-widget-label" }, "Spent on project"),
+                projectHasCostData
+                  ? React.createElement("div", { className: "playground-project-overview-cost-widget-bars", "aria-label": "Project compute usage by resource type" },
+                      visibleBuckets.map((bucket, bucketIndex) => {
+                        const total = Math.max(0, Number(bucket?.totalCT || 0));
+                        return React.createElement("div", {
+                            key: String(bucket?.key || bucketIndex),
+                            className: "playground-project-overview-cost-widget-bar",
+                            title: String(bucket?.label || "") + " · " + formatProjectOverviewAxisCt(total),
+                          },
+                          projectComputeSeries.map((entry) => {
+                            const rawValue = Math.max(0, Number(entry.values[projectThreadTimeline.length - visibleBuckets.length + bucketIndex] || 0));
+                            if (rawValue <= 0 || total <= 0) {
+                              return null;
+                            }
+                            return React.createElement("span", {
+                              key: entry.id,
+                              className: "playground-project-overview-cost-widget-segment",
+                              style: {
+                                height: Math.max(1, (rawValue / maxBucketTotal) * 100) + "%",
+                                background: entry.color,
+                              },
+                            });
+                          })
+                        );
+                      })
+                    )
+                  : React.createElement("div", { className: "playground-project-overview-widget-empty" }, "No project cost yet.")
+              )
+            );
+          }
+
+          function isProjectOverviewMetronomeResource(resource) {
+            const haystack = [
+              resource?.type,
+              resource?.kind,
+              resource?.resourceType,
+              resource?.title,
+              resource?.name,
+              resource?.label,
+            ].join(" ").toLowerCase();
+            return haystack.includes("metronome") || haystack.includes("schedule") || haystack.includes("cron");
+          }
+
+          function renderProjectOverviewMetronomesWidget() {
+            const metronomeResources = allOverviewResourceItems.filter((item) => isProjectOverviewMetronomeResource(item)).slice(0, 4);
+            return React.createElement("section", { className: "playground-project-overview-widget" },
+              renderProjectOverviewWidgetHeader("Metronomes", Metronome, {
+                label: "Open",
+                onClick: () => typeof onOpenProjectMetronomes === "function" && onOpenProjectMetronomes({ projectId: normalizedSelectedProjectId }),
+              }),
+              metronomeResources.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-widget-list" },
+                    metronomeResources.map((resource, index) => {
+                      const title = String(resource?.title || resource?.name || resource?.label || "Metronome").trim();
+                      const meta = [resource?.status || "", resource?.dateLabel || resource?.updatedAt || ""].filter(Boolean).join(" · ");
+                      return renderProjectOverviewWidgetListItem({
+                        key: String(resource?.id || title || index),
+                        Icon: Metronome,
+                        title,
+                        meta,
+                      });
+                    })
+                  )
+                : React.createElement("div", { className: "playground-project-overview-widget-empty" }, "No project metronomes yet.")
+            );
+          }
+
+          function renderProjectOverviewFilesWidget() {
+            const visibleFiles = filteredProjectFileActivityItems.slice(0, 4);
+            return React.createElement("section", { className: "playground-project-overview-widget" },
+              renderProjectOverviewWidgetHeader("Files", FolderOpen, {
+                label: "Open",
+                onClick: () => {
+                  if (typeof onOpenFilesPage !== "function") return;
+                  onOpenFilesPage({
+                    token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                    projectId: normalizedSelectedProjectId,
+                    environmentId: activeProjectAttachmentEnvironmentId || selectedProject?.defaultEnvironmentId || "",
+                  });
+                },
+              }),
+              visibleFiles.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-widget-list" },
+                    visibleFiles.map((row, index) => {
+                      const title = String(row?.title || row?.path || "Untitled file").trim();
+                      const meta = [row?.operation || "Modified", row?.dateLabel || ""].filter(Boolean).join(" · ");
+                      return renderProjectOverviewWidgetListItem({
+                        key: String(row?.id || row?.path || title || index),
+                        Icon: FolderOpen,
+                        title,
+                        meta,
+                        onClick: () => typeof navigateProjectOverviewFileToFiles === "function" && navigateProjectOverviewFileToFiles(row),
+                      });
+                    })
+                  )
+                : React.createElement("div", { className: "playground-project-overview-widget-empty" }, "No project file activity yet.")
+            );
+          }
+
+          function renderProjectOverviewResourcesWidget() {
+            const metronomeResources = allOverviewResourceItems
+              .filter((item) => isProjectOverviewMetronomeResource(item))
+              .map((resource, index) => {
+                const title = String(resource?.title || resource?.name || resource?.label || "Metronome").trim();
+                return {
+                  key: "metronome:" + String(resource?.id || title || index),
+                  Icon: Metronome,
+                  title,
+                  meta: [resource?.status || "Metronome", resource?.dateLabel || resource?.updatedAt || ""].filter(Boolean).join(" · "),
+                  onClick: () => typeof onOpenProjectMetronomes === "function" && onOpenProjectMetronomes({ projectId: normalizedSelectedProjectId }),
+                };
+              });
+            const serverResources = overviewResourceItems
+              .filter((item) => !isProjectOverviewMetronomeResource(item))
+              .map((resource, index) => {
+                const title = String(resource?.title || resource?.name || resource?.label || "Resource").trim();
+                return {
+                  key: "server:" + String(resource?.id || title || index),
+                  Icon: Server,
+                  title,
+                  meta: [resource?.type || resource?.kind || resource?.resourceType || "Server resource", resource?.status || ""].filter(Boolean).join(" · "),
+                  onClick: () => {
+                    if (typeof setProjectOverviewHomeTab === "function") {
+                      setProjectOverviewHomeTab("observability");
+                    }
+                    if (typeof setProjectOverviewFilesSubview === "function") {
+                      setProjectOverviewFilesSubview("resources");
+                    }
+                  },
+                };
+              });
+            const imagineResources = projectOverviewImagineResources.map((resource, index) => {
+              const resourcePath = String(resource?.path || resource?.sourcePath || resource?.workspacePath || "").trim();
+              const title = String(resource?.title || resource?.filename || getHistoryPathName(resourcePath) || "Untitled visual").trim();
+              const candidate = [resource?.mimeType, resource?.contentType, resource?.type, resource?.fileType, resourcePath, title].join(" ");
+              const isVideoResource = /^video\//i.test(String(candidate || "")) || /\.(m4v|mkv|mov|mp4|webm)$/i.test(String(candidate || ""));
+              return {
+                key: "imagine:" + String(resource?.id || resourcePath || title || index),
+                Icon: isVideoResource ? Film : ImageIcon,
+                title,
+                meta: [isVideoResource ? "Video" : "Image", resource?.dateLabel || ""].filter(Boolean).join(" · "),
+                onClick: () => typeof navigateProjectOverviewFileToFiles === "function" && navigateProjectOverviewFileToFiles(resource),
+              };
+            });
+            const combinedResources = []
+              .concat(metronomeResources)
+              .concat(serverResources)
+              .concat(imagineResources);
+            return React.createElement("section", { className: "playground-project-overview-widget" },
+              renderProjectOverviewWidgetHeader("Resources", Server, {
+                label: "Open",
+                onClick: () => {
+                  if (typeof setProjectOverviewHomeTab === "function") {
+                    setProjectOverviewHomeTab("observability");
+                  }
+                  if (typeof setProjectOverviewFilesSubview === "function") {
+                    setProjectOverviewFilesSubview("resources");
+                  }
+                },
+              }),
+              combinedResources.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-widget-list" },
+                    combinedResources.map((resource) => renderProjectOverviewWidgetListItem(resource))
+                  )
+                : React.createElement("div", { className: "playground-project-overview-widget-empty" }, "No project resources yet.")
+            );
+          }
+
+          function renderProjectOverviewServerResourcesWidget() {
+            const visibleResources = overviewResourceItems.filter((item) => !isProjectOverviewMetronomeResource(item)).slice(0, 4);
+            return React.createElement("section", { className: "playground-project-overview-widget" },
+              renderProjectOverviewWidgetHeader("Server Resources", Server, {
+                label: "Open",
+                onClick: () => {
+                  if (typeof setProjectOverviewHomeTab === "function") {
+                    setProjectOverviewHomeTab("observability");
+                  }
+                  if (typeof setProjectOverviewFilesSubview === "function") {
+                    setProjectOverviewFilesSubview("resources");
+                  }
+                },
+              }),
+              visibleResources.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-widget-list" },
+                    visibleResources.map((resource, index) => {
+                      const title = String(resource?.title || resource?.name || resource?.label || "Resource").trim();
+                      const meta = [resource?.type || resource?.kind || resource?.resourceType || "Resource", resource?.status || ""].filter(Boolean).join(" · ");
+                      return renderProjectOverviewWidgetListItem({
+                        key: String(resource?.id || title || index),
+                        Icon: Server,
+                        title,
+                        meta,
+                      });
+                    })
+                  )
+                : React.createElement("div", { className: "playground-project-overview-widget-empty" }, "No server resources yet.")
+            );
+          }
+
+          function renderProjectOverviewImagineWidget() {
+            const visibleImagineResources = projectOverviewImagineResources.slice(0, 4);
+            return React.createElement("section", { className: "playground-project-overview-widget" },
+              renderProjectOverviewWidgetHeader("Imagine Resources", Clapperboard, {
+                label: "Open",
+                onClick: () => {
+                  if (typeof setProjectOverviewHomeTab === "function") {
+                    setProjectOverviewHomeTab("observability");
+                  }
+                  if (typeof setProjectOverviewFilesSubview === "function") {
+                    setProjectOverviewFilesSubview("imagine");
+                  }
+                },
+              }),
+              visibleImagineResources.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-widget-list" },
+                    visibleImagineResources.map((resource, index) => {
+                      const resourcePath = String(resource?.path || resource?.sourcePath || resource?.workspacePath || "").trim();
+                      const title = String(resource?.title || resource?.filename || getHistoryPathName(resourcePath) || "Untitled visual").trim();
+                      const candidate = [resource?.mimeType, resource?.contentType, resource?.type, resource?.fileType, resourcePath, title].join(" ");
+                      const isVideoResource = /^video\//i.test(String(candidate || "")) || /\.(m4v|mkv|mov|mp4|webm)$/i.test(String(candidate || ""));
+                      const meta = [isVideoResource ? "Video" : "Image", resource?.dateLabel || ""].filter(Boolean).join(" · ");
+                      return renderProjectOverviewWidgetListItem({
+                        key: String(resource?.id || resourcePath || title || index),
+                        Icon: isVideoResource ? Film : ImageIcon,
+                        title,
+                        meta,
+                        onClick: () => typeof navigateProjectOverviewFileToFiles === "function" && navigateProjectOverviewFileToFiles(resource),
+                      });
+                    })
+                  )
+                : React.createElement("div", { className: "playground-project-overview-widget-empty" }, "No imagine resources yet.")
+            );
+          }
+
+          function renderProjectOverviewWidgetSection() {
+            return React.createElement("div", { className: "playground-project-overview-widget-grid" },
+              renderProjectOverviewProgressWidget(),
+              renderProjectOverviewCostWidget(),
+              renderProjectOverviewFilesWidget(),
+              renderProjectOverviewResourcesWidget()
+            );
+          }
+
+          function renderProjectOverviewGeneralPanel() {
+            return React.createElement("div", { className: "playground-project-overview-general-grid" },
+              renderProjectOverviewWidgetSection(),
+              renderProjectOverviewActivitySection()
+            );
+          }
+
           function renderProjectOverviewStrategyPanel() {
             const strategyBrief = normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraft);
             const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
@@ -5326,345 +6865,29 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     React.createElement("div", { className: "playground-project-overview-summary-title-row" },
                       React.createElement("h1", { className: "playground-project-overview-summary-title" }, selectedProject.name || "Untitled Project"),
                       React.createElement("div", { className: "playground-project-overview-summary-title-actions" },
-	                        React.createElement("button", {
-	                          type: "button",
-	                          className: "playground-files-control-button playground-project-overview-summary-mission-button",
-	                          onClick: openMissionControlComposer,
-	                        },
-	                          React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                          React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Mission Control")
-	                        ),
-	                        React.createElement("button", {
-	                          type: "button",
-	                          className: "playground-files-control-button playground-project-overview-summary-mission-button" + (projectFullAutoState?.enabled && projectFullAutoState.projectId === selectedProjectId ? " is-active" : ""),
-	                          onClick: projectFullAutoState?.enabled && projectFullAutoState.projectId === selectedProjectId
-	                            ? stopProjectFullAutoMode
-	                            : startProjectFullAutoMode,
-	                          title: projectFullAutoState?.enabled && projectFullAutoState.projectId === selectedProjectId ? "Stop Full Auto" : "Start Full Auto",
-	                        },
-	                          React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8, fill: "currentColor" }),
-	                          React.createElement("span", { className: "playground-project-overview-summary-mission-label" },
-	                            projectFullAutoState?.enabled && projectFullAutoState.projectId === selectedProjectId ? "Stop Auto" : "Full Auto"
-	                          )
-	                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-control-button playground-project-overview-summary-mission-button",
+                          onClick: openMissionControlComposer,
+                        },
+                          React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Mission Control")
+                        )
                       )
-                    ),
-                    null
+                    )
                   )
                 )
-	              ),
-		              renderProjectOverviewHomeTabs(),
-			              activeProjectOverviewHomeTab === "strategy"
-			                ? renderProjectOverviewStrategyPanel()
-			                : activeProjectOverviewHomeTab === "rules"
-			                  ? renderProjectOverviewRulesPanel()
-			                  : activeProjectOverviewHomeTab === "plugins"
-			                    ? renderProjectOverviewPluginsPanel()
-			                    : React.createElement(React.Fragment, null,
-              activeProjectOverviewHomeTab === "general" && !isProjectOverviewResourceSubviewOpen
-		                ? React.createElement("div", { className: "playground-project-overview-chart-surface" },
-                React.createElement("div", { className: "playground-project-overview-chart-grid" },
-                  React.createElement("section", {
-                    className: "playground-settings-usage-chart-card playground-project-overview-chart-card" + (!projectHasCostData ? " is-cost-empty" : ""),
-                  },
-                    React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
-                      projectOverviewKpis.map((item) =>
-                        React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
-                          React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                            React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                        )
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-chart-header" },
-                      React.createElement("div", { className: "playground-project-overview-chart-header-main" },
-                        React.createElement("div", { className: "playground-project-overview-chart-title" }, "Cost by Resource")
-                      )
-                    ),
-                    React.createElement(React.Fragment, null,
-                      renderProjectOverviewMultiStackedChart({
-                        labels: projectThreadTimeline.map((bucket) => bucket.label),
-                        series: projectComputeSeries,
-                        yMax: maxProjectDailyCt,
-                        tickFormatter: formatProjectOverviewAxisCt,
-                        tall: true,
-                        ariaLabel: "Project compute token usage by resource type",
-                        emptyText: "No project compute usage yet",
-                        emptyContent: renderProjectOverviewCostEmptyState(),
-                      }),
-                      React.createElement("div", { className: "playground-project-overview-chart-footer-row" },
-                        projectHasCostData
-                          ? React.createElement("div", {
-                              className: "playground-settings-usage-inline-legend",
-                            },
-                              projectComputeSeries.map((entry) =>
-                                React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
-                                  React.createElement("span", {
-                                    className: "playground-settings-usage-legend-swatch",
-                                    style: { background: entry.color },
-                                  }),
-                                  React.createElement("span", null, entry.label)
-                                )
-                              )
-                            )
-                          : React.createElement("div", { className: "playground-settings-usage-inline-legend" }),
-                        React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
-                          React.createElement("select", {
-                            className: "playground-environments-home-comparison-timescale-select",
-                            value: projectOverviewChartTimescale,
-                            "aria-label": "Project overview chart timeframe",
-                            onChange: (event) => setProjectOverviewChartTimescale(String(event.target.value || "month")),
-                          },
-                            React.createElement("option", { value: "day" }, "Daily"),
-                            React.createElement("option", { value: "week" }, "Weekly"),
-                            React.createElement("option", { value: "month" }, "Monthly")
-                          )
-                        )
-                      )
-                    ),
-                    renderProjectOverviewFilesNavCards()
-                  )
-	                )
-	              )
-		                : null,
-	            React.createElement("div", { className: "playground-tasks-project-panel-grid" },
-	              activeProjectOverviewHomeTab === "general" && !isProjectOverviewResourceSubviewOpen
-	                ? React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section" },
-                React.createElement("div", { className: "playground-plugins-section-header playground-project-overview-list-tabs-header" },
-                  React.createElement("div", { className: "playground-project-overview-chart-tabs playground-project-overview-list-tabs" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-project-overview-chart-tab playground-project-overview-list-tab" + (projectOverviewListMode !== "threads" ? " is-active" : ""),
-                      onClick: () => {
-                        setProjectOverviewListMode("tasks");
-                        setProjectOverviewThreadToolbarPopover("");
-                      },
-                    }, "Current Tasks"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-project-overview-chart-tab playground-project-overview-list-tab" + (projectOverviewListMode === "threads" ? " is-active" : ""),
-                      onClick: () => {
-                        setProjectOverviewListMode("threads");
-                        setProjectOverviewTaskToolbarPopover("");
-                      },
-                    }, "Threads")
-                  )
-                ),
-                projectOverviewListMode === "threads"
-                  ? React.createElement(React.Fragment, null,
-                      React.createElement("div", { className: "playground-plugins-search-row", ref: projectOverviewThreadsToolbarRef },
-                        React.createElement("div", { className: "playground-plugins-search-shell" },
-                          React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("input", {
-                            type: "search",
-                            value: projectOverviewThreadSearchQuery,
-                            onChange: (event) => setProjectOverviewThreadSearchQuery(event.target.value),
-                            className: "playground-plugins-search",
-                            placeholder: "Search threads",
-                            "aria-label": "Search project threads",
-                          })
-                        ),
-                        React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                          React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-control-button is-bare is-backlog-sort" + (projectOverviewThreadToolbarPopover === "sort" || projectOverviewThreadSortMode !== "recent-desc" ? " is-active" : ""),
-                              onClick: () => setProjectOverviewThreadToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                              title: activeProjectOverviewThreadSortOption.label,
-                            },
-                              React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("span", null, "Sort")
-                            ),
-                            projectOverviewThreadToolbarPopover === "sort"
-                              ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                                  projectOverviewThreadSortOptions.map((option) =>
-                                    renderProjectOverviewTaskToolbarOption({
-                                      option,
-                                      active: projectOverviewThreadSortMode === option.id,
-                                      onClick: () => {
-                                        setProjectOverviewThreadSortMode(option.id);
-                                        setProjectOverviewThreadToolbarPopover("");
-                                      },
-                                    })
-                                  )
-                                )
-                              : null
-                          ),
-                          React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-control-button is-bare is-backlog-filter" + (projectOverviewThreadToolbarPopover === "filter" || projectOverviewThreadFilterMode !== "all" ? " is-active" : ""),
-                              onClick: () => setProjectOverviewThreadToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                              title: activeProjectOverviewThreadFilterOption.label,
-                            },
-                              React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("span", null, "Filter")
-                            ),
-                            projectOverviewThreadToolbarPopover === "filter"
-                              ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                                  projectOverviewThreadFilterOptions.map((option) =>
-                                    renderProjectOverviewTaskToolbarOption({
-                                      option,
-                                      active: projectOverviewThreadFilterMode === option.id,
-                                      onClick: () => {
-                                        setProjectOverviewThreadFilterMode(option.id);
-                                        setProjectOverviewThreadToolbarPopover("");
-                                      },
-                                    })
-                                  )
-                                )
-                            : null
-                          )
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-control-button playground-project-overview-toolbar-action",
-                          onClick: () => typeof setProjectOverviewVisibleThreadCount === "function" && setProjectOverviewVisibleThreadCount((current) => current + 10),
-                          disabled: !hasMoreProjectThreads,
-                          style: !hasMoreProjectThreads ? { opacity: 0.5 } : undefined,
-                        },
-                          React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "Show more")
-                        )
-                      ),
-                      projectOverviewFilteredThreads.length > 0
-                        ? React.createElement("div", { className: "playground-project-overview-threads-table" },
-                            React.createElement("div", { className: "playground-project-overview-threads-table-header" },
-                              React.createElement("div", null, "Title"),
-                              React.createElement("div", null, "Assignee"),
-                              React.createElement("div", null, "Task"),
-                              React.createElement("div", null, "Date"),
-                              React.createElement("div", null)
-                            ),
-                            React.createElement("div", { className: "playground-project-overview-thread-list" },
-                              visibleProjectThreads.map((thread) => renderOverviewThreadRow(thread))
-                            )
-                          )
-                        : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                            hasProjectOverviewThreadListFilters ? "No matching project threads." : "No project threads yet."
-                          )
-                    )
-                  : React.createElement(React.Fragment, null,
-                      React.createElement("div", { className: "playground-plugins-search-row", ref: projectOverviewTasksToolbarRef },
-                        React.createElement("div", { className: "playground-plugins-search-shell" },
-                          React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("input", {
-                            type: "search",
-                            value: projectOverviewTaskSearchQuery,
-                            onChange: (event) => setProjectOverviewTaskSearchQuery(event.target.value),
-                            className: "playground-plugins-search",
-                            placeholder: "Search tasks",
-                            "aria-label": "Search current tasks",
-                          })
-                        ),
-                        React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                          React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-control-button is-bare is-backlog-sort" + (projectOverviewTaskToolbarPopover === "sort" || projectOverviewTaskSortMode !== "default" ? " is-active" : ""),
-                              onClick: () => setProjectOverviewTaskToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                              title: activeProjectOverviewTaskSortOption.label,
-                            },
-                              React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("span", null, "Sort")
-                            ),
-                            projectOverviewTaskToolbarPopover === "sort"
-                              ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                                  projectOverviewTaskSortOptions.map((option) =>
-                                    renderProjectOverviewTaskToolbarOption({
-                                      option,
-                                      active: projectOverviewTaskSortMode === option.id,
-                                      onClick: () => {
-                                        setProjectOverviewTaskSortMode(option.id);
-                                        setProjectOverviewTaskToolbarPopover("");
-                                      },
-                                    })
-                                  )
-                                )
-                              : null
-                          ),
-                          React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-control-button is-bare is-backlog-filter" + (projectOverviewTaskToolbarPopover === "filter" || projectOverviewTaskFilterMode !== "open" ? " is-active" : ""),
-                              onClick: () => setProjectOverviewTaskToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                              title: activeProjectOverviewTaskFilterOption.label,
-                            },
-                              React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("span", null, "Filter")
-                            ),
-                            projectOverviewTaskToolbarPopover === "filter"
-                              ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                                  projectOverviewTaskFilterOptions.map((option) =>
-                                    renderProjectOverviewTaskToolbarOption({
-                                      option,
-                                      active: projectOverviewTaskFilterMode === option.id,
-                                      onClick: () => {
-                                        setProjectOverviewTaskFilterMode(option.id);
-                                        setProjectOverviewTaskToolbarPopover("");
-                                      },
-                                    })
-                                  )
-                                )
-                            : null
-                          )
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-control-button playground-project-overview-current-tasks-see-all",
-                          onClick: () => typeof setTaskView === "function" && setTaskView("backlog"),
-                        },
-                          React.createElement(ListTodo, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "See all")
-                        )
-                      ),
-                      overviewVisibleTasks.length > 0
-                        ? React.createElement("div", { className: "playground-project-overview-backlog-list playground-project-overview-current-release-list" },
-                            overviewCurrentTaskReleaseSections.map((section) =>
-                              React.createElement("div", {
-                                  key: section.key,
-                                  className: "playground-tasks-backlog-section playground-project-overview-current-release-section",
-                                },
-                                React.createElement("div", { className: "playground-tasks-backlog-section-header" },
-                                  React.createElement("div", { className: "playground-tasks-backlog-section-copy-group" },
-                                    React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title)
-                                  ),
-                                  typeof renderReleaseHeaderMeta === "function"
-                                    ? renderReleaseHeaderMeta(section.releaseId ? (releasesById[section.releaseId] || null) : null)
-                                    : null
-                                ),
-                                section.tasks.map((task) => renderOverviewTaskRow(task))
-                              )
-                            )
-                          )
-                        : hasProjectOverviewTaskListFilters
-                          ? React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                              "No matching active tasks."
-                            )
-                          : React.createElement("div", { className: "playground-project-overview-empty-card is-compact" },
-                              React.createElement("div", { className: "playground-project-overview-empty-title" }, "Create your first task"),
-                              React.createElement("div", { className: "playground-project-overview-empty-copy" }, "Start the backlog and define the first ticket for this project."),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-tasks-empty-primary-button playground-project-overview-empty-action",
-                                onClick: () => typeof setTaskView === "function" && setTaskView("backlog"),
-                              },
-                                React.createElement(Plus, { width: 12, height: 12, strokeWidth: 2, "aria-hidden": "true" }),
-                                React.createElement("span", null, "New Task")
-                              )
-                            )
-                    )
-	              )
-	                : null,
-	              isProjectOverviewResourceSubviewOpen
-	                ? React.createElement(React.Fragment, null,
-	                    renderProjectOverviewFilesTab(),
-	                    renderProjectOverviewFileMenu()
-	                  )
-	                : null
-              )
-	                )
+              ),
+              renderProjectOverviewHomeTabs(),
+              activeProjectOverviewHomeTab === "observability"
+                ? renderProjectOverviewObservabilityPanel()
+                : activeProjectOverviewHomeTab === "strategy"
+                  ? renderProjectOverviewStrategyPanel()
+                  : activeProjectOverviewHomeTab === "rules"
+                    ? renderProjectOverviewRulesPanel()
+                    : activeProjectOverviewHomeTab === "plugins"
+                      ? renderProjectOverviewPluginsPanel()
+                      : renderProjectOverviewGeneralPanel()
             )
           );
         }

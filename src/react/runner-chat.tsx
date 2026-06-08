@@ -355,6 +355,7 @@ interface PendingRunnerMessage {
   turnId: string;
   prompt: string;
   displayPrompt?: string | null;
+  reasoningEffort?: string | null;
   attachments: LocalAttachment[];
   extraResolvedAttachments?: RunnerAttachment[] | null;
   quotedSelection?: RunnerQuotedSelection | null;
@@ -1622,6 +1623,33 @@ export interface RunnerChatOption {
 
 type RunnerAgentSelectorMode = "agents" | "teams" | "humans";
 type RunnerWorkspaceSelectorMode = "computers" | "projects";
+type RunnerReasoningEffortId = "minimal" | "low" | "medium" | "high";
+
+const RUNNER_REASONING_EFFORT_OPTIONS: Array<{
+  id: RunnerReasoningEffortId;
+  label: string;
+  description: string;
+}> = [
+  { id: "minimal", label: "Low", description: "Fast responses for simple tasks." },
+  { id: "low", label: "Medium", description: "Balanced default reasoning." },
+  { id: "medium", label: "High", description: "More deliberate planning and tool use." },
+  { id: "high", label: "Max", description: "Maximum reasoning for complex work." },
+];
+
+function normalizeRunnerReasoningEffort(value: unknown): RunnerReasoningEffortId {
+  const normalized = typeof value === "string" ? value.trim().toLowerCase().replace(/[_\s]+/g, "-") : "";
+  if (normalized === "minimal" || normalized === "low" || normalized === "medium" || normalized === "high") {
+    return normalized;
+  }
+  if (normalized === "extra-high" || normalized === "extra") {
+    return "high";
+  }
+  return "low";
+}
+
+function getRunnerReasoningEffortOption(value: unknown) {
+  return RUNNER_REASONING_EFFORT_OPTIONS.find((option) => option.id === normalizeRunnerReasoningEffort(value)) || RUNNER_REASONING_EFFORT_OPTIONS[1];
+}
 
 export interface RunnerChatProjectOption extends RunnerChatOption {
   defaultEnvironmentId?: string | null;
@@ -2026,6 +2054,7 @@ export interface RunnerChatExternalRunRequest {
   threadId: string;
   prompt: string;
   displayPrompt?: string | null;
+  reasoningEffort?: string | null;
   agentId?: string | null;
   agentName?: string | null;
   attachments?: RunnerAttachment[] | null;
@@ -2058,6 +2087,7 @@ export interface RunnerChatProjectTaskSubmitPayload {
   projectId?: string | null;
   agentId: string | null;
   agentName?: string | null;
+  reasoningEffort?: string | null;
   githubRepo?: {
     repoFullName: string;
     repoName: string;
@@ -2212,6 +2242,8 @@ export interface RunnerChatProps {
   inputMode?: RunnerChatInputMode;
   agents?: RunnerChatOption[];
   hideAgentSelector?: boolean;
+  reasoningEffort?: string | null;
+  onReasoningEffortChange?: (reasoningEffort: string) => void;
   environments?: RunnerChatOption[];
   hideEnvironmentSelector?: boolean;
   skills?: RunnerChatSkill[];
@@ -2305,6 +2337,7 @@ export interface RunnerChatProps {
     environmentId: string | null;
     projectId?: string | null;
     agentId: string | null;
+    reasoningEffort?: string | null;
     githubRepo?: {
       repoFullName: string;
       repoName: string;
@@ -2441,6 +2474,7 @@ type InputPopupId =
   | "context"
   | "skills"
   | "agent"
+  | "agent-reasoning"
   | "environment"
   | "github"
   | "notion"
@@ -2456,11 +2490,12 @@ type SidePopupRenderId = Exclude<InputPopupId, MainPopupRenderId>;
 type PopupAnimationPhase = "idle" | "enter" | "exit";
 type SidePopupExitDirection = "left" | "down";
 
-function isPlusPopupId(popup: InputPopupId | null): popup is Exclude<InputPopupId, "context" | "agent" | "environment"> {
+function isPlusPopupId(popup: InputPopupId | null): popup is Exclude<InputPopupId, "context" | "agent" | "agent-reasoning" | "environment"> {
   return popup === "main" || popup === "skills" || popup === "github" || popup === "notion" || popup === "google-drive" || popup === "one-drive" || popup === "schedule" || popup === "attach-files";
 }
 
 function getMainPopupRenderId(popup: InputPopupId | null): MainPopupRenderId | null {
+  if (popup === "agent-reasoning") return "agent";
   if (popup === "context" || popup === "agent" || popup === "environment") return popup;
   return isPlusPopupId(popup) ? "main" : null;
 }
@@ -4677,6 +4712,7 @@ async function createThread(params: {
   environmentId?: string;
   projectId?: string | null;
   agentId?: string;
+  reasoningEffort?: string | null;
   metadata?: Record<string, unknown> | null;
   privateMode?: boolean;
 }): Promise<{ threadId: string; title: string | null; environmentId: string | null }> {
@@ -4717,6 +4753,7 @@ async function createThread(params: {
       environmentId: params.environmentId,
       projectId: params.projectId || undefined,
       agentId: params.agentId,
+      reasoningEffort: params.reasoningEffort || undefined,
       metadata,
     }),
   });
@@ -9493,6 +9530,8 @@ export function RunnerChat({
   inputMode = "minimal",
   agents = [],
   hideAgentSelector = false,
+  reasoningEffort: controlledReasoningEffort,
+  onReasoningEffortChange,
   environments = [],
   hideEnvironmentSelector = false,
   skills = [],
@@ -9681,6 +9720,9 @@ export function RunnerChat({
   });
   const [agentPopupMode, setAgentPopupMode] = useState<RunnerAgentSelectorMode>(() =>
     getRunnerAgentSelectorMode(agents.find((agent) => agent.id === agentId) || getRunnerPreferredDefaultAgentOption(agents))
+  );
+  const [selectedReasoningEffort, setSelectedReasoningEffort] = useState<RunnerReasoningEffortId>(() =>
+    normalizeRunnerReasoningEffort(controlledReasoningEffort)
   );
   const hasInitializedOpenAgentPopupModeRef = useRef(false);
   const [activeThreadEnvironmentId, setActiveThreadEnvironmentId] = useState<string | null>(null);
@@ -10220,6 +10262,10 @@ export function RunnerChat({
   const effectiveEnvironmentId = useComputerAgentsMode
     ? effectiveProjectEnvironmentId || selectedEnvironmentId || environmentId
     : environmentId;
+  const effectiveReasoningEffort = useComputerAgentsMode
+    ? selectedReasoningEffort
+    : normalizeRunnerReasoningEffort(controlledReasoningEffort);
+  const selectedReasoningEffortOption = getRunnerReasoningEffortOption(effectiveReasoningEffort);
   const isPassiveWarmEnvironmentReady = !useComputerAgentsMode || Boolean(effectiveEnvironmentId);
   const isPassiveWarmAgentReady = !useComputerAgentsMode || Boolean(effectiveAgentId);
   const textareaAllowsPromptAfterStagedCommand = threadContextActionAllowsPrompt(stagedThreadContextCommand);
@@ -12464,6 +12510,7 @@ export function RunnerChat({
       environmentIdOverride?: string | null;
       agentIdOverride?: string | null;
       agentNameOverride?: string | null;
+      reasoningEffortOverride?: string | null;
       backlogCommand?: StagedBacklogCommand | null;
       resourceCreationCommand?: StagedResourceCreationCommand | null;
       agentCreationCommand?: StagedAgentCreationCommand | null;
@@ -12542,6 +12589,9 @@ export function RunnerChat({
         ? String(options.agentIdOverride || "").trim()
         : String(effectiveAgentId || "").trim();
     const runAgentName = String(options?.agentNameOverride || "").trim() || selectedAgent?.name || displayedAgentLabel;
+    const runReasoningEffort = normalizeRunnerReasoningEffort(
+      options?.reasoningEffortOverride !== undefined ? options.reasoningEffortOverride : effectiveReasoningEffort
+    );
     const baseEnabledSkillsPayload =
       options?.enabledSkillsOverride !== undefined
         ? options.enabledSkillsOverride || null
@@ -12576,8 +12626,9 @@ export function RunnerChat({
         threadId,
         prompt: executionTaskText,
         displayPrompt: visibleTaskText || taskText,
-        agentId: effectiveAgentId || null,
-        agentName: selectedAgent?.name || displayedAgentLabel,
+        reasoningEffort: runReasoningEffort,
+        agentId: runAgentId || null,
+        agentName: runAgentName || null,
         attachments: resolvedAttachments || [],
         githubRepo: githubRepo || null,
         enabledSkills: executionEnabledSkillsPayload || null,
@@ -12757,6 +12808,7 @@ export function RunnerChat({
           })(),
           body: {
             content: visibleTaskText || taskText,
+            reasoningEffort: runReasoningEffort,
             ...(executionTaskText !== (visibleTaskText || taskText) ? { executionContent: executionTaskText } : {}),
             ...(options?.slideCreationCommand || options?.researchCreationCommand || options?.scrapeCreationCommand || options?.parseCreationCommand || options?.adCreationCommand
               ? {
@@ -12984,6 +13036,7 @@ export function RunnerChat({
           environmentIdOverride: externalRunRequest.environmentId ?? undefined,
           agentIdOverride: externalRunRequest.agentId ?? undefined,
           agentNameOverride: externalRunRequest.agentName ?? undefined,
+          reasoningEffortOverride: externalRunRequest.reasoningEffort ?? undefined,
           quotedSelection: externalRunRequest.quotedSelection || null,
           resolvedAttachmentsOverride: Array.isArray(externalRunRequest.attachments) ? externalRunRequest.attachments : undefined,
           githubRepoOverride: externalRunRequest.githubRepo ?? undefined,
@@ -13749,6 +13802,13 @@ export function RunnerChat({
   }, [agentId, agents]);
 
   useEffect(() => {
+    if (controlledReasoningEffort === undefined) {
+      return;
+    }
+    setSelectedReasoningEffort(normalizeRunnerReasoningEffort(controlledReasoningEffort));
+  }, [controlledReasoningEffort]);
+
+  useEffect(() => {
     if (!agents.length) {
       setInitialAgentTopId(null);
       return;
@@ -13768,7 +13828,7 @@ export function RunnerChat({
   }, [agentId, agents, initialAgentTopId, selectedAgentId]);
 
   useEffect(() => {
-    if (activeInputPopup !== "agent") {
+    if (activeInputPopup !== "agent" && activeInputPopup !== "agent-reasoning") {
       hasInitializedOpenAgentPopupModeRef.current = false;
       return;
     }
@@ -14404,6 +14464,7 @@ export function RunnerChat({
       environmentId: effectiveEnvironmentId,
       projectId: effectiveProjectId,
       agentId: effectiveAgentId,
+      reasoningEffort: effectiveReasoningEffort,
       title: title || DEFAULT_NEW_THREAD_TITLE,
       metadata: threadMetadata,
       privateMode,
@@ -15018,6 +15079,10 @@ export function RunnerChat({
 
   function closeSkillsPopup() {
     setActiveInputPopup("main");
+  }
+
+  function closeAgentReasoningPopup() {
+    setActiveInputPopup("agent");
   }
 
   function closeSchedulePopup() {
@@ -15721,7 +15786,7 @@ export function RunnerChat({
     setActiveInputPopup((current) => (isPlusPopupId(current) ? null : "main"));
   }
 
-  function openPlusPopup(popup: Exclude<InputPopupId, "context" | "agent" | "environment">) {
+  function openPlusPopup(popup: Exclude<InputPopupId, "context" | "agent" | "agent-reasoning" | "environment">) {
     setActiveInputPopup(popup);
   }
 
@@ -15745,6 +15810,12 @@ export function RunnerChat({
     setSelectedAgentId(nextAgentId);
     onAgentChange?.(nextAgentId);
     setActiveInputPopup(null);
+  }
+
+  function selectReasoningEffort(nextReasoningEffort: RunnerReasoningEffortId) {
+    const normalizedReasoningEffort = normalizeRunnerReasoningEffort(nextReasoningEffort);
+    setSelectedReasoningEffort(normalizedReasoningEffort);
+    onReasoningEffortChange?.(normalizedReasoningEffort);
   }
 
   function selectEnvironment(nextEnvironmentId: string) {
@@ -16336,6 +16407,7 @@ export function RunnerChat({
           projectId: effectiveProjectId ?? null,
           agentId: effectiveAgentId ?? null,
           agentName: selectedAgent?.name || displayedAgentLabel || null,
+          reasoningEffort: effectiveReasoningEffort,
           githubRepo: githubRepo || null,
           enabledSkills: enabledSkillsPayload || null,
           quotedSelection,
@@ -16370,6 +16442,7 @@ export function RunnerChat({
           environmentId: effectiveEnvironmentId ?? null,
           projectId: effectiveProjectId ?? null,
           agentId: effectiveAgentId ?? null,
+          reasoningEffort: effectiveReasoningEffort,
           ...(githubRepo
             ? {
                 githubRepo: {
@@ -16461,6 +16534,7 @@ export function RunnerChat({
             displayPrompt: taskText,
             attachments: executionAttachmentEntries,
             extraResolvedAttachments: previewImageRunAttachments,
+            reasoningEffort: effectiveReasoningEffort,
             quotedSelection,
             backlogCommand,
             resourceCreationCommand,
@@ -16537,6 +16611,7 @@ export function RunnerChat({
           adCreationCommand: nextQueuedMessage.adCreationCommand,
           extraResolvedAttachments: nextQueuedMessage.extraResolvedAttachments,
           displayPromptOverride: nextQueuedMessage.displayPrompt,
+          reasoningEffortOverride: nextQueuedMessage.reasoningEffort,
         });
       } catch (error) {
         const normalizedError = error instanceof Error ? error : new Error(String(error));
@@ -18468,7 +18543,7 @@ export function RunnerChat({
     if (availableAgentPopupModes.includes(agentPopupMode)) {
       return;
     }
-    if (activeInputPopup === "agent") {
+    if (activeInputPopup === "agent" || activeInputPopup === "agent-reasoning") {
       return;
     }
     const nextMode = getRunnerAgentSelectorMode(
@@ -18687,6 +18762,7 @@ export function RunnerChat({
   const hasPlusPopupOpen = isPlusPopupId(activeInputPopup) || renderedSidePopup !== null || renderedMainPopup === "main";
   const showContextPopup = renderedMainPopup === "context";
   const showSkillsPopup = renderedSidePopup === "skills";
+  const showAgentReasoningPopup = renderedSidePopup === "agent-reasoning";
   const showAgentPopup = renderedMainPopup === "agent";
   const showEnvironmentPopup = renderedMainPopup === "environment";
   const showGithubPopup = renderedSidePopup === "github";
@@ -18939,6 +19015,7 @@ export function RunnerChat({
           onClick={() => togglePopup("agent")}
         >
           <span>{displayedAgentLabel}</span>
+          <span className="tb-composer-agent-button-effort">{selectedReasoningEffortOption.label}</span>
           <IconChevronDown className="tb-inline-selector-chevron" />
         </button>
 
@@ -18951,7 +19028,6 @@ export function RunnerChat({
               </div>
             ) : (
               <>
-                <div className="tb-popup-menu-title">Agent</div>
                 <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
                   <div className="tb-popup-nav">
                     {availableAgentPopupModes.includes("agents") ? (
@@ -19008,8 +19084,49 @@ export function RunnerChat({
                     </div>
                   )}
                 </div>
+                <button
+                  type="button"
+                  className={`tb-popup-row tb-popup-row-core-action tb-agent-reasoning-effort-entry ${showAgentReasoningPopup ? "selected" : ""}`.trim()}
+                  onClick={() => setActiveInputPopup("agent-reasoning")}
+                >
+                  <LucideBrain className="tb-popup-icon" strokeWidth={1.75} />
+                  <span className="tb-popup-label">Reasoning effort</span>
+                  <span className="tb-popup-value">{selectedReasoningEffortOption.label}</span>
+                  <IconChevronRight className="tb-popup-chevron" />
+                </button>
               </>
             )}
+          </div>
+        ) : null}
+
+        {showAgentReasoningPopup ? (
+          <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-agent-reasoning ${sidePopupAnimationClass}`.trim()}>
+            <div className="tb-popup-attach-topbar">
+              <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeAgentReasoningPopup} aria-label="Close reasoning effort popup">
+                <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
+              </button>
+              <div className="tb-popup-attach-topbar-title">Reasoning effort</div>
+              <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-confirm" onClick={() => closeAllInputPopups()} aria-label="Done">
+                <LucideCheck className="tb-popup-attach-topbar-icon" strokeWidth={2} />
+              </button>
+            </div>
+            <div className="tb-agent-reasoning-effort-panel tb-agent-reasoning-effort-panel-side" onClick={(event) => event.stopPropagation()}>
+              <div className="tb-popup-nav tb-agent-reasoning-effort-tabs" role="radiogroup" aria-label="Reasoning effort">
+                {RUNNER_REASONING_EFFORT_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selectedReasoningEffortOption.id === option.id}
+                    title={option.description}
+                    className={`tb-popup-nav-button ${selectedReasoningEffortOption.id === option.id ? "active" : ""}`.trim()}
+                    onClick={() => selectReasoningEffort(option.id)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         ) : null}
       </div>
@@ -19045,7 +19162,6 @@ export function RunnerChat({
               </div>
             ) : (
               <>
-                <div className="tb-popup-menu-title">Workspace</div>
                 <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
                   <div className="tb-popup-nav">
                     <button

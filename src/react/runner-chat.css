@@ -616,8 +616,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .task-prompt-in-session-context.is-email-origin {
-  background: rgba(102, 166, 255, 0.1);
-  border: 1px solid rgba(102, 166, 255, 0.25);
+  background: rgba(102, 166, 255, 0.12);
+  border: 0;
 }
 
 .tb-runner-chat .task-prompt-in-session-context::before {
@@ -8268,15 +8268,46 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .runner-attachment-file {
+  --runner-attachment-file-border: linear-gradient(
+    -10deg,
+    rgba(200, 200, 200, 0.25),
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.375)
+  );
   width: auto;
   flex: 0 0 auto;
   min-width: 0;
   max-width: min(220px, 100%);
   padding: 0 10px;
   gap: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  border: 0;
+  border-radius: 15px;
+  background: transparent;
   backdrop-filter: blur(20px);
+  z-index: 0;
+}
+
+.tb-runner-chat .runner-attachment-file::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--runner-attachment-file-border);
+  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  mask-origin: content-box, border-box;
+  mask-repeat: repeat, repeat;
+  mask-size: auto, auto;
+}
+
+.tb-runner-chat .runner-attachment-file > * {
+  position: relative;
+  z-index: 6;
 }
 
 .tb-runner-chat .runner-attachment-document-previewable {
@@ -10358,8 +10389,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-popup-menu-inline-agent {
-  width: 280px;
-  max-height: 320px;
+  width: 320px;
+  max-height: 400px;
 }
 
 .tb-runner-chat .tb-popup-menu-inline-workspace {
@@ -10381,9 +10412,44 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .tb-popup-menu-inline-body-agent {
   margin-top: 12px;
-  padding-top: 12px;
+  padding-top: 3px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   max-height: 180px;
+}
+
+.tb-runner-chat .tb-popup-menu-inline-agent .tb-popup-menu-inline-body-agent {
+  max-height: 168px;
+}
+
+.tb-runner-chat .tb-composer-agent-button-effort {
+  margin-left: 2px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-agent-reasoning-effort-panel {
+  flex-shrink: 0;
+  padding: 16px;
+}
+
+.tb-runner-chat .tb-popup-row.tb-agent-reasoning-effort-entry {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tb-runner-chat .tb-agent-reasoning-effort-entry .tb-popup-value {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-agent-reasoning-effort-entry .tb-popup-chevron {
+  margin-left: 4px;
+}
+
+.tb-runner-chat .tb-agent-reasoning-effort-tabs .tb-popup-nav-button {
+  padding-left: 8px;
+  padding-right: 8px;
+  font-size: 11px;
 }
 
 .tb-runner-chat .tb-popup-menu-inline-empty {
@@ -10758,6 +10824,14 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-popup-menu-skills {
   width: 280px;
   height: 284px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tb-runner-chat .tb-popup-menu-agent-reasoning {
+  left: 328px;
+  width: 280px;
   padding: 0;
   display: flex;
   flex-direction: column;
