@@ -13,6 +13,9 @@ import { IMAGINE_PAGE_CSS, IMAGINE_PAGE_SCRIPT } from "./demo-imagine-page.mjs";
 import { IMAGINE_TEMPLATE_PAGE_CSS, IMAGINE_TEMPLATE_PAGE_SCRIPT } from "./demo-imagine-template-page.mjs";
 import { METRONOME_PAGE_CSS, METRONOME_PAGE_SCRIPT } from "./demo-metronome-page.mjs";
 import { MODELS_PAGE_CSS, MODELS_PAGE_SCRIPT } from "./demo-models-page.mjs";
+import { PROJECT_TYPE_ALIASES, PROJECT_TYPE_REGISTRY } from "./demo-project-types.mjs";
+import { RESOURCE_TEMPLATE_CATALOG, RESOURCE_TEMPLATE_TYPES } from "./demo-resource-templates.mjs";
+import { RESOURCE_TEMPLATES_PAGE_CSS, RESOURCE_TEMPLATES_PAGE_SCRIPT } from "./demo-resource-templates-page.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -859,7 +862,7 @@ const html = `<!doctype html>
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 500;
         text-align: left;
       }
@@ -1295,7 +1298,7 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.92);
         cursor: pointer;
         text-align: left;
-        font-size: 14px;
+        font-size: 12px;
         line-height: 14px;
         font-weight: 500;
         box-sizing: border-box;
@@ -31874,20 +31877,377 @@ const html = `<!doctype html>
       }
 
       .playground-content-body.is-tasks-page .playground-tasks-main-scroll.is-projects-home > .playground-projects-overview-surface {
-        padding: 42px 50px 56px;
-        display: block;
-        flex: 0 0 auto;
-        min-height: 100%;
-        overflow: visible;
+        padding: 0;
+        display: flex;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
       }
 
       .playground-projects-overview-inner {
-        width: min(100%, var(--playground-centered-page-max-width));
-        max-width: var(--playground-centered-page-max-width);
-        margin: 0 auto;
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        min-height: 0;
+        flex: 1 1 auto;
         display: flex;
         flex-direction: column;
-        gap: 30px;
+        gap: 0;
+      }
+
+      .playground-projects-list-shell {
+        width: 100%;
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .playground-projects-list-toolbar {
+        flex: 0 0 auto;
+        min-height: 44px;
+        padding: 0 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-projects-list-toolbar-left,
+      .playground-projects-list-toolbar-actions {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-projects-list-view-pill {
+        min-height: 34px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.94);
+        font: inherit;
+        font-size: 13px;
+        line-height: 1;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-projects-list-add-button,
+      .playground-projects-list-icon-button {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+      }
+
+      .playground-projects-list-add-button:hover,
+      .playground-projects-list-icon-button:hover {
+        border-color: rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .playground-projects-list-add-button svg,
+      .playground-projects-list-icon-button svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .playground-projects-list-table {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .playground-projects-list-header,
+      .playground-projects-list-row {
+        display: grid;
+        grid-template-columns: minmax(360px, 1fr) 180px 100px 120px 130px 90px 110px;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .playground-projects-list-header {
+        flex: 0 0 auto;
+        padding: 0 54px 10px 62px;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 500;
+      }
+
+      .playground-projects-list-body {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        overflow: auto;
+        scrollbar-width: none;
+      }
+
+      .playground-projects-list-body::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-projects-list-row {
+        width: 100%;
+        min-height: 72px;
+        padding: 0 18px 0 16px;
+        border: 0;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.92);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        box-sizing: border-box;
+        transition: background 160ms ease;
+      }
+
+      .playground-projects-list-row:hover {
+        background: rgba(255, 255, 255, 0.075);
+      }
+
+      .playground-projects-list-name-cell {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 22px 24px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-projects-list-checkbox {
+        width: 18px;
+        height: 18px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 5px;
+        background: transparent;
+        color: transparent;
+        cursor: pointer;
+      }
+
+      .playground-projects-list-project-icon {
+        width: 22px;
+        height: 22px;
+        color: rgba(255, 255, 255, 0.74);
+      }
+
+      .playground-projects-list-project-main {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-projects-list-project-title {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 14px;
+        line-height: 1.2;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-projects-list-project-type {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-projects-list-project-type-dot {
+        width: 10px;
+        height: 10px;
+        flex: 0 0 auto;
+        transform: rotate(45deg);
+        border-radius: 2px;
+        border: 1.5px solid var(--project-blueprint-accent, rgba(255, 255, 255, 0.4));
+        opacity: 0.72;
+      }
+
+      .playground-projects-list-health {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 13px;
+        line-height: 1.2;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+
+      .playground-projects-list-health-icon {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: rgba(84, 214, 100, 0.18);
+        color: #65d46d;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+      }
+
+      .playground-projects-list-health-label {
+        color: #65d46d;
+      }
+
+      .playground-projects-list-health-meta {
+        color: rgba(101, 212, 109, 0.72);
+        font-weight: 400;
+      }
+
+      .playground-projects-list-priority {
+        display: inline-flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 18px;
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-projects-list-priority-bar {
+        width: 4px;
+        border-radius: 999px;
+        background: currentColor;
+        opacity: 0.46;
+      }
+
+      .playground-projects-list-priority-bar:nth-child(1) {
+        height: 7px;
+      }
+
+      .playground-projects-list-priority-bar:nth-child(2) {
+        height: 12px;
+      }
+
+      .playground-projects-list-priority-bar:nth-child(3) {
+        height: 17px;
+      }
+
+      .playground-projects-list-priority-bar.is-active {
+        opacity: 0.88;
+      }
+
+      .playground-projects-list-lead {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .playground-projects-list-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        object-fit: cover;
+        background: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.88);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 400;
+        overflow: hidden;
+      }
+
+      .playground-projects-list-target,
+      .playground-projects-list-issues {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 13px;
+        line-height: 1.2;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+
+      .playground-projects-list-target svg {
+        width: 16px;
+        height: 16px;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-projects-list-muted {
+        color: rgba(255, 255, 255, 0.36);
+      }
+
+      .playground-projects-list-status {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 13px;
+        line-height: 1.2;
+        font-weight: 500;
+      }
+
+      .playground-projects-list-status-ring {
+        width: 17px;
+        height: 17px;
+        border-radius: 999px;
+        border: 2px dotted rgba(255, 176, 61, 0.9);
+        box-sizing: border-box;
+      }
+
+      .playground-projects-list-empty {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        color: rgba(255, 255, 255, 0.58);
+        text-align: center;
+        padding: 32px;
+      }
+
+      .playground-projects-list-empty-title {
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 16px;
+        line-height: 1.25;
+        font-weight: 500;
+      }
+
+      .playground-projects-list-empty-copy {
+        max-width: 420px;
+        font-size: 12px;
+        line-height: 1.45;
+        font-weight: 400;
       }
 
       .playground-project-workspace-inner {
@@ -31947,6 +32307,20 @@ const html = `<!doctype html>
       .playground-projects-overview-add-button svg {
         width: 14px;
         height: 14px;
+      }
+
+      @media (max-width: 1100px) {
+        .playground-projects-list-header,
+        .playground-projects-list-row {
+          grid-template-columns: minmax(280px, 1fr) 160px 90px 90px 90px;
+        }
+
+        .playground-projects-list-col-target,
+        .playground-projects-list-col-issues,
+        .playground-projects-list-target,
+        .playground-projects-list-issues {
+          display: none;
+        }
       }
 
       .playground-projects-working-agent-section {
@@ -32142,7 +32516,7 @@ const html = `<!doctype html>
 
       @media (max-width: 767px) {
         .playground-content-body.is-tasks-page .playground-tasks-main-scroll.is-projects-home > .playground-projects-overview-surface {
-          padding: 28px 18px 36px;
+          padding: 0;
         }
 
         .playground-projects-working-agent-card {
@@ -36234,6 +36608,33 @@ const html = `<!doctype html>
         background: rgba(255, 255, 255, 0.08);
       }
 
+      .playground-tasks-project-composer-modal .playground-tasks-project-modal-icon-trigger:hover,
+      .playground-tasks-project-composer-modal .playground-tasks-project-modal-icon-trigger.is-active {
+        background: transparent;
+      }
+
+      .playground-tasks-project-composer-modal {
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+
+      .playground-tasks-project-composer-modal::before,
+      .playground-tasks-project-composer-modal::after {
+        content: none !important;
+        display: none !important;
+      }
+
+      .playground-tasks-project-composer-modal .playground-tasks-project-modal-icon-trigger,
+      .playground-tasks-project-composer-modal .playground-tasks-project-modal-icon-trigger:hover,
+      .playground-tasks-project-composer-modal .playground-tasks-project-modal-icon-trigger.is-active,
+      .playground-tasks-project-composer-modal .playground-tasks-project-modal-icon-trigger:focus-visible {
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
       .playground-tasks-project-modal-name-input {
         flex: 1;
         min-width: 0;
@@ -36466,6 +36867,288 @@ const html = `<!doctype html>
         font-weight: 400;
         min-width: 110px;
         text-align: center;
+      }
+
+      .playground-tasks-project-blueprint-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 0 0 14px;
+      }
+
+      .playground-tasks-project-blueprint-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-tasks-project-blueprint-active {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-tasks-project-blueprint-trigger {
+        width: 100%;
+        min-height: 44px;
+        padding: 8px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease;
+      }
+
+      .playground-tasks-project-blueprint-trigger:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .playground-tasks-project-blueprint-trigger-main {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-tasks-project-blueprint-trigger-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-tasks-project-blueprint-trigger-title {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 13px;
+        line-height: 1.2;
+        font-weight: 500;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .playground-tasks-project-blueprint-trigger-description {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.25;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .playground-tasks-project-blueprint-chevron {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-tasks-project-blueprint-modal {
+        width: min(680px, calc(100vw - 48px));
+        max-height: min(760px, calc(100vh - 48px));
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .playground-tasks-project-blueprint-modal-backdrop {
+        z-index: 10020;
+      }
+
+      .playground-tasks-project-blueprint-modal-body {
+        min-height: 0;
+        overflow: auto;
+        scrollbar-width: none;
+      }
+
+      .playground-tasks-project-blueprint-modal-body::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-tasks-project-blueprint-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .playground-tasks-project-blueprint-option {
+        width: 100%;
+        min-width: 0;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+      }
+
+      .playground-tasks-project-blueprint-option:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.07);
+        transform: translateY(-1px);
+      }
+
+      .playground-tasks-project-blueprint-option.is-active {
+        border-color: rgba(255, 255, 255, 0.28);
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-tasks-project-blueprint-icon {
+        width: 28px;
+        height: 28px;
+        flex: 0 0 auto;
+        border-radius: 9px;
+        background: color-mix(in srgb, var(--project-blueprint-accent, #66A6FF) 22%, transparent);
+        color: var(--project-blueprint-accent, #66A6FF);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-tasks-project-blueprint-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-tasks-project-blueprint-title {
+        color: #ffffff;
+        font-size: 13px;
+        line-height: 1.2;
+        font-weight: 500;
+      }
+
+      .playground-tasks-project-blueprint-description {
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .playground-tasks-project-blueprint-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .playground-tasks-project-blueprint-chip {
+        min-width: 0;
+        border-radius: 999px;
+        padding: 3px 7px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.64);
+        font-size: 10px;
+        line-height: 1.2;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+
+      .playground-tasks-project-lead-selector {
+        width: 100%;
+        min-height: 52px;
+        padding: 8px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease;
+      }
+
+      .playground-tasks-project-lead-selector:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .playground-tasks-project-lead-label {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.2;
+      }
+
+      .playground-tasks-project-lead-person {
+        min-width: 0;
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 9px;
+      }
+
+      .playground-tasks-project-lead-avatar {
+        width: 28px;
+        height: 28px;
+        flex: 0 0 28px;
+        border-radius: 999px;
+        object-fit: cover;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.72);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-tasks-project-lead-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-tasks-project-lead-name,
+      .playground-tasks-project-lead-email {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-tasks-project-lead-name {
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 13px;
+        line-height: 1.2;
+        font-weight: 500;
+      }
+
+      .playground-tasks-project-lead-email {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .playground-tasks-project-lead-chevron {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-mission-control-studio-body {
+        background: transparent;
+        gap: 0;
       }
 
       .playground-project-wallpaper-transition-layer {
@@ -39515,8 +40198,8 @@ ${METRONOME_PAGE_CSS}
         flex: 1 1 auto;
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 1px;
-        background: rgba(255, 255, 255, 0.08);
+        gap: 0;
+        background: transparent;
         overflow: hidden;
       }
 
@@ -39531,7 +40214,7 @@ ${METRONOME_PAGE_CSS}
       .playground-mission-control-studio-settings {
         display: flex;
         flex-direction: column;
-        background: transparent;
+        background: rgba(255, 255, 255, 0.05) !important;
       }
 
       .playground-mission-control-studio-section-header {
@@ -39609,8 +40292,11 @@ ${METRONOME_PAGE_CSS}
       .playground-mission-control-studio-settings-scroll {
         min-height: 0;
         flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
         overflow: auto;
         padding: 0 22px 22px;
+        background: transparent;
         scrollbar-width: none;
       }
 
@@ -39712,6 +40398,8 @@ ${METRONOME_PAGE_CSS}
 
       .playground-mission-control-setup-form {
         width: 100%;
+        height: 100%;
+        min-height: 100%;
         margin: 0 auto;
         display: flex;
         flex-direction: column;
@@ -39720,13 +40408,40 @@ ${METRONOME_PAGE_CSS}
 
       .playground-mission-control-setup-form .playground-tasks-project-composer-modal {
         width: 100%;
+        height: 100%;
+        min-height: 100%;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
         padding: 0;
-        border: 0;
+        border: 0 !important;
         border-radius: 0;
-        background: transparent;
-        box-shadow: none;
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+
+      .playground-mission-control-setup-form .playground-tasks-project-composer-modal::before,
+      .playground-mission-control-setup-form .playground-tasks-project-composer-modal::after {
+        content: none !important;
+        display: none !important;
+      }
+
+      .playground-mission-control-setup-form .playground-tasks-project-modal-icon-trigger,
+      .playground-mission-control-setup-form .playground-tasks-project-modal-icon-trigger:hover,
+      .playground-mission-control-setup-form .playground-tasks-project-modal-icon-trigger.is-active,
+      .playground-mission-control-setup-form .playground-tasks-project-modal-icon-trigger:focus-visible {
+        background: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+      }
+
+      .playground-mission-control-setup-form .playground-tasks-project-modal-icon-trigger::before,
+      .playground-mission-control-setup-form .playground-tasks-project-modal-icon-trigger::after {
+        content: none !important;
+        display: none !important;
       }
 
       .playground-mission-control-setup-form .playground-tasks-project-modal-top {
@@ -39734,11 +40449,50 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-mission-control-setup-form .playground-tasks-project-modal-actions {
-        position: sticky;
-        bottom: 0;
+        margin-top: auto;
         padding-top: 16px;
-        padding-bottom: 2px;
-        background: linear-gradient(180deg, rgba(6, 6, 10, 0), rgba(6, 6, 10, 0.96) 28%);
+        padding-bottom: 0;
+        background: transparent;
+        display: flex;
+        justify-content: flex-end;
+        flex: 0 0 auto;
+      }
+
+      .playground-mission-control-studio .playground-tasks-project-modal,
+      .playground-mission-control-studio .playground-tasks-project-composer-modal {
+        border-color: transparent !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+
+      .playground-mission-control-studio .playground-tasks-project-modal::before,
+      .playground-mission-control-studio .playground-tasks-project-modal::after,
+      .playground-mission-control-studio .playground-tasks-project-composer-modal::before,
+      .playground-mission-control-studio .playground-tasks-project-composer-modal::after {
+        content: none !important;
+        display: none !important;
+      }
+
+      .playground-mission-control-studio .playground-tasks-project-modal-icon-trigger,
+      .playground-mission-control-studio .playground-tasks-project-modal-icon-trigger:hover,
+      .playground-mission-control-studio .playground-tasks-project-modal-icon-trigger.is-active,
+      .playground-mission-control-studio .playground-tasks-project-modal-icon-trigger:focus-visible {
+        background: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+      }
+
+      .playground-mission-control-studio .playground-tasks-project-modal-icon-trigger::before,
+      .playground-mission-control-studio .playground-tasks-project-modal-icon-trigger::after {
+        content: none !important;
+        display: none !important;
+      }
+
+      .playground-mission-control-studio .playground-tasks-project-blueprint-icon {
+        background: transparent !important;
       }
 
       .playground-mission-control-setup-empty-card {
@@ -39986,6 +40740,7 @@ ${METRONOME_PAGE_CSS}
         border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 15px;
         background: #000;
+        background-image: none !important;
         background-clip: padding-box;
         box-sizing: border-box;
         gap: 14px;
@@ -39995,29 +40750,101 @@ ${METRONOME_PAGE_CSS}
         padding-bottom: 10px;
       }
 
-      .playground-content-body.is-tasks-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-overview::before,
-      .playground-content-body.is-tasks-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-backlog::before,
-      .playground-content-body.is-tasks-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-board::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 450px;
-        pointer-events: none;
-        z-index: 0;
-        background-image:
-          linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.62) 64%, #000 100%),
-          var(--playground-project-overview-bg-image);
-        background-position: center top;
-        background-size: cover;
-        background-repeat: no-repeat;
+      .playground-content-body.is-tasks-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll::before,
+      .playground-content-body.is-calendar-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll::before {
+        content: none !important;
+        display: none !important;
       }
 
       .playground-content-body.is-tasks-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-mission-control-setup,
       .playground-content-body.is-calendar-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-mission-control-setup {
         padding: 0;
         gap: 0;
+        background: transparent !important;
+      }
+
+      .playground-mission-control-studio .playground-mission-control-studio-settings-scroll,
+      .playground-mission-control-studio .playground-mission-control-setup-form,
+      .playground-mission-control-studio .playground-tasks-project-composer-modal,
+      .playground-mission-control-studio .playground-tasks-project-modal-top,
+      .playground-mission-control-studio .playground-tasks-project-modal-attachments,
+      .playground-mission-control-studio .playground-tasks-project-modal-connectors {
+        background: transparent !important;
+      }
+
+      .playground-mission-control-studio .playground-mission-control-setup-form,
+      .playground-mission-control-studio .playground-tasks-project-composer-modal {
+        min-height: 0;
+        flex: 1 1 auto;
+      }
+
+      .playground-mission-control-studio .playground-mission-control-studio-settings {
+        background: rgba(255, 255, 255, 0.05) !important;
+      }
+
+      .playground-mission-control-studio .playground-tasks-project-blueprint-section,
+      .playground-mission-control-setup-form .playground-tasks-project-blueprint-section {
+        margin: 0 0 14px;
+        gap: 0;
+      }
+
+      .playground-mission-control-studio .playground-tasks-project-blueprint-section::before,
+      .playground-mission-control-studio .playground-tasks-project-blueprint-section::after,
+      .playground-mission-control-setup-form .playground-tasks-project-blueprint-section::before,
+      .playground-mission-control-setup-form .playground-tasks-project-blueprint-section::after {
+        content: none !important;
+        display: none !important;
+      }
+
+      .playground-mission-control-studio .playground-tasks-project-blueprint-heading,
+      .playground-mission-control-studio .playground-tasks-project-blueprint-active,
+      .playground-mission-control-studio .playground-tasks-project-blueprint-chips,
+      .playground-mission-control-studio .playground-tasks-project-blueprint-chip,
+      .playground-mission-control-studio .playground-tasks-project-blueprint-section > .playground-tasks-detail-section-title,
+      .playground-mission-control-setup-form .playground-tasks-project-blueprint-heading,
+      .playground-mission-control-setup-form .playground-tasks-project-blueprint-active,
+      .playground-mission-control-setup-form .playground-tasks-project-blueprint-chips,
+      .playground-mission-control-setup-form .playground-tasks-project-blueprint-chip,
+      .playground-mission-control-setup-form .playground-tasks-project-blueprint-section > .playground-tasks-detail-section-title {
+        display: none !important;
+      }
+
+      .playground-mission-control-studio .playground-tasks-project-modal-icon-trigger,
+      .playground-mission-control-setup-form .playground-tasks-project-modal-icon-trigger {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+      }
+
+      .playground-mission-control-studio .playground-tasks-project-modal-icon-trigger::before,
+      .playground-mission-control-studio .playground-tasks-project-modal-icon-trigger::after,
+      .playground-mission-control-setup-form .playground-tasks-project-modal-icon-trigger::before,
+      .playground-mission-control-setup-form .playground-tasks-project-modal-icon-trigger::after {
+        content: none !important;
+        display: none !important;
+      }
+
+      .playground-mission-control-studio .playground-tasks-project-modal-attachments,
+      .playground-mission-control-studio .playground-tasks-project-modal-connectors,
+      .playground-mission-control-studio .playground-tasks-detail-description,
+      .playground-mission-control-studio .playground-tasks-detail-description-editor,
+      .playground-mission-control-studio .playground-tasks-detail-description-preview-scope,
+      .playground-mission-control-setup-form .playground-tasks-project-modal-attachments,
+      .playground-mission-control-setup-form .playground-tasks-project-modal-connectors,
+      .playground-mission-control-setup-form .playground-tasks-detail-description,
+      .playground-mission-control-setup-form .playground-tasks-detail-description-editor,
+      .playground-mission-control-setup-form .playground-tasks-detail-description-preview-scope {
+        background: transparent !important;
+      }
+
+      .playground-mission-control-studio .playground-tasks-project-blueprint-trigger .playground-tasks-project-blueprint-icon,
+      .playground-mission-control-studio .playground-tasks-project-blueprint-option .playground-tasks-project-blueprint-icon,
+      .playground-mission-control-setup-form .playground-tasks-project-blueprint-trigger .playground-tasks-project-blueprint-icon,
+      .playground-mission-control-setup-form .playground-tasks-project-blueprint-option .playground-tasks-project-blueprint-icon {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
       }
 
       .playground-content-body.is-tasks-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar,
@@ -42943,6 +43770,10 @@ ${METRONOME_PAGE_CSS}
         background: linear-gradient(180deg, #4f7fc5 0%, #1e4585 100%);
       }
 
+      .playground-tasks-calendar-event-type-icon.is-metronome {
+        background: linear-gradient(180deg, #125ffb 0%, #0d48fb 100%);
+      }
+
       .playground-tasks-calendar-event-priority {
         flex: 0 0 auto;
         display: inline-flex;
@@ -43837,6 +44668,7 @@ ${METRONOME_PAGE_CSS}
         }
       }
 ${MODELS_PAGE_CSS}
+${RESOURCE_TEMPLATES_PAGE_CSS}
     </style>
 
     <script type="importmap">
@@ -43861,6 +44693,7 @@ ${MODELS_PAGE_CSS}
           "rehype-raw": "https://esm.sh/rehype-raw@7.0.0?bundle",
           "remark-gfm": "https://esm.sh/remark-gfm@4.0.1?bundle",
           "unist-util-visit": "https://esm.sh/unist-util-visit@5.0.0",
+          "chart.js/auto": "https://esm.sh/chart.js@4.5.1/auto?bundle",
           "pptx-preview": "https://esm.sh/pptx-preview@1.0.7?bundle",
           "jszip": "https://esm.sh/jszip@3.10.1?bundle",
           "xlsx": "/vendor/xlsx/xlsx.mjs"
@@ -43897,10 +44730,11 @@ ${MODELS_PAGE_CSS}
       import rehypeRaw from "rehype-raw";
       import remarkGfm from "remark-gfm";
       import { visit as unistVisit } from "unist-util-visit";
+      import Chart from "chart.js/auto";
       import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, Paperclip, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -47740,6 +48574,99 @@ ${MODELS_PAGE_CSS}
           || normalizedId.startsWith("agent-assistant-");
       }
 
+      function isPlaygroundFreePlanLockedComposerAgent(agent) {
+        return isPlaygroundDeveloperAgent(agent) || isPlaygroundResearcherAgent(agent) || getPlaygroundAgentListMode(agent) === "teams";
+      }
+
+      function renderPlaygroundAgentUpgradeModal({
+        isOpen,
+        titleId = "playground-agent-upgrade-title",
+        onClose,
+        onCheckout,
+        checkoutLoading = false,
+        checkoutDisabled = false,
+      } = {}) {
+        if (!isOpen) {
+          return null;
+        }
+
+        const features = [
+          { icon: Bot, title: "Forge and Foundry", copy: "Use higher-capacity default agents for implementation, synthesis, and reasoning-heavy work." },
+          { icon: Plus, title: "Custom agents", copy: "Create specialized agents with their own instructions, skills, permissions, and models." },
+          { icon: UsersRound, title: "Agent teams", copy: "Coordinate fixed teams with orchestrators and subagents for repeatable workflows." },
+          { icon: Brain, title: "Premium models", copy: "Access the managed model catalog beyond Spark, including long-context and frontier models." },
+          { icon: Sparkles, title: "Compute included", copy: "Start with 1,500 Compute Tokens and upgrade controls built into settings." },
+          { icon: Key, title: "API access", copy: "Use Computer Agents APIs and budget controls for production workflows." },
+        ];
+
+        return React.createElement("div", {
+            className: "playground-calendar-upgrade-backdrop",
+            role: "dialog",
+            "aria-modal": "true",
+            "aria-labelledby": titleId,
+          },
+          React.createElement("button", {
+            type: "button",
+            className: "playground-files-header-icon-button is-plain playground-calendar-upgrade-close",
+            onClick: onClose,
+            "aria-label": "Close upgrade modal",
+            disabled: checkoutLoading,
+          }, React.createElement(X, { width: 18, height: 18, strokeWidth: 1.8 })),
+          React.createElement("div", { className: "playground-calendar-upgrade-shell" },
+            React.createElement("h2", {
+              id: titleId,
+              className: "playground-calendar-upgrade-headline",
+            },
+              "Try Individual for ",
+              React.createElement("span", { className: "playground-calendar-upgrade-headline-price" }, "$0.00"),
+              " for 14 Days"
+            ),
+            React.createElement("div", { className: "playground-calendar-upgrade-pill" }, "Unlock Forge, Foundry, teams, and custom agents"),
+            React.createElement("div", {
+                className: "playground-calendar-upgrade-modal",
+                role: "document",
+              },
+              React.createElement("div", { className: "playground-calendar-upgrade-modal-top" },
+                React.createElement("div", { className: "playground-calendar-upgrade-modal-header" },
+                  React.createElement("div", { className: "playground-calendar-upgrade-modal-title" }, "Individual"),
+                  React.createElement("div", { className: "playground-calendar-upgrade-modal-offer" }, "Limited Time Offer")
+                ),
+                React.createElement("div", { className: "playground-calendar-upgrade-price-row" },
+                  React.createElement("span", { className: "playground-calendar-upgrade-price-old" }, "$19.99"),
+                  React.createElement("span", { className: "playground-calendar-upgrade-price-new" }, "$0")
+                ),
+                React.createElement("p", { className: "playground-calendar-upgrade-modal-copy" },
+                  "Use Spark on Free. Upgrade to create custom agents and run Forge or Foundry for larger digital work."
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-calendar-upgrade-modal-button",
+                  onClick: onCheckout,
+                  disabled: checkoutLoading || checkoutDisabled,
+                }, checkoutLoading ? "Opening checkout..." : "Claim $0.00 offer")
+              ),
+              React.createElement("div", { className: "playground-calendar-upgrade-feature-list" },
+                features.map((feature) => {
+                  const Icon = feature.icon;
+                  return React.createElement("div", {
+                      key: feature.title,
+                      className: "playground-calendar-upgrade-modal-feature",
+                    },
+                    React.createElement("span", { className: "playground-calendar-upgrade-modal-feature-icon" },
+                      React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.8 })
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("div", null, feature.title),
+                      React.createElement("small", null, feature.copy)
+                    )
+                  );
+                })
+              )
+            )
+          )
+        );
+      }
+
       function isPlaygroundDefaultNamedAgent(agent) {
         const normalizedName = String(agent?.name || "").trim().toLowerCase();
         return normalizedName === "default" || normalizedName === "default agent" || agent?.isDefault === true;
@@ -47896,6 +48823,95 @@ ${MODELS_PAGE_CSS}
           ...(photoUrl ? { photoUrl, photoURL: photoUrl } : {}),
           ...(overrides && typeof overrides === "object" ? overrides : {}),
         };
+      }
+
+      function buildPlaygroundComposerDefaultAgentFallback(kind) {
+        const normalizedKind = String(kind || "").trim().toLowerCase();
+        if (normalizedKind === "forge") {
+          return buildPlaygroundRunnerAgentOption({
+            id: "agent_default",
+            name: "Forge",
+            description: "Implementation-heavy execution and technical work.",
+            model: "minimax-m3",
+            isDefault: true,
+            isSystem: true,
+            enabledSkills: PLAYGROUND_DEFAULT_ENABLED_SKILL_IDS,
+          });
+        }
+        if (normalizedKind === "foundry") {
+          return buildPlaygroundRunnerAgentOption({
+            id: "agent_research",
+            name: "Foundry",
+            description: "High-rigor synthesis, reasoning, and review.",
+            model: "claude-opus-4-8",
+            isDefault: true,
+            isSystem: true,
+            enabledSkills: PLAYGROUND_DEFAULT_ENABLED_SKILL_IDS,
+          });
+        }
+        return buildPlaygroundRunnerAgentOption({
+          id: "agent_assistant",
+          name: "Spark",
+          description: "Fast everyday execution for digital work.",
+          model: "deepseek-v4-flash",
+          isDefault: true,
+          isSystem: true,
+          enabledSkills: PLAYGROUND_DEFAULT_ENABLED_SKILL_IDS,
+        });
+      }
+
+      function buildPlaygroundComposerDefaultTeamFallback(agents) {
+        const normalizedAgents = Array.isArray(agents) ? agents.filter(Boolean) : [];
+        const sparkAgent = normalizedAgents.find((agent) => isPlaygroundAssistantAgent(agent)) || buildPlaygroundComposerDefaultAgentFallback("spark");
+        const forgeAgent = normalizedAgents.find((agent) => isPlaygroundDeveloperAgent(agent)) || buildPlaygroundComposerDefaultAgentFallback("forge");
+        const foundryAgent = normalizedAgents.find((agent) => isPlaygroundResearcherAgent(agent)) || buildPlaygroundComposerDefaultAgentFallback("foundry");
+        const orchestratorAgentId = String(sparkAgent?.id || "agent_assistant").trim();
+        const subagentIds = dedupePlaygroundAgentIds([
+          forgeAgent?.id || "agent_default",
+          foundryAgent?.id || "agent_research",
+        ]);
+        return buildPlaygroundRunnerAgentOption({
+          id: "agent_default_team",
+          name: "Default Team",
+          description: "Spark, Forge, and Foundry coordinated for project work.",
+          agentType: "team",
+          isDefault: true,
+          isSystem: true,
+          metadata: {
+            kind: "team",
+            executionMode: PLAYGROUND_AGENT_TEAM_EXECUTION_MODE,
+            team: {
+              version: 1,
+              orchestratorAgentId,
+              subagentIds,
+            },
+          },
+        });
+      }
+
+      function ensurePlaygroundComposerDefaultChoices(agents) {
+        const nextAgents = (Array.isArray(agents) ? agents : []).filter(Boolean).slice();
+        if (!nextAgents.some((agent) => isPlaygroundAssistantAgent(agent))) {
+          nextAgents.push(buildPlaygroundComposerDefaultAgentFallback("spark"));
+        }
+        if (!nextAgents.some((agent) => isPlaygroundDeveloperAgent(agent))) {
+          nextAgents.push(buildPlaygroundComposerDefaultAgentFallback("forge"));
+        }
+        if (!nextAgents.some((agent) => isPlaygroundResearcherAgent(agent))) {
+          nextAgents.push(buildPlaygroundComposerDefaultAgentFallback("foundry"));
+        }
+        const hasDefaultTeam = nextAgents.some((agent) => (
+          getPlaygroundAgentListMode(agent) === "teams"
+          && (
+            agent?.isDefault
+            || String(agent?.id || "").trim() === "agent_default_team"
+            || String(agent?.name || "").trim().toLowerCase() === "default team"
+          )
+        ));
+        if (!hasDefaultTeam) {
+          nextAgents.push(buildPlaygroundComposerDefaultTeamFallback(nextAgents));
+        }
+        return nextAgents;
       }
 
       function buildPlaygroundAgentProfileMetadata(agent) {
@@ -48485,18 +49501,19 @@ ${MODELS_PAGE_CSS}
           "Your job is to run project strategy and backlog planning for the exact project supplied in the user prompt. You do not ask what Mission Control means.",
           "",
           "Workflow:",
-          "1. Read the provided project goal, existing structured strategy, outcomes, rules, connectors, attachments, releases, tasks, agents, environments, and operator directive.",
-          "2. Use the Task Management skill for release, task, subtask, blocker, dependency, connector, comment, and assignment mutations whenever the project structure needs to change.",
-          "3. Use the Computer Agents skill to inspect live agents, environments, skills, and thread context before assigning work or assuming IDs.",
-          "4. Keep the project's selected default environment as the execution environment unless the prompt or available context proves another environment is better.",
-          "5. Update the compact strategy, outcomes, and project rules only when the new project context justifies it. Preserve existing outcome IDs and rule meaning whenever possible.",
-          "6. Produce a concise project strategy document and the required mission_control_json block. Do not add conversational prefaces or outros.",
+          "1. Read the provided project goal, operating profile, existing structured strategy, outcomes, rules, connectors, attachments, milestones, tasks, agents, environments, and operator directive.",
+          "2. Treat the project operating profile as the default shape of the project: it defines likely resources, setup steps, dashboard focus, collaboration style, and sync targets. Override it only when the actual project context proves a better path.",
+          "3. Use the Task Management skill for milestone, task, subtask, blocker, dependency, connector, comment, and assignment mutations whenever the project structure needs to change.",
+          "4. Use the Computer Agents skill to inspect live agents, environments, skills, and thread context before assigning work or assuming IDs.",
+          "5. Keep the project's selected default environment as the execution environment unless the prompt or available context proves another environment is better.",
+          "6. Update the compact strategy, outcomes, and project rules only when the new project context justifies it. Preserve existing outcome IDs and rule meaning whenever possible.",
+          "7. Produce a concise project strategy document and the required mission_control_json block. Do not add conversational prefaces or outros.",
           "",
           "Planning standards:",
-          "- Prefer release-level structure before creating loose tasks.",
+          "- Prefer milestone-level structure before creating loose tasks.",
           "- Create execution-ready tasks with assignee, environment, skills, dependencies, connector context, and acceptance criteria when the context supports it.",
           "- Keep tickets specific, short, and actionable.",
-          "- Keep outcomes user/business-facing and map them to taskIds or releaseId when work clearly contributes to them.",
+          "- Keep outcomes user/business-facing and map them to taskIds or releaseId (milestone id) when work clearly contributes to them.",
           "- Keep project rules concrete, operational, and phrased as instructions agents can follow while executing tickets.",
           "- Use comments to preserve important rationale, sequencing, and handoff context.",
           "- If the project is underspecified, still create a useful strategy from the available context and state the most important assumptions in the strategy document.",
@@ -49638,6 +50655,10 @@ ${MODELS_PAGE_CSS}
         { id: "flame", label: "Flame", icon: Flame },
         { id: "layout-grid", label: "Grid", icon: LayoutGrid },
         { id: "layers", label: "Layers", icon: Layers },
+        { id: "code", label: "Code", icon: Code2 },
+        { id: "sparkles", label: "Sparkles", icon: Sparkles },
+        { id: "calculator", label: "Analysis", icon: Calculator },
+        { id: "users", label: "Customers", icon: UsersRound },
         { id: "telescope", label: "Discovery", icon: Telescope },
         { id: "bot", label: "Bot", icon: Bot },
         { id: "message-circle", label: "Threads", icon: MessageCircle },
@@ -49645,6 +50666,17 @@ ${MODELS_PAGE_CSS}
         { id: "hard-drive", label: "Environment", icon: HardDrive },
         { id: "zap", label: "Execution", icon: Zap },
       ];
+      const PLAYGROUND_PROJECT_BLUEPRINT_PROFILE_DATA = ${JSON.stringify(PROJECT_TYPE_REGISTRY)};
+      const PLAYGROUND_PROJECT_BLUEPRINT_ALIASES = ${JSON.stringify(PROJECT_TYPE_ALIASES)};
+      const PLAYGROUND_RESOURCE_TEMPLATE_DATA = ${stringifyForInlineScript(RESOURCE_TEMPLATE_CATALOG)};
+      const PLAYGROUND_RESOURCE_TEMPLATE_TYPE_DATA = ${stringifyForInlineScript(RESOURCE_TEMPLATE_TYPES)};
+      const PLAYGROUND_PROJECT_BLUEPRINT_OPTIONS = PLAYGROUND_PROJECT_BLUEPRINT_PROFILE_DATA.map((profile) => {
+        const iconConfig = getPlaygroundProjectIconConfig(profile.iconId);
+        return {
+          ...profile,
+          Icon: iconConfig.icon || Rocket,
+        };
+      });
       const PLAYGROUND_SKILL_ICON_OPTIONS = [
         { id: "code", label: "Code", icon: Code },
         { id: "terminal", label: "Terminal", icon: Terminal },
@@ -49897,6 +50929,119 @@ ${MODELS_PAGE_CSS}
           || PLAYGROUND_PROJECT_ICON_OPTIONS[0];
       }
 
+      function getPlaygroundProjectBlueprintId(value) {
+        const normalized = String(value || "").trim().toLowerCase().replace(/[\\s-]+/g, "_");
+        const candidate = PLAYGROUND_PROJECT_BLUEPRINT_ALIASES[normalized] || normalized || "blank";
+        return PLAYGROUND_PROJECT_BLUEPRINT_OPTIONS.some((option) => option.id === candidate)
+          ? candidate
+          : "blank";
+      }
+
+      function getPlaygroundProjectBlueprint(value) {
+        const blueprintId = getPlaygroundProjectBlueprintId(value);
+        return PLAYGROUND_PROJECT_BLUEPRINT_OPTIONS.find((option) => option.id === blueprintId)
+          || PLAYGROUND_PROJECT_BLUEPRINT_OPTIONS[0];
+      }
+
+      function serializePlaygroundProjectBlueprintRules(blueprint) {
+        const rules = Array.isArray(blueprint?.defaultRules) ? blueprint.defaultRules : [];
+        return rules
+          .map((rule) => String(rule || "").trim())
+          .filter(Boolean)
+          .map((rule) => "- " + rule)
+          .join("\\n");
+      }
+
+      function clonePlaygroundProjectBlueprintValue(value, fallback = null) {
+        if (value === undefined || value === null) {
+          return fallback;
+        }
+        try {
+          return JSON.parse(JSON.stringify(value));
+        } catch {
+          return fallback;
+        }
+      }
+
+      function buildPlaygroundProjectOperatingProfileSnapshot(blueprintOrId) {
+        const blueprint = getPlaygroundProjectBlueprint(blueprintOrId?.id || blueprintOrId);
+        return {
+          id: blueprint.id,
+          version: Number.isFinite(Number(blueprint.version)) ? Number(blueprint.version) : 1,
+          title: blueprint.title,
+          shortTitle: blueprint.shortTitle || blueprint.title,
+          description: blueprint.description || "",
+          useCases: clonePlaygroundProjectBlueprintValue(blueprint.useCases, []),
+          setupRecipe: clonePlaygroundProjectBlueprintValue(blueprint.setupRecipe, {}),
+          dashboardProfile: clonePlaygroundProjectBlueprintValue(blueprint.dashboardProfile, {}),
+          missionControlProfile: clonePlaygroundProjectBlueprintValue(blueprint.missionControlProfile, {}),
+          syncProfiles: clonePlaygroundProjectBlueprintValue(blueprint.syncProfiles, []),
+          collaborationProfile: clonePlaygroundProjectBlueprintValue(blueprint.collaborationProfile, {}),
+          successMetrics: clonePlaygroundProjectBlueprintValue(blueprint.successMetrics, []),
+          suggestedFolders: Array.isArray(blueprint.suggestedFolders) ? blueprint.suggestedFolders.slice() : [],
+          suggestedResources: Array.isArray(blueprint.suggestedResources) ? blueprint.suggestedResources.slice() : [],
+          suggestedSkills: Array.isArray(blueprint.suggestedSkills) ? blueprint.suggestedSkills.slice() : [],
+          defaultRules: Array.isArray(blueprint.defaultRules) ? blueprint.defaultRules.slice() : [],
+        };
+      }
+
+      function buildPlaygroundProjectBlueprintMetadata(blueprintOrId) {
+        const blueprint = getPlaygroundProjectBlueprint(blueprintOrId?.id || blueprintOrId);
+        const operatingProfile = buildPlaygroundProjectOperatingProfileSnapshot(blueprint);
+        return {
+          projectType: blueprint.id,
+          blueprintId: blueprint.id,
+          blueprintTitle: blueprint.title,
+          operatingProfileVersion: operatingProfile.version,
+          operatingProfileSnapshot: operatingProfile,
+          setupRecipe: clonePlaygroundProjectBlueprintValue(blueprint.setupRecipe, {}),
+          dashboardProfile: clonePlaygroundProjectBlueprintValue(blueprint.dashboardProfile, {}),
+          missionControlProfile: clonePlaygroundProjectBlueprintValue(blueprint.missionControlProfile, {}),
+          syncProfiles: clonePlaygroundProjectBlueprintValue(blueprint.syncProfiles, []),
+          collaborationProfile: clonePlaygroundProjectBlueprintValue(blueprint.collaborationProfile, {}),
+          successMetrics: clonePlaygroundProjectBlueprintValue(blueprint.successMetrics, []),
+          suggestedFolders: Array.isArray(blueprint.suggestedFolders) ? blueprint.suggestedFolders.slice() : [],
+          suggestedResources: Array.isArray(blueprint.suggestedResources) ? blueprint.suggestedResources.slice() : [],
+          suggestedSkills: Array.isArray(blueprint.suggestedSkills) ? blueprint.suggestedSkills.slice() : [],
+          blueprintDefaultRules: serializePlaygroundProjectBlueprintRules(blueprint),
+        };
+      }
+
+      function applyPlaygroundProjectBlueprintToDraft(project, blueprintOrId, options = {}) {
+        const blueprint = getPlaygroundProjectBlueprint(blueprintOrId);
+        const current = project && typeof project === "object" && !Array.isArray(project)
+          ? project
+          : {};
+        const metadata = current.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
+          ? current.metadata
+          : {};
+        const blueprintRules = serializePlaygroundProjectBlueprintRules(blueprint);
+        const previousBlueprintRules = String(metadata.blueprintDefaultRules || "");
+        const currentProjectRules = String(current.projectRules || "");
+        const shouldReplaceRules = options?.replaceRules === true
+          || !currentProjectRules.trim()
+          || currentProjectRules === previousBlueprintRules;
+        const forceVisualDefaults = options?.forceVisualDefaults === true;
+        const blueprintMetadata = buildPlaygroundProjectBlueprintMetadata(blueprint);
+        return {
+          ...current,
+          projectType: blueprint.id,
+          type: blueprint.id,
+          icon: forceVisualDefaults || !current.icon ? blueprint.iconId : current.icon,
+          wallpaperId: forceVisualDefaults || !current.wallpaperId ? blueprint.wallpaperId : current.wallpaperId,
+          color: forceVisualDefaults || !current.color ? blueprint.color : current.color,
+          projectRules: shouldReplaceRules ? blueprintRules : currentProjectRules,
+          metadata: {
+            ...metadata,
+            ...blueprintMetadata,
+            icon: forceVisualDefaults || !metadata.icon ? blueprint.iconId : metadata.icon,
+            wallpaperId: forceVisualDefaults || !metadata.wallpaperId ? blueprint.wallpaperId : metadata.wallpaperId,
+            color: forceVisualDefaults || !metadata.color ? blueprint.color : metadata.color,
+            projectRules: shouldReplaceRules ? blueprintRules : currentProjectRules,
+          },
+        };
+      }
+
       function getPlaygroundSkillIconId(value) {
         const normalized = String(value || "").trim().toLowerCase();
         return PLAYGROUND_SKILL_ICON_OPTIONS.some((option) => option.id === normalized)
@@ -49996,20 +51141,27 @@ ${MODELS_PAGE_CSS}
 
       function buildPlaygroundDefaultProjectDraft() {
         const now = new Date().toISOString();
+        const blueprint = getPlaygroundProjectBlueprint("blank");
         return {
           id: "",
           name: "",
           description: "",
-          icon: PLAYGROUND_PROJECT_ICON_OPTIONS[0].id,
-          wallpaperId: PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id,
+          projectType: blueprint.id,
+          type: blueprint.id,
+          icon: blueprint.iconId,
+          wallpaperId: blueprint.wallpaperId,
           useCardBackgroundAsWallpaper: true,
-          color: null,
-	          defaultEnvironmentId: null,
+          color: blueprint.color,
+          defaultEnvironmentId: null,
+          leadUserId: "",
+          leadName: "",
+          leadEmail: "",
+          leadAvatarUrl: "",
 	          attachments: [],
 	          connectors: buildPlaygroundDefaultTaskConnectors(),
 	          projectRules: "",
 	          missionControl: buildEmptyPlaygroundProjectMissionControl(),
-	          metadata: null,
+	          metadata: buildPlaygroundProjectBlueprintMetadata(blueprint),
 	          summary: buildEmptyPlaygroundProjectSummary(),
           createdAt: now,
           updatedAt: now,
@@ -51900,8 +53052,15 @@ ${MODELS_PAGE_CSS}
         const metadata = project.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
           ? project.metadata
           : null;
-        const icon = getPlaygroundProjectIconId(project.icon || metadata?.icon);
-        const wallpaperId = getPlaygroundProjectWallpaperId(project.wallpaperId || metadata?.wallpaperId, "");
+        const projectBlueprint = getPlaygroundProjectBlueprint(
+          project.projectType
+          || project.type
+          || metadata?.projectType
+          || metadata?.type
+          || metadata?.blueprintId
+        );
+        const icon = getPlaygroundProjectIconId(project.icon || metadata?.icon || projectBlueprint.iconId);
+        const wallpaperId = getPlaygroundProjectWallpaperId(project.wallpaperId || metadata?.wallpaperId || projectBlueprint.wallpaperId, "");
         const useCardBackgroundAsWallpaper = getPlaygroundProjectUseCardBackgroundAsWallpaper(
           project.useCardBackgroundAsWallpaper,
           metadata?.useCardBackgroundAsWallpaper
@@ -51931,6 +53090,13 @@ ${MODELS_PAGE_CSS}
 	          ? project.description
 	          : (metadataDescription || (typeof project.description === "string" ? project.description : draft.description));
 	        const projectRules = getPlaygroundProjectRules(project);
+        const metadataLead = metadata?.lead && typeof metadata.lead === "object" && !Array.isArray(metadata.lead)
+          ? metadata.lead
+          : {};
+        const leadUserId = String(project.leadUserId || metadata?.leadUserId || metadataLead.userId || metadataLead.id || "").trim();
+        const leadName = String(project.leadName || metadata?.leadName || metadataLead.name || "").trim();
+        const leadEmail = String(project.leadEmail || metadata?.leadEmail || metadataLead.email || "").trim();
+        const leadAvatarUrl = String(project.leadAvatarUrl || metadata?.leadAvatarUrl || metadataLead.avatarUrl || metadataLead.photoUrl || "").trim();
 
 	        return {
 	          ...draft,
@@ -51938,10 +53104,14 @@ ${MODELS_PAGE_CSS}
           id: typeof project.id === "string" ? project.id : draft.id,
           name: resolvedProjectName,
           description: resolvedProjectDescription,
+          projectType: projectBlueprint.id,
+          type: projectBlueprint.id,
           icon,
           wallpaperId,
           useCardBackgroundAsWallpaper,
-          color: typeof project.color === "string" && project.color.trim() ? project.color.trim() : null,
+          color: typeof project.color === "string" && project.color.trim()
+            ? project.color.trim()
+            : (typeof metadata?.color === "string" && metadata.color.trim() ? metadata.color.trim() : projectBlueprint.color),
           defaultEnvironmentId: typeof project.defaultEnvironmentId === "string" && project.defaultEnvironmentId.trim()
             ? project.defaultEnvironmentId.trim()
             : typeof metadata?.defaultEnvironmentId === "string" && metadata.defaultEnvironmentId.trim()
@@ -51951,7 +53121,24 @@ ${MODELS_PAGE_CSS}
 	          connectors,
 	          projectRules,
 	          missionControl,
-	          metadata,
+          leadUserId,
+          leadName,
+          leadEmail,
+          leadAvatarUrl,
+	          metadata: {
+	            ...(metadata && typeof metadata === "object" ? metadata : {}),
+	            ...buildPlaygroundProjectBlueprintMetadata(projectBlueprint),
+            leadUserId,
+            leadName,
+            leadEmail,
+            leadAvatarUrl,
+            lead: {
+              userId: leadUserId,
+              name: leadName,
+              email: leadEmail,
+              avatarUrl: leadAvatarUrl,
+            },
+	          },
           summary: {
             ...buildEmptyPlaygroundProjectSummary(),
             environmentsCount: Number(summary.environmentsCount) || 0,
@@ -52346,6 +53533,11 @@ ${MODELS_PAGE_CSS}
           || hasOwnProjectField(rawPrimaryMetadata, "icon");
         const primaryHasUseCardBackgroundAsWallpaper = hasOwnProjectField(primaryProject, "useCardBackgroundAsWallpaper")
           || hasOwnProjectField(rawPrimaryMetadata, "useCardBackgroundAsWallpaper");
+        const primaryHasProjectType = hasOwnProjectField(primaryProject, "projectType")
+          || hasOwnProjectField(primaryProject, "type")
+          || hasOwnProjectField(rawPrimaryMetadata, "projectType")
+          || hasOwnProjectField(rawPrimaryMetadata, "type")
+          || hasOwnProjectField(rawPrimaryMetadata, "blueprintId");
         const primaryName = normalizeProjectNameForMerge(primaryHasName ? normalizedPrimary.name : "");
         const fallbackName = normalizeProjectNameForMerge(fallbackHasName ? normalizedFallback.name : "");
         const mergedName = primaryHasName && (!isPlaceholderProjectNameForMerge(primaryName) || isPlaceholderProjectNameForMerge(fallbackName))
@@ -52400,12 +53592,18 @@ ${MODELS_PAGE_CSS}
               rawFallbackMetadata.useCardBackgroundAsWallpaper,
               normalizedFallback.useCardBackgroundAsWallpaper
             );
+        const mergedProjectType = primaryHasProjectType
+          ? normalizedPrimary.projectType
+          : normalizedFallback.projectType;
+        const mergedBlueprint = getPlaygroundProjectBlueprint(mergedProjectType);
 
         return normalizePlaygroundProjectRecord({
           ...normalizedFallback,
           ...normalizedPrimary,
           name: mergedName,
           description: mergedDescription,
+          projectType: mergedBlueprint.id,
+          type: mergedBlueprint.id,
           icon: mergedIcon,
           wallpaperId: mergedWallpaperId,
           useCardBackgroundAsWallpaper: mergedUseCardBackgroundAsWallpaper,
@@ -52417,8 +53615,11 @@ ${MODELS_PAGE_CSS}
 	          missionControl: mergedMissionControl,
 	          metadata: {
             ...mergedMetadata,
+            ...buildPlaygroundProjectBlueprintMetadata(mergedBlueprint),
             name: mergedName,
             description: mergedDescription,
+            projectType: mergedBlueprint.id,
+            blueprintId: mergedBlueprint.id,
             icon: mergedIcon,
             wallpaperId: mergedWallpaperId,
             useCardBackgroundAsWallpaper: mergedUseCardBackgroundAsWallpaper,
@@ -53153,6 +54354,122 @@ ${MODELS_PAGE_CSS}
             priority: taskPriority,
           },
         }];
+      }
+
+      function getPlaygroundMetronomeListArray(data) {
+        if (Array.isArray(data?.data)) return data.data;
+        if (Array.isArray(data?.metronomes)) return data.metronomes;
+        if (Array.isArray(data?.workflows)) return data.workflows;
+        if (Array.isArray(data?.items)) return data.items;
+        if (Array.isArray(data)) return data;
+        return [];
+      }
+
+      function getPlaygroundMetronomeWorkflowDefinition(workflow) {
+        const source = workflow && typeof workflow === "object" ? workflow : {};
+        const definition = source.definition && typeof source.definition === "object" ? source.definition : {};
+        const metadataDefinition = source.metadata?.definition && typeof source.metadata.definition === "object" ? source.metadata.definition : {};
+        return {
+          nodes: Array.isArray(source.nodes)
+            ? source.nodes
+            : Array.isArray(definition.nodes)
+              ? definition.nodes
+              : Array.isArray(metadataDefinition.nodes)
+                ? metadataDefinition.nodes
+                : [],
+          edges: Array.isArray(source.edges)
+            ? source.edges
+            : Array.isArray(definition.edges)
+              ? definition.edges
+              : Array.isArray(metadataDefinition.edges)
+                ? metadataDefinition.edges
+                : [],
+        };
+      }
+
+      function normalizePlaygroundCalendarMetronomeWorkflow(rawWorkflow) {
+        const workflow = rawWorkflow && typeof rawWorkflow === "object" ? rawWorkflow : {};
+        const definition = getPlaygroundMetronomeWorkflowDefinition(workflow);
+        const metadata = workflow.metadata && typeof workflow.metadata === "object" ? workflow.metadata : {};
+        return {
+          id: String(workflow.id || "").trim(),
+          name: String(workflow.name || "Untitled Metronome").trim() || "Untitled Metronome",
+          status: workflow.status === "active" ? "active" : workflow.status === "paused" ? "paused" : "draft",
+          projectId: String(workflow.projectId || workflow.project_id || metadata.projectId || metadata.project_id || "").trim(),
+          projectName: String(workflow.projectName || workflow.project_name || metadata.projectName || metadata.project_name || "").trim(),
+          nodes: definition.nodes,
+          edges: definition.edges,
+          createdAt: String(workflow.createdAt || workflow.created_at || "").trim(),
+          updatedAt: String(workflow.updatedAt || workflow.updated_at || "").trim(),
+        };
+      }
+
+      function getPlaygroundMetronomePeriodicTrigger(workflow) {
+        const normalized = normalizePlaygroundCalendarMetronomeWorkflow(workflow);
+        if (!normalized.id || normalized.status !== "active") {
+          return null;
+        }
+        const triggerNode = (Array.isArray(normalized.nodes) ? normalized.nodes : [])
+          .find((node) => {
+            const data = node?.data && typeof node.data === "object" ? node.data : node;
+            const kind = String(data?.kind || "").trim();
+            const subtype = String(data?.subtype || "").trim();
+            const config = data?.config && typeof data.config === "object" ? data.config : {};
+            const triggerType = String(config.triggerType || subtype || "").trim();
+            return kind === "trigger" && triggerType === "periodic";
+          });
+        if (!triggerNode) {
+          return null;
+        }
+        const triggerData = triggerNode?.data && typeof triggerNode.data === "object" ? triggerNode.data : triggerNode;
+        const config = triggerData?.config && typeof triggerData.config === "object" ? triggerData.config : {};
+        const scheduleType = config.scheduleType === "recurring" ? "recurring" : "one-time";
+        const scheduledTime = String(config.scheduledTime || config.scheduledStartAt || config.nextRunAt || "").trim();
+        const cronExpression = String(config.cronExpression || "").trim();
+        if (!scheduledTime && !(scheduleType === "recurring" && cronExpression)) {
+          return null;
+        }
+        return {
+          workflow: normalized,
+          config: {
+            scheduleType,
+            scheduledTime,
+            cronExpression,
+            timezone: String(config.scheduleTimezone || config.timezone || "UTC").trim() || "UTC",
+          },
+        };
+      }
+
+      function buildPlaygroundMetronomeCalendarEvents(workflow, visibleRange) {
+        const periodicTrigger = getPlaygroundMetronomePeriodicTrigger(workflow);
+        if (!periodicTrigger) {
+          return [];
+        }
+        const { workflow: normalized, config } = periodicTrigger;
+        return buildPlaygroundScheduleCalendarEvents({
+          id: "metronome:" + normalized.id,
+          name: normalized.name,
+          task: normalized.name,
+          kind: "metronome",
+          scheduleType: config.scheduleType,
+          scheduledTime: config.scheduledTime || normalized.createdAt || new Date().toISOString(),
+          cronExpression: config.scheduleType === "recurring" ? config.cronExpression : null,
+          timezone: config.timezone,
+          enabled: true,
+          createdAt: normalized.createdAt || null,
+        }, visibleRange).map((event) => ({
+          ...event,
+          id: "metronome-calendar:" + normalized.id + ":" + event.start.toISOString(),
+          title: normalized.name,
+          resource: {
+            kind: "metronome",
+            workflowId: normalized.id,
+            workflowName: normalized.name,
+            projectId: normalized.projectId,
+            projectName: normalized.projectName,
+            scheduleType: config.scheduleType,
+          },
+        }));
       }
 
       function formatPlaygroundTaskDateTime(value) {
@@ -56322,7 +57639,7 @@ ${MODELS_PAGE_CSS}
         if (resourceType === "agent") return "Agent";
         if (resourceType === "skill") return "Skill";
         if (resourceType === "task") return "Task";
-        if (resourceType === "release") return "Release";
+        if (resourceType === "release") return "Milestone";
         if (resourceType === "environment") return "Environment";
         return "Resource";
       }
@@ -56974,7 +58291,7 @@ ${MODELS_PAGE_CSS}
         return createHistoryResourceEntry("release", {
           ...record,
           id,
-          name: name || "Untitled Release",
+          name: name || "Untitled Milestone",
           projectId:
             asHistoryOptionalTrimmedString(record.projectId)
             || asHistoryOptionalTrimmedString(record.project_id)
@@ -57047,7 +58364,7 @@ ${MODELS_PAGE_CSS}
         for (const rawLine of lines) {
           const line = rawLine.trim();
           if (!line) continue;
-          const match = line.match(/^(?:[+*-]\\s*)?(?:✓\\s*)?(?:Release created|Created release):\\s*(.+?)(?:\\s+\\((release_[^)]+)\\))?\\s*$/i);
+          const match = line.match(/^(?:[+*-]\\s*)?(?:✓\\s*)?(?:(?:Release|Milestone) created|Created (?:release|milestone)):\\s*(.+?)(?:\\s+\\((release_[^)]+)\\))?\\s*$/i);
           if (!match?.[1]) {
             continue;
           }
@@ -60979,6 +62296,7 @@ ${IMAGINE_TEMPLATE_PAGE_SCRIPT}
 ${IMAGINE_PAGE_SCRIPT}
 ${METRONOME_PAGE_SCRIPT}
 ${MODELS_PAGE_SCRIPT}
+${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
       function getPlaygroundImageMaskViewportRect(containerWidth, containerHeight, naturalWidth, naturalHeight) {
         const safeContainerWidth = Math.max(1, Number(containerWidth) || 1);
@@ -61344,7 +62662,7 @@ ${MODELS_PAGE_SCRIPT}
         }));
       }
 
-      function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, agents = [], onFileChatThreadMutated, onThreadOpen, onThreadStarted, onRequestSidebarCollapse, navigationRequest, onNavigationRequestHandled, onOpenEnvironmentSettings, onCreateEnvironment, onEnvironmentMutated, onEnvironmentChange, onTopNavChange }) {
+      function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, agents = [], isAgentSelectionBlocked, onBlockedAgentSelect, onFileChatThreadMutated, onThreadOpen, onThreadStarted, onRequestSidebarCollapse, navigationRequest, onNavigationRequestHandled, onOpenEnvironmentSettings, onCreateEnvironment, onEnvironmentMutated, onEnvironmentChange, onTopNavChange }) {
         const FILE_CHAT_PANEL_DEFAULT_WIDTH = 420;
         const FILES_BROWSER_RESTORE_WIDTH = 320;
         const FILES_PANE_CLOSE_THRESHOLD = 100;
@@ -66115,6 +67433,8 @@ ${MODELS_PAGE_SCRIPT}
             environmentId: sourceEnvironmentId,
             agentId: agentId || "",
             agents: composerAgents,
+            isAgentSelectionBlocked,
+            onBlockedAgentSelect,
             environments: composerEnvironments,
             inputMode: "computer-agents",
             placeholder: fileKind === "image" ? "Ask about this image" : fileKind === "video" ? "Ask about this video" : "Ask about this file",
@@ -89658,9 +90978,11 @@ ${MODELS_PAGE_SCRIPT}
                             ...environment,
                             ...(preferredEnvironmentId && environment.id === preferredEnvironmentId ? { isDefault: true } : {}),
                           })),
-                          agents: (Array.isArray(agents) ? agents : []).map((agent) => (
-                            buildPlaygroundRunnerAgentOption(agent, preferredAgentId && agent.id === preferredAgentId ? { isDefault: true } : {})
-                          )),
+	                          agents: ensurePlaygroundComposerDefaultChoices(Array.isArray(agents) ? agents : []).map((agent) => (
+	                            buildPlaygroundRunnerAgentOption(agent, preferredAgentId && agent.id === preferredAgentId ? { isDefault: true } : {})
+	                          )),
+                          isAgentSelectionBlocked: (agent) => isFreeAgentPlan && isPlaygroundFreePlanLockedComposerAgent(agent),
+                          onBlockedAgentSelect: openAgentUpgradeModal,
                           skills: Array.isArray(skills) ? skills : [],
                           skillDefaults: getDemoImageGenerationSkillDefaults(),
                           environmentId: preferredEnvironmentId || undefined,
@@ -90023,8 +91345,8 @@ ${MODELS_PAGE_SCRIPT}
           }
         }, [backendUrl, requestHeaders]);
 
-        const orderedAgents = useMemo(() => {
-          return [...agents].sort((left, right) => {
+	        const orderedAgents = useMemo(() => {
+	          return ensurePlaygroundComposerDefaultChoices(Array.isArray(agents) ? agents : []).sort((left, right) => {
             if (Boolean(left?.isDefault) !== Boolean(right?.isDefault)) {
               return left?.isDefault ? -1 : 1;
             }
@@ -91977,14 +93299,9 @@ ${MODELS_PAGE_SCRIPT}
             || agents.find((agent) => agent?.id === normalizedFocusedAgentId)
             || null;
 
-          if (focusedAgent && !isAgentAllowedOnCurrentPlan(focusedAgent)) {
-            openAgentUpgradeModal();
-            return;
-          }
-
-          if (focusedAgent) {
-            setAgentListMode(getPlaygroundAgentListMode(focusedAgent));
-          }
+	          if (focusedAgent) {
+	            setAgentListMode(getPlaygroundAgentListMode(focusedAgent));
+	          }
           setIsHomeViewActive(false);
           setAgentCreationSetupOpen(false);
           setAgentCreationSetupError("");
@@ -92450,16 +93767,10 @@ ${MODELS_PAGE_SCRIPT}
           void loadAgentsHomeThreads();
         }, [isHomeViewActive, loadAgentsHomeThreads, selectedAgentId]);
 
-        function handleAgentSelect(agentId) {
-          const targetAgent = allKnownAgents.find((agent) => agent?.id === agentId)
-            || orderedAgents.find((agent) => agent?.id === agentId)
-            || null;
-          if (targetAgent && !canUseAgentOnCurrentPlan(targetAgent)) {
-            return;
-          }
-          if (draftAgent?.id && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID && editorDirtyRef.current) {
-            agentAutosaveQueuedRef.current = normalizePlaygroundAgentRecord(draftAgent);
-            if (agentAutosaveTimerRef.current) {
+	        function handleAgentSelect(agentId) {
+	          if (draftAgent?.id && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID && editorDirtyRef.current) {
+	            agentAutosaveQueuedRef.current = normalizePlaygroundAgentRecord(draftAgent);
+	            if (agentAutosaveTimerRef.current) {
               window.clearTimeout(agentAutosaveTimerRef.current);
               agentAutosaveTimerRef.current = 0;
             }
@@ -92538,14 +93849,17 @@ ${MODELS_PAGE_SCRIPT}
           ));
         }
 
-        function openAgentAssistant(commandType = "") {
-          if (draftAgent?.isSystem || draftAgent?.isDefault) {
-            setAgentAssistantOpen(false);
-            return;
-          }
-          setAgentAssistantOpen(true);
-          setAgentAssistantCommandRequest(null);
-          setAgentAssistantPresetRunState((current) => (
+	        function openAgentAssistant(commandType = "") {
+	          if (draftAgent?.isSystem || draftAgent?.isDefault) {
+	            setAgentAssistantOpen(false);
+	            return;
+	          }
+	          if (draftAgent && !canUseAgentOnCurrentPlan(draftAgent)) {
+	            return;
+	          }
+	          setAgentAssistantOpen(true);
+	          setAgentAssistantCommandRequest(null);
+	          setAgentAssistantPresetRunState((current) => (
             current.error
               ? {
                   isStarting: false,
@@ -96890,86 +98204,38 @@ ${MODELS_PAGE_SCRIPT}
         }
 
         function renderAgentUpgradeModal() {
-          if (!agentUpgradeModalOpen) {
-            return null;
+          return renderPlaygroundAgentUpgradeModal({
+            isOpen: agentUpgradeModalOpen,
+            titleId: "playground-agent-upgrade-title",
+            onClose: closeAgentUpgradeModal,
+            onCheckout: handleAgentUpgradeCheckout,
+            checkoutLoading: agentUpgradeCheckoutLoading,
+            checkoutDisabled: typeof onUpgradeToIndividual !== "function",
+          });
+        }
+
+	        const agentsHomeComposerSourceAgents = useMemo(
+	          () => ensurePlaygroundComposerDefaultChoices(Array.isArray(agents) ? agents : []),
+	          [agents]
+	        );
+        const agentsHomeComposerAgentId = (() => {
+          const normalizedAgentId = String(preferredAgentId || "").trim();
+          if (!isFreeAgentPlan) {
+            return normalizedAgentId;
           }
 
-          const features = [
-            { icon: Bot, title: "Forge and Foundry", copy: "Use higher-capacity default agents for implementation, synthesis, and reasoning-heavy work." },
-            { icon: Plus, title: "Custom agents", copy: "Create specialized agents with their own instructions, skills, permissions, and models." },
-            { icon: UsersRound, title: "Agent teams", copy: "Coordinate fixed teams with orchestrators and subagents for repeatable workflows." },
-            { icon: Brain, title: "Premium models", copy: "Access the managed model catalog beyond Spark, including long-context and frontier models." },
-            { icon: Sparkles, title: "Compute included", copy: "Start with 1,500 Compute Tokens and upgrade controls built into settings." },
-            { icon: Key, title: "API access", copy: "Use Computer Agents APIs and budget controls for production workflows." },
-          ];
+          const selectedAgent = agentsHomeComposerSourceAgents.find((agent) => String(agent?.id || "").trim() === normalizedAgentId) || null;
+          if (selectedAgent && !isPlaygroundFreePlanLockedComposerAgent(selectedAgent)) {
+            return normalizedAgentId;
+          }
 
-          return React.createElement("div", {
-              className: "playground-calendar-upgrade-backdrop",
-              role: "dialog",
-              "aria-modal": "true",
-              "aria-labelledby": "playground-agent-upgrade-title",
-            },
-            React.createElement("button", {
-              type: "button",
-              className: "playground-files-header-icon-button is-plain playground-calendar-upgrade-close",
-              onClick: closeAgentUpgradeModal,
-              "aria-label": "Close upgrade modal",
-              disabled: agentUpgradeCheckoutLoading,
-            }, React.createElement(X, { width: 18, height: 18, strokeWidth: 1.8 })),
-            React.createElement("div", { className: "playground-calendar-upgrade-shell" },
-              React.createElement("h2", {
-                id: "playground-agent-upgrade-title",
-                className: "playground-calendar-upgrade-headline",
-              },
-                "Try Individual for ",
-                React.createElement("span", { className: "playground-calendar-upgrade-headline-price" }, "$0.00"),
-                " for 14 Days"
-              ),
-              React.createElement("div", { className: "playground-calendar-upgrade-pill" }, "Unlock Forge, Foundry, teams, and custom agents"),
-              React.createElement("div", {
-                  className: "playground-calendar-upgrade-modal",
-                  role: "document",
-                },
-                React.createElement("div", { className: "playground-calendar-upgrade-modal-top" },
-                  React.createElement("div", { className: "playground-calendar-upgrade-modal-header" },
-                    React.createElement("div", { className: "playground-calendar-upgrade-modal-title" }, "Individual"),
-                    React.createElement("div", { className: "playground-calendar-upgrade-modal-offer" }, "Limited Time Offer")
-                  ),
-                  React.createElement("div", { className: "playground-calendar-upgrade-price-row" },
-                    React.createElement("span", { className: "playground-calendar-upgrade-price-old" }, "$19.99"),
-                    React.createElement("span", { className: "playground-calendar-upgrade-price-new" }, "$0")
-                  ),
-                  React.createElement("p", { className: "playground-calendar-upgrade-modal-copy" },
-                    "Use Spark on Free. Upgrade to create custom agents and run Forge or Foundry for larger digital work."
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-calendar-upgrade-modal-button",
-                    onClick: handleAgentUpgradeCheckout,
-                    disabled: agentUpgradeCheckoutLoading || typeof onUpgradeToIndividual !== "function",
-                  }, agentUpgradeCheckoutLoading ? "Opening checkout..." : "Claim $0.00 offer")
-                ),
-                React.createElement("div", { className: "playground-calendar-upgrade-feature-list" },
-                  features.map((feature) => {
-                    const Icon = feature.icon;
-                    return React.createElement("div", {
-                        key: feature.title,
-                        className: "playground-calendar-upgrade-modal-feature",
-                      },
-                      React.createElement("span", { className: "playground-calendar-upgrade-modal-feature-icon" },
-                        React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.8 })
-                      ),
-                      React.createElement("div", null,
-                        React.createElement("div", null, feature.title),
-                        React.createElement("small", null, feature.copy)
-                      )
-                    );
-                  })
-                )
-              )
-            )
-          );
-        }
+          const sparkAgent = agentsHomeComposerSourceAgents.find((agent) => isPlaygroundAssistantAgent(agent));
+          const selectableAgent = agentsHomeComposerSourceAgents.find((agent) => !isPlaygroundFreePlanLockedComposerAgent(agent));
+          return String((sparkAgent || selectableAgent || agentsHomeComposerSourceAgents[0])?.id || "").trim();
+        })();
+        const agentsHomeComposerAgents = agentsHomeComposerSourceAgents.map((agent) => (
+          buildPlaygroundRunnerAgentOption(agent, agentsHomeComposerAgentId && agent.id === agentsHomeComposerAgentId ? { isDefault: true } : {})
+        ));
 
         if (embeddedInResources) {
           const embeddedAgentBackgroundImageUrl = !agentCreationSetupOpen && !shouldShowAgentsHome && draftAgent
@@ -97240,13 +98506,13 @@ ${MODELS_PAGE_SCRIPT}
                             ...environment,
                             ...(preferredEnvironmentId && environment.id === preferredEnvironmentId ? { isDefault: true } : {}),
                           })),
-                          agents: (Array.isArray(agents) ? agents : []).map((agent) => (
-                            buildPlaygroundRunnerAgentOption(agent, preferredAgentId && agent.id === preferredAgentId ? { isDefault: true } : {})
-                          )),
+                          agents: agentsHomeComposerAgents,
                           skills: Array.isArray(skills) ? skills : [],
                           skillDefaults: getDemoImageGenerationSkillDefaults(),
                           environmentId: preferredEnvironmentId || undefined,
-                          agentId: preferredAgentId || undefined,
+                          agentId: agentsHomeComposerAgentId || undefined,
+                          isAgentSelectionBlocked: (agent) => isFreeAgentPlan && isPlaygroundFreePlanLockedComposerAgent(agent),
+                          onBlockedAgentSelect: openAgentUpgradeModal,
                           keepFocusOnSubmit: true,
                           showUsageInStatus: false,
                           placeholder: "Type /agent or /team",
@@ -97603,7 +98869,7 @@ ${MODELS_PAGE_SCRIPT}
               "## Example Prompts",
               "",
               "- List the available agents and suggest who should own these tickets",
-              "- Create a custom skill for release planning",
+              "- Create a custom skill for milestone planning",
             ].join("\\n"),
             codeFiles: [
               {
@@ -101524,6 +102790,7 @@ ${MODELS_PAGE_SCRIPT}
         computerAgents,
         skills,
         currentUserName,
+        currentUserEmail,
         currentUserAvatarUrl,
         canStartThreads,
         taskRunStates,
@@ -101641,6 +102908,7 @@ ${MODELS_PAGE_SCRIPT}
         const [projectComposerOpen, setProjectComposerOpen] = useState(false);
         const [projectComposerMode, setProjectComposerMode] = useState("create");
         const [projectIconPickerOpen, setProjectIconPickerOpen] = useState(false);
+        const [projectBlueprintPickerOpen, setProjectBlueprintPickerOpen] = useState(false);
         const [projectSidebarPopover, setProjectSidebarPopover] = useState("");
         const [projectCardMenuProjectId, setProjectCardMenuProjectId] = useState("");
         const [projectsHomeSortMode, setProjectsHomeSortMode] = useState("updated-desc");
@@ -101675,6 +102943,7 @@ ${MODELS_PAGE_SCRIPT}
         const [taskView, setTaskView] = useState(() => isStandaloneCalendarMode ? "calendar" : "overview");
         const [projectOverviewChartTimescale, setProjectOverviewChartTimescale] = useState("day");
         const [projectOverviewHomeTab, setProjectOverviewHomeTab] = useState("general");
+        const [projectOverviewSidebarCollapsed, setProjectOverviewSidebarCollapsed] = useState(false);
         const [projectOverviewFilesSubview, setProjectOverviewFilesSubview] = useState("overview");
         const [projectOverviewListMode, setProjectOverviewListMode] = useState("tasks");
         const [projectOverviewTaskSearchQuery, setProjectOverviewTaskSearchQuery] = useState("");
@@ -101726,6 +102995,7 @@ ${MODELS_PAGE_SCRIPT}
 	        const projectListAutoLoadKeyRef = useRef("");
 	        const projectWorkspaceAutoLoadKeyRef = useRef("");
 	        const projectSchedulesAutoLoadKeyRef = useRef("");
+	        const projectMetronomeSchedulesAutoLoadKeyRef = useRef("");
 	        const projectCustomSkillsLoadKeyRef = useRef("");
 	        const taskDetailThreadRecordsLoadKeyRef = useRef("");
 	        const taskDetailAutoLoadKeyRef = useRef("");
@@ -101777,12 +103047,15 @@ ${MODELS_PAGE_SCRIPT}
         const [releases, setReleases] = useState([]);
         const [sprints, setSprints] = useState([]);
         const [schedules, setSchedules] = useState([]);
+        const [calendarMetronomeWorkflows, setCalendarMetronomeWorkflows] = useState([]);
         const [scheduleLoadState, setScheduleLoadState] = useState({
           status: "idle",
           error: "",
         });
         const [calendarUpgradeModalOpen, setCalendarUpgradeModalOpen] = useState(false);
         const [calendarUpgradeCheckoutLoading, setCalendarUpgradeCheckoutLoading] = useState(false);
+        const [projectAgentUpgradeModalOpen, setProjectAgentUpgradeModalOpen] = useState(false);
+        const [projectAgentUpgradeCheckoutLoading, setProjectAgentUpgradeCheckoutLoading] = useState(false);
         const [scheduleViewMode, setScheduleViewMode] = useState("calendar");
         const [scheduleEditorMode, setScheduleEditorMode] = useState("create");
         const [selectedScheduleId, setSelectedScheduleId] = useState("");
@@ -102142,21 +103415,7 @@ ${MODELS_PAGE_SCRIPT}
           selectedProject?.wallpaperId,
         ]);
 
-        const selectedProjectShellBackground = useMemo(() => {
-          const backgroundProject = projectComposerOpen ? projectDraft : selectedProject;
-          if (!backgroundProject) {
-            return "";
-          }
-          if (!projectComposerOpen && !getPlaygroundProjectUseCardBackgroundAsWallpaper(
-            backgroundProject.useCardBackgroundAsWallpaper,
-            backgroundProject.metadata?.useCardBackgroundAsWallpaper
-          )) {
-            return "";
-          }
-          const selectedProjectIndex = projects.findIndex((project) => project.id === backgroundProject.id);
-          const projectWallpaper = getPlaygroundProjectWallpaperConfig(backgroundProject, selectedProjectIndex >= 0 ? selectedProjectIndex : 0);
-          return "linear-gradient(180deg, rgba(6, 6, 10, 0.82), rgba(6, 6, 10, 0.95)), url(" + projectWallpaper.url + ")";
-        }, [projectComposerOpen, projectDraft, projects, selectedProject]);
+        const selectedProjectShellBackground = useMemo(() => "", []);
 
         const selectedProjectSummary = useMemo(() => {
           const baseSummary = selectedProjectDetail?.project?.id === selectedProjectId
@@ -102566,12 +103825,26 @@ ${MODELS_PAGE_SCRIPT}
           projectEnvironmentFilePickerTree,
         ]);
 
+        const effectiveBacklogComposerAgentId = useMemo(() => {
+          const normalizedAgentId = String(backlogComposerAgentId || "").trim();
+          if (normalizedSubscriptionTierId !== "free") {
+            return normalizedAgentId;
+          }
+          const selectedAgent = assignableActors.find((agent) => String(agent?.id || "").trim() === normalizedAgentId) || null;
+          if (selectedAgent && !isPlaygroundFreePlanLockedComposerAgent(selectedAgent)) {
+            return normalizedAgentId;
+          }
+          const sparkAgent = assignableActors.find((agent) => isPlaygroundAssistantAgent(agent));
+          const selectableAgent = assignableActors.find((agent) => !isPlaygroundFreePlanLockedComposerAgent(agent));
+          return String((sparkAgent || selectableAgent || assignableActors[0])?.id || "").trim();
+        }, [assignableActors, backlogComposerAgentId, normalizedSubscriptionTierId]);
+
         const backlogComposerAgents = useMemo(() => {
           return assignableActors.map((agent) => ({
             ...agent,
-            ...(backlogComposerAgentId && agent.id === backlogComposerAgentId ? { isDefault: true } : {}),
+            ...(effectiveBacklogComposerAgentId && agent.id === effectiveBacklogComposerAgentId ? { isDefault: true } : {}),
           }));
-        }, [assignableActors, backlogComposerAgentId]);
+        }, [assignableActors, effectiveBacklogComposerAgentId]);
 
         const selectedProjectRecentThreads = useMemo(() => {
           if (selectedProjectDetail?.project?.id !== selectedProjectId) {
@@ -104403,11 +105676,11 @@ ${MODELS_PAGE_SCRIPT}
           { id: "done", label: "Finished", description: "Only show finished tasks" },
         ];
         const releaseFilterOptions = [
-          { id: "all", label: "All Releases", description: "Show every release in this project" },
-          { id: "active", label: "Active", description: "Only show releases currently in progress" },
-          { id: "planned", label: "Planned", description: "Only show upcoming releases" },
-          { id: "completed", label: "Completed", description: "Only show releases whose date range has ended" },
-          { id: "open", label: "Needs Work", description: "Only show releases with open tasks remaining" },
+          { id: "all", label: "All Milestones", description: "Show every milestone in this project" },
+          { id: "active", label: "Active", description: "Only show milestones currently in progress" },
+          { id: "planned", label: "Planned", description: "Only show upcoming milestones" },
+          { id: "completed", label: "Completed", description: "Only show milestones whose date range has ended" },
+          { id: "open", label: "Needs Work", description: "Only show milestones with open tasks remaining" },
         ];
         const backlogSortOptions = [
           { id: "default", label: "Default Order" },
@@ -105056,7 +106329,7 @@ ${MODELS_PAGE_SCRIPT}
             "Existing tasks:",
             ...sortedTaskRecords.map((taskRecord) => {
               const ticketNumber = taskTicketNumbersById[taskRecord.id] || taskRecord.ticketNumber || "000";
-              const releaseName = taskRecord.releaseId ? (releasesById[taskRecord.releaseId]?.name || "Release") : "All other";
+              const releaseName = taskRecord.releaseId ? (releasesById[taskRecord.releaseId]?.name || "Milestone") : "All other";
               const descriptionPreview = String(taskRecord.description || "").replace(/\\s+/g, " ").trim();
               const blockedByTaskId = Array.isArray(taskRecord.dependencyIds) ? String(taskRecord.dependencyIds[0] || "").trim() : "";
               const blockedByTicketNumber = blockedByTaskId ? (taskTicketNumbersById[blockedByTaskId] || blockedByTaskId) : "";
@@ -105071,7 +106344,7 @@ ${MODELS_PAGE_SCRIPT}
                 "  status=" + getPlaygroundTaskStatusLabel(taskRecord.status),
                 "priority=" + getPlaygroundTaskPriorityLabel(taskRecord.priority),
                 "type=" + getPlaygroundTaskTypeLabel(taskRecord.taskType),
-                "release=" + releaseName,
+                "milestone=" + releaseName,
                 "assignee=" + (getTaskAssigneeName(taskRecord.assigneeAgentId, "Unassigned") || "Unassigned"),
                 taskRecord.reviewRequired ? ("reviewer=" + (getTaskAssigneeName(taskRecord.reviewerAgentId, "Reviewer") || "Reviewer")) : null,
                 "environment=" + environmentLabel,
@@ -105117,15 +106390,15 @@ ${MODELS_PAGE_SCRIPT}
             .sort(compareTaskReleaseOrder);
 
           if (sortedReleaseRecords.length === 0) {
-            return "Existing releases:\\n- No releases exist yet.";
+            return "Existing milestones:\\n- No milestones exist yet.";
           }
 
           return [
-            "Existing releases:",
+            "Existing milestones:",
             ...sortedReleaseRecords.map((releaseRecord) => {
               const releaseDeadlineLabel = formatPlaygroundTaskReleaseDateRange(releaseRecord);
               return [
-                "- " + (releaseRecord.name || "Untitled Release"),
+                "- " + (releaseRecord.name || "Untitled Milestone"),
                 releaseRecord.description ? ("desc=" + String(releaseRecord.description).replace(/\\s+/g, " ").trim()) : null,
                 "deadline=" + (releaseDeadlineLabel === "No dates" ? "No deadlines" : releaseDeadlineLabel),
                 "open_tasks=" + String(Number.isFinite(releaseRecord.openTaskCount) ? releaseRecord.openTaskCount : 0),
@@ -105639,6 +106912,64 @@ ${MODELS_PAGE_SCRIPT}
           return bestRecord;
         }
 
+        function buildPlaygroundMissionControlOperatingProfilePromptSection(project) {
+          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+            ? project.metadata
+            : {};
+          const blueprint = getPlaygroundProjectBlueprint(
+            project?.projectType
+            || project?.type
+            || metadata.projectType
+            || metadata.blueprintId
+          );
+          const operatingProfile = metadata.operatingProfileSnapshot && typeof metadata.operatingProfileSnapshot === "object" && !Array.isArray(metadata.operatingProfileSnapshot)
+            ? metadata.operatingProfileSnapshot
+            : buildPlaygroundProjectOperatingProfileSnapshot(blueprint);
+          const newline = String.fromCharCode(10);
+
+          function formatProfileList(label, values) {
+            const items = Array.isArray(values)
+              ? values.map((value) => String(value || "").trim()).filter(Boolean)
+              : [];
+            return items.length ? "- " + label + ": " + items.join(", ") : "";
+          }
+
+          const dashboardProfile = operatingProfile.dashboardProfile && typeof operatingProfile.dashboardProfile === "object"
+            ? operatingProfile.dashboardProfile
+            : {};
+          const missionControlProfile = operatingProfile.missionControlProfile && typeof operatingProfile.missionControlProfile === "object"
+            ? operatingProfile.missionControlProfile
+            : {};
+          const setupRecipe = operatingProfile.setupRecipe && typeof operatingProfile.setupRecipe === "object"
+            ? operatingProfile.setupRecipe
+            : {};
+          const syncProfiles = Array.isArray(operatingProfile.syncProfiles) ? operatingProfile.syncProfiles : [];
+          const syncLines = syncProfiles
+            .map((profile) => {
+              const source = String(profile?.source || profile?.label || "").trim();
+              if (!source) return "";
+              const direction = String(profile?.direction || "").trim();
+              const objects = Array.isArray(profile?.objects) ? profile.objects.map((item) => String(item || "").trim()).filter(Boolean) : [];
+              return "- Sync: " + source + (direction ? " (" + direction + ")" : "") + (objects.length ? " for " + objects.join(", ") : "");
+            })
+            .filter(Boolean);
+
+          return [
+            "Project operating profile:",
+            "- Type: " + (operatingProfile.title || blueprint.title || "Blank Project") + " [" + (operatingProfile.id || blueprint.id || "blank") + "]",
+            operatingProfile.description ? "- Purpose: " + operatingProfile.description : "",
+            missionControlProfile.planningStyle ? "- Planning style: " + missionControlProfile.planningStyle : "",
+            missionControlProfile.releasePattern ? "- Milestone pattern: " + missionControlProfile.releasePattern : "",
+            formatProfileList("Priorities", missionControlProfile.prioritization),
+            formatProfileList("Dashboard focus", dashboardProfile.primaryMetrics),
+            formatProfileList("Activity focus", dashboardProfile.activityFocus),
+            formatProfileList("Recommended resources", operatingProfile.suggestedResources),
+            formatProfileList("Recommended skills", operatingProfile.suggestedSkills),
+            formatProfileList("Starter folders", setupRecipe.initialFolders || operatingProfile.suggestedFolders),
+            ...syncLines,
+          ].filter(Boolean).join(newline);
+        }
+
         function buildPlaygroundMissionControlPrompt(options = {}) {
           const normalizedProject = normalizePlaygroundProjectRecord(options?.projectRecord || selectedProject || projectDraft);
           const newline = String.fromCharCode(10);
@@ -105683,18 +107014,20 @@ ${MODELS_PAGE_SCRIPT}
 		          });
 	          const operatorPrompt = String(options?.userPrompt || "").trim();
 	          const projectContextDescription = getPlaygroundProjectMissionInstructions(normalizedProject);
+	          const projectOperatingProfileSection = buildPlaygroundMissionControlOperatingProfilePromptSection(normalizedProject);
 	          const currentProjectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(normalizedProject);
 	          const currentProjectRulesSection = buildPlaygroundProjectRulesPromptSection(normalizedProject);
 	          return [
-	            "You are running Mission Control for this software project.",
+	            "You are running Mission Control for this project.",
 		            "Your job is to analyze the available project context, reconcile the current project state, define the right strategy, and update the project structure using the Task Management and Computer Agents skills where appropriate.",
-	            "Always use the Task Management skill for releases, tasks, subtasks, blockers, comments, and other planning mutations instead of only describing them in prose.",
+	            "Always use the Task Management skill for milestones, tasks, subtasks, blockers, comments, and other planning mutations instead of only describing them in prose.",
             "Always use the Computer Agents skill for live discovery of agents, environments, and skills instead of inventing IDs or writing raw curl requests.",
             "When invoking built-in skills, use the exact invocation names from the available skills list, for example task-management and computer-agents. Do not invoke skills using attachment IDs like task_management or computer_agents.",
             "Project: " + (normalizedProject.name || "Untitled Project"),
             projectContextDescription
               ? ("Project goal:" + newline + projectContextDescription)
               : "Project goal: None provided.",
+		            projectOperatingProfileSection,
 		            projectAttachmentsSection,
 		            runAttachmentsSection,
 		            projectConnectorsSection,
@@ -105715,12 +107048,12 @@ ${MODELS_PAGE_SCRIPT}
               : "",
             [
               "Required outputs:",
-              "1. Analyze the project attachments, project goal, existing releases, open work, completed work, comments, blocked work, and likely next steps.",
+              "1. Analyze the project operating profile, attachments, project goal, existing milestones, open work, completed work, comments, blocked work, and likely next steps.",
               "2. Use the Computer Agents skill to inspect the live agent roster, environments, and available skills before assigning work.",
 	              "3. Form a strategy for the project and explain the direction clearly.",
 	              "   - Also create compact structured strategy context agents can use inside every task prompt.",
 	              "   - The structured strategy context must express the project goal, primary outcomes, in-scope boundaries, out-of-scope boundaries, success criteria, risks/assumptions, and key decisions.",
-	              "   - Outcomes should be concrete user/business outcomes, not generic task status buckets. Include releaseId or taskIds when an outcome clearly maps to existing work.",
+	              "   - Outcomes should be concrete user/business outcomes, not generic task status buckets. Include releaseId (milestone id) or taskIds when an outcome clearly maps to existing work.",
 	              "   - Preserve existing outcome ids when you are updating an existing outcome. Only remove an outcome when it is clearly obsolete or the operator asks for that.",
 	              "   - Update project rules when the project needs durable execution behavior that every future task agent should follow. Do not duplicate generic platform behavior as a rule.",
 	              "4. Inspect the available agents and assign the backlog work intentionally.",
@@ -105728,7 +107061,8 @@ ${MODELS_PAGE_SCRIPT}
 	                ? ("   - Every created or updated execution task and subtask must have an agent assignee. If no better specialist is obvious, set assigneeAgentId to " + defaultExecutionAgent.id + " (" + (defaultExecutionAgent.name || "Assistant") + ").")
                 : "   - Every created or updated execution task and subtask must have an agent assignee. If no better fit is obvious, use the system Assistant agent returned by the Computer Agents or Task Management skill.",
               "5. Create or update the project structure using the Task Management skill whenever the project needs clearer execution steps.",
-              "   - If the project is empty or still loosely defined, create at least one release first and then place the new work under releases.",
+              "   - If the project is empty or still loosely defined, create at least one milestone first and then place the new work under milestones.",
+              "   - When the project is new, use the operating profile setup recipe, recommended resources, skills, sync targets, and dashboard focus as the default project shape.",
               "   - Prefer a clear hierarchy of parent tasks and subtasks instead of keeping every item flat.",
               "   - Add blocked-by dependencies so the execution order is explicit and immediately understandable.",
               "   - Create human-assigned resource request tasks only when user-owned input is required, such as API keys, credentials, billing decisions, repository access, or product decisions. Make them small, explicit, and acceptance-criteria driven.",
@@ -105746,7 +107080,7 @@ ${MODELS_PAGE_SCRIPT}
               "   - Keep descriptions focused and execution-ready rather than long speculative specs.",
               "   - Delete, close, or comment on obsolete tickets instead of leaving stale work mixed into the active plan.",
               "   - If a reusable project-specific workflow gap is obvious and worth reusing, create a custom skill before attaching it to tasks.",
-              "   - Aim for task records that are execution-ready: release, assignee, environment, skills, hierarchy/dependencies, and useful comments should all be populated when the context supports it.",
+              "   - Aim for task records that are execution-ready: milestone, assignee, environment, skills, hierarchy/dependencies, and useful comments should all be populated when the context supports it.",
               "   - When you create parent tasks, also create the subtasks and dependency chain needed to express the real order of work.",
               "6. In your human-readable response, output only the strategy document markdown itself.",
               "   - Do not add any conversational intro, acknowledgement, explanation, or outro before or after the document.",
@@ -106044,7 +107378,7 @@ ${MODELS_PAGE_SCRIPT}
 
         const projectSearchPlaceholder = useMemo(() => {
           if (selectedReleaseId && (taskView === "backlog" || taskView === "board")) {
-            return "Search release tasks, ticket numbers, assignees, or environments...";
+            return "Search milestone tasks, ticket numbers, assignees, or environments...";
           }
           if (taskView === "overview") {
             return "Search tasks, threads, files, environments, or plugins...";
@@ -106355,7 +107689,7 @@ ${MODELS_PAGE_SCRIPT}
             return [{
               key: selectedRelease.id,
               releaseId: selectedRelease.id,
-              title: selectedRelease.name || "Release",
+              title: selectedRelease.name || "Milestone",
               copy: selectedRelease.description || "",
               tasks: boardVisibleTasks,
             }];
@@ -106374,10 +107708,10 @@ ${MODELS_PAGE_SCRIPT}
               sections.push({
                 key: sectionKey,
                 releaseId: normalizedReleaseId,
-                title: normalizedReleaseId ? (releaseRecord?.name || "Release unavailable") : "All other",
+                title: normalizedReleaseId ? (releaseRecord?.name || "Milestone unavailable") : "All other",
                 copy: normalizedReleaseId
                   ? (releaseRecord?.description || "")
-                  : "All tasks, that are not assigned to any release",
+                  : "All tasks that are not assigned to any milestone",
                 tasks: [],
               });
             }
@@ -106439,11 +107773,11 @@ ${MODELS_PAGE_SCRIPT}
               const sectionKey = normalizedReleaseId || "__no_release__";
               const releaseRecord = normalizedReleaseId ? (releasesById[normalizedReleaseId] || null) : null;
               const sectionTitle = normalizedReleaseId
-                ? (releaseRecord?.name || "Release unavailable")
+                ? (releaseRecord?.name || "Milestone unavailable")
                 : "All other";
               const sectionCopy = normalizedReleaseId
                 ? (releaseRecord?.description || "")
-                : "All tasks, that are not assigned to any release";
+                : "All tasks that are not assigned to any milestone";
               let sectionIndex = sectionIndexByKey.get(sectionKey);
               if (sectionIndex === undefined) {
                 sectionIndex = releaseSections.length;
@@ -106702,6 +108036,10 @@ ${MODELS_PAGE_SCRIPT}
             .reduce((allEvents, schedule) => {
               return allEvents.concat(buildPlaygroundScheduleCalendarEvents(schedule, visibleScheduleCalendarRange));
             }, []);
+          const metronomeEvents = calendarMetronomeWorkflows
+            .reduce((allEvents, workflow) => {
+              return allEvents.concat(buildPlaygroundMetronomeCalendarEvents(workflow, visibleScheduleCalendarRange));
+            }, []);
           const taskEvents = sortedTasks
             .reduce((allEvents, task) => {
               return allEvents.concat(
@@ -106714,6 +108052,7 @@ ${MODELS_PAGE_SCRIPT}
             }, []);
 
           return scheduleEvents
+            .concat(metronomeEvents)
             .concat(taskEvents)
             .sort((left, right) => {
               const leftTime = left?.start instanceof Date ? left.start.getTime() : 0;
@@ -106723,7 +108062,7 @@ ${MODELS_PAGE_SCRIPT}
               }
               return String(left?.title || "").localeCompare(String(right?.title || ""));
             });
-        }, [selectedProjectSchedules, sortedTasks, taskTicketNumbersById, visibleScheduleCalendarRange]);
+        }, [calendarMetronomeWorkflows, selectedProjectSchedules, sortedTasks, taskTicketNumbersById, visibleScheduleCalendarRange]);
 
         const boardSprints = useMemo(() => {
           return [
@@ -106740,6 +108079,222 @@ ${MODELS_PAGE_SCRIPT}
           if (!projectId) return path;
           const connector = path.includes("?") ? "&" : "?";
           return path + connector + "projectId=" + encodeURIComponent(projectId);
+        }
+
+        function getPlaygroundProjectSetupRecipe(projectBlueprint) {
+          return projectBlueprint?.setupRecipe && typeof projectBlueprint.setupRecipe === "object" && !Array.isArray(projectBlueprint.setupRecipe)
+            ? projectBlueprint.setupRecipe
+            : {};
+        }
+
+        function normalizePlaygroundProjectSetupFolderPath(value) {
+          const normalized = String(value || "")
+            .trim()
+            .split("/")
+            .map((part) => part.trim())
+            .filter(Boolean)
+            .join("/");
+          if (!normalized || normalized === "." || normalized.includes("..")) {
+            return "";
+          }
+          return normalized;
+        }
+
+        function getPlaygroundProjectSetupFolderPaths(projectBlueprint) {
+          const setupRecipe = getPlaygroundProjectSetupRecipe(projectBlueprint);
+          const setupFolders = Array.isArray(setupRecipe.initialFolders) ? setupRecipe.initialFolders : [];
+          const suggestedFolders = Array.isArray(projectBlueprint?.suggestedFolders) ? projectBlueprint.suggestedFolders : [];
+          const seen = new Set();
+          return setupFolders
+            .concat(suggestedFolders)
+            .map(normalizePlaygroundProjectSetupFolderPath)
+            .filter((folderPath) => {
+              if (!folderPath || seen.has(folderPath)) {
+                return false;
+              }
+              seen.add(folderPath);
+              return true;
+            });
+        }
+
+        function normalizePlaygroundProjectStarterTask(value, index = 0) {
+          const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+          const title = typeof value === "string"
+            ? value
+            : typeof source.title === "string"
+              ? source.title
+              : typeof source.name === "string"
+                ? source.name
+                : "";
+          const normalizedTitle = normalizePlaygroundEditableTaskTitle(title, "");
+          if (!normalizedTitle) {
+            return null;
+          }
+          return {
+            title: normalizedTitle,
+            description: typeof source.description === "string" ? source.description : "",
+            priority: PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === source.priority)
+              ? source.priority
+              : "medium",
+            status: PLAYGROUND_TASK_STATUS_OPTIONS.some((option) => option.id === source.status)
+              ? source.status
+              : "todo",
+            taskColor: getPlaygroundTaskColorId(source.taskColor || source.color || PLAYGROUND_TASK_COLOR_OPTIONS[index % PLAYGROUND_TASK_COLOR_OPTIONS.length]?.id),
+            sortOrder: Number.isFinite(source.sortOrder) ? Number(source.sortOrder) : Date.now() + index,
+          };
+        }
+
+        function getPlaygroundProjectStarterTasks(projectBlueprint) {
+          const setupRecipe = getPlaygroundProjectSetupRecipe(projectBlueprint);
+          const starterTasks = Array.isArray(setupRecipe.starterTasks) ? setupRecipe.starterTasks : [];
+          return starterTasks
+            .map((task, index) => normalizePlaygroundProjectStarterTask(task, index))
+            .filter(Boolean);
+        }
+
+        function resolvePlaygroundProjectSetupEnvironmentId(projectRecord, projectEnvironments = []) {
+          const normalizedProject = normalizePlaygroundProjectRecord(projectRecord);
+          const candidates = [
+            normalizedProject.defaultEnvironmentId,
+            normalizedProject.metadata?.defaultEnvironmentId,
+            selectedEnvironmentId,
+            Array.isArray(projectEnvironments) && projectEnvironments.length > 0 ? projectEnvironments[0]?.id : "",
+          ];
+          for (const candidate of candidates) {
+            const normalizedCandidate = String(candidate || "").trim();
+            if (normalizedCandidate) {
+              return normalizedCandidate;
+            }
+          }
+          return "";
+        }
+
+        function isPlaygroundProjectSetupAlreadyExistsError(data) {
+          const message = String(data?.message || data?.error || "").toLowerCase();
+          return message.includes("already") || message.includes("exist") || message.includes("duplicate");
+        }
+
+        async function createPlaygroundProjectSetupFolders(environmentId, folderPaths = []) {
+          const normalizedEnvironmentId = String(environmentId || "").trim();
+          const normalizedFolderPaths = (Array.isArray(folderPaths) ? folderPaths : [])
+            .map(normalizePlaygroundProjectSetupFolderPath)
+            .filter(Boolean);
+          if (!normalizedEnvironmentId || normalizedFolderPaths.length === 0) {
+            return [];
+          }
+
+          const createdFolders = [];
+          for (const folderPath of normalizedFolderPaths) {
+            try {
+              const response = await fetch(backendUrl + "/environments/" + encodeURIComponent(normalizedEnvironmentId) + "/files/mkdir", {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  path: folderPath,
+                }),
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok && !isPlaygroundProjectSetupAlreadyExistsError(data)) {
+                throw new Error(data?.message || data?.error || "Failed to create folder.");
+              }
+              createdFolders.push(folderPath);
+            } catch (error) {
+              console.warn("[project setup] Failed to create starter folder", {
+                environmentId: normalizedEnvironmentId,
+                folderPath,
+                error,
+              });
+            }
+          }
+          return createdFolders;
+        }
+
+        async function createPlaygroundProjectSetupTasks(projectRecord, projectBlueprint, environmentId) {
+          const normalizedProject = normalizePlaygroundProjectRecord(projectRecord);
+          const normalizedProjectId = String(normalizedProject.id || "").trim();
+          const starterTasks = getPlaygroundProjectStarterTasks(projectBlueprint);
+          if (!normalizedProjectId || starterTasks.length === 0) {
+            return [];
+          }
+
+          const normalizedEnvironmentId = String(environmentId || "").trim();
+          const createdTasks = [];
+          for (let index = 0; index < starterTasks.length; index += 1) {
+            const starterTask = starterTasks[index];
+            const taskDraft = normalizePlaygroundTaskRecord({
+              id: "",
+              projectId: normalizedProjectId,
+              title: starterTask.title,
+              description: starterTask.description,
+              status: starterTask.status,
+              priority: starterTask.priority,
+              taskColor: starterTask.taskColor,
+              environmentId: normalizedEnvironmentId || null,
+              sortOrder: starterTask.sortOrder,
+              metadata: {
+                runnerPlayground: {
+                  source: "project_type_setup",
+                  setupProfileId: projectBlueprint?.id || "blank",
+                  taskColor: starterTask.taskColor,
+                  environmentId: normalizedEnvironmentId || undefined,
+                },
+              },
+            });
+            const taskPayload = buildTaskUpdatePayload(taskDraft, {
+              projectId: normalizedProjectId,
+              environmentId: normalizedEnvironmentId || null,
+              taskColor: starterTask.taskColor,
+            });
+
+            try {
+              const response = await fetch(backendUrl + "/tasks", {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(taskPayload),
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to create task.");
+              }
+              const createdTask = getPlaygroundTaskResponseRecord(data);
+              if (createdTask?.id) {
+                createdTasks.push(createdTask);
+              }
+            } catch (error) {
+              console.warn("[project setup] Failed to create starter task", {
+                projectId: normalizedProjectId,
+                title: starterTask.title,
+                error,
+              });
+            }
+          }
+          return createdTasks;
+        }
+
+        async function applyPlaygroundProjectInitialSetup(projectRecord, projectBlueprint, projectEnvironments = []) {
+          const normalizedProject = normalizePlaygroundProjectRecord(projectRecord);
+          const normalizedProjectId = String(normalizedProject.id || "").trim();
+          if (!normalizedProjectId) {
+            return {
+              folders: [],
+              tasks: [],
+            };
+          }
+
+          const setupEnvironmentId = resolvePlaygroundProjectSetupEnvironmentId(normalizedProject, projectEnvironments);
+          const folderPaths = getPlaygroundProjectSetupFolderPaths(projectBlueprint);
+          const folders = await createPlaygroundProjectSetupFolders(setupEnvironmentId, folderPaths);
+          const tasks = await createPlaygroundProjectSetupTasks(normalizedProject, projectBlueprint, setupEnvironmentId);
+          return {
+            folders,
+            tasks,
+          };
         }
 
         function resetSaveState(message = "") {
@@ -108096,16 +109651,40 @@ ${MODELS_PAGE_SCRIPT}
           const defaultProjectEnvironmentId = projectComposerDefaultEnvironmentId || null;
           const initialName = String(options?.name || "").trim();
           const initialDescription = String(options?.description || options?.goal || "").trim();
+          const initialProjectBlueprint = getPlaygroundProjectBlueprint(options?.projectType || options?.type || options?.blueprintId);
+          const defaultLeadName = String(currentUserName || currentUserEmail || "Project Lead").trim();
+          const defaultLeadEmail = String(currentUserEmail || "").trim();
+          const defaultLeadAvatarUrl = String(currentUserAvatarUrl || "").trim();
+          const defaultLeadUserId = defaultLeadEmail || defaultLeadName || "current";
+          const defaultProjectDraft = buildPlaygroundDefaultProjectDraft();
           projectDraftNameDirtyRef.current = Boolean(initialName);
           projectDraftTypedNameRef.current = initialName;
           setProjectComposerMode("create");
-          setProjectDraft({
-            ...buildPlaygroundDefaultProjectDraft(),
+          setProjectDraft(applyPlaygroundProjectBlueprintToDraft({
+            ...defaultProjectDraft,
             ...(initialName ? { name: initialName } : {}),
             ...(initialDescription ? { description: initialDescription } : {}),
             defaultEnvironmentId: defaultProjectEnvironmentId,
-          });
+            leadUserId: defaultLeadUserId,
+            leadName: defaultLeadName,
+            leadEmail: defaultLeadEmail,
+            leadAvatarUrl: defaultLeadAvatarUrl,
+            metadata: {
+              ...(defaultProjectDraft.metadata || {}),
+              leadUserId: defaultLeadUserId,
+              leadName: defaultLeadName,
+              leadEmail: defaultLeadEmail,
+              leadAvatarUrl: defaultLeadAvatarUrl,
+              lead: {
+                userId: defaultLeadUserId,
+                name: defaultLeadName,
+                email: defaultLeadEmail,
+                avatarUrl: defaultLeadAvatarUrl,
+              },
+            },
+          }, initialProjectBlueprint.id, { forceVisualDefaults: true, replaceRules: true }));
           setProjectDescriptionEditing(Boolean(initialDescription));
+          setProjectBlueprintPickerOpen(false);
           setProjectComposerEnvironmentPopoverOpen(false);
           setProjectPreviewedAttachmentId("");
           setProjectAttachmentTransferState({
@@ -108195,6 +109774,7 @@ ${MODELS_PAGE_SCRIPT}
           setMissionControlSetupOpen(false);
           setProjectComposerMode("create");
           setProjectIconPickerOpen(false);
+          setProjectBlueprintPickerOpen(false);
           setProjectComposerEnvironmentPopoverOpen(false);
           setProjectDraft(buildPlaygroundDefaultProjectDraft());
           setProjectDescriptionEditing(false);
@@ -108517,6 +110097,31 @@ ${MODELS_PAGE_SCRIPT}
           }
         }
 
+        async function loadProjectMetronomeSchedules(projectId) {
+          try {
+            const normalizedProjectId = String(projectId || "").trim();
+            const requestTarget = new URL(backendUrl + "/metronomes", window.location.origin);
+            if (normalizedProjectId) {
+              requestTarget.searchParams.set("projectId", normalizedProjectId);
+            }
+            const response = await fetch(requestTarget.toString(), {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Metronomes API unavailable.");
+            }
+            const nextWorkflows = getPlaygroundMetronomeListArray(data)
+              .map(normalizePlaygroundCalendarMetronomeWorkflow)
+              .filter((workflow) => workflow.id);
+            setCalendarMetronomeWorkflows(nextWorkflows);
+          } catch (error) {
+            console.warn("[calendar] Failed to load metronome schedules", error);
+            setCalendarMetronomeWorkflows([]);
+          }
+        }
+
         function closeScheduleDetail() {
           scheduleEditorDirtyRef.current = false;
           scheduleAutosaveQueuedRef.current = null;
@@ -108563,6 +110168,33 @@ ${MODELS_PAGE_SCRIPT}
             await Promise.resolve(onUpgradeToIndividual());
           } finally {
             setCalendarUpgradeCheckoutLoading(false);
+          }
+        }
+
+        function openProjectAgentUpgradeModal() {
+          setTaskDetailPopover("");
+          setTaskDetailSelectPopover("");
+          setTaskSkillsPopoverOpen(false);
+          setProjectSidebarPopover("");
+          setProjectAgentUpgradeModalOpen(true);
+        }
+
+        function closeProjectAgentUpgradeModal() {
+          if (projectAgentUpgradeCheckoutLoading) {
+            return;
+          }
+          setProjectAgentUpgradeModalOpen(false);
+        }
+
+        async function handleProjectAgentUpgradeCheckout() {
+          if (projectAgentUpgradeCheckoutLoading || typeof onUpgradeToIndividual !== "function") {
+            return;
+          }
+          setProjectAgentUpgradeCheckoutLoading(true);
+          try {
+            await Promise.resolve(onUpgradeToIndividual());
+          } finally {
+            setProjectAgentUpgradeCheckoutLoading(false);
           }
         }
 
@@ -109289,6 +110921,10 @@ ${MODELS_PAGE_SCRIPT}
               setProjectComposerEnvironmentPopoverOpen(false);
               return;
             }
+            if (projectBlueprintPickerOpen) {
+              setProjectBlueprintPickerOpen(false);
+              return;
+            }
             if (projectIconPickerOpen) {
               setProjectIconPickerOpen(false);
               return;
@@ -109298,7 +110934,7 @@ ${MODELS_PAGE_SCRIPT}
 
           window.addEventListener("keydown", handleProjectComposerEscape);
           return () => window.removeEventListener("keydown", handleProjectComposerEscape);
-        }, [projectComposerEnvironmentPopoverOpen, projectComposerOpen, projectEnvironmentFilePickerOpen, projectIconPickerOpen]);
+        }, [projectBlueprintPickerOpen, projectComposerEnvironmentPopoverOpen, projectComposerOpen, projectEnvironmentFilePickerOpen, projectIconPickerOpen]);
 
         useEffect(() => {
           if (!releaseComposerOpen) return undefined;
@@ -109646,6 +111282,26 @@ ${MODELS_PAGE_SCRIPT}
 	          projectSchedulesAutoLoadKeyRef.current = loadKey;
 	          void loadProjectSchedules(scheduleProjectId, visibleScheduleCalendarRange);
 	        }, [backendUrl, isStandaloneCalendarMode, requestHeadersKey, selectedProjectId, visibleScheduleCalendarRange, visibleScheduleCalendarRangeKey]);
+
+	        useEffect(() => {
+            const scheduleProjectId = isStandaloneCalendarMode ? "" : selectedProjectId;
+	          if (!scheduleProjectId && !isStandaloneCalendarMode) {
+	            projectMetronomeSchedulesAutoLoadKeyRef.current = "";
+	            setCalendarMetronomeWorkflows([]);
+	            return;
+	          }
+	          const loadKey = [
+	            backendUrl,
+	            requestHeadersKey,
+	            scheduleProjectId || "standalone",
+              isCalendarContext ? "calendar" : "background",
+	          ].join("|");
+	          if (projectMetronomeSchedulesAutoLoadKeyRef.current === loadKey) {
+	            return;
+	          }
+	          projectMetronomeSchedulesAutoLoadKeyRef.current = loadKey;
+	          void loadProjectMetronomeSchedules(scheduleProjectId);
+	        }, [backendUrl, isCalendarContext, isStandaloneCalendarMode, requestHeadersKey, selectedProjectId]);
 
         useEffect(() => {
           if (!selectedProjectId || boardSprintId === PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID) return;
@@ -111558,14 +113214,14 @@ ${MODELS_PAGE_SCRIPT}
               selectTask: selectedTaskIdRef.current === savedTask.id,
             });
             const nextReleaseName = normalizedTargetReleaseId
-              ? (releasesById[normalizedTargetReleaseId]?.name || "release")
+              ? (releasesById[normalizedTargetReleaseId]?.name || "milestone")
               : "All other";
             resetSaveState("Moved to " + nextReleaseName);
           } catch (error) {
             await loadProjectWorkspace(selectedProjectId);
             setSaveState({
               isSaving: false,
-              error: error instanceof Error ? error.message : "Failed to move ticket to release.",
+              error: error instanceof Error ? error.message : "Failed to move ticket to milestone.",
               message: "",
             });
           }
@@ -112852,9 +114508,32 @@ ${MODELS_PAGE_SCRIPT}
             const normalizedProjectAttachments = normalizePlaygroundTaskAttachmentList(projectDraft.attachments);
             const normalizedProjectConnectors = normalizePlaygroundTaskConnectorSelections(projectDraft.connectors);
             const isEditMode = mode === "edit" && projectDraft?.id;
+            const projectBlueprint = getPlaygroundProjectBlueprint(
+              projectDraft.projectType
+              || projectDraft.type
+              || projectDraft.metadata?.projectType
+              || projectDraft.metadata?.blueprintId
+            );
+            const projectBlueprintMetadata = buildPlaygroundProjectBlueprintMetadata(projectBlueprint);
             const projectDraftMetadataSource = isEditMode && selectedProject?.id === projectDraft.id
               ? (mergePlaygroundProjectRecords(projectDraft, selectedProject) || projectDraft)
               : projectDraft;
+            const projectDraftMetadata = projectDraft.metadata && typeof projectDraft.metadata === "object" && !Array.isArray(projectDraft.metadata)
+              ? projectDraft.metadata
+              : {};
+            const projectDraftLead = projectDraftMetadata.lead && typeof projectDraftMetadata.lead === "object" && !Array.isArray(projectDraftMetadata.lead)
+              ? projectDraftMetadata.lead
+              : {};
+            const nextLeadUserId = String(projectDraft.leadUserId || projectDraftMetadata.leadUserId || projectDraftLead.userId || projectDraftLead.id || currentUserEmail || currentUserName || "").trim();
+            const nextLeadName = String(projectDraft.leadName || projectDraftMetadata.leadName || projectDraftLead.name || currentUserName || "").trim();
+            const nextLeadEmail = String(projectDraft.leadEmail || projectDraftMetadata.leadEmail || projectDraftLead.email || currentUserEmail || "").trim();
+            const nextLeadAvatarUrl = String(projectDraft.leadAvatarUrl || projectDraftMetadata.leadAvatarUrl || projectDraftLead.avatarUrl || projectDraftLead.photoUrl || currentUserAvatarUrl || "").trim();
+            const nextLead = {
+              userId: nextLeadUserId,
+              name: nextLeadName,
+              email: nextLeadEmail,
+              avatarUrl: nextLeadAvatarUrl,
+            };
             const response = await fetch(isEditMode
               ? backendUrl + "/projects/" + encodeURIComponent(projectDraft.id)
               : backendUrl + "/projects", {
@@ -112866,17 +114545,31 @@ ${MODELS_PAGE_SCRIPT}
               body: JSON.stringify({
                 name: nextName,
                 description: nextDescription,
+                projectType: projectBlueprint.id,
+                type: projectBlueprint.id,
                 color: projectDraft.color || getPlaygroundProjectAccent(projectDraft, projects.length),
                 defaultEnvironmentId: projectDraft.defaultEnvironmentId || undefined,
+                leadUserId: nextLeadUserId || undefined,
+                leadName: nextLeadName || undefined,
+                leadEmail: nextLeadEmail || undefined,
+                leadAvatarUrl: nextLeadAvatarUrl || undefined,
                 attachments: normalizedProjectAttachments,
                 connectors: normalizedProjectConnectors,
                 metadata: {
                   ...(projectDraft.metadata && typeof projectDraft.metadata === "object" ? projectDraft.metadata : {}),
+                  ...projectBlueprintMetadata,
                   name: nextName,
                   description: nextDescription,
+                  projectType: projectBlueprint.id,
+                  blueprintId: projectBlueprint.id,
                   icon: getPlaygroundProjectIconId(projectDraft.icon),
                   wallpaperId: nextWallpaperId,
                   useCardBackgroundAsWallpaper: nextUseCardBackgroundAsWallpaper,
+                  leadUserId: nextLeadUserId,
+                  leadName: nextLeadName,
+                  leadEmail: nextLeadEmail,
+                  leadAvatarUrl: nextLeadAvatarUrl,
+                  lead: nextLead,
 	                  defaultEnvironmentId: projectDraft.defaultEnvironmentId || null,
 	                  attachments: normalizedProjectAttachments,
 	                  connectors: normalizedProjectConnectors,
@@ -112893,14 +114586,28 @@ ${MODELS_PAGE_SCRIPT}
             const savedProject = getPlaygroundProjectResponseRecord(data, {
               ...projectDraft,
               description: nextDescription,
+              projectType: projectBlueprint.id,
+              type: projectBlueprint.id,
               wallpaperId: nextWallpaperId,
               useCardBackgroundAsWallpaper: nextUseCardBackgroundAsWallpaper,
+              leadUserId: nextLeadUserId,
+              leadName: nextLeadName,
+              leadEmail: nextLeadEmail,
+              leadAvatarUrl: nextLeadAvatarUrl,
               metadata: {
                 ...(projectDraft.metadata && typeof projectDraft.metadata === "object" ? projectDraft.metadata : {}),
+                ...projectBlueprintMetadata,
                 name: nextName,
 	                description: nextDescription,
+	                projectType: projectBlueprint.id,
+	                blueprintId: projectBlueprint.id,
 	                wallpaperId: nextWallpaperId,
 	                useCardBackgroundAsWallpaper: nextUseCardBackgroundAsWallpaper,
+                  leadUserId: nextLeadUserId,
+                  leadName: nextLeadName,
+                  leadEmail: nextLeadEmail,
+                  leadAvatarUrl: nextLeadAvatarUrl,
+                  lead: nextLead,
 	                projectRules: String(projectDraft.projectRules || ""),
 	                ...buildPlaygroundProjectMissionControlMetadataFragment(projectDraftMetadataSource),
 	              },
@@ -112909,28 +114616,49 @@ ${MODELS_PAGE_SCRIPT}
               throw new Error(isEditMode ? "Project update failed." : "Project creation failed.");
             }
 
+            const savedProjectEnvironments = isEditMode
+              ? selectedProjectEnvironments
+              : parsePlaygroundEnvironmentListResponse(data);
             rememberProjectLocalNameOverride(savedProject.id, nextName);
             projectDraftNameDirtyRef.current = false;
             projectDraftTypedNameRef.current = "";
             const committedProjectRules = String(savedProject.projectRules || projectDraft.projectRules || "");
             const committedProject = commitLocalProjectRecord({
               ...savedProject,
+              projectType: projectBlueprint.id,
+              type: projectBlueprint.id,
               name: nextName,
+              leadUserId: nextLeadUserId,
+              leadName: nextLeadName,
+              leadEmail: nextLeadEmail,
+              leadAvatarUrl: nextLeadAvatarUrl,
               metadata: {
                 ...(savedProject.metadata && typeof savedProject.metadata === "object" ? savedProject.metadata : {}),
+		                ...projectBlueprintMetadata,
 		                name: nextName,
 		                description: nextDescription,
+		                projectType: projectBlueprint.id,
+		                blueprintId: projectBlueprint.id,
+                    leadUserId: nextLeadUserId,
+                    leadName: nextLeadName,
+                    leadEmail: nextLeadEmail,
+                    leadAvatarUrl: nextLeadAvatarUrl,
+                    lead: nextLead,
 		                projectRules: committedProjectRules,
 		                ...buildPlaygroundProjectMissionControlMetadataFragment(savedProject, projectDraftMetadataSource),
 		              },
 	              summary: savedProject.summary || (isEditMode ? selectedProjectSummary : savedProject.summary),
 	            }, {
               summary: savedProject.summary || (isEditMode ? selectedProjectSummary : savedProject.summary),
-              environments: isEditMode ? selectedProjectEnvironments : parsePlaygroundEnvironmentListResponse(data),
+              environments: savedProjectEnvironments,
               recentThreads: isEditMode ? selectedProjectRecentThreads : [],
               threads: isEditMode ? selectedProjectRecentThreads : [],
               selectImmediately: isEditMode,
             });
+
+            if (!isEditMode) {
+              await applyPlaygroundProjectInitialSetup(committedProject, projectBlueprint, savedProjectEnvironments);
+            }
 
             if (options?.closeAfterSave !== false) {
               closeProjectComposer();
@@ -112940,10 +114668,24 @@ ${MODELS_PAGE_SCRIPT}
                 ...committedProject,
                 name: nextName,
                 description: nextDescription,
+                projectType: projectBlueprint.id,
+                type: projectBlueprint.id,
+                leadUserId: nextLeadUserId,
+                leadName: nextLeadName,
+                leadEmail: nextLeadEmail,
+                leadAvatarUrl: nextLeadAvatarUrl,
                 metadata: {
                   ...(committedProject.metadata && typeof committedProject.metadata === "object" ? committedProject.metadata : {}),
+	                  ...projectBlueprintMetadata,
 	                  name: nextName,
 	                  description: nextDescription,
+	                  projectType: projectBlueprint.id,
+	                  blueprintId: projectBlueprint.id,
+                    leadUserId: nextLeadUserId,
+                    leadName: nextLeadName,
+                    leadEmail: nextLeadEmail,
+                    leadAvatarUrl: nextLeadAvatarUrl,
+                    lead: nextLead,
 	                  projectRules: committedProjectRules,
 	                  ...buildPlaygroundProjectMissionControlMetadataFragment(committedProject, projectDraftMetadataSource),
 	                },
@@ -113230,12 +114972,12 @@ ${MODELS_PAGE_SCRIPT}
             );
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
-              throw new Error(data?.message || data?.error || (isEditingRelease ? "Failed to update release." : "Failed to create release."));
+              throw new Error(data?.message || data?.error || (isEditingRelease ? "Failed to update milestone." : "Failed to create milestone."));
             }
 
             const savedRelease = getPlaygroundTaskReleaseResponseRecord(data);
             if (!savedRelease?.id) {
-              throw new Error(isEditingRelease ? "Release update failed." : "Release creation failed.");
+              throw new Error(isEditingRelease ? "Milestone update failed." : "Milestone creation failed.");
             }
 
             const nextReleases = isEditingRelease
@@ -113253,7 +114995,7 @@ ${MODELS_PAGE_SCRIPT}
           } catch (error) {
             setReleaseSaveState({
               isSaving: false,
-              error: error instanceof Error ? error.message : (isEditingRelease ? "Failed to update release." : "Failed to create release."),
+              error: error instanceof Error ? error.message : (isEditingRelease ? "Failed to update milestone." : "Failed to create milestone."),
             });
           }
         }
@@ -113263,7 +115005,7 @@ ${MODELS_PAGE_SCRIPT}
           if (!resolvedReleaseId) {
             return;
           }
-          if (!window.confirm("Delete this release? Tickets will stay in the project and simply lose their release assignment.")) {
+          if (!window.confirm("Delete this milestone? Tickets will stay in the project and simply lose their milestone assignment.")) {
             return;
           }
 
@@ -113283,7 +115025,7 @@ ${MODELS_PAGE_SCRIPT}
             );
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to delete release.");
+              throw new Error(data?.message || data?.error || "Failed to delete milestone.");
             }
 
             const nextReleases = releases.filter((release) => release.id !== resolvedReleaseId);
@@ -113309,7 +115051,7 @@ ${MODELS_PAGE_SCRIPT}
             setReleaseDeletePending(false);
             setReleaseSaveState({
               isSaving: false,
-              error: error instanceof Error ? error.message : "Failed to delete release.",
+              error: error instanceof Error ? error.message : "Failed to delete milestone.",
             });
           }
         }
@@ -113330,8 +115072,8 @@ ${MODELS_PAGE_SCRIPT}
                     event.stopPropagation();
                     openReleaseComposerForEdit(normalizedRelease);
                   },
-                  title: "Edit release",
-                  "aria-label": "Edit release",
+                  title: "Edit milestone",
+                  "aria-label": "Edit milestone",
                 }, React.createElement(Ellipsis, { width: 12, height: 12, strokeWidth: 1.9 }))
               : null
           );
@@ -118233,9 +119975,9 @@ ${MODELS_PAGE_SCRIPT}
             ...buildEmptyPlaygroundProjectSummary(),
             ...(project.summary && typeof project.summary === "object" ? project.summary : {}),
           };
-          const wallpaper = getPlaygroundProjectWallpaperConfig(project, index);
           const projectIconConfig = getPlaygroundProjectIconConfig(project.icon);
           const ProjectIcon = projectIconConfig.icon;
+          const projectBlueprint = getPlaygroundProjectBlueprint(project.projectType || project.type || project.metadata?.projectType || project.metadata?.blueprintId);
           const isProjectCardMenuOpen = projectCardMenuProjectId === project.id;
 
           return React.createElement("div", {
@@ -118243,9 +119985,6 @@ ${MODELS_PAGE_SCRIPT}
               className: "playground-tasks-project-card",
               role: "button",
               tabIndex: 0,
-              style: {
-                backgroundImage: 'linear-gradient(180deg, rgba(9, 10, 12, 0.12), rgba(9, 10, 12, 0.48)), url("' + wallpaper.url + '")',
-              },
               onClick: () => handleSelectProject(project.id),
               onKeyDown: (event) => {
                 if (event.key === "Enter" || event.key === " ") {
@@ -118310,7 +120049,7 @@ ${MODELS_PAGE_SCRIPT}
                       : null
                   )
                 ),
-                React.createElement("div", { className: "playground-tasks-project-card-kicker" }, "Project Workspace"),
+                React.createElement("div", { className: "playground-tasks-project-card-kicker" }, projectBlueprint.shortTitle || "Project Workspace"),
                 React.createElement("div", { className: "playground-tasks-project-card-title" }, project.name || "Untitled Project"),
                 React.createElement(PlaygroundTaskDescriptionMarkdown, {
                   content: project.description || "Open this project to access its environments, active threads, and sprint-driven task board.",
@@ -118320,56 +120059,15 @@ ${MODELS_PAGE_SCRIPT}
               React.createElement("div", { className: "playground-tasks-project-card-body" },
                 React.createElement("div", { className: "playground-tasks-project-card-metrics" },
                   React.createElement("span", { className: "playground-tasks-chip" }, summary.threadsCount + " threads"),
-                  React.createElement("span", { className: "playground-tasks-chip" }, summary.openTasksCount + " open tasks")
+                  React.createElement("span", { className: "playground-tasks-chip" }, summary.openTasksCount + " open tasks"),
+                  React.createElement("span", { className: "playground-tasks-chip" }, projectBlueprint.shortTitle || "Project")
                 )
               )
             );
         }
 
         function renderProjectWallpaperPicker() {
-          const currentWallpaperId = getPlaygroundProjectWallpaperId(projectDraft.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id);
-          const currentWallpaper = getPlaygroundProjectWallpaperConfig(currentWallpaperId, 0);
-          const previewBackgroundImage = "url(" + currentWallpaper.url + ")";
-          const isPreviewTransitioning = projectWallpaperTransition
-            && typeof projectWallpaperTransition.fromPreview === "string"
-            && typeof projectWallpaperTransition.toPreview === "string";
-          return React.createElement("div", { className: "playground-tasks-project-wallpaper-picker" },
-            React.createElement("div", {
-                className: "playground-tasks-project-wallpaper-picker-preview" + (isPreviewTransitioning ? " is-" + projectWallpaperTransition.direction : ""),
-                style: isPreviewTransitioning ? undefined : { backgroundImage: previewBackgroundImage },
-                "aria-hidden": "true",
-              },
-              isPreviewTransitioning
-                ? React.createElement(React.Fragment, null,
-                    React.createElement("div", {
-                      className: "playground-tasks-project-wallpaper-picker-preview-image is-outgoing",
-                      style: { backgroundImage: projectWallpaperTransition.fromPreview },
-                    }),
-                    React.createElement("div", {
-                      className: "playground-tasks-project-wallpaper-picker-preview-image is-incoming",
-                      style: { backgroundImage: projectWallpaperTransition.toPreview },
-                    })
-                  )
-                : null
-            ),
-            React.createElement("div", { className: "playground-tasks-project-wallpaper-picker-controls" },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-tasks-project-wallpaper-picker-button",
-                onClick: () => handleProjectWallpaperStep("prev"),
-                "aria-label": "Previous background image",
-                title: "Previous background image",
-              }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
-              React.createElement("div", { className: "playground-tasks-project-wallpaper-picker-label" }, currentWallpaper.name || "Background"),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-tasks-project-wallpaper-picker-button",
-                onClick: () => handleProjectWallpaperStep("next"),
-                "aria-label": "Next background image",
-                title: "Next background image",
-              }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
-            )
-          );
+          return null;
         }
 
         function renderProjectComposerDialog(options = {}) {
@@ -118380,6 +120078,7 @@ ${MODELS_PAGE_SCRIPT}
 
           const selectedProjectIcon = getPlaygroundProjectIconConfig(projectDraft.icon);
           const SelectedProjectIcon = selectedProjectIcon.icon;
+          const selectedProjectBlueprint = getPlaygroundProjectBlueprint(projectDraft.projectType || projectDraft.type || projectDraft.metadata?.projectType || projectDraft.metadata?.blueprintId);
           const projectAttachments = normalizePlaygroundTaskAttachmentList(projectDraft.attachments);
           const hasProjectAttachments = projectAttachments.length > 0;
           const projectConnectorEntries = PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => {
@@ -118465,6 +120164,226 @@ ${MODELS_PAGE_SCRIPT}
             );
           }
 
+          function handleProjectBlueprintSelection(blueprint) {
+            setProjectDraft((current) => {
+              const currentRecord = current && typeof current === "object" ? current : {};
+              const currentMetadata = currentRecord.metadata && typeof currentRecord.metadata === "object" && !Array.isArray(currentRecord.metadata)
+                ? currentRecord.metadata
+                : {};
+              const previousWallpaperId = String(currentRecord.wallpaperId || currentMetadata.wallpaperId || "").trim();
+              const nextDraft = applyPlaygroundProjectBlueprintToDraft(currentRecord, blueprint.id, {
+                replaceRules: true,
+              });
+              const nextMetadata = nextDraft.metadata && typeof nextDraft.metadata === "object" && !Array.isArray(nextDraft.metadata)
+                ? nextDraft.metadata
+                : {};
+              return {
+                ...nextDraft,
+                wallpaperId: previousWallpaperId || nextDraft.wallpaperId || "",
+                metadata: {
+                  ...nextMetadata,
+                  wallpaperId: previousWallpaperId || nextMetadata.wallpaperId || "",
+                },
+              };
+            });
+            setProjectBlueprintPickerOpen(false);
+            setProjectIconPickerOpen(false);
+            setProjectComposerEnvironmentPopoverOpen(false);
+          }
+
+          function renderProjectBlueprintOption(blueprint) {
+            const BlueprintIcon = blueprint.Icon || getPlaygroundProjectIconConfig(blueprint.iconId).icon;
+            const isActive = selectedProjectBlueprint.id === blueprint.id;
+            return React.createElement("button", {
+                key: blueprint.id,
+                type: "button",
+                className: "playground-tasks-project-blueprint-option" + (isActive ? " is-active" : ""),
+                onClick: () => handleProjectBlueprintSelection(blueprint),
+              },
+              React.createElement("span", {
+                className: "playground-tasks-project-blueprint-icon",
+                style: { "--project-blueprint-accent": blueprint.color || "#66A6FF" },
+                "aria-hidden": "true",
+              }, React.createElement(BlueprintIcon, { width: 15, height: 15, strokeWidth: 1.85 })),
+              React.createElement("span", { className: "playground-tasks-project-blueprint-copy" },
+                React.createElement("span", { className: "playground-tasks-project-blueprint-title" }, blueprint.title),
+                React.createElement("span", { className: "playground-tasks-project-blueprint-description" }, blueprint.description)
+              )
+            );
+          }
+
+          function renderProjectBlueprintSelector() {
+            const BlueprintIcon = selectedProjectBlueprint.Icon || getPlaygroundProjectIconConfig(selectedProjectBlueprint.iconId).icon;
+            return React.createElement("div", { className: "playground-tasks-project-blueprint-section" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-project-blueprint-trigger",
+                onClick: () => {
+                  setProjectIconPickerOpen(false);
+                  setProjectComposerEnvironmentPopoverOpen(false);
+                  setProjectBlueprintPickerOpen(true);
+                },
+                "aria-haspopup": "dialog",
+                "aria-expanded": projectBlueprintPickerOpen ? "true" : "false",
+              },
+                React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-main" },
+                    React.createElement("span", {
+                      className: "playground-tasks-project-blueprint-icon",
+                      style: { "--project-blueprint-accent": selectedProjectBlueprint.color || "#66A6FF" },
+                      "aria-hidden": "true",
+                    }, React.createElement(BlueprintIcon, { width: 15, height: 15, strokeWidth: 1.85 })),
+                  React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-copy" },
+                    React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-title" }, selectedProjectBlueprint.title),
+                  React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-description" }, selectedProjectBlueprint.description)
+                    )
+                ),
+                React.createElement(ChevronDown, { className: "playground-tasks-project-blueprint-chevron", strokeWidth: 1.8 })
+              )
+            );
+          }
+
+          function renderProjectBlueprintPickerModal() {
+            if (!projectBlueprintPickerOpen) {
+              return null;
+            }
+            const modalElement = React.createElement("div", {
+                className: "playground-tasks-project-modal-backdrop playground-tasks-project-blueprint-modal-backdrop",
+                onClick: () => setProjectBlueprintPickerOpen(false),
+              },
+              React.createElement("div", {
+                  className: "playground-tasks-project-modal playground-tasks-project-blueprint-modal",
+                  role: "dialog",
+                  "aria-modal": "true",
+                  "aria-label": "Choose project type",
+                  onClick: (event) => event.stopPropagation(),
+                },
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "Choose Project Type")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: () => setProjectBlueprintPickerOpen(false),
+                    title: "Close",
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-tasks-project-blueprint-modal-body" },
+                  React.createElement("div", { className: "playground-tasks-project-blueprint-grid" },
+                    PLAYGROUND_PROJECT_BLUEPRINT_OPTIONS.map((blueprint) => renderProjectBlueprintOption(blueprint))
+                  )
+                )
+              )
+            );
+            return typeof document !== "undefined" && document.body
+              ? createPortal(modalElement, document.body)
+              : modalElement;
+          }
+
+          function getProjectDraftLeadDisplay() {
+            const metadata = projectDraft?.metadata && typeof projectDraft.metadata === "object" && !Array.isArray(projectDraft.metadata)
+              ? projectDraft.metadata
+              : {};
+            const metadataLead = metadata.lead && typeof metadata.lead === "object" && !Array.isArray(metadata.lead)
+              ? metadata.lead
+              : {};
+            const leadName = String(
+              projectDraft?.leadName
+                || metadata.leadName
+                || metadataLead.name
+                || currentUserName
+                || currentUserEmail
+                || "Project Lead"
+            ).trim();
+            const leadEmail = String(
+              projectDraft?.leadEmail
+                || metadata.leadEmail
+                || metadataLead.email
+                || currentUserEmail
+                || ""
+            ).trim();
+            const leadAvatarUrl = String(
+              projectDraft?.leadAvatarUrl
+                || metadata.leadAvatarUrl
+                || metadataLead.avatarUrl
+                || metadataLead.photoUrl
+                || currentUserAvatarUrl
+                || ""
+            ).trim();
+            return {
+              name: leadName || "Project Lead",
+              email: leadEmail,
+              avatarUrl: leadAvatarUrl,
+            };
+          }
+
+          function assignCurrentUserAsProjectLead(event) {
+            if (event?.preventDefault) {
+              event.preventDefault();
+            }
+            const leadName = String(currentUserName || currentUserEmail || "Project Lead").trim();
+            const leadEmail = String(currentUserEmail || "").trim();
+            const leadAvatarUrl = String(currentUserAvatarUrl || "").trim();
+            const leadUserId = leadEmail || leadName || "current";
+            setProjectDraft((current) => {
+              const currentRecord = current && typeof current === "object" ? current : {};
+              const currentMetadata = currentRecord.metadata && typeof currentRecord.metadata === "object" && !Array.isArray(currentRecord.metadata)
+                ? currentRecord.metadata
+                : {};
+              return {
+                ...currentRecord,
+                leadUserId,
+                leadName,
+                leadEmail,
+                leadAvatarUrl,
+                metadata: {
+                  ...currentMetadata,
+                  leadUserId,
+                  leadName,
+                  leadEmail,
+                  leadAvatarUrl,
+                  lead: {
+                    userId: leadUserId,
+                    name: leadName,
+                    email: leadEmail,
+                    avatarUrl: leadAvatarUrl,
+                  },
+                },
+              };
+            });
+          }
+
+          function renderProjectLeadSelector() {
+            const lead = getProjectDraftLeadDisplay();
+            return React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-project-lead-selector",
+                onClick: assignCurrentUserAsProjectLead,
+                title: "Project lead",
+              },
+              React.createElement("span", { className: "playground-tasks-project-lead-label" }, "Lead"),
+              React.createElement("span", { className: "playground-tasks-project-lead-person" },
+                canRenderAvatarImage(lead.avatarUrl)
+                  ? React.createElement("img", {
+                      className: "playground-tasks-project-lead-avatar",
+                      src: lead.avatarUrl,
+                      alt: lead.name,
+                      draggable: false,
+                    })
+                  : React.createElement("span", { className: "playground-tasks-project-lead-avatar" },
+                      React.createElement(User, { width: 13, height: 13, strokeWidth: 1.8 })
+                    ),
+                React.createElement("span", { className: "playground-tasks-project-lead-copy" },
+                  React.createElement("span", { className: "playground-tasks-project-lead-name" }, lead.name),
+                  lead.email
+                    ? React.createElement("span", { className: "playground-tasks-project-lead-email" }, lead.email)
+                    : null
+                )
+              ),
+              React.createElement(ChevronDown, { className: "playground-tasks-project-lead-chevron", strokeWidth: 1.8 })
+            );
+          }
+
           const projectComposerForm = React.createElement("form", {
                   className: "playground-tasks-project-modal playground-tasks-project-composer-modal",
                   onClick: (event) => event.stopPropagation(),
@@ -118524,6 +120443,8 @@ ${MODELS_PAGE_SCRIPT}
                       }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 ),
                 embedded ? renderProjectWallpaperPicker() : null,
+                renderProjectBlueprintSelector(),
+                renderProjectLeadSelector(),
                 React.createElement("div", { className: "playground-tasks-attachments playground-tasks-project-modal-attachments" },
                   React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
                       React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),
@@ -118694,7 +120615,14 @@ ${MODELS_PAGE_SCRIPT}
                   ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, projectSaveState.error)
                   : null,
                 embedded
-                  ? null
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-actions playground-mission-control-setup-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-mission-control-studio-save-button",
+                        onClick: () => void handleSaveProjectFromStudio(),
+                        disabled: projectSaveState.isSaving || !String(projectDraft.name || "").trim(),
+                      }, projectSaveState.isSaving ? "Saving..." : "Save Project")
+                    )
                   : React.createElement("div", { className: "playground-tasks-project-modal-actions" },
                       React.createElement("button", {
                         type: "button",
@@ -118713,16 +120641,22 @@ ${MODELS_PAGE_SCRIPT}
           ;
 
           if (embedded) {
-            return React.createElement("div", { className: "playground-mission-control-setup-form" },
-              projectComposerForm
+            return React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-mission-control-setup-form" },
+                projectComposerForm
+              ),
+              renderProjectBlueprintPickerModal()
             );
           }
 
-          return React.createElement("div", {
-              className: "playground-tasks-project-modal-backdrop",
-              onClick: () => closeProjectComposer(),
-            },
-            projectComposerForm
+          return React.createElement(React.Fragment, null,
+            React.createElement("div", {
+                className: "playground-tasks-project-modal-backdrop",
+                onClick: () => closeProjectComposer(),
+              },
+              projectComposerForm
+            ),
+            renderProjectBlueprintPickerModal()
           );
         }
 
@@ -118749,7 +120683,7 @@ ${MODELS_PAGE_SCRIPT}
                       type: "text",
                       className: "playground-tasks-project-modal-name-input",
                       value: releaseDraft.name,
-                      placeholder: isEditingRelease ? "Release name" : "New Release",
+                      placeholder: isEditingRelease ? "Milestone name" : "New Milestone",
                       autoFocus: true,
                       onChange: (event) => setReleaseDraft((current) => ({ ...current, name: event.target.value })),
                     })
@@ -118819,14 +120753,14 @@ ${MODELS_PAGE_SCRIPT}
                               })
                             : React.createElement("div", {
                                 className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                              }, "Optional milestone details for this release.")
+                              }, "Optional details for this milestone.")
                         )
                       : null,
                     React.createElement("textarea", {
                       ref: releaseDescriptionTextareaRef,
                       className: "playground-tasks-detail-description-input " + (isReleaseDescriptionEditing ? "is-editing" : "is-preview"),
                       rows: 1,
-                      placeholder: isReleaseDescriptionEditing ? "Optional milestone details for this release." : "",
+                      placeholder: isReleaseDescriptionEditing ? "Optional details for this milestone." : "",
                       value: releaseDraft.description,
                       onFocus: () => setIsReleaseDescriptionEditing(true),
                       onChange: (event) => {
@@ -118864,7 +120798,7 @@ ${MODELS_PAGE_SCRIPT}
                     disabled: isReleaseActionPending || !String(releaseDraft.name || "").trim(),
                   }, releaseSaveState.isSaving
                     ? (isEditingRelease ? "Saving..." : "Creating...")
-                    : (isEditingRelease ? "Save Release" : "Create Release"))
+                    : (isEditingRelease ? "Save Milestone" : "Create Milestone"))
                 )
               )
             );
@@ -118984,7 +120918,7 @@ ${MODELS_PAGE_SCRIPT}
           const planningRows = [
             {
               title: "Mission Control",
-              subtitle: "Turn a short goal into strategy, releases, tickets, and the next steps agents should follow.",
+              subtitle: "Turn a short goal into strategy, milestones, tickets, and the next steps agents should follow.",
               Icon: Rocket,
             },
             {
@@ -118993,7 +120927,7 @@ ${MODELS_PAGE_SCRIPT}
               Icon: LayoutGrid,
             },
             {
-              title: "Releases",
+              title: "Milestones",
               subtitle: "Group tasks into concrete milestones so agents work toward outcomes instead of isolated tickets.",
               Icon: CalendarIcon,
             },
@@ -119048,7 +120982,7 @@ ${MODELS_PAGE_SCRIPT}
                   React.createElement("span", { className: "playground-projects-working-agent-title-emphasis" }, "A working agent.")
                 ),
                 React.createElement("p", { className: "playground-projects-working-agent-copy" },
-                  "A project gives every agent the surrounding plan: strategy, tickets, releases, files, comments, reviewers, resources, and run history. Agents can return to the same workspace and continue the work instead of restarting from a prompt."
+                  "A project gives every agent the surrounding plan: strategy, tickets, milestones, files, comments, reviewers, resources, and run history. Agents can return to the same workspace and continue the work instead of restarting from a prompt."
                 ),
                 renderProjectWorkingAgentLogoCarousel()
               )
@@ -119067,6 +121001,191 @@ ${MODELS_PAGE_SCRIPT}
                 )
               )
             )
+          );
+        }
+
+        function getProjectListSummary(project) {
+          const projectObject = project && typeof project === "object" && !Array.isArray(project) ? project : {};
+          const summaryObject = projectObject.summary && typeof projectObject.summary === "object" && !Array.isArray(projectObject.summary)
+            ? projectObject.summary
+            : {};
+          return buildEmptyPlaygroundProjectSummary({
+            ...projectObject,
+            ...summaryObject,
+          });
+        }
+
+        function getProjectListBlueprint(project) {
+          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+            ? project.metadata
+            : {};
+          return getPlaygroundProjectBlueprint(
+            project?.projectType
+              || project?.type
+              || metadata.projectType
+              || metadata.blueprintId
+              || "blank"
+          );
+        }
+
+        function getProjectListLead(project) {
+          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+            ? project.metadata
+            : {};
+          const lead = project?.lead && typeof project.lead === "object" && !Array.isArray(project.lead)
+            ? project.lead
+            : {};
+          const leadName = String(
+            project?.leadName
+              || lead.name
+              || lead.displayName
+              || metadata.leadName
+              || currentUserName
+              || "Unassigned"
+          ).trim();
+          const leadAvatarUrl = String(
+            project?.leadAvatarUrl
+              || lead.avatarUrl
+              || lead.photoURL
+              || metadata.leadAvatarUrl
+              || currentUserAvatarUrl
+              || ""
+          ).trim();
+          return {
+            name: leadName || "Unassigned",
+            avatarUrl: leadAvatarUrl,
+          };
+        }
+
+        function renderProjectListLeadAvatar(lead) {
+          if (canRenderAvatarImage(lead.avatarUrl)) {
+            return React.createElement("img", {
+              className: "playground-projects-list-avatar",
+              src: lead.avatarUrl,
+              alt: lead.name || "Project lead",
+              draggable: false,
+            });
+          }
+
+          return React.createElement("span", { className: "playground-projects-list-avatar" },
+            getAccountInitials(lead.name || "Lead")
+          );
+        }
+
+        function getProjectListTargetDateLabel(project) {
+          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+            ? project.metadata
+            : {};
+          const targetDate = String(project?.targetDate || project?.dueDate || metadata.targetDate || metadata.dueDate || "").trim();
+          return targetDate ? (formatPlaygroundFileDate(targetDate) || targetDate) : "";
+        }
+
+        function getProjectListPriorityLevel(project) {
+          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+            ? project.metadata
+            : {};
+          const rawPriority = project?.priority || metadata.priority || metadata.priorityLevel || "medium";
+          const normalizedPriority = String(rawPriority || "").trim().toLowerCase();
+          if (normalizedPriority === "urgent" || normalizedPriority === "critical" || normalizedPriority === "high" || Number(rawPriority) >= 3) {
+            return 3;
+          }
+          if (normalizedPriority === "medium" || Number(rawPriority) === 2) {
+            return 2;
+          }
+          if (normalizedPriority === "low" || Number(rawPriority) === 1) {
+            return 1;
+          }
+          return 2;
+        }
+
+        function renderProjectListPriority(level) {
+          return React.createElement("span", { className: "playground-projects-list-priority", title: "Priority" },
+            [1, 2, 3].map((bar) =>
+              React.createElement("span", {
+                key: bar,
+                className: "playground-projects-list-priority-bar" + (bar <= level ? " is-active" : ""),
+              })
+            )
+          );
+        }
+
+        function renderProjectListRow(project, index) {
+          const summary = getProjectListSummary(project);
+          const blueprint = getProjectListBlueprint(project);
+          const iconConfig = getPlaygroundProjectIconConfig(project?.icon || blueprint.iconId || "rocket");
+          const ProjectIcon = iconConfig.icon || Rocket;
+          const lead = getProjectListLead(project);
+          const targetDateLabel = getProjectListTargetDateLabel(project);
+          const priorityLevel = getProjectListPriorityLevel(project);
+          const totalTasks = Math.max(0, Number(summary.tasksCount) || 0);
+          const openTasks = Math.max(0, Math.min(totalTasks, Number(summary.openTasksCount) || 0));
+          const completedTasks = Math.max(0, totalTasks - openTasks);
+          const statusPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+          const healthLabel = statusPercent >= 100 ? "Complete" : "On track";
+          const healthMeta = formatRelativeThreadTime(project?.updatedAt || project?.createdAt) || "now";
+          const projectName = String(project?.name || "").trim() || "Untitled project";
+
+          return React.createElement("button", {
+              key: project?.id || projectName || index,
+              type: "button",
+              className: "playground-projects-list-row",
+              style: { "--project-blueprint-accent": blueprint.color || "#66A6FF" },
+              onClick: () => project?.id && handleSelectProject(project.id),
+            },
+            React.createElement("div", { className: "playground-projects-list-name-cell" },
+              React.createElement("span", {
+                className: "playground-projects-list-checkbox",
+                onClick: (event) => event.stopPropagation(),
+                "aria-hidden": "true",
+              }),
+              React.createElement(ProjectIcon, { className: "playground-projects-list-project-icon", strokeWidth: 1.8 }),
+              React.createElement("span", { className: "playground-projects-list-project-main" },
+                React.createElement("span", { className: "playground-projects-list-project-title" }, projectName),
+                React.createElement("span", { className: "playground-projects-list-project-type" },
+                  React.createElement("span", { className: "playground-projects-list-project-type-dot", "aria-hidden": "true" }),
+                  React.createElement("span", null, blueprint.shortTitle || blueprint.title || "Project")
+                )
+              )
+            ),
+            React.createElement("div", { className: "playground-projects-list-health" },
+              React.createElement("span", { className: "playground-projects-list-health-icon", "aria-hidden": "true" },
+                React.createElement(Check, { width: 12, height: 12, strokeWidth: 2 })
+              ),
+              React.createElement("span", { className: "playground-projects-list-health-label" }, healthLabel),
+              React.createElement("span", { className: "playground-projects-list-health-meta" }, "- " + healthMeta)
+            ),
+            renderProjectListPriority(priorityLevel),
+            React.createElement("div", { className: "playground-projects-list-lead" }, renderProjectListLeadAvatar(lead)),
+            React.createElement("div", { className: "playground-projects-list-target" },
+              targetDateLabel
+                ? React.createElement(React.Fragment, null,
+                    React.createElement(CalendarIcon, { strokeWidth: 1.8 }),
+                    React.createElement("span", null, targetDateLabel)
+                  )
+                : React.createElement(React.Fragment, null,
+                    React.createElement(CalendarIcon, { strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "playground-projects-list-muted" }, "No target")
+                  )
+            ),
+            React.createElement("div", { className: "playground-projects-list-issues" }, String(totalTasks)),
+            React.createElement("div", { className: "playground-projects-list-status" },
+              React.createElement("span", { className: "playground-projects-list-status-ring", "aria-hidden": "true" }),
+              React.createElement("span", null, statusPercent + "%")
+            )
+          );
+        }
+
+        function renderProjectsListEmptyState() {
+          return React.createElement("div", { className: "playground-projects-list-empty" },
+            React.createElement("div", { className: "playground-projects-list-empty-title" }, "No projects yet"),
+            React.createElement("div", { className: "playground-projects-list-empty-copy" },
+              "Create a project to give agents a shared goal, task backlog, resources, files, and operating context."
+            ),
+            React.createElement("button", {
+              type: "button",
+              className: "playground-environments-action-button is-primary",
+              onClick: () => openProjectComposer(),
+            }, "Add Project")
           );
         }
 
@@ -119099,36 +121218,61 @@ ${MODELS_PAGE_SCRIPT}
 
           return React.createElement("div", { className: "playground-tasks-view-section playground-projects-overview-surface" },
             React.createElement("div", { className: "playground-projects-overview-inner" },
-              React.createElement("div", { className: "playground-projects-overview-title-block" },
-                React.createElement("div", { className: "playground-projects-overview-title-copy" },
-                  React.createElement("h1", { className: "playground-project-overview-summary-title" }, "Organize your work in projects")
-                ),
-                React.createElement("div", { className: "playground-projects-overview-title-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-projects-overview-add-button",
-                    onClick: () => window.open(${JSON.stringify(aiosOrigin + "/developers/core-concepts#projects")}, "_blank", "noopener,noreferrer"),
-                  },
-                    React.createElement(BookOpen, { strokeWidth: 1.8, "aria-hidden": "true" }),
-                    React.createElement("span", null, "Docs")
+              React.createElement("div", { className: "playground-projects-list-shell" },
+                React.createElement("div", { className: "playground-projects-list-toolbar" },
+                  React.createElement("div", { className: "playground-projects-list-toolbar-left" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-projects-list-view-pill",
+                    }, "All projects"),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-projects-list-add-button",
+                      onClick: () => openProjectComposer(),
+                      title: "Add Project",
+                      "aria-label": "Add Project",
+                    }, React.createElement(Plus, { strokeWidth: 1.8 }))
                   ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-projects-overview-add-button",
-                    onClick: () => openProjectComposer(),
-                  },
-                    React.createElement(Plus, { strokeWidth: 1.8, "aria-hidden": "true" }),
-                    React.createElement("span", null, "Add Project")
+                  React.createElement("div", { className: "playground-projects-list-toolbar-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-projects-list-icon-button",
+                      title: "Filter projects",
+                      "aria-label": "Filter projects",
+                    }, React.createElement(SlidersHorizontal, { strokeWidth: 1.8 })),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-projects-list-icon-button",
+                      title: "View options",
+                      "aria-label": "View options",
+                    }, React.createElement(SlidersHorizontal, { strokeWidth: 1.8 })),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-projects-list-icon-button",
+                      title: "Layout",
+                      "aria-label": "Layout",
+                    }, React.createElement(PanelLeft, { strokeWidth: 1.8 }))
                   )
-                )
-              ),
-              filteredProjects.length > 0
-                ? React.createElement("div", { className: "playground-tasks-project-grid" },
-                    filteredProjects.map((project, index) => renderProjectCard(project, index))
-                  )
-                : projects.length === 0
-                  ? renderProjectWorkingAgentEmptyState()
-                  : renderNoMatchingProjectsState()
+                ),
+                filteredProjects.length > 0
+                  ? React.createElement("div", { className: "playground-projects-list-table" },
+                      React.createElement("div", { className: "playground-projects-list-header", "aria-hidden": "true" },
+                        React.createElement("div", { className: "playground-projects-list-header-cell" }, "Name"),
+                        React.createElement("div", { className: "playground-projects-list-header-cell" }, "Health"),
+                        React.createElement("div", { className: "playground-projects-list-header-cell" }, "Priority"),
+                        React.createElement("div", { className: "playground-projects-list-header-cell" }, "Lead"),
+                        React.createElement("div", { className: "playground-projects-list-header-cell playground-projects-list-col-target" }, "Target date"),
+                        React.createElement("div", { className: "playground-projects-list-header-cell playground-projects-list-col-issues" }, "Issues"),
+                        React.createElement("div", { className: "playground-projects-list-header-cell" }, "Status")
+                      ),
+                      React.createElement("div", { className: "playground-projects-list-body" },
+                        filteredProjects.map((project, index) => renderProjectListRow(project, index))
+                      )
+                    )
+                  : projects.length === 0
+                    ? renderProjectsListEmptyState()
+                    : renderNoMatchingProjectsState()
+              )
             )
           );
         }
@@ -119215,8 +121359,8 @@ ${MODELS_PAGE_SCRIPT}
         function renderProjectReleasePickerControl({
           popover,
           setPopover,
-          allLabel = "All Releases",
-          allDescription = "Show every release.",
+          allLabel = "All Milestones",
+          allDescription = "Show every milestone.",
         }) {
           return React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-release-filter-shell" },
             React.createElement("button", {
@@ -119225,7 +121369,7 @@ ${MODELS_PAGE_SCRIPT}
               onClick: () => setPopover((current) => current === "release" ? "" : "release"),
             },
               React.createElement(History, { width: 14, height: 14, strokeWidth: 1.8 }),
-              React.createElement("span", null, "Releases")
+              React.createElement("span", null, "Milestones")
             ),
             popover === "release"
               ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-release-picker-menu" },
@@ -119263,7 +121407,7 @@ ${MODELS_PAGE_SCRIPT}
                           : null
                       ),
                       React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                        React.createElement("span", null, release.name || "Untitled Release"),
+                        React.createElement("span", null, release.name || "Untitled Milestone"),
                         React.createElement("span", null, release.description || formatPlaygroundTaskReleaseDateRange(release))
                       )
                     )
@@ -119278,8 +121422,8 @@ ${MODELS_PAGE_SCRIPT}
                   },
                     React.createElement(Plus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                     React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                      React.createElement("span", null, "Add Release"),
-                      React.createElement("span", null, "Create a new milestone release.")
+                      React.createElement("span", null, "Add Milestone"),
+                      React.createElement("span", null, "Create a new milestone.")
                     )
                   )
                 )
@@ -119344,11 +121488,11 @@ ${MODELS_PAGE_SCRIPT}
                 const sectionKey = normalizedReleaseId || "__no_release__";
                 const releaseRecord = normalizedReleaseId ? (releasesById[normalizedReleaseId] || null) : null;
                 const sectionTitle = normalizedReleaseId
-                  ? (releaseRecord?.name || "Release unavailable")
+                  ? (releaseRecord?.name || "Milestone unavailable")
                   : "All other";
                 const sectionCopy = normalizedReleaseId
                   ? (releaseRecord?.description || "")
-                  : "All tasks, that are not assigned to any release";
+                  : "All tasks that are not assigned to any milestone";
                 let sectionIndex = sectionIndexByKey.get(sectionKey);
                 if (sectionIndex === undefined) {
                   sectionIndex = releaseSections.length;
@@ -119847,7 +121991,7 @@ ${MODELS_PAGE_SCRIPT}
             && activeTaskRoots.length === 0
             && (!isReleaseBacklogView || Boolean(selectedRelease));
           const backlogEmptyTitle = normalizedSearchQuery
-            ? (isReleaseBacklogView ? "No matching release tasks" : "No matching backlog tasks")
+            ? (isReleaseBacklogView ? "No matching milestone tasks" : "No matching backlog tasks")
             : activeBacklogFilterValue === "tasks"
               ? "No tasks yet"
               : activeBacklogFilterValue === "subtasks"
@@ -119857,11 +122001,11 @@ ${MODELS_PAGE_SCRIPT}
                   : activeBacklogFilterValue === "done"
                     ? "No completed tasks"
                     : isReleaseBacklogView
-                      ? "Release backlog is empty"
+                      ? "Milestone backlog is empty"
                       : "Backlog is empty";
           const backlogEmptyCopy = normalizedSearchQuery
             ? (isReleaseBacklogView
-                ? "Clear the search or assign more tickets to this release."
+                ? "Clear the search or assign more tickets to this milestone."
                 : "Clear the project search or add a new task below.")
             : activeBacklogFilterValue === "tasks"
               ? "Top-level tasks for this project will appear here."
@@ -119869,11 +122013,11 @@ ${MODELS_PAGE_SCRIPT}
                 ? "Subtasks will appear here below the tasks they belong to."
                 : activeBacklogFilterValue === "all"
                   ? (isReleaseBacklogView
-                      ? "Open and completed work from this release will appear here."
+                      ? "Open and completed work from this milestone will appear here."
                       : "Open and completed project tasks will appear here.")
                   : activeBacklogFilterValue === "done"
                     ? (isReleaseBacklogView
-                        ? "Completed work for this release will appear here."
+                        ? "Completed work for this milestone will appear here."
                         : "Completed work from this project will appear here.")
                     : isReleaseBacklogView
                       ? "Run Mission Control to generate the first strategy and create the initial structured backlog for this project."
@@ -119884,7 +122028,7 @@ ${MODELS_PAGE_SCRIPT}
             + "/api/task-backlog/" + encodeURIComponent(selectedProjectId)
             + (selectedReleaseId ? ("/releases/" + encodeURIComponent(selectedReleaseId)) : "");
           const backlogHeaderTitle = isReleaseBacklogView
-            ? (selectedRelease.name || "Release")
+            ? (selectedRelease.name || "Milestone")
             : "Backlog";
           const backlogHeaderAction = isReleaseBacklogView && selectedRelease
             ? React.createElement("button", {
@@ -119953,24 +122097,26 @@ ${MODELS_PAGE_SCRIPT}
                   inputMode: "computer-agents",
                   computerAgents: computerAgents,
                   environments: backlogComposerEnvironments,
-                  agents: backlogComposerAgents,
-                  skills: skills,
-                  skillDefaults: getDemoImageGenerationSkillDefaults(),
-                  environmentId: backlogComposerEnvironmentId || undefined,
-                  agentId: backlogComposerAgentId || undefined,
-                  autoFocusComposer: true,
-                  keepFocusOnSubmit: true,
+	                  agents: backlogComposerAgents,
+	                  skills: skills,
+	                  skillDefaults: getDemoImageGenerationSkillDefaults(),
+	                  environmentId: backlogComposerEnvironmentId || undefined,
+	                  agentId: effectiveBacklogComposerAgentId || undefined,
+	                  autoFocusComposer: true,
+	                  keepFocusOnSubmit: true,
                   enableBacklogSubtaskCommand: true,
                   backlogTaskConnectors: normalizePlaygroundTaskConnectorSelections(selectedProject?.connectors),
                   backlogSubtaskCommand: backlogComposerSubtaskCommandRequest,
                   enableBacklogMissionControlCommand: true,
                   backlogMissionControlCommand: backlogComposerMissionControlCommandRequest,
                   showUsageInStatus: false,
-                  placeholder: "Add a new task",
-                  onRunStart: handleBacklogComposerRunStart,
-                  onRunFinish: handleBacklogComposerRunFinish,
-                  onBacklogMissionControlSubmit: handleBacklogMissionControlSubmit,
-                  onAgentChange: (nextAgentId) => setBacklogComposerAgentId(nextAgentId),
+	                  placeholder: "Add a new task",
+	                  onRunStart: handleBacklogComposerRunStart,
+	                  onRunFinish: handleBacklogComposerRunFinish,
+	                  onBacklogMissionControlSubmit: handleBacklogMissionControlSubmit,
+	                  isAgentSelectionBlocked: (agent) => normalizedSubscriptionTierId === "free" && isPlaygroundFreePlanLockedComposerAgent(agent),
+	                  onBlockedAgentSelect: openProjectAgentUpgradeModal,
+	                  onAgentChange: (nextAgentId) => setBacklogComposerAgentId(nextAgentId),
                   onEnvironmentChange: (nextEnvironmentId) => setBacklogComposerEnvironmentId(nextEnvironmentId),
                   onDocumentPreviewOpenChange: () => {
                   },
@@ -120057,8 +122203,8 @@ ${MODELS_PAGE_SCRIPT}
                     releaseControl: renderProjectReleasePickerControl({
                       popover: boardToolbarPopover,
                       setPopover: setBoardToolbarPopover,
-                      allLabel: "All Releases",
-                      allDescription: "Show every release on the board.",
+                      allLabel: "All Milestones",
+                      allDescription: "Show every milestone on the board.",
                     }),
                   })
                 )
@@ -120218,10 +122364,10 @@ ${MODELS_PAGE_SCRIPT}
             && boardFilterMode === "all"
             && !shouldRenderBoardSections;
           const emptyTitle = selectedRelease
-            ? "No tasks in this release"
+            ? "No tasks in this milestone"
             : "No tasks on the board";
           const emptyCopy = selectedRelease
-            ? "Assign tasks to this release or adjust the filter and they will appear in the appropriate lane."
+            ? "Assign tasks to this milestone or adjust the filter and they will appear in the appropriate lane."
             : shouldShowMissionControlEmptyAction
               ? "Run Mission Control to generate the first strategy and create the initial structured backlog for this project."
               : "Adjust the filter or add tasks to the project and they will appear in the appropriate board lane.";
@@ -120295,7 +122441,7 @@ ${MODELS_PAGE_SCRIPT}
             : null;
           const activeScheduleReleaseId = String(scheduleDraft?.releaseId || "").trim();
           const activeScheduleReleaseLabel = activeScheduleReleaseId
-            ? (releasesById[activeScheduleReleaseId]?.name || "Release")
+            ? (releasesById[activeScheduleReleaseId]?.name || "Milestone")
             : "None";
           const activeScheduleTaskType = normalizePlaygroundTaskType(scheduleDraft?.taskType);
           const scheduleParentTaskId = normalizePlaygroundParentTaskId(scheduleDraft?.parentTaskId);
@@ -120731,7 +122877,7 @@ ${MODELS_PAGE_SCRIPT}
                             )
                           ),
                           React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Release"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Milestone"),
                             React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                               renderScheduleDetailSelectControl({
                                 popoverId: "schedule-release",
@@ -120753,7 +122899,7 @@ ${MODELS_PAGE_SCRIPT}
                                     .map((release) =>
                                       renderScheduleDetailSelectOptionRow({
                                         key: release.id,
-                                        label: release.name || "Untitled Release",
+                                        label: release.name || "Untitled Milestone",
                                         description: release.description || formatPlaygroundTaskReleaseDateRange(release),
                                         selected: activeScheduleReleaseId === release.id,
                                         onClick: () => {
@@ -121340,6 +123486,14 @@ ${MODELS_PAGE_SCRIPT}
         }
 
         function getProjectCalendarEventProps(event) {
+          if (event?.resource?.kind === "metronome") {
+            return {
+              style: {
+                "--playground-calendar-event-surface": "rgba(102, 166, 255, 0.14)",
+                "--playground-calendar-event-text": "#dbeafe",
+              },
+            };
+          }
           const eventColorId = event?.resource?.taskColor;
           if (!eventColorId) {
             return {};
@@ -121353,8 +123507,34 @@ ${MODELS_PAGE_SCRIPT}
           };
         }
 
+        function getProjectCalendarMetronomeWorkflowId(event) {
+          const resource = event?.resource && typeof event.resource === "object" ? event.resource : {};
+          const directWorkflowId = String(resource.workflowId || resource.workflow_id || "").trim();
+          if (resource.kind === "metronome" && directWorkflowId) {
+            return directWorkflowId;
+          }
+          const eventId = String(event?.id || "").trim();
+          const prefixedMatch = eventId.match(/^metronome(?:-calendar)?:([^:]+)/);
+          if (prefixedMatch?.[1]) {
+            return prefixedMatch[1];
+          }
+          return "";
+        }
+
         function renderProjectCalendarEvent({ event, title }) {
           const resource = event?.resource && typeof event.resource === "object" ? event.resource : {};
+          if (resource.kind === "metronome") {
+            const eventTitle = String(title || event?.title || "").trim() || "Metronome";
+            return React.createElement("div", { className: "playground-tasks-calendar-event-inner is-metronome" },
+              React.createElement("span", {
+                  className: "playground-tasks-calendar-event-type-icon is-metronome",
+                  "aria-hidden": "true",
+                },
+                React.createElement(Metronome, { strokeWidth: 1.8 })
+              ),
+              React.createElement("span", { className: "playground-tasks-calendar-event-title" }, eventTitle)
+            );
+          }
           const eventTaskType = normalizePlaygroundTaskType(resource.taskType || resource.metadata?.taskType);
           const EventTaskTypeIcon = eventTaskType === "subtask" ? Check : Bookmark;
           const eventPriority = resource.priority || resource.metadata?.priority || "medium";
@@ -121405,11 +123585,18 @@ ${MODELS_PAGE_SCRIPT}
                   selectable: true,
                   onSelectSlot: (slotInfo) => openScheduleComposerFromSlot(slotInfo),
                   onSelectEvent: (event) => {
+                    const metronomeWorkflowId = getProjectCalendarMetronomeWorkflowId(event);
+                    if (metronomeWorkflowId) {
+                      if (typeof onOpenProjectMetronomes === "function") {
+                        onOpenProjectMetronomes({ workflowId: metronomeWorkflowId });
+                      }
+                      return;
+                    }
                     if (event?.resource?.kind === "task") {
                       openTaskFromCalendar(event.resource.taskId);
                       return;
                     }
-                    handleSelectSchedule(event.resource.id);
+                    handleSelectSchedule(event?.resource?.id);
                   },
                 })
               )
@@ -121539,6 +123726,17 @@ ${MODELS_PAGE_SCRIPT}
           return typeof document !== "undefined" && document.body
             ? createPortal(modalElement, document.body)
             : modalElement;
+        }
+
+        function renderProjectAgentUpgradeModal() {
+          return renderPlaygroundAgentUpgradeModal({
+            isOpen: projectAgentUpgradeModalOpen,
+            titleId: "playground-project-agent-upgrade-title",
+            onClose: closeProjectAgentUpgradeModal,
+            onCheckout: handleProjectAgentUpgradeCheckout,
+            checkoutLoading: projectAgentUpgradeCheckoutLoading,
+            checkoutDisabled: typeof onUpgradeToIndividual !== "function",
+          });
         }
 
         function renderMissionControlSetupEmptyState() {
@@ -121684,14 +123882,6 @@ ${MODELS_PAGE_SCRIPT}
                   ),
                   React.createElement("div", { className: "playground-mission-control-studio-settings-scroll" },
                     renderProjectComposerDialog({ embedded: true })
-                  ),
-                  React.createElement("div", { className: "playground-mission-control-studio-settings-footer" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-mission-control-studio-save-button",
-                        onClick: () => void handleSaveProjectFromStudio(),
-                        disabled: projectSaveState.isSaving || !String(projectDraft.name || "").trim(),
-                      }, projectSaveState.isSaving ? "Saving..." : "Save Project")
                   )
                 ),
                 React.createElement("section", { className: "playground-mission-control-studio-chat" },
@@ -121713,31 +123903,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
 
           const projectWorkspaceTitle = selectedProjectWorkspaceTitle;
-          const projectWorkspaceOverviewIndex = Array.isArray(filteredProjects)
-            ? filteredProjects.findIndex((project) => project.id === selectedProject.id)
-            : -1;
-          const projectWorkspaceProjectIndex = projectWorkspaceOverviewIndex >= 0
-            ? projectWorkspaceOverviewIndex
-            : Array.isArray(projects)
-              ? projects.findIndex((project) => project.id === selectedProject.id)
-              : -1;
-          const projectWorkspaceBackgroundProject = projectWorkspaceOverviewIndex >= 0
-            ? filteredProjects[projectWorkspaceOverviewIndex]
-            : projectWorkspaceProjectIndex >= 0 && Array.isArray(projects)
-              ? projects[projectWorkspaceProjectIndex]
-              : selectedProject;
-          const projectWorkspaceWallpaper = getPlaygroundProjectWallpaperConfig(
-            projectWorkspaceBackgroundProject,
-            projectWorkspaceProjectIndex >= 0 ? projectWorkspaceProjectIndex : 0
-          );
-          const projectWorkspaceShowsHero = taskView === "overview" || taskView === "backlog" || taskView === "board";
           const projectWorkspaceScrollClassName = "playground-environments-detail-scroll playground-tasks-project-workspace-scroll"
             + (taskView === "overview" ? " is-overview" : "")
             + (taskView === "backlog" ? " is-backlog" : "")
             + (taskView === "board" ? " is-board" : "");
-          const projectWorkspaceScrollStyle = projectWorkspaceShowsHero
-            ? { "--playground-project-overview-bg-image": "url(" + JSON.stringify(projectWorkspaceWallpaper.url) + ")" }
-            : undefined;
+          const projectWorkspaceScrollStyle = undefined;
 
           return React.createElement("div", {
               className: "playground-environments-page playground-tasks-project-workspace",
@@ -121813,7 +123983,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 : taskView === "calendar"
                                 ? "Filter tasks and schedules by title, task, agent, or environment."
                                 : taskView === "backlog" && selectedReleaseId
-                                  ? "Filter release tasks by title, ticket number, assignee, environment, or release."
+                                  ? "Filter milestone tasks by title, ticket number, assignee, environment, or milestone."
                                   : "Filter tasks by title, ticket number, assignee, environment, or sprint."
                             )
                           )
@@ -121946,7 +124116,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tasks-project-navbar-actions" })
               ),
               React.createElement("div", {
-                className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll",
+                className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll is-mission-control-setup",
               },
                 React.createElement("div", { className: "playground-tasks-empty" },
                   React.createElement("div", { className: "playground-tasks-empty-title" }, "Project Studio"),
@@ -122302,7 +124472,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-detail-empty" },
               React.createElement("div", { className: "playground-tasks-empty" },
                 React.createElement("div", { className: "playground-tasks-empty-title" }, "Pick a task"),
-                React.createElement("div", { className: "playground-tasks-empty-copy" }, "Select a task from backlog, board, or a release backlog to edit assignments, dependencies, attachments, and scheduling.")
+                React.createElement("div", { className: "playground-tasks-empty-copy" }, "Select a task from backlog, board, or a milestone backlog to edit assignments, dependencies, attachments, and scheduling.")
               )
             );
           }
@@ -122356,7 +124526,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const linkedRunPresentation = getTaskLinkedRunPresentation(startedThreadRecord);
           const activeTaskTypeLabel = PLAYGROUND_TASK_TYPE_OPTIONS.find((option) => option.id === activeTaskType)?.label || "Task";
           const activeReleaseLabel = activeTaskReleaseId
-            ? (releasesById[activeTaskReleaseId]?.name || releases.find((release) => release.id === activeTaskReleaseId)?.name || "Release")
+            ? (releasesById[activeTaskReleaseId]?.name || releases.find((release) => release.id === activeTaskReleaseId)?.name || "Milestone")
             : "None";
           const resolvedTaskAssigneeId = draftTask.assigneeAgentId || defaultTaskAssigneeId || "";
 	          const activeAssigneeLabel = resolvedTaskAssigneeId
@@ -123063,7 +125233,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
-                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Release"),
+                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Milestone"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                     renderTaskDetailSelectControl({
                       popoverId: "release",
@@ -123085,7 +125255,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           .map((release) =>
                             renderTaskDetailSelectOptionRow({
                               key: release.id,
-                              label: release.name || "Untitled Release",
+                              label: release.name || "Untitled Milestone",
                               description: release.description || formatPlaygroundTaskReleaseDateRange(release),
                               selected: activeTaskReleaseId === release.id,
                               onClick: () => {
@@ -123623,24 +125793,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const isTaskAttachmentPreviewOpen = Boolean((isTaskDetailOpen || isScheduleDetailOpen) && previewedTaskAttachment);
 
         function renderProjectWallpaperTransitionLayer() {
-          if (!projectWallpaperTransition) {
-            return null;
-          }
-
-          return React.createElement("div", {
-              key: projectWallpaperTransition.token,
-              className: "playground-project-wallpaper-transition-layer is-" + projectWallpaperTransition.direction,
-              "aria-hidden": "true",
-            },
-            React.createElement("div", {
-              className: "playground-project-wallpaper-transition-image is-outgoing",
-              style: { backgroundImage: projectWallpaperTransition.from },
-            }),
-            React.createElement("div", {
-              className: "playground-project-wallpaper-transition-image is-incoming",
-              style: { backgroundImage: projectWallpaperTransition.to },
-            })
-          );
+          return null;
         }
 
         if (isDetailOnlyMode) {
@@ -123658,11 +125811,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
             renderProjectComposerDialog(),
             renderReleaseComposerDialog(),
             renderCalendarUpgradeModal(),
+            renderProjectAgentUpgradeModal(),
             renderProjectEnvironmentFilePicker()
           );
         }
 
-        return React.createElement("div", { className: "playground-tasks-page" + (projectWallpaperTransition ? " has-project-wallpaper-transition" : "") },
+        return React.createElement("div", { className: "playground-tasks-page" },
           renderProjectWallpaperTransitionLayer(),
           React.createElement("div", { className: "playground-tasks-shell" + (isDetailOpen ? " is-detail-open" : "") + (isTaskAttachmentPreviewOpen ? " is-preview-open" : "") },
             React.createElement("section", { className: "playground-tasks-main" },
@@ -123753,6 +125907,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           renderProjectComposerDialog(),
           renderReleaseComposerDialog(),
           renderCalendarUpgradeModal(),
+          renderProjectAgentUpgradeModal(),
           renderProjectEnvironmentFilePicker()
         );
       }
@@ -125450,7 +127605,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             details: [
               {
                 title: "Backlog + schedule",
-                copy: "Capture work as tasks, organize it into releases or schedules, and launch threads directly from those plans.",
+                copy: "Capture work as tasks, organize it into milestones or schedules, and launch threads directly from those plans.",
               },
               {
                 title: "Threads stay linked",
@@ -125632,10 +127787,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [sidebarOpen, setSidebarOpen] = useState(true);
         const [activePage, setActivePage] = useState("thread");
         const [metronomeProjectFilterId, setMetronomeProjectFilterId] = useState("");
+        const [metronomeOpenWorkflowRequest, setMetronomeOpenWorkflowRequest] = useState(null);
         const [metronomeTopNavState, setMetronomeTopNavState] = useState(null);
         const [metronomeTopNavMenuOpen, setMetronomeTopNavMenuOpen] = useState(false);
         const [isMetronomeNodeDetailOpen, setIsMetronomeNodeDetailOpen] = useState(false);
         const metronomeTopNavMenuRef = useRef(null);
+        const wasMetronomeVisualEditorOpenRef = useRef(false);
         const metronomeTopNavActionsRef = useRef({
           edit: null,
           rename: null,
@@ -125959,6 +128116,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [modelsPageSort, setModelsPageSort] = useState("provider");
         const [modelsPageToolbarPopover, setModelsPageToolbarPopover] = useState("");
         const [modelsPageAgentModelOptions, setModelsPageAgentModelOptions] = useState(() => PLAYGROUND_AGENT_MODEL_OPTIONS);
+        const [resourceTemplateTypeFilter, setResourceTemplateTypeFilter] = useState("all");
+        const [resourceTemplateSearchQuery, setResourceTemplateSearchQuery] = useState("");
+        const [resourceTemplateSelectedId, setResourceTemplateSelectedId] = useState("");
+        const [resourceTemplatePublishId, setResourceTemplatePublishId] = useState("");
+        const [resourceTemplateNotice, setResourceTemplateNotice] = useState("");
+        const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
         const resolvedModelsPageAgentModelOptions = useMemo(() => (
           Array.isArray(modelsPageAgentModelOptions) && modelsPageAgentModelOptions.length > 0
             ? modelsPageAgentModelOptions
@@ -126031,6 +128194,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [pendingThreadComposerPlusOpen, setPendingThreadComposerPlusOpen] = useState(false);
         const [pluginsNavPopover, setPluginsNavPopover] = useState("");
         const [settingsCheckoutLoading, setSettingsCheckoutLoading] = useState(false);
+        const [composerAgentUpgradeModalOpen, setComposerAgentUpgradeModalOpen] = useState(false);
+        const [composerAgentUpgradeCheckoutLoading, setComposerAgentUpgradeCheckoutLoading] = useState(false);
         const [settingsSubscriptionActionId, setSettingsSubscriptionActionId] = useState("");
         const [settingsTopUpActionId, setSettingsTopUpActionId] = useState("");
         const [settingsSelectedTopUpId, setSettingsSelectedTopUpId] = useState("growth");
@@ -128037,6 +130202,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setSidebarOpen(false);
         }, [isMetronomeNodeDetailOpen, sidebarOpen]);
 
+        useEffect(() => {
+          const isVisualEditorOpen = activePage === "metronome"
+            && metronomeTopNavState?.mode === "editor"
+            && (metronomeTopNavState?.editorMode || "edit") === "edit";
+          if (isVisualEditorOpen && !wasMetronomeVisualEditorOpenRef.current) {
+            setSidebarOpen(false);
+          }
+          wasMetronomeVisualEditorOpenRef.current = Boolean(isVisualEditorOpen);
+        }, [activePage, metronomeTopNavState?.mode, metronomeTopNavState?.editorMode, metronomeTopNavState?.workflowId]);
+
         function openPluginsPage() {
           setAccountMenuOpen(false);
           setSidebarWorkspaceMode("configure");
@@ -128058,9 +130233,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function openMetronomePage(options = {}) {
           const normalizedProjectId = String(options?.projectId || "").trim();
+          const normalizedWorkflowId = String(options?.workflowId || "").trim();
           setAccountMenuOpen(false);
           setSidebarWorkspaceMode("work");
           setMetronomeProjectFilterId(normalizedProjectId);
+          setMetronomeOpenWorkflowRequest(normalizedWorkflowId
+            ? {
+                workflowId: normalizedWorkflowId,
+                token: Date.now(),
+              }
+            : null);
           setActivePage("metronome");
         }
 
@@ -134342,7 +136524,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 		            [
               "Review expectations:",
               "- The project id, task id, and implementation thread id above are authoritative. Do not list all projects or all tasks just to discover this context.",
-              "- Use direct lookups for the provided project/task when you need project management context such as releases, dependencies, comments, or nearby work.",
+              "- Use direct lookups for the provided project/task when you need project management context such as milestones, dependencies, comments, or nearby work.",
               "- Inspect the provided implementation thread id and verify the ticket's acceptance criteria, deployment state, and smoke-test evidence.",
               "- If the implementation is accepted, add a concise approval comment and update the ticket status to done.",
               "- If changes are required, add a concrete review comment that the assignee can act on, set the ticket status back to todo, and keep completedAt empty.",
@@ -135911,6 +138093,24 @@ ${PROJECT_OVERVIEW_SCRIPT}
           void loadModelsPageAgentModelCatalog();
         }
 
+        function openResourceTemplatesPage(options = {}) {
+          setAccountMenuOpen(false);
+          setProfileEditorOpen(false);
+          if (!options.preserveSidebarMode) {
+            setSidebarWorkspaceMode("configure");
+          }
+          setResourcesHeaderState({
+            mode: "overview",
+            title: "",
+          });
+          const nextType = String(options.type || "all").trim() || "all";
+          setResourceTemplateTypeFilter(nextType);
+          if (options.templateId) {
+            setResourceTemplateSelectedId(String(options.templateId || "").trim());
+          }
+          setActivePage("resource-templates");
+        }
+
         function openDevelopHome(options = {}) {
           setAccountMenuOpen(false);
           setProfileEditorOpen(false);
@@ -135942,6 +138142,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (mode === "configure") {
             return activePage === "configure"
               || activePage === "models"
+              || activePage === "resource-templates"
               || activePage === "inference"
               || (isResourcesPage && (activeResourcesView === "agents" || activeResourcesView === "computers"))
               || (activePage === "tools" && (toolsView === "plugins" || toolsView === "skills"));
@@ -139256,7 +141457,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               id: "github",
               label: "GitHub",
               logoUrl: PLAYGROUND_GITHUB_LOGO_URL,
-              copy: "Triages PRs, CI, and releases",
+              copy: "Triages PRs, CI, and milestones",
             },
             {
               id: "gmail",
@@ -144538,25 +146739,23 @@ ${PROJECT_OVERVIEW_SCRIPT}
           selectedThreadAgentId,
           threadAgentSelectionOverride,
         ]);
-        const isFreeComposerAgentPlan = hasShellAccess
-          && (normalizeSettingsTierId(settingsCurrentTierId || accountTierId || "free") || "free") === "free";
+        const isFreeComposerAgentPlan = (normalizeSettingsTierId(settingsCurrentTierId || accountTierId || "free") || "free") === "free";
         const runtimeAgentsForComposer = useMemo(() => {
-          const visibleAgents = Array.isArray(runtimeAgents) ? runtimeAgents : [];
-          if (!isFreeComposerAgentPlan) {
-            return visibleAgents;
-          }
-          const sparkAgents = visibleAgents.filter((agent) => isPlaygroundAssistantAgent(agent));
-          return sparkAgents.length > 0 ? sparkAgents : visibleAgents.slice(0, 1);
-        }, [isFreeComposerAgentPlan, runtimeAgents]);
+          const normalizedRuntimeAgents = Array.isArray(runtimeAgents) ? runtimeAgents : [];
+          return ensurePlaygroundComposerDefaultChoices(normalizedRuntimeAgents);
+        }, [runtimeAgents]);
         const resolvedComposerAgentId = useMemo(() => {
           const normalizedAgentId = String(resolvedTaskInputAgentId || "").trim();
           if (!isFreeComposerAgentPlan) {
             return normalizedAgentId;
           }
-          if (normalizedAgentId && runtimeAgentsForComposer.some((agent) => String(agent?.id || "").trim() === normalizedAgentId)) {
+          const selectedAgent = runtimeAgentsForComposer.find((agent) => String(agent?.id || "").trim() === normalizedAgentId) || null;
+          if (selectedAgent && !isPlaygroundFreePlanLockedComposerAgent(selectedAgent)) {
             return normalizedAgentId;
           }
-          return String(runtimeAgentsForComposer[0]?.id || "").trim();
+          const sparkAgent = runtimeAgentsForComposer.find((agent) => isPlaygroundAssistantAgent(agent));
+          const selectableAgent = runtimeAgentsForComposer.find((agent) => !isPlaygroundFreePlanLockedComposerAgent(agent));
+          return String((sparkAgent || selectableAgent || runtimeAgentsForComposer[0])?.id || "").trim();
         }, [isFreeComposerAgentPlan, resolvedTaskInputAgentId, runtimeAgentsForComposer]);
         useEffect(() => {
           if (!isFreeComposerAgentPlan) {
@@ -144566,13 +146765,44 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (!normalizedPreferredAgentId) {
             return;
           }
-          if (runtimeAgentsForComposer.some((agent) => String(agent?.id || "").trim() === normalizedPreferredAgentId)) {
+          const preferredAgent = runtimeAgentsForComposer.find((agent) => String(agent?.id || "").trim() === normalizedPreferredAgentId) || null;
+          if (preferredAgent && !isPlaygroundFreePlanLockedComposerAgent(preferredAgent)) {
             return;
           }
-          const nextAgentId = String(runtimeAgentsForComposer[0]?.id || "").trim();
+          const nextAgent = runtimeAgentsForComposer.find((agent) => isPlaygroundAssistantAgent(agent))
+            || runtimeAgentsForComposer.find((agent) => !isPlaygroundFreePlanLockedComposerAgent(agent))
+            || runtimeAgentsForComposer[0];
+          const nextAgentId = String(nextAgent?.id || "").trim();
+          if (!nextAgentId || nextAgentId === normalizedPreferredAgentId) {
+            return;
+          }
           setPreferredAgentId(nextAgentId);
           setThreadAgentSelectionOverride(null);
         }, [isFreeComposerAgentPlan, preferredAgentId, runtimeAgentsForComposer]);
+        const closeComposerAgentUpgradeModal = useCallback(() => {
+          if (composerAgentUpgradeCheckoutLoading) {
+            return;
+          }
+          setComposerAgentUpgradeModalOpen(false);
+        }, [composerAgentUpgradeCheckoutLoading]);
+        const handleComposerAgentUpgradeCheckout = useCallback(async () => {
+          if (composerAgentUpgradeCheckoutLoading) {
+            return;
+          }
+          setComposerAgentUpgradeCheckoutLoading(true);
+          try {
+            await Promise.resolve(handleSettingsSubscribe("individual"));
+          } finally {
+            setComposerAgentUpgradeCheckoutLoading(false);
+          }
+        }, [composerAgentUpgradeCheckoutLoading]);
+        const isComposerAgentSelectionBlocked = useCallback((agent) => {
+          return isFreeComposerAgentPlan && isPlaygroundFreePlanLockedComposerAgent(agent);
+        }, [isFreeComposerAgentPlan]);
+        const handleBlockedComposerAgentSelect = useCallback(() => {
+          setComposerAgentUpgradeCheckoutLoading(false);
+          setComposerAgentUpgradeModalOpen(true);
+        }, []);
         const openAgentDetailsInResources = useCallback((nextAgentId, options = {}) => {
           const normalizedAgentId = String(nextAgentId || "").trim();
           if (!normalizedAgentId) {
@@ -146526,7 +148756,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               case "tasks":
                 return {
                   title: "Projects",
-                  copy: "Plan releases, assign work to agents, and keep mission control close to the execution flow.",
+                  copy: "Plan milestones, assign work to agents, and keep mission control close to the execution flow.",
                   cards: [
                     { icon: Rocket, title: "Mission Control", copy: "Turn rough ideas into strategy, backlog structure, and next-run guidance." },
                     { icon: ListTodo, title: "Backlog", copy: "Track tickets, priorities, dependencies, and ownership without leaving ACP." },
@@ -147915,14 +150145,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
             },
               React.createElement(Play, { strokeWidth: 1.8 }),
               React.createElement("span", null, "Run")
-            ),
-            React.createElement("button", {
-              type: "button",
-              className: "playground-top-nav-private-chat-button",
-              onClick: () => metronomeTopNavActionsRef.current?.publish?.(),
-            },
-              React.createElement(Rocket, { strokeWidth: 1.8 }),
-              React.createElement("span", null, state.status === "active" ? "Unpublish" : "Publish")
             )
           );
         }
@@ -150176,12 +152398,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
               onOpenBilling: handleOpenSubscriptionSuccessBilling,
             })
           : null;
+        const renderedComposerAgentUpgradeModal = renderPlaygroundAgentUpgradeModal({
+          isOpen: composerAgentUpgradeModalOpen,
+          titleId: "playground-composer-agent-upgrade-title",
+          onClose: closeComposerAgentUpgradeModal,
+          onCheckout: handleComposerAgentUpgradeCheckout,
+          checkoutLoading: composerAgentUpgradeCheckoutLoading,
+        });
 
         if (!hasShellAccess && (sessionState.status === "loading" || sessionState.status === "unauthenticated" || sessionState.status === "error")) {
           return React.createElement(React.Fragment, null,
             renderAuthGate(),
             renderedPlaygroundOnboarding,
-            renderedSubscriptionSuccessModal
+            renderedSubscriptionSuccessModal,
+            renderedComposerAgentUpgradeModal
           );
         }
 
@@ -150194,6 +152424,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           React.createElement(React.Fragment, null,
             renderedPlaygroundOnboarding,
             renderedSubscriptionSuccessModal,
+            renderedComposerAgentUpgradeModal,
             renderThreadSearchPalette(),
             renderNotificationMenu(),
             renderThreadActionMenu(),
@@ -150719,6 +152950,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               apiKey: effectiveApiKey,
                               agentId: resolvedComposerAgentId || "",
                               agents: runtimeAgentsForComposer,
+                              isAgentSelectionBlocked: isComposerAgentSelectionBlocked,
+                              onBlockedAgentSelect: handleBlockedComposerAgentSelect,
                               onFileChatThreadMutated: () => {
                                 void refreshThreads();
                               },
@@ -150861,6 +153094,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               agents: computerAgentsMode ? runtimeAgentsForComposer.map((agent) => (
                                 buildPlaygroundRunnerAgentOption(agent, resolvedComposerAgentId && agent.id === resolvedComposerAgentId ? { isDefault: true } : {})
                               )) : [],
+                              isAgentSelectionBlocked: isComposerAgentSelectionBlocked,
+                              onBlockedAgentSelect: handleBlockedComposerAgentSelect,
                               skills: computerAgentsMode ? demoSkills : [],
                               skillDefaults: getDemoImageGenerationSkillDefaults(),
                               canGenerateVideo: canGenerateImagineVideo,
@@ -150948,6 +153183,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               environments: realEnvironments,
                               projects: realProjects,
                               projectFilterId: metronomeProjectFilterId,
+                              openWorkflowRequest: metronomeOpenWorkflowRequest,
+                              onOpenWorkflowRequestHandled: (token) => {
+                                setMetronomeOpenWorkflowRequest((current) => (
+                                  current && current.token === token ? null : current
+                                ));
+                              },
                               backendUrl: proxyBackendBase,
                               apiKey: effectiveApiKey,
                               requestHeaders,
@@ -150998,6 +153239,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             computerAgents: demoComputerAgents,
                             skills: demoSkills,
                             currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",
+                            currentUserEmail: hasSessionAuth ? accountEmail : "",
                             currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                             canStartThreads: hasRealAccess,
                             taskRunStates: taskRunStates,
@@ -151029,7 +153271,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             },
                             onOpenProjectMetronomes: (request = {}) => {
                               const normalizedProjectId = String(request?.projectId || "").trim();
-                              openMetronomePage({ projectId: normalizedProjectId });
+                              const normalizedWorkflowId = String(request?.workflowId || "").trim();
+                              openMetronomePage(normalizedWorkflowId
+                                ? { workflowId: normalizedWorkflowId }
+                                : { projectId: normalizedProjectId });
                             },
                             onThreadOpen: (threadId, options = {}) => {
                               const normalizedThreadId = String(threadId || "").trim();
@@ -151160,6 +153405,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     agents: computerAgentsMode ? runtimeAgentsForComposer.map((agent) => (
                                       buildPlaygroundRunnerAgentOption(agent, resolvedComposerAgentId && agent.id === resolvedComposerAgentId ? { isDefault: true } : {})
                                     )) : undefined,
+                                    isAgentSelectionBlocked: computerAgentsMode ? isComposerAgentSelectionBlocked : undefined,
+                                    onBlockedAgentSelect: computerAgentsMode ? handleBlockedComposerAgentSelect : undefined,
                                     skills: computerAgentsMode ? demoSkills : undefined,
                                     enabledSkillIds: computerAgentsMode ? runnerEnabledSkillIds : undefined,
                                     onSkillsChange: computerAgentsMode ? setRunnerEnabledSkillIds : undefined,
@@ -151503,6 +153750,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               computerAgents: demoComputerAgents,
                               skills: demoSkills,
                               currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",
+                              currentUserEmail: hasSessionAuth ? accountEmail : "",
                               currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                               canStartThreads: hasRealAccess,
                               taskRunStates: taskRunStates,
@@ -151578,7 +153826,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               },
                               onOpenProjectMetronomes: (request = {}) => {
                                 const normalizedProjectId = String(request?.projectId || "").trim();
-                                openMetronomePage({ projectId: normalizedProjectId });
+                                const normalizedWorkflowId = String(request?.workflowId || "").trim();
+                                openMetronomePage(normalizedWorkflowId
+                                  ? { workflowId: normalizedWorkflowId }
+                                  : { projectId: normalizedProjectId });
                               },
                               onThreadOpen: (threadId, options = {}) => {
                                 const normalizedThreadId = String(threadId || "").trim();

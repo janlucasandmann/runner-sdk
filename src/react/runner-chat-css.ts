@@ -8831,6 +8831,10 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   --tb-task-input-base-bg: #000000;
 }
 
+.tb-runner-chat.playground-thread-runner:not(.tb-runner-chat-image-preview-local-open) .task-input-box {
+  --tb-task-input-base-bg: rgba(0, 0, 0, 0.75);
+}
+
 .tb-runner-chat .runner-attachments {
   display: flex;
   flex-wrap: wrap;
@@ -10971,11 +10975,72 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   z-index: 20;
   min-width: 240px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
-  background: #323232;
+  border: 0;
+  border-radius: 25px;
+  background: rgba(30, 30, 30, 0.5);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+.tb-runner-chat .tb-popup-menu::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--tb-task-input-border, var(--tb-runner-input-border));
+  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  mask-origin: content-box, border-box;
+  mask-repeat: repeat, repeat;
+  mask-size: auto, auto;
+}
+
+.tb-composer-popup-portal-root {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.tb-composer-popup-portal-root .tb-composer-popup-portal-scope {
+  position: static;
+  display: block;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: visible;
+  background: transparent;
+  color: inherit;
+  pointer-events: none;
+}
+
+.tb-composer-popup-portal-root .tb-composer-popup-portal-scope .tb-popup-menu {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  pointer-events: auto;
+  background: rgba(30, 30, 30, 0.5);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+.tb-composer-popup-portal-root .tb-composer-popup-portal-scope .tb-popup-menu-main,
+.tb-composer-popup-portal-root .tb-composer-popup-portal-scope .tb-popup-menu-inline,
+.tb-composer-popup-portal-root .tb-composer-popup-portal-scope .tb-popup-menu-side,
+.tb-composer-popup-portal-root .tb-composer-popup-portal-scope .tb-popup-menu-context {
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+}
+
+.tb-composer-popup-portal-root .tb-composer-popup-portal-scope .tb-composer-popup-measure {
+  pointer-events: auto;
 }
 
 .tb-runner-chat .tb-popup-menu-animate-up-in {
@@ -11016,6 +11081,12 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   width: 240px;
 }
 
+.tb-runner-chat .tb-popup-menu-main:not(.tb-popup-menu-slash):not(.tb-ad-creation-popup):not(.tb-composer-create-menu),
+.tb-runner-chat .tb-popup-menu-context {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
 .tb-runner-chat .tb-popup-menu-slash {
   width: 100%;
   max-height: 220px;
@@ -11054,13 +11125,15 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-popup-menu-inline-agent {
-  width: 320px;
+  width: 280px;
   max-height: 400px;
+  padding-bottom: 4px;
 }
 
 .tb-runner-chat .tb-popup-menu-inline-workspace {
   width: 280px;
   max-height: 320px;
+  padding-bottom: 4px;
 }
 
 .tb-runner-chat .tb-popup-menu-context {
@@ -11495,7 +11568,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-popup-menu-agent-reasoning {
-  left: 328px;
+  left: 288px;
   width: 280px;
   padding: 0;
   display: flex;

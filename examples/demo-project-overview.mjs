@@ -7,10 +7,338 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         gap: 24px;
       }
 
-      .playground-project-overview-view.is-general,
-      .playground-project-overview-view.is-observability {
+      .playground-project-overview-view.is-general {
         width: 100%;
         max-width: none;
+      }
+
+      .playground-project-overview-layout {
+        width: 100%;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+        gap: 24px;
+        align-items: start;
+      }
+
+      .playground-project-overview-layout.is-sidebar-collapsed {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .playground-project-overview-main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .playground-project-overview-sidebar {
+        min-width: 0;
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-project-overview-layout.is-sidebar-collapsed .playground-project-overview-sidebar {
+        display: none;
+      }
+
+      .playground-project-overview-sidebar-card {
+        border: 0;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 12px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .playground-project-overview-sidebar-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .playground-project-overview-sidebar-title {
+        min-width: 0;
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.3;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-project-overview-sidebar-title-with-caret {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .playground-project-overview-sidebar-title-caret {
+        width: 10px;
+        height: 10px;
+        color: rgba(255, 255, 255, 0.46);
+      }
+
+      .playground-project-overview-sidebar-see-all {
+        flex: 0 0 auto;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        color: rgba(255, 255, 255, 0.56);
+        font: inherit;
+        font-size: 11px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-sidebar-see-all:hover {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-project-overview-sidebar-action {
+        flex: 0 0 auto;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.56);
+        font: inherit;
+        font-size: 12px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-sidebar-action:hover {
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-project-overview-sidebar-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-project-overview-sidebar-row {
+        min-width: 0;
+        min-height: 32px;
+        display: grid;
+        grid-template-columns: minmax(88px, 0.85fr) minmax(0, 1.35fr);
+        gap: 12px;
+        align-items: center;
+        padding: 6px 0;
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-project-overview-sidebar-row-label {
+        min-width: 0;
+        font-size: 12px;
+        line-height: 1.25;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-project-overview-sidebar-row-value {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 7px;
+        font-size: 12px;
+        line-height: 1.25;
+        color: rgba(255, 255, 255, 0.88);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-sidebar-muted {
+        color: rgba(255, 255, 255, 0.45);
+      }
+
+      .playground-project-overview-sidebar-status-dot {
+        width: 7px;
+        height: 7px;
+        flex: 0 0 7px;
+        border-radius: 999px;
+        background: #66a6ff;
+        box-shadow: 0 0 0 3px rgba(102, 166, 255, 0.12);
+      }
+
+      .playground-project-overview-sidebar-lead {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .playground-project-overview-sidebar-avatar {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        border-radius: 999px;
+        object-fit: cover;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 9px;
+        line-height: 1;
+        font-weight: 500;
+      }
+
+      .playground-project-overview-sidebar-chip {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        max-width: 100%;
+        padding: 3px 7px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.07);
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 11px;
+        line-height: 1.25;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-sidebar-resource-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-project-overview-sidebar-resource-row {
+        width: 100%;
+        min-width: 0;
+        min-height: 34px;
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        padding: 6px 4px;
+        color: rgba(255, 255, 255, 0.86);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-sidebar-resource-row:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-project-overview-sidebar-resource-icon {
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-project-overview-sidebar-resource-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        line-height: 1.25;
+        font-weight: 500;
+      }
+
+      .playground-project-overview-sidebar-resource-count {
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 12px;
+        line-height: 1.25;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .playground-project-overview-sidebar-activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+
+      .playground-project-overview-sidebar-activity-row {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 20px minmax(0, 1fr);
+        align-items: start;
+        gap: 8px;
+      }
+
+      .playground-project-overview-sidebar-activity-row .playground-project-overview-activity-avatar {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        margin-top: 0;
+        border-radius: 999px;
+      }
+
+      .playground-project-overview-sidebar-activity-icon {
+        width: 14px;
+        height: 14px;
+        margin-top: 1px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-project-overview-sidebar-activity-icon.is-task {
+        color: rgb(122, 126, 255);
+      }
+
+      .playground-project-overview-sidebar-activity-icon.is-file {
+        color: rgb(102, 166, 255);
+      }
+
+      .playground-project-overview-sidebar-activity-icon.is-thread,
+      .playground-project-overview-sidebar-activity-icon.is-update {
+        color: rgb(74, 222, 128);
+      }
+
+      .playground-project-overview-sidebar-activity-copy {
+        min-width: 0;
+        font-size: 12px;
+        line-height: 1.35;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-project-overview-sidebar-activity-copy strong {
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-project-overview-sidebar-activity-object {
+        display: inline;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.88);
+        font: inherit;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-sidebar-activity-object:hover {
+        color: #66a6ff;
+      }
+
+      .playground-project-overview-sidebar-activity-time {
+        color: rgba(255, 255, 255, 0.46);
+      }
+
+      .playground-project-overview-sidebar-empty {
+        padding: 4px 0 2px;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 12px;
+        line-height: 1.4;
       }
 
       .playground-content-body.is-tasks-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-overview:has(.playground-project-overview-view.is-rules) {
@@ -234,6 +562,27 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-summary-title-actions .playground-project-overview-summary-mission-button {
         margin-left: 0;
+      }
+
+      .playground-project-overview-sidebar-toggle {
+        flex: 0 0 auto;
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.68);
+        padding: 0;
+        cursor: pointer;
+        transition: background 160ms ease, color 160ms ease;
+      }
+
+      .playground-project-overview-sidebar-toggle:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.95);
       }
 
       .playground-project-overview-summary-mission-button::before {
@@ -521,6 +870,173 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         width: 100%;
       }
 
+      .playground-project-overview-general-goal {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-project-overview-general-goal-title {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-project-overview-general-goal-text {
+        max-width: 920px;
+        margin: 0;
+        white-space: pre-wrap;
+        font-size: 14px;
+        line-height: 1.55;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-project-overview-general-goal-text.is-empty {
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-project-overview-progress-combo-card {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        overflow: hidden;
+      }
+
+      .playground-project-overview-progress-combo-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-project-overview-progress-combo-title {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.3;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-progress-combo-meta {
+        font-size: 12px;
+        line-height: 1.3;
+        color: rgba(255, 255, 255, 0.52);
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-progress-combo-chart {
+        width: 100%;
+        min-width: 0;
+        position: relative;
+      }
+
+      .playground-project-overview-progress-combo-chart-frame {
+        position: relative;
+        width: 100%;
+        height: 330px;
+        min-height: 330px;
+      }
+
+      .playground-project-overview-progress-combo-canvas {
+        display: block;
+        width: 100% !important;
+        height: 330px !important;
+      }
+
+      .playground-project-overview-progress-combo-legend {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+        width: 100%;
+        max-width: none;
+      }
+
+      .playground-project-overview-progress-combo-legend-row {
+        min-width: 0;
+        flex: 0 1 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 7px;
+        font-size: 12px;
+        line-height: 1.25;
+      }
+
+      .playground-project-overview-progress-combo-legend-name {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 500;
+      }
+
+      .playground-project-overview-progress-combo-legend-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 13px;
+        line-height: 1.1;
+        font-weight: 600;
+      }
+
+      .playground-project-overview-progress-combo-legend-count::before {
+        content: "△";
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 13px;
+        line-height: 1;
+        transform: translateY(-1px);
+      }
+
+      .playground-project-overview-progress-combo-legend-count.is-cost::before {
+        content: none;
+      }
+
+      .playground-project-overview-progress-combo-ct {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        font-size: 12px;
+        line-height: 1.3;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-project-overview-progress-combo-ct-swatch {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        background: rgb(95, 112, 230);
+      }
+
+      .playground-project-overview-progress-swatch.is-cost {
+        background: rgb(95, 112, 230);
+      }
+
+      @media (max-width: 1180px) {
+        .playground-project-overview-layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .playground-project-overview-sidebar {
+          position: static;
+        }
+      }
+
       .playground-project-overview-widget-grid {
         width: 100%;
         display: grid;
@@ -550,6 +1066,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         border-radius: 25px;
         background: transparent;
         box-shadow: none;
+        backdrop-filter: blur(20px);
         color: rgba(255, 255, 255, 0.96);
         overflow: hidden;
       }
@@ -893,6 +1410,82 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         text-align: center;
       }
 
+      .playground-project-overview-widget-metric {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      .playground-project-overview-widget-metric-value {
+        color: rgba(255, 255, 255, 0.98);
+        font-size: 32px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+
+      .playground-project-overview-widget-metric-label {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 11px;
+        line-height: 1.25;
+        font-weight: 400;
+      }
+
+      .playground-project-overview-widget-metric-meta {
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 10px;
+        line-height: 1.25;
+        font-weight: 400;
+      }
+
+      .playground-project-overview-setup-section {
+        --playground-home-widget-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+        border: 0;
+        border-radius: 20px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        overflow: hidden;
+      }
+
+      .playground-project-overview-setup-section::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-home-widget-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-project-overview-setup-section > * {
+        position: relative;
+        z-index: 1;
+      }
+
       .playground-project-overview-progress-card {
         min-height: 360px;
       }
@@ -996,11 +1589,11 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-progress-swatch.is-started {
-        background: rgb(122, 126, 255);
+        background: rgb(255, 209, 26);
       }
 
       .playground-project-overview-progress-swatch.is-completed {
-        background: rgb(56, 204, 164);
+        background: rgb(111, 116, 255);
       }
 
       .playground-project-overview-progress-swatch.is-scope {
@@ -1051,6 +1644,138 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         display: flex;
         flex-direction: column;
         gap: 18px;
+      }
+
+      .playground-project-overview-latest-update-card {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 14px 16px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .playground-project-overview-latest-update-header,
+      .playground-project-overview-latest-update-meta,
+      .playground-project-overview-latest-update-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-project-overview-latest-update-header {
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-project-overview-latest-update-title {
+        min-width: 0;
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-project-overview-latest-update-button {
+        flex: 0 0 auto;
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.58);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        font: inherit;
+        font-size: 12px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-latest-update-button:hover {
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-project-overview-latest-update-button-icon {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+      }
+
+      .playground-project-overview-latest-update-meta {
+        flex-wrap: wrap;
+        font-size: 12px;
+        line-height: 1.35;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-project-overview-latest-update-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: rgb(74, 222, 128);
+      }
+
+      .playground-project-overview-latest-update-status-icon {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        color: rgb(74, 222, 128);
+      }
+
+      .playground-project-overview-latest-update-author {
+        display: inline-flex;
+        align-items: center;
+        min-width: 0;
+        gap: 7px;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-project-overview-latest-update-author .playground-project-overview-sidebar-avatar,
+      .playground-project-overview-latest-update-author .playground-project-overview-activity-avatar {
+        width: 18px;
+        height: 18px;
+        font-size: 8px;
+      }
+
+      .playground-project-overview-latest-update-body {
+        margin: 2px 0 0;
+        white-space: pre-wrap;
+        font-size: 13px;
+        line-height: 1.55;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-project-overview-latest-update-actions {
+        gap: 8px;
+        margin-top: 2px;
+      }
+
+      .playground-project-overview-latest-update-icon-button {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.02);
+        color: rgba(255, 255, 255, 0.62);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-latest-update-icon-button:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .playground-project-overview-latest-update-icon {
+        width: 14px;
+        height: 14px;
       }
 
       .playground-project-overview-activity-header {
@@ -3294,6 +4019,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           return formatProjectOverviewCt(value) + " CT";
         }
 
+        function formatProjectOverviewInteger(value) {
+          const numericValue = Math.max(0, Number(value || 0));
+          if (!Number.isFinite(numericValue) || numericValue <= 0) {
+            return "0";
+          }
+          return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Math.round(numericValue));
+        }
+
         function getProjectOverviewLocalDayKey(dateLike) {
           const date = dateLike instanceof Date ? new Date(dateLike) : new Date(dateLike);
           if (Number.isNaN(date.getTime())) {
@@ -3816,13 +4549,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               ? "Mission Control has generated a strategy snapshot for the current project state."
               : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
           const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
-          const activeProjectOverviewHomeTab = projectOverviewHomeTab === "observability" || projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "plugins"
+          const activeProjectOverviewHomeTab = projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "plugins"
             ? projectOverviewHomeTab
             : "general";
           function renderProjectOverviewHomeTabs() {
             const tabs = [
 	              { id: "general", label: "General" },
-	              { id: "observability", label: "Observability" },
 	              { id: "strategy", label: "Strategy" },
 	              { id: "rules", label: "Rules" },
 	              { id: "plugins", label: "Plugins" },
@@ -4227,10 +4959,10 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const projectOverviewStoragePercent = projectOverviewStorageCapacityBytes > 0
             ? Math.max(0, Math.min(100, Math.round((projectOverviewStorageUsedBytes / projectOverviewStorageCapacityBytes) * 1000) / 10))
             : 0;
-          const projectOverviewFilesSubviewId = ["overview", "resources", "imagine"].includes(String(projectOverviewFilesSubview || ""))
+          const projectOverviewFilesSubviewId = ["overview", "resources", "web-apps", "functions", "databases", "imagine"].includes(String(projectOverviewFilesSubview || ""))
             ? String(projectOverviewFilesSubview || "")
             : "overview";
-          const isProjectOverviewResourceSubviewOpen = activeProjectOverviewHomeTab === "observability" && projectOverviewFilesSubviewId !== "overview";
+          const isProjectOverviewResourceSubviewOpen = projectOverviewFilesSubviewId !== "overview";
           const visibleOverviewTasks = overviewVisibleTasks.slice(0, 5);
           const normalizedProjectOverviewTaskSearch = String(projectOverviewTaskSearchQuery || "").trim();
           const hasProjectOverviewTaskListFilters = Boolean(
@@ -4254,7 +4986,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 sections.push({
                   key: sectionKey,
                   releaseId: normalizedReleaseId,
-                  title: normalizedReleaseId ? (releaseRecord?.name || "Release unavailable") : "All other",
+                  title: normalizedReleaseId ? (releaseRecord?.name || "Milestone unavailable") : "All other",
                   tasks: [],
                 });
               }
@@ -4815,7 +5547,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
-          function renderProjectOverviewResourcesPanel() {
+          function renderProjectOverviewResourcesPanel(resourceItems = overviewResourceItems, emptyLabel = "No project resources have been created yet.") {
+            const visibleResourceItems = Array.isArray(resourceItems) ? resourceItems : [];
             return React.createElement("div", { className: "playground-project-overview-resources-block" },
               React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
                 React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Server Resources")
@@ -4824,7 +5557,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Loading project resources...")
                 : projectOverviewServerResourcesState?.status === "error"
                   ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, projectOverviewServerResourcesState.error || "Failed to load project resources.")
-                  : overviewResourceItems.length > 0
+                  : visibleResourceItems.length > 0
                     ? React.createElement("div", { className: "playground-project-overview-resources-table" },
                         React.createElement("div", { className: "playground-project-overview-resources-table-header" },
                           React.createElement("div", null, "Title"),
@@ -4833,10 +5566,10 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                           React.createElement("div", null, "Status"),
                           React.createElement("div", null, "Date")
                         ),
-                        overviewResourceItems.slice(0, 12).map((resource) => renderOverviewResourceRow(resource))
+                        visibleResourceItems.slice(0, 12).map((resource) => renderOverviewResourceRow(resource))
                       )
                     : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                        normalizedSearchQuery ? "No matching resources." : "No project resources have been created yet."
+                        normalizedSearchQuery ? "No matching resources." : emptyLabel
                       )
             );
           }
@@ -4903,6 +5636,50 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   : null
               )
             );
+          }
+
+          function getProjectOverviewResourceSubviewInfo(subviewId) {
+            const id = String(subviewId || "").trim();
+            if (id === "web-apps") {
+              return {
+                title: "Web Apps",
+                description: "Project web apps connected to this workspace.",
+                emptyLabel: "No web apps have been created for this project yet.",
+              };
+            }
+            if (id === "functions") {
+              return {
+                title: "Functions",
+                description: "Project functions connected to this workspace.",
+                emptyLabel: "No functions have been created for this project yet.",
+              };
+            }
+            if (id === "databases") {
+              return {
+                title: "Databases",
+                description: "Project databases connected to this workspace.",
+                emptyLabel: "No databases have been created for this project yet.",
+              };
+            }
+            return {
+              title: "Server Resources",
+              description: "Track the deployable resources connected to this project.",
+              emptyLabel: "No project resources have been created yet.",
+            };
+          }
+
+          function getProjectOverviewResourcesForSubview(subviewId) {
+            const id = String(subviewId || "").trim();
+            if (id === "web-apps") {
+              return overviewResourceItems.filter((item) => !isProjectOverviewMetronomeResource(item) && isProjectOverviewWebAppResource(item));
+            }
+            if (id === "functions") {
+              return overviewResourceItems.filter((item) => !isProjectOverviewMetronomeResource(item) && isProjectOverviewFunctionResource(item));
+            }
+            if (id === "databases") {
+              return overviewResourceItems.filter((item) => !isProjectOverviewMetronomeResource(item) && isProjectOverviewDatabaseResource(item));
+            }
+            return overviewResourceItems;
           }
 
           function renderProjectOverviewFilesConnectorBadge(row) {
@@ -4980,9 +5757,17 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               return null;
             }
             if (projectOverviewFilesSubviewId === "resources") {
+              const resourceSubviewInfo = getProjectOverviewResourceSubviewInfo(projectOverviewFilesSubviewId);
               return React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
-                renderProjectOverviewFilesSubviewHeader("Server Resources", "Track the deployable resources connected to this project."),
-                renderProjectOverviewResourcesPanel()
+                renderProjectOverviewFilesSubviewHeader(resourceSubviewInfo.title, resourceSubviewInfo.description),
+                renderProjectOverviewResourcesPanel(getProjectOverviewResourcesForSubview(projectOverviewFilesSubviewId), resourceSubviewInfo.emptyLabel)
+              );
+            }
+            if (projectOverviewFilesSubviewId === "web-apps" || projectOverviewFilesSubviewId === "functions" || projectOverviewFilesSubviewId === "databases") {
+              const resourceSubviewInfo = getProjectOverviewResourceSubviewInfo(projectOverviewFilesSubviewId);
+              return React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
+                renderProjectOverviewFilesSubviewHeader(resourceSubviewInfo.title, resourceSubviewInfo.description),
+                renderProjectOverviewResourcesPanel(getProjectOverviewResourcesForSubview(projectOverviewFilesSubviewId), resourceSubviewInfo.emptyLabel)
               );
             }
             if (projectOverviewFilesSubviewId === "imagine") {
@@ -5871,6 +6656,597 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             };
           }
 
+          function parseProjectOverviewTaskTimelineTimestamp(...values) {
+            for (const value of values) {
+              if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+                return value;
+              }
+              if (typeof value !== "string" || !value.trim()) {
+                continue;
+              }
+              const timestamp = Date.parse(value.trim());
+              if (Number.isFinite(timestamp)) {
+                return timestamp;
+              }
+            }
+            return null;
+          }
+
+          function getProjectOverviewTaskStatusId(task) {
+            return String(task?.status || "").trim().toLowerCase();
+          }
+
+          function isProjectOverviewTaskStartedStatus(status) {
+            return status === "in_progress" || status === "in_review" || status === "done";
+          }
+
+          function isProjectOverviewTaskCompletedStatus(status) {
+            return status === "done";
+          }
+
+          function buildProjectOverviewThreadTimestampById() {
+            return projectThreads.reduce((map, thread) => {
+              const threadId = String(thread?.id || thread?.threadId || "").trim();
+              if (!threadId) {
+                return map;
+              }
+              const timestamp = parseProjectOverviewTaskTimelineTimestamp(
+                thread?.startedAt,
+                thread?.createdAt,
+                thread?.updatedAt,
+                thread?.completedAt,
+                thread?.finishedAt,
+                thread?.endedAt
+              );
+              if (Number.isFinite(timestamp)) {
+                map[threadId] = timestamp;
+              }
+              return map;
+            }, Object.create(null));
+          }
+
+          function getProjectOverviewTaskEarliestLinkedThreadTimestamp(task, threadTimestampById) {
+            const threadIds = new Set();
+            if (typeof task?.lastStartedThreadId === "string" && task.lastStartedThreadId.trim()) {
+              threadIds.add(task.lastStartedThreadId.trim());
+            }
+            if (Array.isArray(task?.linkedThreadIds)) {
+              task.linkedThreadIds.forEach((threadId) => {
+                if (typeof threadId === "string" && threadId.trim()) {
+                  threadIds.add(threadId.trim());
+                }
+              });
+            }
+            let earliest = null;
+            threadIds.forEach((threadId) => {
+              const timestamp = threadTimestampById?.[threadId];
+              if (!Number.isFinite(timestamp)) {
+                return;
+              }
+              earliest = earliest === null ? timestamp : Math.min(earliest, timestamp);
+            });
+            return earliest;
+          }
+
+          function buildProjectOverviewProgressSeriesForBuckets(dailyCtBuckets) {
+            const tasksForTimeline = Array.isArray(normalizedOverviewTasks) ? normalizedOverviewTasks : [];
+            const threadTimestampById = buildProjectOverviewThreadTimestampById();
+            const bucketEndTimes = dailyCtBuckets.map((bucket) => {
+              const key = String(bucket?.key || "").trim();
+              const timestamp = Date.parse(key + "T23:59:59.999");
+              return Number.isFinite(timestamp) ? timestamp : null;
+            });
+            const scopeValues = [];
+            const startedValues = [];
+            const completedValues = [];
+
+            bucketEndTimes.forEach((bucketEndTime) => {
+              let scopeCount = 0;
+              let startedCount = 0;
+              let completedCount = 0;
+
+              tasksForTimeline.forEach((task) => {
+                const createdAt = parseProjectOverviewTaskTimelineTimestamp(
+                  task?.createdAt,
+                  task?.created_at,
+                  task?.insertedAt,
+                  task?.metadata?.createdAt
+                );
+                const taskExistsByBucket = bucketEndTime === null
+                  || createdAt === null
+                  || createdAt <= bucketEndTime;
+                if (!taskExistsByBucket) {
+                  return;
+                }
+
+                scopeCount += 1;
+
+                const status = getProjectOverviewTaskStatusId(task);
+                const linkedStartedAt = getProjectOverviewTaskEarliestLinkedThreadTimestamp(task, threadTimestampById);
+                const fallbackStartedAt = isProjectOverviewTaskStartedStatus(status)
+                  ? parseProjectOverviewTaskTimelineTimestamp(
+                      linkedStartedAt,
+                      task?.startedAt,
+                      task?.updatedAt,
+                      task?.createdAt
+                    )
+                  : null;
+                const startedAt = linkedStartedAt !== null ? linkedStartedAt : fallbackStartedAt;
+                if (
+                  startedAt !== null
+                  && (bucketEndTime === null || startedAt <= bucketEndTime)
+                ) {
+                  startedCount += 1;
+                }
+
+                const completedAt = parseProjectOverviewTaskTimelineTimestamp(
+                  task?.completedAt,
+                  task?.finishedAt,
+                  task?.closedAt,
+                  isProjectOverviewTaskCompletedStatus(status) ? task?.updatedAt : null,
+                  isProjectOverviewTaskCompletedStatus(status) ? task?.createdAt : null
+                );
+                if (
+                  completedAt !== null
+                  && (bucketEndTime === null || completedAt <= bucketEndTime)
+                ) {
+                  completedCount += 1;
+                }
+              });
+
+              scopeValues.push(scopeCount);
+              startedValues.push(Math.min(startedCount, scopeCount));
+              completedValues.push(Math.min(completedCount, scopeCount));
+            });
+
+            return [
+              { id: "scope", values: scopeValues },
+              { id: "started", values: startedValues },
+              { id: "completed", values: completedValues },
+            ];
+          }
+
+          function buildProjectOverviewDailyCtBuckets(bucketCount) {
+            const now = new Date();
+            const endDate = new Date(now);
+            endDate.setHours(0, 0, 0, 0);
+            const buckets = [];
+            const bucketIndexByKey = new Map();
+            for (let index = 0; index < bucketCount; index += 1) {
+              const date = new Date(endDate);
+              date.setDate(endDate.getDate() - (bucketCount - 1 - index));
+              const key = getProjectOverviewLocalDayKey(date);
+              const bucket = {
+                key,
+                label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+                totalCT: 0,
+              };
+              bucketIndexByKey.set(key, buckets.length);
+              buckets.push(bucket);
+            }
+
+            const projectCostSummary = projectOverviewCostSummaryState?.summary;
+            const projectCostSummaryDays = Array.isArray(projectCostSummary?.byDay) ? projectCostSummary.byDay : [];
+            if (projectOverviewCostSummaryState?.status === "ready" && projectCostSummary) {
+              projectCostSummaryDays.forEach((day) => {
+                const timestamp = Date.parse(String(day?.date || "") + "T00:00:00");
+                if (!Number.isFinite(timestamp)) {
+                  return;
+                }
+                const bucketIndex = bucketIndexByKey.get(getProjectOverviewLocalDayKey(new Date(timestamp)));
+                if (typeof bucketIndex !== "number") {
+                  return;
+                }
+                buckets[bucketIndex].totalCT += Math.max(0, Number(readSettingsComputeTokens(day, "totalCT", "totalCost") || 0));
+              });
+              return buckets;
+            }
+
+            projectThreads.forEach((thread) => {
+              const timestamp = Date.parse(String(thread?.updatedAt || thread?.createdAt || ""));
+              if (!Number.isFinite(timestamp)) {
+                return;
+              }
+              const bucketIndex = bucketIndexByKey.get(getProjectOverviewLocalDayKey(new Date(timestamp)));
+              if (typeof bucketIndex !== "number") {
+                return;
+              }
+              buckets[bucketIndex].totalCT += Math.max(0, Number(readSettingsComputeTokens(thread, "totalCT", "totalCost") || 0));
+            });
+            return buckets;
+          }
+
+          function PlaygroundProjectOverviewProgressUsageChart({ dailyCtBuckets, maxDailyCt, maxProgressValue, series }) {
+            const canvasRef = useRef(null);
+            const chartSignature = JSON.stringify({
+              buckets: dailyCtBuckets.map((bucket) => ({
+                key: bucket?.key || "",
+                label: bucket?.label || "",
+                totalCT: Math.max(0, Number(bucket?.totalCT || 0)),
+              })),
+              maxDailyCt,
+              maxProgressValue,
+              series: series.map((entry) => ({
+                id: entry.id,
+                values: Array.isArray(entry.values) ? entry.values : [],
+              })),
+            });
+
+            useEffect(() => {
+              const canvas = canvasRef.current;
+              if (!canvas || typeof Chart !== "function") {
+                return undefined;
+              }
+
+              const labels = dailyCtBuckets.map((bucket) => String(bucket?.label || ""));
+              const dailyCtValues = dailyCtBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0)));
+              const seriesById = series.reduce((map, entry) => {
+                map[entry.id] = Array.isArray(entry.values) ? entry.values : [];
+                return map;
+              }, {});
+              function makeVerticalGradient(context, stops, fallback) {
+                const chart = context?.chart;
+                const chartArea = chart?.chartArea;
+                const ctx = chart?.ctx;
+                if (!ctx || !chartArea) {
+                  return fallback;
+                }
+                const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                stops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
+                return gradient;
+              }
+              const hoverGuidePlugin = {
+                id: "projectOverviewProgressHoverGuide",
+                afterDatasetsDraw: (chartInstance) => {
+                  const activeElements = chartInstance?.tooltip?.getActiveElements?.() || [];
+                  if (!activeElements.length) {
+                    return;
+                  }
+                  const activeIndex = activeElements[0]?.index;
+                  const activeElement = activeElements[0]?.element;
+                  const chartArea = chartInstance.chartArea;
+                  const ctx = chartInstance.ctx;
+                  if (!ctx || !chartArea || typeof activeIndex !== "number" || !activeElement) {
+                    return;
+                  }
+                  const x = activeElement.x;
+                  const label = labels[activeIndex] || "";
+                  if (!label) {
+                    return;
+                  }
+                  ctx.save();
+                  ctx.setLineDash([4, 4]);
+                  ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+                  ctx.lineWidth = 1;
+                  ctx.beginPath();
+                  ctx.moveTo(x, chartArea.top + 8);
+                  ctx.lineTo(x, chartArea.bottom);
+                  ctx.stroke();
+                  ctx.setLineDash([]);
+                  ctx.font = "500 12px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif";
+                  const metrics = ctx.measureText(label);
+                  const paddingX = 8;
+                  const labelWidth = metrics.width + paddingX * 2;
+                  const labelHeight = 24;
+                  const labelX = Math.min(Math.max(x - labelWidth / 2, chartArea.left), chartArea.right - labelWidth);
+                  const labelY = chartArea.top - 2;
+                  const radius = 6;
+                  ctx.fillStyle = "rgba(46, 46, 52, 0.96)";
+                  ctx.beginPath();
+                  ctx.moveTo(labelX + radius, labelY);
+                  ctx.lineTo(labelX + labelWidth - radius, labelY);
+                  ctx.quadraticCurveTo(labelX + labelWidth, labelY, labelX + labelWidth, labelY + radius);
+                  ctx.lineTo(labelX + labelWidth, labelY + labelHeight - radius);
+                  ctx.quadraticCurveTo(labelX + labelWidth, labelY + labelHeight, labelX + labelWidth - radius, labelY + labelHeight);
+                  ctx.lineTo(labelX + radius, labelY + labelHeight);
+                  ctx.quadraticCurveTo(labelX, labelY + labelHeight, labelX, labelY + labelHeight - radius);
+                  ctx.lineTo(labelX, labelY + radius);
+                  ctx.quadraticCurveTo(labelX, labelY, labelX + radius, labelY);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.fillStyle = "rgba(255, 255, 255, 0.82)";
+                  ctx.textBaseline = "middle";
+                  ctx.fillText(label, labelX + paddingX, labelY + labelHeight / 2 + 0.5);
+                  ctx.restore();
+                },
+              };
+              const edgeToEdgeChartAreaPlugin = {
+                id: "projectOverviewProgressEdgeToEdgeChartArea",
+                afterLayout: (chartInstance) => {
+                  const chartArea = chartInstance?.chartArea;
+                  const xScale = chartInstance?.scales?.x;
+                  if (!chartArea || !xScale || !Number.isFinite(chartInstance.width)) {
+                    return;
+                  }
+                  const left = 0;
+                  const right = Math.max(left, chartInstance.width);
+                  chartArea.left = left;
+                  chartArea.right = right;
+                  chartArea.width = right - left;
+                  xScale.left = left;
+                  xScale.right = right;
+                  xScale.width = right - left;
+                },
+                beforeDatasetsDraw: (chartInstance) => {
+                  const ctx = chartInstance?.ctx;
+                  const chartArea = chartInstance?.chartArea;
+                  const progressScale = chartInstance?.scales?.progress;
+                  if (!ctx || !chartArea || !progressScale) {
+                    return;
+                  }
+                  const min = Number(progressScale.min || 0);
+                  const max = Number(progressScale.max || 0);
+                  if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) {
+                    return;
+                  }
+                  ctx.save();
+                  ctx.setLineDash([5, 8]);
+                  ctx.strokeStyle = "rgba(255, 255, 255, 0.055)";
+                  ctx.lineWidth = 1;
+                  for (let index = 1; index < 4; index += 1) {
+                    const value = min + ((max - min) * index) / 4;
+                    const y = progressScale.getPixelForValue(value);
+                    if (!Number.isFinite(y)) {
+                      continue;
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(chartInstance.width, y);
+                    ctx.stroke();
+                  }
+                  ctx.restore();
+                },
+              };
+              const chart = new Chart(canvas, {
+                type: "bar",
+                data: {
+                  labels,
+                  datasets: [
+                    {
+                      id: "dailyCT",
+                      type: "bar",
+                      label: "Compute Tokens",
+                      data: dailyCtValues,
+                      yAxisID: "ct",
+                      backgroundColor: (context) => makeVerticalGradient(context, [
+                        [0, "rgba(102, 166, 255, 0.82)"],
+                        [1, "rgba(91, 103, 230, 0.64)"],
+                      ], "rgba(95, 112, 230, 0.72)"),
+                      borderColor: "rgba(95, 112, 230, 0.75)",
+                      borderWidth: 0,
+                      borderRadius: 2,
+                      barPercentage: 0.72,
+                      categoryPercentage: 0.86,
+                      maxBarThickness: 10,
+                      order: 4,
+                    },
+                    {
+                      id: "scope",
+                      type: "line",
+                      label: "Scope",
+                      data: seriesById.scope || [],
+                      yAxisID: "progress",
+                      borderColor: "rgba(160, 160, 166, 0.62)",
+                      backgroundColor: "rgba(160, 160, 166, 0.16)",
+                      borderWidth: 1.7,
+                      fill: false,
+                      pointBackgroundColor: "rgba(190, 190, 196, 0.86)",
+                      pointBorderColor: "#050505",
+                      pointBorderWidth: 2,
+                      pointRadius: (context) => context.dataIndex === (seriesById.scope || []).length - 1 ? 5 : 0,
+                      pointHoverRadius: 5,
+                      tension: 0.28,
+                      order: 1,
+                    },
+                    {
+                      id: "started",
+                      type: "line",
+                      label: "Started",
+                      data: seriesById.started || [],
+                      yAxisID: "progress",
+                      borderColor: "rgb(255, 209, 26)",
+                      backgroundColor: (context) => makeVerticalGradient(context, [
+                        [0, "rgba(255, 209, 26, 0.2)"],
+                        [0.62, "rgba(255, 209, 26, 0.08)"],
+                        [1, "rgba(255, 209, 26, 0)"],
+                      ], "rgba(255, 209, 26, 0.08)"),
+                      borderWidth: 2,
+                      fill: false,
+                      pointBackgroundColor: "rgb(255, 209, 26)",
+                      pointBorderColor: "#050505",
+                      pointBorderWidth: 2,
+                      pointRadius: (context) => context.dataIndex === (seriesById.started || []).length - 1 ? 5 : 0,
+                      pointHoverRadius: 5,
+                      tension: 0.28,
+                      order: 2,
+                    },
+                    {
+                      id: "completed",
+                      type: "line",
+                      label: "Completed",
+                      data: seriesById.completed || [],
+                      yAxisID: "progress",
+                      borderColor: "rgb(111, 116, 255)",
+                      backgroundColor: (context) => makeVerticalGradient(context, [
+                        [0, "rgba(111, 116, 255, 0.32)"],
+                        [0.55, "rgba(111, 116, 255, 0.16)"],
+                        [1, "rgba(111, 116, 255, 0)"],
+                      ], "rgba(111, 116, 255, 0.14)"),
+                      borderWidth: 2,
+                      fill: "origin",
+                      pointBackgroundColor: "rgb(111, 116, 255)",
+                      pointBorderColor: "#050505",
+                      pointBorderWidth: 2,
+                      pointRadius: (context) => context.dataIndex === (seriesById.completed || []).length - 1 ? 5 : 0,
+                      pointHoverRadius: 5,
+                      tension: 0.28,
+                      order: 3,
+                    },
+                  ],
+                },
+                options: {
+                  animation: { duration: 180 },
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  normalized: true,
+                  interaction: {
+                    intersect: false,
+                    mode: "index",
+                  },
+                  layout: {
+                    padding: {
+                      top: 28,
+                      right: 0,
+                      bottom: 0,
+                      left: 0,
+                    },
+                  },
+                  plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                      enabled: true,
+                      backgroundColor: "rgba(8, 8, 8, 0.96)",
+                      borderColor: "rgba(255, 255, 255, 0.14)",
+                      borderWidth: 1,
+                      cornerRadius: 8,
+                      displayColors: true,
+                      titleColor: "rgba(255, 255, 255, 0.94)",
+                      bodyColor: "rgba(255, 255, 255, 0.78)",
+                      padding: 10,
+                      callbacks: {
+                        label: (context) => {
+                          const datasetId = context.dataset?.id || "";
+                          const value = Math.max(0, Number(context.parsed?.y || 0));
+                          if (datasetId === "dailyCT") {
+                            return "Compute Tokens: " + formatProjectOverviewCt(value) + " CT";
+                          }
+                          return String(context.dataset?.label || "Progress") + ": " + formatProjectOverviewInteger(value);
+                        },
+                      },
+                    },
+                  },
+                  scales: {
+                    x: {
+                      type: "category",
+                      bounds: "data",
+                      offset: false,
+                      grid: { display: false, offset: false, drawBorder: false },
+                      border: { display: false },
+                      ticks: {
+                        align: "inner",
+                        autoSkip: false,
+                        color: "rgba(255, 255, 255, 0.5)",
+                        font: {
+                          size: 12,
+                          weight: "400",
+                          family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+                        },
+                        maxRotation: 0,
+                        minRotation: 0,
+                        padding: 12,
+                        callback: (_value, index) => {
+                          if (index === 0 || index === labels.length - 1) {
+                            return labels[index] || "";
+                          }
+                          return "";
+                        },
+                      },
+                    },
+                    progress: {
+                      display: false,
+                      type: "linear",
+                      position: "left",
+                      min: 0,
+                      max: Math.max(1, Math.ceil(maxProgressValue * 1.18)),
+                      ticks: {
+                        display: false,
+                        maxTicksLimit: 4,
+                      },
+                      grid: {
+                        display: false,
+                        drawTicks: false,
+                      },
+                      border: { display: false },
+                    },
+                    ct: {
+                      display: false,
+                      type: "linear",
+                      position: "right",
+                      min: 0,
+                      max: Math.max(1, Math.ceil(maxDailyCt * 4)),
+                      ticks: { display: false },
+                      grid: { display: false, drawTicks: false },
+                      border: { display: false },
+                    },
+                  },
+                },
+                plugins: [edgeToEdgeChartAreaPlugin, hoverGuidePlugin],
+              });
+
+              return () => {
+                chart.destroy();
+              };
+            }, [chartSignature]);
+
+            return React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
+              React.createElement("canvas", {
+                ref: canvasRef,
+                className: "playground-project-overview-progress-combo-canvas",
+                role: "img",
+                "aria-label": "Project progress and daily compute token usage",
+              })
+            );
+          }
+
+          function renderProjectOverviewProgressUsageChartSection() {
+            const progressStats = getProjectOverviewProgressStats();
+            const dailyCtBuckets = buildProjectOverviewDailyCtBuckets(30);
+            const series = buildProjectOverviewProgressSeriesForBuckets(dailyCtBuckets);
+            const maxSeriesValue = Math.max(
+              0,
+              ...series.flatMap((entry) => Array.isArray(entry.values) ? entry.values : [])
+                .map((value) => Math.max(0, Number(value || 0)))
+            );
+            const maxProgressValue = Math.max(
+              1,
+              progressStats.scopeCount,
+              progressStats.startedCount,
+              progressStats.completedCount,
+              maxSeriesValue
+            );
+            const maxDailyCt = Math.max(1, ...dailyCtBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0))));
+            const totalDailyCt = dailyCtBuckets.reduce((sum, bucket) => sum + Math.max(0, Number(bucket?.totalCT || 0)), 0);
+
+            return React.createElement("section", { className: "playground-project-overview-progress-combo-card" },
+              React.createElement("div", { className: "playground-project-overview-progress-combo-legend" },
+                progressStats.rows.map((row) =>
+                  React.createElement("div", { key: row.id, className: "playground-project-overview-progress-combo-legend-row" },
+                    React.createElement("div", { className: "playground-project-overview-progress-combo-legend-name" },
+                      React.createElement("span", { className: "playground-project-overview-progress-swatch is-" + row.id }),
+                      React.createElement("span", null, row.label)
+                    ),
+                    React.createElement("div", { className: "playground-project-overview-progress-combo-legend-count" }, row.value)
+                  )
+                ),
+                React.createElement("div", { className: "playground-project-overview-progress-combo-legend-row" },
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-legend-name" },
+                    React.createElement("span", { className: "playground-project-overview-progress-swatch is-cost" }),
+                    React.createElement("span", null, "Cost")
+                  ),
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-legend-count is-cost" }, formatProjectOverviewCt(totalDailyCt) + " CT")
+                )
+              ),
+              React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
+                React.createElement(PlaygroundProjectOverviewProgressUsageChart, {
+                  dailyCtBuckets,
+                  maxDailyCt,
+                  maxProgressValue,
+                  series,
+                })
+              )
+            );
+          }
+
           function renderProjectOverviewWidgetHeader(title, Icon, action) {
             return React.createElement("div", { className: "playground-project-overview-widget-header" },
               React.createElement("div", { className: "playground-project-overview-widget-title-wrap" },
@@ -5902,6 +7278,51 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 React.createElement("span", { className: "playground-project-overview-widget-list-title", title }, title),
                 meta ? React.createElement("span", { className: "playground-project-overview-widget-list-meta", title: meta }, meta) : null
               )
+            );
+          }
+
+          function renderProjectOverviewSetupSection() {
+            const progressStats = getProjectOverviewProgressStats();
+            if (progressStats.scopeCount > 0) {
+              return null;
+            }
+            const operatingProfile = getProjectOverviewOperatingProfile();
+            const setupRecipe = operatingProfile?.setupRecipe && typeof operatingProfile.setupRecipe === "object" && !Array.isArray(operatingProfile.setupRecipe)
+              ? operatingProfile.setupRecipe
+              : {};
+            const starterTasks = Array.isArray(setupRecipe.starterTasks)
+              ? setupRecipe.starterTasks
+              : [];
+            const firstSteps = Array.isArray(setupRecipe.firstSteps)
+              ? setupRecipe.firstSteps
+              : [];
+            const setupSteps = (starterTasks.length ? starterTasks : firstSteps)
+              .map((step) => String(step || "").trim())
+              .filter(Boolean)
+              .slice(0, 4);
+            const recommendedResources = Array.isArray(operatingProfile?.suggestedResources)
+              ? operatingProfile.suggestedResources
+              : [];
+            const recommendedConnectors = Array.isArray(setupRecipe.recommendedConnectors)
+              ? setupRecipe.recommendedConnectors
+              : [];
+            const recommendationLine = recommendedConnectors.concat(recommendedResources)
+              .map((item) => String(item || "").trim())
+              .filter(Boolean)
+              .slice(0, 3)
+              .join(" · ");
+            return React.createElement("section", { className: "playground-project-overview-setup-section" },
+              renderProjectOverviewWidgetHeader("Project Setup", ListTodo),
+              setupSteps.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-widget-list" },
+                    setupSteps.map((step, index) => renderProjectOverviewWidgetListItem({
+                      key: "setup:" + index + ":" + step,
+                      Icon: ListTodo,
+                      title: step,
+                      meta: index === 0 && recommendationLine ? "Recommended: " + recommendationLine : "",
+                    }))
+                  )
+                : React.createElement("div", { className: "playground-project-overview-widget-empty" }, "Run Mission Control to create the first setup plan.")
             );
           }
 
@@ -6001,7 +7422,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             return React.createElement("section", { className: "playground-project-overview-widget" },
               renderProjectOverviewWidgetHeader("Cost Observability", Coins, {
                 label: "Details",
-                onClick: () => typeof setProjectOverviewHomeTab === "function" && setProjectOverviewHomeTab("observability"),
+                onClick: () => typeof setProjectOverviewHomeTab === "function" && setProjectOverviewHomeTab("general"),
               }),
               React.createElement("div", { className: "playground-project-overview-cost-widget-main" },
                 React.createElement("div", { className: "playground-project-overview-cost-widget-value" }, formatProjectOverviewCt(projectTotalCt) + " CT"),
@@ -6037,16 +7458,41 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
-          function isProjectOverviewMetronomeResource(resource) {
-            const haystack = [
+          function getProjectOverviewResourceHaystack(resource) {
+            return [
               resource?.type,
               resource?.kind,
               resource?.resourceType,
+              resource?.resourceKind,
+              resource?.serverKind,
               resource?.title,
               resource?.name,
               resource?.label,
             ].join(" ").toLowerCase();
+          }
+
+          function isProjectOverviewMetronomeResource(resource) {
+            const haystack = getProjectOverviewResourceHaystack(resource);
             return haystack.includes("metronome") || haystack.includes("schedule") || haystack.includes("cron");
+          }
+
+          function isProjectOverviewWebAppResource(resource) {
+            const haystack = getProjectOverviewResourceHaystack(resource);
+            return haystack.includes("web app")
+              || haystack.includes("web-app")
+              || haystack.includes("web_app")
+              || haystack.includes("webapp")
+              || haystack.includes("frontend app")
+              || haystack.includes("hosted app");
+          }
+
+          function isProjectOverviewDatabaseResource(resource) {
+            const haystack = getProjectOverviewResourceHaystack(resource);
+            return haystack.includes("database")
+              || haystack.includes("datastore")
+              || haystack.includes("data store")
+              || haystack.includes("firestore")
+              || haystack.includes("postgres");
           }
 
           function renderProjectOverviewMetronomesWidget() {
@@ -6129,7 +7575,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   meta: [resource?.type || resource?.kind || resource?.resourceType || "Server resource", resource?.status || ""].filter(Boolean).join(" · "),
                   onClick: () => {
                     if (typeof setProjectOverviewHomeTab === "function") {
-                      setProjectOverviewHomeTab("observability");
+                      setProjectOverviewHomeTab("general");
                     }
                     if (typeof setProjectOverviewFilesSubview === "function") {
                       setProjectOverviewFilesSubview("resources");
@@ -6159,7 +7605,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 label: "Open",
                 onClick: () => {
                   if (typeof setProjectOverviewHomeTab === "function") {
-                    setProjectOverviewHomeTab("observability");
+                    setProjectOverviewHomeTab("general");
                   }
                   if (typeof setProjectOverviewFilesSubview === "function") {
                     setProjectOverviewFilesSubview("resources");
@@ -6181,7 +7627,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 label: "Open",
                 onClick: () => {
                   if (typeof setProjectOverviewHomeTab === "function") {
-                    setProjectOverviewHomeTab("observability");
+                    setProjectOverviewHomeTab("general");
                   }
                   if (typeof setProjectOverviewFilesSubview === "function") {
                     setProjectOverviewFilesSubview("resources");
@@ -6212,7 +7658,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 label: "Open",
                 onClick: () => {
                   if (typeof setProjectOverviewHomeTab === "function") {
-                    setProjectOverviewHomeTab("observability");
+                    setProjectOverviewHomeTab("general");
                   }
                   if (typeof setProjectOverviewFilesSubview === "function") {
                     setProjectOverviewFilesSubview("imagine");
@@ -6240,19 +7686,850 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
+          function renderProjectOverviewUsersWidget() {
+            const summary = selectedProjectSummary && typeof selectedProjectSummary === "object" && !Array.isArray(selectedProjectSummary)
+              ? selectedProjectSummary
+              : {};
+            const activeUsers = Math.max(0, Number(summary.activeUsers || summary.activeUsersCount || summary.usersCount || summary.dau || 0));
+            const totalUsers = Math.max(activeUsers, Number(summary.totalUsers || summary.totalUsersCount || summary.usersCount || 0));
+            return React.createElement("section", { className: "playground-project-overview-widget" },
+              renderProjectOverviewWidgetHeader("Users", UsersRound),
+              React.createElement("div", { className: "playground-project-overview-widget-metric" },
+                React.createElement("div", { className: "playground-project-overview-widget-metric-value" }, formatProjectOverviewInteger(activeUsers)),
+                React.createElement("div", { className: "playground-project-overview-widget-metric-label" }, "Daily active users"),
+                totalUsers > 0
+                  ? React.createElement("div", { className: "playground-project-overview-widget-metric-meta" }, formatProjectOverviewInteger(totalUsers) + " total users")
+                  : React.createElement("div", { className: "playground-project-overview-widget-empty" }, "No user activity yet.")
+              )
+            );
+          }
+
+          function isProjectOverviewFunctionResource(resource) {
+            const haystack = getProjectOverviewResourceHaystack(resource);
+            return haystack.includes("function") || haystack.includes("server action") || haystack.includes("backend logic");
+          }
+
+          function renderProjectOverviewFunctionsWidget() {
+            const functionResources = allOverviewResourceItems
+              .filter((item) => isProjectOverviewFunctionResource(item))
+              .slice(0, 4);
+            return React.createElement("section", { className: "playground-project-overview-widget" },
+              renderProjectOverviewWidgetHeader("Functions", FunctionSquare, {
+                label: "Open",
+                onClick: () => {
+                  if (typeof setProjectOverviewHomeTab === "function") {
+                    setProjectOverviewHomeTab("general");
+                  }
+                  if (typeof setProjectOverviewFilesSubview === "function") {
+                    setProjectOverviewFilesSubview("resources");
+                  }
+                },
+              }),
+              functionResources.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-widget-list" },
+                    functionResources.map((resource, index) => {
+                      const title = String(resource?.title || resource?.name || resource?.label || "Function").trim();
+                      const meta = [resource?.status || "", resource?.dateLabel || resource?.updatedAt || ""].filter(Boolean).join(" · ");
+                      return renderProjectOverviewWidgetListItem({
+                        key: String(resource?.id || title || index),
+                        Icon: FunctionSquare,
+                        title,
+                        meta,
+                      });
+                    })
+                  )
+                : React.createElement("div", { className: "playground-project-overview-widget-empty" }, "No functions connected yet.")
+            );
+          }
+
+          function renderProjectOverviewEarningsWidget() {
+            const summary = selectedProjectSummary && typeof selectedProjectSummary === "object" && !Array.isArray(selectedProjectSummary)
+              ? selectedProjectSummary
+              : {};
+            const earningsValue = Math.max(0, Number(summary.earnings || summary.revenue || summary.totalRevenue || summary.paymentsTotal || 0));
+            const formattedValue = earningsValue > 0
+              ? "$" + new Intl.NumberFormat("en-US", { maximumFractionDigits: earningsValue >= 100 ? 0 : 2 }).format(earningsValue)
+              : "$0";
+            return React.createElement("section", { className: "playground-project-overview-widget" },
+              renderProjectOverviewWidgetHeader("Earnings", DollarSign),
+              React.createElement("div", { className: "playground-project-overview-widget-metric" },
+                React.createElement("div", { className: "playground-project-overview-widget-metric-value" }, formattedValue),
+                React.createElement("div", { className: "playground-project-overview-widget-metric-label" }, "Payment revenue"),
+                earningsValue > 0
+                  ? React.createElement("div", { className: "playground-project-overview-widget-metric-meta" }, "From connected payment resources")
+                  : React.createElement("div", { className: "playground-project-overview-widget-empty" }, "No earnings recorded yet.")
+              )
+            );
+          }
+
+          function getProjectOverviewOperatingProfile() {
+            const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
+              ? selectedProject.metadata
+              : {};
+            if (metadata.operatingProfileSnapshot && typeof metadata.operatingProfileSnapshot === "object" && !Array.isArray(metadata.operatingProfileSnapshot)) {
+              return metadata.operatingProfileSnapshot;
+            }
+            const projectType = String(selectedProject?.projectType || selectedProject?.type || metadata.projectType || metadata.blueprintId || "blank").trim();
+            const blueprint = typeof getPlaygroundProjectBlueprint === "function"
+              ? getPlaygroundProjectBlueprint(projectType)
+              : null;
+            if (blueprint && typeof buildPlaygroundProjectOperatingProfileSnapshot === "function") {
+              return buildPlaygroundProjectOperatingProfileSnapshot(blueprint);
+            }
+            return null;
+          }
+
+          function getProjectOverviewDashboardWidgetIds() {
+            const operatingProfile = getProjectOverviewOperatingProfile();
+            const dashboardProfile = operatingProfile?.dashboardProfile && typeof operatingProfile.dashboardProfile === "object" && !Array.isArray(operatingProfile.dashboardProfile)
+              ? operatingProfile.dashboardProfile
+              : {};
+            const configuredWidgets = Array.isArray(dashboardProfile.widgets)
+              ? dashboardProfile.widgets
+              : [];
+            const normalizedWidgets = configuredWidgets
+              .map((widgetId) => String(widgetId || "").trim().toLowerCase().replace(/[\\s_-]+/g, "-"))
+              .filter(Boolean);
+            const fallbackWidgets = ["progress", "files", "resources", "cost"];
+            const allowedWidgets = new Set(["progress", "cost", "files", "resources", "metronomes", "server-resources", "imagine-resources", "users", "functions", "earnings"]);
+            const seen = new Set();
+            const widgetIds = (normalizedWidgets.length ? normalizedWidgets : fallbackWidgets)
+              .map((widgetId) => {
+                if (["project-progress", "scope"].includes(widgetId)) return "progress";
+                if (["costs", "cost-observability", "usage"].includes(widgetId)) return "cost";
+                if (["file", "workspace-files"].includes(widgetId)) return "files";
+                if (["resource", "execution-resources"].includes(widgetId)) return "resources";
+                if (["setup", "setup-guide", "project-setup", "setup-recipe"].includes(widgetId)) return "";
+                if (["dau", "daily-active-users", "active-users"].includes(widgetId)) return "users";
+                if (["function", "server-functions", "function-activity"].includes(widgetId)) return "functions";
+                if (["revenue", "payments", "payment-earnings"].includes(widgetId)) return "earnings";
+                return widgetId;
+              })
+              .filter(Boolean)
+              .filter((widgetId) => {
+                if (!allowedWidgets.has(widgetId)) {
+                  return false;
+                }
+                if (seen.has(widgetId)) {
+                  return false;
+                }
+                seen.add(widgetId);
+                return true;
+              });
+            return widgetIds.length ? widgetIds : fallbackWidgets;
+          }
+
+          function renderProjectOverviewWidgetById(widgetId) {
+            switch (widgetId) {
+              case "progress":
+                return renderProjectOverviewProgressWidget();
+              case "cost":
+                return renderProjectOverviewCostWidget();
+              case "files":
+                return renderProjectOverviewFilesWidget();
+              case "resources":
+                return renderProjectOverviewResourcesWidget();
+              case "metronomes":
+                return renderProjectOverviewMetronomesWidget();
+              case "server-resources":
+                return renderProjectOverviewServerResourcesWidget();
+              case "imagine-resources":
+                return renderProjectOverviewImagineWidget();
+              case "users":
+                return renderProjectOverviewUsersWidget();
+              case "functions":
+                return renderProjectOverviewFunctionsWidget();
+              case "earnings":
+                return renderProjectOverviewEarningsWidget();
+              default:
+                return null;
+            }
+          }
+
           function renderProjectOverviewWidgetSection() {
-            return React.createElement("div", { className: "playground-project-overview-widget-grid" },
-              renderProjectOverviewProgressWidget(),
-              renderProjectOverviewCostWidget(),
-              renderProjectOverviewFilesWidget(),
-              renderProjectOverviewResourcesWidget()
+            const widgets = getProjectOverviewDashboardWidgetIds()
+              .map(renderProjectOverviewWidgetById)
+              .filter(Boolean);
+            return React.createElement("div", { className: "playground-project-overview-widget-grid" }, ...widgets);
+          }
+
+          function getProjectOverviewReadableText(value) {
+            if (value == null) return "";
+            if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+              return String(value).trim();
+            }
+            if (Array.isArray(value)) {
+              return value.map(getProjectOverviewReadableText).filter(Boolean).join("\n").trim();
+            }
+            if (typeof value === "object") {
+              const candidates = [
+                value.body,
+                value.text,
+                value.message,
+                value.content,
+                value.summary,
+                value.description,
+                value.note,
+                value.update,
+                value.markdown,
+                value.plainText,
+                value.goal,
+                value.title,
+                value.name,
+                value.latestUpdate,
+                value.statusUpdate,
+                value.scopeUpdate,
+                value.projectUpdate,
+              ];
+              for (const candidate of candidates) {
+                const text = getProjectOverviewReadableText(candidate);
+                if (text) return text;
+              }
+            }
+            return "";
+          }
+
+          function normalizeProjectOverviewLatestUpdateRecord(value) {
+            if (value == null) return null;
+            if (typeof value === "string") {
+              const body = value.trim();
+              return body ? { body } : null;
+            }
+            if (typeof value !== "object" || Array.isArray(value)) {
+              return null;
+            }
+            const body = getProjectOverviewReadableText(
+              value.body
+                || value.text
+                || value.message
+                || value.content
+                || value.summary
+                || value.description
+                || value.note
+                || value.update
+                || value.markdown
+                || value.plainText
+                || value.goal
+                || value.title
+                || value.name
+                || ""
+            );
+            const timestamp = String(
+              value.updatedAt
+                || value.createdAt
+                || value.timestamp
+                || value.date
+                || ""
+            ).trim();
+            const authorName = String(
+              value.authorName
+                || value.actorName
+                || value.userName
+                || value.name
+                || value.author?.name
+                || value.actor?.name
+                || ""
+            ).trim();
+            const authorAvatarUrl = String(
+              value.authorAvatarUrl
+                || value.actorAvatarUrl
+                || value.avatarUrl
+                || value.photoUrl
+                || value.author?.avatarUrl
+                || value.actor?.avatarUrl
+                || ""
+            ).trim();
+            if (!body && !timestamp && !authorName && !authorAvatarUrl) {
+              return null;
+            }
+            return {
+              body,
+              timestamp,
+              authorName,
+              authorAvatarUrl,
+            };
+          }
+
+          function collectProjectOverviewLatestUpdateRecords() {
+            const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
+              ? selectedProject.metadata
+              : {};
+            const summary = selectedProjectSummary && typeof selectedProjectSummary === "object" && !Array.isArray(selectedProjectSummary)
+              ? selectedProjectSummary
+              : {};
+            const rawCandidates = [
+              selectedProject?.latestUpdate,
+              selectedProject?.statusUpdate,
+              selectedProject?.scopeUpdate,
+              selectedProject?.projectUpdate,
+              metadata.latestUpdate,
+              metadata.statusUpdate,
+              metadata.scopeUpdate,
+              metadata.projectUpdate,
+              summary.latestUpdate,
+              summary.statusUpdate,
+              summary.scopeUpdate,
+              summary.projectUpdate,
+            ];
+            [
+              selectedProject?.updates,
+              selectedProject?.projectUpdates,
+              selectedProject?.statusUpdates,
+              selectedProject?.comments,
+              metadata.updates,
+              metadata.projectUpdates,
+              metadata.statusUpdates,
+              metadata.comments,
+              summary.updates,
+              summary.projectUpdates,
+              summary.statusUpdates,
+            ].forEach((collection) => {
+              if (Array.isArray(collection)) {
+                collection.forEach((entry) => rawCandidates.push(entry));
+              }
+            });
+            return rawCandidates
+              .map(normalizeProjectOverviewLatestUpdateRecord)
+              .filter(Boolean)
+              .sort((left, right) => {
+                const leftTime = Date.parse(left.timestamp || "");
+                const rightTime = Date.parse(right.timestamp || "");
+                return (Number.isFinite(rightTime) ? rightTime : 0) - (Number.isFinite(leftTime) ? leftTime : 0);
+              });
+          }
+
+          function getProjectOverviewLatestUpdateTimestamp(...values) {
+            for (const value of values) {
+              const raw = String(value || "").trim();
+              if (!raw) continue;
+              const parsed = Date.parse(raw);
+              if (Number.isFinite(parsed)) {
+                return { timestamp: raw, time: parsed };
+              }
+            }
+            return { timestamp: "", time: 0 };
+          }
+
+          function buildProjectOverviewLatestUpdateActivityRecords() {
+            const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
+              ? selectedProject.metadata
+              : {};
+            const lead = getProjectOverviewSidebarLead();
+            const records = [];
+            const pushRecord = (record) => {
+              const body = getProjectOverviewReadableText(record?.body);
+              if (!body) return;
+              records.push({
+                body,
+                timestamp: String(record?.timestamp || "").trim(),
+                time: Number.isFinite(Number(record?.time)) ? Number(record.time) : 0,
+                authorName: String(record?.authorName || lead.name || "Project lead").trim(),
+                authorAvatarUrl: String(record?.authorAvatarUrl || lead.avatarUrl || "").trim(),
+              });
+            };
+
+            buildProjectOverviewActivityItems()
+              .filter((item) => item?.task || item?.taskId)
+              .forEach((item) => {
+                const task = item?.task || {};
+                const timestampInfo = getProjectOverviewLatestUpdateTimestamp(task.updatedAt, task.createdAt);
+                const verb = String(item?.verb || "").trim() || "updated";
+                pushRecord({
+                  body: [item?.actor || "Agent", verb, "ticket", item?.object || task.title || "Untitled task"].filter(Boolean).join(" "),
+                  timestamp: timestampInfo.timestamp,
+                  time: timestampInfo.time || Number(item?.time || 0),
+                  authorName: item?.actor,
+                  authorAvatarUrl: item?.photoUrl,
+                });
+              });
+
+            Object.values(releasesById || {}).forEach((release) => {
+              const name = String(release?.name || release?.title || "").trim();
+              if (!name) return;
+              const timestampInfo = getProjectOverviewLatestUpdateTimestamp(release.updatedAt, release.createdAt, release.timestamp);
+              if (!timestampInfo.time) return;
+              const isCreated = String(release?.createdAt || "").trim()
+                && String(release?.createdAt || "").trim() === String(release?.updatedAt || "").trim();
+              pushRecord({
+                body: (isCreated ? "Created milestone " : "Updated milestone ") + name,
+                timestamp: timestampInfo.timestamp,
+                time: timestampInfo.time,
+              });
+            });
+
+            const strategyTimestamp = getProjectOverviewLatestUpdateTimestamp(
+              metadata.strategyUpdatedAt,
+              metadata.missionControlUpdatedAt,
+              selectedProjectMissionControl?.updatedAt,
+              selectedProjectMissionControl?.createdAt
+            );
+            if (String(missionControlDocumentDraft || selectedProjectMissionControl?.document || "").trim() && strategyTimestamp.time) {
+              pushRecord({
+                body: "Updated project strategy",
+                timestamp: strategyTimestamp.timestamp,
+                time: strategyTimestamp.time,
+              });
+            }
+
+            const rulesTimestamp = getProjectOverviewLatestUpdateTimestamp(
+              metadata.rulesUpdatedAt,
+              metadata.projectRulesUpdatedAt,
+              selectedProject?.rulesUpdatedAt
+            );
+            const ruleEntries = typeof splitPlaygroundProjectRuleEntries === "function"
+              ? splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules)
+              : [];
+            if (ruleEntries.length > 0 && rulesTimestamp.time) {
+              pushRecord({
+                body: "Updated project rules",
+                timestamp: rulesTimestamp.timestamp,
+                time: rulesTimestamp.time,
+              });
+            }
+
+            const strategyBrief = typeof normalizePlaygroundProjectStrategyBrief === "function"
+              ? normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraft)
+              : { outcomes: [] };
+            const outcomesTimestamp = getProjectOverviewLatestUpdateTimestamp(
+              metadata.outcomesUpdatedAt,
+              metadata.strategyUpdatedAt,
+              metadata.missionControlUpdatedAt,
+              selectedProjectMissionControl?.updatedAt
+            );
+            if (Array.isArray(strategyBrief?.outcomes) && strategyBrief.outcomes.length > 0 && outcomesTimestamp.time) {
+              pushRecord({
+                body: "Updated project outcomes",
+                timestamp: outcomesTimestamp.timestamp,
+                time: outcomesTimestamp.time,
+              });
+            }
+
+            return records.sort((left, right) => (right.time || 0) - (left.time || 0));
+          }
+
+          function getProjectOverviewLatestUpdateInfo() {
+            const lead = getProjectOverviewSidebarLead();
+            const latestRecord = collectProjectOverviewLatestUpdateRecords()
+              .map((record) => ({
+                ...record,
+                body: getProjectOverviewReadableText(record?.body),
+                time: Date.parse(String(record?.timestamp || "")),
+              }))
+              .filter((record) => record.body)
+              .concat(buildProjectOverviewLatestUpdateActivityRecords())
+              .sort((left, right) => {
+                const leftTime = Number.isFinite(left.time) ? left.time : 0;
+                const rightTime = Number.isFinite(right.time) ? right.time : 0;
+                return rightTime - leftTime;
+              })[0] || null;
+            const body = getProjectOverviewReadableText(latestRecord?.body);
+            if (!body) {
+              return null;
+            }
+            const timestamp = String(latestRecord?.timestamp || "").trim();
+            const timeLabel = timestamp && typeof formatRelativeThreadTime === "function"
+              ? (formatRelativeThreadTime(timestamp) || "")
+              : "";
+            const actorName = latestRecord?.authorName || lead.name || "Project lead";
+            const actorAvatarUrl = latestRecord?.authorAvatarUrl || lead.avatarUrl || "";
+            const progressStats = getProjectOverviewProgressStats();
+            const healthLabel = progressStats.scopeCount > 0 && progressStats.completedCount >= progressStats.scopeCount
+              ? "Complete"
+              : "On track";
+            return {
+              actorName,
+              actorAvatarUrl,
+              body,
+              healthLabel,
+              timeLabel,
+            };
+          }
+
+          function renderProjectOverviewLatestUpdateSection() {
+            const update = getProjectOverviewLatestUpdateInfo();
+            const updateBody = getProjectOverviewReadableText(update?.body);
+            if (!update || !updateBody) {
+              return null;
+            }
+            return React.createElement("section", { className: "playground-project-overview-latest-update-card" },
+              React.createElement("div", { className: "playground-project-overview-latest-update-header" },
+                React.createElement("h2", { className: "playground-project-overview-latest-update-title" }, "Latest update"),
+                typeof openProjectComposerForEdit === "function"
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-project-overview-latest-update-button",
+                      onClick: () => openProjectComposerForEdit(selectedProject),
+                    },
+                      React.createElement(SquarePen, { className: "playground-project-overview-latest-update-button-icon", strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Update")
+                    )
+                  : null
+              ),
+              React.createElement("div", { className: "playground-project-overview-latest-update-meta" },
+                React.createElement("span", { className: "playground-project-overview-latest-update-status" },
+                  React.createElement(CircleCheckBig, { className: "playground-project-overview-latest-update-status-icon", strokeWidth: 2 }),
+                  React.createElement("span", null, update.healthLabel)
+                ),
+                React.createElement("span", { className: "playground-project-overview-latest-update-author" },
+                  renderProjectOverviewSidebarAvatar(update.actorName, update.actorAvatarUrl),
+                  React.createElement("span", null, update.actorName)
+                ),
+                update.timeLabel
+                  ? React.createElement("span", { className: "playground-project-overview-latest-update-time" }, update.timeLabel)
+                  : null
+              ),
+              React.createElement("p", { className: "playground-project-overview-latest-update-body" }, updateBody),
+              React.createElement("div", { className: "playground-project-overview-latest-update-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-project-overview-latest-update-icon-button",
+                  "aria-label": "Comment on latest update",
+                }, React.createElement(MessageCircle, { className: "playground-project-overview-latest-update-icon", strokeWidth: 1.8 })),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-project-overview-latest-update-icon-button",
+                  "aria-label": "React to latest update",
+                }, React.createElement(Plus, { className: "playground-project-overview-latest-update-icon", strokeWidth: 1.8 }))
+              )
+            );
+          }
+
+          function renderProjectOverviewGeneralGoalSection() {
+            const goalText = getProjectOverviewReadableText(projectOverviewDraft?.description || projectOverviewGoal);
+            return React.createElement("section", { className: "playground-project-overview-general-goal" },
+              React.createElement("h2", { className: "playground-project-overview-general-goal-title" }, "Project Goal"),
+              React.createElement("p", {
+                className: "playground-project-overview-general-goal-text" + (goalText ? "" : " is-empty"),
+              }, goalText || "No project goal set yet.")
             );
           }
 
           function renderProjectOverviewGeneralPanel() {
+            if (isProjectOverviewResourceSubviewOpen) {
+              return React.createElement("div", { className: "playground-tasks-project-panel-grid" },
+                renderProjectOverviewFilesTab(),
+                renderProjectOverviewFileMenu()
+              );
+            }
             return React.createElement("div", { className: "playground-project-overview-general-grid" },
-              renderProjectOverviewWidgetSection(),
-              renderProjectOverviewActivitySection()
+              renderProjectOverviewProgressUsageChartSection(),
+              renderProjectOverviewLatestUpdateSection(),
+              renderProjectOverviewSetupSection(),
+              renderProjectOverviewThreadsSection()
+            );
+          }
+
+          function getProjectOverviewSidebarInitials(value) {
+            const words = String(value || "")
+              .trim()
+              .split(/\s+/)
+              .filter(Boolean);
+            if (!words.length) return "P";
+            return words
+              .slice(0, 2)
+              .map((word) => word.charAt(0).toUpperCase())
+              .join("");
+          }
+
+          function getProjectOverviewSidebarLead() {
+            if (typeof getProjectListLead === "function") {
+              const lead = getProjectListLead(selectedProject);
+              return {
+                name: String(lead?.name || "Unassigned").trim() || "Unassigned",
+                avatarUrl: String(lead?.avatarUrl || "").trim(),
+              };
+            }
+            const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
+              ? selectedProject.metadata
+              : {};
+            const metadataLead = metadata?.lead && typeof metadata.lead === "object" && !Array.isArray(metadata.lead)
+              ? metadata.lead
+              : {};
+            const name = String(
+              selectedProject?.leadName
+                || metadata.leadName
+                || metadataLead.name
+                || metadataLead.displayName
+                || "Unassigned"
+            ).trim();
+            const avatarUrl = String(
+              selectedProject?.leadAvatarUrl
+                || metadata.leadAvatarUrl
+                || metadataLead.avatarUrl
+                || metadataLead.photoUrl
+                || ""
+            ).trim();
+            return {
+              name: name || "Unassigned",
+              avatarUrl,
+            };
+          }
+
+          function renderProjectOverviewSidebarAvatar(name, avatarUrl) {
+            if (avatarUrl && (typeof canRenderAvatarImage !== "function" || canRenderAvatarImage(avatarUrl))) {
+              return React.createElement("img", {
+                className: "playground-project-overview-sidebar-avatar",
+                src: avatarUrl,
+                alt: name || "Project lead",
+                draggable: false,
+              });
+            }
+            return React.createElement("span", { className: "playground-project-overview-sidebar-avatar" },
+              getProjectOverviewSidebarInitials(name || "Project lead")
+            );
+          }
+
+          function getProjectOverviewSidebarStatusLabel() {
+            const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
+              ? selectedProject.metadata
+              : {};
+            const explicitStatus = String(selectedProject?.status || selectedProject?.state || metadata.status || "").trim();
+            if (explicitStatus) {
+              return explicitStatus.charAt(0).toUpperCase() + explicitStatus.slice(1).replace(/[_-]+/g, " ");
+            }
+            const progressStats = getProjectOverviewProgressStats();
+            if (progressStats.scopeCount > 0 && progressStats.completedCount >= progressStats.scopeCount) {
+              return "Completed";
+            }
+            if (progressStats.startedCount > 0) {
+              return "In progress";
+            }
+            return "Backlog";
+          }
+
+          function getProjectOverviewSidebarPriorityLabel() {
+            const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
+              ? selectedProject.metadata
+              : {};
+            const priority = String(selectedProject?.priority || metadata.priority || "").trim();
+            if (!priority) return "Medium";
+            return priority.charAt(0).toUpperCase() + priority.slice(1).replace(/[_-]+/g, " ");
+          }
+
+          function getProjectOverviewSidebarDateLabel(value) {
+            const raw = String(value || "").trim();
+            if (!raw) return "";
+            if (typeof formatPlaygroundFileDate === "function") {
+              return formatPlaygroundFileDate(raw) || raw;
+            }
+            const timestamp = Date.parse(raw);
+            if (!Number.isFinite(timestamp)) return raw;
+            try {
+              return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(timestamp));
+            } catch {
+              return raw;
+            }
+          }
+
+          function renderProjectOverviewSidebarRow(label, value, options = {}) {
+            const content = options.content || React.createElement("span", null, value || "None");
+            return React.createElement("div", { className: "playground-project-overview-sidebar-row" },
+              React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, label),
+              React.createElement("div", {
+                className: "playground-project-overview-sidebar-row-value" + (!value && !options.content ? " playground-project-overview-sidebar-muted" : ""),
+              }, content)
+            );
+          }
+
+          function renderProjectOverviewSidebarActivity() {
+            const activityItems = buildProjectOverviewActivityItems().slice(0, 4);
+            if (!activityItems.length) {
+              return React.createElement("div", { className: "playground-project-overview-sidebar-empty" }, "No recent activity yet.");
+            }
+            return React.createElement("div", { className: "playground-project-overview-sidebar-activity-list" },
+              activityItems.map((item) =>
+                React.createElement("div", { key: item.id, className: "playground-project-overview-sidebar-activity-row" },
+                  renderProjectOverviewActivityAvatar(item),
+                  React.createElement("div", { className: "playground-project-overview-sidebar-activity-copy" },
+                    React.createElement("strong", null, item.actor),
+                    React.createElement("span", null, " " + item.verb + " "),
+                    item.taskId && typeof handleSelectTask === "function"
+                      ? React.createElement("button", {
+                          type: "button",
+                          className: "playground-project-overview-sidebar-activity-object",
+                          onClick: (event) => {
+                            event.stopPropagation();
+                            handleSelectTask(item.taskId);
+                          },
+                        }, item.object)
+                      : React.createElement("strong", null, item.object),
+                    item.timeLabel
+                      ? React.createElement("span", null, " · " + item.timeLabel)
+                      : null
+                  )
+                )
+              )
+            );
+          }
+
+          function openProjectOverviewSidebarResourceTarget(resourceType) {
+            const id = String(resourceType || "").trim();
+            if (id === "files") {
+              if (typeof onOpenFilesPage === "function") {
+                onOpenFilesPage({
+                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                  projectId: normalizedSelectedProjectId,
+                  environmentId: activeProjectAttachmentEnvironmentId || selectedProject?.defaultEnvironmentId || "",
+                });
+              }
+              return;
+            }
+            if (id === "metronomes") {
+              if (typeof onOpenProjectMetronomes === "function") {
+                onOpenProjectMetronomes({ projectId: normalizedSelectedProjectId });
+              }
+              return;
+            }
+            if (typeof setProjectOverviewHomeTab === "function") {
+              setProjectOverviewHomeTab("general");
+            }
+            if (typeof setProjectOverviewFilesSubview === "function") {
+              const resourceSubviewId = ["web-apps", "functions", "databases", "imagine"].includes(id) ? id : "resources";
+              setProjectOverviewFilesSubview(resourceSubviewId);
+            }
+          }
+
+          function renderProjectOverviewSidebarResourceRow(resource) {
+            const Icon = resource.Icon || Server;
+            const count = Math.max(0, Number(resource.count || 0));
+            return React.createElement("button", {
+                key: resource.id,
+                type: "button",
+                className: "playground-project-overview-sidebar-resource-row",
+                onClick: () => openProjectOverviewSidebarResourceTarget(resource.id),
+              },
+              React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
+                React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.85 })
+              ),
+              React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, resource.label),
+              React.createElement("span", { className: "playground-project-overview-sidebar-resource-count" },
+                typeof formatProjectOverviewInteger === "function" ? formatProjectOverviewInteger(count) : String(count)
+              )
+            );
+          }
+
+          function renderProjectOverviewSidebar() {
+            const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
+              ? selectedProject.metadata
+              : {};
+            const lead = getProjectOverviewSidebarLead();
+            const progressStats = getProjectOverviewProgressStats();
+            const operatingProfile = getProjectOverviewOperatingProfile();
+            const projectTypeLabel = String(operatingProfile?.label || operatingProfile?.name || metadata.projectTypeLabel || "").trim();
+            const targetDateLabel = getProjectOverviewSidebarDateLabel(selectedProject?.targetDate || selectedProject?.dueDate || metadata.targetDate || metadata.dueDate);
+            const startDateLabel = getProjectOverviewSidebarDateLabel(selectedProject?.startDate || metadata.startDate || selectedProject?.createdAt);
+            const defaultComputerLabel = String(
+              activeProjectAttachmentEnvironment?.name
+                || selectedProject?.defaultEnvironmentName
+                || metadata.defaultEnvironmentName
+                || "Default"
+            ).trim();
+            const issueCount = Math.max(
+              0,
+              Number(selectedProjectSummary?.openTasksCount) || Number(selectedProjectTaskStatusOverview?.total) || Number(progressStats.scopeCount) || 0
+            );
+            const releaseSections = overviewCurrentTaskReleaseSections
+              .filter((section) => section.key !== "__no_release__")
+              .slice(0, 2);
+            const metronomeResourceCount = allOverviewResourceItems.filter((item) => isProjectOverviewMetronomeResource(item)).length;
+            const webAppResourceCount = allOverviewResourceItems
+              .filter((item) => !isProjectOverviewMetronomeResource(item) && isProjectOverviewWebAppResource(item))
+              .length;
+            const functionResourceCount = allOverviewResourceItems
+              .filter((item) => !isProjectOverviewMetronomeResource(item) && isProjectOverviewFunctionResource(item))
+              .length;
+            const databaseResourceCount = allOverviewResourceItems
+              .filter((item) => !isProjectOverviewMetronomeResource(item) && isProjectOverviewDatabaseResource(item))
+              .length;
+            const sidebarResources = [
+              { id: "files", label: "Files", count: allOverviewProjectFileCount, Icon: FolderOpen },
+              { id: "metronomes", label: "Metronomes", count: metronomeResourceCount, Icon: Metronome },
+              { id: "web-apps", label: "Web Apps", count: webAppResourceCount, Icon: Monitor },
+              { id: "functions", label: "Functions", count: functionResourceCount, Icon: FunctionSquare },
+              { id: "databases", label: "Databases", count: databaseResourceCount, Icon: Database },
+              { id: "imagine", label: "Imagine Resources", count: projectOverviewImagineResources.length, Icon: Clapperboard },
+            ];
+
+            return React.createElement("aside", { className: "playground-project-overview-sidebar", "aria-label": "Project settings" },
+              React.createElement("section", { className: "playground-project-overview-sidebar-card" },
+                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties"),
+                  typeof openProjectComposerForEdit === "function"
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-project-overview-sidebar-action",
+                        onClick: () => openProjectComposerForEdit(selectedProject),
+                      }, "Edit")
+                    : null
+                ),
+                React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
+                  renderProjectOverviewSidebarRow("Status", getProjectOverviewSidebarStatusLabel(), {
+                    content: React.createElement(React.Fragment, null,
+                      React.createElement("span", { className: "playground-project-overview-sidebar-status-dot" }),
+                      React.createElement("span", null, getProjectOverviewSidebarStatusLabel())
+                    ),
+                  }),
+                  renderProjectOverviewSidebarRow("Priority", getProjectOverviewSidebarPriorityLabel()),
+                  renderProjectOverviewSidebarRow("Lead", lead.name, {
+                    content: React.createElement("span", { className: "playground-project-overview-sidebar-lead" },
+                      renderProjectOverviewSidebarAvatar(lead.name, lead.avatarUrl),
+                      React.createElement("span", null, lead.name)
+                    ),
+                  }),
+                  renderProjectOverviewSidebarRow("Issues", String(issueCount)),
+                  renderProjectOverviewSidebarRow("Dates", targetDateLabel || startDateLabel, {
+                    content: React.createElement("span", null,
+                      startDateLabel || "Start",
+                      React.createElement("span", { className: "playground-project-overview-sidebar-muted" }, " → "),
+                      targetDateLabel || "Target"
+                    ),
+                  }),
+                  renderProjectOverviewSidebarRow("Type", projectTypeLabel || "Blank Project"),
+                  renderProjectOverviewSidebarRow("Computer", defaultComputerLabel)
+                )
+              ),
+              React.createElement("section", { className: "playground-project-overview-sidebar-card" },
+                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Resources")
+                ),
+                React.createElement("div", { className: "playground-project-overview-sidebar-resource-list" },
+                  sidebarResources.map(renderProjectOverviewSidebarResourceRow)
+                )
+              ),
+              React.createElement("section", { className: "playground-project-overview-sidebar-card" },
+                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Milestones")
+                ),
+                releaseSections.length > 0
+                  ? React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
+                      releaseSections.map((section) =>
+                        React.createElement("div", { key: section.key, className: "playground-project-overview-sidebar-row" },
+                          React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, "Milestone"),
+                          React.createElement("div", { className: "playground-project-overview-sidebar-row-value" },
+                            React.createElement("span", { className: "playground-project-overview-sidebar-chip" },
+                              section.title,
+                              React.createElement("span", { className: "playground-project-overview-sidebar-muted" }, String(section.tasks.length))
+                            )
+                          )
+                        )
+                      )
+                    )
+                  : React.createElement("div", { className: "playground-project-overview-sidebar-empty" }, "No milestone")
+              ),
+              React.createElement("section", { className: "playground-project-overview-sidebar-card is-activity" },
+                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                  React.createElement("h2", { className: "playground-project-overview-sidebar-title playground-project-overview-sidebar-title-with-caret" },
+                    React.createElement("span", null, "Activity"),
+                    React.createElement(ChevronDown, { className: "playground-project-overview-sidebar-title-caret", strokeWidth: 1.9 })
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-sidebar-see-all",
+                    onClick: () => typeof setProjectOverviewHomeTab === "function" && setProjectOverviewHomeTab("general"),
+                  }, "See all")
+                ),
+                renderProjectOverviewSidebarActivity()
+              )
             );
           }
 
@@ -6857,6 +9134,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	            );
 	          }
 
+            const projectOverviewActivePanel = activeProjectOverviewHomeTab === "strategy"
+                ? renderProjectOverviewStrategyPanel()
+                : activeProjectOverviewHomeTab === "rules"
+                  ? renderProjectOverviewRulesPanel()
+                  : activeProjectOverviewHomeTab === "plugins"
+                    ? renderProjectOverviewPluginsPanel()
+                    : renderProjectOverviewGeneralPanel();
+
 	          return React.createElement("div", { className: "playground-tasks-view-section playground-project-overview-view is-" + activeProjectOverviewHomeTab },
             React.createElement("div", { className: "playground-project-overview-hero-shell" },
               React.createElement("section", { className: "playground-project-overview-summary-surface" },
@@ -6872,22 +9157,33 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         },
                           React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
                           React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Mission Control")
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-project-overview-sidebar-toggle",
+                          onClick: () => setProjectOverviewSidebarCollapsed((current) => !current),
+                          title: projectOverviewSidebarCollapsed ? "Show project sidebar" : "Hide project sidebar",
+                          "aria-label": projectOverviewSidebarCollapsed ? "Show project sidebar" : "Hide project sidebar",
+                          "aria-pressed": projectOverviewSidebarCollapsed ? "true" : "false",
+                        },
+                          React.createElement(projectOverviewSidebarCollapsed ? PanelLeftOpen : PanelLeftClose, {
+                            width: 15,
+                            height: 15,
+                            strokeWidth: 1.8,
+                          })
                         )
                       )
                     )
                   )
                 )
               ),
-              renderProjectOverviewHomeTabs(),
-              activeProjectOverviewHomeTab === "observability"
-                ? renderProjectOverviewObservabilityPanel()
-                : activeProjectOverviewHomeTab === "strategy"
-                  ? renderProjectOverviewStrategyPanel()
-                  : activeProjectOverviewHomeTab === "rules"
-                    ? renderProjectOverviewRulesPanel()
-                    : activeProjectOverviewHomeTab === "plugins"
-                      ? renderProjectOverviewPluginsPanel()
-                      : renderProjectOverviewGeneralPanel()
+              React.createElement("div", { className: "playground-project-overview-layout" + (projectOverviewSidebarCollapsed ? " is-sidebar-collapsed" : "") },
+                React.createElement("div", { className: "playground-project-overview-main" },
+                  renderProjectOverviewHomeTabs(),
+                  projectOverviewActivePanel
+                ),
+                projectOverviewSidebarCollapsed ? null : renderProjectOverviewSidebar()
+              )
             )
           );
         }

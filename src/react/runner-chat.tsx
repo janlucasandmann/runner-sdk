@@ -2242,6 +2242,8 @@ export interface RunnerChatProps {
   inputMode?: RunnerChatInputMode;
   agents?: RunnerChatOption[];
   hideAgentSelector?: boolean;
+  isAgentSelectionBlocked?: (agent: RunnerChatOption) => boolean;
+  onBlockedAgentSelect?: (agent: RunnerChatOption) => void;
   reasoningEffort?: string | null;
   onReasoningEffortChange?: (reasoningEffort: string) => void;
   environments?: RunnerChatOption[];
@@ -2489,6 +2491,188 @@ type MainPopupRenderId = "main" | "context" | "agent" | "environment";
 type SidePopupRenderId = Exclude<InputPopupId, MainPopupRenderId>;
 type PopupAnimationPhase = "idle" | "enter" | "exit";
 type SidePopupExitDirection = "left" | "down";
+type ComposerPopupPlacement = "above-start" | "above-end" | "side-end";
+type ComposerPopupAnchorRef<T extends HTMLElement = HTMLElement> = { current: T | null };
+
+type ComposerAnchoredPopupOptions = {
+  open: boolean;
+  anchorRef: ComposerPopupAnchorRef;
+  verticalAnchorRef?: ComposerPopupAnchorRef;
+  popupRef: ComposerPopupAnchorRef;
+  placement?: ComposerPopupPlacement;
+  gap?: number;
+  viewportPadding?: number;
+  offsetX?: number;
+  offsetY?: number;
+};
+
+function useComposerAnchoredPopupStyle({
+  open,
+  anchorRef,
+  verticalAnchorRef,
+  popupRef,
+  placement = "above-start",
+  gap = 8,
+  viewportPadding = 8,
+  offsetX = 0,
+  offsetY = 0,
+}: ComposerAnchoredPopupOptions): CSSProperties | null {
+  const [style, setStyle] = useState<CSSProperties | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setStyle(null);
+      return;
+    }
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    let frameId = 0;
+    let settleFrameIds: number[] = [];
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => scheduleUpdate()) : null;
+    let observedElements = new Set<HTMLElement>();
+
+    const observeCurrentElements = (...elements: Array<HTMLElement | null>) => {
+      if (!resizeObserver) {
+        return;
+      }
+
+      const nextElements = new Set(elements.filter((element): element is HTMLElement => Boolean(element)));
+
+      observedElements.forEach((element) => {
+        if (!nextElements.has(element)) {
+          resizeObserver.unobserve(element);
+        }
+      });
+
+      nextElements.forEach((element) => {
+        if (!observedElements.has(element)) {
+          resizeObserver.observe(element);
+        }
+      });
+
+      observedElements = nextElements;
+    };
+
+    const update = () => {
+      const anchor = anchorRef.current;
+      if (!anchor) {
+        setStyle(null);
+        return;
+      }
+
+      const popup = popupRef.current;
+      const verticalAnchor = verticalAnchorRef?.current || anchor;
+      const anchorRect = anchor.getBoundingClientRect();
+      const verticalAnchorRect = verticalAnchor.getBoundingClientRect();
+      const popupWidth = popup?.offsetWidth || 240;
+      const popupHeight = popup?.offsetHeight || 0;
+      const visualViewport = window.visualViewport;
+      const viewportWidth = visualViewport?.width || window.innerWidth;
+      const viewportHeight = visualViewport?.height || window.innerHeight;
+      const viewportLeft = visualViewport?.offsetLeft || 0;
+      const viewportTop = visualViewport?.offsetTop || 0;
+      const maxLeft = viewportLeft + viewportWidth - popupWidth - viewportPadding;
+      const layoutViewportHeight = window.innerHeight;
+      const viewportBottom = viewportTop + viewportHeight;
+      const maxBottom = Math.max(viewportPadding, layoutViewportHeight - viewportBottom + viewportPadding);
+
+      let left = anchorRect.left;
+      let bottomEdge = verticalAnchorRect.top - gap;
+
+      if (placement === "above-end") {
+        left = anchorRect.right - popupWidth;
+      } else if (placement === "side-end") {
+        left = anchorRect.right + gap;
+        bottomEdge = verticalAnchorRect.bottom;
+        if (left + popupWidth > viewportLeft + viewportWidth - viewportPadding) {
+          left = anchorRect.left - popupWidth - gap;
+        }
+      }
+
+      left += offsetX;
+      bottomEdge += offsetY;
+
+      let bottom = layoutViewportHeight - bottomEdge;
+      const unclampedTop = bottomEdge - popupHeight;
+      if (unclampedTop < viewportTop + viewportPadding) {
+        bottom = Math.min(bottom, layoutViewportHeight - (viewportTop + viewportPadding + popupHeight));
+      }
+
+      const clampedLeft = Math.min(Math.max(left, viewportLeft + viewportPadding), Math.max(viewportLeft + viewportPadding, maxLeft));
+      const clampedBottom = Math.max(maxBottom, Math.round(bottom));
+
+      observeCurrentElements(anchor, verticalAnchor, popup || null);
+
+      setStyle({
+        left: `${Math.round(clampedLeft)}px`,
+        top: "auto",
+        bottom: `${clampedBottom}px`,
+        visibility: "visible",
+      });
+    };
+
+    const scheduleUpdate = () => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(update);
+    };
+
+    update();
+    // Portal popups mount outside the composer so their ref and intrinsic height
+    // can settle one or two frames after the button click. Measure for a short
+    // window so scroll-boundary states do not leave the popup hidden/offscreen.
+    const scheduleSettledUpdate = (remainingFrames: number) => {
+      const settledFrameId = window.requestAnimationFrame(() => {
+        scheduleUpdate();
+        if (remainingFrames > 1) {
+          scheduleSettledUpdate(remainingFrames - 1);
+        }
+      });
+      settleFrameIds.push(settledFrameId);
+    };
+    scheduleSettledUpdate(4);
+
+    window.addEventListener("resize", scheduleUpdate);
+    window.addEventListener("scroll", scheduleUpdate, true);
+    window.visualViewport?.addEventListener("resize", scheduleUpdate);
+    window.visualViewport?.addEventListener("scroll", scheduleUpdate);
+    observeCurrentElements(anchorRef.current, verticalAnchorRef?.current || null, popupRef.current);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      settleFrameIds.forEach((id) => window.cancelAnimationFrame(id));
+      window.removeEventListener("resize", scheduleUpdate);
+      window.removeEventListener("scroll", scheduleUpdate, true);
+      window.visualViewport?.removeEventListener("resize", scheduleUpdate);
+      window.visualViewport?.removeEventListener("scroll", scheduleUpdate);
+      resizeObserver?.disconnect();
+    };
+  }, [anchorRef, gap, offsetX, offsetY, open, placement, popupRef, verticalAnchorRef, viewportPadding]);
+
+  return style;
+}
+
+function renderComposerPopupPortal(content: ReactNode, style: CSSProperties | null): ReactNode {
+  if (!content || typeof document === "undefined") {
+    return null;
+  }
+
+  const resolvedStyle: CSSProperties = style || {
+    left: "-9999px",
+    top: "0px",
+    bottom: "auto",
+    visibility: "hidden",
+  };
+
+  return createPortal(
+    <div className="tb-composer-popup-portal-root" style={resolvedStyle}>
+      <div className="tb-runner-chat tb-composer-popup-portal-scope">{content}</div>
+    </div>,
+    document.body
+  );
+}
 
 function isPlusPopupId(popup: InputPopupId | null): popup is Exclude<InputPopupId, "context" | "agent" | "agent-reasoning" | "environment"> {
   return popup === "main" || popup === "skills" || popup === "github" || popup === "notion" || popup === "google-drive" || popup === "one-drive" || popup === "schedule" || popup === "attach-files";
@@ -3226,7 +3410,7 @@ function renderRunnerSummaryResourceChip(
           ? "Environment"
           : resource.resourceType === "project"
             ? "Project"
-          : "Release";
+          : "Milestone";
   const subtitle = getRunnerSummaryResourceSubtitle(resource);
   const isAgent = resource.resourceType === "agent";
   const className = `runner-summary-resource-chip is-${resource.resourceType} ${options.onClick ? "is-clickable" : ""}`.trim();
@@ -9530,6 +9714,8 @@ export function RunnerChat({
   inputMode = "minimal",
   agents = [],
   hideAgentSelector = false,
+  isAgentSelectionBlocked,
+  onBlockedAgentSelect,
   reasoningEffort: controlledReasoningEffort,
   onReasoningEffortChange,
   environments = [],
@@ -9797,6 +9983,16 @@ export function RunnerChat({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const editingTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const popupAreaRef = useRef<HTMLDivElement | null>(null);
+  const plusButtonRef = useRef<HTMLButtonElement | null>(null);
+  const plusMainPopupRef = useRef<HTMLDivElement | null>(null);
+  const plusSidePopupRef = useRef<HTMLDivElement | null>(null);
+  const contextIndicatorButtonRef = useRef<HTMLButtonElement | null>(null);
+  const contextPopupRef = useRef<HTMLDivElement | null>(null);
+  const agentSelectorButtonRef = useRef<HTMLButtonElement | null>(null);
+  const agentPopupRef = useRef<HTMLDivElement | null>(null);
+  const agentReasoningPopupRef = useRef<HTMLDivElement | null>(null);
+  const environmentSelectorButtonRef = useRef<HTMLButtonElement | null>(null);
+  const environmentPopupRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const projectTasksPopupRef = useRef<HTMLDivElement | null>(null);
   const projectCreateButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -15807,8 +16003,16 @@ export function RunnerChat({
   }
 
   function selectAgent(nextAgentId: string) {
-    setSelectedAgentId(nextAgentId);
-    onAgentChange?.(nextAgentId);
+    const normalizedAgentId = String(nextAgentId || "").trim();
+    const selectedAgentOption = agents.find((agent) => String(agent?.id || "").trim() === normalizedAgentId) || null;
+    if (selectedAgentOption && isAgentSelectionBlocked?.(selectedAgentOption)) {
+      setActiveInputPopup(null);
+      onBlockedAgentSelect?.(selectedAgentOption);
+      return;
+    }
+
+    setSelectedAgentId(normalizedAgentId);
+    onAgentChange?.(normalizedAgentId);
     setActiveInputPopup(null);
   }
 
@@ -18771,6 +18975,52 @@ export function RunnerChat({
   const showOneDrivePopup = renderedSidePopup === "one-drive";
   const showSchedulePopup = renderedSidePopup === "schedule";
   const showAttachFilesPopup = renderedSidePopup === "attach-files";
+  const hasPlusSidePopup =
+    showSkillsPopup ||
+    showGithubPopup ||
+    showNotionPopup ||
+    showGoogleDrivePopup ||
+    showOneDrivePopup ||
+    showSchedulePopup ||
+    showAttachFilesPopup;
+  const plusMainPopupStyle = useComposerAnchoredPopupStyle({
+    open: showMainMenu,
+    anchorRef: plusButtonRef,
+    popupRef: plusMainPopupRef,
+    placement: "above-start",
+  });
+  const plusSidePopupStyle = useComposerAnchoredPopupStyle({
+    open: hasPlusSidePopup,
+    anchorRef: plusMainPopupRef,
+    popupRef: plusSidePopupRef,
+    placement: "side-end",
+  });
+  const contextPopupStyle = useComposerAnchoredPopupStyle({
+    open: showContextPopup,
+    anchorRef: contextIndicatorButtonRef,
+    verticalAnchorRef: plusButtonRef,
+    popupRef: contextPopupRef,
+    placement: "above-start",
+    offsetX: -6,
+  });
+  const agentPopupStyle = useComposerAnchoredPopupStyle({
+    open: showAgentPopup,
+    anchorRef: agentSelectorButtonRef,
+    popupRef: agentPopupRef,
+    placement: "above-start",
+  });
+  const agentReasoningPopupStyle = useComposerAnchoredPopupStyle({
+    open: showAgentReasoningPopup,
+    anchorRef: agentPopupRef,
+    popupRef: agentReasoningPopupRef,
+    placement: "side-end",
+  });
+  const environmentPopupStyle = useComposerAnchoredPopupStyle({
+    open: showEnvironmentPopup,
+    anchorRef: environmentSelectorButtonRef,
+    popupRef: environmentPopupRef,
+    placement: "above-end",
+  });
   const hasPortalDocumentPreview = Boolean(documentPreviewPortalTarget);
   const isPreviewedDocumentImage = isRunnerImagePreviewAttachment(previewedDocumentAttachment);
   const shouldReserveDocumentPreviewWidth = Boolean(previewedDocumentAttachment && !hasPortalDocumentPreview);
@@ -19010,6 +19260,7 @@ export function RunnerChat({
     return (
       <div className="tb-selector-anchor">
         <button
+          ref={agentSelectorButtonRef}
           type="button"
           className={`tb-inline-selector tb-inline-selector-agent ${showAgentPopup ? "active" : ""}`.trim()}
           onClick={() => togglePopup("agent")}
@@ -19019,8 +19270,9 @@ export function RunnerChat({
           <IconChevronDown className="tb-inline-selector-chevron" />
         </button>
 
-        {showAgentPopup ? (
-          <div className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent ${mainPopupAnimationClass}`.trim()}>
+        {renderComposerPopupPortal(
+          showAgentPopup ? (
+          <div ref={agentPopupRef} className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent ${mainPopupAnimationClass}`.trim()}>
             {!hasApiKey ? (
               <div className="tb-popup-note">
                 <div className="tb-popup-note-title">API key required</div>
@@ -19097,10 +19349,13 @@ export function RunnerChat({
               </>
             )}
           </div>
-        ) : null}
+          ) : null,
+          agentPopupStyle
+        )}
 
-        {showAgentReasoningPopup ? (
-          <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-agent-reasoning ${sidePopupAnimationClass}`.trim()}>
+        {renderComposerPopupPortal(
+          showAgentReasoningPopup ? (
+          <div ref={agentReasoningPopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-agent-reasoning ${sidePopupAnimationClass}`.trim()}>
             <div className="tb-popup-attach-topbar">
               <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeAgentReasoningPopup} aria-label="Close reasoning effort popup">
                 <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
@@ -19128,7 +19383,9 @@ export function RunnerChat({
               </div>
             </div>
           </div>
-        ) : null}
+          ) : null,
+          agentReasoningPopupStyle
+        )}
       </div>
     );
   }
@@ -19145,6 +19402,7 @@ export function RunnerChat({
     return (
       <div className="tb-selector-anchor">
         <button
+          ref={environmentSelectorButtonRef}
           type="button"
           className={`tb-inline-selector ${showEnvironmentPopup ? "active" : ""}`.trim()}
           onClick={() => togglePopup("environment")}
@@ -19153,8 +19411,9 @@ export function RunnerChat({
           <IconChevronDown className="tb-inline-selector-chevron" />
         </button>
 
-        {showEnvironmentPopup ? (
-          <div className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-right tb-popup-menu-inline-workspace ${mainPopupAnimationClass}`.trim()}>
+        {renderComposerPopupPortal(
+          showEnvironmentPopup ? (
+          <div ref={environmentPopupRef} className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-right tb-popup-menu-inline-workspace ${mainPopupAnimationClass}`.trim()}>
             {!hasApiKey ? (
               <div className="tb-popup-note">
                 <div className="tb-popup-note-title">API key required</div>
@@ -19237,7 +19496,9 @@ export function RunnerChat({
               </>
             )}
           </div>
-        ) : null}
+          ) : null,
+          environmentPopupStyle
+        )}
       </div>
     );
   }
@@ -19610,6 +19871,7 @@ export function RunnerChat({
     return (
       <div className="tb-selector-anchor tb-context-indicator-anchor">
         <button
+          ref={contextIndicatorButtonRef}
           type="button"
           className={`tb-context-indicator-button ${showContextPopup ? "active" : ""} ${isThreadContextLoading ? "loading" : ""}`.trim()}
           onClick={handleContextIndicatorClick}
@@ -19619,7 +19881,14 @@ export function RunnerChat({
           <span className="tb-context-indicator-ring" style={{ "--tb-context-progress": String(contextUsageRatio) } as CSSProperties} />
         </button>
 
-        {showContextPopup ? renderThreadContextPopup() : null}
+        {renderComposerPopupPortal(
+          showContextPopup ? (
+            <div ref={contextPopupRef} className="tb-composer-popup-measure">
+              {renderThreadContextPopup()}
+            </div>
+          ) : null,
+          contextPopupStyle
+        )}
       </div>
     );
   }
@@ -20078,6 +20347,7 @@ export function RunnerChat({
       const target = event.target;
       if (!(target instanceof Node)) return;
       if (popupAreaRef.current?.contains(target)) return;
+      if (target instanceof Element && target.closest(".tb-composer-popup-portal-root")) return;
       closeAllInputPopups("outside");
     }
 
@@ -21092,6 +21362,7 @@ export function RunnerChat({
                   <div ref={popupAreaRef} className="task-input-controls task-input-controls-full">
                     <div className="tb-selector-anchor">
                       <button
+                        ref={plusButtonRef}
                         type="button"
                         className={`task-attachment-button task-attachment-button-full ${hasPlusPopupOpen ? "active" : ""}`}
                         onClick={toggleMainMenu}
@@ -21102,8 +21373,9 @@ export function RunnerChat({
                         <IconPlus className="task-attachment-icon" />
                       </button>
 
-                      {showMainMenu ? (
-                        <div className={`tb-popup-menu tb-popup-menu-main ${mainPopupAnimationClass}`.trim()}>
+                      {renderComposerPopupPortal(
+                        showMainMenu ? (
+                        <div ref={plusMainPopupRef} className={`tb-popup-menu tb-popup-menu-main ${mainPopupAnimationClass}`.trim()}>
                           <button
                             type="button"
                             className={`tb-popup-row tb-popup-row-divider tb-popup-row-core-action ${showAttachFilesPopup ? "selected" : ""}`}
@@ -21162,10 +21434,13 @@ export function RunnerChat({
                             </span>
                           </button>
                         </div>
-                      ) : null}
+                        ) : null,
+                        plusMainPopupStyle
+                      )}
 
-                      {showSkillsPopup ? (
-                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-skills ${sidePopupAnimationClass}`.trim()}>
+                      {renderComposerPopupPortal(
+                        showSkillsPopup ? (
+                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-skills ${sidePopupAnimationClass}`.trim()}>
                           <div className="tb-popup-attach-topbar">
                             <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeSkillsPopup} aria-label="Close skills popup">
                               <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
@@ -21212,10 +21487,13 @@ export function RunnerChat({
                             ) : null}
                           </div>
                         </div>
-                      ) : null}
+                        ) : null,
+                        plusSidePopupStyle
+                      )}
 
-                      {showGithubPopup ? (
-                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-panel ${sidePopupAnimationClass}`.trim()}>
+                      {renderComposerPopupPortal(
+                        showGithubPopup ? (
+                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-panel ${sidePopupAnimationClass}`.trim()}>
                           {!githubConnected ? (
                             <div className="tb-popup-note">
                               <div className="tb-popup-note-title">GitHub not connected</div>
@@ -21265,10 +21543,13 @@ export function RunnerChat({
                             </>
                           )}
                         </div>
-                      ) : null}
+                        ) : null,
+                        plusSidePopupStyle
+                      )}
 
-                      {showNotionPopup ? (
-                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-panel ${sidePopupAnimationClass}`.trim()}>
+                      {renderComposerPopupPortal(
+                        showNotionPopup ? (
+                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-panel ${sidePopupAnimationClass}`.trim()}>
                           {!notionConnected ? (
                             <div className="tb-popup-note">
                               <div className="tb-popup-note-title">Notion not connected</div>
@@ -21308,10 +21589,13 @@ export function RunnerChat({
                             </>
                           )}
                         </div>
-                      ) : null}
+                        ) : null,
+                        plusSidePopupStyle
+                      )}
 
-                      {showGoogleDrivePopup ? (
-                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-filebrowser ${sidePopupAnimationClass}`.trim()}>
+                      {renderComposerPopupPortal(
+                        showGoogleDrivePopup ? (
+                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-filebrowser ${sidePopupAnimationClass}`.trim()}>
                           {!googleDriveConnected ? (
                             <div className="tb-popup-note">
                               <div className="tb-popup-note-title">Google Drive not connected</div>
@@ -21379,10 +21663,13 @@ export function RunnerChat({
                             </>
                           )}
                         </div>
-                      ) : null}
+                        ) : null,
+                        plusSidePopupStyle
+                      )}
 
-                      {showOneDrivePopup ? (
-                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-filebrowser ${sidePopupAnimationClass}`.trim()}>
+                      {renderComposerPopupPortal(
+                        showOneDrivePopup ? (
+                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-filebrowser ${sidePopupAnimationClass}`.trim()}>
                           {!oneDriveConnected ? (
                             <div className="tb-popup-note">
                               <div className="tb-popup-note-title">OneDrive not connected</div>
@@ -21450,10 +21737,13 @@ export function RunnerChat({
                             </>
                           )}
                         </div>
-                      ) : null}
+                        ) : null,
+                        plusSidePopupStyle
+                      )}
 
-                      {showSchedulePopup ? (
-                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-schedule ${sidePopupAnimationClass}`.trim()}>
+                      {renderComposerPopupPortal(
+                        showSchedulePopup ? (
+                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-schedule ${sidePopupAnimationClass}`.trim()}>
                           <div className="tb-popup-attach-topbar">
                             <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeSchedulePopup} aria-label="Close schedule popup">
                               <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
@@ -21512,10 +21802,13 @@ export function RunnerChat({
                             </>
                           </div>
                         </div>
-                      ) : null}
+                        ) : null,
+                        plusSidePopupStyle
+                      )}
 
-                      {showAttachFilesPopup ? (
-                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-attach ${sidePopupAnimationClass}`.trim()}>
+                      {renderComposerPopupPortal(
+                        showAttachFilesPopup ? (
+                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-attach ${sidePopupAnimationClass}`.trim()}>
                           <div className="tb-popup-attach-topbar">
                             <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeAttachFilesPopup} aria-label="Close attach files popup">
                               <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
@@ -21563,7 +21856,9 @@ export function RunnerChat({
                             </button>
                           </div>
                         </div>
-                      ) : null}
+                        ) : null,
+                        plusSidePopupStyle
+                      )}
                     </div>
                     {composerLeadingControl ? (
                       <div className="tb-composer-leading-control">{composerLeadingControl}</div>

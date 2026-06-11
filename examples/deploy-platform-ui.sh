@@ -90,8 +90,11 @@ for public_file in \
   assistantastro-1.webp \
   blueastro.webp \
   devastro.webp \
+  foundry.webp \
+  forge.webp \
   orangeastro.webp \
   researchastro.webp \
+  spark.webp \
   starbg.jpeg \
   suitastro.webp; do
   cp "repos/runner-web-sdk/img/agent-profile-pics/${public_file}" "${TMP_BUILD_DIR}/web/hosting/public/img/agent-profile-pics/${public_file}"

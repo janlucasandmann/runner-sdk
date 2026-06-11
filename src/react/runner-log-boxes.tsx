@@ -2197,7 +2197,7 @@ function formatTaskManagementUpdateSummary(log: RunnerLog, tasks: RunnerTaskMana
     changes.push("Due date updated.");
   }
   if (releaseFlag) {
-    changes.push("Release assignment updated.");
+    changes.push("Milestone assignment updated.");
   }
   if (sprintFlag) {
     changes.push("Sprint assignment updated.");
@@ -2781,7 +2781,7 @@ function getCreatedResourceTypeLabel(resourceType: RunnerCreatedResourceType): s
   if (resourceType === "skill") return "Skill";
   if (resourceType === "environment") return "Environment";
   if (resourceType === "project") return "Project";
-  return "Release";
+  return "Milestone";
 }
 
 function renderCreatedResourceIcon(resourceType: RunnerCreatedResourceType, className: string) {
@@ -2980,7 +2980,7 @@ function extractCreatedResourcePreviewsFromText(
     { type: "agent", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:agent created|created agent)\b[:\s-]*(.+?)(?:\s+\(([^)]+)\))?\s*$/i },
     { type: "skill", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:skill created|created skill)\b[:\s-]*(.+?)(?:\s+\((skill_[^)]+)\))?\s*$/i },
     { type: "environment", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:environment created|created environment)\b[:\s-]*(.+?)(?:\s+\(((?:env|environment)_[^)]+)\))?\s*$/i },
-    { type: "release", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:release created|created release)\b[:\s-]*(.+?)(?:\s+\((release_[^)]+)\))?\s*$/i },
+    { type: "release", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:(?:release|milestone) created|created (?:release|milestone))\b[:\s-]*(.+?)(?:\s+\((release_[^)]+)\))?\s*$/i },
   ];
 
   for (const rawLine of trimmed.split(/\r?\n/)) {
@@ -3173,7 +3173,7 @@ function normalizeTaskManagementReleasePreview(value: unknown): RunnerCreatedRes
 
   return {
     id: id || `release:${name}`,
-    name: name || "Untitled Release",
+    name: name || "Untitled Milestone",
     resourceType: "release",
     description: asOptionalTrimmedString(record.description) || null,
     model: null,
@@ -3255,7 +3255,7 @@ function extractTaskManagementReleasePreviewsFromText(text: string): RunnerCreat
   for (const rawLine of trimmed.split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line) continue;
-    const match = line.match(/^(?:[+*-]\s*)?(?:✓\s*)?(?:Release created|Created release):\s*(.+?)(?:\s+\((release_[^)]+)\))?\s*$/i);
+    const match = line.match(/^(?:[+*-]\s*)?(?:✓\s*)?(?:(?:Release|Milestone) created|Created (?:release|milestone)):\s*(.+?)(?:\s+\((release_[^)]+)\))?\s*$/i);
     if (!match?.[1]) continue;
     previews.push({
       id: String(match[2] || `release:${match[1]}`).trim(),
@@ -3978,16 +3978,16 @@ function TaskManagementReleaseCreateLogBox({
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
   const title =
     releases.length === 1
-      ? "1 release created"
+      ? "1 milestone created"
       : releases.length > 1
-        ? `${releases.length} releases created`
-        : "Create releases";
+        ? `${releases.length} milestones created`
+        : "Create milestones";
   const firstRelease = releases[0];
 
   return (
     <CompactActionLogLine
       icon={<Calendar className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
-      title={releases.length === 1 ? "Created release" : title}
+      title={releases.length === 1 ? "Created milestone" : title}
       detail={firstRelease?.name || (isLoading ? "creating..." : "")}
     />
   );
