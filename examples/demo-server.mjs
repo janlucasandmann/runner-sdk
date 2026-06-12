@@ -38631,8 +38631,75 @@ ${METRONOME_PAGE_CSS}
         background: rgba(255, 255, 255, 0.10);
       }
 
+      .playground-thread-observability-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .playground-thread-observability-summary-item {
+        min-width: 0;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-thread-observability-summary-label {
+        display: block;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-thread-observability-summary-value {
+        display: block;
+        margin-top: 6px;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.1;
+      }
+
       .playground-thread-observability-card .playground-agents-observability-node-meta {
         display: none;
+      }
+
+      .playground-agents-observability-node-badges {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      .playground-agents-observability-node-badge {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        min-height: 20px;
+        padding: 0 7px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.07);
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .playground-agents-observability-node-badge.is-ring-2 {
+        background: rgba(102, 166, 255, 0.14);
+        color: rgba(168, 205, 255, 0.9);
+      }
+
+      .playground-agents-observability-node-badge.is-ring-3 {
+        background: rgba(255, 174, 102, 0.14);
+        color: rgba(255, 208, 168, 0.94);
       }
 
       .playground-thread-observability-card .playground-agents-observability-node-duration {
@@ -38689,10 +38756,86 @@ ${METRONOME_PAGE_CSS}
         color: #fff;
       }
 
+      .playground-thread-observability-expanded-chip.is-ring {
+        min-height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.76);
+      }
+
+      .playground-thread-observability-expanded-chip.is-ring-2 {
+        background: rgba(102, 166, 255, 0.16);
+        color: rgba(168, 205, 255, 0.92);
+      }
+
+      .playground-thread-observability-expanded-chip.is-ring-3 {
+        background: rgba(255, 174, 102, 0.16);
+        color: rgba(255, 208, 168, 0.94);
+      }
+
+      .playground-thread-observability-expanded-chip.is-decision-status {
+        min-height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.76);
+      }
+
+      .playground-thread-observability-expanded-chip.is-decision-status.is-verified {
+        background: rgba(45, 212, 132, 0.14);
+        color: rgba(128, 241, 181, 0.92);
+      }
+
+      .playground-thread-observability-expanded-chip.is-decision-status.is-needs-review {
+        background: rgba(255, 231, 23, 0.12);
+        color: rgba(255, 238, 123, 0.9);
+      }
+
+      .playground-thread-observability-expanded-chip.is-decision-status.is-superseded {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.48);
+      }
+
       .playground-thread-observability-expanded-chip svg {
         width: 13px;
         height: 13px;
         flex: 0 0 auto;
+      }
+
+      .playground-thread-observability-expanded-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 14px;
+      }
+
+      .playground-thread-observability-expanded-actions .playground-environments-action-button {
+        gap: 7px;
+      }
+
+      .playground-thread-observability-expanded-actions .playground-files-state-loader {
+        width: 14px;
+        height: 14px;
+      }
+
+      .playground-thread-observability-expanded-error {
+        min-width: 0;
+        color: rgba(255, 114, 114, 0.9);
+        font-size: 12px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+      }
+
+      .playground-thread-observability-expanded-warning {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        line-height: 1.45;
       }
 
       .playground-thread-observability-expanded-section {
@@ -38805,6 +38948,10 @@ ${METRONOME_PAGE_CSS}
         }
 
         .playground-agents-observability-facts {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .playground-thread-observability-summary {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
@@ -59833,10 +59980,20 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           logs: normalizeTraceItems(logsData, "logs"),
           messages: normalizeTraceItems(messagesData, "messages"),
           steps: normalizeTraceItems(stepsData, "steps"),
+          decisions: [
+            ...normalizeTraceItems(threadData, "decisions"),
+            ...normalizeTraceItems(stepsData, "decisions"),
+          ].filter((decision, index, decisions) => {
+            const decisionId = String(decision?.id || decision?.decisionId || decision?.decision_id || "").trim();
+            if (!decisionId) return true;
+            return decisions.findIndex((candidate) => (
+              String(candidate?.id || candidate?.decisionId || candidate?.decision_id || "").trim() === decisionId
+            )) === index;
+          }),
           loadedAt: new Date().toISOString(),
         };
 
-        if (firstRejected && !nextDetails.thread && nextDetails.logs.length === 0 && nextDetails.messages.length === 0 && nextDetails.steps.length === 0) {
+        if (firstRejected && !nextDetails.thread && nextDetails.logs.length === 0 && nextDetails.messages.length === 0 && nextDetails.steps.length === 0 && nextDetails.decisions.length === 0) {
           throw firstRejected.reason instanceof Error ? firstRejected.reason : new Error("Failed to load trace data.");
         }
 
@@ -60070,6 +60227,322 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         if (type.includes("subagent")) return "subagent";
         if (type.includes("message")) return "message";
         return "log";
+      }
+
+      function getTraceRecordMetadata(record) {
+        return record?.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata)
+          ? record.metadata
+          : {};
+      }
+
+      function getTraceStepType(step) {
+        return String(step?.stepKind || step?.step_kind || step?.eventType || step?.event_type || step?.type || "step")
+          .trim()
+          .toLowerCase();
+      }
+
+      function getTraceStepTitle(step) {
+        const metadata = getTraceRecordMetadata(step);
+        const explicitTitle = String(step?.title || metadata?.title || metadata?.decision || "").trim();
+        if (explicitTitle) {
+          return explicitTitle.length > 96 ? explicitTitle.slice(0, 95).trimEnd() + "..." : explicitTitle;
+        }
+        const stepType = getTraceStepType(step);
+        if (stepType === "user_message") return "User intent received";
+        if (stepType === "assistant_message") return "Assistant response";
+        if (stepType === "reasoning") return "Reasoning checkpoint";
+        if (stepType === "command_execution") return "Ran command";
+        if (stepType === "mcp_tool_call") return "Called tool";
+        if (stepType === "file_change") return "Changed files";
+        if (stepType === "turn_completed") return "Turn completed";
+        if (stepType === "system") return "System event";
+        return stepType ? getTraceStatusLabel(stepType) : "Trace step";
+      }
+
+      function getTraceStepCopy(step) {
+        const metadata = getTraceRecordMetadata(step);
+        return readTraceText(
+          metadata?.decision
+          || metadata?.summary
+          || metadata?.message
+          || metadata?.reasoning
+          || metadata?.command
+          || metadata?.toolName
+          || metadata?.tool_name
+          || metadata?.filePath
+          || metadata?.file_path
+          || step?.summary
+          || step?.message
+          || step?.content
+          || "",
+          220
+        );
+      }
+
+      function getTraceDecisionTitle(record) {
+        const metadata = getTraceRecordMetadata(record);
+        const explicitTitle = readTraceText(
+          record?.title
+          || record?.decision
+          || record?.summary
+          || metadata?.title
+          || metadata?.decision
+          || metadata?.summary
+          || "",
+          96
+        );
+        return explicitTitle || getTraceStepTitle(record);
+      }
+
+      function getTraceDecisionCopy(record) {
+        const metadata = getTraceRecordMetadata(record);
+        return readTraceText(
+          record?.rationale
+          || record?.reason
+          || record?.summary
+          || record?.description
+          || record?.decision
+          || record?.content
+          || metadata?.rationale
+          || metadata?.reason
+          || metadata?.summary
+          || metadata?.description
+          || metadata?.decision
+          || "",
+          240
+        ) || getTraceStepCopy(record);
+      }
+
+      function getTraceDecisionStepId(record) {
+        const metadata = getTraceRecordMetadata(record);
+        const stepIds = Array.isArray(record?.stepIds)
+          ? record.stepIds
+          : Array.isArray(record?.step_ids)
+            ? record.step_ids
+            : Array.isArray(metadata?.stepIds)
+              ? metadata.stepIds
+              : Array.isArray(metadata?.step_ids)
+                ? metadata.step_ids
+                : [];
+        return String(
+          record?.stepId
+          || record?.step_id
+          || record?.startStepId
+          || record?.start_step_id
+          || record?.firstStepId
+          || record?.first_step_id
+          || metadata?.stepId
+          || metadata?.step_id
+          || metadata?.startStepId
+          || metadata?.start_step_id
+          || metadata?.firstStepId
+          || metadata?.first_step_id
+          || stepIds[0]
+          || ""
+        ).trim();
+      }
+
+      function getTraceDecisionStepSequence(record) {
+        const metadata = getTraceRecordMetadata(record);
+        const value = Number(
+          record?.stepSequence
+          ?? record?.step_sequence
+          ?? record?.startStepSequence
+          ?? record?.start_step_sequence
+          ?? metadata?.stepSequence
+          ?? metadata?.step_sequence
+          ?? metadata?.startStepSequence
+          ?? metadata?.start_step_sequence
+        );
+        return Number.isFinite(value) ? value : null;
+      }
+
+      function getTraceDecisionSnapshotId(record, side) {
+        const metadata = getTraceRecordMetadata(record);
+        const isBefore = side === "before";
+        return String(
+          isBefore
+            ? record?.snapshotBeforeId
+              || record?.snapshot_before_id
+              || record?.startSnapshotId
+              || record?.start_snapshot_id
+              || metadata?.snapshotBeforeId
+              || metadata?.snapshot_before_id
+              || metadata?.startSnapshotId
+              || metadata?.start_snapshot_id
+              || ""
+            : record?.snapshotAfterId
+              || record?.snapshot_after_id
+              || record?.endSnapshotId
+              || record?.end_snapshot_id
+              || metadata?.snapshotAfterId
+              || metadata?.snapshot_after_id
+              || metadata?.endSnapshotId
+              || metadata?.end_snapshot_id
+              || ""
+        ).trim();
+      }
+
+      function isTraceDecisionEntry(entry) {
+        return entry?.source === "step" || entry?.source === "decision";
+      }
+
+      function collectTraceTouchedResources(record) {
+        const metadata = getTraceRecordMetadata(record);
+        const resources = [];
+        const addResource = (value) => {
+          if (value == null || value === "") return;
+          if (Array.isArray(value)) {
+            value.forEach(addResource);
+            return;
+          }
+          if (value && typeof value === "object") {
+            addResource(value.path || value.filePath || value.file_path || value.name || value.id || value.resourceId || value.resource_id);
+            return;
+          }
+          const text = String(value || "").trim();
+          if (!text) return;
+          if (!resources.includes(text)) {
+            resources.push(text);
+          }
+        };
+
+        [
+          record?.environmentId,
+          record?.environment_id,
+          record?.sourceMessageId,
+          record?.source_message_id,
+          metadata?.filePath,
+          metadata?.file_path,
+          metadata?.path,
+          metadata?.relativePath,
+          metadata?.relative_path,
+          metadata?.changedFile,
+          metadata?.changed_file,
+          metadata?.changedFiles,
+          metadata?.changed_files,
+          metadata?.filenames,
+          metadata?.fileNames,
+          metadata?.files,
+          metadata?.resourceId,
+          metadata?.resource_id,
+          metadata?.toolName,
+          metadata?.tool_name,
+          metadata?.command,
+        ].forEach(addResource);
+
+        return resources.slice(0, 8);
+      }
+
+      function getTraceRingNumber(record) {
+        const stepType = getTraceStepType(record);
+        const eventType = getTraceEventType(record);
+        const type = String(stepType && stepType !== "step" ? stepType : (eventType || stepType)).toLowerCase();
+        const metadata = getTraceRecordMetadata(record);
+        const searchableText = [
+          type,
+          record?.title,
+          record?.message,
+          record?.summary,
+          metadata?.action,
+          metadata?.toolName,
+          metadata?.tool_name,
+          metadata?.command,
+          metadata?.summary,
+          metadata?.message,
+          metadata?.resourceType,
+          metadata?.resource_type,
+        ].map((value) => readTraceText(value, 240)).join(" ").toLowerCase();
+
+        if (
+          type.includes("permission")
+          || searchableText.includes("payment")
+          || searchableText.includes("stripe")
+          || searchableText.includes("send email")
+          || searchableText.includes("email send")
+          || searchableText.includes("delete")
+          || searchableText.includes("secret")
+          || searchableText.includes("external api")
+        ) {
+          return 3;
+        }
+        if (
+          searchableText.includes("deploy")
+          || searchableText.includes("publish")
+          || searchableText.includes("webhook")
+          || searchableText.includes("github")
+          || searchableText.includes("google drive")
+          || searchableText.includes("onedrive")
+          || searchableText.includes("notion")
+        ) {
+          return 2;
+        }
+        return 1;
+      }
+
+      function getTraceRingLabel(ring) {
+        const numericRing = Number(ring);
+        if (numericRing === 3) return "Ring 3";
+        if (numericRing === 2) return "Ring 2";
+        return "Ring 1";
+      }
+
+      function getTraceRingDescription(ring) {
+        const numericRing = Number(ring);
+        if (numericRing === 3) return "High-blast-radius action";
+        if (numericRing === 2) return "Externally visible action";
+        return "Sandbox-local action";
+      }
+
+      function getTraceDecisionStatus(record) {
+        const metadata = getTraceRecordMetadata(record);
+        const status = String(
+          record?.decisionStatus
+          || record?.decision_status
+          || metadata?.decisionStatus
+          || metadata?.decision_status
+          || metadata?.status
+          || ""
+        ).trim().toLowerCase();
+        const supersededBy = String(record?.supersededBy || record?.superseded_by || metadata?.supersededBy || metadata?.superseded_by || "").trim();
+        const needsReview = Boolean(
+          record?.needsReview
+          || record?.needs_review
+          || metadata?.needsReview
+          || metadata?.needs_review
+          || metadata?.requiresReview
+          || metadata?.requires_review
+        );
+        if (supersededBy || status === "superseded") return "superseded";
+        if (needsReview || status === "needs_review" || status === "review" || status === "blocked") return "needs-review";
+        if (status === "verified" || status === "accepted" || status === "complete") return "verified";
+        return "grounded";
+      }
+
+      function getTraceDecisionStatusLabel(status) {
+        const normalized = String(status || "").trim().toLowerCase();
+        if (normalized === "superseded") return "Superseded";
+        if (normalized === "needs-review") return "Needs review";
+        if (normalized === "verified") return "Verified";
+        return "Grounded";
+      }
+
+      function getTraceEvidenceLabel(entry) {
+        if (!entry || typeof entry !== "object") return "No evidence";
+        const parts = [];
+        if (entry.stepSequence != null) {
+          parts.push("step #" + entry.stepSequence);
+        } else if (entry.stepId) {
+          parts.push("step");
+        }
+        const touchedCount = Array.isArray(entry.touchedResources) ? entry.touchedResources.length : 0;
+        if (touchedCount > 0) {
+          parts.push(touchedCount + " " + (touchedCount === 1 ? "resource" : "resources"));
+        }
+        if (entry.snapshotBeforeId || entry.snapshotAfterId) {
+          parts.push("snapshots");
+        }
+        return parts.length > 0 ? parts.join(" · ") : "event evidence";
       }
 
       function getTraceEventDurationMs(record) {
@@ -60352,6 +60825,8 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         });
         const logs = Array.isArray(details?.logs) ? details.logs : [];
         const messages = Array.isArray(details?.messages) ? details.messages : [];
+        const steps = Array.isArray(details?.steps) ? details.steps : [];
+        const decisions = Array.isArray(details?.decisions) ? details.decisions : [];
         const timeline = [];
         const startedAt = normalizedThread.startedAt || normalizedThread.createdAt || details?.thread?.startedAt || details?.thread?.createdAt || "";
         const completedAt = normalizedThread.completedAt || normalizedThread.finishedAt || normalizedThread.endedAt || details?.thread?.completedAt || details?.thread?.finishedAt || details?.thread?.endedAt || "";
@@ -60375,7 +60850,61 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           tokenCount: getTraceEventTokens(normalizedThread) || getTraceEventTokens(details?.thread || {}),
         });
 
-        const sourceEvents = logs.length > 0
+        const stepEvents = steps.map((step, index) => {
+          const type = getTraceStepType(step);
+          const ring = getTraceRingNumber(step);
+          return {
+            source: "step",
+            record: step,
+            index,
+            idPrefix: "step",
+            type,
+            title: getTraceStepTitle(step),
+            copy: getTraceStepCopy(step),
+            createdAt: getTraceEventCreatedAt(step),
+            raw: step,
+            stepId: String(step?.id || "").trim(),
+            stepSequence: Number.isFinite(Number(step?.sequence)) ? Number(step.sequence) : null,
+            snapshotBeforeId: String(step?.snapshotBeforeId || step?.snapshot_before_id || "").trim(),
+            snapshotAfterId: String(step?.snapshotAfterId || step?.snapshot_after_id || "").trim(),
+            ring,
+            ringLabel: getTraceRingLabel(ring),
+            ringDescription: getTraceRingDescription(ring),
+            decisionStatus: getTraceDecisionStatus(step),
+            touchedResources: collectTraceTouchedResources(step),
+          };
+        });
+
+        const decisionEvents = decisions.map((decision, index) => {
+          const type = getTraceStepType(decision);
+          const ring = getTraceRingNumber(decision);
+          return {
+            source: "decision",
+            record: decision,
+            index,
+            idPrefix: "decision",
+            type,
+            title: getTraceDecisionTitle(decision),
+            copy: getTraceDecisionCopy(decision),
+            createdAt: getTraceEventCreatedAt(decision),
+            raw: decision,
+            stepId: getTraceDecisionStepId(decision),
+            stepSequence: getTraceDecisionStepSequence(decision),
+            snapshotBeforeId: getTraceDecisionSnapshotId(decision, "before"),
+            snapshotAfterId: getTraceDecisionSnapshotId(decision, "after"),
+            ring,
+            ringLabel: getTraceRingLabel(ring),
+            ringDescription: getTraceRingDescription(ring),
+            decisionStatus: getTraceDecisionStatus(decision),
+            touchedResources: collectTraceTouchedResources(decision),
+          };
+        });
+
+        const sourceEvents = decisionEvents.length > 0
+          ? decisionEvents
+          : stepEvents.length > 0
+          ? stepEvents
+          : logs.length > 0
           ? logs.map((log, index) => ({
               source: "log",
               record: log,
@@ -60400,18 +60929,27 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
             }));
 
         sourceEvents
-          .map((log, index) => ({
-            id: String(log.record?.id || log.idPrefix + ":" + index),
-            kind: getTraceEventKindClass(log.type),
-            source: log.source,
-            type: log.type,
-            timestamp: readTraceTimestamp(log.record),
-            title: log.title,
-            copy: log.copy,
-            createdAt: log.createdAt,
-            durationMs: getTraceEventDurationMs(log.record),
-            raw: log.raw,
-            tokenCount: getTraceEventTokens(log.record),
+          .map((event, index) => ({
+            id: String(event.record?.id || event.idPrefix + ":" + index),
+            kind: getTraceEventKindClass(event.type),
+            source: event.source,
+            type: event.type,
+            timestamp: readTraceTimestamp(event.record),
+            title: event.title,
+            copy: event.copy,
+            createdAt: event.createdAt,
+            durationMs: getTraceEventDurationMs(event.record),
+            raw: event.raw,
+            tokenCount: getTraceEventTokens(event.record),
+            stepId: event.stepId || "",
+            stepSequence: event.stepSequence,
+            snapshotBeforeId: event.snapshotBeforeId || "",
+            snapshotAfterId: event.snapshotAfterId || "",
+            ring: event.ring || getTraceRingNumber(event.record),
+            ringLabel: event.ringLabel || getTraceRingLabel(getTraceRingNumber(event.record)),
+            ringDescription: event.ringDescription || getTraceRingDescription(getTraceRingNumber(event.record)),
+            decisionStatus: event.decisionStatus || getTraceDecisionStatus(event.record),
+            touchedResources: Array.isArray(event.touchedResources) ? event.touchedResources : collectTraceTouchedResources(event.record),
           }))
           .filter((entry) => entry.title || entry.copy)
           .sort((left, right) => {
@@ -60436,8 +60974,11 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         fallbackThreadId = "",
         fallbackTitle = "",
         loadingLabel = "Loading trace...",
+        backendUrl = "",
+        requestHeaders = null,
         onOpenChat,
         onOpenTrace,
+        onForkCreated,
         traceSearchQuery = "",
         traceEventFilter = "all",
         traceEventSort = "timeline",
@@ -60448,8 +60989,11 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           fallbackThreadId,
           fallbackTitle,
           loadingLabel,
+          backendUrl,
+          requestHeaders,
           onOpenChat,
           onOpenTrace,
+          onForkCreated,
           traceSearchQuery,
           traceEventFilter,
           traceEventSort,
@@ -60462,8 +61006,11 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         fallbackThreadId = "",
         fallbackTitle = "",
         loadingLabel = "Loading trace...",
+        backendUrl = "",
+        requestHeaders = null,
         onOpenChat,
         onOpenTrace,
+        onForkCreated,
         traceSearchQuery = "",
         traceEventFilter = "all",
         traceEventSort = "timeline",
@@ -60481,8 +61028,11 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           details,
           fallbackThreadId,
           fallbackTitle,
+          backendUrl,
+          requestHeaders,
           onOpenChat,
           onOpenTrace,
+          onForkCreated,
           traceSearchQuery,
           traceEventFilter,
           traceEventSort,
@@ -60494,8 +61044,11 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         details,
         fallbackThreadId = "",
         fallbackTitle = "",
+        backendUrl = "",
+        requestHeaders = null,
         onOpenChat,
         onOpenTrace,
+        onForkCreated,
         traceSearchQuery = "",
         traceEventFilter = "all",
         traceEventSort = "timeline",
@@ -60509,6 +61062,11 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const messages = Array.isArray(details.messages) ? details.messages : [];
         const steps = Array.isArray(details.steps) ? details.steps : [];
         const logs = Array.isArray(details.logs) ? details.logs : [];
+        const [traceForkState, setTraceForkState] = useState({
+          itemId: "",
+          status: "",
+          error: "",
+        });
         const timeline = useMemo(() => buildThreadTraceTimeline(normalizedThread, details, fallbackTitle), [
           details,
           fallbackTitle,
@@ -60525,8 +61083,13 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           const normalizedSearchQuery = String(traceSearchQuery || "").trim().toLowerCase();
           const normalizedFilter = String(traceEventFilter || "all").trim().toLowerCase() || "all";
           const normalizedSort = String(traceEventSort || "timeline").trim().toLowerCase() || "timeline";
+          const hasDecisionEntries = timeline.some((entry) => isTraceDecisionEntry(entry));
           const matchesFilter = (entry) => {
             if (normalizedFilter === "all") return true;
+            if (normalizedFilter === "decisions") return hasDecisionEntries ? isTraceDecisionEntry(entry) : true;
+            if (normalizedFilter === "needs-review") return entry.decisionStatus === "needs-review";
+            if (normalizedFilter === "ring-2-plus") return Number(entry.ring || 1) >= 2;
+            if (normalizedFilter === "ring-3") return Number(entry.ring || 1) >= 3;
             if (normalizedFilter === "messages") return entry.kind === "message";
             if (normalizedFilter === "tools") return entry.kind === "tool";
             if (normalizedFilter === "reasoning") return String(entry.type || "").includes("reasoning") || String(entry.type || "").includes("summary");
@@ -60543,6 +61106,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
               entry.type,
               entry.kind,
               entry.source,
+              entry.ringLabel,
+              entry.decisionStatus,
+              getTraceEvidenceLabel(entry),
             ].join(" ").toLowerCase();
             return haystack.includes(normalizedSearchQuery);
           };
@@ -60578,6 +61144,68 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           ));
         }, [visibleTimeline]);
         const selectedTraceItem = visibleTimeline.find((entry) => entry.id === selectedTraceItemId) || null;
+        const handleForkFromSelectedTraceItem = useCallback(async () => {
+          const normalizedThreadId = String(normalizedThread.id || fallbackThreadId || "").trim();
+          const normalizedStepId = String(selectedTraceItem?.stepId || "").trim();
+          const normalizedBackendUrl = String(backendUrl || "").trim().replace(new RegExp("/+$"), "");
+          if (!normalizedThreadId || !normalizedStepId || !normalizedBackendUrl) {
+            return;
+          }
+
+          setTraceForkState({
+            itemId: selectedTraceItem.id,
+            status: "loading",
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              normalizedBackendUrl
+                + "/threads/" + encodeURIComponent(normalizedThreadId)
+                + "/steps/" + encodeURIComponent(normalizedStepId)
+                + "/fork",
+              {
+                method: "POST",
+                headers: {
+                  ...(requestHeaders || {}),
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  mode: "historical",
+                  title: "Fork from " + (selectedTraceItem.title || "trace decision"),
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to fork from this decision.");
+            }
+            const nextThread = data?.thread || data?.data?.thread || null;
+            setTraceForkState({
+              itemId: selectedTraceItem.id,
+              status: "success",
+              error: "",
+            });
+            if (nextThread?.id && typeof onForkCreated === "function") {
+              onForkCreated(nextThread);
+            }
+          } catch (error) {
+            setTraceForkState({
+              itemId: selectedTraceItem.id,
+              status: "error",
+              error: error instanceof Error ? error.message : "Failed to fork from this decision.",
+            });
+          }
+        }, [
+          backendUrl,
+          fallbackThreadId,
+          normalizedThread.id,
+          onForkCreated,
+          requestHeaders,
+          selectedTraceItem?.id,
+          selectedTraceItem?.stepId,
+          selectedTraceItem?.title,
+        ]);
         const timelineRangeSource = visibleTimeline.length > 0 ? visibleTimeline : timeline;
         const timelineStartMs = Math.min(...timelineRangeSource.map((entry) => entry.timestamp).filter((value) => Number.isFinite(value) && value > 0), Date.now());
         const timelineEndMs = Math.max(
@@ -60610,16 +61238,45 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           : formatTraceDurationMs(selectedTraceItem.durationMs);
         const selectedTokenLabel = formatTraceTokenLabel(selectedTraceItem?.tokenCount || 0);
         const SelectedTraceIcon = selectedTraceItem?.Icon || Clock;
+        const selectedTouchedResources = Array.isArray(selectedTraceItem?.touchedResources) ? selectedTraceItem.touchedResources : [];
+        const selectedDecisionStatus = selectedTraceItem?.decisionStatus || getTraceDecisionStatus(selectedRaw);
+        const selectedForkStatus = traceForkState.itemId === selectedTraceItem?.id ? traceForkState.status : "";
+        const selectedForkError = traceForkState.itemId === selectedTraceItem?.id ? traceForkState.error : "";
+        const traceDecisionCount = timeline.filter((entry) => isTraceDecisionEntry(entry)).length;
+        const traceRingTwoPlusCount = timeline.filter((entry) => Number(entry.ring || 1) >= 2).length;
+        const traceNeedsReviewCount = timeline.filter((entry) => entry.decisionStatus === "needs-review").length;
+        const traceForkPointCount = timeline.filter((entry) => entry.stepId && entry.snapshotBeforeId).length;
+        const traceSummaryItems = [
+          { label: "Grounded decisions", value: String(traceDecisionCount || 0) },
+          { label: "Ring 2+", value: String(traceRingTwoPlusCount || 0) },
+          { label: "Needs review", value: String(traceNeedsReviewCount || 0) },
+          { label: "Fork points", value: String(traceForkPointCount || 0) },
+        ];
         const selectedProperties = [
           { label: "Created", value: formatTraceDateTime(selectedTraceItem?.createdAt || selectedRaw?.createdAt || selectedRaw?.timestamp || "") },
           { label: "ID", value: selectedTraceItem?.id || "-" },
           { label: "Type", value: getTraceStatusLabel(selectedTraceItem?.type || selectedTraceItem?.kind || "") },
+          { label: "Source", value: isTraceDecisionEntry(selectedTraceItem) ? "Decision record" : getTraceStatusLabel(selectedTraceItem?.source || "event") },
+          selectedTraceItem?.stepSequence != null ? { label: "Step", value: "#" + selectedTraceItem.stepSequence } : null,
+          isTraceDecisionEntry(selectedTraceItem) ? { label: "Decision status", value: getTraceDecisionStatusLabel(selectedDecisionStatus) } : null,
+          { label: "Evidence", value: getTraceEvidenceLabel(selectedTraceItem) },
+          selectedTraceItem?.snapshotBeforeId ? { label: "Snapshot before", value: selectedTraceItem.snapshotBeforeId } : null,
+          selectedTraceItem?.snapshotAfterId ? { label: "Snapshot after", value: selectedTraceItem.snapshotAfterId } : null,
+          selectedTouchedResources.length > 0 ? { label: "Touched", value: selectedTouchedResources.join(", ") } : null,
           { label: "Tokens", value: selectedTokenLabel },
           { label: "Logs", value: String(logs.length) },
           { label: "Steps", value: String(steps.length) },
-        ];
+        ].filter(Boolean);
 
         return React.createElement("div", { className: "playground-agents-observability-detail" },
+          React.createElement("div", { className: "playground-thread-observability-summary" },
+            traceSummaryItems.map((item) =>
+              React.createElement("div", { key: item.label, className: "playground-thread-observability-summary-item" },
+                React.createElement("span", { className: "playground-thread-observability-summary-label" }, item.label),
+                React.createElement("span", { className: "playground-thread-observability-summary-value" }, item.value)
+              )
+            )
+          ),
           React.createElement("div", { className: "playground-agents-observability-tree" },
             visibleTimeline.length > 0
               ? visibleTimeline.map((entry) => {
@@ -60635,7 +61292,10 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
                   return React.createElement("div", { key: entry.id, className: "playground-thread-observability-row" },
                     React.createElement("button", {
                         type: "button",
-                        className: "playground-agents-observability-node is-" + (entry.kind || "log") + (isSelected ? " is-selected" : ""),
+                        className: "playground-agents-observability-node is-" + (entry.kind || "log")
+                          + (isTraceDecisionEntry(entry) ? " is-step" : "")
+                          + (entry.ring ? " is-ring-" + entry.ring : "")
+                          + (isSelected ? " is-selected" : ""),
                         onClick: () => setSelectedTraceItemId((current) => current === entry.id ? "" : entry.id),
                       },
                       React.createElement("span", { className: "playground-agents-observability-node-icon", "aria-hidden": "true" },
@@ -60646,6 +61306,15 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
                           className: "playground-agents-observability-node-title",
                           title: entry.title,
                         }, entry.title),
+                        isTraceDecisionEntry(entry)
+                          ? React.createElement("div", { className: "playground-agents-observability-node-badges" },
+                              React.createElement("span", { className: "playground-agents-observability-node-badge" }, getTraceDecisionStatusLabel(entry.decisionStatus)),
+                              React.createElement("span", {
+                                className: "playground-agents-observability-node-badge is-ring is-ring-" + (entry.ring || 1),
+                                title: entry.ringDescription || "",
+                              }, entry.ringLabel || getTraceRingLabel(entry.ring))
+                            )
+                          : null,
                         entry.copy || entry.createdAt
                           ? React.createElement("div", {
                               className: "playground-agents-observability-node-meta",
@@ -60669,11 +61338,31 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
                     isSelected
                       ? React.createElement("div", { className: "playground-thread-observability-expanded" },
                           React.createElement("div", { className: "playground-thread-observability-expanded-header" },
+                            React.createElement("div", { className: "playground-thread-observability-expanded-title" },
+                              selectedTraceItem?.title || "Trace decision"
+                            ),
                             React.createElement("div", { className: "playground-thread-observability-expanded-chips" },
+                              selectedTraceItem?.ring
+                                ? React.createElement("span", {
+                                    className: "playground-thread-observability-expanded-chip is-ring is-ring-" + selectedTraceItem.ring,
+                                    title: selectedTraceItem.ringDescription || "",
+                                  },
+                                    React.createElement(Shield, { strokeWidth: 1.8 }),
+                                    React.createElement("span", null, selectedTraceItem.ringLabel || getTraceRingLabel(selectedTraceItem.ring))
+                                  )
+                                : null,
                               React.createElement("span", { className: "playground-thread-observability-expanded-chip is-kind" },
                                 React.createElement(SelectedTraceIcon, { strokeWidth: 1.8 }),
                                 React.createElement("span", null, getTraceStatusLabel(selectedTraceItem?.type || selectedTraceItem?.kind || ""))
                               ),
+                              isTraceDecisionEntry(selectedTraceItem)
+                                ? React.createElement("span", {
+                                    className: "playground-thread-observability-expanded-chip is-decision-status is-" + selectedDecisionStatus,
+                                  },
+                                    React.createElement(Check, { strokeWidth: 1.8 }),
+                                    React.createElement("span", null, getTraceDecisionStatusLabel(selectedDecisionStatus))
+                                  )
+                                : null,
                               selectedTraceItem?.tokenCount
                                 ? React.createElement("span", { className: "playground-thread-observability-expanded-chip" },
                                     React.createElement(Coins, { strokeWidth: 1.8 }),
@@ -60688,6 +61377,29 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
                                 : null
                             )
                           ),
+                          selectedTraceItem?.stepId
+                            ? React.createElement("div", { className: "playground-thread-observability-expanded-actions" },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-environments-action-button" + (selectedForkStatus === "loading" ? " is-loading" : ""),
+                                  onClick: handleForkFromSelectedTraceItem,
+                                  disabled: selectedForkStatus === "loading",
+                                },
+                                  selectedForkStatus === "loading"
+                                    ? React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                                    : React.createElement(GitFork, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                  React.createElement("span", null, selectedForkStatus === "success" ? "Fork created" : "Fork from here")
+                                ),
+                                selectedForkError
+                                  ? React.createElement("span", { className: "playground-thread-observability-expanded-error" }, selectedForkError)
+                                  : null
+                              )
+                            : null,
+                          isTraceDecisionEntry(selectedTraceItem) && Number(selectedTraceItem?.ring || 1) >= 2
+                            ? React.createElement("div", { className: "playground-thread-observability-expanded-warning" },
+                                "Forking from this point restores the local thread and computer state only. Externally visible actions after this decision are not undone."
+                              )
+                            : null,
                           React.createElement("div", { className: "playground-thread-observability-expanded-section" },
                             React.createElement("div", { className: "playground-thread-observability-expanded-section-header" },
                               React.createElement("span", null, "Properties"),
@@ -60707,7 +61419,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
                           ),
                           React.createElement("div", { className: "playground-thread-observability-expanded-section" },
                             React.createElement("div", { className: "playground-thread-observability-expanded-section-header" },
-                              React.createElement("span", null, selectedTraceItem?.kind === "thread" ? "Thread context" : "Event content"),
+                              React.createElement("span", null, selectedTraceItem?.kind === "thread" ? "Thread context" : isTraceDecisionEntry(selectedTraceItem) ? "Decision summary" : "Event content"),
                               React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
                             ),
                             React.createElement("div", { className: "playground-thread-observability-expanded-message" },
@@ -60751,12 +61463,12 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         );
       }
 
-      function ThreadObservabilityView({ threadId, threadTitle, backendUrl, requestHeaders, hasRealAccess, onOpenChat }) {
+      function ThreadObservabilityView({ threadId, threadTitle, backendUrl, requestHeaders, hasRealAccess, onOpenChat, onForkCreated }) {
         const traceToolbarRef = useRef(null);
         const [traceDetails, setTraceDetails] = useState(null);
         const [traceSearchQuery, setTraceSearchQuery] = useState("");
         const [traceEventSort, setTraceEventSort] = useState("timeline");
-        const [traceEventFilter, setTraceEventFilter] = useState("all");
+        const [traceEventFilter, setTraceEventFilter] = useState("decisions");
         const [traceToolbarPopover, setTraceToolbarPopover] = useState("");
 
         useEffect(() => {
@@ -60831,20 +61543,29 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           { id: "duration", label: "Slowest first" },
           { id: "tokens", label: "Most tokens" },
         ];
-	        const filterOptions = [
-	          { id: "all", label: "All events" },
-	          { id: "messages", label: "Messages" },
-	          { id: "tools", label: "Tools" },
-	          { id: "reasoning", label: "Reasoning" },
-	          { id: "subagents", label: "Subagents" },
-	          { id: "permissions", label: "Permissions" },
-	        ];
-	        const activeTraceFilterLabel = filterOptions.find((option) => option.id === traceEventFilter)?.label || "All events";
-	        return React.createElement("div", { className: "playground-thread-observability-view" },
+        const filterOptions = [
+          { id: "decisions", label: "Decisions" },
+          { id: "needs-review", label: "Needs review" },
+          { id: "ring-2-plus", label: "Ring 2+" },
+          { id: "ring-3", label: "Ring 3" },
+          { id: "all", label: "All events" },
+          { id: "messages", label: "Messages" },
+          { id: "tools", label: "Tools" },
+          { id: "reasoning", label: "Reasoning" },
+          { id: "subagents", label: "Subagents" },
+          { id: "permissions", label: "Permissions" },
+        ];
+        const activeTraceFilterLabel = filterOptions.find((option) => option.id === traceEventFilter)?.label || "All events";
+        return React.createElement("div", { className: "playground-thread-observability-view" },
           React.createElement("div", { className: "playground-thread-observability-card" },
             React.createElement("div", { className: "playground-plugins-section-header" },
               React.createElement("div", { className: "playground-plugins-section-copy" },
-                React.createElement("h3", { className: "playground-plugins-section-title" }, normalizedThreadId || "Trace")
+                React.createElement("h3", { className: "playground-plugins-section-title" }, "Decision Timeline"),
+                React.createElement("p", { className: "playground-plugins-section-description" },
+                  threadTitle || normalizedThreadId
+                    ? (threadTitle || normalizedThreadId) + " · grounded in thread steps and raw trace evidence"
+                    : "Grounded in thread steps and raw trace evidence"
+                )
               )
             ),
             React.createElement("div", { className: "playground-plugins-search-row playground-agents-overview-search-row playground-thread-observability-toolbar", ref: traceToolbarRef },
@@ -60934,8 +61655,11 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
               details: traceDetails,
               fallbackThreadId: normalizedThreadId,
               fallbackTitle: threadTitle,
+              backendUrl,
+              requestHeaders,
               onOpenChat: null,
               onOpenTrace: null,
+              onForkCreated,
               traceSearchQuery,
               traceEventFilter,
               traceEventSort,
@@ -102809,6 +103533,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         onProjectRecordCommitted,
         onOpenFilesPage,
         onOpenProjectMetronomes,
+        onOpenResourceTemplatesPage,
+        projectOverviewResourceFilter = "all",
+        setProjectOverviewResourceFilter = () => {},
         onRequireAuth,
         onRequestSidebarCollapse,
         useUnifiedProjectNav = false,
@@ -146604,6 +147331,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (activePage === "models") {
             return "Models";
           }
+          if (activePage === "resource-templates") {
+            return "Templates";
+          }
           if (activePage === "develop") {
             return "Developers";
           }
@@ -149792,6 +150522,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
+        function renderResourceTemplatesPageNav() {
+          return renderUnifiedTopNav({
+            className: "playground-configure-navbar playground-models-navbar",
+            pathItems: [{ label: "Configure" }, { label: "Templates" }],
+          });
+        }
+
         function renderInferencePageNav() {
           return renderUnifiedTopNav({
             className: "playground-configure-navbar playground-models-navbar",
@@ -150431,6 +151168,125 @@ ${PROJECT_OVERVIEW_SCRIPT}
             agentModelOptions: resolvedModelsPageAgentModelOptions,
             pricingUrl: ${JSON.stringify(aiosOrigin + "/pricing")},
             onOpenSkillSettings: (skillId) => openToolsView("skills", { skillId, preserveSidebarMode: true }),
+          });
+        }
+
+        function renderResourceTemplatesPage() {
+          const projectOptions = (Array.isArray(realProjects) ? realProjects : [])
+            .map((project) => ({
+              id: String(project?.id || "").trim(),
+              name: String(project?.name || project?.title || "Untitled Project").trim() || "Untitled Project",
+            }))
+            .filter((project) => project.id);
+          async function publishResourceTemplateToProject(template, projectOption) {
+            const normalizedProjectId = String(projectOption?.id || "").trim();
+            const normalizedTemplateId = String(template?.id || "").trim();
+            if (!normalizedProjectId || !normalizedTemplateId) {
+              throw new Error("Select a project and template first.");
+            }
+            const existingProject = (Array.isArray(realProjects) ? realProjects : [])
+              .find((project) => String(project?.id || "").trim() === normalizedProjectId);
+            const normalizedProject = normalizePlaygroundProjectRecord(existingProject || projectOption);
+            if (!normalizedProject?.id) {
+              throw new Error("Project could not be resolved.");
+            }
+            const currentMetadata = normalizedProject.metadata && typeof normalizedProject.metadata === "object" && !Array.isArray(normalizedProject.metadata)
+              ? normalizedProject.metadata
+              : {};
+            const currentPublishedTemplates = Array.isArray(currentMetadata.resourceTemplates)
+              ? currentMetadata.resourceTemplates
+              : [];
+            const templateEntry = {
+              id: normalizedTemplateId,
+              templateId: normalizedTemplateId,
+              type: String(template?.type || "file").trim() || "file",
+              typeLabel: String(template?.typeLabel || "").trim(),
+              title: String(template?.title || "Template").trim() || "Template",
+              summary: String(template?.summary || template?.description || "").trim(),
+              difficulty: String(template?.difficulty || "").trim(),
+              estimatedSetup: String(template?.estimatedSetup || "").trim(),
+              publishedAt: new Date().toISOString(),
+            };
+            const nextPublishedTemplates = [
+              templateEntry,
+              ...currentPublishedTemplates.filter((item) => (
+                String(item?.templateId || item?.id || "").trim() !== normalizedTemplateId
+              )),
+            ];
+            const nextMetadata = {
+              ...currentMetadata,
+              resourceTemplates: nextPublishedTemplates,
+            };
+            const normalizedProjectAttachments = normalizePlaygroundTaskAttachmentList(normalizedProject.attachments || currentMetadata.attachments);
+            const normalizedProjectConnectors = normalizePlaygroundTaskConnectorSelections(normalizedProject.connectors || currentMetadata.connectors);
+            const response = await fetch(proxyBackendBase + "/projects/" + encodeURIComponent(normalizedProject.id), {
+              method: "PATCH",
+              headers: {
+                ...authRequestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name: normalizedProject.name || String(projectOption?.name || "Untitled Project").trim() || "Untitled Project",
+                description: normalizedProject.description || "",
+                projectType: normalizedProject.projectType || normalizedProject.type || currentMetadata.projectType || currentMetadata.blueprintId || "blank",
+                type: normalizedProject.type || normalizedProject.projectType || currentMetadata.type || currentMetadata.projectType || "blank",
+                color: normalizedProject.color || undefined,
+                defaultEnvironmentId: normalizedProject.defaultEnvironmentId || currentMetadata.defaultEnvironmentId || undefined,
+                leadUserId: normalizedProject.leadUserId || currentMetadata.leadUserId || currentMetadata.lead?.userId || undefined,
+                leadName: normalizedProject.leadName || currentMetadata.leadName || currentMetadata.lead?.name || undefined,
+                leadEmail: normalizedProject.leadEmail || currentMetadata.leadEmail || currentMetadata.lead?.email || undefined,
+                leadAvatarUrl: normalizedProject.leadAvatarUrl || currentMetadata.leadAvatarUrl || currentMetadata.lead?.avatarUrl || undefined,
+                attachments: normalizedProjectAttachments,
+                connectors: normalizedProjectConnectors,
+                metadata: nextMetadata,
+              }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (isUnauthorizedStatus(response.status)) {
+              triggerPlatformSessionRecovery();
+              throw new Error("Please sign in again to publish templates.");
+            }
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to publish template.");
+            }
+            const fallbackProject = {
+              ...normalizedProject,
+              metadata: nextMetadata,
+            };
+            const updatedProject = getPlaygroundProjectResponseRecord(data, fallbackProject) || normalizePlaygroundProjectRecord(fallbackProject);
+            if (!updatedProject?.id) {
+              throw new Error("Template publish failed.");
+            }
+            setRealProjects((current) => {
+              const projects = Array.isArray(current) ? current : [];
+              const existingIndex = projects.findIndex((project) => project.id === updatedProject.id);
+              if (existingIndex === -1) {
+                return sortPlaygroundProjectsByRecent([updatedProject, ...projects]);
+              }
+              return sortPlaygroundProjectsByRecent(projects.map((project) => (
+                project.id === updatedProject.id
+                  ? mergePlaygroundProjectRecords(updatedProject, project) || updatedProject
+                  : project
+              )));
+            });
+            setResourceTemplateNotice("Published " + templateEntry.title + " to " + (updatedProject.name || normalizedProject.name || "project") + ".");
+            void refreshProjects();
+          }
+          return renderPlaygroundResourceTemplatesPage({
+            templates: Array.isArray(PLAYGROUND_RESOURCE_TEMPLATE_DATA) ? PLAYGROUND_RESOURCE_TEMPLATE_DATA : [],
+            types: Array.isArray(PLAYGROUND_RESOURCE_TEMPLATE_TYPE_DATA) ? PLAYGROUND_RESOURCE_TEMPLATE_TYPE_DATA : [],
+            projectOptions,
+            activeType: resourceTemplateTypeFilter,
+            setActiveType: setResourceTemplateTypeFilter,
+            searchQuery: resourceTemplateSearchQuery,
+            setSearchQuery: setResourceTemplateSearchQuery,
+            selectedTemplateId: resourceTemplateSelectedId,
+            setSelectedTemplateId: setResourceTemplateSelectedId,
+            publishTemplateId: resourceTemplatePublishId,
+            setPublishTemplateId: setResourceTemplatePublishId,
+            notice: resourceTemplateNotice,
+            setNotice: setResourceTemplateNotice,
+            onPublishTemplate: publishResourceTemplateToProject,
           });
         }
 
@@ -152097,6 +152953,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 onClick: () => openModelsPage(),
               },
               {
+                id: "resource-templates",
+                label: "Templates",
+                Icon: Layers,
+                active: activePage === "resource-templates",
+                onClick: () => openResourceTemplatesPage(),
+              },
+              {
                 id: "inference",
                 label: "Inference",
                 Icon: Cpu,
@@ -152634,6 +153497,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      ? renderConfigureHomeNav()
 	                    : activePage === "models"
 	                      ? renderModelsPageNav()
+	                    : activePage === "resource-templates"
+	                      ? renderResourceTemplatesPageNav()
 	                    : activePage === "inference"
 	                      ? renderInferencePageNav()
 	                    : activePage === "develop"
@@ -152919,6 +153784,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      : activePage === "models"
 	                        ? hasRealAccess
 	                          ? renderModelsPage()
+	                          : hasDemoAccess
+	                            ? renderDemoFeaturePage("resources")
+	                            : renderAuthGate()
+	                      : activePage === "resource-templates"
+	                        ? hasRealAccess
+	                          ? renderResourceTemplatesPage()
 	                          : hasDemoAccess
 	                            ? renderDemoFeaturePage("resources")
 	                            : renderAuthGate()
@@ -153276,6 +154147,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 ? { workflowId: normalizedWorkflowId }
                                 : { projectId: normalizedProjectId });
                             },
+                            onOpenResourceTemplatesPage: openResourceTemplatesPage,
+                            projectOverviewResourceFilter,
+                            setProjectOverviewResourceFilter,
                             onThreadOpen: (threadId, options = {}) => {
                               const normalizedThreadId = String(threadId || "").trim();
                               if (!normalizedThreadId) {
@@ -153716,6 +154590,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     requestHeaders: authRequestHeaders,
                                     hasRealAccess,
                                     onOpenChat: () => setContentMode("chat"),
+                                    onForkCreated: (threadRecord) => {
+                                      const normalizedForkThreadId = String(threadRecord?.id || "").trim();
+                                      if (!normalizedForkThreadId) return;
+                                      upsertRealThreadRecord(threadRecord);
+                                      setContentMode("chat");
+                                      handleThreadSelect(normalizedForkThreadId);
+                                      void refreshThreads(undefined, normalizedForkThreadId);
+                                    },
                                   })
                                 : hasDemoAccess
                                   ? renderDemoThreadChangesSurface()
@@ -153831,6 +154713,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                   ? { workflowId: normalizedWorkflowId }
                                   : { projectId: normalizedProjectId });
                               },
+                              onOpenResourceTemplatesPage: openResourceTemplatesPage,
+                              projectOverviewResourceFilter,
+                              setProjectOverviewResourceFilter,
                               onThreadOpen: (threadId, options = {}) => {
                                 const normalizedThreadId = String(threadId || "").trim();
                                 if (!normalizedThreadId) {
@@ -159959,6 +160844,17 @@ const server = http.createServer((req, res) => {
       req,
       res,
       `/threads/${encodeURIComponent(decodeURIComponent(threadStepRevertMatch[1]))}/steps/${encodeURIComponent(decodeURIComponent(threadStepRevertMatch[2]))}/revert`,
+      "POST",
+    );
+    return;
+  }
+
+  const threadStepForkMatch = url.pathname.match(/^\/api\/real\/threads\/([^/]+)\/steps\/([^/]+)\/fork$/);
+  if (req.method === "POST" && threadStepForkMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/threads/${encodeURIComponent(decodeURIComponent(threadStepForkMatch[1]))}/steps/${encodeURIComponent(decodeURIComponent(threadStepForkMatch[2]))}/fork`,
       "POST",
     );
     return;

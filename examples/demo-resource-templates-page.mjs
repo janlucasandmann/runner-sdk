@@ -1,9 +1,17 @@
 export const RESOURCE_TEMPLATES_PAGE_CSS = String.raw`
       .playground-resource-templates-page {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 48px 50px 64px;
+        box-sizing: border-box;
+        color: #fff;
+      }
+
+      .playground-resource-templates-page-inner {
         width: min(100%, 1180px);
         margin: 0 auto;
-        padding: 48px 0 64px;
-        color: #fff;
       }
 
       .playground-resource-templates-hero {
@@ -435,6 +443,7 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
         setPublishTemplateId,
         notice,
         setNotice,
+        onPublishTemplate,
       }) {
         const templateList = Array.isArray(templates) ? templates : [];
         const typeList = Array.isArray(types) && types.length
@@ -598,12 +607,20 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
                           key: String(project?.id || project?.name),
                           type: "button",
                           className: "playground-resource-templates-project-option",
-                          onClick: () => {
+                          onClick: async () => {
                             const projectName = String(project?.name || "project").trim() || "project";
-                            if (typeof setNotice === "function") {
-                              setNotice("Published " + String(template.title || "template") + " to " + projectName + ".");
+                            try {
+                              if (typeof onPublishTemplate === "function") {
+                                await onPublishTemplate(template, project);
+                              } else if (typeof setNotice === "function") {
+                                setNotice("Published " + String(template.title || "template") + " to " + projectName + ".");
+                              }
+                              closeModal();
+                            } catch (error) {
+                              if (typeof setNotice === "function") {
+                                setNotice(error instanceof Error ? error.message : "Failed to publish template.");
+                              }
                             }
-                            closeModal();
                           },
                         }, project?.name || "Untitled project")
                       )
@@ -615,52 +632,54 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
         }
 
         return React.createElement("div", { className: "playground-resource-templates-page" },
-          React.createElement("section", { className: "playground-resource-templates-hero" },
-            React.createElement("div", { className: "playground-resource-templates-hero-top" },
-              React.createElement("div", null,
-                React.createElement("p", { className: "playground-resource-templates-eyebrow" }, "Infrastructure templates"),
-                React.createElement("h1", { className: "playground-resource-templates-title" }, "Start from reusable project resources"),
-                React.createElement("p", { className: "playground-resource-templates-copy" },
-                  "Use templates to create metronomes, files, databases, functions, web apps, and Imagine resources that match the way a project is meant to operate."
-                )
+          React.createElement("div", { className: "playground-resource-templates-page-inner" },
+            React.createElement("section", { className: "playground-resource-templates-hero" },
+              React.createElement("div", { className: "playground-resource-templates-hero-top" },
+                React.createElement("div", null,
+                  React.createElement("p", { className: "playground-resource-templates-eyebrow" }, "Infrastructure templates"),
+                  React.createElement("h1", { className: "playground-resource-templates-title" }, "Start from reusable project resources"),
+                  React.createElement("p", { className: "playground-resource-templates-copy" },
+                    "Use templates to create metronomes, files, databases, functions, web apps, and Imagine resources that match the way a project is meant to operate."
+                  )
+                ),
+                React.createElement("div", { className: "playground-resource-templates-notice" }, notice || "")
               ),
-              React.createElement("div", { className: "playground-resource-templates-notice" }, notice || "")
+              React.createElement("div", { className: "playground-resource-templates-featured-grid" },
+                featuredTemplates.map(renderFeaturedCard)
+              )
             ),
-            React.createElement("div", { className: "playground-resource-templates-featured-grid" },
-              featuredTemplates.map(renderFeaturedCard)
-            )
-          ),
-          React.createElement("section", { className: "playground-resource-templates-table-card" },
-            React.createElement("div", { className: "playground-resource-templates-table-inner" },
-              React.createElement("div", { className: "playground-resource-templates-toolbar" },
-                React.createElement("div", { className: "playground-resource-templates-search" },
-                  React.createElement(Search, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("input", {
-                    value: searchQuery || "",
-                    onChange: (event) => typeof setSearchQuery === "function" && setSearchQuery(event.target.value),
-                    placeholder: "Search templates",
-                  })
+            React.createElement("section", { className: "playground-resource-templates-table-card" },
+              React.createElement("div", { className: "playground-resource-templates-table-inner" },
+                React.createElement("div", { className: "playground-resource-templates-toolbar" },
+                  React.createElement("div", { className: "playground-resource-templates-search" },
+                    React.createElement(Search, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("input", {
+                      value: searchQuery || "",
+                      onChange: (event) => typeof setSearchQuery === "function" && setSearchQuery(event.target.value),
+                      placeholder: "Search templates",
+                    })
+                  ),
+                  typeList.map((type) =>
+                    React.createElement("button", {
+                      key: String(type.id),
+                      type: "button",
+                      className: "playground-resource-templates-filter" + (normalizedActiveType === String(type.id) ? " is-active" : ""),
+                      onClick: () => typeof setActiveType === "function" && setActiveType(String(type.id || "all")),
+                    }, type.label || type.id)
+                  )
                 ),
-                typeList.map((type) =>
-                  React.createElement("button", {
-                    key: String(type.id),
-                    type: "button",
-                    className: "playground-resource-templates-filter" + (normalizedActiveType === String(type.id) ? " is-active" : ""),
-                    onClick: () => typeof setActiveType === "function" && setActiveType(String(type.id || "all")),
-                  }, type.label || type.id)
+                React.createElement("div", { className: "playground-resource-templates-table" },
+                  React.createElement("div", { className: "playground-resource-templates-row is-header" },
+                    React.createElement("div", null, "Template"),
+                    React.createElement("div", null, "Type"),
+                    React.createElement("div", null, "Difficulty"),
+                    React.createElement("div", null, "Setup"),
+                    React.createElement("div", null, "")
+                  ),
+                  filteredTemplates.length > 0
+                    ? filteredTemplates.map(renderTemplateRow)
+                    : React.createElement("div", { className: "playground-resource-templates-empty" }, "No templates match this filter.")
                 )
-              ),
-              React.createElement("div", { className: "playground-resource-templates-table" },
-                React.createElement("div", { className: "playground-resource-templates-row is-header" },
-                  React.createElement("div", null, "Template"),
-                  React.createElement("div", null, "Type"),
-                  React.createElement("div", null, "Difficulty"),
-                  React.createElement("div", null, "Setup"),
-                  React.createElement("div", null, "")
-                ),
-                filteredTemplates.length > 0
-                  ? filteredTemplates.map(renderTemplateRow)
-                  : React.createElement("div", { className: "playground-resource-templates-empty" }, "No templates match this filter.")
               )
             )
           ),
