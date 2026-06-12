@@ -3882,6 +3882,48 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   line-height: 1.45;
 }
 
+.tb-runner-chat .tb-log-permission-ring {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tb-runner-chat .tb-log-permission-ring-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(102, 166, 255, 0.14);
+  color: #66a6ff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.tb-runner-chat .tb-log-permission-ring-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tb-runner-chat .tb-log-permission-ring-title {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.tb-runner-chat .tb-log-permission-ring-description {
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .tb-runner-chat .tb-log-permission-details {
   display: flex;
   flex-direction: column;

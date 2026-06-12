@@ -161,6 +161,15 @@ export interface RunnerLog {
       sourceType: "working_log" | "run_summary";
     };
     permissionRequestId?: string;
+    permissionRing?: 1 | 2 | 3;
+    permissionRingId?: string;
+    permissionRingLabel?: string;
+    permissionRingShortLabel?: string;
+    permissionRingDescription?: string;
+    permissionActionId?: string;
+    permissionActionLabel?: string;
+    permissionActionDescription?: string;
+    permissionAccess?: string;
     currentMode?: string;
     requiredMode?: string;
     reason?: string;

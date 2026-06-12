@@ -11495,6 +11495,22 @@ function PermissionRequestLogBox({
   const toolName = String(log.metadata?.toolName || log.metadata?.toolId || toolNameFromMessage || "tool").trim() || "tool";
   const reason = typeof log.metadata?.reason === "string" ? log.metadata.reason.trim() : "";
   const input = typeof log.metadata?.input === "string" ? log.metadata.input.trim() : "";
+  const permissionRing = log.metadata?.permissionRing === 1 || log.metadata?.permissionRing === 2 || log.metadata?.permissionRing === 3
+    ? log.metadata.permissionRing
+    : undefined;
+  const permissionRingLabel = typeof log.metadata?.permissionRingLabel === "string" && log.metadata.permissionRingLabel.trim()
+    ? log.metadata.permissionRingLabel.trim()
+    : permissionRing
+      ? `Ring ${permissionRing}`
+      : "";
+  const permissionRingShortLabel = typeof log.metadata?.permissionRingShortLabel === "string" && log.metadata.permissionRingShortLabel.trim()
+    ? log.metadata.permissionRingShortLabel.trim()
+    : "";
+  const permissionRingDescription = typeof log.metadata?.permissionRingDescription === "string" ? log.metadata.permissionRingDescription.trim() : "";
+  const permissionActionLabel = typeof log.metadata?.permissionActionLabel === "string" && log.metadata.permissionActionLabel.trim()
+    ? log.metadata.permissionActionLabel.trim()
+    : toolName;
+  const permissionActionDescription = typeof log.metadata?.permissionActionDescription === "string" ? log.metadata.permissionActionDescription.trim() : "";
   const permissionPreview = buildPermissionRequestPreview(toolName, input, reason);
 
   const decide = async (decision: "allow" | "deny") => {
@@ -11518,6 +11534,22 @@ function PermissionRequestLogBox({
   return (
     <div className="tb-log-card tb-log-card-permission is-pending">
       <div className="tb-log-card-panel tb-log-permission-panel">
+        {permissionRingLabel ? (
+          <div className="tb-log-permission-ring">
+            <div className="tb-log-permission-ring-badge">
+              <span>{permissionRingLabel}</span>
+              {permissionRingShortLabel ? <span>{permissionRingShortLabel}</span> : null}
+            </div>
+            <div className="tb-log-permission-ring-copy">
+              <div className="tb-log-permission-ring-title">{permissionActionLabel}</div>
+              {permissionActionDescription || permissionRingDescription ? (
+                <div className="tb-log-permission-ring-description">
+                  {permissionActionDescription || permissionRingDescription}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
         <div className="tb-log-permission-summary">{permissionPreview.summary}</div>
         {permissionPreview.details.length > 0 ? (
           <div className="tb-log-permission-details">

@@ -24922,7 +24922,7 @@ const html = `<!doctype html>
       .playground-agents-permissions-list {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 14px;
       }
 
       .playground-agents-permissions-section {
@@ -24951,6 +24951,107 @@ const html = `<!doctype html>
         padding: 8px 0;
       }
 
+      .playground-agents-permission-ring-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-agents-permission-ring-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        padding: 1px;
+        border-radius: inherit;
+        background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04) 42%, rgba(255,255,255,0.12));
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+      }
+
+      .playground-agents-permission-ring-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .playground-agents-permission-ring-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .playground-agents-permission-ring-index {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        background: rgba(102, 166, 255, 0.14);
+        color: #66a6ff;
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .playground-agents-permission-ring-copy {
+        max-width: 760px;
+      }
+
+      .playground-agents-permission-ring-title {
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.25;
+      }
+
+      .playground-agents-permission-ring-description {
+        margin-top: 5px;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-agents-permission-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-agents-permission-action-row {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) minmax(310px, auto);
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+        padding: 12px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-agents-permission-action-badge {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 8px;
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: rgba(102, 166, 255, 0.12);
+        color: #66a6ff;
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1.2;
+        vertical-align: middle;
+      }
+
       .playground-agents-permission-copy {
         min-width: 170px;
         flex: 1 1 210px;
@@ -24971,6 +25072,10 @@ const html = `<!doctype html>
       }
 
       .playground-agents-permission-options {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 16px;
         flex: 0 0 auto;
         min-width: 0;
         margin-left: auto;
@@ -24982,6 +25087,10 @@ const html = `<!doctype html>
         align-items: center;
         justify-content: flex-end;
         min-width: 126px;
+      }
+
+      .playground-agents-permission-select-shell.is-ring {
+        min-width: 104px;
       }
 
       .playground-agents-permission-select-shell::after {
@@ -25025,8 +25134,18 @@ const html = `<!doctype html>
         color: #111;
       }
 
+      .playground-agents-permission-effective-access {
+        min-width: 92px;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 11px;
+        line-height: 1.35;
+        text-align: right;
+      }
+
       @media (max-width: 820px) {
-        .playground-agents-permission-row {
+        .playground-agents-permission-row,
+        .playground-agents-permission-action-row {
+          display: flex;
           align-items: stretch;
           flex-direction: column;
         }
@@ -25038,9 +25157,20 @@ const html = `<!doctype html>
           width: 100%;
         }
 
+        .playground-agents-permission-options {
+          align-items: stretch;
+          flex-direction: column;
+          gap: 10px;
+        }
+
         .playground-agents-permission-select {
           text-align: left;
           text-align-last: left;
+        }
+
+        .playground-agents-permission-effective-access {
+          min-width: 0;
+          text-align: left;
         }
       }
 
@@ -49714,6 +49844,127 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         { id: "no_access", label: "No access" },
       ];
 
+      const PLAYGROUND_PERMISSION_RING_DEFINITIONS = [
+        {
+          id: "ring_1",
+          number: 1,
+          label: "Ring 1",
+          shortLabel: "Local",
+          title: "Local workspace",
+          description: "Actions that stay inside the selected computer, including local files, shell commands, and local skill runs.",
+          defaultAccess: "full_access",
+        },
+        {
+          id: "ring_2",
+          number: 2,
+          label: "Ring 2",
+          shortLabel: "Shared",
+          title: "Shared workspace",
+          description: "Actions that affect shared Computer Agents resources or send private messages outside the current computer.",
+          defaultAccess: "ask_for_permission",
+        },
+        {
+          id: "ring_3",
+          number: 3,
+          label: "Ring 3",
+          shortLabel: "Public",
+          title: "Public and irreversible",
+          description: "Actions that publish publicly, write to external systems, move money, or expose secrets.",
+          defaultAccess: "ask_for_permission",
+        },
+      ];
+
+      const PLAYGROUND_PERMISSION_RING_IDS = PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => ring.id);
+
+      const PLAYGROUND_PERMISSION_ACTION_DEFINITIONS = [
+        {
+          id: "workspace_read",
+          ringId: "ring_1",
+          label: "Read workspace",
+          description: "Read files, directories, logs, and local workspace context.",
+        },
+        {
+          id: "workspace_write",
+          ringId: "ring_1",
+          label: "Edit workspace",
+          description: "Create, update, delete, move, or download files inside the selected computer.",
+        },
+        {
+          id: "local_shell",
+          ringId: "ring_1",
+          label: "Run local commands",
+          description: "Run bash or runtime commands that execute inside the selected computer.",
+        },
+        {
+          id: "local_skill_run",
+          ringId: "ring_1",
+          label: "Run local skills",
+          description: "Use installed skills that operate within the selected computer context.",
+        },
+        {
+          id: "external_read",
+          ringId: "ring_2",
+          label: "Read external sources",
+          description: "Fetch public web pages, package metadata, documentation, or other read-only external context.",
+        },
+        {
+          id: "shared_resource_write",
+          ringId: "ring_2",
+          label: "Edit shared resources",
+          description: "Change shared projects, files, resources, comments, tickets, calendars, or team-visible state.",
+        },
+        {
+          id: "send_email",
+          ringId: "ring_2",
+          label: "Send private messages",
+          description: "Send email, Slack, or other direct messages to known recipients.",
+        },
+        {
+          id: "team_agent_delegation",
+          ringId: "ring_2",
+          label: "Delegate to agents",
+          description: "Create, invoke, or coordinate other agents and team agents.",
+        },
+        {
+          id: "managed_resource_mutation",
+          ringId: "ring_2",
+          label: "Change managed resources",
+          description: "Create or update Computer Agents databases, functions, web apps, secrets, auth, or other managed resources.",
+        },
+        {
+          id: "public_deploy",
+          ringId: "ring_3",
+          label: "Publish deployments",
+          description: "Deploy or publish public web apps, functions, workflows, or other externally reachable services.",
+        },
+        {
+          id: "github_write",
+          ringId: "ring_3",
+          label: "Write to GitHub",
+          description: "Push commits, create pull requests, merge code, or otherwise write to GitHub repositories.",
+        },
+        {
+          id: "payment_action",
+          ringId: "ring_3",
+          label: "Move money",
+          description: "Create charges, refunds, checkout links, subscriptions, or payment-provider changes.",
+        },
+        {
+          id: "public_message",
+          ringId: "ring_3",
+          label: "Publish public messages",
+          description: "Post to public channels, social accounts, websites, or customer-visible feeds.",
+        },
+        {
+          id: "secret_export",
+          ringId: "ring_3",
+          label: "Expose secrets",
+          description: "Copy, export, transmit, or reveal secrets and credentials outside the secure resource boundary.",
+        },
+      ];
+
+      const PLAYGROUND_PERMISSION_ACTION_IDS = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.map((action) => action.id);
+
       const PLAYGROUND_PERMISSION_RESOURCE_TYPES = [
         "agents",
         "skills",
@@ -49765,6 +50016,79 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           : fallback;
       }
 
+      function normalizePlaygroundPermissionRingId(value, fallback = "ring_1") {
+        return PLAYGROUND_PERMISSION_RING_IDS.includes(value) ? value : fallback;
+      }
+
+      function createPlaygroundDefaultPermissionRings() {
+        return PLAYGROUND_PERMISSION_RING_DEFINITIONS.reduce((rings, ring) => {
+          rings[ring.id] = {
+            defaultAccess: ring.defaultAccess,
+          };
+          return rings;
+        }, {});
+      }
+
+      function createPlaygroundDefaultPermissionActions() {
+        return PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.reduce((actions, action) => {
+          actions[action.id] = {
+            ringId: action.ringId,
+          };
+          return actions;
+        }, {});
+      }
+
+      function normalizePlaygroundPermissionRings(value) {
+        const rings = createPlaygroundDefaultPermissionRings();
+        const inputRings = isPlaygroundPermissionRecord(value) ? value : {};
+
+        PLAYGROUND_PERMISSION_RING_DEFINITIONS.forEach((ring) => {
+          const ringValue = inputRings[ring.id];
+          if (typeof ringValue === "string") {
+            rings[ring.id] = {
+              defaultAccess: normalizePlaygroundPermissionAccess(ringValue, ring.defaultAccess),
+            };
+            return;
+          }
+          if (!isPlaygroundPermissionRecord(ringValue)) {
+            return;
+          }
+          rings[ring.id] = {
+            defaultAccess: normalizePlaygroundPermissionAccess(ringValue.defaultAccess, ring.defaultAccess),
+          };
+        });
+
+        return rings;
+      }
+
+      function normalizePlaygroundPermissionActions(value) {
+        const actions = createPlaygroundDefaultPermissionActions();
+        const inputActions = isPlaygroundPermissionRecord(value) ? value : {};
+
+        PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.forEach((action) => {
+          const actionValue = inputActions[action.id];
+          if (typeof actionValue === "string") {
+            const access = normalizePlaygroundPermissionAccess(actionValue, "");
+            actions[action.id] = {
+              ringId: action.ringId,
+              ...(access ? { access } : {}),
+            };
+            return;
+          }
+          if (!isPlaygroundPermissionRecord(actionValue)) {
+            return;
+          }
+          const normalizedRingId = normalizePlaygroundPermissionRingId(actionValue.ringId, action.ringId);
+          const normalizedAccess = normalizePlaygroundPermissionAccess(actionValue.access, "");
+          actions[action.id] = {
+            ringId: normalizedRingId,
+            ...(normalizedAccess ? { access: normalizedAccess } : {}),
+          };
+        });
+
+        return actions;
+      }
+
       function createPlaygroundDefaultPermissionResources(defaultAccess = "full_access") {
         return PLAYGROUND_PERMISSION_RESOURCE_TYPES.reduce((resources, resourceType) => {
           resources[resourceType] = {
@@ -49796,22 +50120,39 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           .filter(Boolean);
       }
 
+      function normalizePlaygroundPermissionSubjectType(value, fallback = "agent") {
+        const normalized = String(value || "").trim();
+        return normalized === "agent"
+          || normalized === "project"
+          || normalized === "team"
+          || normalized === "human_user"
+          ? normalized
+          : fallback;
+      }
+
       function createPlaygroundDefaultPermissionSet(subjectType = "agent") {
+        const normalizedSubjectType = normalizePlaygroundPermissionSubjectType(subjectType, "agent");
         return {
           version: 1,
-          subjectType,
+          subjectType: normalizedSubjectType,
           defaultAccess: "full_access",
+          rings: createPlaygroundDefaultPermissionRings(),
+          actions: createPlaygroundDefaultPermissionActions(),
           resources: createPlaygroundDefaultPermissionResources("full_access"),
         };
       }
 
       function normalizePlaygroundPermissionSet(value, subjectType = "agent") {
-        const fallback = createPlaygroundDefaultPermissionSet(subjectType);
+        const normalizedFallbackSubjectType = normalizePlaygroundPermissionSubjectType(subjectType, "agent");
+        const fallback = createPlaygroundDefaultPermissionSet(normalizedFallbackSubjectType);
         if (!isPlaygroundPermissionRecord(value)) {
           return fallback;
         }
+        const normalizedSubjectType = normalizePlaygroundPermissionSubjectType(value.subjectType, normalizedFallbackSubjectType);
 
         const defaultAccess = normalizePlaygroundPermissionAccess(value.defaultAccess, fallback.defaultAccess);
+        const rings = normalizePlaygroundPermissionRings(value.rings);
+        const actions = normalizePlaygroundPermissionActions(value.actions);
         const resources = createPlaygroundDefaultPermissionResources(defaultAccess);
         const inputResources = isPlaygroundPermissionRecord(value.resources) ? value.resources : {};
 
@@ -49836,10 +50177,51 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 
         return {
           version: 1,
-          subjectType: value.subjectType === "human_user" || value.subjectType === "team" ? value.subjectType : subjectType,
+          subjectType: normalizedSubjectType,
           defaultAccess,
+          rings,
+          actions,
           resources,
         };
+      }
+
+      function getPlaygroundPermissionRingDefinition(ringId) {
+        const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "ring_1");
+        return PLAYGROUND_PERMISSION_RING_DEFINITIONS.find((ring) => ring.id === normalizedRingId)
+          || PLAYGROUND_PERMISSION_RING_DEFINITIONS[0];
+      }
+
+      function getPlaygroundPermissionActionDefinition(actionId) {
+        return PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.find((action) => action.id === actionId) || null;
+      }
+
+      function getPlaygroundPermissionActionRingId(permissionSet, actionDefinition) {
+        if (!actionDefinition) {
+          return "ring_1";
+        }
+        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, permissionSet?.subjectType || "agent");
+        const actionPolicy = normalizedPermissionSet.actions?.[actionDefinition.id] || null;
+        return normalizePlaygroundPermissionRingId(actionPolicy?.ringId, actionDefinition.ringId);
+      }
+
+      function getPlaygroundPermissionRingAccess(permissionSet, ringId) {
+        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, permissionSet?.subjectType || "agent");
+        const ringDefinition = getPlaygroundPermissionRingDefinition(ringId);
+        return normalizePlaygroundPermissionAccess(
+          normalizedPermissionSet.rings?.[ringDefinition.id]?.defaultAccess,
+          ringDefinition.defaultAccess || normalizedPermissionSet.defaultAccess
+        );
+      }
+
+      function getPlaygroundPermissionActionAccess(permissionSet, actionDefinition) {
+        if (!actionDefinition) {
+          return "full_access";
+        }
+        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, permissionSet?.subjectType || "agent");
+        const actionPolicy = normalizedPermissionSet.actions?.[actionDefinition.id] || null;
+        const actionRingId = getPlaygroundPermissionActionRingId(normalizedPermissionSet, actionDefinition);
+        const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, actionRingId);
+        return normalizePlaygroundPermissionAccess(actionPolicy?.access, inheritedAccess);
       }
 
       function normalizePlaygroundPackages(packages) {
@@ -51303,9 +51685,10 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           leadUserId: "",
           leadName: "",
           leadEmail: "",
-          leadAvatarUrl: "",
-	          attachments: [],
-	          connectors: buildPlaygroundDefaultTaskConnectors(),
+	          leadAvatarUrl: "",
+	          permissionSet: createPlaygroundDefaultPermissionSet("project"),
+		          attachments: [],
+		          connectors: buildPlaygroundDefaultTaskConnectors(),
 	          projectRules: "",
 	          missionControl: buildEmptyPlaygroundProjectMissionControl(),
 	          metadata: buildPlaygroundProjectBlueprintMetadata(blueprint),
@@ -53241,12 +53624,13 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           ? metadata.lead
           : {};
         const leadUserId = String(project.leadUserId || metadata?.leadUserId || metadataLead.userId || metadataLead.id || "").trim();
-        const leadName = String(project.leadName || metadata?.leadName || metadataLead.name || "").trim();
-        const leadEmail = String(project.leadEmail || metadata?.leadEmail || metadataLead.email || "").trim();
-        const leadAvatarUrl = String(project.leadAvatarUrl || metadata?.leadAvatarUrl || metadataLead.avatarUrl || metadataLead.photoUrl || "").trim();
+	        const leadName = String(project.leadName || metadata?.leadName || metadataLead.name || "").trim();
+	        const leadEmail = String(project.leadEmail || metadata?.leadEmail || metadataLead.email || "").trim();
+	        const leadAvatarUrl = String(project.leadAvatarUrl || metadata?.leadAvatarUrl || metadataLead.avatarUrl || metadataLead.photoUrl || "").trim();
+	        const projectPermissionSet = normalizePlaygroundPermissionSet(project.permissionSet || metadata?.permissionSet, "project");
 
-	        return {
-	          ...draft,
+		        return {
+		          ...draft,
 	          ...project,
           id: typeof project.id === "string" ? project.id : draft.id,
           name: resolvedProjectName,
@@ -53269,23 +53653,25 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 	          projectRules,
 	          missionControl,
           leadUserId,
-          leadName,
-          leadEmail,
-          leadAvatarUrl,
-	          metadata: {
-	            ...(metadata && typeof metadata === "object" ? metadata : {}),
-	            ...buildPlaygroundProjectBlueprintMetadata(projectBlueprint),
+	          leadName,
+	          leadEmail,
+	          leadAvatarUrl,
+	          permissionSet: projectPermissionSet,
+		          metadata: {
+		            ...(metadata && typeof metadata === "object" ? metadata : {}),
+		            ...buildPlaygroundProjectBlueprintMetadata(projectBlueprint),
             leadUserId,
             leadName,
             leadEmail,
             leadAvatarUrl,
             lead: {
               userId: leadUserId,
-              name: leadName,
-              email: leadEmail,
-              avatarUrl: leadAvatarUrl,
-            },
-	          },
+	              name: leadName,
+	              email: leadEmail,
+	              avatarUrl: leadAvatarUrl,
+	            },
+	            permissionSet: projectPermissionSet,
+		          },
           summary: {
             ...buildEmptyPlaygroundProjectSummary(),
             environmentsCount: Number(summary.environmentsCount) || 0,
@@ -53674,7 +54060,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 	          || hasOwnProjectField(rawPrimaryMetadata, "projectRules");
 	        const primaryHasMissionControl = hasOwnProjectField(primaryProject, "missionControl")
 	          || hasOwnProjectField(rawPrimaryMetadata, "missionControl");
-        const primaryHasWallpaper = hasOwnProjectField(primaryProject, "wallpaperId")
+	        const primaryHasPermissionSet = hasOwnProjectField(primaryProject, "permissionSet")
+	          || hasOwnProjectField(rawPrimaryMetadata, "permissionSet");
+	        const primaryHasWallpaper = hasOwnProjectField(primaryProject, "wallpaperId")
           || hasOwnProjectField(rawPrimaryMetadata, "wallpaperId");
         const primaryHasIcon = hasOwnProjectField(primaryProject, "icon")
           || hasOwnProjectField(rawPrimaryMetadata, "icon");
@@ -53699,8 +54087,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           : normalizedFallback.defaultEnvironmentId;
 	        const mergedAttachments = primaryHasAttachments ? normalizedPrimary.attachments : normalizedFallback.attachments;
 	        const mergedConnectors = primaryHasConnectors ? normalizedPrimary.connectors : normalizedFallback.connectors;
-	        const mergedProjectRules = primaryHasProjectRules ? normalizedPrimary.projectRules : normalizedFallback.projectRules;
-	        const primaryMissionControlIsMeaningful = hasMeaningfulPlaygroundProjectMissionControlRecord(normalizedPrimary.missionControl);
+		        const mergedProjectRules = primaryHasProjectRules ? normalizedPrimary.projectRules : normalizedFallback.projectRules;
+		        const mergedPermissionSet = primaryHasPermissionSet ? normalizedPrimary.permissionSet : normalizedFallback.permissionSet;
+		        const primaryMissionControlIsMeaningful = hasMeaningfulPlaygroundProjectMissionControlRecord(normalizedPrimary.missionControl);
 	        const fallbackMissionControlIsMeaningful = hasMeaningfulPlaygroundProjectMissionControlRecord(normalizedFallback.missionControl);
 	        const mergedMissionControl = primaryHasMissionControl
 	          ? (primaryMissionControlIsMeaningful || !fallbackMissionControlIsMeaningful
@@ -53758,8 +54147,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           defaultEnvironmentId: mergedDefaultEnvironmentId,
 	          attachments: mergedAttachments,
 	          connectors: mergedConnectors,
-	          projectRules: mergedProjectRules,
-	          missionControl: mergedMissionControl,
+		          projectRules: mergedProjectRules,
+		          permissionSet: mergedPermissionSet,
+		          missionControl: mergedMissionControl,
 	          metadata: {
             ...mergedMetadata,
             ...buildPlaygroundProjectBlueprintMetadata(mergedBlueprint),
@@ -53773,8 +54163,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
             defaultEnvironmentId: mergedDefaultEnvironmentId,
 	            attachments: mergedAttachments,
 	            connectors: hasPlaygroundTaskConnectorSelections(mergedConnectors) ? mergedConnectors : null,
-	            projectRules: mergedProjectRules,
-	            missionControl: mergedMissionControl,
+		            projectRules: mergedProjectRules,
+		            permissionSet: mergedPermissionSet,
+		            missionControl: mergedMissionControl,
 	          },
           summary: {
             ...buildEmptyPlaygroundProjectSummary(),
@@ -92537,61 +92928,229 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             });
         }
 
+        function updateAgentPermissionRingAccess(ringId, access) {
+          const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "");
+          if (!normalizedRingId) {
+            return;
+          }
+          const nextAccess = normalizePlaygroundPermissionAccess(access);
+          updateDraftAgent((current) => {
+            const currentPermissionSet = normalizePlaygroundPermissionSet(current?.permissionSet, "agent");
+            const currentRings = currentPermissionSet.rings || createPlaygroundDefaultPermissionRings();
+            const currentRingPolicy = currentRings[normalizedRingId] || {
+              defaultAccess: getPlaygroundPermissionRingDefinition(normalizedRingId).defaultAccess,
+            };
+            return {
+              ...current,
+              permissionSet: {
+                ...currentPermissionSet,
+                version: 1,
+                subjectType: "agent",
+                rings: {
+                  ...currentRings,
+                  [normalizedRingId]: {
+                    ...currentRingPolicy,
+                    defaultAccess: nextAccess,
+                  },
+                },
+              },
+            };
+          });
+        }
+
+        function updateAgentPermissionActionRing(actionId, ringId) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition) {
+            return;
+          }
+          const nextRingId = normalizePlaygroundPermissionRingId(ringId, actionDefinition.ringId);
+          updateDraftAgent((current) => {
+            const currentPermissionSet = normalizePlaygroundPermissionSet(current?.permissionSet, "agent");
+            const currentActions = currentPermissionSet.actions || createPlaygroundDefaultPermissionActions();
+            const currentActionPolicy = currentActions[actionDefinition.id] || {
+              ringId: actionDefinition.ringId,
+            };
+            return {
+              ...current,
+              permissionSet: {
+                ...currentPermissionSet,
+                version: 1,
+                subjectType: "agent",
+                actions: {
+                  ...currentActions,
+                  [actionDefinition.id]: {
+                    ...currentActionPolicy,
+                    ringId: nextRingId,
+                  },
+                },
+              },
+            };
+          });
+        }
+
+        function updateAgentPermissionActionAccess(actionId, access) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition) {
+            return;
+          }
+          const shouldInherit = !String(access || "").trim();
+          const nextAccess = shouldInherit ? "" : normalizePlaygroundPermissionAccess(access);
+          updateDraftAgent((current) => {
+            const currentPermissionSet = normalizePlaygroundPermissionSet(current?.permissionSet, "agent");
+            const currentActions = currentPermissionSet.actions || createPlaygroundDefaultPermissionActions();
+            const currentActionPolicy = currentActions[actionDefinition.id] || {
+              ringId: actionDefinition.ringId,
+            };
+            const nextPolicy = {
+              ...currentActionPolicy,
+              ringId: normalizePlaygroundPermissionRingId(currentActionPolicy.ringId, actionDefinition.ringId),
+            };
+            if (shouldInherit) {
+              delete nextPolicy.access;
+            } else {
+              nextPolicy.access = nextAccess;
+            }
+            return {
+              ...current,
+              permissionSet: {
+                ...currentPermissionSet,
+                version: 1,
+                subjectType: "agent",
+                actions: {
+                  ...currentActions,
+                  [actionDefinition.id]: nextPolicy,
+                },
+              },
+            };
+          });
+        }
+
         function getAgentPermissionAccessLabel(access) {
           return PLAYGROUND_PERMISSION_ACCESS_OPTIONS.find((option) => option.id === access)?.label || "Custom";
         }
 
         function getAgentPermissionSummary(permissionSet) {
           const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "agent");
-          const resourceAccessValues = PLAYGROUND_PERMISSION_RESOURCE_TYPES.map((resourceType) => {
-            const resourcePolicy = normalizedPermissionSet.resources?.[resourceType] || null;
-            return normalizePlaygroundPermissionAccess(
-              resourcePolicy?.defaultAccess,
-              normalizedPermissionSet.defaultAccess
-            );
-          });
-          const uniqueAccessValues = Array.from(new Set(resourceAccessValues));
-          if (uniqueAccessValues.length === 1) {
-            return getAgentPermissionAccessLabel(uniqueAccessValues[0]);
-          }
-          return "Custom access";
+          return PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) =>
+            ring.shortLabel + ": " + getAgentPermissionAccessLabel(getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id))
+          ).join(" / ");
         }
 
-        function renderAgentPermissionsList(permissionSet, onAccessChange = updateAgentPermissionAccess) {
-          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "agent");
+        function renderAgentPermissionAccessSelect({ value, onChange, ariaLabel, includeInherit = false, inheritedAccess = "", disabled = false }) {
+          const selectedValue = includeInherit && !value ? "" : normalizePlaygroundPermissionAccess(value);
+          return React.createElement("label", {
+              className: "playground-agents-permission-select-shell",
+              "aria-label": ariaLabel,
+            },
+            React.createElement("select", {
+                className: "playground-agents-permission-select",
+                value: selectedValue,
+                onChange: (event) => onChange(event.target.value),
+                disabled: Boolean(disabled),
+              },
+              includeInherit
+                ? React.createElement("option", { value: "" }, "Inherit " + getAgentPermissionAccessLabel(inheritedAccess))
+                : null,
+              PLAYGROUND_PERMISSION_ACCESS_OPTIONS.map((option) =>
+                React.createElement("option", { key: option.id, value: option.id }, option.label)
+              )
+            )
+          );
+        }
+
+        function renderAgentPermissionRingSelect({ value, onChange, ariaLabel, disabled = false }) {
+          return React.createElement("label", {
+              className: "playground-agents-permission-select-shell is-ring",
+              "aria-label": ariaLabel,
+            },
+            React.createElement("select", {
+                className: "playground-agents-permission-select",
+                value: normalizePlaygroundPermissionRingId(value, "ring_1"),
+                onChange: (event) => onChange(event.target.value),
+                disabled: Boolean(disabled),
+              },
+              PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) =>
+                React.createElement("option", { key: ring.id, value: ring.id }, ring.label + " · " + ring.shortLabel)
+              )
+            )
+          );
+        }
+
+        function renderAgentPermissionsList(permissionSet, handlers = {}) {
+          const subjectType = normalizePlaygroundPermissionSubjectType(handlers.subjectType || permissionSet?.subjectType, "agent");
+          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, subjectType);
+          const isDisabled = Boolean(handlers.disabled);
+          const onRingAccessChange = !isDisabled && typeof handlers.onRingAccessChange === "function"
+            ? handlers.onRingAccessChange
+            : updateAgentPermissionRingAccess;
+          const onActionRingChange = !isDisabled && typeof handlers.onActionRingChange === "function"
+            ? handlers.onActionRingChange
+            : updateAgentPermissionActionRing;
+          const onActionAccessChange = !isDisabled && typeof handlers.onActionAccessChange === "function"
+            ? handlers.onActionAccessChange
+            : updateAgentPermissionActionAccess;
+
           return React.createElement("div", { className: "playground-agents-permissions-list" },
-            PLAYGROUND_PERMISSION_RESOURCE_TYPES.map((resourceType) => {
-              const resourceCopy = PLAYGROUND_PERMISSION_RESOURCE_LABELS[resourceType] || {
-                title: resourceType,
-                description: "",
-              };
-              const resourcePolicy = normalizedPermissionSet.resources?.[resourceType] || null;
-              const selectedAccess = normalizePlaygroundPermissionAccess(
-                resourcePolicy?.defaultAccess,
-                normalizedPermissionSet.defaultAccess
+            PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
+              const ringAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
+              const ringActions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter((action) =>
+                getPlaygroundPermissionActionRingId(normalizedPermissionSet, action) === ring.id
               );
-              return React.createElement("div", { className: "playground-agents-permission-row", key: resourceType },
-                React.createElement("div", { className: "playground-agents-permission-copy" },
-                  React.createElement("div", { className: "playground-agents-permission-title" }, resourceCopy.title),
-                  React.createElement("div", { className: "playground-agents-permission-description" }, resourceCopy.description)
+              return React.createElement("section", { className: "playground-agents-permission-ring-card", key: ring.id },
+                React.createElement("div", { className: "playground-agents-permission-ring-header" },
+                  React.createElement("div", { className: "playground-agents-permission-ring-kicker" },
+                    React.createElement("span", { className: "playground-agents-permission-ring-index" }, String(ring.number)),
+                    React.createElement("span", null, ring.label + " · " + ring.shortLabel)
+                  ),
+                  renderAgentPermissionAccessSelect({
+	                    value: ringAccess,
+	                    onChange: (nextAccess) => onRingAccessChange(ring.id, nextAccess),
+	                    ariaLabel: ring.label + " default permissions",
+	                    disabled: isDisabled,
+	                  })
                 ),
-                React.createElement("div", {
-                    className: "playground-agents-permission-options",
-                  },
-                  React.createElement("label", {
-                      className: "playground-agents-permission-select-shell",
-                      "aria-label": resourceCopy.title + " permissions",
-                    },
-                    React.createElement("select", {
-                        className: "playground-agents-permission-select",
-                        value: selectedAccess,
-                        onChange: (event) => onAccessChange(resourceType, event.target.value),
-                      },
-                      PLAYGROUND_PERMISSION_ACCESS_OPTIONS.map((option) =>
-                        React.createElement("option", { key: option.id, value: option.id }, option.label)
+                React.createElement("div", { className: "playground-agents-permission-ring-copy" },
+                  React.createElement("div", { className: "playground-agents-permission-ring-title" }, ring.title),
+                  React.createElement("div", { className: "playground-agents-permission-ring-description" }, ring.description)
+                ),
+                React.createElement("div", { className: "playground-agents-permission-actions" },
+                  ringActions.map((action) => {
+                    const actionPolicy = normalizedPermissionSet.actions?.[action.id] || {};
+                    const actionRingId = getPlaygroundPermissionActionRingId(normalizedPermissionSet, action);
+                    const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, actionRingId);
+                    const explicitAccess = typeof actionPolicy.access === "string" ? actionPolicy.access : "";
+                    const effectiveAccess = getPlaygroundPermissionActionAccess(normalizedPermissionSet, action);
+                    return React.createElement("div", { className: "playground-agents-permission-action-row", key: action.id },
+                      React.createElement("div", { className: "playground-agents-permission-copy" },
+                        React.createElement("div", { className: "playground-agents-permission-title" },
+                          action.label,
+                          explicitAccess
+                            ? React.createElement("span", { className: "playground-agents-permission-action-badge" }, "Override")
+                            : null
+                        ),
+                        React.createElement("div", { className: "playground-agents-permission-description" }, action.description)
+                      ),
+                      React.createElement("div", { className: "playground-agents-permission-options" },
+                        renderAgentPermissionRingSelect({
+	                          value: actionRingId,
+	                          onChange: (nextRingId) => onActionRingChange(action.id, nextRingId),
+	                          ariaLabel: action.label + " ring",
+	                          disabled: isDisabled,
+	                        }),
+	                        renderAgentPermissionAccessSelect({
+	                          value: explicitAccess,
+	                          inheritedAccess,
+	                          includeInherit: true,
+	                          onChange: (nextAccess) => onActionAccessChange(action.id, nextAccess),
+	                          ariaLabel: action.label + " permissions",
+	                          disabled: isDisabled,
+	                        }),
+                        React.createElement("span", { className: "playground-agents-permission-effective-access" },
+                          getAgentPermissionAccessLabel(effectiveAccess)
+                        )
                       )
-                    )
-                  )
+                    );
+                  })
                 )
               );
             })
@@ -93941,7 +94500,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               ),
               React.createElement("div", { className: "playground-agent-composer-modal-body" },
                 React.createElement("div", { className: "playground-agents-permissions-card" },
-                  renderAgentPermissionsList(draftAgent?.permissionSet, updateAgentPermissionAccess)
+                  renderAgentPermissionsList(draftAgent?.permissionSet)
                 )
               ),
               React.createElement("div", { className: "playground-tasks-project-modal-actions" },
@@ -98088,7 +98647,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             )
           );
 
-          const agentPermissionsContent = renderAgentPermissionsList(draftAgent.permissionSet, updateAgentPermissionAccess);
+          const agentPermissionsContent = renderAgentPermissionsList(draftAgent.permissionSet);
           const agentPermissionsSection = React.createElement("section", {
               className: "playground-agents-permissions-section",
               key: "permissions",
@@ -115255,13 +115814,17 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             const nextLeadName = String(projectDraft.leadName || projectDraftMetadata.leadName || projectDraftLead.name || currentUserName || "").trim();
             const nextLeadEmail = String(projectDraft.leadEmail || projectDraftMetadata.leadEmail || projectDraftLead.email || currentUserEmail || "").trim();
             const nextLeadAvatarUrl = String(projectDraft.leadAvatarUrl || projectDraftMetadata.leadAvatarUrl || projectDraftLead.avatarUrl || projectDraftLead.photoUrl || currentUserAvatarUrl || "").trim();
-            const nextLead = {
-              userId: nextLeadUserId,
-              name: nextLeadName,
-              email: nextLeadEmail,
-              avatarUrl: nextLeadAvatarUrl,
-            };
-            const response = await fetch(isEditMode
+	            const nextLead = {
+	              userId: nextLeadUserId,
+	              name: nextLeadName,
+	              email: nextLeadEmail,
+	              avatarUrl: nextLeadAvatarUrl,
+	            };
+	            const normalizedProjectPermissionSet = normalizePlaygroundPermissionSet(
+	              projectDraft.permissionSet || projectDraftMetadata.permissionSet,
+	              "project"
+	            );
+	            const response = await fetch(isEditMode
               ? backendUrl + "/projects/" + encodeURIComponent(projectDraft.id)
               : backendUrl + "/projects", {
               method: isEditMode ? "PATCH" : "POST",
@@ -115278,9 +115841,10 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                 defaultEnvironmentId: projectDraft.defaultEnvironmentId || undefined,
                 leadUserId: nextLeadUserId || undefined,
                 leadName: nextLeadName || undefined,
-                leadEmail: nextLeadEmail || undefined,
-                leadAvatarUrl: nextLeadAvatarUrl || undefined,
-                attachments: normalizedProjectAttachments,
+	                leadEmail: nextLeadEmail || undefined,
+	                leadAvatarUrl: nextLeadAvatarUrl || undefined,
+	                permissionSet: normalizedProjectPermissionSet,
+	                attachments: normalizedProjectAttachments,
                 connectors: normalizedProjectConnectors,
                 metadata: {
                   ...(projectDraft.metadata && typeof projectDraft.metadata === "object" ? projectDraft.metadata : {}),
@@ -115299,9 +115863,10 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   lead: nextLead,
 	                  defaultEnvironmentId: projectDraft.defaultEnvironmentId || null,
 	                  attachments: normalizedProjectAttachments,
-	                  connectors: normalizedProjectConnectors,
-	                  projectRules: String(projectDraft.projectRules || ""),
-	                  ...buildPlaygroundProjectMissionControlMetadataFragment(projectDraftMetadataSource),
+		                  connectors: normalizedProjectConnectors,
+		                  projectRules: String(projectDraft.projectRules || ""),
+		                  permissionSet: normalizedProjectPermissionSet,
+		                  ...buildPlaygroundProjectMissionControlMetadataFragment(projectDraftMetadataSource),
 	                },
 	              }),
             });
@@ -115318,10 +115883,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               wallpaperId: nextWallpaperId,
               useCardBackgroundAsWallpaper: nextUseCardBackgroundAsWallpaper,
               leadUserId: nextLeadUserId,
-              leadName: nextLeadName,
-              leadEmail: nextLeadEmail,
-              leadAvatarUrl: nextLeadAvatarUrl,
-              metadata: {
+	              leadName: nextLeadName,
+	              leadEmail: nextLeadEmail,
+	              leadAvatarUrl: nextLeadAvatarUrl,
+	              permissionSet: normalizedProjectPermissionSet,
+	              metadata: {
                 ...(projectDraft.metadata && typeof projectDraft.metadata === "object" ? projectDraft.metadata : {}),
                 ...projectBlueprintMetadata,
                 name: nextName,
@@ -115334,9 +115900,10 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   leadName: nextLeadName,
                   leadEmail: nextLeadEmail,
                   leadAvatarUrl: nextLeadAvatarUrl,
-                  lead: nextLead,
-	                projectRules: String(projectDraft.projectRules || ""),
-	                ...buildPlaygroundProjectMissionControlMetadataFragment(projectDraftMetadataSource),
+	                lead: nextLead,
+		                projectRules: String(projectDraft.projectRules || ""),
+		                permissionSet: normalizedProjectPermissionSet,
+		                ...buildPlaygroundProjectMissionControlMetadataFragment(projectDraftMetadataSource),
 	              },
 	            });
             if (!savedProject?.id) {
@@ -115914,10 +116481,14 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           const existingProjectMetadata = existingProject?.metadata && typeof existingProject.metadata === "object" && !Array.isArray(existingProject.metadata)
             ? existingProject.metadata
             : {};
-	          const normalizedProjectAttachments = normalizePlaygroundTaskAttachmentList(normalizedProject.attachments);
-	          const normalizedProjectConnectors = normalizePlaygroundTaskConnectorSelections(normalizedProject.connectors);
-	          const normalizedProjectRules = String(normalizedProject.projectRules || "");
-	          const hasMetadataMissionControlOverride = metadataOverrides
+		          const normalizedProjectAttachments = normalizePlaygroundTaskAttachmentList(normalizedProject.attachments);
+		          const normalizedProjectConnectors = normalizePlaygroundTaskConnectorSelections(normalizedProject.connectors);
+		          const normalizedProjectRules = String(normalizedProject.projectRules || "");
+		          const normalizedProjectPermissionSet = normalizePlaygroundPermissionSet(
+		            normalizedProject.permissionSet || normalizedProject.metadata?.permissionSet,
+		            "project"
+		          );
+		          const hasMetadataMissionControlOverride = metadataOverrides
 	            && typeof metadataOverrides === "object"
 	            && Object.prototype.hasOwnProperty.call(metadataOverrides, "missionControl");
 	          const hasKnownMissionControlMetadata = hasMetadataMissionControlOverride
@@ -115949,10 +116520,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             wallpaperId: getPlaygroundProjectWallpaperId(normalizedProject.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
             useCardBackgroundAsWallpaper: normalizedProject.useCardBackgroundAsWallpaper !== false,
             defaultEnvironmentId: normalizedProject.defaultEnvironmentId || null,
-            attachments: normalizedProjectAttachments,
-            connectors: hasPlaygroundTaskConnectorSelections(normalizedProjectConnectors) ? normalizedProjectConnectors : null,
-            projectRules: normalizedProjectRules,
-          };
+	            attachments: normalizedProjectAttachments,
+	            connectors: hasPlaygroundTaskConnectorSelections(normalizedProjectConnectors) ? normalizedProjectConnectors : null,
+	            projectRules: normalizedProjectRules,
+	            permissionSet: normalizedProjectPermissionSet,
+	          };
           if (hasKnownMissionControlMetadata || hasMeaningfulPlaygroundProjectMissionControlRecord(normalizedProjectMissionControl)) {
             metadataPayload.missionControl = normalizedProjectMissionControl;
           }
@@ -115960,10 +116532,194 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	            name: normalizedProject.name || "Project",
 	            description: normalizedProject.description,
             color: normalizedProject.color || getPlaygroundProjectAccent(normalizedProject, projectIndex),
-            defaultEnvironmentId: normalizedProject.defaultEnvironmentId || undefined,
-            attachments: normalizedProjectAttachments,
-            metadata: metadataPayload,
-	          };
+	            defaultEnvironmentId: normalizedProject.defaultEnvironmentId || undefined,
+	            permissionSet: normalizedProjectPermissionSet,
+	            attachments: normalizedProjectAttachments,
+	            metadata: metadataPayload,
+		          };
+		        }
+
+	        function applyProjectPermissionSetLocally(projectId, permissionSet) {
+	          const normalizedProjectId = String(projectId || "").trim();
+	          if (!normalizedProjectId) {
+	            return;
+	          }
+	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "project");
+	          const mergePermissionSet = (project) => normalizePlaygroundProjectRecord({
+	            ...(project && typeof project === "object" ? project : {}),
+	            permissionSet: normalizedPermissionSet,
+	            metadata: {
+	              ...(project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata) ? project.metadata : {}),
+	              permissionSet: normalizedPermissionSet,
+	            },
+	          });
+
+	          setProjects((current) => current.map((project) =>
+	            project.id === normalizedProjectId ? mergePermissionSet(project) : project
+	          ));
+	          setProjectDraft((current) =>
+	            current?.id === normalizedProjectId ? mergePermissionSet(current) : current
+	          );
+	          setSelectedProjectDetail((current) => {
+	            if (current?.project?.id !== normalizedProjectId) {
+	              return current;
+	            }
+	            return {
+	              ...current,
+	              project: mergePermissionSet(current.project),
+	            };
+	          });
+	        }
+
+	        async function persistProjectPermissionSet(nextPermissionSet) {
+	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+	          const normalizedProjectId = String(normalizedProject.id || "").trim();
+	          if (!normalizedProjectId || normalizedProjectId === PLAYGROUND_PROJECT_DRAFT_ID) {
+	            return null;
+	          }
+	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(nextPermissionSet, "project");
+	          const nextProjectRecord = normalizePlaygroundProjectRecord({
+	            ...normalizedProject,
+	            permissionSet: normalizedPermissionSet,
+	            metadata: {
+	              ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),
+	              permissionSet: normalizedPermissionSet,
+	            },
+	          });
+	          const savePayload = buildPlaygroundProjectSavePayload(nextProjectRecord, {
+	            permissionSet: normalizedPermissionSet,
+	          });
+
+	          const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
+	            method: "PATCH",
+	            headers: {
+	              ...requestHeaders,
+	              "Content-Type": "application/json",
+	            },
+	            body: JSON.stringify(savePayload),
+	          });
+	          const data = await response.json().catch(() => ({}));
+	          if (!response.ok) {
+	            throw new Error(data?.message || data?.error || "Failed to update project permissions.");
+	          }
+	          const updatedProject = getPlaygroundProjectResponseRecord(data, nextProjectRecord);
+	          if (updatedProject?.id) {
+	            commitLocalProjectRecord(updatedProject, {
+	              summary: updatedProject.summary || selectedProjectSummary,
+	              environments: selectedProjectEnvironments,
+	              recentThreads: selectedProjectRecentThreads,
+	              threads: selectedProjectRecentThreads,
+	              selectImmediately: true,
+	            });
+	          }
+	          return updatedProject;
+	        }
+
+	        function updateProjectPermissionSet(updater) {
+	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+	          const normalizedProjectId = String(normalizedProject.id || "").trim();
+	          const currentPermissionSet = normalizePlaygroundPermissionSet(
+	            normalizedProject.permissionSet || normalizedProject.metadata?.permissionSet,
+	            "project"
+	          );
+	          const nextPermissionSet = normalizePlaygroundPermissionSet(
+	            typeof updater === "function" ? updater(currentPermissionSet) : updater,
+	            "project"
+	          );
+	          if (normalizedProjectId) {
+	            applyProjectPermissionSetLocally(normalizedProjectId, nextPermissionSet);
+	          }
+	          void persistProjectPermissionSet(nextPermissionSet).catch((error) => {
+	            console.warn("Failed to save project permissions", error);
+	            setProjectSaveState({
+	              isSaving: false,
+	              error: error?.message || "Failed to save project permissions.",
+	            });
+	          });
+	        }
+
+	        function updateProjectPermissionRingAccess(ringId, nextAccess) {
+	          const ringDefinition = getPlaygroundPermissionRingDefinition(ringId);
+	          updateProjectPermissionSet((currentPermissionSet) => {
+	            const currentRings = currentPermissionSet.rings && typeof currentPermissionSet.rings === "object"
+	              ? currentPermissionSet.rings
+	              : {};
+	            const currentRingPolicy = currentRings[ringDefinition.id] || {
+	              defaultAccess: ringDefinition.defaultAccess,
+	            };
+	            return {
+	              ...currentPermissionSet,
+	              version: 1,
+	              subjectType: "project",
+	              rings: {
+	                ...currentRings,
+	                [ringDefinition.id]: {
+	                  ...currentRingPolicy,
+	                  defaultAccess: normalizePlaygroundPermissionAccess(nextAccess, ringDefinition.defaultAccess),
+	                },
+	              },
+	            };
+	          });
+	        }
+
+	        function updateProjectPermissionActionRing(actionId, nextRingId) {
+	          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+	          if (!actionDefinition) {
+	            return;
+	          }
+	          updateProjectPermissionSet((currentPermissionSet) => {
+	            const currentActions = currentPermissionSet.actions && typeof currentPermissionSet.actions === "object"
+	              ? currentPermissionSet.actions
+	              : {};
+	            const currentActionPolicy = currentActions[actionDefinition.id] || {
+	              ringId: actionDefinition.ringId,
+	            };
+	            return {
+	              ...currentPermissionSet,
+	              version: 1,
+	              subjectType: "project",
+	              actions: {
+	                ...currentActions,
+	                [actionDefinition.id]: {
+	                  ...currentActionPolicy,
+	                  ringId: normalizePlaygroundPermissionRingId(nextRingId, actionDefinition.ringId),
+	                },
+	              },
+	            };
+	          });
+	        }
+
+	        function updateProjectPermissionActionAccess(actionId, nextAccess) {
+	          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+	          if (!actionDefinition) {
+	            return;
+	          }
+	          updateProjectPermissionSet((currentPermissionSet) => {
+	            const currentActions = currentPermissionSet.actions && typeof currentPermissionSet.actions === "object"
+	              ? currentPermissionSet.actions
+	              : {};
+	            const currentActionPolicy = currentActions[actionDefinition.id] || {
+	              ringId: actionDefinition.ringId,
+	            };
+	            const nextPolicy = {
+	              ...currentActionPolicy,
+	              ringId: normalizePlaygroundPermissionRingId(currentActionPolicy.ringId, actionDefinition.ringId),
+	            };
+	            if (!nextAccess) {
+	              delete nextPolicy.access;
+	            } else {
+	              nextPolicy.access = normalizePlaygroundPermissionAccess(nextAccess);
+	            }
+	            return {
+	              ...currentPermissionSet,
+	              version: 1,
+	              subjectType: "project",
+	              actions: {
+	                ...currentActions,
+	                [actionDefinition.id]: nextPolicy,
+	              },
+	            };
+	          });
 	        }
 
         function buildMissionControlRecordForSave(overrides = {}) {
@@ -130412,6 +131168,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return rawMessage || fallback;
         }
 
+        function normalizeTeamPageTeamRecord(team) {
+          const source = team && typeof team === "object" && !Array.isArray(team) ? team : {};
+          return {
+            ...source,
+            permissionSet: normalizePlaygroundPermissionSet(source.permissionSet, "team"),
+          };
+        }
+
         async function loadTeamPageData(options = {}) {
           if (!hasRealAccess) {
             return;
@@ -130438,7 +131202,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               }
               throw new Error(getTeamPageApiErrorMessage(data));
             }
-            const teams = Array.isArray(data?.data) ? data.data : Array.isArray(data?.teams) ? data.teams : [];
+            const teams = (Array.isArray(data?.data) ? data.data : Array.isArray(data?.teams) ? data.teams : [])
+              .map((team) => normalizeTeamPageTeamRecord(team));
             setTeamPageTeams(teams);
             const selectedTeam = requestedTeamId
               ? teams.find((team) => team.id === requestedTeamId) || null
@@ -130721,6 +131486,136 @@ ${PROJECT_OVERVIEW_SCRIPT}
           } finally {
             setTeamPageActionId("");
           }
+        }
+
+        function applyTeamPermissionSetLocally(teamId, permissionSet) {
+          const normalizedTeamId = String(teamId || "").trim();
+          if (!normalizedTeamId) {
+            return;
+          }
+          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "team");
+          setTeamPageTeams((current) => (Array.isArray(current) ? current : []).map((team) =>
+            String(team?.id || "") === normalizedTeamId
+              ? normalizeTeamPageTeamRecord({
+                  ...team,
+                  permissionSet: normalizedPermissionSet,
+                })
+              : normalizeTeamPageTeamRecord(team)
+          ));
+        }
+
+        async function persistTeamPermissionSet(teamId, permissionSet) {
+          const normalizedTeamId = String(teamId || "").trim();
+          if (!normalizedTeamId) {
+            return null;
+          }
+          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "team");
+          const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(normalizedTeamId), {
+            method: "PATCH",
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+              ...requestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ permissionSet: normalizedPermissionSet }),
+          }, 8000);
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to update team permissions.");
+          }
+          const updatedTeam = normalizeTeamPageTeamRecord(data?.data || data?.team || data);
+          if (updatedTeam?.id) {
+            setTeamPageTeams((current) => (Array.isArray(current) ? current : []).map((team) =>
+              String(team?.id || "") === String(updatedTeam.id || "") ? updatedTeam : normalizeTeamPageTeamRecord(team)
+            ));
+          }
+          return updatedTeam;
+        }
+
+        function updateTeamPermissionSet(updater) {
+          const teamId = String(teamPageSelectedTeamId || "").trim();
+          const selectedTeam = teamPageTeams.find((team) => String(team?.id || "") === teamId) || null;
+          if (!teamId || !selectedTeam) {
+            return;
+          }
+          const currentPermissionSet = normalizePlaygroundPermissionSet(selectedTeam.permissionSet, "team");
+          const nextPermissionSet = normalizePlaygroundPermissionSet(
+            typeof updater === "function" ? updater(currentPermissionSet) : updater,
+            "team"
+          );
+          applyTeamPermissionSetLocally(teamId, nextPermissionSet);
+          setTeamPageActionId("team-permissions");
+          setTeamPageError("");
+          void persistTeamPermissionSet(teamId, nextPermissionSet)
+            .catch((error) => {
+              applyTeamPermissionSetLocally(teamId, currentPermissionSet);
+              setTeamPageError(error instanceof Error ? error.message : "Failed to update team permissions.");
+            })
+            .finally(() => {
+              setTeamPageActionId((current) => current === "team-permissions" ? "" : current);
+            });
+        }
+
+        function updateTeamPermissionRingAccess(ringId, nextAccess) {
+          const normalizedRingId = String(ringId || "").trim();
+          const normalizedAccess = normalizePlaygroundPermissionAccess(nextAccess);
+          if (!normalizedRingId) {
+            return;
+          }
+          updateTeamPermissionSet((currentPermissionSet) => ({
+            ...currentPermissionSet,
+            rings: {
+              ...(currentPermissionSet.rings || {}),
+              [normalizedRingId]: {
+                ...((currentPermissionSet.rings || {})[normalizedRingId] || {}),
+                defaultAccess: normalizedAccess,
+              },
+            },
+          }));
+        }
+
+        function updateTeamPermissionActionRing(actionId, nextRingId) {
+          const normalizedActionId = String(actionId || "").trim();
+          const normalizedRingId = String(nextRingId || "").trim();
+          if (!normalizedActionId || !normalizedRingId) {
+            return;
+          }
+          updateTeamPermissionSet((currentPermissionSet) => {
+            const existingAction = (currentPermissionSet.actions || {})[normalizedActionId] || {};
+            return {
+              ...currentPermissionSet,
+              actions: {
+                ...(currentPermissionSet.actions || {}),
+                [normalizedActionId]: {
+                  ...existingAction,
+                  ringId: normalizedRingId,
+                  access: existingAction.access || getPlaygroundPermissionRingAccess(currentPermissionSet, normalizedRingId),
+                },
+              },
+            };
+          });
+        }
+
+        function updateTeamPermissionActionAccess(actionId, nextAccess) {
+          const normalizedActionId = String(actionId || "").trim();
+          const normalizedAccess = normalizePlaygroundPermissionAccess(nextAccess);
+          if (!normalizedActionId) {
+            return;
+          }
+          updateTeamPermissionSet((currentPermissionSet) => {
+            const existingAction = (currentPermissionSet.actions || {})[normalizedActionId] || {};
+            return {
+              ...currentPermissionSet,
+              actions: {
+                ...(currentPermissionSet.actions || {}),
+                [normalizedActionId]: {
+                  ...existingAction,
+                  ringId: existingAction.ringId || getPlaygroundPermissionActionRingId(currentPermissionSet, normalizedActionId),
+                  access: normalizedAccess,
+                },
+              },
+            };
+          });
         }
 
         async function handleDeleteTeam() {
@@ -137713,7 +138608,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
 
           try {
-            const response = await fetch(proxyBackendBase + "/agents", {
+            const response = await fetch(proxyBackendBase + "/agents?limit=200", {
               method: "GET",
               headers: authRequestHeaders,
             });
@@ -146330,6 +147225,29 @@ ${PROJECT_OVERVIEW_SCRIPT}
               : renderEmpty("No resources shared yet.")
           );
 
+          const renderPermissionsTab = () => {
+            const teamPermissionSet = normalizePlaygroundPermissionSet(selectedTeam?.permissionSet, "team");
+            return React.createElement("div", { className: "playground-team-detail-panel playground-team-permissions-panel" },
+              React.createElement("div", { className: "playground-plugins-section-header playground-team-permissions-header" },
+                React.createElement("div", { className: "playground-plugins-section-copy" },
+                  React.createElement("h2", { className: "playground-plugins-section-title" }, "Permission rings"),
+                  React.createElement("p", { className: "playground-plugins-section-description" },
+                    "Team permissions define the default action policy for people in this workspace. Runtime checks still use the strictest applicable rule across agent, project, and team scopes."
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-agents-permissions-card playground-team-permissions-card" },
+                renderAgentPermissionsList(teamPermissionSet, {
+                  subjectType: "team",
+                  disabled: !canManageTeam || teamPageActionId === "team-permissions",
+                  onRingAccessChange: updateTeamPermissionRingAccess,
+                  onActionRingChange: updateTeamPermissionActionRing,
+                  onActionAccessChange: updateTeamPermissionActionAccess,
+                })
+              )
+            );
+          };
+
           return React.createElement("div", { className: "playground-team-page" },
             React.createElement("div", { className: "playground-team-shell" },
               selectedTeam
@@ -146370,6 +147288,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         [
                           { id: "members", label: "Team members" },
                           { id: "resources", label: "Resources" },
+                          { id: "permissions", label: "Permissions" },
                         ].map((tab) =>
                           React.createElement("button", {
                             key: tab.id,
@@ -146384,7 +147303,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     teamPageError
                       ? React.createElement("div", { className: "playground-team-error" }, teamPageError)
                       : null,
-                    teamPageActiveTab === "resources" ? renderResourcesTab() : renderMembersTab()
+                    teamPageActiveTab === "resources"
+                      ? renderResourcesTab()
+                      : teamPageActiveTab === "permissions"
+                        ? renderPermissionsTab()
+                        : renderMembersTab()
                     ,
                     renderRenameTeamModal(),
                     renderInviteTeamModal(),
@@ -147509,6 +148432,32 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setPreferredAgentId(nextAgentId);
           setThreadAgentSelectionOverride(null);
         }, [isFreeComposerAgentPlan, preferredAgentId, runtimeAgentsForComposer]);
+        const metronomeAgentsForComposer = useMemo(() => {
+          const seenAgentIds = new Set();
+          const nextAgents = [];
+          const addAgentOption = (agent) => {
+            if (!agent || typeof agent !== "object") {
+              return;
+            }
+            if (isPlaygroundAgentCreatorAgent(agent) || isPlaygroundMissionControlAgent(agent)) {
+              return;
+            }
+            const option = buildPlaygroundRunnerAgentOption(agent);
+            const optionId = String(option?.id || "").trim();
+            if (!optionId || seenAgentIds.has(optionId)) {
+              return;
+            }
+            seenAgentIds.add(optionId);
+            nextAgents.push(option);
+          };
+
+          (Array.isArray(runtimeAgentsForComposer) ? runtimeAgentsForComposer : []).forEach(addAgentOption);
+          if (hasRealAccess) {
+            (Array.isArray(realAgents) ? realAgents : []).forEach(addAgentOption);
+          }
+
+          return ensurePlaygroundComposerDefaultChoices(nextAgents);
+        }, [hasRealAccess, realAgents, runtimeAgentsForComposer]);
         const closeComposerAgentUpgradeModal = useCallback(() => {
           if (composerAgentUpgradeCheckoutLoading) {
             return;
@@ -150696,13 +151645,22 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (!state) {
             return null;
           }
-          const activeMode = state.editorMode === "runs" ? "runs" : state.editorMode === "code" ? "code" : "edit";
+          const isReadOnly = Boolean(state.readOnly);
+          const activeMode = isReadOnly
+            ? (state.editorMode === "code" ? "code" : "edit")
+            : state.editorMode === "runs" ? "runs" : state.editorMode === "code" ? "code" : "edit";
+          const tabs = isReadOnly
+            ? [
+                { id: "edit", label: "Details" },
+                { id: "code", label: "Code" },
+              ]
+            : [
+                { id: "edit", label: "Edit" },
+                { id: "code", label: "Code" },
+                { id: "runs", label: "Runs" },
+              ];
           return React.createElement("div", { className: "content-mode-switch playground-thread-mode-switch playground-metronome-top-nav-switch", role: "tablist", "aria-label": "Metronome modes" },
-            [
-              { id: "edit", label: "Edit" },
-              { id: "code", label: "Code" },
-              { id: "runs", label: "Runs" },
-            ].map((tab) =>
+            tabs.map((tab) =>
               React.createElement("button", {
                 key: tab.id,
                 type: "button",
@@ -150839,11 +151797,17 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (!state) {
             return null;
           }
-          const menuRows = [
-            { id: "rename", label: "Rename", icon: SquarePen, action: () => metronomeTopNavActionsRef.current?.rename?.() },
-            { id: "duplicate", label: "Duplicate", icon: Copy, action: () => metronomeTopNavActionsRef.current?.duplicate?.() },
-            { id: "delete", label: "Delete", icon: Trash2, action: () => metronomeTopNavActionsRef.current?.delete?.(), danger: true },
-          ];
+          const isReadOnly = Boolean(state.readOnly);
+          const menuRows = isReadOnly
+            ? [
+                { id: "duplicate", label: "Duplicate", icon: Copy, action: () => metronomeTopNavActionsRef.current?.duplicate?.() },
+              ]
+            : [
+                { id: "rename", label: "Rename", icon: SquarePen, action: () => metronomeTopNavActionsRef.current?.rename?.() },
+                { id: "duplicate", label: "Duplicate", icon: Copy, action: () => metronomeTopNavActionsRef.current?.duplicate?.() },
+                { id: "delete", label: "Delete", icon: Trash2, action: () => metronomeTopNavActionsRef.current?.delete?.(), danger: true },
+              ];
+          const workflowId = String(state.workflowId || "").trim();
           return React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-metronome-top-nav-menu-shell", ref: metronomeTopNavMenuRef },
               React.createElement("button", {
@@ -150857,6 +151821,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
               ),
               metronomeTopNavMenuOpen
                 ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-metronome-top-nav-menu" },
+                    workflowId
+                      ? React.createElement("div", { className: "playground-metronome-top-nav-menu-id" },
+                          React.createElement("span", null, "Workflow ID"),
+                          React.createElement("code", null, workflowId)
+                        )
+                      : null,
                     menuRows.map((row) => {
                       const Icon = row.icon;
                       return React.createElement("button", {
@@ -150875,14 +151845,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   )
                 : null
             ),
-            React.createElement("button", {
-              type: "button",
-              className: "playground-top-nav-private-chat-button",
-              onClick: () => metronomeTopNavActionsRef.current?.run?.(),
-            },
-              React.createElement(Play, { strokeWidth: 1.8 }),
-              React.createElement("span", null, "Run")
-            )
+            isReadOnly
+              ? null
+              : React.createElement("button", {
+                  type: "button",
+                  className: "playground-top-nav-private-chat-button",
+                  onClick: () => metronomeTopNavActionsRef.current?.run?.(),
+                },
+                  React.createElement(Play, { strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Run")
+                )
           );
         }
 
@@ -154050,7 +155022,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               topNavActionsRef: metronomeTopNavActionsRef,
                               onNodeDetailOpenChange: setIsMetronomeNodeDetailOpen,
                               inspectorPortalId: "playground-metronome-node-drawer-root",
-                              agents: realAgents,
+                              agents: metronomeAgentsForComposer.map((agent) => (
+                                buildPlaygroundRunnerAgentOption(agent, resolvedComposerAgentId && agent.id === resolvedComposerAgentId ? { isDefault: true } : {})
+                              )),
                               environments: realEnvironments,
                               projects: realProjects,
                               projectFilterId: metronomeProjectFilterId,
@@ -154063,6 +155037,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               backendUrl: proxyBackendBase,
                               apiKey: effectiveApiKey,
                               requestHeaders,
+                              currentUserName: hasSessionAuth ? accountName : "Me",
+                              currentUserEmail: hasSessionAuth ? accountEmail : "",
+                              currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                               onThreadOpen: (threadId, options = {}) => {
                                 const normalizedThreadId = String(threadId || "").trim();
                                 if (!normalizedThreadId) {

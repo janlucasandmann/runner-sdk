@@ -4831,17 +4831,18 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               ? "Mission Control has generated a strategy snapshot for the current project state."
               : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
           const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
-          const activeProjectOverviewHomeTab = projectOverviewHomeTab === "resources" || projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "plugins"
-            ? projectOverviewHomeTab
-            : "general";
+	          const activeProjectOverviewHomeTab = projectOverviewHomeTab === "resources" || projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "plugins" || projectOverviewHomeTab === "permissions"
+	            ? projectOverviewHomeTab
+	            : "general";
           function renderProjectOverviewHomeTabs() {
             const tabs = [
 	              { id: "general", label: "General" },
 	              { id: "resources", label: "Resources" },
-	              { id: "strategy", label: "Strategy" },
-	              { id: "rules", label: "Rules" },
-	              { id: "plugins", label: "Plugins" },
-	            ];
+		              { id: "strategy", label: "Strategy" },
+		              { id: "rules", label: "Rules" },
+		              { id: "plugins", label: "Plugins" },
+		              { id: "permissions", label: "Permissions" },
+		            ];
             return React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs" },
               React.createElement("div", { className: "playground-project-overview-chart-tabs" },
                 tabs.map((tab) =>
@@ -9776,6 +9777,36 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	            );
 	          }
 
+	          function renderProjectOverviewPermissionsPanel() {
+	            const projectPermissionSet = normalizePlaygroundPermissionSet(
+	              projectOverviewDraft?.permissionSet
+	                || projectOverviewDraft?.metadata?.permissionSet
+	                || selectedProject?.permissionSet
+	                || selectedProject?.metadata?.permissionSet,
+	              "project"
+	            );
+	            return React.createElement("section", {
+	                className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-permissions-section",
+	              },
+	              React.createElement("div", { className: "playground-plugins-section-header" },
+	                React.createElement("div", { className: "playground-plugins-section-copy" },
+	                  React.createElement("h2", { className: "playground-plugins-section-title" }, "Permissions"),
+	                  React.createElement("p", { className: "playground-plugins-section-description" },
+	                    "Project permissions define the default ring policy for work in this project. Runtime checks use the strictest policy across project, agent, and team scope."
+	                  )
+	                )
+	              ),
+	              React.createElement("div", { className: "playground-agents-permissions-card" },
+	                renderAgentPermissionsList(projectPermissionSet, {
+	                  subjectType: "project",
+	                  onRingAccessChange: updateProjectPermissionRingAccess,
+	                  onActionRingChange: updateProjectPermissionActionRing,
+	                  onActionAccessChange: updateProjectPermissionActionAccess,
+	                })
+	              )
+	            );
+	          }
+
             const projectOverviewActivePanel = activeProjectOverviewHomeTab === "resources"
                 ? renderProjectOverviewResourcesPanel()
                 : activeProjectOverviewHomeTab === "strategy"
@@ -9784,7 +9815,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     ? renderProjectOverviewRulesPanel()
                     : activeProjectOverviewHomeTab === "plugins"
                       ? renderProjectOverviewPluginsPanel()
-                      : renderProjectOverviewGeneralPanel();
+                      : activeProjectOverviewHomeTab === "permissions"
+                        ? renderProjectOverviewPermissionsPanel()
+                        : renderProjectOverviewGeneralPanel();
 
 	          return React.createElement("div", { className: "playground-tasks-view-section playground-project-overview-view is-" + activeProjectOverviewHomeTab },
             React.createElement("div", { className: "playground-project-overview-hero-shell" },

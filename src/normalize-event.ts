@@ -282,6 +282,17 @@ export class RunnerEventNormalizer {
             eventType: "permission_request",
             metadata: {
               permissionRequestId: this.asString(event.requestId),
+              permissionRing: event.permissionRing === 1 || event.permissionRing === 2 || event.permissionRing === 3
+                ? event.permissionRing
+                : undefined,
+              permissionRingId: this.optionalString(event.permissionRingId),
+              permissionRingLabel: this.optionalString(event.permissionRingLabel),
+              permissionRingShortLabel: this.optionalString(event.permissionRingShortLabel),
+              permissionRingDescription: this.optionalString(event.permissionRingDescription),
+              permissionActionId: this.optionalString(event.permissionActionId),
+              permissionActionLabel: this.optionalString(event.permissionActionLabel),
+              permissionActionDescription: this.optionalString(event.permissionActionDescription),
+              permissionAccess: this.optionalString(event.permissionAccess),
               toolName,
               input: this.asString(event.input),
               currentMode: this.asString(event.currentMode),
