@@ -495,6 +495,19 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   max-width: 85%;
 }
 
+.tb-runner-chat .tb-metronome-turn-workflow-prompt-shell {
+  width: min(100%, 760px);
+  max-width: 100%;
+  margin: 12px 0 var(--tb-user-turn-shell-gap) auto;
+}
+
+.tb-runner-chat .tb-metronome-turn-workflow-prompt {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 0;
+}
+
 .tb-runner-chat .tb-selection-popup {
   position: fixed;
   z-index: 40;
@@ -2260,6 +2273,237 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   font-size: 13px;
   line-height: 1.35;
   font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-card-metronome-workflow {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-link {
+  appearance: none;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-link:disabled {
+  cursor: default;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-link:not(:disabled):focus-visible {
+  outline: 1px solid rgba(77, 163, 255, 0.72);
+  outline-offset: 4px;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-header {
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-status {
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+  text-transform: capitalize;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap {
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  position: relative;
+  overflow: visible;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-track {
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  align-items: center;
+  justify-content: end;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-slot {
+  min-width: 0;
+  width: 132px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node {
+  width: 100%;
+  max-width: 132px;
+  min-width: 0;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node.is-active {
+  border-color: #4da3ff;
+  box-shadow: 0 0 0 1px rgba(77, 163, 255, 0.52);
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node.is-placeholder {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon .tb-log-card-small-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-trigger {
+  background: linear-gradient(to top, #3ed776, #66f092);
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-thread,
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-action {
+  background: linear-gradient(to top, #315fa9, #5f91ec);
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-condition {
+  background: linear-gradient(to top, #202aa7, #5565e6);
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-imagine {
+  background: linear-gradient(to top, #e21c51, #f7476b);
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-function {
+  background: linear-gradient(to top, #0e90ff, #44a6ff);
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-database {
+  background: linear-gradient(to top, #027559, #088263);
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-metronome {
+  background: linear-gradient(to top, #0d48fb, #125ffb);
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-loop {
+  background: linear-gradient(to top, #83c3ff, #8ad2ff);
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-ticket {
+  background: linear-gradient(to top, #1f8f4c, #35bd6a);
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-end {
+  background: linear-gradient(to top, #5b6bc9, #6b7ac9);
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-note {
+  background: linear-gradient(to top, #fecb0d, #ffd322);
+  color: rgba(0, 0, 0, 0.88);
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-node-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-connector {
+  width: 28px;
+  height: 1px;
+  display: block;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-connector.is-empty {
+  opacity: 0;
+}
+
+.tb-runner-chat .tb-log-metronome-user-message {
+  width: fit-content;
+  max-width: min(100%, 760px);
+  min-width: 0;
+  margin-top: 6px;
+}
+
+.tb-runner-chat .tb-log-metronome-user-message-markdown {
+  color: inherit;
+}
+
+.tb-runner-chat .tb-log-card.tb-log-card-metronome-workflow {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
 }
 
 .tb-runner-chat .tb-log-file-change-summary {

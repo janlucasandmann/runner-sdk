@@ -109,6 +109,19 @@ const RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH = 10;
 const RUNNER_THREAD_HISTORY_SMALL_LINE_WIDTH = 5;
 const RUNNER_WORK_LOG_PAGE_SIZE = 10;
 const RUNNER_LIVE_WORK_LOG_PREVIEW_COUNT = 2;
+const RUNNER_COMPOSER_POPUP_OPEN_EVENT = "tb-runner-composer-popup-open";
+
+function emitRunnerComposerPopupOpen(sourceId: string) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(RUNNER_COMPOSER_POPUP_OPEN_EVENT, {
+    detail: { sourceId },
+  }));
+}
+
+function getRunnerComposerPopupEventSource(event: Event): string {
+  if (!(event instanceof CustomEvent)) return "";
+  return typeof event.detail?.sourceId === "string" ? event.detail.sourceId : "";
+}
 
 export interface RunnerAttachment {
   id: string;
@@ -6563,8 +6576,8 @@ function buildHydratedTurnsFromMessages(
   function commitCurrentTurn() {
     if (!currentTurn) return;
     const hasPrompt = currentTurn.prompt.trim().length > 0;
-    const hasResponse = currentTurn.logs.some((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
-    if (hasPrompt || hasResponse) {
+    const hasLogs = currentTurn.logs.length > 0;
+    if (hasPrompt || hasLogs) {
       turns.push(currentTurn);
     }
     currentTurn = null;
@@ -6573,8 +6586,8 @@ function buildHydratedTurnsFromMessages(
   function commitPendingBtwTurn() {
     if (!pendingBtwTurn) return;
     const hasPrompt = pendingBtwTurn.prompt.trim().length > 0;
-    const hasResponse = pendingBtwTurn.logs.some((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
-    if (hasPrompt || hasResponse) {
+    const hasLogs = pendingBtwTurn.logs.length > 0;
+    if (hasPrompt || hasLogs) {
       turns.push(pendingBtwTurn);
     }
     pendingBtwTurn = null;
@@ -6676,7 +6689,19 @@ function buildHydratedTurnsFromMessages(
     }
 
     if (!currentTurn) {
-      continue;
+      currentTurn = {
+        id: message.id || generateId("turn"),
+        sourceMessageId: null,
+        prompt: "",
+        logs: [],
+        startedAtMs: safeTimestamp,
+        completedAtMs: safeTimestamp,
+        status: "completed",
+        animateOnRender: false,
+        agentName: meta?.agentName ?? null,
+        environmentName: meta?.environmentName ?? null,
+        presentation: "default",
+      };
     }
 
     const existingResponseIndex = currentTurn.logs.findIndex(
@@ -6927,14 +6952,16 @@ function buildHydratedTurnsFromPayload(
       threadStatus: payload.threadStatus,
       completedAtMs: payload.completedAtMs,
     });
-    const messageTurnsWithTimeline = mergeHydratedTimelineLogsIntoMessageTurns(messageTurns, chronologicalLogs, {
-      startedAtMs: payload.startedAtMs,
-    });
-    if (messageTurnsWithTimeline) {
-      return applyHydratedRunningThreadState(messageTurnsWithTimeline, {
-        threadStatus: payload.threadStatus,
-        completedAtMs: payload.completedAtMs,
+    if (messageTurns.length > 0) {
+      const messageTurnsWithTimeline = mergeHydratedTimelineLogsIntoMessageTurns(messageTurns, chronologicalLogs, {
+        startedAtMs: payload.startedAtMs,
       });
+      if (messageTurnsWithTimeline) {
+        return applyHydratedRunningThreadState(messageTurnsWithTimeline, {
+          threadStatus: payload.threadStatus,
+          completedAtMs: payload.completedAtMs,
+        });
+      }
     }
   }
 
@@ -7813,6 +7840,30 @@ function getTurnAssistantMessageText(turn: RunnerTurn): string {
     .trim();
 }
 
+function runnerLogHasMetronomeWorkflowPromptReplacement(log: RunnerLog): boolean {
+  if (log.eventType !== "metronome_workflow" && !log.metadata?.metronomeWorkflow) {
+    return false;
+  }
+  const workflow = log.metadata?.metronomeWorkflow && typeof log.metadata.metronomeWorkflow === "object"
+    ? log.metadata.metronomeWorkflow as Record<string, unknown>
+    : null;
+  if (!workflow) {
+    return false;
+  }
+  if (workflow.displayAsPrompt === true) {
+    return true;
+  }
+  const status = String(workflow.status || log.metadata?.status || "").trim().toLowerCase();
+  const triggerCommand = String(workflow.triggerCommand || "").trim();
+  const triggerEventId = String(workflow.triggerEventId || "").trim();
+  const definitionSource = String(workflow.definitionSource || "").trim();
+  return status === "running" && !triggerCommand && !triggerEventId && !definitionSource;
+}
+
+function turnHasMetronomeWorkflowPromptReplacement(turn: RunnerTurn): boolean {
+  return turn.logs.some(runnerLogHasMetronomeWorkflowPromptReplacement);
+}
+
 function turnPresentation(turn: RunnerTurn): RunnerTurn["presentation"] {
   if (turn.presentation) return turn.presentation;
   return isBtwTurnPrompt(turn.prompt) ? "btw" : "default";
@@ -8295,18 +8346,7 @@ function mergeHydratedMessageTurnsIntoTurns(
     return turns;
   }
 
-  const consumedMessageTurnIndexes = new Set<number>();
-  const mergedTurns = turns.map((turn) => {
-    const matchedMessageTurnIndex = messageTurns.findIndex(
-      (messageTurn, index) => !consumedMessageTurnIndexes.has(index) && turnsLikelyMatch(turn, messageTurn)
-    );
-
-    if (matchedMessageTurnIndex === -1) {
-      return turn;
-    }
-
-    consumedMessageTurnIndexes.add(matchedMessageTurnIndex);
-    const messageTurn = messageTurns[matchedMessageTurnIndex]!;
+  function mergeMessageTurnIntoTurn(turn: RunnerTurn, messageTurn: RunnerTurn): RunnerTurn {
     const messageResponseLogs = messageTurn.logs.filter(isTurnResponseLog);
     const turnResponseText = getTurnAssistantMessageText(turn);
     const messageResponseText = getTurnAssistantMessageText(messageTurn);
@@ -8338,9 +8378,48 @@ function mergeHydratedMessageTurnsIntoTurns(
       parseCreationCommand: turn.parseCreationCommand ?? messageTurn.parseCreationCommand ?? null,
       adCreationCommand: turn.adCreationCommand ?? messageTurn.adCreationCommand ?? null,
     };
+  }
+
+  const consumedMessageTurnIndexes = new Set<number>();
+  let mergedTurns = turns.map((turn) => {
+    const matchedMessageTurnIndex = messageTurns.findIndex(
+      (messageTurn, index) => !consumedMessageTurnIndexes.has(index) && turnsLikelyMatch(turn, messageTurn)
+    );
+
+    if (matchedMessageTurnIndex === -1) {
+      return turn;
+    }
+
+    consumedMessageTurnIndexes.add(matchedMessageTurnIndex);
+    const messageTurn = messageTurns[matchedMessageTurnIndex]!;
+    return mergeMessageTurnIntoTurn(turn, messageTurn);
   });
 
-  const unmatchedMessageTurns = messageTurns.filter((_, index) => !consumedMessageTurnIndexes.has(index));
+  const unmatchedMessageTurns: RunnerTurn[] = [];
+  for (let index = 0; index < messageTurns.length; index += 1) {
+    if (consumedMessageTurnIndexes.has(index)) {
+      continue;
+    }
+    const messageTurn = messageTurns[index]!;
+    const isAssistantOnlyMessageTurn =
+      !messageTurn.prompt.trim() &&
+      messageTurn.logs.some(isTurnResponseLog);
+    if (isAssistantOnlyMessageTurn) {
+      const targetTurnIndex = mergedTurns.findIndex((turn) =>
+        turnHasMetronomeWorkflowPromptReplacement(turn) ||
+        (!turn.prompt.trim() && turn.logs.length > 0)
+      );
+      if (targetTurnIndex !== -1) {
+        mergedTurns = mergedTurns.map((turn, turnIndex) =>
+          turnIndex === targetTurnIndex ? mergeMessageTurnIntoTurn(turn, messageTurn) : turn
+        );
+        consumedMessageTurnIndexes.add(index);
+        continue;
+      }
+    }
+    unmatchedMessageTurns.push(messageTurn);
+  }
+
   if (unmatchedMessageTurns.length === 0) {
     return mergedTurns;
   }
@@ -9841,6 +9920,7 @@ export function RunnerChat({
   const [expandedStepRows, setExpandedStepRows] = useState<Record<string, boolean>>({});
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
   const [activeInputPopup, setActiveInputPopup] = useState<InputPopupId | null>(null);
+  const composerPopupSourceIdRef = useRef(`runner-chat:${Math.random().toString(36).slice(2)}`);
   const [selectedWorkspaceFileIds, setSelectedWorkspaceFileIds] = useState<string[]>([]);
   const [showFileBrowserModal, setShowFileBrowserModal] = useState(false);
   const [showFileBrowserApiKeyPrompt, setShowFileBrowserApiKeyPrompt] = useState(false);
@@ -15004,6 +15084,26 @@ export function RunnerChat({
     clearQuotedSelectionPopup();
   }
 
+  useEffect(() => {
+    if (!activeInputPopup) return;
+    emitRunnerComposerPopupOpen(composerPopupSourceIdRef.current);
+  }, [activeInputPopup]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const handleComposerPopupOpen = (event: Event) => {
+      const sourceId = getRunnerComposerPopupEventSource(event);
+      if (!sourceId || sourceId === composerPopupSourceIdRef.current) {
+        return;
+      }
+      closeAllInputPopups();
+    };
+
+    window.addEventListener(RUNNER_COMPOSER_POPUP_OPEN_EVENT, handleComposerPopupOpen);
+    return () => window.removeEventListener(RUNNER_COMPOSER_POPUP_OPEN_EVENT, handleComposerPopupOpen);
+  }, [activeInputPopup, renderedMainPopup, renderedSidePopup]);
+
   function isExternalFileDrag(event: { dataTransfer?: DataTransfer | null }): boolean {
     const types = event.dataTransfer?.types;
     if (!types) {
@@ -17079,6 +17179,38 @@ export function RunnerChat({
       log.eventType === "llm_response" ||
       log.eventType === "turn_completed"
     );
+  }
+
+  function isMetronomeWorkflowRunnerLog(log: RunnerLog): boolean {
+    return log.eventType === "metronome_workflow" || Boolean(log.metadata?.metronomeWorkflow);
+  }
+
+  function isMetronomeWorkflowPromptReplacementLog(log: RunnerLog): boolean {
+    if (!isMetronomeWorkflowRunnerLog(log)) {
+      return false;
+    }
+    const workflow = log.metadata?.metronomeWorkflow && typeof log.metadata.metronomeWorkflow === "object"
+      ? log.metadata.metronomeWorkflow as Record<string, unknown>
+      : null;
+    if (!workflow) {
+      return false;
+    }
+    if (workflow.displayAsPrompt === true) {
+      return true;
+    }
+    const status = String(workflow.status || log.metadata?.status || "").trim().toLowerCase();
+    const triggerCommand = String(workflow.triggerCommand || "").trim();
+    const triggerEventId = String(workflow.triggerEventId || "").trim();
+    const definitionSource = String(workflow.definitionSource || "").trim();
+    return status === "running" && !triggerCommand && !triggerEventId && !definitionSource;
+  }
+
+  function getTurnMetronomeWorkflowPromptLog(turn: RunnerTurn): RunnerLog | null {
+    const workflowLogs = turn.logs.filter(isMetronomeWorkflowPromptReplacementLog);
+    if (workflowLogs.length === 0) {
+      return null;
+    }
+    return workflowLogs[0] || null;
   }
 
   function getSubagentInvocationMetadata(log: RunnerLog) {
@@ -20479,6 +20611,8 @@ export function RunnerChat({
               const isLatestTurn = turnIndex === turns.length - 1;
               const turnSeconds = getTurnDurationSeconds(turn);
               const { agentMessage, displayedTimelineItems: rawDisplayedTimelineItems } = getTurnTimelineState(turn);
+              const metronomeWorkflowPromptLog = getTurnMetronomeWorkflowPromptLog(turn);
+              const shouldRenderMetronomeWorkflowPrompt = Boolean(metronomeWorkflowPromptLog);
               const normalizedPrompt = turn.prompt.trim();
               const emailPromptDisplay = getRunnerEmailPromptDisplay(turn.prompt);
               const displayedUserPrompt = emailPromptDisplay.content;
@@ -20507,8 +20641,8 @@ export function RunnerChat({
               const hasSpecialPromptPreview = Boolean(taskPreviewForTurn || missionControlPreviewForTurn);
               const isActionableTurn = isActionableUserTurn(turn);
               const isForkingTurn = forkingTurnId === turn.id;
-              const isEditablePromptTurn = canEditTurn && !hasSpecialPromptPreview;
-              const showTurnActions = isActionableTurn && !isEditingTurn && !hasSpecialPromptPreview;
+              const isEditablePromptTurn = canEditTurn && !hasSpecialPromptPreview && !shouldRenderMetronomeWorkflowPrompt;
+              const showTurnActions = isActionableTurn && !isEditingTurn && !hasSpecialPromptPreview && !shouldRenderMetronomeWorkflowPrompt;
               const areTurnActionsDisabled = !canEditTurn || isForkingTurn || hasSpecialPromptPreview;
               const shouldRenderSpecialPreviewPrompt = Boolean(
                 (taskPreviewForTurn?.reviewRequest === true || taskPreviewForTurn?.showPromptPreview === true) && normalizedPrompt
@@ -20518,10 +20652,13 @@ export function RunnerChat({
                   ? turn.logs.find((log) => log.eventType === "action_summary") || null
                   : null;
               const visibleTimelineItemCount = visibleTimelineItemCountsByTurn[turn.id];
+              const visibleTimelineSourceItems = shouldRenderMetronomeWorkflowPrompt && metronomeWorkflowPromptLog
+                ? rawDisplayedTimelineItems.filter((item) => item.kind !== "log" || item.log !== metronomeWorkflowPromptLog)
+                : rawDisplayedTimelineItems;
               const revealedTimelineItems =
                 visibleTimelineItemCount === undefined
-                  ? rawDisplayedTimelineItems
-                  : rawDisplayedTimelineItems.slice(0, visibleTimelineItemCount);
+                  ? visibleTimelineSourceItems
+                  : visibleTimelineSourceItems.slice(0, visibleTimelineItemCount);
               const isLiveWorkLogPreviewTurn = isTurnRunning && !agentMessage?.message;
               const isExpanded = expandedTurns[turn.id] ?? (isLiveWorkLogPreviewTurn ? false : !isThreadHistoryLoading);
               const visibleWorkLogItemCount = isExpanded
@@ -20533,7 +20670,7 @@ export function RunnerChat({
               const shouldShowCollapsedLivePreview = !isExpanded && isLiveWorkLogPreviewTurn && displayedTimelineItems.length > 0;
               const thinkingStatusPhase =
                 thinkingStatusPhaseByTurn[turn.id] ??
-                (isTurnRunning && rawDisplayedTimelineItems.length > 0 && !agentMessage?.message ? "visible" : "hidden");
+                (isTurnRunning && visibleTimelineSourceItems.length > 0 && !agentMessage?.message ? "visible" : "hidden");
               const shouldRenderThinkingStatus =
                 isTurnRunning &&
                 rawDisplayedTimelineItems.length > 0 &&
@@ -20624,6 +20761,65 @@ export function RunnerChat({
                 <div className={`tb-run-mode-label ${runModeLabelConfig.className}`}>
                   <RunModeLabelIcon className="tb-run-mode-label-icon" strokeWidth={1.75} />
                   <span>{runModeLabelConfig.label}</span>
+                </div>
+              ) : null;
+              const metronomeWorkflowPromptContent = shouldRenderMetronomeWorkflowPrompt && metronomeWorkflowPromptLog ? (
+                <div className="tb-metronome-turn-workflow-prompt">
+                  <RunnerWorkLogEntry
+                    log={metronomeWorkflowPromptLog}
+                    backendUrl={normalizedBackendUrl}
+                    environmentId={scopedActiveThreadEnvironmentId || selectedEnvironment?.id || environmentId || null}
+                    requestHeaders={requestHeaders}
+                    activeTaskPreviewId={threadTaskPreview?.taskId || null}
+                    availableAgents={agents}
+                    availableEnvironments={availableEnvironments}
+                    availableProjects={availableProjects}
+                    onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
+                    onWorkspacePathClick={(path) => handleSummaryWorkspacePathClick(turn, path, "working_log")}
+                    onPermissionDecision={handlePermissionDecision}
+                    onTaskPreviewClick={onTaskPreviewClick}
+                    onAgentPreviewClick={(agent) => {
+                      if (typeof onAgentTurnClick !== "function") return;
+                      onAgentTurnClick({
+                        turnId: turn.id,
+                        agentId: agent.agentId || undefined,
+                        agentName: agent.agentName || undefined,
+                      });
+                    }}
+                    onEnvironmentPreviewClick={(environment) => {
+                      const normalizedEnvironmentId = String(environment.environmentId || "").trim();
+                      if (!normalizedEnvironmentId) return;
+                      onResourcePreviewClick?.({
+                        id: normalizedEnvironmentId,
+                        name: String(environment.environmentName || "Environment").trim() || "Environment",
+                        resourceType: "environment",
+                        description: null,
+                        model: null,
+                        category: null,
+                        projectId: null,
+                        projectName: null,
+                        isDefault: false,
+                        status: null,
+                      });
+                    }}
+                    onProjectPreviewClick={(project) => {
+                      const normalizedProjectId = String(project.projectId || "").trim();
+                      if (!normalizedProjectId) return;
+                      onResourcePreviewClick?.({
+                        id: normalizedProjectId,
+                        name: String(project.projectName || "Project").trim() || "Project",
+                        resourceType: "project",
+                        description: null,
+                        model: null,
+                        category: null,
+                        projectId: normalizedProjectId,
+                        projectName: String(project.projectName || "").trim() || null,
+                        isDefault: false,
+                        status: null,
+                      });
+                    }}
+                    onOpenTaskList={onOpenTaskList}
+                  />
                 </div>
               ) : null;
 
@@ -20761,11 +20957,15 @@ export function RunnerChat({
                       >
                         {runModeLabel}
                         <div className={`task-prompt-in-session-context ${emailPromptDisplay.isEmailPrompt ? "is-email-origin" : ""}`.trim()}>
-                          {emailPromptLabel}
-                          <CollapsibleRunnerUserPrompt
-                            content={displayedUserPrompt}
-                            className="tb-message-markdown tb-message-markdown-user"
-                          />
+                          {metronomeWorkflowPromptContent || (
+                            <>
+                              {emailPromptLabel}
+                              <CollapsibleRunnerUserPrompt
+                                content={displayedUserPrompt}
+                                className="tb-message-markdown tb-message-markdown-user"
+                              />
+                            </>
+                          )}
                         </div>
                       </div>
                     ) : null}
@@ -20895,91 +21095,101 @@ export function RunnerChat({
 
               return (
                 <div key={turn.id} className="tb-turn tb-turn-user">
-                  <div
-                    ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
-                    className={`tb-user-turn-shell ${showTurnActions ? "tb-user-turn-shell-has-actions" : ""} ${isEditablePromptTurn ? "tb-user-turn-shell-editable" : ""} ${isEditingTurn ? "tb-user-turn-shell-editing" : ""} ${isForkingTurn ? "tb-user-turn-shell-forking" : ""}`.trim()}
-                    style={promptStyle}
-                  >
-                    {turn.attachments && turn.attachments.length > 0 ? (
-                      <div className="runner-attachments runner-attachments-turn">
-                        {turn.attachments.map((attachment) => renderAttachmentPreviewChip(attachment))}
-                      </div>
-                    ) : null}
-                    {turn.quotedSelection ? (
-                      <div className="tb-user-turn-quote">
-                        <LucideTextQuote className="tb-user-turn-quote-icon" strokeWidth={1.6} />
-                        <div className="tb-user-turn-quote-text">{turn.quotedSelection.text}</div>
-                      </div>
-                    ) : null}
-                    {runModeLabel}
+                  {metronomeWorkflowPromptContent && !isEditingTurn && !taskPreviewForTurn && !missionControlPreviewForTurn ? (
                     <div
-                      className={`task-prompt-in-session-context ${emailPromptDisplay.isEmailPrompt ? "is-email-origin" : ""} ${isEditablePromptTurn ? "tb-user-turn-editable" : ""} ${isEditingTurn ? "tb-user-turn-editing" : ""}`.trim()}
+                      ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
+                      className="tb-metronome-turn-workflow-prompt-shell tb-thread-history-anchor"
+                      style={promptStyle}
                     >
-                      {isEditingTurn ? (
-                        <>
-                          <textarea
-                            ref={editingTextareaRef}
-                            className="tb-user-turn-editor"
-                            value={editingTurnDraft}
-                            onChange={(event) => setEditingTurnDraft(event.target.value)}
-                            onKeyDown={(event) => handleEditedTurnKeyDown(event, turn.id)}
-                            autoFocus
-                          />
-                          <div className="tb-user-turn-edit-actions">
-                            <button type="button" className="tb-user-turn-edit-button tb-user-turn-edit-button-secondary" onClick={cancelEditingTurn}>
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              className="tb-user-turn-edit-button tb-user-turn-edit-button-primary"
-                              onClick={() => handleEditedTurnSend(turn.id)}
-                              disabled={!editingTurnDraft.trim()}
-                            >
-                              Send
-                            </button>
-                          </div>
-                        </>
-                      ) : taskPreviewForTurn ? (
-                        renderRunnerTaskPreviewCard(taskPreviewForTurn, { onClick: onTaskPreviewClick })
-                      ) : missionControlPreviewForTurn ? (
-                        renderRunnerMissionControlPreviewCard(missionControlPreviewForTurn)
-                      ) : (
-                        <>
-                          {emailPromptLabel}
-                          <CollapsibleRunnerUserPrompt
-                            content={displayedUserPrompt}
-                            className="tb-message-markdown tb-message-markdown-user"
-                          />
-                        </>
-                      )}
+                      {metronomeWorkflowPromptContent}
                     </div>
-                    {showTurnActions ? (
-                      <div className="tb-user-turn-actions">
-                        <button
-                          type="button"
-                          className="tb-user-turn-action-trigger"
-                          aria-label="Fork from message"
-                          onClick={() => openForkDialogForTurn(turn)}
-                          disabled={areTurnActionsDisabled}
-                        >
-                          {isForkingTurn ? (
-                            <LucideLoaderCircle className="tb-user-turn-edit-trigger-icon tb-context-action-notice-icon-spinner" strokeWidth={1.75} />
-                          ) : (
-                            <LucideGitBranch className="tb-user-turn-edit-trigger-icon" strokeWidth={1.75} />
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          className="tb-user-turn-action-trigger"
-                          aria-label="Edit message"
-                          onClick={() => startEditingTurn(turn)}
-                          disabled={areTurnActionsDisabled}
-                        >
-                          <LucidePencil className="tb-user-turn-edit-trigger-icon" strokeWidth={1.75} />
-                        </button>
+                  ) : (
+                    <div
+                      ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
+                      className={`tb-user-turn-shell ${showTurnActions ? "tb-user-turn-shell-has-actions" : ""} ${isEditablePromptTurn ? "tb-user-turn-shell-editable" : ""} ${isEditingTurn ? "tb-user-turn-shell-editing" : ""} ${isForkingTurn ? "tb-user-turn-shell-forking" : ""}`.trim()}
+                      style={promptStyle}
+                    >
+                      {turn.attachments && turn.attachments.length > 0 ? (
+                        <div className="runner-attachments runner-attachments-turn">
+                          {turn.attachments.map((attachment) => renderAttachmentPreviewChip(attachment))}
+                        </div>
+                      ) : null}
+                      {turn.quotedSelection ? (
+                        <div className="tb-user-turn-quote">
+                          <LucideTextQuote className="tb-user-turn-quote-icon" strokeWidth={1.6} />
+                          <div className="tb-user-turn-quote-text">{turn.quotedSelection.text}</div>
+                        </div>
+                      ) : null}
+                      {runModeLabel}
+                      <div
+                        className={`task-prompt-in-session-context ${emailPromptDisplay.isEmailPrompt ? "is-email-origin" : ""} ${isEditablePromptTurn ? "tb-user-turn-editable" : ""} ${isEditingTurn ? "tb-user-turn-editing" : ""}`.trim()}
+                      >
+                        {isEditingTurn ? (
+                          <>
+                            <textarea
+                              ref={editingTextareaRef}
+                              className="tb-user-turn-editor"
+                              value={editingTurnDraft}
+                              onChange={(event) => setEditingTurnDraft(event.target.value)}
+                              onKeyDown={(event) => handleEditedTurnKeyDown(event, turn.id)}
+                              autoFocus
+                            />
+                            <div className="tb-user-turn-edit-actions">
+                              <button type="button" className="tb-user-turn-edit-button tb-user-turn-edit-button-secondary" onClick={cancelEditingTurn}>
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                className="tb-user-turn-edit-button tb-user-turn-edit-button-primary"
+                                onClick={() => handleEditedTurnSend(turn.id)}
+                                disabled={!editingTurnDraft.trim()}
+                              >
+                                Send
+                              </button>
+                            </div>
+                          </>
+                        ) : taskPreviewForTurn ? (
+                          renderRunnerTaskPreviewCard(taskPreviewForTurn, { onClick: onTaskPreviewClick })
+                        ) : missionControlPreviewForTurn ? (
+                          renderRunnerMissionControlPreviewCard(missionControlPreviewForTurn)
+                        ) : (
+                          <>
+                            {emailPromptLabel}
+                            <CollapsibleRunnerUserPrompt
+                              content={displayedUserPrompt}
+                              className="tb-message-markdown tb-message-markdown-user"
+                            />
+                          </>
+                        )}
                       </div>
-                    ) : null}
-                  </div>
+                      {showTurnActions ? (
+                        <div className="tb-user-turn-actions">
+                          <button
+                            type="button"
+                            className="tb-user-turn-action-trigger"
+                            aria-label="Fork from message"
+                            onClick={() => openForkDialogForTurn(turn)}
+                            disabled={areTurnActionsDisabled}
+                          >
+                            {isForkingTurn ? (
+                              <LucideLoaderCircle className="tb-user-turn-edit-trigger-icon tb-context-action-notice-icon-spinner" strokeWidth={1.75} />
+                            ) : (
+                              <LucideGitBranch className="tb-user-turn-edit-trigger-icon" strokeWidth={1.75} />
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            className="tb-user-turn-action-trigger"
+                            aria-label="Edit message"
+                            onClick={() => startEditingTurn(turn)}
+                            disabled={areTurnActionsDisabled}
+                          >
+                            <LucidePencil className="tb-user-turn-edit-trigger-icon" strokeWidth={1.75} />
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
 
                   {!isQueuedTurn && !shouldRenderWorkSection ? (
                     <div className="tb-turn-meta" style={metaHeaderStyle}>

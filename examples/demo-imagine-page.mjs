@@ -205,11 +205,11 @@ export const IMAGINE_PAGE_CSS = String.raw`
       }
 
       .playground-imagine-model-selector .tb-inline-selector {
-        max-width: 170px;
+        max-width: 190px;
         min-height: 32px;
       }
 
-      .playground-imagine-model-selector .tb-inline-selector span {
+      .playground-imagine-model-selector-label {
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -218,12 +218,40 @@ export const IMAGINE_PAGE_CSS = String.raw`
 
       .playground-imagine-model-menu {
         width: 300px !important;
+        -webkit-backdrop-filter: blur(5px) !important;
+        backdrop-filter: blur(5px) !important;
+      }
+
+      .playground-imagine-model-menu-body {
+        flex: 1;
+        min-height: 0;
+        max-height: 168px;
+        overflow-y: auto;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        border-top: 0;
       }
 
       .playground-imagine-model-menu .tb-popup-row {
-        align-items: flex-start;
+        align-items: center;
         gap: 10px;
-        min-height: 52px;
+        min-height: 42px;
+      }
+
+      .playground-imagine-model-provider-icon-shell {
+        width: 18px;
+        height: 18px;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .playground-imagine-model-provider-icon-shell .playground-agents-model-provider-icon {
+        width: 16px;
+        height: 16px;
+      }
+
+      .playground-imagine-model-selector-icon {
+        width: 16px;
+        height: 16px;
       }
 
       .playground-imagine-model-option-copy {
@@ -231,7 +259,6 @@ export const IMAGINE_PAGE_CSS = String.raw`
         display: flex;
         flex: 1 1 auto;
         flex-direction: column;
-        gap: 3px;
         text-align: left;
       }
 
@@ -240,13 +267,6 @@ export const IMAGINE_PAGE_CSS = String.raw`
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-      }
-
-      .playground-imagine-model-option-description {
-        color: rgba(255, 255, 255, 0.48);
-        font-size: 11px;
-        line-height: 1.3;
-        font-weight: 400;
       }
 
       .playground-imagine-toolbar.playground-auth-users-toolbar {
@@ -1317,6 +1337,219 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           return normalizedAssets;
         }
 
+        function getPlaygroundImagineModelProviderIcon(model) {
+          const normalizedProvider = String(model?.provider || model?.providerType || "").trim().toLowerCase();
+          const normalizedModelId = String(model?.id || model?.baseModelId || "").trim().toLowerCase();
+          const haystack = [normalizedProvider, normalizedModelId].filter(Boolean).join(" ");
+          if (haystack.includes("bytedance") || haystack.includes("seedance")) {
+            return { src: "/img/05-model-provider-icons/bytedance.svg", alt: "ByteDance", className: "" };
+          }
+          if (haystack.includes("xai") || haystack.includes("x.ai") || haystack.includes("grok")) {
+            return { src: "/img/05-model-provider-icons/xai.svg", alt: "xAI", className: "" };
+          }
+          if (haystack.includes("google") || haystack.includes("gemini")) {
+            return { src: "/img/05-model-provider-icons/gemini.png", alt: "Google", className: "" };
+          }
+          if (haystack.includes("openai") || haystack.includes("open-ai") || normalizedModelId.startsWith("gpt-")) {
+            return { src: "/img/05-model-provider-icons/openai.svg", alt: "OpenAI", className: "is-openai" };
+          }
+          return null;
+        }
+
+        function createPlaygroundImagineComposerPopupSourceId(prefix) {
+          return String(prefix || "imagine-popup") + ":" + Math.random().toString(36).slice(2);
+        }
+
+        function emitPlaygroundImagineComposerPopupOpen(sourceId) {
+          if (typeof window === "undefined") {
+            return;
+          }
+          window.dispatchEvent(new CustomEvent("tb-runner-composer-popup-open", {
+            detail: { sourceId },
+          }));
+        }
+
+        function getPlaygroundImagineComposerPopupEventSource(event) {
+          return event instanceof CustomEvent && typeof event.detail?.sourceId === "string"
+            ? event.detail.sourceId
+            : "";
+        }
+
+        function usePlaygroundImaginePopupAnimation(open) {
+          const [rendered, setRendered] = useState(open);
+          const [phase, setPhase] = useState(open ? "enter" : "idle");
+
+          useEffect(() => {
+            if (open) {
+              setRendered(true);
+              setPhase("enter");
+              return undefined;
+            }
+            if (!rendered) {
+              setPhase("idle");
+              return undefined;
+            }
+            setPhase("exit");
+            if (typeof window === "undefined") {
+              setRendered(false);
+              setPhase("idle");
+              return undefined;
+            }
+            const timeoutId = window.setTimeout(() => {
+              setRendered(false);
+              setPhase("idle");
+            }, 180);
+            return () => window.clearTimeout(timeoutId);
+          }, [open, rendered]);
+
+          return {
+            shouldRender: rendered,
+            className: phase === "exit" ? "tb-popup-menu-animate-up-out" : "tb-popup-menu-animate-up-in",
+          };
+        }
+
+        function usePlaygroundImagineAnchoredPopupStyle({
+          open,
+          anchorRef,
+          popupRef,
+          gap = 8,
+          viewportPadding = 8,
+        }) {
+          const [style, setStyle] = useState(null);
+
+          useLayoutEffect(() => {
+            if (!open) {
+              setStyle(null);
+              return undefined;
+            }
+
+            if (typeof window === "undefined") {
+              return undefined;
+            }
+
+            let frameId = 0;
+            const settleFrameIds = [];
+            const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => scheduleUpdate()) : null;
+            let observedElements = new Set();
+
+            const observeCurrentElements = (...elements) => {
+              if (!resizeObserver) {
+                return;
+              }
+
+              const nextElements = new Set(elements.filter(Boolean));
+              observedElements.forEach((element) => {
+                if (!nextElements.has(element)) {
+                  resizeObserver.unobserve(element);
+                }
+              });
+              nextElements.forEach((element) => {
+                if (!observedElements.has(element)) {
+                  resizeObserver.observe(element);
+                }
+              });
+              observedElements = nextElements;
+            };
+
+            const update = () => {
+              const anchor = anchorRef.current;
+              if (!anchor) {
+                setStyle(null);
+                return;
+              }
+
+              const popup = popupRef.current;
+              const anchorRect = anchor.getBoundingClientRect();
+              const popupWidth = popup?.offsetWidth || 300;
+              const popupHeight = popup?.offsetHeight || 0;
+              const visualViewport = window.visualViewport;
+              const viewportWidth = visualViewport?.width || window.innerWidth;
+              const viewportHeight = visualViewport?.height || window.innerHeight;
+              const viewportLeft = visualViewport?.offsetLeft || 0;
+              const viewportTop = visualViewport?.offsetTop || 0;
+              const layoutViewportHeight = window.innerHeight;
+              const viewportBottom = viewportTop + viewportHeight;
+              const maxLeft = viewportLeft + viewportWidth - popupWidth - viewportPadding;
+              const maxBottom = Math.max(viewportPadding, layoutViewportHeight - viewportBottom + viewportPadding);
+              const bottomEdge = anchorRect.top - gap;
+              let bottom = layoutViewportHeight - bottomEdge;
+              const unclampedTop = bottomEdge - popupHeight;
+
+              if (unclampedTop < viewportTop + viewportPadding) {
+                bottom = Math.min(bottom, layoutViewportHeight - (viewportTop + viewportPadding + popupHeight));
+              }
+
+              const clampedLeft = Math.min(
+                Math.max(anchorRect.left, viewportLeft + viewportPadding),
+                Math.max(viewportLeft + viewportPadding, maxLeft)
+              );
+
+              observeCurrentElements(anchor, popup || null);
+              setStyle({
+                left: Math.round(clampedLeft) + "px",
+                top: "auto",
+                bottom: Math.max(maxBottom, Math.round(bottom)) + "px",
+                visibility: "visible",
+              });
+            };
+
+            const scheduleUpdate = () => {
+              window.cancelAnimationFrame(frameId);
+              frameId = window.requestAnimationFrame(update);
+            };
+
+            update();
+            const scheduleSettledUpdate = (remainingFrames) => {
+              const settledFrameId = window.requestAnimationFrame(() => {
+                scheduleUpdate();
+                if (remainingFrames > 1) {
+                  scheduleSettledUpdate(remainingFrames - 1);
+                }
+              });
+              settleFrameIds.push(settledFrameId);
+            };
+            scheduleSettledUpdate(4);
+
+            window.addEventListener("resize", scheduleUpdate);
+            window.addEventListener("scroll", scheduleUpdate, true);
+            window.visualViewport?.addEventListener("resize", scheduleUpdate);
+            window.visualViewport?.addEventListener("scroll", scheduleUpdate);
+            observeCurrentElements(anchorRef.current, popupRef.current);
+
+            return () => {
+              window.cancelAnimationFrame(frameId);
+              settleFrameIds.forEach((id) => window.cancelAnimationFrame(id));
+              window.removeEventListener("resize", scheduleUpdate);
+              window.removeEventListener("scroll", scheduleUpdate, true);
+              window.visualViewport?.removeEventListener("resize", scheduleUpdate);
+              window.visualViewport?.removeEventListener("scroll", scheduleUpdate);
+              resizeObserver?.disconnect();
+            };
+          }, [anchorRef, gap, open, popupRef, viewportPadding]);
+
+          return style;
+        }
+
+        function renderPlaygroundImaginePopupPortal(content, style) {
+          if (!content || typeof document === "undefined") {
+            return null;
+          }
+
+          const resolvedStyle = style || {
+            left: "-9999px",
+            top: "0px",
+            bottom: "auto",
+            visibility: "hidden",
+          };
+
+          return createPortal(
+            React.createElement("div", { className: "tb-composer-popup-portal-root", style: resolvedStyle },
+              React.createElement("div", { className: "tb-runner-chat tb-composer-popup-portal-scope" }, content)
+            ),
+            document.body
+          );
+        }
+
         function PlaygroundImagineTemplatePreviewMedia({ template }) {
           const mediaRef = useRef(null);
           const lastAssetRef = useRef(null);
@@ -1510,11 +1743,13 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             {
               id: "gpt-image-2",
               label: "GPT Image 2",
+              provider: "OpenAI",
               description: "Highest-fidelity OpenAI image generation and editing.",
             },
             {
               id: "gemini-3.1-flash-image-preview",
               label: "Gemini 3.1 Flash Image",
+              provider: "Google DeepMind",
               description: "Fast multimodal image generation and editing preview.",
             },
           ], []);
@@ -1522,16 +1757,19 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             {
               id: "seedance-2.0-fast",
               label: "Seedance 2.0 Fast",
+              provider: "ByteDance",
               description: "Fast default video drafts and short motion clips.",
             },
             {
               id: "seedance-2.0",
               label: "Seedance 2.0",
+              provider: "ByteDance",
               description: "Higher-quality Seedance video generation.",
             },
             {
               id: "grok-imagine-video",
               label: "Grok Imagine Video",
+              provider: "xAI",
               description: "Alternative video model for imaginative motion.",
             },
           ], []);
@@ -1562,6 +1800,15 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           const [videoUpgradeModalOpen, setVideoUpgradeModalOpen] = useState(false);
           const [videoUpgradeCheckoutLoading, setVideoUpgradeCheckoutLoading] = useState(false);
           const imagineModelSelectorRef = useRef(null);
+          const imagineModelSelectorButtonRef = useRef(null);
+          const imagineModelMenuRef = useRef(null);
+          const imagineModelPopupSourceIdRef = useRef(createPlaygroundImagineComposerPopupSourceId("imagine-model"));
+          const imagineModelSelectorAnimation = usePlaygroundImaginePopupAnimation(imagineModelSelectorOpen);
+          const imagineModelMenuStyle = usePlaygroundImagineAnchoredPopupStyle({
+            open: imagineModelSelectorAnimation.shouldRender,
+            anchorRef: imagineModelSelectorButtonRef,
+            popupRef: imagineModelMenuRef,
+          });
 
           async function generateImagineThreadTitle(threadId, prompt) {
             const normalizedThreadId = String(threadId || "").trim();
@@ -1712,6 +1959,9 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               if (imagineModelSelectorRef.current && target && imagineModelSelectorRef.current.contains(target)) {
                 return;
               }
+              if (imagineModelMenuRef.current && target && imagineModelMenuRef.current.contains(target)) {
+                return;
+              }
               setImagineModelSelectorOpen(false);
             };
             const handleKeyDown = (event) => {
@@ -1728,6 +1978,20 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               document.removeEventListener("keydown", handleKeyDown);
             };
           }, [imagineModelSelectorOpen]);
+          useEffect(() => {
+            if (typeof window === "undefined") {
+              return undefined;
+            }
+            const handleComposerPopupOpen = (event) => {
+              const sourceId = getPlaygroundImagineComposerPopupEventSource(event);
+              if (!sourceId || sourceId === imagineModelPopupSourceIdRef.current) {
+                return;
+              }
+              setImagineModelSelectorOpen(false);
+            };
+            window.addEventListener("tb-runner-composer-popup-open", handleComposerPopupOpen);
+            return () => window.removeEventListener("tb-runner-composer-popup-open", handleComposerPopupOpen);
+          }, []);
           useEffect(() => {
             setImagineModelSelectorOpen(false);
           }, [activeMediaMode]);
@@ -3392,22 +3656,58 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             setImagineModelSelectorOpen(false);
           };
 
+          const toggleImagineModelSelector = () => {
+            setImagineModelSelectorOpen((open) => {
+              const nextOpen = !open;
+              if (nextOpen) {
+                emitPlaygroundImagineComposerPopupOpen(imagineModelPopupSourceIdRef.current);
+              }
+              return nextOpen;
+            });
+          };
+
+          const renderImagineModelProviderIcon = (option, extraClassName = "") => {
+            const providerIcon = getPlaygroundImagineModelProviderIcon(option);
+            const shellClassName = [
+              "playground-agents-model-provider-icon-shell",
+              "playground-imagine-model-provider-icon-shell",
+              extraClassName,
+            ].filter(Boolean).join(" ");
+            if (!providerIcon) {
+              return React.createElement("span", { className: shellClassName, "aria-hidden": "true" });
+            }
+            return React.createElement("span", { className: shellClassName, "aria-hidden": "true" },
+              React.createElement("img", {
+                src: providerIcon.src,
+                alt: "",
+                draggable: "false",
+                className: "playground-agents-model-provider-icon" + (providerIcon.className ? " " + providerIcon.className : ""),
+              })
+            );
+          };
+
           const renderImagineModelSelector = () =>
             React.createElement("div", { ref: imagineModelSelectorRef, className: "tb-selector-anchor playground-imagine-model-selector" },
               React.createElement("button", {
+                ref: imagineModelSelectorButtonRef,
                 type: "button",
                 className: "tb-inline-selector tb-inline-selector-agent" + (imagineModelSelectorOpen ? " active" : ""),
-                onClick: () => setImagineModelSelectorOpen((open) => !open),
+                onClick: toggleImagineModelSelector,
                 "aria-haspopup": "menu",
                 "aria-expanded": imagineModelSelectorOpen ? "true" : "false",
               },
-                React.createElement("span", null, selectedImagineModel.label),
+                renderImagineModelProviderIcon(selectedImagineModel, "playground-imagine-model-selector-icon"),
+                React.createElement("span", { className: "playground-imagine-model-selector-label" }, selectedImagineModel.label),
                 React.createElement(ChevronDown, { className: "tb-inline-selector-chevron", strokeWidth: 1.8 })
               ),
-              imagineModelSelectorOpen
-                ? React.createElement("div", { className: "tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent playground-tasks-toolbar-popup-menu-animate-up-in playground-imagine-model-menu" },
-                    React.createElement("div", { className: "tb-popup-menu-title" }, activeMediaMode === "video" ? "Video model" : "Image model"),
-                    React.createElement("div", { className: "tb-popup-menu-inline-body tb-popup-menu-inline-body-agent" },
+              imagineModelSelectorAnimation.shouldRender
+                ? renderPlaygroundImaginePopupPortal(
+                    React.createElement("div", {
+                      ref: imagineModelMenuRef,
+                      className: "tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent playground-imagine-model-menu " + imagineModelSelectorAnimation.className,
+                      onClick: (event) => event.stopPropagation(),
+                    },
+                    React.createElement("div", { className: "tb-popup-menu-inline-body playground-imagine-model-menu-body" },
                       activeImagineModelOptions.map((option) =>
                         React.createElement("button", {
                           key: option.id,
@@ -3415,10 +3715,9 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                           className: "tb-popup-row tb-popup-row-select" + (option.id === selectedImagineModel.id ? " selected" : ""),
                           onClick: () => selectImagineModel(option.id),
                         },
-                          React.createElement(activeMediaMode === "video" ? Film : ImageIcon, { className: "tb-popup-icon", strokeWidth: 1.8 }),
+                          renderImagineModelProviderIcon(option),
                           React.createElement("span", { className: "playground-imagine-model-option-copy" },
-                            React.createElement("span", { className: "playground-imagine-model-option-title" }, option.label),
-                            React.createElement("span", { className: "playground-imagine-model-option-description" }, option.description)
+                            React.createElement("span", { className: "playground-imagine-model-option-title" }, option.label)
                           ),
                           React.createElement("span", { className: "tb-popup-check-slot" },
                             option.id === selectedImagineModel.id
@@ -3428,7 +3727,9 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                         )
                       )
                     )
-                  )
+                  ),
+                  imagineModelMenuStyle
+                )
                 : null
             );
 

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import {
   AlertCircle,
@@ -14,6 +14,7 @@ import {
   ChevronRight,
   ChevronUp,
   ChevronsUp,
+  Clapperboard,
   Cloud,
   Code2,
   Copy,
@@ -39,17 +40,22 @@ import {
   ListTodo,
   Mail,
   MessageSquare,
+  Metronome,
   Monitor,
   MousePointerClick,
   Route,
   Music,
   Paperclip,
+  Play,
   RefreshCw,
   Rocket,
   ScanEye,
   Search,
   Server,
   SlidersHorizontal,
+  Split,
+  Square,
+  StickyNote,
   Telescope,
   Terminal,
   ThumbsDown,
@@ -57,6 +63,7 @@ import {
   User,
   Video,
   X,
+  Zap,
 } from "lucide-react";
 import type { RunnerDeepResearchSession, RunnerLog } from "../types.js";
 import {
@@ -4076,6 +4083,312 @@ function GenericTextLogBox({
       title={title || label}
       detail={detail || "No details available."}
     />
+  );
+}
+
+type MetronomeWorkflowMiniNode = {
+  id: string;
+  kind: string;
+  label: string;
+};
+
+type MetronomeWorkflowMiniEdge = {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+};
+
+function normalizeMetronomeWorkflowMiniNode(value: unknown): MetronomeWorkflowMiniNode | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const id = String(record.id || "").trim();
+  if (!id) return null;
+  const kind = String(record.kind || record.type || "action").trim().toLowerCase() || "action";
+  const rawLabel = String(record.name || record.displayName || record.display_name || record.label || record.title || "").trim();
+  const fallbackLabel = kind === "thread" || kind === "action"
+    ? "Thread"
+    : kind === "trigger"
+      ? "Trigger"
+      : kind === "condition"
+        ? "Condition"
+        : kind === "ticket"
+          ? "Ticket"
+          : kind === "imagine"
+            ? "Imagine"
+            : kind === "function"
+              ? "Function"
+              : kind === "database"
+                ? "Database"
+                : kind === "metronome"
+                  ? "Metronome"
+                  : kind === "loop"
+                    ? "Loop"
+                    : kind === "end"
+                      ? "End"
+                      : kind === "note"
+                        ? "Note"
+                        : "Node";
+  const label = (kind === "thread" || kind === "action") && /^start\s+(agent\s+)?thread$/i.test(rawLabel)
+    ? "Thread"
+    : rawLabel || fallbackLabel;
+  return { id, kind, label };
+}
+
+function normalizeMetronomeWorkflowMiniEdge(value: unknown): MetronomeWorkflowMiniEdge | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const id = String(record.id || "").trim();
+  const source = String(record.source || "").trim();
+  const target = String(record.target || "").trim();
+  if (!source || !target) return null;
+  return {
+    id: id || `${source}->${target}`,
+    source,
+    target,
+    sourceHandle: String(record.sourceHandle || record.source_handle || "").trim() || undefined,
+    targetHandle: String(record.targetHandle || record.target_handle || "").trim() || undefined,
+  };
+}
+
+function getMetronomeWorkflowRecord(log: RunnerLog): Record<string, unknown> | null {
+  const value = log.metadata?.metronomeWorkflow;
+  return value && typeof value === "object" ? value as Record<string, unknown> : null;
+}
+
+function normalizeMetronomeWorkflowMiniMap(workflow: Record<string, unknown> | null): {
+  nodes: MetronomeWorkflowMiniNode[];
+  edges: MetronomeWorkflowMiniEdge[];
+  startNodeId: string | null;
+} {
+  const map = workflow?.workflowMap && typeof workflow.workflowMap === "object"
+    ? workflow.workflowMap as Record<string, unknown>
+    : null;
+  const nodes = Array.isArray(map?.nodes)
+    ? map.nodes.map(normalizeMetronomeWorkflowMiniNode).filter((node): node is MetronomeWorkflowMiniNode => Boolean(node))
+    : [];
+  const validNodeIds = new Set(nodes.map((node) => node.id));
+  const edges = Array.isArray(map?.edges)
+    ? map.edges
+        .map(normalizeMetronomeWorkflowMiniEdge)
+        .filter((edge): edge is MetronomeWorkflowMiniEdge => edge !== null && validNodeIds.has(edge.source) && validNodeIds.has(edge.target))
+    : [];
+  const startNodeId = String(map?.startNodeId || "").trim() || nodes.find((node) => node.kind === "trigger")?.id || nodes[0]?.id || null;
+  return { nodes, edges, startNodeId };
+}
+
+function getMetronomeWorkflowStepNodeIds(workflow: Record<string, unknown> | null): string[] {
+  const steps = Array.isArray(workflow?.steps) ? workflow.steps : [];
+  const ids: string[] = [];
+  for (const step of steps) {
+    if (!step || typeof step !== "object") continue;
+    const id = String((step as Record<string, unknown>).nodeId || "").trim();
+    if (id && ids[ids.length - 1] !== id) ids.push(id);
+  }
+  return ids;
+}
+
+function buildMetronomeWorkflowLinearPath({
+  nodes,
+  edges,
+  startNodeId,
+  stepNodeIds,
+}: {
+  nodes: MetronomeWorkflowMiniNode[];
+  edges: MetronomeWorkflowMiniEdge[];
+  startNodeId: string | null;
+  stepNodeIds: string[];
+}): string[] {
+  const validNodeIds = new Set(nodes.map((node) => node.id));
+  const path = stepNodeIds.filter((id, index, arr) => validNodeIds.has(id) && arr.indexOf(id) === index);
+  const outgoingBySource = new Map<string, MetronomeWorkflowMiniEdge[]>();
+  for (const edge of edges) {
+    const list = outgoingBySource.get(edge.source) || [];
+    list.push(edge);
+    outgoingBySource.set(edge.source, list);
+  }
+  let cursor = path[path.length - 1] || startNodeId;
+  const visited = new Set(path);
+  while (cursor && path.length < 24) {
+    if (!path.includes(cursor) && validNodeIds.has(cursor)) {
+      path.push(cursor);
+      visited.add(cursor);
+    }
+    const next = (outgoingBySource.get(cursor) || []).find((edge) => !visited.has(edge.target));
+    if (!next) break;
+    cursor = next.target;
+  }
+  if (!path.length && nodes[0]) path.push(nodes[0].id);
+  return path;
+}
+
+function buildMetronomeWorkflowPathAroundActive({
+  activeNodeId,
+  edges,
+}: {
+  activeNodeId: string;
+  edges: MetronomeWorkflowMiniEdge[];
+}): string[] {
+  const incomingByTarget = new Map<string, MetronomeWorkflowMiniEdge[]>();
+  const outgoingBySource = new Map<string, MetronomeWorkflowMiniEdge[]>();
+  for (const edge of edges) {
+    incomingByTarget.set(edge.target, [...(incomingByTarget.get(edge.target) || []), edge]);
+    outgoingBySource.set(edge.source, [...(outgoingBySource.get(edge.source) || []), edge]);
+  }
+
+  const before: string[] = [];
+  const beforeVisited = new Set([activeNodeId]);
+  let cursor = activeNodeId;
+  while (before.length < 2) {
+    const previous = (incomingByTarget.get(cursor) || []).find((edge) => !beforeVisited.has(edge.source));
+    if (!previous) break;
+    before.unshift(previous.source);
+    beforeVisited.add(previous.source);
+    cursor = previous.source;
+  }
+
+  const after: string[] = [];
+  const afterVisited = new Set([activeNodeId, ...before]);
+  cursor = activeNodeId;
+  while (after.length < 2) {
+    const next = (outgoingBySource.get(cursor) || []).find((edge) => !afterVisited.has(edge.target));
+    if (!next) break;
+    after.push(next.target);
+    afterVisited.add(next.target);
+    cursor = next.target;
+  }
+
+  return [...before, activeNodeId, ...after];
+}
+
+function getMetronomeWorkflowMiniNodeIcon(kind: string): ReactNode {
+  const normalizedKind = String(kind || "").toLowerCase();
+  if (normalizedKind === "trigger") return <Zap className="tb-log-card-small-icon" strokeWidth={1.8} />;
+  if (normalizedKind === "thread" || normalizedKind === "action") return <Play className="tb-log-card-small-icon" strokeWidth={1.8} />;
+  if (normalizedKind === "condition") return <Split className="tb-log-card-small-icon" strokeWidth={1.8} />;
+  if (normalizedKind === "imagine") return <Clapperboard className="tb-log-card-small-icon" strokeWidth={1.8} />;
+  if (normalizedKind === "function") return <Code2 className="tb-log-card-small-icon" strokeWidth={1.8} />;
+  if (normalizedKind === "database") return <HardDrive className="tb-log-card-small-icon" strokeWidth={1.8} />;
+  if (normalizedKind === "metronome") return <Metronome className="tb-log-card-small-icon" strokeWidth={1.8} />;
+  if (normalizedKind === "loop") return <RefreshCw className="tb-log-card-small-icon" strokeWidth={1.8} />;
+  if (normalizedKind === "ticket") return <Bookmark className="tb-log-card-small-icon" strokeWidth={1.8} />;
+  if (normalizedKind === "note") return <StickyNote className="tb-log-card-small-icon" strokeWidth={1.8} />;
+  if (normalizedKind === "end") return <Square className="tb-log-card-small-icon" strokeWidth={1.8} />;
+  return <FileText className="tb-log-card-small-icon" strokeWidth={1.8} />;
+}
+
+function MetronomeWorkflowLogBox({ log }: { log: RunnerLog; timeLabel?: string }) {
+  const workflow = getMetronomeWorkflowRecord(log);
+  const workflowTitle = String(workflow?.metronomeName || "").trim() || "Workflow";
+  const userMessage = String(workflow?.userMessage || workflow?.displayMessage || workflow?.inputPrompt || "").trim();
+  const workflowId = String(workflow?.metronomeId || workflow?.workflowId || "").trim();
+  const runId = String(workflow?.runId || "").trim();
+  const { nodes, edges, startNodeId } = normalizeMetronomeWorkflowMiniMap(workflow);
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const stepNodeIds = getMetronomeWorkflowStepNodeIds(workflow);
+  const activeNodeId = String(workflow?.activeNodeId || "").trim()
+    || stepNodeIds[stepNodeIds.length - 1]
+    || startNodeId
+    || null;
+  let path = buildMetronomeWorkflowLinearPath({ nodes, edges, startNodeId, stepNodeIds });
+  if (activeNodeId && !path.includes(activeNodeId)) {
+    path = buildMetronomeWorkflowPathAroundActive({ activeNodeId, edges });
+  }
+  const activeIndex = activeNodeId ? Math.max(0, path.indexOf(activeNodeId)) : 0;
+  const rawSlots = [-2, -1, 0, 1, 2].map((offset) => {
+    const id = path[activeIndex + offset];
+    return id ? nodeById.get(id) || null : null;
+  });
+  const firstVisibleSlotIndex = rawSlots.findIndex(Boolean);
+  const lastVisibleSlotIndex = rawSlots.length - 1 - rawSlots.slice().reverse().findIndex(Boolean);
+  const slots = firstVisibleSlotIndex === -1
+    ? rawSlots
+    : rawSlots.slice(firstVisibleSlotIndex, lastVisibleSlotIndex + 1);
+  const edgeExistsBetween = (source?: string, target?: string) => {
+    if (!source || !target) return false;
+    return edges.some((edge) => edge.source === source && edge.target === target)
+      || stepNodeIds.some((nodeId, index) => nodeId === source && stepNodeIds[index + 1] === target);
+  };
+  const openWorkflowRuns = () => {
+    if (!workflowId || typeof window === "undefined") return;
+    window.dispatchEvent(new CustomEvent("playground:open-metronome-workflow", {
+      detail: {
+        workflowId,
+        runId,
+        mode: "runs",
+      },
+    }));
+  };
+
+  if (!nodes.length) {
+    return (
+      <CompactActionLogLine
+        icon={<Metronome className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        title={workflowTitle}
+        detail="Workflow triggered"
+      />
+    );
+  }
+
+  return (
+    <div className="tb-log-card tb-log-card-metronome-workflow">
+      <button
+        type="button"
+        className="tb-log-metronome-workflow-link"
+        onClick={openWorkflowRuns}
+        disabled={!workflowId}
+        title={workflowId ? "Open Metronome runs" : undefined}
+      >
+        <span className="tb-log-metronome-workflow-header">
+          <span className="tb-log-compact-action-icon" aria-hidden="true">
+            <Metronome className="tb-log-card-small-icon" strokeWidth={1.5} />
+          </span>
+          <span className="tb-log-compact-action-title">{workflowTitle}</span>
+        </span>
+        <span className="tb-log-metronome-minimap" aria-label="Metronome workflow progress">
+          <span className="tb-log-metronome-minimap-track">
+            {slots.map((node, index) => {
+              const previousNode = index > 0 ? slots[index - 1] : null;
+              const connector = index > 0 ? (
+                <span
+                  key={`connector-${index}`}
+                  className={`tb-log-metronome-minimap-connector ${edgeExistsBetween(previousNode?.id, node?.id) ? "" : "is-empty"}`.trim()}
+                  aria-hidden="true"
+                />
+              ) : null;
+              return (
+                <Fragment key={`${node?.id || "empty"}-${index}`}>
+                  {connector}
+                  <span className="tb-log-metronome-minimap-slot">
+                    {node ? (
+                      <span className={`tb-log-metronome-minimap-node ${node.id === activeNodeId ? "is-active" : ""}`.trim()}>
+                        <span className={`tb-log-metronome-minimap-node-icon is-${node.kind}`} aria-hidden="true">
+                          {getMetronomeWorkflowMiniNodeIcon(node.kind)}
+                        </span>
+                        <span className="tb-log-metronome-minimap-node-title" title={node.label}>{node.label}</span>
+                      </span>
+                    ) : (
+                      <span className="tb-log-metronome-minimap-node is-placeholder" aria-hidden="true" />
+                    )}
+                  </span>
+                </Fragment>
+              );
+            })}
+          </span>
+        </span>
+      </button>
+      {userMessage ? (
+        <div className="task-prompt-in-session-context tb-log-metronome-user-message">
+          <RunnerMarkdown
+            content={userMessage}
+            className="tb-message-markdown tb-message-markdown-user tb-log-metronome-user-message-markdown"
+            softBreaks
+            disallowHeadings
+          />
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -11648,22 +11961,7 @@ export function RunnerWorkLogEntry({
   }
 
   if (log.eventType === "metronome_workflow" || log.metadata?.metronomeWorkflow) {
-    const workflow = log.metadata?.metronomeWorkflow && typeof log.metadata.metronomeWorkflow === "object"
-      ? log.metadata.metronomeWorkflow as { metronomeName?: unknown }
-      : null;
-    const workflowTitle = typeof workflow?.metronomeName === "string" && workflow.metronomeName.trim()
-      ? workflow.metronomeName.trim()
-      : "Workflow result";
-    return (
-      <GenericTextLogBox
-        log={log}
-        timeLabel={timeLabel}
-        label="Metronome Workflow"
-        title={workflowTitle}
-        icon={<Route className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        onWorkspacePathClick={onWorkspacePathClick}
-      />
-    );
+    return <MetronomeWorkflowLogBox log={log} timeLabel={timeLabel} />;
   }
 
   const persistedCommand = typeof log.metadata?.command === "string" ? log.metadata.command : "";

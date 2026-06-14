@@ -209,6 +209,15 @@ export const RESOURCE_TEMPLATES_PAGE_CSS = String.raw`
         border-top: 1px solid rgba(255, 255, 255, 0.08);
       }
 
+      .playground-resource-templates-row.is-clickable {
+        cursor: pointer;
+      }
+
+      .playground-resource-templates-row.is-clickable:focus-visible {
+        outline: 1px solid rgba(255, 255, 255, 0.38);
+        outline-offset: -1px;
+      }
+
       .playground-resource-templates-row.is-header {
         min-height: 36px;
         color: rgba(255, 255, 255, 0.46);
@@ -444,6 +453,7 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
         notice,
         setNotice,
         onPublishTemplate,
+        onPreviewTemplate,
       }) {
         const templateList = Array.isArray(templates) ? templates : [];
         const typeList = Array.isArray(types) && types.length
@@ -481,12 +491,24 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
             : null;
         }
 
+        function previewTemplate(template) {
+          if (!template) return;
+          const previewableTemplateTypes = new Set(["metronome", "web_app", "function", "database"]);
+          if (previewableTemplateTypes.has(String(template.type || "").trim()) && typeof onPreviewTemplate === "function") {
+            onPreviewTemplate(template);
+            return;
+          }
+          if (typeof setSelectedTemplateId === "function") {
+            setSelectedTemplateId(String(template.id || ""));
+          }
+        }
+
         function renderFeaturedCard(template) {
           return React.createElement("button", {
               key: "featured:" + String(template.id || template.title),
               type: "button",
               className: "playground-resource-templates-card",
-              onClick: () => typeof setSelectedTemplateId === "function" && setSelectedTemplateId(String(template.id || "")),
+              onClick: () => previewTemplate(template),
             },
             React.createElement("span", { className: "playground-resource-templates-card-icon" }, renderTemplateIcon(template.type, 17)),
             React.createElement("span", { className: "playground-resource-templates-card-meta" },
@@ -501,7 +523,16 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
         function renderTemplateRow(template) {
           return React.createElement("div", {
               key: "template:" + String(template.id || template.title),
-              className: "playground-resource-templates-row",
+              className: "playground-resource-templates-row is-clickable",
+              tabIndex: 0,
+              role: "button",
+              onClick: () => previewTemplate(template),
+              onKeyDown: (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  previewTemplate(template);
+                }
+              },
             },
             React.createElement("div", { className: "playground-resource-templates-row-title" },
               React.createElement("span", { className: "playground-resource-templates-row-icon" }, renderTemplateIcon(template.type, 14)),
@@ -517,12 +548,22 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
               React.createElement("button", {
                 type: "button",
                 className: "playground-resource-templates-action",
-                onClick: () => typeof setSelectedTemplateId === "function" && setSelectedTemplateId(String(template.id || "")),
+                onClick: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  previewTemplate(template);
+                },
               }, "View"),
               React.createElement("button", {
                 type: "button",
                 className: "playground-resource-templates-action is-primary",
-                onClick: () => typeof setPublishTemplateId === "function" && setPublishTemplateId(String(template.id || "")),
+                onClick: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  if (typeof setPublishTemplateId === "function") {
+                    setPublishTemplateId(String(template.id || ""));
+                  }
+                },
               }, "Publish")
             )
           );

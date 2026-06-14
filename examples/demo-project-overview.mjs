@@ -16,7 +16,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         width: 100%;
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-        gap: 24px;
+        gap: 42px;
         align-items: start;
       }
 
@@ -339,10 +339,6 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.42);
         font-size: 12px;
         line-height: 1.4;
-      }
-
-      .playground-content-body.is-tasks-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-overview:has(.playground-project-overview-view.is-rules) {
-        padding-bottom: 10px;
       }
 
       .playground-project-overview-hero-shell {
@@ -2148,6 +2144,253 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         box-shadow: none;
         padding: 0;
         margin-top: 0 !important;
+      }
+
+      .playground-project-permissions-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-project-permissions-section > .playground-permission-rings-overview {
+        margin-bottom: 42px;
+      }
+
+      .playground-project-permissions-details-card {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-project-permissions-details-card::before {
+        content: none;
+      }
+
+      .playground-project-teams-section {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: relative;
+        overflow: visible;
+        z-index: 70;
+      }
+
+      .playground-project-team-permissions-header {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .playground-project-team-permissions-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 30px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .playground-project-team-permissions-back:hover {
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-team-permissions-title {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.2;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-teams-table-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-width: 0;
+      }
+
+      .playground-project-teams-table-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .playground-project-teams-add-shell,
+      .playground-project-team-action-shell {
+        position: relative;
+        display: inline-flex;
+        justify-content: flex-end;
+        z-index: 220;
+      }
+
+      .playground-project-team-action-shell.is-open {
+        z-index: 360;
+      }
+
+      .playground-project-teams-add-shell.is-open {
+        z-index: 380;
+      }
+
+      .playground-project-teams-add-menu,
+      .playground-project-team-action-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        min-width: 210px;
+        width: max-content;
+        max-width: min(280px, calc(100vw - 32px));
+        padding: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        background: #323232;
+        color: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+        z-index: 400;
+        transform-origin: top right;
+      }
+
+      .playground-project-team-action-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        cursor: pointer;
+      }
+
+      .playground-project-team-action-button:hover,
+      .playground-project-team-action-shell.is-open .playground-project-team-action-button {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-project-team-menu-item {
+        width: 100%;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 8px 10px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.94);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.2;
+        text-align: left;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-project-team-menu-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .playground-project-team-menu-item svg {
+        flex: 0 0 auto;
+        color: currentColor;
+      }
+
+      .playground-project-team-menu-item.is-danger {
+        color: rgba(255, 125, 145, 0.96);
+      }
+
+      .playground-project-team-menu-item.is-danger:hover {
+        background: rgba(255, 125, 145, 0.12);
+        color: rgba(255, 145, 162, 1);
+      }
+
+      .playground-project-team-menu-item:disabled {
+        cursor: default;
+        opacity: 0.55;
+      }
+
+      .playground-project-team-menu-item:disabled:hover {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-project-teams-table-shell td.is-actions {
+        position: relative;
+        overflow: visible;
+        z-index: 5;
+      }
+
+      .playground-auth-users-table-shell.playground-team-table-shell.playground-project-teams-table-shell {
+        position: relative;
+        background: transparent;
+        overflow: visible !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        z-index: 120;
+        isolation: isolate;
+      }
+
+      .playground-auth-users-table-shell.playground-team-table-shell.playground-project-teams-table-shell::before {
+        z-index: 0 !important;
+        pointer-events: none;
+      }
+
+      .playground-auth-users-table-shell.playground-team-table-shell.playground-project-teams-table-shell > * {
+        position: relative;
+        z-index: 1 !important;
+      }
+
+      .playground-project-teams-table-shell table,
+      .playground-project-teams-table-shell thead,
+      .playground-project-teams-table-shell tbody,
+      .playground-project-teams-table-shell tr,
+      .playground-project-teams-table-shell td,
+      .playground-project-teams-table-shell th {
+        overflow: visible;
+      }
+
+      .playground-project-teams-table-shell tr.is-menu-open,
+      .playground-project-teams-table-shell tr.is-menu-open td {
+        position: relative;
+        z-index: 320;
+      }
+
+      .playground-project-teams-table-shell tr:has(.playground-project-team-action-shell.is-open),
+      .playground-project-teams-table-shell tr:has(.playground-project-team-action-shell.is-open) td,
+      .playground-project-teams-table-shell td.is-actions:has(.playground-project-team-action-shell.is-open) {
+        position: relative;
+        z-index: 320;
+      }
+
+      .playground-project-teams-table-shell .playground-project-team-action-shell.is-open .playground-project-team-action-menu,
+      .playground-project-teams-add-shell.is-open .playground-project-teams-add-menu {
+        z-index: 420;
       }
 
       .playground-project-overview-panel-plain.playground-plugins-section {
@@ -3971,6 +4214,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         padding-bottom: 0;
       }
 
+      .playground-project-overview-rules-tab.is-inline {
+        gap: 12px;
+      }
+
       .playground-project-overview-strategy-tab .playground-tasks-detail-scroll,
       .playground-environments-page:not(.playground-agents-page) .playground-project-overview-strategy-tab .playground-project-overview-strategy-scroll,
       .playground-environments-page:not(.playground-agents-page) .playground-project-overview-rules-tab .playground-project-overview-rules-scroll {
@@ -4147,6 +4394,25 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         margin: 0;
         transform: translateX(-50%);
         z-index: 50;
+      }
+
+      .playground-project-overview-rules-composer-shell.is-inline {
+        position: relative;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        width: 100%;
+        transform: none;
+        z-index: auto;
+      }
+
+      .playground-project-overview-rules-tab.is-inline .playground-project-overview-rules-list {
+        flex: 0 1 auto;
+        overflow: visible;
+      }
+
+      .playground-project-overview-rules-tab.is-inline .playground-project-overview-rules-empty {
+        min-height: 180px;
       }
 
       .playground-project-overview-rules-runner.tb-runner-chat {
@@ -4831,17 +5097,17 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               ? "Mission Control has generated a strategy snapshot for the current project state."
               : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
           const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
-	          const activeProjectOverviewHomeTab = projectOverviewHomeTab === "resources" || projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "plugins" || projectOverviewHomeTab === "permissions"
-	            ? projectOverviewHomeTab
+          const normalizedProjectOverviewHomeTab = projectOverviewHomeTab === "rules" ? "strategy" : projectOverviewHomeTab;
+	          const activeProjectOverviewHomeTab = normalizedProjectOverviewHomeTab === "resources" || normalizedProjectOverviewHomeTab === "strategy" || normalizedProjectOverviewHomeTab === "plugins" || normalizedProjectOverviewHomeTab === "permissions"
+	            ? normalizedProjectOverviewHomeTab
 	            : "general";
           function renderProjectOverviewHomeTabs() {
             const tabs = [
 	              { id: "general", label: "General" },
 	              { id: "resources", label: "Resources" },
 		              { id: "strategy", label: "Strategy" },
-		              { id: "rules", label: "Rules" },
 		              { id: "plugins", label: "Plugins" },
-		              { id: "permissions", label: "Permissions" },
+		              { id: "permissions", label: "Teams" },
 		            ];
             return React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs" },
               React.createElement("div", { className: "playground-project-overview-chart-tabs" },
@@ -4865,6 +5131,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                       }
                       if (typeof setProjectOverviewFilesSubview === "function") {
                         setProjectOverviewFilesSubview("overview");
+                      }
+                      if (typeof setProjectOverviewPermissionTeamId === "function") {
+                        setProjectOverviewPermissionTeamId("");
+                      }
+                      if (tab.id === "permissions" && typeof requestProjectOverviewWorkspaceTeams === "function") {
+                        requestProjectOverviewWorkspaceTeams();
                       }
                       if (tab.id === "strategy") {
                         if (typeof setMissionControlSetupOpen === "function") {
@@ -6322,9 +6594,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           function renderOverviewTaskRow(task) {
             const taskId = String(task?.id || "").trim();
             const ticketNumber = taskTicketNumbersById[taskId] || task?.ticketNumber || "000";
-            const assigneeLabel = typeof getTaskAssigneeName === "function"
-              ? getTaskAssigneeName(task?.assigneeAgentId, "Unassigned")
-              : "Unassigned";
             const isSubtask = typeof isPlaygroundSubtaskRecord === "function" ? isPlaygroundSubtaskRecord(task) : false;
             const TaskTypeIcon = isSubtask ? Check : Bookmark;
             const isLaunchLocked = typeof isTaskThreadLaunchLocked === "function" ? isTaskThreadLaunchLocked(task) : false;
@@ -6370,8 +6639,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   React.createElement("div", { className: "playground-tasks-backlog-assignee-shell" },
                     typeof renderTaskAssigneeAvatar === "function"
                       ? renderTaskAssigneeAvatar(task, "playground-tasks-backlog-assignee-avatar")
-                      : null,
-                    React.createElement("span", { className: "playground-tasks-backlog-assignee" + (task?.assigneeAgentId ? "" : " is-unassigned") }, assigneeLabel)
+                      : null
                   )
                 ),
                 React.createElement("button", {
@@ -9579,7 +9847,11 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                           React.createElement("div", { className: "playground-tasks-empty-copy" },
                             "Add outcomes manually or run Mission Control to turn the strategy into measurable project outcomes."
                           )
-                        )
+                        ),
+                    React.createElement("div", { className: "playground-project-overview-strategy-add-row playground-project-overview-rules-inline-title-row" },
+                      React.createElement("h2", { className: "playground-project-overview-strategy-add-title" }, "Rules")
+                    ),
+                    renderProjectOverviewRulesPanel({ inline: true })
                   ),
                   React.createElement("div", { className: "playground-project-overview-strategy-card is-notes" },
                     React.createElement("div", { className: "playground-tasks-detail-description playground-project-overview-strategy-notes" },
@@ -9644,14 +9916,15 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	            );
 	          }
 
-	          function renderProjectOverviewRulesPanel() {
+	          function renderProjectOverviewRulesPanel(options = {}) {
+	            const isInline = Boolean(options?.inline);
 	            const ruleEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
 	            const canAddRule = Boolean(normalizePlaygroundProjectRuleEntry(projectRuleInputValue))
 	              && !projectSaveState.isSaving;
 
 	            return React.createElement("section", {
-	                className: "playground-project-overview-rules-tab",
-	                ref: projectOverviewRulesSurfaceRef,
+	                className: "playground-project-overview-rules-tab" + (isInline ? " is-inline" : ""),
+	                ref: isInline ? null : projectOverviewRulesSurfaceRef,
 	              },
 	              React.createElement("div", { className: "playground-project-overview-rules-list" },
 	                ruleEntries.length > 0
@@ -9737,7 +10010,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                    : null
 	              ),
 	              React.createElement("div", {
-	                  className: "playground-project-overview-rules-composer-shell playground-tasks-backlog-composer-shell" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""),
+	                  className: "playground-project-overview-rules-composer-shell playground-tasks-backlog-composer-shell"
+	                    + (isInline ? " is-inline" : "")
+	                    + (projectWallpaperActive ? " is-project-wallpaper-active" : ""),
 	                },
 	                React.createElement("div", { className: "tb-runner-chat playground-project-overview-rules-runner" },
 	                  React.createElement("div", { className: "task-input-box" },
@@ -9785,25 +10060,285 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                || selectedProject?.metadata?.permissionSet,
 	              "project"
 	            );
-	            return React.createElement("section", {
-	                className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-permissions-section",
+	            const projectMetadata = projectOverviewDraft?.metadata && typeof projectOverviewDraft.metadata === "object" && !Array.isArray(projectOverviewDraft.metadata)
+	              ? projectOverviewDraft.metadata
+	              : {};
+	            const projectTeamPermissionSets = projectMetadata.teamPermissionSets
+	              && typeof projectMetadata.teamPermissionSets === "object"
+	              && !Array.isArray(projectMetadata.teamPermissionSets)
+	                ? projectMetadata.teamPermissionSets
+	                : {};
+	            const availableWorkspaceTeams = Array.isArray(workspaceTeams)
+	              ? workspaceTeams
+	              : [];
+	            const projectRemovedTeamIds = new Set(
+	              (Array.isArray(projectMetadata.teamAccessRemovedIds) ? projectMetadata.teamAccessRemovedIds : [])
+	                .map((teamId) => String(teamId || "").trim())
+	                .filter(Boolean)
+	            );
+	            const removedWorkspaceTeams = availableWorkspaceTeams
+	              .map((team) => {
+	                const teamId = String(team?.id || "").trim();
+	                return teamId && projectRemovedTeamIds.has(teamId) ? { ...team, id: teamId } : null;
+	              })
+	              .filter(Boolean);
+	            const projectPermissionTeams = [
+	              {
+	                id: "all_agents",
+	                name: "All Agents",
+	                meta: "Always included",
+	                permission: "Project default",
+	                createdAt: "",
+	                locked: true,
+	                permissionSet: projectPermissionSet,
 	              },
-	              React.createElement("div", { className: "playground-plugins-section-header" },
-	                React.createElement("div", { className: "playground-plugins-section-copy" },
-	                  React.createElement("h2", { className: "playground-plugins-section-title" }, "Permissions"),
-	                  React.createElement("p", { className: "playground-plugins-section-description" },
-	                    "Project permissions define the default ring policy for work in this project. Runtime checks use the strictest policy across project, agent, and team scope."
+	              ...availableWorkspaceTeams.map((team) => {
+	                const teamId = String(team?.id || "").trim();
+	                if (!teamId || projectRemovedTeamIds.has(teamId)) {
+	                  return null;
+	                }
+	                return {
+	                  id: teamId,
+	                  name: team?.name || "Untitled team",
+	                  meta: team?.memberCount ? String(team.memberCount) + " members" : "Team workspace",
+	                  permission: projectTeamPermissionSets[teamId] ? "Project override" : "Team policy",
+	                  createdAt: team?.createdAt || "",
+	                  locked: false,
+	                  permissionSet: normalizePlaygroundPermissionSet(projectTeamPermissionSets[teamId] || team?.permissionSet, "team"),
+	                };
+	              }).filter(Boolean),
+	            ];
+	            const formatProjectTeamCreatedDate = (value) => {
+	              if (!value) {
+	                return "";
+	              }
+	              try {
+	                return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value));
+	              } catch {
+	                return String(value || "");
+	              }
+	            };
+	            const selectedPermissionTeam = projectPermissionTeams.find((team) =>
+	              String(team.id) === String(projectOverviewPermissionTeamId || "")
+	            ) || null;
+	            const closeProjectTeamMenu = () => setProjectOverviewTeamMenuId?.("");
+	            const handleOpenTeamDetails = (team) => {
+	              if (!team || team.locked) {
+	                return;
+	              }
+	              closeProjectTeamMenu();
+	              onOpenTeamPage?.(team.id);
+	            };
+	            const handleRemoveProjectTeam = (team) => {
+	              if (!team || team.locked || !hasRealAccess) {
+	                return;
+	              }
+	              closeProjectTeamMenu();
+	              if (String(projectOverviewPermissionTeamId || "") === String(team.id || "")) {
+	                setProjectOverviewPermissionTeamId?.("");
+	              }
+	              updateProjectTeamWorkspaceMembership?.(team.id, "remove");
+	            };
+	            const handleAddProjectTeam = (team) => {
+	              if (!team || !hasRealAccess) {
+	                return;
+	              }
+	              closeProjectTeamMenu();
+	              updateProjectTeamWorkspaceMembership?.(team.id, "add");
+	            };
+	            const renderProjectTeamMenu = (team) => {
+	              const menuId = "team:" + String(team.id || "");
+	              if (projectOverviewTeamMenuId !== menuId) {
+	                return null;
+	              }
+	              return React.createElement("div", {
+	                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-team-action-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	                  onClick: (event) => event.stopPropagation(),
+	                },
+	                team.locked
+	                  ? React.createElement("button", {
+	                      type: "button",
+	                      className: "tb-popup-row playground-project-team-menu-item",
+	                      disabled: true,
+	                    }, "Default workspace access")
+	                  : React.createElement(React.Fragment, null,
+	                      React.createElement("button", {
+	                        type: "button",
+	                        className: "tb-popup-row playground-project-team-menu-item",
+	                        onClick: () => handleOpenTeamDetails(team),
+	                      },
+	                        React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                        React.createElement("span", null, "View team")
+	                      ),
+	                      hasRealAccess
+	                        ? React.createElement("button", {
+	                            type: "button",
+	                            className: "tb-popup-row playground-project-team-menu-item is-danger",
+	                            onClick: () => handleRemoveProjectTeam(team),
+	                          },
+	                            React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                            React.createElement("span", null, "Remove from project")
+	                          )
+	                        : null
+	                    )
+	              );
+	            };
+	            const renderAddProjectTeamsMenu = () => {
+	              if (projectOverviewTeamMenuId !== "add-teams") {
+	                return null;
+	              }
+	              return React.createElement("div", {
+	                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-teams-add-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	                  onClick: (event) => event.stopPropagation(),
+	                },
+	                removedWorkspaceTeams.length
+	                  ? removedWorkspaceTeams.map((team) =>
+	                      React.createElement("button", {
+	                        key: team.id,
+	                        type: "button",
+	                        className: "tb-popup-row playground-project-team-menu-item",
+	                        onClick: () => handleAddProjectTeam(team),
+	                      },
+	                        React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                        React.createElement("span", null, team.name || "Untitled team")
+	                      )
+	                    )
+	                  : React.createElement("button", {
+	                      type: "button",
+	                      className: "tb-popup-row playground-project-team-menu-item",
+	                      disabled: true,
+	                    }, workspaceTeamsLoading ? "Loading teams..." : "All teams already have access")
+	              );
+	            };
+
+	            const renderProjectTeamTable = () =>
+	              React.createElement(React.Fragment, null,
+	                React.createElement("div", { className: "playground-project-teams-table-heading" },
+	                  React.createElement("h2", { className: "playground-project-teams-table-title" }, "Manage Project Access"),
+	                  hasRealAccess
+	                    ? React.createElement("div", { className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell" + (projectOverviewTeamMenuId === "add-teams" ? " is-open" : "") },
+	                        React.createElement("button", {
+	                          type: "button",
+	                          className: "playground-files-control-button playground-project-teams-add-button",
+	                          onClick: (event) => {
+	                            event.stopPropagation();
+	                            if (!workspaceTeamsLoading) {
+	                              requestProjectOverviewWorkspaceTeams?.();
+	                            }
+	                            setProjectOverviewTeamMenuId?.((current) => current === "add-teams" ? "" : "add-teams");
+	                          },
+	                          disabled: workspaceTeamsLoading,
+	                        },
+	                          React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                          React.createElement("span", null, "Add Teams")
+	                        ),
+	                        renderAddProjectTeamsMenu()
+	                      )
+	                    : null
+	                ),
+	                React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell playground-project-teams-table-shell" },
+	                  React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table" },
+	                    React.createElement("colgroup", null,
+	                      React.createElement("col", { className: "playground-team-table-col-main" }),
+	                      React.createElement("col", { className: "playground-team-table-col-role" }),
+	                      React.createElement("col", { className: "playground-team-table-col-meta" }),
+	                      React.createElement("col", { className: "playground-team-table-col-actions" })
+	                    ),
+	                    React.createElement("thead", null,
+	                      React.createElement("tr", null,
+	                        React.createElement("th", null, "Team"),
+	                        React.createElement("th", null, "Permission"),
+	                        React.createElement("th", null, "Created"),
+	                        React.createElement("th", { className: "is-actions" }, "")
+	                      )
+	                    ),
+	                    React.createElement("tbody", null,
+	                      projectPermissionTeams.map((team) =>
+	                        React.createElement("tr", {
+	                          key: team.id,
+	                          className: "is-clickable" + (projectOverviewTeamMenuId === "team:" + String(team.id || "") ? " is-menu-open" : ""),
+	                          tabIndex: 0,
+	                          onClick: () => setProjectOverviewPermissionTeamId?.(team.id),
+	                          onKeyDown: (event) => {
+	                            if (event.key === "Enter" || event.key === " ") {
+	                              event.preventDefault();
+	                              setProjectOverviewPermissionTeamId?.(team.id);
+	                            }
+	                          },
+	                        },
+	                          React.createElement("td", null,
+	                            React.createElement("div", { className: "playground-team-table-title" }, team.name),
+	                            React.createElement("div", { className: "playground-team-table-meta" }, team.meta)
+	                          ),
+	                          React.createElement("td", { className: "playground-auth-users-cell" }, team.permission),
+	                          React.createElement("td", { className: "playground-auth-users-cell" }, team.locked ? "Default" : (formatProjectTeamCreatedDate(team.createdAt) || "—")),
+	                          React.createElement("td", { className: "is-actions" },
+	                            React.createElement("div", {
+	                                className: "playground-tasks-toolbar-popup-shell playground-project-team-action-shell" + (projectOverviewTeamMenuId === "team:" + String(team.id || "") ? " is-open" : ""),
+	                              },
+	                              React.createElement("button", {
+	                                type: "button",
+	                                className: "playground-project-team-action-button",
+	                                onClick: (event) => {
+	                                  event.preventDefault();
+	                                  event.stopPropagation();
+	                                  const menuId = "team:" + String(team.id || "");
+	                                  setProjectOverviewTeamMenuId?.((current) => current === menuId ? "" : menuId);
+	                                },
+	                                "aria-label": "Team actions for " + team.name,
+	                                "aria-expanded": projectOverviewTeamMenuId === "team:" + String(team.id || "") ? "true" : "false",
+	                              }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
+	                              renderProjectTeamMenu(team)
+	                            )
+	                          )
+	                        )
+	                      )
+	                    )
 	                  )
 	                )
-	              ),
-	              React.createElement("div", { className: "playground-agents-permissions-card" },
-	                renderAgentPermissionsList(projectPermissionSet, {
-	                  subjectType: "project",
-	                  onRingAccessChange: updateProjectPermissionRingAccess,
-	                  onActionRingChange: updateProjectPermissionActionRing,
-	                  onActionAccessChange: updateProjectPermissionActionAccess,
-	                })
-	              )
+	              );
+
+	            if (selectedPermissionTeam) {
+	              const isAllAgentsTeam = selectedPermissionTeam.id === "all_agents";
+	              return React.createElement("section", {
+	                  className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-permissions-section playground-project-teams-section",
+	                },
+	                React.createElement("div", { className: "playground-project-team-permissions-header" },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-project-team-permissions-back",
+	                    onClick: () => setProjectOverviewPermissionTeamId?.(""),
+	                  },
+	                    React.createElement(ArrowLeft, { width: 13, height: 13, strokeWidth: 1.9 }),
+	                    React.createElement("span", null, "Teams")
+	                  ),
+	                  React.createElement("div", { className: "playground-project-team-permissions-title" },
+	                    (selectedPermissionTeam.name || "Team") + " Permissions"
+	                  )
+	                ),
+	                renderPlaygroundPermissionPanel(
+	                  isAllAgentsTeam ? projectPermissionSet : selectedPermissionTeam.permissionSet,
+	                  isAllAgentsTeam
+	                    ? {
+	                        subjectType: "project",
+	                        onRingAccessChange: updateProjectPermissionRingAccess,
+	                        onActionRingChange: updateProjectPermissionActionRing,
+	                        onActionAccessChange: updateProjectPermissionActionAccess,
+	                      }
+	                    : {
+	                        subjectType: "team",
+	                        onRingAccessChange: (ringId, nextAccess) => updateProjectTeamPermissionRingAccess?.(selectedPermissionTeam.id, ringId, nextAccess),
+	                        onActionRingChange: (actionId, nextRingId) => updateProjectTeamPermissionActionRing?.(selectedPermissionTeam.id, actionId, nextRingId),
+	                        onActionAccessChange: (actionId, nextAccess) => updateProjectTeamPermissionActionAccess?.(selectedPermissionTeam.id, actionId, nextAccess),
+	                      }
+	                )
+	              );
+	            }
+
+	            return React.createElement("section", {
+	                className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section",
+	              },
+	              renderProjectTeamTable()
 	            );
 	          }
 
@@ -9811,9 +10346,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 ? renderProjectOverviewResourcesPanel()
                 : activeProjectOverviewHomeTab === "strategy"
                   ? renderProjectOverviewStrategyPanel()
-                  : activeProjectOverviewHomeTab === "rules"
-                    ? renderProjectOverviewRulesPanel()
-                    : activeProjectOverviewHomeTab === "plugins"
+                  : activeProjectOverviewHomeTab === "plugins"
                       ? renderProjectOverviewPluginsPanel()
                       : activeProjectOverviewHomeTab === "permissions"
                         ? renderProjectOverviewPermissionsPanel()

@@ -379,7 +379,7 @@ const html = `<!doctype html>
         border-radius: 14px;
         border: 1px solid rgba(255,255,255,0.12);
         background: #080808;
-        padding: 12px;
+        padding: 9px;
       }
 
       .panel h3 {
@@ -655,7 +655,7 @@ const html = `<!doctype html>
       .right {
         min-width: 0;
         height: 100%;
-        padding: 6px;
+        padding: 12px;
       }
 
       .playground-shell {
@@ -899,7 +899,7 @@ const html = `<!doctype html>
         top: calc(100% + 6px);
         left: 0;
         width: 100%;
-        padding: 6px;
+        padding: 8px;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 14px;
         background: #323232;
@@ -8867,19 +8867,40 @@ const html = `<!doctype html>
       }
 
       .notification-menu {
+        --playground-top-nav-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
         position: fixed;
         top: 58px;
         right: 12px;
         width: min(360px, calc(100vw - 24px));
         max-height: min(560px, calc(100vh - 76px));
+        padding-top: 4px;
+        padding-bottom: 4px;
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        border-radius: 15px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: #323232;
+        border-radius: 25px;
+        border: 0;
+        background: rgba(30, 30, 30, 0.5);
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
+      }
+
+      .notification-menu::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-top-nav-popup-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .notification-menu-header,
@@ -9977,11 +9998,37 @@ const html = `<!doctype html>
       }
 
       .account-menu.is-top-nav {
+        --playground-top-nav-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
         left: auto;
         right: 12px;
         top: 58px;
         bottom: auto;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        border: 0;
+        border-radius: 25px;
+        background: rgba(30, 30, 30, 0.5);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
         transform-origin: top right;
+      }
+
+      .account-menu.is-top-nav::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-top-nav-popup-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .account-menu-animate-up-in {
@@ -10159,16 +10206,38 @@ const html = `<!doctype html>
       }
 
       .thread-search-modal {
+        --playground-top-nav-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
+        position: relative;
         width: min(792px, calc(100vw - 24px));
         max-height: min(78vh, 720px);
+        padding-top: 4px;
+        padding-bottom: 4px;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        border-radius: 15px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: #323232;
+        border-radius: 25px;
+        border: 0;
+        background: rgba(30, 30, 30, 0.5);
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
+      }
+
+      .thread-search-modal::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-top-nav-popup-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .thread-search-input-row {
@@ -24942,6 +25011,186 @@ const html = `<!doctype html>
         background: transparent;
       }
 
+      .playground-permission-rings-overview {
+        --playground-permission-ring-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        overflow: visible;
+        display: grid;
+        grid-template-columns: 170px minmax(0, 1fr);
+        align-items: center;
+        gap: 22px;
+        min-width: 0;
+        margin-bottom: 42px;
+        padding: 20px;
+        border: 0;
+        border-radius: 15px;
+        background: transparent;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-permission-rings-overview::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-permission-ring-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-permission-rings-visual {
+        position: relative;
+        width: 148px;
+        height: 148px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        justify-self: center;
+      }
+
+      .playground-permission-ring-orbit {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        box-sizing: border-box;
+        border-radius: 999px;
+        padding: 8px;
+        border: 0;
+        background: rgba(255, 255, 255, 0.1);
+        opacity: var(--permission-ring-opacity, 0.1);
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        mask-composite: exclude;
+        transform: translate(-50%, -50%);
+      }
+
+      .playground-permission-ring-orbit.is-ring-3 {
+        width: 148px;
+        height: 148px;
+        --permission-ring-opacity: var(--permission-ring-3-opacity, 0.1);
+        background: linear-gradient(rgb(247, 71, 107) 0%, rgb(226, 28, 81) 100%);
+      }
+
+      .playground-permission-ring-orbit.is-ring-2 {
+        width: 98px;
+        height: 98px;
+        --permission-ring-opacity: var(--permission-ring-2-opacity, 0.1);
+        background: linear-gradient(rgb(18, 95, 251) 0%, rgb(13, 72, 251) 100%);
+      }
+
+      .playground-permission-ring-orbit.is-ring-1 {
+        width: 48px;
+        height: 48px;
+        --permission-ring-opacity: var(--permission-ring-1-opacity, 0.1);
+        background: linear-gradient(rgb(57, 184, 119) 0%, rgb(43, 139, 89) 100%);
+      }
+
+      .playground-permission-rings-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-permission-ring-summary-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 18px;
+        min-height: 56px;
+        padding: 12px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-permission-ring-summary-row:first-child {
+        border-top: 0;
+      }
+
+      .playground-permission-ring-summary-copy {
+        min-width: 0;
+      }
+
+      .playground-permission-ring-summary-title-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        max-width: 100%;
+        min-width: 0;
+      }
+
+      .playground-permission-ring-summary-title {
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.25;
+      }
+
+      .playground-permission-ring-summary-info {
+        position: relative;
+        z-index: 40;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.42);
+        padding: 0;
+        cursor: help;
+      }
+
+      .playground-permission-ring-summary-info:hover,
+      .playground-permission-ring-summary-info:focus-visible {
+        color: rgba(255, 255, 255, 0.84);
+      }
+
+      .playground-permission-ring-summary-info::after {
+        content: attr(data-tooltip);
+        pointer-events: none;
+        position: absolute;
+        z-index: 140;
+        left: 50%;
+        bottom: calc(100% + 8px);
+        width: min(280px, 72vw);
+        padding: 9px 10px;
+        border-radius: 8px;
+        background: rgba(32, 32, 34, 0.98);
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.34);
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.4;
+        white-space: normal;
+        opacity: 0;
+        visibility: hidden;
+        transform: translate(-50%, 4px);
+        transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+      }
+
+      .playground-permission-ring-summary-info:hover::after,
+      .playground-permission-ring-summary-info:focus-visible::after {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, 0);
+      }
+
       .playground-agents-permission-row {
         display: flex;
         align-items: center;
@@ -24951,14 +25200,153 @@ const html = `<!doctype html>
         padding: 8px 0;
       }
 
+      .playground-permissions-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        min-width: 0;
+        overflow: visible;
+      }
+
+      .playground-permissions-panel > .playground-permission-rings-overview {
+        margin-bottom: 42px;
+      }
+
+      .playground-permissions-panel-details {
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
       .playground-agents-permission-ring-card {
         position: relative;
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 0;
         padding: 16px;
         border-radius: 15px;
         background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-agents-permissions-list.is-details-only {
+        gap: 18px;
+      }
+
+      .playground-agents-permission-ring-card.is-details-only {
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-agents-permission-ring-card.is-details-only::before {
+        content: none;
+      }
+
+      .playground-agents-permission-ring-card.is-details-only .playground-agents-permission-action-row:first-child {
+        border-top: 0;
+      }
+
+      .playground-agents-permission-ring-card.is-details-only:last-child {
+        margin-bottom: 24px;
+      }
+
+      .playground-agents-permission-detail-ring-title-row {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) minmax(310px, auto);
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+        margin-bottom: 4px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .playground-agents-permission-detail-ring-title-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .playground-agents-permission-detail-column-headings {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 16px;
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .playground-agents-permission-detail-column-headings span {
+        display: inline-flex;
+        justify-content: flex-end;
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .playground-agents-permission-detail-column-headings span:first-child {
+        min-width: 104px;
+      }
+
+      .playground-agents-permission-detail-column-headings span:last-child {
+        min-width: 126px;
+      }
+
+      .playground-permission-mini-ring-icon {
+        position: relative;
+        display: inline-flex;
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+      }
+
+      .playground-permission-mini-ring-orbit {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 999px;
+        transform: translate(-50%, -50%);
+      }
+
+      .playground-permission-mini-ring-orbit.is-ring-3 {
+        width: 18px;
+        height: 18px;
+      }
+
+      .playground-permission-mini-ring-orbit.is-ring-2 {
+        width: 12px;
+        height: 12px;
+      }
+
+      .playground-permission-mini-ring-orbit.is-ring-1 {
+        width: 6px;
+        height: 6px;
+      }
+
+      .playground-permission-mini-ring-orbit.is-active {
+        border-color: rgba(255, 255, 255, 1);
+      }
+
+      .playground-permission-mini-ring-orbit.is-ring-3.is-active {
+        border-color: rgb(247, 71, 107);
+      }
+
+      .playground-permission-mini-ring-orbit.is-ring-2.is-active {
+        border-color: rgb(18, 95, 251);
+      }
+
+      .playground-permission-mini-ring-orbit.is-ring-1.is-active {
+        border-color: rgb(57, 184, 119);
       }
 
       .playground-agents-permission-ring-card::before {
@@ -31907,6 +32295,333 @@ const html = `<!doctype html>
         padding-bottom: 15px;
       }
 
+      .playground-tasks-ticket-screen,
+      .playground-tasks-ticket-screen-detail,
+      .playground-tasks-ticket-screen-scroll,
+      .playground-tasks-ticket-screen-inner,
+      .playground-tasks-ticket-screen-panel,
+      .playground-tasks-ticket-screen-sidebar {
+        min-width: 0;
+        min-height: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-tasks-ticket-screen {
+        width: 100%;
+        height: 100%;
+      }
+
+      .playground-tasks-ticket-screen-detail,
+      .playground-tasks-ticket-screen-inner,
+      .playground-tasks-ticket-screen-panel {
+        background: transparent;
+        border: 0;
+        overflow: hidden;
+      }
+
+      .playground-tasks-ticket-screen-scroll {
+        overflow: hidden;
+      }
+
+      .playground-tasks-ticket-screen-inner,
+      .playground-tasks-ticket-screen-panel {
+        height: 100%;
+      }
+
+      .playground-project-workspace-inner.playground-tasks-ticket-screen-inner {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell {
+        flex: 1;
+        min-height: 0;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-main,
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-body {
+        background: transparent;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-main,
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-body,
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar,
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-scroll,
+      .playground-tasks-ticket-screen-panel .playground-tasks-comment-dock {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar {
+        grid-template-columns: minmax(0, 1fr) 0 auto;
+        gap: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar .playground-content-nav-center {
+        display: none;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar-title {
+        width: 100%;
+        max-width: none;
+        gap: 12px;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar-title-meta {
+        gap: 12px;
+      }
+
+      .playground-tasks-ticket-page-nav-title {
+        min-width: 0;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 5px;
+      }
+
+      .playground-tasks-ticket-page-nav-ticket-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-tasks-ticket-page-nav-back {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: currentColor;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .playground-tasks-ticket-page-nav-back:hover {
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-tasks-ticket-page-nav-ticket {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-ticket-page-nav-title-input {
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.18;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-comment-dock {
+        margin-top: auto;
+        padding-bottom: 0;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-comments > .playground-tasks-comment-dock {
+        margin-top: 12px;
+        padding: 0;
+      }
+
+	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page {
+	        grid-template-columns: minmax(0, 1fr) 320px 0px;
+	        gap: 0;
+	      }
+
+	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page.is-preview-open {
+	        grid-template-columns: minmax(0, 1fr) 320px minmax(300px, 360px);
+	        gap: 0;
+	      }
+
+		      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page.is-ticket-sidebar-collapsed {
+		        grid-template-columns: minmax(0, 1fr) 34px 0px;
+		        gap: 0;
+		      }
+
+		      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page.is-ticket-sidebar-collapsed.is-preview-open {
+		        grid-template-columns: minmax(0, 1fr) 34px minmax(300px, 360px);
+		        gap: 0;
+		      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page > .playground-tasks-detail-main {
+        grid-column: 1;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page > .playground-tasks-ticket-screen-sidebar {
+        grid-column: 2;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page > .playground-tasks-detail-preview-pane {
+        grid-column: 3;
+      }
+
+	      .playground-tasks-ticket-screen-sidebar {
+	        flex: 0 0 320px;
+	        width: 320px;
+	        display: flex;
+	        flex-direction: column;
+		        gap: 12px;
+			        padding-top: 12px;
+		        overflow: auto;
+		        scrollbar-width: none;
+		        transition: width 220ms cubic-bezier(0.16, 1, 0.3, 1), flex-basis 220ms cubic-bezier(0.16, 1, 0.3, 1);
+		      }
+
+		      .playground-tasks-detail-shell.is-ticket-full-page.is-ticket-sidebar-collapsed > .playground-tasks-ticket-screen-sidebar {
+		        flex-basis: 34px;
+		        width: 34px;
+		        min-width: 34px;
+		        overflow: visible;
+		        pointer-events: auto;
+		      }
+
+	      .playground-tasks-ticket-screen-sidebar::-webkit-scrollbar {
+	        display: none;
+	      }
+
+		      .playground-tasks-ticket-sidebar-card,
+		      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-threads-section,
+		      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-facts {
+		        position: relative;
+		        overflow: hidden;
+		        border: 1px solid rgba(255, 255, 255, 0.05);
+		        border-radius: 10px;
+		        background: rgba(255, 255, 255, 0.05);
+	        padding: 12px;
+	        display: flex;
+	        flex-direction: column;
+	        gap: 12px;
+	        box-sizing: border-box;
+	      }
+
+		      .playground-tasks-ticket-sidebar-card::before,
+		      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-threads-section::before,
+		      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-facts::before {
+	        content: "";
+	        position: absolute;
+	        inset: 0;
+	        pointer-events: none;
+        border-radius: inherit;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 48%);
+	        opacity: 0.45;
+	      }
+
+	      .playground-tasks-ticket-screen-sidebar .playground-tasks-ticket-controls-card::before,
+	      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-threads-section::before {
+	        content: none;
+	        display: none;
+	      }
+
+	      .playground-tasks-ticket-sidebar-card > *,
+	      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-threads-section > *,
+	      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-facts > * {
+	        position: relative;
+	        z-index: 1;
+	      }
+
+	      .playground-tasks-ticket-sidebar-card-title,
+	      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-section-title,
+	      .playground-tasks-ticket-screen-sidebar .playground-plugins-section-title {
+	        color: rgba(255, 255, 255, 0.94);
+	        font-size: 12px;
+	        line-height: 1.25;
+	        font-weight: 500;
+	      }
+
+	      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-facts {
+	        overflow: visible;
+	        box-shadow: none;
+	        backdrop-filter: blur(50px);
+	        -webkit-backdrop-filter: blur(50px);
+	      }
+
+		      .playground-tasks-ticket-sidebar-toggle-button {
+		        flex: 0 0 auto;
+		      }
+
+		      .playground-tasks-ticket-sidebar-toolbar {
+		        display: flex;
+		        align-items: center;
+		        justify-content: flex-end;
+		        min-height: 32px;
+		        width: 100%;
+		      }
+
+      .playground-tasks-ticket-controls-card {
+        gap: 12px;
+      }
+
+      .playground-tasks-ticket-controls-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-tasks-ticket-thread-run-row {
+        margin-top: auto;
+      }
+
+      .playground-tasks-ticket-control-button {
+        width: 100%;
+        min-height: 34px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.94);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 7px 12px;
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .playground-tasks-ticket-control-button:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .playground-tasks-ticket-control-button:disabled {
+        cursor: default;
+        opacity: 0.48;
+      }
+
+      .playground-tasks-ticket-control-button.is-danger {
+        color: rgba(255, 111, 132, 0.95);
+      }
+
+      .playground-tasks-ticket-screen-sidebar .playground-plugins-section-header {
+        padding-bottom: 0 !important;
+        border-bottom: 0 !important;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-close-button {
+        display: none;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar-ticket {
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 400;
+      }
+
       .playground-tasks-detail-shell {
         width: 100%;
         height: 100%;
@@ -34782,24 +35497,46 @@ const html = `<!doctype html>
         flex: 0 0 auto;
       }
 
+      .playground-tasks-priority-bars-icon {
+        width: 14px !important;
+        height: 10px !important;
+        display: inline-flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 2px;
+      }
+
+      .playground-tasks-priority-bars-bar {
+        width: 2px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .playground-tasks-priority-bars-bar:nth-child(1) {
+        height: 4px;
+      }
+
+      .playground-tasks-priority-bars-bar:nth-child(2) {
+        height: 7px;
+      }
+
+      .playground-tasks-priority-bars-bar:nth-child(3) {
+        height: 10px;
+      }
+
+      .playground-tasks-priority-bars-bar.is-active {
+        background: rgba(255, 255, 255, 0.92);
+      }
+
       .playground-tasks-priority-value-text {
         white-space: nowrap;
       }
 
-      .playground-tasks-priority-value.is-low .playground-tasks-priority-value-icon {
-        color: #66a6ff;
-      }
-
-      .playground-tasks-priority-value.is-medium .playground-tasks-priority-value-icon {
-        color: #f4c95d;
-      }
-
-      .playground-tasks-priority-value.is-high .playground-tasks-priority-value-icon {
-        color: #ff9b4a;
-      }
-
+      .playground-tasks-priority-value.is-low .playground-tasks-priority-value-icon,
+      .playground-tasks-priority-value.is-medium .playground-tasks-priority-value-icon,
+      .playground-tasks-priority-value.is-high .playground-tasks-priority-value-icon,
       .playground-tasks-priority-value.is-critical .playground-tasks-priority-value-icon {
-        color: #ff9d9d;
+        color: rgba(255, 255, 255, 0.92);
       }
 
       .playground-tasks-schedule-anchor {
@@ -36138,6 +36875,41 @@ const html = `<!doctype html>
 
       .playground-tasks-comment-bar.is-review-mode::before {
         background: linear-gradient(-10deg, rgba(246, 190, 93, 0.7), rgba(246, 190, 93, 0.42), rgba(255, 224, 153, 0.5));
+      }
+
+      .playground-tasks-detail-shell .playground-tasks-comment-bar {
+        min-height: 42px;
+        padding: 0 7px 0 12px;
+        border-radius: 21px;
+        gap: 7px;
+      }
+
+      .playground-tasks-detail-shell .playground-tasks-comment-bar::before {
+        border-radius: 21px;
+      }
+
+      .playground-tasks-detail-shell .playground-tasks-comment-mode-token {
+        margin-bottom: 11px;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .playground-tasks-detail-shell .playground-tasks-comment-input {
+        min-height: 40px;
+        padding: 11px 0 9px;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .playground-tasks-detail-shell .playground-tasks-comment-send-button {
+        width: 32px;
+        height: 32px;
+        margin-bottom: 5px;
+      }
+
+      .playground-tasks-detail-shell .playground-tasks-comment-send-icon {
+        width: 14px;
+        height: 14px;
       }
 
       .playground-tasks-comment-mode-token {
@@ -41027,6 +41799,10 @@ ${METRONOME_PAGE_CSS}
         padding-bottom: 10px;
       }
 
+      .playground-content-body.is-tasks-page .playground-environments-page.playground-tasks-ticket-screen:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll {
+        padding-bottom: 10px;
+      }
+
       .playground-content-body.is-tasks-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll::before,
       .playground-content-body.is-calendar-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll::before {
         content: none !important;
@@ -41269,7 +42045,7 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-tasks-backlog-heading {
-        font-size: 24px;
+        font-size: 18px;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.94);
         line-height: 1.2;
@@ -41640,6 +42416,37 @@ ${METRONOME_PAGE_CSS}
         min-width: 280px;
         max-height: min(720px, calc(100vh - 72px));
         transform-origin: top right;
+      }
+
+      .playground-thread-nav-popup-shell .playground-thread-nav-popup-menu,
+      .playground-metronome-top-nav-menu-shell .playground-metronome-top-nav-menu {
+        --playground-top-nav-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
+        padding-top: 4px;
+        padding-bottom: 4px;
+        border: 0;
+        border-radius: 25px;
+        background: rgba(30, 30, 30, 0.5);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
+      }
+
+      .playground-thread-nav-popup-shell .playground-thread-nav-popup-menu::before,
+      .playground-metronome-top-nav-menu-shell .playground-metronome-top-nav-menu::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-top-nav-popup-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .playground-thread-nav-popup-static-row {
@@ -42057,7 +42864,7 @@ ${METRONOME_PAGE_CSS}
         min-width: 0;
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 7px;
       }
 
       .playground-tasks-backlog-main {
@@ -42065,7 +42872,7 @@ ${METRONOME_PAGE_CSS}
         min-width: 0;
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 7px;
       }
 
       .playground-tasks-backlog-section {
@@ -42184,9 +42991,9 @@ ${METRONOME_PAGE_CSS}
 
       .playground-tasks-backlog-ticket {
         flex: 0 0 auto;
-        color: var(--playground-task-color-accent, rgba(255, 255, 255, 0.92));
+        color: rgba(255, 255, 255, 0.7);
         font-size: 12px;
-        font-weight: 500;
+        font-weight: 400;
         line-height: 1;
       }
 
@@ -42198,6 +43005,23 @@ ${METRONOME_PAGE_CSS}
       .playground-tasks-backlog-item.is-active {
         background: var(--playground-task-color-surface-active, rgba(255, 255, 255, 0.1));
         color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-tasks-project-workspace .playground-tasks-backlog-view .playground-tasks-backlog-item {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-tasks-project-workspace .playground-tasks-backlog-view .playground-tasks-backlog-item::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-tasks-project-workspace .playground-tasks-backlog-view .playground-tasks-backlog-item:hover {
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .playground-tasks-project-workspace .playground-tasks-backlog-view .playground-tasks-backlog-item.is-active {
+        background: rgba(255, 255, 255, 0.1);
       }
 
       .playground-tasks-backlog-title {
@@ -50224,6 +51048,260 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         return normalizePlaygroundPermissionAccess(actionPolicy?.access, inheritedAccess);
       }
 
+      function getPlaygroundPermissionAccessLabel(access) {
+        return PLAYGROUND_PERMISSION_ACCESS_OPTIONS.find((option) => option.id === access)?.label || "Custom";
+      }
+
+      function getPlaygroundPermissionAccessColor(access) {
+        switch (normalizePlaygroundPermissionAccess(access, "no_access")) {
+          case "full_access":
+            return "rgba(255, 255, 255, 1)";
+          case "ask_for_permission":
+            return "rgba(255, 255, 255, 0.66)";
+          case "read_only":
+            return "rgba(255, 255, 255, 0.33)";
+          case "no_access":
+          default:
+            return "rgba(255, 255, 255, 0.10)";
+        }
+      }
+
+      function getPlaygroundPermissionAccessOpacity(access) {
+        switch (normalizePlaygroundPermissionAccess(access, "no_access")) {
+          case "full_access":
+            return "1";
+          case "ask_for_permission":
+            return "0.66";
+          case "read_only":
+            return "0.33";
+          case "no_access":
+          default:
+            return "0.1";
+        }
+      }
+
+      function renderPlaygroundPermissionAccessSelect({ value, onChange, ariaLabel, includeInherit = false, inheritedAccess = "", disabled = false }) {
+        const selectedValue = includeInherit && !value ? "" : normalizePlaygroundPermissionAccess(value);
+        return React.createElement("label", {
+            className: "playground-agents-permission-select-shell",
+            "aria-label": ariaLabel,
+          },
+          React.createElement("select", {
+              className: "playground-agents-permission-select",
+              value: selectedValue,
+              onChange: (event) => {
+                if (typeof onChange === "function") {
+                  onChange(event.target.value);
+                }
+              },
+              disabled: Boolean(disabled),
+            },
+            includeInherit
+              ? React.createElement("option", { value: "" }, "Inherit " + getPlaygroundPermissionAccessLabel(inheritedAccess))
+              : null,
+            PLAYGROUND_PERMISSION_ACCESS_OPTIONS.map((option) =>
+              React.createElement("option", { key: option.id, value: option.id }, option.label)
+            )
+          )
+        );
+      }
+
+      function renderPlaygroundPermissionRingSelect({ value, onChange, ariaLabel, disabled = false }) {
+        return React.createElement("label", {
+            className: "playground-agents-permission-select-shell is-ring",
+            "aria-label": ariaLabel,
+          },
+          React.createElement("select", {
+              className: "playground-agents-permission-select",
+              value: normalizePlaygroundPermissionRingId(value, "ring_1"),
+              onChange: (event) => {
+                if (typeof onChange === "function") {
+                  onChange(event.target.value);
+                }
+              },
+              disabled: Boolean(disabled),
+            },
+            PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) =>
+              React.createElement("option", { key: ring.id, value: ring.id }, ring.label + " · " + ring.shortLabel)
+            )
+          )
+        );
+      }
+
+      function renderPlaygroundPermissionRingsOverview(permissionSet, handlers = {}) {
+        const subjectType = normalizePlaygroundPermissionSubjectType(handlers.subjectType || permissionSet?.subjectType, "agent");
+        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, subjectType);
+        const isDisabled = Boolean(handlers.disabled);
+        const onRingAccessChange = !isDisabled && typeof handlers.onRingAccessChange === "function"
+          ? handlers.onRingAccessChange
+          : null;
+        const ringAccessById = PLAYGROUND_PERMISSION_RING_DEFINITIONS.reduce((result, ring) => {
+          result[ring.id] = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
+          return result;
+        }, {});
+
+        return React.createElement("section", {
+            className: "playground-permission-rings-overview",
+            style: {
+              "--permission-ring-1-opacity": getPlaygroundPermissionAccessOpacity(ringAccessById.ring_1),
+              "--permission-ring-2-opacity": getPlaygroundPermissionAccessOpacity(ringAccessById.ring_2),
+              "--permission-ring-3-opacity": getPlaygroundPermissionAccessOpacity(ringAccessById.ring_3),
+            },
+          },
+          React.createElement("div", { className: "playground-permission-rings-visual", "aria-hidden": "true" },
+            React.createElement("div", { className: "playground-permission-ring-orbit is-ring-3" }),
+            React.createElement("div", { className: "playground-permission-ring-orbit is-ring-2" }),
+            React.createElement("div", { className: "playground-permission-ring-orbit is-ring-1" })
+          ),
+          React.createElement("div", { className: "playground-permission-rings-copy" },
+            PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
+              const ringAccess = ringAccessById[ring.id];
+              return React.createElement("div", { key: ring.id, className: "playground-permission-ring-summary-row" },
+                React.createElement("div", { className: "playground-permission-ring-summary-copy" },
+                  React.createElement("div", { className: "playground-permission-ring-summary-title-row" },
+                    renderPlaygroundPermissionMiniRingIcon(ring.id),
+                    React.createElement("div", { className: "playground-permission-ring-summary-title" }, ring.label + " · " + ring.title),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-permission-ring-summary-info",
+                      "aria-label": ring.description,
+                      "data-tooltip": ring.description,
+                    }, React.createElement(Info, { width: 12, height: 12, strokeWidth: 1.8 }))
+                  )
+                ),
+                renderPlaygroundPermissionAccessSelect({
+                  value: ringAccess,
+                  onChange: (nextAccess) => onRingAccessChange?.(ring.id, nextAccess),
+                  ariaLabel: ring.label + " default permissions",
+                  disabled: isDisabled || !onRingAccessChange,
+                })
+              );
+            })
+          )
+        );
+      }
+
+      function renderPlaygroundPermissionPanel(permissionSet, handlers = {}) {
+        const subjectType = normalizePlaygroundPermissionSubjectType(handlers.subjectType || permissionSet?.subjectType, "agent");
+        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, subjectType);
+        const className = [
+          "playground-permissions-panel",
+          handlers.className || "",
+        ].filter(Boolean).join(" ");
+        return React.createElement("section", { className },
+          renderPlaygroundPermissionRingsOverview(normalizedPermissionSet, handlers),
+          React.createElement("div", { className: "playground-permissions-panel-details" },
+            renderAgentPermissionsList(normalizedPermissionSet, {
+              ...handlers,
+              detailsOnly: true,
+            })
+          )
+        );
+      }
+
+      function renderPlaygroundPermissionMiniRingIcon(activeRingId) {
+        return React.createElement("span", { className: "playground-permission-mini-ring-icon", "aria-hidden": "true" },
+          ["ring_3", "ring_2", "ring_1"].map((ringId) =>
+            React.createElement("span", {
+              key: ringId,
+              className: "playground-permission-mini-ring-orbit is-" + ringId.replace("_", "-") + (ringId === activeRingId ? " is-active" : ""),
+            })
+          )
+        );
+      }
+
+      function renderAgentPermissionsList(permissionSet, handlers = {}) {
+        const subjectType = normalizePlaygroundPermissionSubjectType(handlers.subjectType || permissionSet?.subjectType, "agent");
+        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, subjectType);
+        const isDisabled = Boolean(handlers.disabled);
+        const isDetailsOnly = Boolean(handlers.detailsOnly);
+        const onRingAccessChange = !isDisabled && typeof handlers.onRingAccessChange === "function"
+          ? handlers.onRingAccessChange
+          : null;
+        const onActionRingChange = !isDisabled && typeof handlers.onActionRingChange === "function"
+          ? handlers.onActionRingChange
+          : null;
+        const onActionAccessChange = !isDisabled && typeof handlers.onActionAccessChange === "function"
+          ? handlers.onActionAccessChange
+          : null;
+
+        return React.createElement("div", { className: "playground-agents-permissions-list" + (isDetailsOnly ? " is-details-only" : "") },
+          PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
+            const ringAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
+            const ringActions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter((action) =>
+              getPlaygroundPermissionActionRingId(normalizedPermissionSet, action) === ring.id
+            );
+            return React.createElement("section", { className: "playground-agents-permission-ring-card" + (isDetailsOnly ? " is-details-only" : ""), key: ring.id },
+              isDetailsOnly
+                ? React.createElement("div", { className: "playground-agents-permission-detail-ring-title-row" },
+                    React.createElement("div", { className: "playground-agents-permission-detail-ring-title-label" },
+                      renderPlaygroundPermissionMiniRingIcon(ring.id),
+                      React.createElement("span", null, ring.label)
+                    ),
+                    React.createElement("div", { className: "playground-agents-permission-detail-column-headings", "aria-hidden": "true" },
+                      React.createElement("span", null, "Ring"),
+                      React.createElement("span", null, "Permission")
+                    )
+                  )
+                : React.createElement(React.Fragment, null,
+                    React.createElement("div", { className: "playground-agents-permission-ring-header" },
+                      React.createElement("div", { className: "playground-agents-permission-ring-kicker" },
+                        React.createElement("span", { className: "playground-agents-permission-ring-index" }, String(ring.number)),
+                        React.createElement("span", null, ring.label + " · " + ring.shortLabel)
+                      ),
+                      renderPlaygroundPermissionAccessSelect({
+                        value: ringAccess,
+                        onChange: (nextAccess) => onRingAccessChange?.(ring.id, nextAccess),
+                        ariaLabel: ring.label + " default permissions",
+                        disabled: isDisabled || !onRingAccessChange,
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-agents-permission-ring-copy" },
+                      React.createElement("div", { className: "playground-agents-permission-ring-title" }, ring.title),
+                      React.createElement("div", { className: "playground-agents-permission-ring-description" }, ring.description)
+                    )
+                  ),
+              React.createElement("div", { className: "playground-agents-permission-actions" },
+                ringActions.map((action) => {
+                  const actionPolicy = normalizedPermissionSet.actions?.[action.id] || {};
+                  const actionRingId = getPlaygroundPermissionActionRingId(normalizedPermissionSet, action);
+                  const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, actionRingId);
+                  const explicitAccess = typeof actionPolicy.access === "string" ? actionPolicy.access : "";
+                  const effectiveAccess = getPlaygroundPermissionActionAccess(normalizedPermissionSet, action);
+                  return React.createElement("div", { className: "playground-agents-permission-action-row", key: action.id },
+                    React.createElement("div", { className: "playground-agents-permission-copy" },
+                      React.createElement("div", { className: "playground-agents-permission-title" },
+                        action.label,
+                        explicitAccess
+                          ? React.createElement("span", { className: "playground-agents-permission-action-badge" }, "Override")
+                          : null
+                      ),
+                      React.createElement("div", { className: "playground-agents-permission-description" }, action.description)
+                    ),
+                    React.createElement("div", { className: "playground-agents-permission-options" },
+                      renderPlaygroundPermissionRingSelect({
+                        value: actionRingId,
+                        onChange: (nextRingId) => onActionRingChange?.(action.id, nextRingId),
+                        ariaLabel: action.label + " ring",
+                        disabled: isDisabled || !onActionRingChange,
+                      }),
+                      renderPlaygroundPermissionAccessSelect({
+                        value: explicitAccess,
+                        inheritedAccess,
+                        includeInherit: true,
+                        onChange: (nextAccess) => onActionAccessChange?.(action.id, nextAccess),
+                        ariaLabel: action.label + " permissions",
+                        disabled: isDisabled || !onActionAccessChange,
+                      })
+                    )
+                  );
+                })
+              )
+            );
+          })
+        );
+      }
+
       function normalizePlaygroundPackages(packages) {
         const source = packages && typeof packages === "object" ? packages : {};
         return {
@@ -51103,11 +52181,12 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         { id: "low", label: "Low" },
         { id: "medium", label: "Medium" },
         { id: "high", label: "High" },
-        { id: "urgent", label: "Critical" },
+        { id: "urgent", label: "Urgent" },
       ];
       const PLAYGROUND_TASK_TYPE_OPTIONS = [
         { id: "task", label: "Task" },
         { id: "subtask", label: "Subtask" },
+        { id: "loop", label: "Loop" },
       ];
       const PLAYGROUND_TASK_COLOR_OPTIONS = [
         {
@@ -51199,6 +52278,481 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       const PLAYGROUND_PROJECT_BLUEPRINT_ALIASES = ${JSON.stringify(PROJECT_TYPE_ALIASES)};
       const PLAYGROUND_RESOURCE_TEMPLATE_DATA = ${stringifyForInlineScript(RESOURCE_TEMPLATE_CATALOG)};
       const PLAYGROUND_RESOURCE_TEMPLATE_TYPE_DATA = ${stringifyForInlineScript(RESOURCE_TEMPLATE_TYPES)};
+      const PLAYGROUND_RESOURCE_TEMPLATE_PREVIEW_TYPES = new Set(["web_app", "function", "database"]);
+
+      function normalizePlaygroundResourceTemplatePreviewIdPart(value) {
+        return String(value || "")
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "_")
+          .replace(/^_+|_+$/g, "");
+      }
+
+      function getPlaygroundResourceTemplatePreviewResourceType(template) {
+        const normalizedType = String(template?.type || "").trim();
+        if (normalizedType === "database") {
+          return "database";
+        }
+        if (normalizedType === "web_app" || normalizedType === "function") {
+          return "server";
+        }
+        return "";
+      }
+
+      function getPlaygroundResourceTemplatePreviewResourceId(template) {
+        const normalizedTemplateId = normalizePlaygroundResourceTemplatePreviewIdPart(template?.id);
+        if (!normalizedTemplateId) {
+          return "";
+        }
+        return getPlaygroundResourceTemplatePreviewResourceType(template) === "database"
+          ? "template_preview_database_" + normalizedTemplateId
+          : "template_preview_server_" + normalizedTemplateId;
+      }
+
+      function buildPlaygroundResourceTemplatePreviewMetadata(template) {
+        const templateId = String(template?.id || "").trim();
+        const templateType = String(template?.type || "").trim();
+        return {
+          resourceTemplatePreview: true,
+          resource_template_preview: true,
+          templatePreview: true,
+          template_preview: true,
+          resourceTemplateId: templateId,
+          resource_template_id: templateId,
+          resourceTemplateType: templateType,
+          resource_template_type: templateType,
+          runnerPlayground: {
+            resourceTemplatePreview: true,
+            resource_template_preview: true,
+            resourceTemplateId: templateId,
+            resource_template_id: templateId,
+            resourceTemplateType: templateType,
+            resource_template_type: templateType,
+          },
+        };
+      }
+
+      function isPlaygroundResourceTemplatePreviewRecord(record) {
+        const metadata = record?.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata)
+          ? record.metadata
+          : null;
+        const runnerPlayground = metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+          ? metadata.runnerPlayground
+          : null;
+        return Boolean(
+          record?.resourceTemplatePreview
+          || record?.templatePreview
+          || metadata?.resourceTemplatePreview
+          || metadata?.resource_template_preview
+          || metadata?.templatePreview
+          || metadata?.template_preview
+          || runnerPlayground?.resourceTemplatePreview
+          || runnerPlayground?.resource_template_preview
+        );
+      }
+
+      function createPlaygroundResourceTemplatePreviewFile(filePath, content, options = {}) {
+        const normalizedPath = normalizeHistoryPath(filePath);
+        const normalizedContent = typeof content === "string" ? content : "";
+        const normalizedName = normalizedPath.split("/").filter(Boolean).pop() || normalizedPath;
+        return {
+          path: normalizedPath,
+          name: normalizedName,
+          type: "file",
+          isDirectory: false,
+          size: normalizedContent.length,
+          mimeType: options.mimeType || getPlaygroundPreviewMimeType({ path: normalizedPath, name: normalizedName }) || "text/plain",
+          modifiedTime: options.modifiedTime || "",
+          content: normalizedContent,
+        };
+      }
+
+      function createPlaygroundResourceTemplatePreviewPackage(name, dependencies = {}, options = {}) {
+        return JSON.stringify({
+          name,
+          version: "1.0.0",
+          private: true,
+          type: "module",
+          scripts: options.scripts && typeof options.scripts === "object" ? options.scripts : {
+            start: "node index.js",
+          },
+          engines: {
+            node: ">=22",
+          },
+          dependencies,
+        }, null, 2) + "\\n";
+      }
+
+      function getPlaygroundResourceTemplatePreviewServerFiles(template) {
+        const templateId = String(template?.id || "").trim();
+        if (templateId === "launch-landing-page") {
+          return [
+            createPlaygroundResourceTemplatePreviewFile("index.html", [
+              "<!doctype html>",
+              "<html lang=\\"en\\">",
+              "  <head>",
+              "    <meta charset=\\"utf-8\\" />",
+              "    <meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1\\" />",
+              "    <title>Launch Landing Page</title>",
+              "    <style>",
+              "      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }",
+              "      * { box-sizing: border-box; }",
+              "      body { margin: 0; min-height: 100vh; background: #060606; color: #fff; }",
+              "      main { min-height: 100vh; display: grid; align-content: center; gap: 28px; width: min(1040px, calc(100vw - 48px)); margin: 0 auto; }",
+              "      .eyebrow { color: #8fc4ff; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }",
+              "      h1 { max-width: 760px; margin: 0; font-size: clamp(44px, 8vw, 92px); line-height: .94; font-weight: 700; }",
+              "      p { max-width: 560px; margin: 0; color: rgba(255,255,255,.72); font-size: 18px; line-height: 1.6; }",
+              "      form { display: flex; gap: 10px; width: min(520px, 100%); }",
+              "      input, button { border: 0; border-radius: 999px; padding: 14px 18px; font: inherit; }",
+              "      input { flex: 1; background: rgba(255,255,255,.1); color: #fff; outline: 1px solid rgba(255,255,255,.12); }",
+              "      button { background: #fff; color: #060606; font-weight: 650; }",
+              "      .proof { display: flex; flex-wrap: wrap; gap: 10px; color: rgba(255,255,255,.66); font-size: 13px; }",
+              "      .proof span { padding: 8px 10px; border: 1px solid rgba(255,255,255,.12); border-radius: 999px; background: rgba(255,255,255,.05); }",
+              "    </style>",
+              "  </head>",
+              "  <body>",
+              "    <main>",
+              "      <div class=\\"eyebrow\\">Private beta opens soon</div>",
+              "      <h1>Turn a launch brief into a live campaign page.</h1>",
+              "      <p>Capture waitlist demand, explain the offer, and hand agents a deployable surface for copy, analytics, and follow-up work.</p>",
+              "      <form>",
+              "        <input aria-label=\\"Email address\\" placeholder=\\"name@company.com\\" />",
+              "        <button type=\\"button\\">Join waitlist</button>",
+              "      </form>",
+              "      <div class=\\"proof\\"><span>Responsive</span><span>Analytics ready</span><span>Agent handoff notes</span></div>",
+              "    </main>",
+              "  </body>",
+              "</html>",
+            ].join("\\n")),
+            createPlaygroundResourceTemplatePreviewFile("package.json", createPlaygroundResourceTemplatePreviewPackage("launch-landing-page", {
+              serve: "latest",
+            }, {
+              scripts: {
+                start: "serve -s . -l $" + "{PORT:-8080}",
+              },
+            })),
+          ];
+        }
+        if (templateId === "product-status-dashboard") {
+          return [
+            createPlaygroundResourceTemplatePreviewFile("index.html", [
+              "<!doctype html>",
+              "<html lang=\\"en\\">",
+              "  <head>",
+              "    <meta charset=\\"utf-8\\" />",
+              "    <meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1\\" />",
+              "    <title>Product Status Dashboard</title>",
+              "    <style>",
+              "      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }",
+              "      * { box-sizing: border-box; }",
+              "      body { margin: 0; min-height: 100vh; background: #090909; color: #f7f7f7; }",
+              "      main { width: min(1180px, calc(100vw - 40px)); margin: 0 auto; padding: 32px 0; }",
+              "      header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }",
+              "      h1 { margin: 0; font-size: 34px; line-height: 1.05; }",
+              "      .timestamp { color: rgba(255,255,255,.54); font-size: 13px; }",
+              "      .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }",
+              "      section { border: 1px solid rgba(255,255,255,.1); border-radius: 8px; background: rgba(255,255,255,.055); padding: 16px; }",
+              "      .wide { grid-column: span 2; }",
+              "      .kpi { color: rgba(255,255,255,.58); font-size: 12px; }",
+              "      .value { margin-top: 8px; font-size: 30px; font-weight: 700; }",
+              "      ul { display: grid; gap: 10px; padding: 0; margin: 14px 0 0; list-style: none; }",
+              "      li { display: flex; justify-content: space-between; gap: 14px; color: rgba(255,255,255,.72); }",
+              "      .ok { color: #9ee6b8; } .warn { color: #ffd98e; }",
+              "    </style>",
+              "  </head>",
+              "  <body>",
+              "    <main>",
+              "      <header><h1>Product Status Dashboard</h1><div class=\\"timestamp\\">Generated from project resources</div></header>",
+              "      <div class=\\"grid\\">",
+              "        <section><div class=\\"kpi\\">Release progress</div><div class=\\"value\\">82%</div></section>",
+              "        <section><div class=\\"kpi\\">Active users</div><div class=\\"value\\">14.2k</div></section>",
+              "        <section><div class=\\"kpi\\">Open incidents</div><div class=\\"value warn\\">2</div></section>",
+              "        <section><div class=\\"kpi\\">Resource health</div><div class=\\"value ok\\">Stable</div></section>",
+              "        <section class=\\"wide\\"><div class=\\"kpi\\">Release checklist</div><ul><li><span>Docs update</span><span class=\\"ok\\">Done</span></li><li><span>Billing smoke test</span><span>In progress</span></li><li><span>Launch monitor</span><span>Queued</span></li></ul></section>",
+              "        <section class=\\"wide\\"><div class=\\"kpi\\">Resource activity</div><ul><li><span>Function deploy</span><span class=\\"ok\\">Healthy</span></li><li><span>Database writes</span><span>Normal</span></li><li><span>Auth sign-ins</span><span>+8%</span></li></ul></section>",
+              "      </div>",
+              "    </main>",
+              "  </body>",
+              "</html>",
+            ].join("\\n")),
+            createPlaygroundResourceTemplatePreviewFile("package.json", createPlaygroundResourceTemplatePreviewPackage("product-status-dashboard", {
+              serve: "latest",
+            }, {
+              scripts: {
+                start: "serve -s . -l $" + "{PORT:-8080}",
+              },
+            })),
+          ];
+        }
+        if (templateId === "webhook-intake-function") {
+          return [
+            createPlaygroundResourceTemplatePreviewFile("index.js", [
+              "import { z } from \\"zod\\";",
+              "",
+              "const WebhookPayload = z.object({",
+              "  event: z.string(),",
+              "  source: z.string().optional(),",
+              "  customerEmail: z.string().email().optional(),",
+              "  priority: z.enum([\\"low\\", \\"normal\\", \\"high\\"]).default(\\"normal\\"),",
+              "  data: z.record(z.any()).default({}),",
+              "});",
+              "",
+              "export default async function handler(request) {",
+              "  const signature = request.headers.get(\\"x-webhook-signature\\") || \\"\\";",
+              "  if (!signature) {",
+              "    return { status: 401, body: JSON.stringify({ error: \\"Missing signature\\" }) };",
+              "  }",
+              "",
+              "  const rawPayload = await request.json().catch(() => null);",
+              "  const payload = WebhookPayload.parse(rawPayload);",
+              "",
+              "  const task = {",
+              "    title: \\"Review \\" + payload.event,",
+              "    priority: payload.priority,",
+              "    customerEmail: payload.customerEmail || null,",
+              "    source: payload.source || \\"webhook\\",",
+              "    data: payload.data,",
+              "  };",
+              "",
+              "  return {",
+              "    status: 202,",
+              "    headers: { \\"content-type\\": \\"application/json; charset=utf-8\\" },",
+              "    body: JSON.stringify({ accepted: true, task }),",
+              "  };",
+              "}",
+            ].join("\\n")),
+            createPlaygroundResourceTemplatePreviewFile("package.json", createPlaygroundResourceTemplatePreviewPackage("webhook-intake-function", {
+              zod: "latest",
+              nanoid: "latest",
+            })),
+          ];
+        }
+        if (templateId === "payment-reconciliation-function") {
+          return [
+            createPlaygroundResourceTemplatePreviewFile("index.js", [
+              "function normalizeAmount(event) {",
+              "  const amount = Number(event.amount_cents || event.amount || 0);",
+              "  return Number.isFinite(amount) ? Math.round(amount) : 0;",
+              "}",
+              "",
+              "function buildMismatchTask(event, reason) {",
+              "  return {",
+              "    title: \\"Reconcile payment \\" + (event.id || event.payment_id || \\"unknown\\"),",
+              "    reason,",
+              "    customerEmail: event.customer_email || event.email || null,",
+              "    amountCents: normalizeAmount(event),",
+              "    provider: event.provider || \\"stripe\\",",
+              "  };",
+              "}",
+              "",
+              "export default async function handler(request) {",
+              "  const event = await request.json().catch(() => ({}));",
+              "  const normalized = {",
+              "    id: event.id || event.payment_id || \\"pending\\",",
+              "    customerEmail: event.customer_email || event.email || null,",
+              "    amountCents: normalizeAmount(event),",
+              "    currency: String(event.currency || \\"usd\\").toUpperCase(),",
+              "    status: event.status || \\"received\\",",
+              "  };",
+              "",
+              "  const mismatchTask = normalized.status === \\"paid\\"",
+              "    ? null",
+              "    : buildMismatchTask(event, \\"Provider event is not marked paid.\\");",
+              "",
+              "  return {",
+              "    status: 200,",
+              "    headers: { \\"content-type\\": \\"application/json; charset=utf-8\\" },",
+              "    body: JSON.stringify({ normalized, mismatchTask }),",
+              "  };",
+              "}",
+            ].join("\\n")),
+            createPlaygroundResourceTemplatePreviewFile("package.json", createPlaygroundResourceTemplatePreviewPackage("payment-reconciliation-function", {
+              "date-fns": "latest",
+            })),
+          ];
+        }
+        return [
+          createPlaygroundResourceTemplatePreviewFile(
+            String(template?.type || "").trim() === "function" ? PLAYGROUND_DEFAULT_FUNCTION_SOURCE_PATH : PLAYGROUND_DEFAULT_WEB_APP_SOURCE_PATH,
+            String(template?.type || "").trim() === "function" ? PLAYGROUND_DEFAULT_FUNCTION_SOURCE_CONTENT : PLAYGROUND_DEFAULT_WEB_APP_SOURCE_CONTENT
+          ),
+          createPlaygroundResourceTemplatePreviewFile(
+            String(template?.type || "").trim() === "function" ? PLAYGROUND_DEFAULT_FUNCTION_PACKAGE_PATH : PLAYGROUND_DEFAULT_WEB_APP_PACKAGE_PATH,
+            String(template?.type || "").trim() === "function" ? PLAYGROUND_DEFAULT_FUNCTION_PACKAGE_CONTENT : PLAYGROUND_DEFAULT_WEB_APP_PACKAGE_CONTENT
+          ),
+        ];
+      }
+
+      function getPlaygroundResourceTemplatePreviewDatabaseDocuments(template) {
+        const templateId = String(template?.id || "").trim();
+        if (templateId === "investor-metrics-database") {
+          return {
+            monthly_metrics: [
+              {
+                id: "2026_05",
+                data: {
+                  month: "2026-05",
+                  recurringRevenue: 184000,
+                  grossMargin: 0.74,
+                  burnMultiple: 1.8,
+                  activeCustomers: 128,
+                  notes: "Expansion revenue offset slower new sales.",
+                },
+              },
+              {
+                id: "2026_06_forecast",
+                data: {
+                  month: "2026-06",
+                  recurringRevenue: 203000,
+                  grossMargin: 0.76,
+                  burnMultiple: 1.6,
+                  activeCustomers: 141,
+                  notes: "Forecast assumes two enterprise upgrades.",
+                },
+              },
+            ],
+            assumptions: [
+              {
+                id: "pricing",
+                data: {
+                  owner: "Finance",
+                  topic: "Pricing assumptions",
+                  basePlan: 499,
+                  enterpriseExpansionRate: 0.18,
+                  confidence: "medium",
+                },
+              },
+            ],
+            updates: [
+              {
+                id: "investor_update_draft",
+                data: {
+                  title: "June investor update",
+                  status: "draft",
+                  highlights: ["Revenue ahead of plan", "Churn stable", "Pipeline quality improving"],
+                  nextSteps: ["Validate forecast", "Attach cohort chart"],
+                },
+              },
+            ],
+          };
+        }
+        return {
+          accounts: [
+            {
+              id: "acme_corp",
+              data: {
+                name: "Acme Corp",
+                segment: "Enterprise",
+                status: "active",
+                owner: "Sales",
+                health: "green",
+                annualValue: 84000,
+              },
+            },
+            {
+              id: "northstar_lab",
+              data: {
+                name: "Northstar Lab",
+                segment: "Mid-market",
+                status: "trial",
+                owner: "Customer Success",
+                health: "yellow",
+                annualValue: 24000,
+              },
+            },
+          ],
+          contacts: [
+            {
+              id: "jordan_acme",
+              data: {
+                accountId: "acme_corp",
+                name: "Jordan Lee",
+                email: "jordan@example.com",
+                role: "VP Operations",
+                lastContactedAt: "2026-06-07",
+              },
+            },
+          ],
+          follow_ups: [
+            {
+              id: "renewal_check_in",
+              data: {
+                accountId: "acme_corp",
+                dueAt: "2026-06-21",
+                priority: "high",
+                summary: "Prepare renewal plan and QBR notes.",
+                done: false,
+              },
+            },
+          ],
+        };
+      }
+
+      function buildPlaygroundResourceTemplatePreviewResources(templates) {
+        const now = new Date().toISOString();
+        return (Array.isArray(templates) ? templates : [])
+          .map((template) => {
+            const templateType = String(template?.type || "").trim();
+            if (!PLAYGROUND_RESOURCE_TEMPLATE_PREVIEW_TYPES.has(templateType)) {
+              return null;
+            }
+            const resourceId = getPlaygroundResourceTemplatePreviewResourceId(template);
+            if (!resourceId) {
+              return null;
+            }
+            const metadata = buildPlaygroundResourceTemplatePreviewMetadata(template);
+            const name = String(template?.title || template?.name || "Template Preview").trim() || "Template Preview";
+            const description = String(template?.description || template?.summary || "").trim();
+            if (templateType === "database") {
+              const documentsByCollectionId = getPlaygroundResourceTemplatePreviewDatabaseDocuments(template);
+              const collections = Object.entries(documentsByCollectionId).map(([collectionId, documents]) => ({
+                id: collectionId,
+                name: collectionId,
+                documentCount: Array.isArray(documents) ? documents.length : 0,
+                createdAt: now,
+                updatedAt: now,
+              }));
+              const database = normalizePlaygroundDatabaseRecord({
+                id: resourceId,
+                name,
+                description,
+                location: "eur3",
+                status: "active",
+                metadata,
+                createdAt: now,
+                updatedAt: now,
+              });
+              return {
+                id: resourceId,
+                resourceType: "database",
+                database,
+                collections,
+                documentsByCollectionId,
+              };
+            }
+            const server = normalizePlaygroundServerRecord({
+              id: resourceId,
+              name,
+              description,
+              kind: templateType,
+              runtime: "nodejs22",
+              authMode: "public",
+              status: "draft",
+              serviceUrl: "",
+              template: "blank",
+              metadata,
+              createdAt: now,
+              updatedAt: now,
+            });
+            return {
+              id: resourceId,
+              resourceType: "server",
+              server,
+              files: getPlaygroundResourceTemplatePreviewServerFiles(template),
+            };
+          })
+          .filter(Boolean);
+      }
       const PLAYGROUND_PROJECT_BLUEPRINT_OPTIONS = PLAYGROUND_PROJECT_BLUEPRINT_PROFILE_DATA.map((profile) => {
         const iconConfig = getPlaygroundProjectIconConfig(profile.iconId);
         return {
@@ -52936,10 +54490,42 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         return String(parsed).padStart(3, "0");
       }
 
+      function getPlaygroundProjectTicketPrefix(projectRecord) {
+        const metadata = projectRecord?.metadata && typeof projectRecord.metadata === "object" && !Array.isArray(projectRecord.metadata)
+          ? projectRecord.metadata
+          : {};
+        const source = String(
+          projectRecord?.name
+            || projectRecord?.title
+            || metadata.name
+            || metadata.title
+            || projectRecord?.slug
+            || projectRecord?.id
+            || ""
+        ).trim();
+        const asciiSource = source.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+        const letterPrefix = asciiSource.replace(/[^A-Za-z]/g, "").toUpperCase().slice(0, 3);
+        const fallbackPrefix = asciiSource.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 3);
+        return (letterPrefix || fallbackPrefix || "PRJ").padEnd(3, "X");
+      }
+
+      function formatPlaygroundProjectTicketNumber(projectRecord, value) {
+        const ticketNumber = normalizePlaygroundTaskTicketNumber(value);
+        if (!ticketNumber) {
+          return "";
+        }
+        return getPlaygroundProjectTicketPrefix(projectRecord) + "-" + ticketNumber;
+      }
+
       function normalizePlaygroundTaskType(value) {
-        return String(value || "").trim().toLowerCase() === "subtask"
-          ? "subtask"
-          : "task";
+        const normalized = String(value || "").trim().toLowerCase();
+        if (normalized === "subtask") {
+          return "subtask";
+        }
+        if (normalized === "loop" || normalized === "loop_task" || normalized === "metronome_loop") {
+          return "loop";
+        }
+        return "task";
       }
 
       function normalizePlaygroundParentTaskId(value) {
@@ -52948,7 +54534,10 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       }
 
       function getPlaygroundTaskTypeLabel(value) {
-        return normalizePlaygroundTaskType(value) === "subtask" ? "Subtask" : "Task";
+        const taskType = normalizePlaygroundTaskType(value);
+        if (taskType === "subtask") return "Subtask";
+        if (taskType === "loop") return "Loop";
+        return "Task";
       }
 
       function getPlaygroundTaskParentTaskId(task) {
@@ -53266,7 +54855,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         return String(left?.id || "").localeCompare(String(right?.id || ""));
       }
 
-      function buildPlaygroundTaskTicketNumberMap(tasks) {
+      function buildPlaygroundTaskTicketNumberMap(tasks, projectRecord = null) {
         const orderedTasks = (Array.isArray(tasks) ? tasks : [])
           .filter((task) => task?.id)
           .slice()
@@ -53289,6 +54878,12 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           nextTicketNumber += 1;
           next[task.id] = String(nextTicketNumber).padStart(3, "0");
         });
+
+        if (projectRecord) {
+          Object.keys(next).forEach((taskId) => {
+            next[taskId] = formatPlaygroundProjectTicketNumber(projectRecord, next[taskId]) || next[taskId];
+          });
+        }
 
         return next;
       }
@@ -53360,7 +54955,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const normalizedParentTaskId = normalizePlaygroundParentTaskId(task.parentTaskId || runnerPlaygroundMetadata?.parentTaskId);
         const taskType = normalizePlaygroundTaskType(
           task.taskType
-          || (task.type === "task" || task.type === "subtask" ? task.type : "")
+          || (["task", "subtask", "loop"].includes(String(task.type || "").trim().toLowerCase()) ? task.type : "")
           || runnerPlaygroundMetadata?.taskType
         );
         const parentTaskId = taskType === "subtask" && normalizedParentTaskId
@@ -55533,36 +57128,56 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const normalized = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === priority) ? priority : "medium";
         switch (normalized) {
           case "low":
-            return { id: "low", label: "Low", Icon: ChevronDown, toneClassName: "is-low" };
+            return { id: "low", label: "Low", level: 1, toneClassName: "is-low" };
           case "high":
-            return { id: "high", label: "High", Icon: ChevronUp, toneClassName: "is-high" };
+            return { id: "high", label: "High", level: 3, toneClassName: "is-high" };
           case "urgent":
-            return { id: "urgent", label: "Critical", Icon: ChevronsUp, toneClassName: "is-critical" };
+            return { id: "urgent", label: "Urgent", level: 3, toneClassName: "is-critical", isUrgent: true };
           default:
-            return { id: "medium", label: "Medium", Icon: Equal, toneClassName: "is-medium" };
+            return { id: "medium", label: "Medium", level: 2, toneClassName: "is-medium" };
         }
+      }
+
+      function renderPlaygroundTaskPriorityGlyph(priority, className) {
+        const presentation = getPlaygroundTaskPriorityPresentation(priority);
+        if (presentation.isUrgent) {
+          return React.createElement(AlertCircle, {
+            className: ["playground-tasks-priority-value-icon", className].filter(Boolean).join(" "),
+            strokeWidth: 2,
+            "aria-hidden": "true",
+          });
+        }
+        return React.createElement("span", {
+            className: ["playground-tasks-priority-value-icon", "playground-tasks-priority-bars-icon", className].filter(Boolean).join(" "),
+            "aria-hidden": "true",
+          },
+          [1, 2, 3].map((barLevel) =>
+            React.createElement("span", {
+              key: barLevel,
+              className: "playground-tasks-priority-bars-bar" + (barLevel <= presentation.level ? " is-active" : ""),
+            })
+          )
+        );
       }
 
       function renderPlaygroundTaskPriorityLabel(priority, className) {
         const presentation = getPlaygroundTaskPriorityPresentation(priority);
-        const PriorityIcon = presentation.Icon;
         return React.createElement("span", {
             className: ["playground-tasks-priority-value", presentation.toneClassName, className].filter(Boolean).join(" "),
           },
-          React.createElement(PriorityIcon, { className: "playground-tasks-priority-value-icon", strokeWidth: 1.9 }),
+          renderPlaygroundTaskPriorityGlyph(priority),
           React.createElement("span", { className: "playground-tasks-priority-value-text" }, presentation.label)
         );
       }
 
       function renderPlaygroundTaskPriorityIcon(priority, className) {
         const presentation = getPlaygroundTaskPriorityPresentation(priority);
-        const PriorityIcon = presentation.Icon;
         return React.createElement("span", {
             className: ["playground-tasks-priority-value", presentation.toneClassName, className].filter(Boolean).join(" "),
             title: presentation.label,
             "aria-label": presentation.label,
           },
-          React.createElement(PriorityIcon, { className: "playground-tasks-priority-value-icon", strokeWidth: 1.9 })
+          renderPlaygroundTaskPriorityGlyph(priority)
         );
       }
 
@@ -58105,6 +59720,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       function normalizeHistoryTaskType(value) {
         const normalized = String(value || "").trim().toLowerCase();
         if (normalized === "subtask") return "subtask";
+        if (normalized === "loop" || normalized === "loop_task" || normalized === "metronome_loop") return "loop";
         if (normalized === "task") return "task";
         return "";
       }
@@ -58607,7 +60223,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const explicitTaskType =
           normalizeHistoryTaskType(record.taskType)
           || normalizeHistoryTaskType(record.task_type)
-          || (["task", "subtask"].includes(String(record.type || "").trim().toLowerCase()) ? normalizeHistoryTaskType(record.type) : "")
+          || (["task", "subtask", "loop"].includes(String(record.type || "").trim().toLowerCase()) ? normalizeHistoryTaskType(record.type) : "")
           || normalizeHistoryTaskType(runnerPlayground?.taskType);
         const hasExplicitTaskIdentifier =
           String(record.id || "").trim().startsWith("task_")
@@ -70246,16 +71862,21 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             : undefined,
           left: isPreviewMaximized ? null : renderFilesEnvironmentSelector(),
           center: isPreviewMaximized ? null : renderFilesModeSwitch(),
+          environmentId: selectedEnvironmentId,
+          path: currentPath,
+          contentMode: isChangesMode ? "changes" : "files",
         }), [
           contentMode,
           activeProjectFilterOption.id,
           activeProjectFilterOption.label,
+          currentPath,
           availableProjectFilters.length,
           environments.length,
           fileEnvironmentMutationState,
           filesEnvironmentMenuMode,
           hasPreviewPanel,
           isPreviewMaximized,
+          isChangesMode,
           orderedEnvironments,
           projectFilterScope,
           projectFilterScopeLabel,
@@ -70774,6 +72395,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         initialEnvironmentId,
         navigationToken = 0,
         navigationTargetEnvironmentId = "",
+        navigationResourceToken = 0,
+        navigationTargetResourceType = "",
+        navigationTargetResourceId = "",
         onEnvironmentMutated,
         onRequestSidebarCollapse,
         apiKey = "",
@@ -70802,6 +72426,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         resourceBillingSuccess = "",
         canConfigureResourceBilling = true,
         onResourceBillingPreferencesChange = null,
+        resourceTemplatePreviewResources = [],
         developServerOperationalMetrics = null,
         developServerOperationalMetricsLoading = false,
         developServerOperationalMetricsError = "",
@@ -70852,6 +72477,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const environmentNavigationRequestRef = useRef({
           token: navigationToken,
           targetId: String(navigationTargetEnvironmentId || "").trim(),
+          handled: false,
+        });
+        const resourceNavigationRequestRef = useRef({
+          token: navigationResourceToken,
+          targetType: String(navigationTargetResourceType || "").trim(),
+          targetId: String(navigationTargetResourceId || "").trim(),
           handled: false,
         });
         const selectedServerIdRef = useRef("");
@@ -71245,6 +72876,152 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           return String(defaultEnvironment?.id || "").trim();
         }, [orderedEnvironments]);
 
+        const normalizedResourceTemplatePreviewResources = useMemo(() => {
+          return (Array.isArray(resourceTemplatePreviewResources) ? resourceTemplatePreviewResources : [])
+            .map((item) => {
+              const resourceType = item?.resourceType === "database" ? "database" : "server";
+              const record = resourceType === "database"
+                ? normalizePlaygroundDatabaseRecord(item?.database || item?.record || item)
+                : normalizePlaygroundServerRecord(item?.server || item?.record || item);
+              if (!record?.id || !isPlaygroundResourceTemplatePreviewRecord(record)) {
+                return null;
+              }
+              const files = resourceType === "server" && Array.isArray(item?.files) ? item.files : [];
+              const collections = resourceType === "database" && Array.isArray(item?.collections) ? item.collections : [];
+              const documentsByCollectionId = resourceType === "database" && item?.documentsByCollectionId && typeof item.documentsByCollectionId === "object" && !Array.isArray(item.documentsByCollectionId)
+                ? item.documentsByCollectionId
+                : {};
+              return {
+                id: record.id,
+                resourceType,
+                record,
+                files,
+                collections,
+                documentsByCollectionId,
+              };
+            })
+            .filter(Boolean);
+        }, [resourceTemplatePreviewResources]);
+
+        const resourceTemplatePreviewServerRecordById = useMemo(() => {
+          const next = {};
+          normalizedResourceTemplatePreviewResources.forEach((preview) => {
+            if (preview.resourceType === "server" && preview.record?.id) {
+              next[preview.record.id] = preview.record;
+            }
+          });
+          return next;
+        }, [normalizedResourceTemplatePreviewResources]);
+
+        const resourceTemplatePreviewDatabaseRecordById = useMemo(() => {
+          const next = {};
+          normalizedResourceTemplatePreviewResources.forEach((preview) => {
+            if (preview.resourceType === "database" && preview.record?.id) {
+              next[preview.record.id] = preview.record;
+            }
+          });
+          return next;
+        }, [normalizedResourceTemplatePreviewResources]);
+
+        const resourceTemplatePreviewServerFilesById = useMemo(() => {
+          const next = {};
+          normalizedResourceTemplatePreviewResources.forEach((preview) => {
+            if (preview.resourceType !== "server" || !preview.record?.id) {
+              return;
+            }
+            next[preview.record.id] = normalizePlaygroundEnvironmentInventory(preview.files || []);
+          });
+          return next;
+        }, [normalizedResourceTemplatePreviewResources]);
+
+        const resourceTemplatePreviewServerFileContentById = useMemo(() => {
+          const next = {};
+          normalizedResourceTemplatePreviewResources.forEach((preview) => {
+            if (preview.resourceType !== "server" || !preview.record?.id) {
+              return;
+            }
+            const fileContentByPath = {};
+            (Array.isArray(preview.files) ? preview.files : []).forEach((file) => {
+              const normalizedPath = normalizeHistoryPath(file?.path || "");
+              if (!normalizedPath || typeof file?.content !== "string") {
+                return;
+              }
+              fileContentByPath[normalizedPath] = file.content;
+            });
+            next[preview.record.id] = fileContentByPath;
+          });
+          return next;
+        }, [normalizedResourceTemplatePreviewResources]);
+
+        const resourceTemplatePreviewDatabaseCollectionsById = useMemo(() => {
+          const next = {};
+          normalizedResourceTemplatePreviewResources.forEach((preview) => {
+            if (preview.resourceType !== "database" || !preview.record?.id) {
+              return;
+            }
+            next[preview.record.id] = (Array.isArray(preview.collections) ? preview.collections : [])
+              .map((collection) => ({
+                id: String(collection?.id || collection?.name || "").trim(),
+                name: String(collection?.name || collection?.id || "").trim(),
+                documentCount: Math.max(0, Number(collection?.documentCount || 0) || 0),
+                createdAt: typeof collection?.createdAt === "string" ? collection.createdAt : "",
+                updatedAt: typeof collection?.updatedAt === "string" ? collection.updatedAt : "",
+              }))
+              .filter((collection) => collection.id);
+          });
+          return next;
+        }, [normalizedResourceTemplatePreviewResources]);
+
+        const resourceTemplatePreviewDatabaseDocumentsByCollectionKey = useMemo(() => {
+          const next = {};
+          normalizedResourceTemplatePreviewResources.forEach((preview) => {
+            if (preview.resourceType !== "database" || !preview.record?.id) {
+              return;
+            }
+            Object.entries(preview.documentsByCollectionId || {}).forEach(([collectionId, documents]) => {
+              const normalizedCollectionId = String(collectionId || "").trim();
+              if (!normalizedCollectionId) {
+                return;
+              }
+              next[preview.record.id + ":" + normalizedCollectionId] = (Array.isArray(documents) ? documents : [])
+                .map((document) => ({
+                  id: String(document?.id || "").trim(),
+                  data: document?.data && typeof document.data === "object" && !Array.isArray(document.data)
+                    ? document.data
+                    : {},
+                }))
+                .filter((document) => document.id);
+            });
+          });
+          return next;
+        }, [normalizedResourceTemplatePreviewResources]);
+
+        const activeResourceTemplatePreviewServerIds = useMemo(() => {
+          const next = new Set();
+          const currentId = String(selectedServerId || "").trim();
+          if (currentId) {
+            next.add(currentId);
+          }
+          const targetId = String(navigationTargetResourceId || "").trim();
+          if (targetId && navigationTargetResourceType !== "database") {
+            next.add(targetId);
+          }
+          return next;
+        }, [navigationTargetResourceId, navigationTargetResourceType, selectedServerId]);
+
+        const activeResourceTemplatePreviewDatabaseIds = useMemo(() => {
+          const next = new Set();
+          const currentId = String(selectedDatabaseId || "").trim();
+          if (currentId) {
+            next.add(currentId);
+          }
+          const targetId = String(navigationTargetResourceId || "").trim();
+          if (targetId && navigationTargetResourceType === "database") {
+            next.add(targetId);
+          }
+          return next;
+        }, [navigationTargetResourceId, navigationTargetResourceType, selectedDatabaseId]);
+
         const environmentListActionTarget = useMemo(() => {
           if (!environmentListActionMenuState?.environmentId) {
             return null;
@@ -71255,31 +73032,47 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }, [environmentListActionMenuState, orderedEnvironments]);
 
         const orderedServers = useMemo(() => {
-          return [...servers].sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
-        }, [servers]);
+          const activePreviewServers = Object.values(resourceTemplatePreviewServerRecordById)
+            .filter((server) => activeResourceTemplatePreviewServerIds.has(server.id));
+          return [...servers, ...activePreviewServers].sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
+        }, [activeResourceTemplatePreviewServerIds, resourceTemplatePreviewServerRecordById, servers]);
 
         const orderedDatabases = useMemo(() => {
-          return [...databases].sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
-        }, [databases]);
+          const activePreviewDatabases = Object.values(resourceTemplatePreviewDatabaseRecordById)
+            .filter((database) => activeResourceTemplatePreviewDatabaseIds.has(database.id));
+          return [...databases, ...activePreviewDatabases].sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
+        }, [activeResourceTemplatePreviewDatabaseIds, databases, resourceTemplatePreviewDatabaseRecordById]);
+
+        const selectedServerTemplatePreview = selectedServerId ? resourceTemplatePreviewServerRecordById[selectedServerId] || null : null;
+        const selectedDatabaseTemplatePreview = selectedDatabaseId ? resourceTemplatePreviewDatabaseRecordById[selectedDatabaseId] || null : null;
+        const isSelectedServerTemplatePreview = Boolean(selectedServerTemplatePreview);
+        const isSelectedDatabaseTemplatePreview = Boolean(selectedDatabaseTemplatePreview);
 
         const currentServerFiles = useMemo(() => {
           if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
             return [];
           }
-          const items = Array.isArray(serverFilesById[selectedServerId]) ? serverFilesById[selectedServerId] : [];
+          const items = Array.isArray(serverFilesById[selectedServerId])
+            ? serverFilesById[selectedServerId]
+            : Array.isArray(resourceTemplatePreviewServerFilesById[selectedServerId])
+              ? resourceTemplatePreviewServerFilesById[selectedServerId]
+              : [];
           return [...items].sort((left, right) => {
             if (Boolean(left?.isFolder) !== Boolean(right?.isFolder)) {
               return left?.isFolder ? -1 : 1;
             }
             return String(left?.path || "").localeCompare(String(right?.path || ""));
           });
-        }, [selectedServerId, serverFilesById]);
+        }, [resourceTemplatePreviewServerFilesById, selectedServerId, serverFilesById]);
 
         const hasLoadedCurrentServerFiles = useMemo(() => {
           return Boolean(selectedServerId)
             && selectedServerId !== PLAYGROUND_SERVER_DRAFT_ID
-            && Object.prototype.hasOwnProperty.call(serverFilesById, selectedServerId);
-        }, [selectedServerId, serverFilesById]);
+            && (
+              Object.prototype.hasOwnProperty.call(serverFilesById, selectedServerId)
+              || Object.prototype.hasOwnProperty.call(resourceTemplatePreviewServerFilesById, selectedServerId)
+            );
+        }, [resourceTemplatePreviewServerFilesById, selectedServerId, serverFilesById]);
 
         const currentServerFilesTree = useMemo(() => buildPlaygroundEnvironmentTree(currentServerFiles), [currentServerFiles]);
         const visibleServerSourceFileRows = useMemo(
@@ -71458,16 +73251,24 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           if (!selectedDatabaseId || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
             return [];
           }
-          return Array.isArray(databaseCollectionsById[selectedDatabaseId]) ? databaseCollectionsById[selectedDatabaseId] : [];
-        }, [databaseCollectionsById, selectedDatabaseId]);
+          return Array.isArray(databaseCollectionsById[selectedDatabaseId])
+            ? databaseCollectionsById[selectedDatabaseId]
+            : Array.isArray(resourceTemplatePreviewDatabaseCollectionsById[selectedDatabaseId])
+              ? resourceTemplatePreviewDatabaseCollectionsById[selectedDatabaseId]
+              : [];
+        }, [databaseCollectionsById, resourceTemplatePreviewDatabaseCollectionsById, selectedDatabaseId]);
 
         const currentDatabaseDocuments = useMemo(() => {
           if (!selectedDatabaseId || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId) {
             return [];
           }
           const key = selectedDatabaseId + ":" + selectedDatabaseCollectionId;
-          return Array.isArray(databaseDocumentsByCollectionKey[key]) ? databaseDocumentsByCollectionKey[key] : [];
-        }, [databaseDocumentsByCollectionKey, selectedDatabaseCollectionId, selectedDatabaseId]);
+          return Array.isArray(databaseDocumentsByCollectionKey[key])
+            ? databaseDocumentsByCollectionKey[key]
+            : Array.isArray(resourceTemplatePreviewDatabaseDocumentsByCollectionKey[key])
+              ? resourceTemplatePreviewDatabaseDocumentsByCollectionKey[key]
+              : [];
+        }, [databaseDocumentsByCollectionKey, resourceTemplatePreviewDatabaseDocumentsByCollectionKey, selectedDatabaseCollectionId, selectedDatabaseId]);
 
         const currentDatabaseCollection = useMemo(() => {
           return currentDatabaseCollections.find((collection) => collection.id === selectedDatabaseCollectionId) || null;
@@ -71619,16 +73420,22 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          if (!embeddedInResources || typeof onResourcesHeaderChange !== "function") {
 	            return;
 	          }
-	          const isSourcePreviewOpen = resourceMode === "servers" && Boolean(serverFileEditorState.path) && serverDetailTab !== "code";
-	          const isResourceCreateViewOpen = Boolean(serverComposerOpen && isServersMode && normalizedEmbeddedServerKind);
-	          const isComputerCreateViewOpen = Boolean(environmentComposerOpen && !isServersMode);
-	          const shouldUseDetailHeader = !isHomeViewActive || isResourceCreateViewOpen || isComputerCreateViewOpen;
-	          onResourcesHeaderChange(
-	            shouldUseDetailHeader
-	              ? { mode: "detail", title: selectedResourcesDetailTitle, sideDetailOpen: isSourcePreviewOpen }
-	              : { mode: "overview", title: "", sideDetailOpen: isSourcePreviewOpen }
-	          );
-	        }, [embeddedInResources, environmentComposerOpen, isHomeViewActive, isServersMode, normalizedEmbeddedServerKind, onResourcesHeaderChange, resourceMode, selectedResourcesDetailTitle, serverComposerOpen, serverDetailTab, serverFileEditorState.path]);
+          const isSourcePreviewOpen = resourceMode === "servers" && Boolean(serverFileEditorState.path) && serverDetailTab !== "code";
+          const selectedResourcesDetailId = resourceMode === "servers"
+            ? String(selectedDatabaseId || selectedServerId || "").trim()
+            : String(selectedEnvironmentId || "").trim();
+          const selectedResourcesDetailType = resourceMode === "servers"
+            ? (selectedDatabaseId ? "database" : "server")
+            : "computer";
+          const isResourceCreateViewOpen = Boolean(serverComposerOpen && isServersMode && normalizedEmbeddedServerKind);
+          const isComputerCreateViewOpen = Boolean(environmentComposerOpen && !isServersMode);
+          const shouldUseDetailHeader = !isHomeViewActive || isResourceCreateViewOpen || isComputerCreateViewOpen;
+          onResourcesHeaderChange(
+            shouldUseDetailHeader
+              ? { mode: "detail", title: selectedResourcesDetailTitle, sideDetailOpen: isSourcePreviewOpen, resourceMode, resourceId: selectedResourcesDetailId, resourceType: selectedResourcesDetailType }
+              : { mode: "overview", title: "", sideDetailOpen: isSourcePreviewOpen, resourceMode, resourceId: "", resourceType: selectedResourcesDetailType }
+          );
+        }, [embeddedInResources, environmentComposerOpen, isHomeViewActive, isServersMode, normalizedEmbeddedServerKind, onResourcesHeaderChange, resourceMode, selectedDatabaseId, selectedEnvironmentId, selectedResourcesDetailTitle, selectedServerId, serverComposerOpen, serverDetailTab, serverFileEditorState.path]);
 
         useEffect(() => {
           if (!embeddedInResources) {
@@ -72786,6 +74593,22 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             return;
           }
 
+          const templatePreviewServer = resourceTemplatePreviewServerRecordById[serverId] || null;
+          if (templatePreviewServer) {
+            setServerDetailsById((current) => ({
+              ...current,
+              [serverId]: templatePreviewServer,
+            }));
+            if (selectedServerIdRef.current === serverId && !serverEditorDirtyRef.current) {
+              setDraftServer(templatePreviewServer);
+            }
+            setServerSaveState((current) => ({
+              ...current,
+              error: "",
+            }));
+            return templatePreviewServer;
+          }
+
           setLoadingServerId(serverId);
           try {
             const response = await fetch(backendUrl + "/servers/" + encodeURIComponent(serverId), {
@@ -72821,11 +74644,24 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           } finally {
             setLoadingServerId((current) => current === serverId ? "" : current);
           }
-        }, [backendUrl, requestHeaders]);
+        }, [backendUrl, requestHeaders, resourceTemplatePreviewServerRecordById]);
 
         const loadServerFiles = useCallback(async (serverId) => {
           if (!serverId || serverId === PLAYGROUND_SERVER_DRAFT_ID) {
             return [];
+          }
+
+          const templatePreviewFiles = resourceTemplatePreviewServerFilesById[serverId];
+          if (Array.isArray(templatePreviewFiles)) {
+            setServerFilesById((current) => ({
+              ...current,
+              [serverId]: templatePreviewFiles,
+            }));
+            setServerFileTransferState((current) => ({
+              ...current,
+              error: "",
+            }));
+            return templatePreviewFiles;
           }
 
           setLoadingServerFilesId(serverId);
@@ -72863,13 +74699,29 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           } finally {
             setLoadingServerFilesId((current) => current === serverId ? "" : current);
           }
-        }, [backendUrl, requestHeaders]);
+        }, [backendUrl, requestHeaders, resourceTemplatePreviewServerFilesById]);
 
         const loadServerFileContent = useCallback(async (serverId, filePath, options = {}) => {
           const normalizedServerId = String(serverId || "").trim();
           const normalizedPath = normalizeHistoryPath(filePath);
           if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID || !normalizedPath) {
             return null;
+          }
+
+          const templatePreviewContent = resourceTemplatePreviewServerFileContentById[normalizedServerId]?.[normalizedPath];
+          if (typeof templatePreviewContent === "string") {
+            setServerFileEditorState((current) => ({
+              ...current,
+              path: normalizedPath,
+              status: "ready",
+              value: templatePreviewContent,
+              initialValue: templatePreviewContent,
+              error: "",
+              saveError: "",
+              saveMessage: "",
+              isSaving: false,
+            }));
+            return templatePreviewContent;
           }
 
           setServerFileEditorState((current) => ({
@@ -72922,12 +74774,36 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             }));
             return null;
           }
-        }, [backendUrl, requestHeaders]);
+        }, [backendUrl, requestHeaders, resourceTemplatePreviewServerFileContentById]);
 
         const loadServerAnalytics = useCallback(async (serverId, options = {}) => {
           const normalizedServerId = String(serverId || "").trim();
           if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
             return null;
+          }
+
+          if (resourceTemplatePreviewServerRecordById[normalizedServerId]) {
+            const normalizedRecord = {
+              summary: {
+                totalRequests24h: 0,
+                successRate24h: 0,
+                p95LatencyMs: 0,
+                clientErrors24h: 0,
+                serverErrors24h: 0,
+              },
+              charts: {
+                traffic24h: [],
+                status24h: [],
+              },
+              recentRequests: [],
+              deployment: null,
+              loadedAt: new Date().toISOString(),
+            };
+            setServerAnalyticsById((current) => ({
+              ...current,
+              [normalizedServerId]: normalizedRecord,
+            }));
+            return normalizedRecord;
           }
 
           const force = options?.force === true;
@@ -72967,7 +74843,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           } finally {
             setLoadingServerAnalyticsId((current) => current === normalizedServerId ? "" : current);
           }
-        }, [backendUrl, requestHeaders, serverAnalyticsById]);
+        }, [backendUrl, requestHeaders, resourceTemplatePreviewServerRecordById, serverAnalyticsById]);
 
         const loadServerAuthUsers = useCallback(async (serverId, options = {}) => {
           const normalizedServerId = String(serverId || "").trim();
@@ -73132,6 +75008,31 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             return null;
           }
 
+          if (resourceTemplatePreviewDatabaseRecordById[normalizedDatabaseId]) {
+            const collections = Array.isArray(resourceTemplatePreviewDatabaseCollectionsById[normalizedDatabaseId])
+              ? resourceTemplatePreviewDatabaseCollectionsById[normalizedDatabaseId]
+              : [];
+            const totalDocuments = collections.reduce((sum, collection) => sum + Math.max(0, Number(collection?.documentCount || 0) || 0), 0);
+            const normalizedRecord = {
+              summary: {
+                totalCollections: collections.length,
+                totalDocuments,
+                reads24h: 0,
+                writes24h: 0,
+                deletes24h: 0,
+              },
+              charts: {
+                operations24h: [],
+              },
+              loadedAt: new Date().toISOString(),
+            };
+            setDatabaseAnalyticsById((current) => ({
+              ...current,
+              [normalizedDatabaseId]: normalizedRecord,
+            }));
+            return normalizedRecord;
+          }
+
           const force = options?.force === true;
           if (!force && databaseAnalyticsByIdRef.current[normalizedDatabaseId]) {
             return databaseAnalyticsByIdRef.current[normalizedDatabaseId];
@@ -73177,7 +75078,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           } finally {
             setLoadingDatabaseAnalyticsId((current) => current === normalizedDatabaseId ? "" : current);
           }
-        }, [backendUrl, requestHeaders]);
+        }, [backendUrl, requestHeaders, resourceTemplatePreviewDatabaseCollectionsById, resourceTemplatePreviewDatabaseRecordById]);
 
         const loadServerLogs = useCallback(async (serverId, kind = "request", options = {}) => {
           const normalizedServerId = String(serverId || "").trim();
@@ -73185,6 +75086,17 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             ? String(kind).trim().toLowerCase()
             : "request";
           if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+
+          if (resourceTemplatePreviewServerRecordById[normalizedServerId]) {
+            setServerLogsById((current) => ({
+              ...current,
+              [normalizedServerId]: {
+                ...(current[normalizedServerId] || {}),
+                [normalizedKind]: [],
+              },
+            }));
             return [];
           }
 
@@ -73245,11 +75157,19 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               loadingKey: current.loadingKey === loadingKey ? "" : current.loadingKey,
             }));
           }
-        }, [backendUrl, requestHeaders, serverLogsById]);
+        }, [backendUrl, requestHeaders, resourceTemplatePreviewServerRecordById, serverLogsById]);
 
         const loadServerDeployments = useCallback(async (serverId, options = {}) => {
           const normalizedServerId = String(serverId || "").trim();
           if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+
+          if (resourceTemplatePreviewServerRecordById[normalizedServerId]) {
+            setServerDeploymentsById((current) => ({
+              ...current,
+              [normalizedServerId]: [],
+            }));
             return [];
           }
 
@@ -73309,11 +75229,19 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           } finally {
             setLoadingServerDeploymentsId((current) => current === normalizedServerId ? "" : current);
           }
-        }, [backendUrl, requestHeaders, serverDeploymentsById]);
+        }, [backendUrl, requestHeaders, resourceTemplatePreviewServerRecordById, serverDeploymentsById]);
 
         const loadServerBindings = useCallback(async (serverId, options = {}) => {
           const normalizedServerId = String(serverId || "").trim();
           if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+
+          if (resourceTemplatePreviewServerRecordById[normalizedServerId]) {
+            setServerBindingsById((current) => ({
+              ...current,
+              [normalizedServerId]: [],
+            }));
             return [];
           }
 
@@ -73350,12 +75278,36 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           } finally {
             setLoadingServerBindingsId((current) => current === normalizedServerId ? "" : current);
           }
-        }, [backendUrl, requestHeaders]);
+        }, [backendUrl, requestHeaders, resourceTemplatePreviewServerRecordById]);
 
         const loadServerContext = useCallback(async (serverId, options = {}) => {
           const normalizedServerId = String(serverId || "").trim();
           if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
             return null;
+          }
+
+          if (resourceTemplatePreviewServerRecordById[normalizedServerId]) {
+            const context = normalizePlaygroundServerContextRecord({
+              serverId: normalizedServerId,
+              bindings: [],
+              runtime: {
+                nodejs: "22",
+                region: "europe-west1",
+                preview: true,
+              },
+              diagnostics: {
+                warnings: [],
+              },
+            });
+            setServerContextsById((current) => ({
+              ...current,
+              [normalizedServerId]: context,
+            }));
+            setServerBindingsById((current) => ({
+              ...current,
+              [normalizedServerId]: [],
+            }));
+            return context;
           }
 
           const force = options?.force === true;
@@ -73402,7 +75354,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           } finally {
             setLoadingServerContextId((current) => current === normalizedServerId ? "" : current);
           }
-        }, [backendUrl, requestHeaders, serverContextsById]);
+        }, [backendUrl, requestHeaders, resourceTemplatePreviewServerRecordById, serverContextsById]);
 
         const loadDatabases = useCallback(async (options = {}) => {
           setHasLoadedDatabases(true);
@@ -73458,6 +75410,22 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             return null;
           }
 
+          const templatePreviewDatabase = resourceTemplatePreviewDatabaseRecordById[databaseId] || null;
+          if (templatePreviewDatabase) {
+            setDatabaseDetailsById((current) => ({
+              ...current,
+              [databaseId]: templatePreviewDatabase,
+            }));
+            if (selectedDatabaseIdRef.current === databaseId) {
+              setDraftDatabase(templatePreviewDatabase);
+            }
+            setDatabaseSaveState((current) => ({
+              ...current,
+              error: "",
+            }));
+            return templatePreviewDatabase;
+          }
+
           setLoadingDatabaseId(databaseId);
           try {
             const response = await fetch(backendUrl + "/databases/" + encodeURIComponent(databaseId), {
@@ -73493,11 +75461,39 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           } finally {
             setLoadingDatabaseId((current) => current === databaseId ? "" : current);
           }
-        }, [backendUrl, requestHeaders]);
+        }, [backendUrl, requestHeaders, resourceTemplatePreviewDatabaseRecordById]);
 
         const loadDatabaseCollections = useCallback(async (databaseId) => {
           if (!databaseId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
             return [];
+          }
+
+          const templatePreviewCollections = resourceTemplatePreviewDatabaseCollectionsById[databaseId];
+          if (Array.isArray(templatePreviewCollections)) {
+            setDatabaseCollectionsById((current) => ({
+              ...current,
+              [databaseId]: templatePreviewCollections,
+            }));
+            if (selectedDatabaseIdRef.current === databaseId) {
+              const currentSelectedCollectionId = selectedDatabaseCollectionIdRef.current;
+              const nextCollectionId = templatePreviewCollections.some((item) => item.id === currentSelectedCollectionId)
+                ? currentSelectedCollectionId
+                : templatePreviewCollections[0]?.id || "";
+              setSelectedDatabaseCollectionId(nextCollectionId);
+              if (!nextCollectionId) {
+                setSelectedDatabaseDocumentId("");
+                setDatabaseDocumentEditorState({
+                  documentId: "",
+                  value: "{}",
+                  initialValue: "{}",
+                  error: "",
+                  saveError: "",
+                  saveMessage: "",
+                  isSaving: false,
+                });
+              }
+            }
+            return templatePreviewCollections;
           }
 
           setLoadingDatabaseCollectionsId(databaseId);
@@ -73545,7 +75541,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           } finally {
             setLoadingDatabaseCollectionsId((current) => current === databaseId ? "" : current);
           }
-        }, [backendUrl, requestHeaders]);
+        }, [backendUrl, requestHeaders, resourceTemplatePreviewDatabaseCollectionsById]);
 
         const loadDatabaseDocuments = useCallback(async (databaseId, collectionId) => {
           if (!databaseId || !collectionId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
@@ -73553,6 +75549,30 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           }
 
           const loadingKey = databaseId + ":" + collectionId;
+          const templatePreviewDocuments = resourceTemplatePreviewDatabaseDocumentsByCollectionKey[loadingKey];
+          if (Array.isArray(templatePreviewDocuments)) {
+            setDatabaseDocumentsByCollectionKey((current) => ({
+              ...current,
+              [loadingKey]: templatePreviewDocuments,
+            }));
+            if (selectedDatabaseIdRef.current === databaseId && selectedDatabaseCollectionIdRef.current === collectionId) {
+              const currentSelectedDocumentId = selectedDatabaseDocumentIdRef.current;
+              const nextDocument = templatePreviewDocuments.find((entry) => entry.id === currentSelectedDocumentId) || templatePreviewDocuments[0] || null;
+              setSelectedDatabaseDocumentId(nextDocument?.id || "");
+              setDatabaseDocumentEditorState((current) => ({
+                ...current,
+                documentId: nextDocument?.id || "",
+                value: nextDocument ? formatPlaygroundDatabaseDocumentJson(nextDocument.data) : "{}",
+                initialValue: nextDocument ? formatPlaygroundDatabaseDocumentJson(nextDocument.data) : "{}",
+                error: "",
+                saveError: "",
+                saveMessage: "",
+                isSaving: false,
+              }));
+            }
+            return templatePreviewDocuments;
+          }
+
           setLoadingDatabaseDocumentsKey(loadingKey);
           try {
             const response = await fetch(buildPlaygroundDatabaseDocumentsUrl(backendUrl, databaseId, collectionId), {
@@ -73594,7 +75614,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           } finally {
             setLoadingDatabaseDocumentsKey((current) => current === loadingKey ? "" : current);
           }
-        }, [backendUrl, requestHeaders]);
+        }, [backendUrl, requestHeaders, resourceTemplatePreviewDatabaseDocumentsByCollectionKey]);
 
         const loadEnvironmentRuntimeStatus = useCallback(async (environmentId) => {
           const normalizedEnvironmentId = String(environmentId || "").trim();
@@ -74550,6 +76570,61 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }, [environmentComposerOpen, navigationTargetEnvironmentId, navigationToken, orderedEnvironments]);
 
         useEffect(() => {
+          const normalizedTargetId = String(navigationTargetResourceId || "").trim();
+          const normalizedTargetType = navigationTargetResourceType === "database" ? "database" : "server";
+          const previousRequest = resourceNavigationRequestRef.current || {
+            token: null,
+            targetType: "",
+            targetId: "",
+            handled: false,
+          };
+          const requestChanged =
+            previousRequest.token !== navigationResourceToken
+            || previousRequest.targetType !== normalizedTargetType
+            || previousRequest.targetId !== normalizedTargetId;
+
+          if (requestChanged) {
+            resourceNavigationRequestRef.current = {
+              token: navigationResourceToken,
+              targetType: normalizedTargetType,
+              targetId: normalizedTargetId,
+              handled: false,
+            };
+          }
+
+          if (!embeddedInResources || embeddedResourcesView !== "servers" || !normalizedTargetId) {
+            return;
+          }
+
+          if (
+            resourceNavigationRequestRef.current.handled
+            && resourceNavigationRequestRef.current.targetType === normalizedTargetType
+            && resourceNavigationRequestRef.current.targetId === normalizedTargetId
+          ) {
+            return;
+          }
+
+          if (normalizedTargetType === "database") {
+            if (!orderedDatabases.some((database) => database.id === normalizedTargetId)) {
+              return;
+            }
+            handleDatabaseSelect(normalizedTargetId);
+          } else {
+            if (!orderedServers.some((server) => server.id === normalizedTargetId)) {
+              return;
+            }
+            handleServerSelect(normalizedTargetId);
+          }
+
+          resourceNavigationRequestRef.current = {
+            token: navigationResourceToken,
+            targetType: normalizedTargetType,
+            targetId: normalizedTargetId,
+            handled: true,
+          };
+        }, [embeddedInResources, embeddedResourcesView, navigationResourceToken, navigationTargetResourceId, navigationTargetResourceType, orderedDatabases, orderedServers]);
+
+        useEffect(() => {
           setServerAuthSearchQuery("");
           setServerAuthUserComposerState({
             open: false,
@@ -74980,6 +77055,8 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           if (
             !draftDatabase?.id
             || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID
+            || isSelectedDatabaseTemplatePreview
+            || isPlaygroundResourceTemplatePreviewRecord(draftDatabase)
             || !selectedDatabaseCollectionId
             || !databaseDocumentEditorState.documentId
             || databaseDocumentViewMode === "json"
@@ -75025,6 +77102,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           databaseDocumentEditorState.value,
           databaseDocumentEditorState.initialValue,
           databaseDocumentEditorState.isSaving,
+          isSelectedDatabaseTemplatePreview,
         ]);
 
         useLayoutEffect(() => {
@@ -75181,6 +77259,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         useEffect(() => {
           if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !serverEditorDirtyRef.current) {
+            return;
+          }
+          if (isSelectedServerTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftServer)) {
+            serverEditorDirtyRef.current = false;
+            serverAutosaveQueuedRef.current = null;
             return;
           }
 
@@ -75353,6 +77436,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         function updateDraftDatabase(updater) {
+          if (isSelectedDatabaseTemplatePreview) {
+            return;
+          }
           setDraftDatabase((current) => {
             const base = current || normalizePlaygroundDatabaseRecord(selectedDatabaseSnapshot || buildPlaygroundDefaultDatabaseDraft());
             return typeof updater === "function" ? updater(base) : updater;
@@ -75611,6 +77697,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         function updateDraftServer(updater) {
+          if (isSelectedServerTemplatePreview) {
+            return;
+          }
           setDraftServer((current) => {
             const base = current || normalizePlaygroundServerRecord(selectedServerSnapshot || buildPlaygroundDefaultServerDraft());
             return typeof updater === "function" ? updater(base) : updater;
@@ -75802,6 +77891,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         async function commitDraftServerIfDirty() {
           if (!serverEditorDirtyRef.current || !draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          if (isSelectedServerTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftServer)) {
+            serverEditorDirtyRef.current = false;
+            serverAutosaveQueuedRef.current = null;
             return;
           }
           if (serverAutosaveTimerRef.current) {
@@ -76882,6 +78976,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           if (!serverRecord) {
             return null;
           }
+          if (isPlaygroundResourceTemplatePreviewRecord(serverRecord)) {
+            return normalizePlaygroundServerRecord(serverRecord);
+          }
 
           const payload = buildSanitizedServerPayload(serverRecord);
           const isNewServer = !serverRecord.id || serverRecord.id === PLAYGROUND_SERVER_DRAFT_ID;
@@ -76914,6 +79011,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         async function persistDatabaseRecord(databaseRecord) {
           if (!databaseRecord) {
             return null;
+          }
+          if (isPlaygroundResourceTemplatePreviewRecord(databaseRecord)) {
+            return normalizePlaygroundDatabaseRecord(databaseRecord);
           }
 
           const payload = buildSanitizedDatabasePayload(databaseRecord);
@@ -77023,6 +79123,15 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         async function handleServerSave() {
           if (!draftServer) {
             return null;
+          }
+          if (isSelectedServerTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftServer)) {
+            serverEditorDirtyRef.current = false;
+            setServerSaveState({
+              isSaving: false,
+              error: "",
+              message: "",
+            });
+            return draftServer;
           }
 
           setServerSaveState({
@@ -77305,6 +79414,14 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           if (!draftDatabase) {
             return;
           }
+          if (isSelectedDatabaseTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftDatabase)) {
+            setDatabaseSaveState({
+              isSaving: false,
+              error: "",
+              message: "",
+            });
+            return;
+          }
 
           setDatabaseSaveState({
             isSaving: true,
@@ -77480,6 +79597,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           if (!serverId || serverId === PLAYGROUND_SERVER_DRAFT_ID) {
             return;
           }
+          if (resourceTemplatePreviewServerRecordById[serverId] || (draftServer?.id === serverId && isSelectedServerTemplatePreview)) {
+            return;
+          }
           if (!window.confirm("Delete this server?")) {
             return;
           }
@@ -77628,6 +79748,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         async function handleDeleteDatabase(databaseId) {
           if (!databaseId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return;
+          }
+          if (resourceTemplatePreviewDatabaseRecordById[databaseId] || (draftDatabase?.id === databaseId && isSelectedDatabaseTemplatePreview)) {
             return;
           }
           if (!window.confirm("Delete this database and all of its collections/documents?")) {
@@ -77798,7 +79921,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         function handleCreateDatabaseCollection() {
-          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID) {
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || isSelectedDatabaseTemplatePreview) {
             return;
           }
           setDatabaseCollectionComposerState({
@@ -77811,7 +79934,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         async function handleSubmitDatabaseCollectionComposer(event) {
           event.preventDefault();
-          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID) {
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || isSelectedDatabaseTemplatePreview) {
             return;
           }
           const name = String(databaseCollectionComposerState.name || "").trim();
@@ -77869,7 +79992,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         async function handleDeleteDatabaseCollection(collectionId) {
-          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !collectionId) {
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || isSelectedDatabaseTemplatePreview || !collectionId) {
             return;
           }
           setDatabaseCollectionActionsOpen(false);
@@ -77910,7 +80033,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         function handleCreateDatabaseDocument() {
-          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId) {
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || isSelectedDatabaseTemplatePreview || !selectedDatabaseCollectionId) {
             return;
           }
           setDatabaseDocumentComposerState({
@@ -77923,7 +80046,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         async function handleSubmitDatabaseDocumentComposer(event) {
           event.preventDefault();
-          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId) {
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || isSelectedDatabaseTemplatePreview || !selectedDatabaseCollectionId) {
             return;
           }
           const documentId = String(databaseDocumentComposerState.documentId || "").trim();
@@ -78008,6 +80131,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         function handleDatabaseDocumentEditorChange(nextValue) {
+          if (isSelectedDatabaseTemplatePreview) {
+            return;
+          }
           setDatabaseDocumentEditorState((current) => ({
             ...current,
             value: typeof nextValue === "string" ? nextValue : "",
@@ -78017,6 +80143,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         function setDatabaseDocumentFromObject(nextObject, options = {}) {
+          if (isSelectedDatabaseTemplatePreview) {
+            return;
+          }
           const nextValue = formatPlaygroundDatabaseDocumentJson(nextObject);
           setDatabaseDocumentEditorState((current) => ({
             ...current,
@@ -78048,6 +80177,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         function openDatabaseFieldComposer(parentPath = []) {
+          if (isSelectedDatabaseTemplatePreview) {
+            return;
+          }
           setDatabaseFieldComposerState({
             open: true,
             parentPath: Array.isArray(parentPath) ? parentPath : [],
@@ -78094,6 +80226,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         function handleDeleteDatabaseField(path) {
+          if (isSelectedDatabaseTemplatePreview) {
+            return;
+          }
           const parsedDocument = parsePlaygroundDatabaseDocumentObject(databaseDocumentEditorState.value);
           if (!parsedDocument) {
             return;
@@ -78157,6 +80292,16 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         async function handleSaveDatabaseDocument(options = {}) {
           if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId || !databaseDocumentEditorState.documentId || databaseDocumentEditorState.isSaving || databaseDocumentSaveInFlightRef.current) {
+            return;
+          }
+          if (isSelectedDatabaseTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftDatabase)) {
+            setDatabaseDocumentEditorState((current) => ({
+              ...current,
+              value: current.initialValue,
+              saveError: "",
+              saveMessage: "",
+              isSaving: false,
+            }));
             return;
           }
 
@@ -78295,6 +80440,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId || !documentId) {
             return;
           }
+          if (isSelectedDatabaseTemplatePreview) {
+            return;
+          }
           setDatabaseDocumentActionsOpen(false);
           if (!window.confirm("Delete this document?")) {
             return;
@@ -78347,7 +80495,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         async function handleServerFileUploadFiles(files) {
           const normalizedFiles = Array.from(files || []).filter(Boolean);
-          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || normalizedFiles.length === 0) {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSelectedServerTemplatePreview || normalizedFiles.length === 0) {
             return;
           }
 
@@ -78444,7 +80592,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         async function handleServerFileDelete(entry) {
-          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !entry?.path) {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSelectedServerTemplatePreview || !entry?.path) {
             return;
           }
           setServerSourceFileMenuPath("");
@@ -78486,7 +80634,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         async function handleServerFileRename(entry) {
-          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !entry?.path || entry.isFolder) {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSelectedServerTemplatePreview || !entry?.path || entry.isFolder) {
             return;
           }
           const currentPath = normalizeHistoryPath(entry.path);
@@ -78620,6 +80768,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         function handleServerFileEditorChange(nextValue) {
+          if (isSelectedServerTemplatePreview) {
+            return;
+          }
           const normalizedValue = typeof nextValue === "string" ? nextValue : "";
           setServerFileEditorState((current) => ({
             ...current,
@@ -78655,6 +80806,16 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         async function handleServerFileSave() {
           if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !serverFileEditorState.path || serverFileEditorState.status !== "ready" || serverFileEditorState.isSaving) {
+            return;
+          }
+          if (isSelectedServerTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftServer)) {
+            setServerFileEditorState((current) => ({
+              ...current,
+              value: current.initialValue,
+              saveError: "",
+              saveMessage: "",
+              isSaving: false,
+            }));
             return;
           }
 
@@ -78703,7 +80864,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         async function handleCreateServerFile() {
-          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSelectedServerTemplatePreview) {
             return;
           }
           const rawPath = window.prompt("New file path", "index.js");
@@ -78756,6 +80917,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         async function createDefaultServerSourceFiles(serverId, starterFiles, options = {}) {
           const normalizedServerId = String(serverId || "").trim();
           if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          if (resourceTemplatePreviewServerRecordById[normalizedServerId]) {
             return;
           }
           const defaultSourceKey = normalizedServerId + ":" + String(options?.kind || "source");
@@ -78855,6 +81019,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         async function handleDeployServer() {
           if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          if (isSelectedServerTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftServer)) {
             return;
           }
 
@@ -79223,6 +81390,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         async function handleInvokeServer() {
           if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          if (isSelectedServerTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftServer)) {
             return;
           }
 
@@ -81884,6 +84054,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           const isAgentRuntimeServer = normalizedServerKind === "agent_runtime";
           const isSecretsServer = normalizedServerKind === "secrets";
           const isPaymentsServer = normalizedServerKind === "payments";
+          const isServerTemplatePreview = isSelectedServerTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftServer);
 	          const isTitlelessServerDescription = isSourceDeployableServer || isAuthServer || isSecretsServer || isPaymentsServer;
           const shouldRenderTitlelessServerDescription = isTitlelessServerDescription && !isFunctionServer;
           const ServerPreviewEditorComponent = serverPreviewEditorModule?.default || null;
@@ -81918,6 +84089,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             children,
           }) => {
             const isOpen = serverDetailSelectPopover === popoverId;
+            const isControlDisabled = disabled || isServerTemplatePreview;
             return React.createElement("div", {
                 className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (isOpen ? " is-open" : ""),
                 ref: isOpen ? serverDetailSelectPopoverRef : null,
@@ -81925,9 +84097,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               React.createElement("button", {
                 type: "button",
                 className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (isEmpty ? " is-empty" : "") + (isOpen ? " is-active" : ""),
-                disabled,
+                disabled: isControlDisabled,
                 onClick: () => {
-                  if (disabled) return;
+                  if (isControlDisabled) return;
                   setServerDetailSelectPopover((current) => current === popoverId ? "" : popoverId);
                 },
                 title: valueLabel,
@@ -82836,6 +85008,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                 className: "playground-tasks-detail-format-button",
                 title: action.label,
                 "aria-label": action.label,
+                disabled: isServerTemplatePreview,
                 onMouseDown: (event) => event.preventDefault(),
                 onClick: () => handleServerDescriptionFormat(action.id),
               }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
@@ -82860,14 +85033,25 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               rows: 1,
               placeholder: isServerDescriptionEditing ? "Add Description here" : "",
               value: draftServer.description || "",
-              onFocus: () => setIsServerDescriptionEditing(true),
+              readOnly: isServerTemplatePreview,
+              "aria-readonly": isServerTemplatePreview ? "true" : "false",
+              onFocus: () => {
+                if (!isServerTemplatePreview) {
+                  setIsServerDescriptionEditing(true);
+                }
+              },
               onChange: (event) => {
+                if (isServerTemplatePreview) {
+                  return;
+                }
                 updateServerField("description", event.target.value);
                 resizeEnvironmentDescriptionTextarea(event.currentTarget);
               },
               onBlur: () => {
                 setIsServerDescriptionEditing(false);
-                void commitDraftServerIfDirty();
+                if (!isServerTemplatePreview) {
+                  void commitDraftServerIfDirty();
+                }
               },
             })
           );
@@ -83222,7 +85406,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                     type: "button",
                     className: "playground-environments-action-button playground-server-custom-domain-add-button",
                     onClick: () => openServerCustomDomainModal(null),
-                    disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                    disabled: isServerTemplatePreview || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
                   },
                     React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
                     React.createElement("span", null, "Add Domain")
@@ -83240,11 +85424,18 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                         key: customDomain.domain,
                         role: "button",
                         tabIndex: 0,
-                        onClick: () => openServerCustomDomainModal(customDomain),
+                        onClick: () => {
+                          if (!isServerTemplatePreview) {
+                            openServerCustomDomainModal(customDomain);
+                          }
+                        },
+                        "aria-disabled": isServerTemplatePreview ? "true" : "false",
                         onKeyDown: (event) => {
                           if (event.key === "Enter" || event.key === " ") {
                             event.preventDefault();
-                            openServerCustomDomainModal(customDomain);
+                            if (!isServerTemplatePreview) {
+                              openServerCustomDomainModal(customDomain);
+                            }
                           }
                         },
                       },
@@ -83296,6 +85487,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                                 type: "button",
                                 className: "playground-server-custom-domain-menu-row",
                                 onClick: () => openServerCustomDomainModal(customDomain),
+                                disabled: isServerTemplatePreview,
                               },
                                 React.createElement(SquarePen, { width: 13, height: 13, strokeWidth: 1.8 }),
                                 React.createElement("span", null, "Edit")
@@ -83304,7 +85496,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                                 type: "button",
                                 className: "playground-server-custom-domain-menu-row is-danger",
                                 onClick: () => void handleRemoveServerCustomDomain(customDomain.domain),
-                                disabled: isRemovingDomain,
+                                disabled: isServerTemplatePreview || isRemovingDomain,
                               },
                                 React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }),
                                 React.createElement("span", null, isRemovingDomain ? "Removing..." : "Remove")
@@ -83709,7 +85901,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                         type: "button",
                         className: "playground-server-custom-domain-menu-row",
                         onClick: () => void handleServerFileRename(entry),
-                        disabled: entry.isFolder,
+                        disabled: isServerTemplatePreview || entry.isFolder,
                       },
                         React.createElement(SquarePen, { width: 13, height: 13, strokeWidth: 1.8 }),
                         React.createElement("span", null, "Rename")
@@ -83718,6 +85910,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                         type: "button",
                         className: "playground-server-custom-domain-menu-row is-danger",
                         onClick: () => void handleServerFileDelete(entry),
+                        disabled: isServerTemplatePreview,
                       },
                         React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }),
                         React.createElement("span", null, "Delete")
@@ -83805,7 +85998,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                               setServerFileActionsPopoverOpen(false);
                               void handleServerFileSave();
                             },
-                            disabled: !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
+                            disabled: isServerTemplatePreview || !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
                           },
                             React.createElement(HardDrive, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                             React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
@@ -83821,7 +86014,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                                 void handleServerFileDownload(currentServerEditorEntry);
                               }
                             },
-                            disabled: !currentServerEditorEntry,
+                            disabled: isServerTemplatePreview || !currentServerEditorEntry,
                           },
                             React.createElement(Download, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                             React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
@@ -83878,10 +86071,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                               }),
                               theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
                               value: serverFileEditorState.value,
-                              onChange: handleServerFileEditorChange,
+                              onChange: isServerTemplatePreview ? undefined : handleServerFileEditorChange,
                               beforeMount: ensurePlaygroundCodeEditorTheme,
                               options: {
                                 automaticLayout: true,
+                                readOnly: isServerTemplatePreview,
                                 minimap: { enabled: false },
                                 scrollBeyondLastLine: false,
                                 smoothScrolling: true,
@@ -83904,6 +86098,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                               className: "playground-code-preview-textarea playground-servers-source-editor-textarea",
                               value: serverFileEditorState.value,
                               onChange: (event) => handleServerFileEditorChange(event.target.value),
+                              readOnly: isServerTemplatePreview,
                               spellCheck: false,
                               wrap: serverFileEditorState.wordWrap ? "soft" : "off",
                           })
@@ -83987,10 +86182,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   }),
                   theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
                   value: serverFileEditorState.value,
-                  onChange: handleServerFileEditorChange,
+                  onChange: isServerTemplatePreview ? undefined : handleServerFileEditorChange,
                   beforeMount: ensurePlaygroundCodeEditorTheme,
                   options: {
                     automaticLayout: true,
+                    readOnly: isServerTemplatePreview,
                     minimap: { enabled: false },
                     scrollBeyondLastLine: false,
                     smoothScrolling: true,
@@ -84013,6 +86209,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               className: "playground-code-preview-textarea playground-servers-source-editor-textarea playground-servers-code-editor-shell",
               value: serverFileEditorState.value,
               onChange: (event) => handleServerFileEditorChange(event.target.value),
+              readOnly: isServerTemplatePreview,
               spellCheck: false,
               wrap: serverFileEditorState.wordWrap ? "soft" : "off",
             });
@@ -84021,7 +86218,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               className: "playground-servers-code-workspace" + (isServerFileDragging ? " is-dragging" : ""),
               onDragOver: (event) => {
                 event.preventDefault();
-                if (!draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || serverFileTransferState.isUploading) {
+                if (!draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isServerTemplatePreview || serverFileTransferState.isUploading) {
                   return;
                 }
                 setIsServerFileDragging(true);
@@ -84037,6 +86234,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                 setIsServerFileDragging(false);
                 const droppedFiles = Array.from(event.dataTransfer?.files || []);
                 if (!droppedFiles.length) {
+                  return;
+                }
+                if (isServerTemplatePreview) {
                   return;
                 }
                 setServerCodeAddFileMenuOpen(false);
@@ -84079,6 +86279,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                             setServerCodeAddFileMenuOpen(false);
                             void handleCreateServerFile();
                           },
+                          disabled: isServerTemplatePreview,
                         },
                           React.createElement(FilePlus2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                           React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
@@ -84092,6 +86293,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                             setServerCodeAddFileMenuOpen(false);
                             openServerFileUploadPicker();
                           },
+                          disabled: isServerTemplatePreview,
                         },
                           React.createElement(ArrowUpFromLine, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                           React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
@@ -84130,13 +86332,13 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                     type: "button",
                     className: "playground-environments-action-button",
                     onClick: handleServerFileEditorRevert,
-                    disabled: !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
+                    disabled: isServerTemplatePreview || !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
                   }, React.createElement("span", null, "Revert")),
                   React.createElement("button", {
                     type: "button",
                     className: "playground-environments-action-button is-primary",
                     onClick: () => void handleServerFileSave(),
-                    disabled: !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
+                    disabled: isServerTemplatePreview || !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
                   },
                     serverFileEditorState.isSaving
                       ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
@@ -84511,7 +86713,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   type: "button",
                   className: "playground-server-deploy-pill-button",
                   onClick: () => void handleInvokeServer(),
-                  disabled: serverDeploymentState.isInvoking || !draftServer.serviceUrl,
+                  disabled: isServerTemplatePreview || serverDeploymentState.isInvoking || !draftServer.serviceUrl,
                 },
                   serverDeploymentState.isInvoking
                     ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
@@ -84522,7 +86724,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   type: "button",
                   className: "playground-server-deploy-pill-button is-primary",
                   onClick: () => void handleDeployServer(),
-                  disabled: serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                  disabled: isServerTemplatePreview || serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
                 },
                   serverDeploymentState.isDeploying
                     ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
@@ -84642,7 +86844,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                 )
               )
             : null;
-	          const serverDangerSection = isSourceDeployableServer || isAgentRuntimeServer || isPaymentsServer
+	          const serverDangerSection = !isServerTemplatePreview && (isSourceDeployableServer || isAgentRuntimeServer || isPaymentsServer)
 	            ? React.createElement("section", { className: "playground-server-danger-section playground-server-details-card" },
                 React.createElement("div", { className: "playground-server-danger-copy-row" },
                   React.createElement("span", { className: "playground-server-danger-icon", "aria-hidden": "true" },
@@ -84769,9 +86971,13 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   placeholder: "Server",
                   "aria-label": "Server name",
                   title: draftServer.name || "Server",
+                  readOnly: isServerTemplatePreview,
+                  "aria-readonly": isServerTemplatePreview ? "true" : "false",
                   onChange: (event) => updateServerField("name", event.target.value),
                   onBlur: () => {
-                    void commitDraftServerIfDirty();
+                    if (!isServerTemplatePreview) {
+                      void commitDraftServerIfDirty();
+                    }
                   },
                 }),
                 isSourceDeployableServer && functionDeployedServiceUrl
@@ -84847,7 +87053,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                         }
                         void handleInvokeServer();
                       },
-                      disabled: serverDeploymentState.isInvoking || !draftServer.serviceUrl,
+                      disabled: isServerTemplatePreview || serverDeploymentState.isInvoking || !draftServer.serviceUrl,
                       title: isWebAppServer
                         ? (draftServer.serviceUrl || "Service URL is available after deployment")
                         : (draftServer.serviceUrl ? "Invoke the live " + serverKindLabel.toLowerCase() : "Deploy first to enable test invocation"),
@@ -84863,7 +87069,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                       type: "button",
                       className: "playground-environments-action-button is-primary",
                       onClick: () => void handleDeployServer(),
-                      disabled: serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                      disabled: isServerTemplatePreview || serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
                     },
                       serverDeploymentState.isDeploying
                         ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
@@ -86733,6 +88939,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             );
           }
 
+          const isDatabaseTemplatePreview = isSelectedDatabaseTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftDatabase);
           const DatabaseJsonEditorComponent = databaseJsonEditorModule?.default || null;
           const collectionLoading = loadingDatabaseCollectionsId === draftDatabase.id;
           const documentsLoading = loadingDatabaseDocumentsKey === (draftDatabase.id + ":" + selectedDatabaseCollectionId);
@@ -86895,6 +89102,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                 className: "playground-tasks-detail-format-button",
                 title: action.label,
                 "aria-label": action.label,
+                disabled: isDatabaseTemplatePreview,
                 onMouseDown: (event) => event.preventDefault(),
                 onClick: () => handleDatabaseDescriptionFormat(action.id),
               }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
@@ -86919,16 +89127,23 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               rows: 1,
               placeholder: isDatabaseDescriptionEditing ? "Add Description here" : "",
               value: draftDatabase.description || "",
+              readOnly: isDatabaseTemplatePreview,
+              "aria-readonly": isDatabaseTemplatePreview ? "true" : "false",
               onFocus: () => {
-                setIsDatabaseDescriptionEditing(true);
+                if (!isDatabaseTemplatePreview) {
+                  setIsDatabaseDescriptionEditing(true);
+                }
               },
               onChange: (event) => {
+                if (isDatabaseTemplatePreview) {
+                  return;
+                }
                 updateDatabaseField("description", event.target.value);
                 resizeEnvironmentDescriptionTextarea(event.currentTarget);
               },
               onBlur: () => {
                 setIsDatabaseDescriptionEditing(false);
-                if (String(draftDatabase.name || "").trim()) {
+                if (!isDatabaseTemplatePreview && String(draftDatabase.name || "").trim()) {
                   void handleDatabaseSave();
                 }
               },
@@ -87031,6 +89246,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               return React.createElement("select", {
                 className: "playground-database-browser-value-select",
                 value: fieldValue ? "true" : "false",
+                disabled: isDatabaseTemplatePreview,
                 onChange: (event) => handleDatabaseFieldValueChange(fieldPath, event.target.value === "true"),
               },
                 React.createElement("option", { value: "true" }, "true"),
@@ -87044,6 +89260,8 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               type: "text",
               className: "playground-database-browser-value-input",
               value: valueType === "number" ? String(fieldValue) : String(fieldValue || ""),
+              readOnly: isDatabaseTemplatePreview,
+              "aria-readonly": isDatabaseTemplatePreview ? "true" : "false",
               onChange: (event) => handleDatabaseFieldValueChange(fieldPath, event.target.value),
               spellCheck: false,
             });
@@ -87099,6 +89317,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                             type: "button",
                             className: "playground-database-browser-field-action",
                             onClick: () => openDatabaseFieldComposer(fieldPath),
+                            disabled: isDatabaseTemplatePreview,
                             title: "Add nested field",
                             "aria-label": "Add nested field",
                           }, React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.9 }))
@@ -87107,6 +89326,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                         type: "button",
                         className: "playground-database-browser-field-action is-danger",
                         onClick: () => handleDeleteDatabaseField(fieldPath),
+                        disabled: isDatabaseTemplatePreview,
                         title: "Delete field",
                         "aria-label": "Delete field",
                       }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.9 }))
@@ -87154,10 +89374,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                                   language: "json",
                                   theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
                                   value: databaseDocumentEditorState.value,
-                                  onChange: handleDatabaseDocumentEditorChange,
+                                  onChange: isDatabaseTemplatePreview ? undefined : handleDatabaseDocumentEditorChange,
                                   beforeMount: ensurePlaygroundCodeEditorTheme,
                                   options: {
                                     automaticLayout: true,
+                                    readOnly: isDatabaseTemplatePreview,
                                     minimap: { enabled: false },
                                     scrollBeyondLastLine: false,
                                     smoothScrolling: true,
@@ -87186,6 +89407,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                                     className: "playground-code-preview-textarea playground-servers-source-editor-textarea",
                                     value: databaseDocumentEditorState.value,
                                     onChange: (event) => handleDatabaseDocumentEditorChange(event.target.value),
+                                    readOnly: isDatabaseTemplatePreview,
                                     spellCheck: false,
                                     wrap: "off",
                                   })
@@ -87199,6 +89421,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                                     type: "button",
                                     className: "playground-database-browser-add-field",
                                     onClick: () => openDatabaseFieldComposer([]),
+                                    disabled: isDatabaseTemplatePreview,
                                   },
                                     React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
                                     React.createElement("span", null, "Add Field")
@@ -87268,11 +89491,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   title: "Collections",
                   count: currentDatabaseCollections.length,
                   Icon: Layers,
-                  onCreate: draftDatabase.id && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID
+                  onCreate: !isDatabaseTemplatePreview && draftDatabase.id && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID
                     ? handleCreateDatabaseCollection
                     : null,
                   createLabel: "Add Collection",
-                  createDisabled: !draftDatabase.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
+                  createDisabled: isDatabaseTemplatePreview || !draftDatabase.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
                 }),
                 React.createElement("div", { className: "playground-database-browser-pane-list" },
                   collectionLoading
@@ -87313,17 +89536,17 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   title: "Documents",
                   count: selectedCollection ? Number(selectedCollection.documentCount || currentDatabaseDocuments.length || 0) : currentDatabaseDocuments.length,
                   Icon: FileText,
-                  onCreate: draftDatabase.id && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID && selectedDatabaseCollectionId
+                  onCreate: !isDatabaseTemplatePreview && draftDatabase.id && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID && selectedDatabaseCollectionId
                     ? handleCreateDatabaseDocument
                     : null,
                   createLabel: "Add Document",
-                  createDisabled: !selectedDatabaseCollectionId,
+                  createDisabled: isDatabaseTemplatePreview || !selectedDatabaseCollectionId,
                   actionMenu: {
                     open: databaseCollectionActionsOpen,
                     onToggle: () => setDatabaseCollectionActionsOpen((current) => !current),
                     onDelete: () => handleDeleteDatabaseCollection(selectedDatabaseCollectionId),
                     deleteLabel: "Delete Collection",
-                    disabled: !selectedDatabaseCollectionId,
+                    disabled: isDatabaseTemplatePreview || !selectedDatabaseCollectionId,
                   },
                 }),
                 React.createElement("div", { className: "playground-database-browser-pane-list" },
@@ -87362,7 +89585,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                         onToggle: () => setDatabaseDocumentActionsOpen((current) => !current),
                         onDelete: () => handleDeleteDatabaseDocument(selectedDatabaseDocumentId),
                         deleteLabel: "Delete Document",
-                        disabled: !selectedDatabaseDocumentId,
+                        disabled: isDatabaseTemplatePreview || !selectedDatabaseDocumentId,
                       })
                     ),
                     React.createElement("div", { className: "playground-database-browser-pane-action-row" },
@@ -87372,6 +89595,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                             type: "button",
                             className: "playground-database-browser-add-field",
                             onClick: () => openDatabaseFieldComposer([]),
+                            disabled: isDatabaseTemplatePreview,
                           },
                             React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
                             React.createElement("span", null, "Add Field")
@@ -87399,7 +89623,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             )
           );
 
-          const databaseCollectionComposerModal = databaseCollectionComposerState.open
+          const databaseCollectionComposerModal = !isDatabaseTemplatePreview && databaseCollectionComposerState.open
             ? React.createElement("div", {
                 className: "playground-tasks-project-modal-backdrop",
                 onClick: closeDatabaseCollectionComposer,
@@ -87461,7 +89685,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               )
             : null;
 
-          const databaseDocumentComposerModal = databaseDocumentComposerState.open
+          const databaseDocumentComposerModal = !isDatabaseTemplatePreview && databaseDocumentComposerState.open
             ? React.createElement("div", {
                 className: "playground-tasks-project-modal-backdrop",
                 onClick: closeDatabaseDocumentComposer,
@@ -87523,7 +89747,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               )
             : null;
 
-          const databaseFieldComposerModal = databaseFieldComposerState.open
+          const databaseFieldComposerModal = !isDatabaseTemplatePreview && databaseFieldComposerState.open
             ? React.createElement("div", {
                 className: "playground-tasks-project-modal-backdrop",
                 onClick: closeDatabaseFieldComposer,
@@ -87635,7 +89859,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                 )
               )
 	            : null;
-	          const databaseDangerSection = React.createElement("section", { className: "playground-server-danger-section playground-database-danger-section playground-server-details-card" },
+	          const databaseDangerSection = isDatabaseTemplatePreview ? null : React.createElement("section", { className: "playground-server-danger-section playground-database-danger-section playground-server-details-card" },
 	            React.createElement("div", { className: "playground-server-danger-copy-row" },
 	              React.createElement("span", { className: "playground-server-danger-icon", "aria-hidden": "true" },
 	                React.createElement(AlertCircle, { width: 15, height: 15, strokeWidth: 2 })
@@ -87720,8 +89944,14 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                       placeholder: "Database",
                       "aria-label": "Database name",
                       title: draftDatabase.name || "Database",
-                      onChange: (event) => updateDatabaseField("name", event.target.value),
+                      readOnly: isDatabaseTemplatePreview,
+                      "aria-readonly": isDatabaseTemplatePreview ? "true" : undefined,
+                      onChange: (event) => {
+                        if (isDatabaseTemplatePreview) return;
+                        updateDatabaseField("name", event.target.value);
+                      },
                       onBlur: () => {
+                        if (isDatabaseTemplatePreview) return;
                         if (String(draftDatabase.name || "").trim()) {
                           void handleDatabaseSave();
                         }
@@ -87743,7 +89973,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                     type: "button",
                     className: "playground-environments-action-button",
                     onClick: () => void handleExportDatabase(),
-                    disabled: databaseExporting || !draftDatabase.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
+                    disabled: isDatabaseTemplatePreview || databaseExporting || !draftDatabase.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
                     title: "Export database as JSON",
                   },
                     databaseExporting
@@ -92697,12 +94927,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           }
           onResourcesHeaderChange(
             agentCreationSetupOpen
-              ? { mode: "detail", title: "New Agent" }
+              ? { mode: "detail", title: "New Agent", resourceType: "agent", resourceId: PLAYGROUND_AGENT_DRAFT_ID }
               : isHomeViewActive
-              ? { mode: "overview", title: "" }
-              : { mode: "detail", title: selectedResourcesDetailTitle }
+              ? { mode: "overview", title: "", resourceType: "agent", resourceId: "" }
+              : { mode: "detail", title: selectedResourcesDetailTitle, resourceType: "agent", resourceId: selectedAgentId }
           );
-        }, [agentCreationSetupOpen, embeddedInResources, isHomeViewActive, onResourcesHeaderChange, selectedResourcesDetailTitle]);
+        }, [agentCreationSetupOpen, embeddedInResources, isHomeViewActive, onResourcesHeaderChange, selectedAgentId, selectedResourcesDetailTitle]);
 
         useEffect(() => {
           if (!embeddedInResources) {
@@ -98647,13 +100877,18 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             )
           );
 
-          const agentPermissionsContent = renderAgentPermissionsList(draftAgent.permissionSet);
+          const agentPermissionsContent = renderPlaygroundPermissionPanel(draftAgent.permissionSet, {
+            subjectType: "agent",
+            onRingAccessChange: updateAgentPermissionRingAccess,
+            onActionRingChange: updateAgentPermissionActionRing,
+            onActionAccessChange: updateAgentPermissionActionAccess,
+          });
           const agentPermissionsSection = React.createElement("section", {
               className: "playground-agents-permissions-section",
               key: "permissions",
               "data-section-id": "permissions",
             },
-            React.createElement("div", { className: "playground-agents-permissions-card" }, agentPermissionsContent)
+            agentPermissionsContent
           );
           const agentDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs" },
             React.createElement("div", { className: "playground-project-overview-chart-tabs" },
@@ -101047,13 +103282,15 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               ? {
                   mode: "detail",
                   title: String(selectedSkill?.name || "Skill").trim() || "Skill",
+                  skillId: String(selectedSkill?.id || selectedSkillId || "").trim(),
                 }
               : {
                   mode: "overview",
                   title: "",
+                  skillId: "",
                 }
           );
-        }, [onToolsSkillsHeaderChange, selectedSkill?.name, skillsPageMode]);
+        }, [onToolsSkillsHeaderChange, selectedSkill?.id, selectedSkill?.name, selectedSkillId, skillsPageMode]);
 
         useEffect(() => {
           if (handledBackRequestTokenRef.current === backRequestToken) {
@@ -104076,6 +106313,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         currentUserEmail,
         currentUserAvatarUrl,
         canStartThreads,
+        hasRealAccess = false,
         taskRunStates,
         onThreadOpen,
         onThreadOptionsOpen,
@@ -104095,6 +106333,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         onOpenResourceTemplatesPage,
         projectOverviewResourceFilter = "all",
         setProjectOverviewResourceFilter = () => {},
+        workspaceTeams = [],
+        workspaceTeamsLoading = false,
+        workspaceTeamsRequiresPlan = false,
+        onWorkspaceTeamsRequest,
+        onOpenTeamPage,
         onRequireAuth,
         onRequestSidebarCollapse,
         useUnifiedProjectNav = false,
@@ -104168,6 +106411,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	        const missionControlAutosaveInFlightRef = useRef(false);
         const missionControlAutosaveQueuedRef = useRef(null);
         const handledOpenTaskRequestTokenRef = useRef("");
+        const projectOverviewWorkspaceTeamsRequestedRef = useRef(false);
         const [projects, setProjects] = useState([]);
         const [selectedProjectId, setSelectedProjectId] = useState(() => {
           try {
@@ -104230,6 +106474,35 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const [projectOverviewChartTimescale, setProjectOverviewChartTimescale] = useState("day");
         const [projectOverviewHomeTab, setProjectOverviewHomeTab] = useState("general");
         const [projectOverviewSidebarCollapsed, setProjectOverviewSidebarCollapsed] = useState(false);
+        const [ticketDetailSidebarCollapsed, setTicketDetailSidebarCollapsed] = useState(false);
+        const [projectOverviewPermissionTeamId, setProjectOverviewPermissionTeamId] = useState("");
+        const [projectOverviewTeamMenuId, setProjectOverviewTeamMenuId] = useState("");
+        const workspaceTeamsCount = Array.isArray(workspaceTeams) ? workspaceTeams.length : 0;
+        function requestProjectOverviewWorkspaceTeams() {
+          if (!hasRealAccess || workspaceTeamsLoading || workspaceTeamsRequiresPlan || workspaceTeamsCount > 0) {
+            return;
+          }
+          if (projectOverviewWorkspaceTeamsRequestedRef.current) {
+            return;
+          }
+          projectOverviewWorkspaceTeamsRequestedRef.current = true;
+          if (typeof onWorkspaceTeamsRequest === "function") {
+            onWorkspaceTeamsRequest();
+          }
+        }
+        useEffect(() => {
+          if (projectOverviewHomeTab !== "permissions") {
+            return;
+          }
+          requestProjectOverviewWorkspaceTeams();
+        }, [
+          projectOverviewHomeTab,
+          hasRealAccess,
+          workspaceTeamsLoading,
+          workspaceTeamsRequiresPlan,
+          workspaceTeamsCount,
+          onWorkspaceTeamsRequest,
+        ]);
         const [projectOverviewFilesSubview, setProjectOverviewFilesSubview] = useState("overview");
         const [projectOverviewListMode, setProjectOverviewListMode] = useState("tasks");
         const [projectOverviewTaskSearchQuery, setProjectOverviewTaskSearchQuery] = useState("");
@@ -104370,6 +106643,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const [isReleaseDescriptionEditing, setIsReleaseDescriptionEditing] = useState(false);
         const [selectedTaskId, setSelectedTaskId] = useState("");
         const [draftTask, setDraftTask] = useState(null);
+        const [projectTaskDetailScreenOpen, setProjectTaskDetailScreenOpen] = useState(false);
         const [isTaskDescriptionEditing, setIsTaskDescriptionEditing] = useState(false);
         const [taskDetailsCollapsed, setTaskDetailsCollapsed] = useState(false);
         const [taskTitleInputValue, setTaskTitleInputValue] = useState("");
@@ -106548,7 +108822,10 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           return next;
         }, [releases]);
 
-        const taskTicketNumbersById = useMemo(() => buildPlaygroundTaskTicketNumberMap(tasks), [tasks]);
+        const taskTicketNumbersById = useMemo(
+          () => buildPlaygroundTaskTicketNumberMap(tasks, selectedProject),
+          [selectedProject, tasks]
+        );
         const taskDetailThreadSortOptions = [
           { id: "recent-desc", label: "Recently Updated", description: "Show the newest activity first" },
           { id: "created-desc", label: "Newest Created", description: "Show newly created threads first" },
@@ -110818,6 +113095,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             resetScheduleSaveState("");
           }
           setSelectedTaskId("");
+          setProjectTaskDetailScreenOpen(false);
           setDraftTask(null);
           setBacklogToolbarPopover("");
           setProjectOverviewCostSummaryState({
@@ -110882,6 +113160,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           }
           setSelectedProjectId(normalizedProjectId);
           setSelectedTaskId("");
+          setProjectTaskDetailScreenOpen(false);
           setDraftTask(null);
           if (!preserveStandaloneSchedule) {
             setSelectedScheduleId("");
@@ -111095,20 +113374,43 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               mode: "project",
               title: selectedProjectWorkspaceTitle,
               view: taskView,
+              projectId: selectedProject.id,
+              taskId: selectedTaskId,
+              scheduleId: selectedScheduleId,
+              detailMode: selectedTaskId
+                ? "task"
+                : missionControlStrategyOpen
+                  ? "mission-control"
+                  : selectedScheduleId && scheduleViewMode === "setup"
+                    ? "schedule"
+                    : "",
             });
           } else {
             onTasksHeaderChange({
               mode: isStandaloneCalendarMode ? "calendar" : "overview",
               title: isStandaloneCalendarMode ? "Calendar" : "Projects",
               view: isStandaloneCalendarMode ? "calendar" : "overview",
+              projectId: selectedProjectId,
+              taskId: selectedTaskId,
+              scheduleId: selectedScheduleId,
+              detailMode: selectedTaskId
+                ? "task"
+                : selectedScheduleId && scheduleViewMode === "setup"
+                  ? "schedule"
+                  : "",
             });
           }
           return undefined;
         }, [
           isStandaloneCalendarMode,
+          missionControlStrategyOpen,
           onTasksHeaderChange,
           selectedProject?.id,
+          selectedProjectId,
           selectedProjectWorkspaceTitle,
+          selectedScheduleId,
+          selectedTaskId,
+          scheduleViewMode,
           taskView,
         ]);
 
@@ -111136,6 +113438,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           setMissionControlSetupOpen(false);
           setTaskView(requestedView);
           setSelectedTaskId("");
+          setProjectTaskDetailScreenOpen(false);
           setDraftTask(null);
           setProjectSidebarPopover("");
         }, [projectNavViewRequest, useUnifiedProjectNav]);
@@ -112811,6 +115114,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             setTaskView("calendar");
           }
           setSelectedTaskId("");
+          setProjectTaskDetailScreenOpen(false);
           setDraftTask(null);
         }, [isStandaloneCalendarMode, taskView]);
 
@@ -112845,6 +115149,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         useEffect(() => {
           selectedTaskIdRef.current = selectedTaskId;
         }, [selectedTaskId]);
+
+        useEffect(() => {
+          if (!selectedTaskId || (taskView !== "backlog" && taskView !== "board")) {
+            setProjectTaskDetailScreenOpen(false);
+          }
+        }, [selectedTaskId, taskView]);
 
         const isTaskKeyboardNavigationBlocked = Boolean(
           boardToolbarPopover
@@ -112906,7 +115216,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             }
 
             event.preventDefault();
-            handleSelectTask(nextTaskId);
+            handleSelectTask(nextTaskId, { screen: projectTaskDetailScreenOpen });
           }
 
           window.addEventListener("keydown", handleTaskNavigationKeyDown);
@@ -112920,6 +115230,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           boardToolbarPopover,
           isTaskKeyboardNavigationBlocked,
           projectEnvironmentFilePickerOpen,
+          projectTaskDetailScreenOpen,
           releaseBacklogToolbarPopover,
           selectedProjectId,
           selectedTaskId,
@@ -112984,6 +115295,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           }
 
           const requestedProjectId = String(navigationRequest?.projectId || "").trim();
+          const requestedTaskId = String(navigationRequest?.taskId || "").trim();
           const requestedView = navigationRequest?.view === "calendar"
             ? "calendar"
             : navigationRequest?.view === "overview"
@@ -113027,6 +115339,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             nextView,
             selectedProjectId,
             currentTaskView: taskView,
+            requestedTaskId,
             activePage: "tasks",
           });
 
@@ -113043,8 +115356,18 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           }
 
           setTaskView(nextView);
+          setPendingExternalTaskOpenRequest(
+            requestedProjectId && requestedTaskId
+              ? {
+                  projectId: requestedProjectId,
+                  taskId: requestedTaskId,
+                }
+              : null
+          );
           if (requestedView === "calendar") {
-            setSelectedTaskId("");
+            if (!requestedTaskId) {
+              setSelectedTaskId("");
+            }
             setSelectedScheduleId("");
             setScheduleViewMode("calendar");
             setScheduleEditorMode("create");
@@ -113221,6 +115544,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         useEffect(() => {
           if (!selectedProjectId || tasks.length === 0) {
             setSelectedTaskId("");
+            setProjectTaskDetailScreenOpen(false);
             setDraftTask(null);
             return;
           }
@@ -113229,6 +115553,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           }
           if (selectedTaskId && !tasksById[selectedTaskId]) {
             setSelectedTaskId("");
+            setProjectTaskDetailScreenOpen(false);
           }
         }, [selectedProjectId, selectedTaskId, tasks, tasksById]);
 
@@ -115253,12 +117578,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             openTaskParentPicker();
             return;
           }
-          if (currentTaskType === "task") {
+          if (currentTaskType === normalizedType && !normalizePlaygroundParentTaskId(draftTask.parentTaskId)) {
             return;
           }
           updateDraftTask((current) => ({
             ...current,
-            taskType: "task",
+            taskType: normalizedType,
             parentTaskId: null,
           }), { autosave: true });
         }
@@ -115270,12 +117595,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             openScheduleTaskParentPicker();
             return;
           }
-          if (currentTaskType === "task" && !normalizePlaygroundParentTaskId(scheduleDraft?.parentTaskId)) {
+          if (currentTaskType === normalizedType && !normalizePlaygroundParentTaskId(scheduleDraft?.parentTaskId)) {
             return;
           }
           updateScheduleDraft((current) => ({
             ...(current || buildProjectScheduleDraft(selectedProject)),
-            taskType: "task",
+            taskType: normalizedType,
             parentTaskId: null,
           }));
         }
@@ -115340,13 +117665,20 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           }), options);
         }
 
-        function handleSelectTask(taskId) {
+        function handleSelectTask(taskId, options = {}) {
           if (!selectedProjectId) return;
+          const normalizedTaskId = String(taskId || "").trim();
+          if (!normalizedTaskId) return;
           setTaskDetailPopover("");
           setTaskSkillsPopoverOpen(false);
           setTaskParentPickerState(null);
           setMissionControlStrategyOpen(false);
-          setSelectedTaskId(taskId);
+          setProjectTaskDetailScreenOpen(Boolean(options?.screen));
+          setSelectedTaskId(normalizedTaskId);
+        }
+
+        function openProjectTaskDetailScreen(taskId) {
+          handleSelectTask(taskId, { screen: true });
         }
 
         function openTaskFromCalendar(taskId) {
@@ -115356,6 +117688,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           setTaskDetailPopover("");
           setTaskSkillsPopoverOpen(false);
           setMissionControlStrategyOpen(false);
+          setProjectTaskDetailScreenOpen(false);
           setSelectedScheduleId("");
           setScheduleViewMode("calendar");
           setScheduleEditorMode("create");
@@ -115374,10 +117707,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             return;
           }
 
-          if (target.closest(".playground-tasks-card, .playground-tasks-backlog-item, .playground-tasks-backlog-composer-shell, .playground-tasks-lane-card, .playground-tasks-calendar-entry, .playground-files-toolbar-anchor, .playground-files-control-button, .playground-files-toolbar-menu, .tb-runner-chat, .tb-popup-menu, .tb-selection-popup, .tb-file-browser-scrim, .tb-popup-modal-scrim, .playground-tasks-confirm-scrim, .playground-tasks-parent-picker-scrim")) {
+          if (target.closest(".playground-tasks-card, .playground-tasks-backlog-item, .playground-tasks-backlog-composer-shell, .playground-tasks-lane-card, .playground-tasks-calendar-entry, .playground-tasks-ticket-screen, .playground-tasks-detail-panel, .playground-tasks-detail-shell, .playground-files-toolbar-anchor, .playground-files-control-button, .playground-files-toolbar-menu, .tb-runner-chat, .tb-popup-menu, .tb-selection-popup, .tb-file-browser-scrim, .tb-popup-modal-scrim, .playground-tasks-confirm-scrim, .playground-tasks-parent-picker-scrim")) {
             return;
           }
 
+          setProjectTaskDetailScreenOpen(false);
           setSelectedTaskId("");
           setMissionControlStrategyOpen(false);
         }
@@ -116722,6 +119056,393 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          });
 	        }
 
+	        function getProjectTeamPermissionSets(project) {
+	          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+	            ? project.metadata
+	            : {};
+	          const source = metadata.teamPermissionSets && typeof metadata.teamPermissionSets === "object" && !Array.isArray(metadata.teamPermissionSets)
+	            ? metadata.teamPermissionSets
+	            : {};
+	          return Object.entries(source).reduce((result, [teamId, permissionSet]) => {
+	            const normalizedTeamId = String(teamId || "").trim();
+	            if (normalizedTeamId) {
+	              result[normalizedTeamId] = normalizePlaygroundPermissionSet(permissionSet, "team");
+	            }
+	            return result;
+	          }, {});
+	        }
+
+	        function getProjectTeamPermissionSet(project, teamId, fallbackPermissionSet = null) {
+	          const normalizedTeamId = String(teamId || "").trim();
+	          const projectTeamPermissionSets = getProjectTeamPermissionSets(project);
+	          return normalizePlaygroundPermissionSet(
+	            normalizedTeamId && projectTeamPermissionSets[normalizedTeamId]
+	              ? projectTeamPermissionSets[normalizedTeamId]
+	              : fallbackPermissionSet,
+	            "team"
+	          );
+	        }
+
+	        function getProjectRemovedTeamIds(project) {
+	          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+	            ? project.metadata
+	            : {};
+	          const source = Array.isArray(metadata.teamAccessRemovedIds)
+	            ? metadata.teamAccessRemovedIds
+	            : Array.isArray(metadata.removedTeamIds)
+	              ? metadata.removedTeamIds
+	              : [];
+	          return source
+	            .map((teamId) => String(teamId || "").trim())
+	            .filter(Boolean);
+	        }
+
+	        function applyProjectTeamPermissionSetLocally(projectId, teamId, permissionSet) {
+	          const normalizedProjectId = String(projectId || "").trim();
+	          const normalizedTeamId = String(teamId || "").trim();
+	          if (!normalizedProjectId || !normalizedTeamId) {
+	            return;
+	          }
+	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "team");
+	          const mergeTeamPermissionSet = (project) => {
+	            const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+	              ? project.metadata
+	              : {};
+	            const currentTeamPermissionSets = getProjectTeamPermissionSets(project);
+	            return normalizePlaygroundProjectRecord({
+	              ...(project && typeof project === "object" ? project : {}),
+	              metadata: {
+	                ...metadata,
+	                teamPermissionSets: {
+	                  ...currentTeamPermissionSets,
+	                  [normalizedTeamId]: normalizedPermissionSet,
+	                },
+	              },
+	            });
+	          };
+
+	          setProjects((current) => current.map((project) =>
+	            project.id === normalizedProjectId ? mergeTeamPermissionSet(project) : project
+	          ));
+	          setProjectDraft((current) =>
+	            current?.id === normalizedProjectId ? mergeTeamPermissionSet(current) : current
+	          );
+	          setSelectedProjectDetail((current) => {
+	            if (current?.project?.id !== normalizedProjectId) {
+	              return current;
+	            }
+	            return {
+	              ...current,
+	              project: mergeTeamPermissionSet(current.project),
+	            };
+	          });
+	        }
+
+	        function applyProjectTeamWorkspaceMembershipLocally(projectId, teamId, action) {
+	          const normalizedProjectId = String(projectId || "").trim();
+	          const normalizedTeamId = String(teamId || "").trim();
+	          const normalizedAction = action === "add" ? "add" : "remove";
+	          if (!normalizedProjectId || !normalizedTeamId || normalizedTeamId === "all_agents") {
+	            return;
+	          }
+	          const mergeTeamMembership = (project) => {
+	            const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+	              ? project.metadata
+	              : {};
+	            const currentTeamPermissionSets = getProjectTeamPermissionSets(project);
+	            const nextTeamPermissionSets = { ...currentTeamPermissionSets };
+	            const removedTeamIds = new Set(getProjectRemovedTeamIds(project));
+	            if (normalizedAction === "remove") {
+	              delete nextTeamPermissionSets[normalizedTeamId];
+	              removedTeamIds.add(normalizedTeamId);
+	            } else {
+	              removedTeamIds.delete(normalizedTeamId);
+	            }
+	            return normalizePlaygroundProjectRecord({
+	              ...(project && typeof project === "object" ? project : {}),
+	              metadata: {
+	                ...metadata,
+	                teamPermissionSets: nextTeamPermissionSets,
+	                teamAccessRemovedIds: Array.from(removedTeamIds),
+	              },
+	            });
+	          };
+
+	          setProjects((current) => current.map((project) =>
+	            project.id === normalizedProjectId ? mergeTeamMembership(project) : project
+	          ));
+	          setProjectDraft((current) =>
+	            current?.id === normalizedProjectId ? mergeTeamMembership(current) : current
+	          );
+	          setSelectedProjectDetail((current) => {
+	            if (current?.project?.id !== normalizedProjectId) {
+	              return current;
+	            }
+	            return {
+	              ...current,
+	              project: mergeTeamMembership(current.project),
+	            };
+	          });
+	        }
+
+	        async function persistProjectTeamWorkspaceMembership(teamId, action) {
+	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+	          const normalizedProjectId = String(normalizedProject.id || "").trim();
+	          const normalizedTeamId = String(teamId || "").trim();
+	          const normalizedAction = action === "add" ? "add" : "remove";
+	          if (!normalizedProjectId || !normalizedTeamId || normalizedTeamId === "all_agents" || normalizedProjectId === PLAYGROUND_PROJECT_DRAFT_ID) {
+	            return null;
+	          }
+	          const currentTeamPermissionSets = getProjectTeamPermissionSets(normalizedProject);
+	          const nextTeamPermissionSets = { ...currentTeamPermissionSets };
+	          const removedTeamIds = new Set(getProjectRemovedTeamIds(normalizedProject));
+	          if (normalizedAction === "remove") {
+	            delete nextTeamPermissionSets[normalizedTeamId];
+	            removedTeamIds.add(normalizedTeamId);
+	          } else {
+	            removedTeamIds.delete(normalizedTeamId);
+	          }
+	          const nextRemovedTeamIds = Array.from(removedTeamIds);
+	          const nextProjectRecord = normalizePlaygroundProjectRecord({
+	            ...normalizedProject,
+	            metadata: {
+	              ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),
+	              teamPermissionSets: nextTeamPermissionSets,
+	              teamAccessRemovedIds: nextRemovedTeamIds,
+	            },
+	          });
+	          const savePayload = buildPlaygroundProjectSavePayload(nextProjectRecord, {
+	            teamPermissionSets: nextTeamPermissionSets,
+	            teamAccessRemovedIds: nextRemovedTeamIds,
+	          });
+
+	          const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
+	            method: "PATCH",
+	            headers: {
+	              ...requestHeaders,
+	              "Content-Type": "application/json",
+	            },
+	            body: JSON.stringify(savePayload),
+	          });
+	          const data = await response.json().catch(() => ({}));
+	          if (!response.ok) {
+	            throw new Error(data?.message || data?.error || "Failed to update project team access.");
+	          }
+	          const updatedProject = getPlaygroundProjectResponseRecord(data, nextProjectRecord);
+	          if (updatedProject?.id) {
+	            commitLocalProjectRecord(updatedProject, {
+	              summary: updatedProject.summary || selectedProjectSummary,
+	              environments: selectedProjectEnvironments,
+	              recentThreads: selectedProjectRecentThreads,
+	              threads: selectedProjectRecentThreads,
+	              selectImmediately: true,
+	            });
+	          }
+	          return updatedProject;
+	        }
+
+	        function updateProjectTeamWorkspaceMembership(teamId, action) {
+	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+	          const normalizedProjectId = String(normalizedProject.id || "").trim();
+	          const normalizedTeamId = String(teamId || "").trim();
+	          const normalizedAction = action === "add" ? "add" : "remove";
+	          if (!hasRealAccess || !normalizedProjectId || !normalizedTeamId || normalizedTeamId === "all_agents") {
+	            return;
+	          }
+	          const previousTeamPermissionSets = getProjectTeamPermissionSets(normalizedProject);
+	          const previousRemovedTeamIds = getProjectRemovedTeamIds(normalizedProject);
+	          applyProjectTeamWorkspaceMembershipLocally(normalizedProjectId, normalizedTeamId, normalizedAction);
+	          void persistProjectTeamWorkspaceMembership(normalizedTeamId, normalizedAction).catch((error) => {
+	            console.warn("Failed to update project team access", error);
+	            const restoreProjectTeamMembership = (project) => normalizePlaygroundProjectRecord({
+	              ...(project && typeof project === "object" ? project : {}),
+	              metadata: {
+	                ...(project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata) ? project.metadata : {}),
+	                teamPermissionSets: previousTeamPermissionSets,
+	                teamAccessRemovedIds: previousRemovedTeamIds,
+	              },
+	            });
+	            setProjects((current) => current.map((project) =>
+	              project.id === normalizedProjectId ? restoreProjectTeamMembership(project) : project
+	            ));
+	            setProjectDraft((current) =>
+	              current?.id === normalizedProjectId ? restoreProjectTeamMembership(current) : current
+	            );
+	            setSelectedProjectDetail((current) => {
+	              if (current?.project?.id !== normalizedProjectId) {
+	                return current;
+	              }
+	              return {
+	                ...current,
+	                project: restoreProjectTeamMembership(current.project),
+	              };
+	            });
+	            setProjectSaveState({
+	              isSaving: false,
+	              error: error?.message || "Failed to update project team access.",
+	            });
+	          });
+	        }
+
+	        async function persistProjectTeamPermissionSet(teamId, nextPermissionSet) {
+	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+	          const normalizedProjectId = String(normalizedProject.id || "").trim();
+	          const normalizedTeamId = String(teamId || "").trim();
+	          if (!normalizedProjectId || !normalizedTeamId || normalizedProjectId === PLAYGROUND_PROJECT_DRAFT_ID) {
+	            return null;
+	          }
+	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(nextPermissionSet, "team");
+	          const currentTeamPermissionSets = getProjectTeamPermissionSets(normalizedProject);
+	          const nextTeamPermissionSets = {
+	            ...currentTeamPermissionSets,
+	            [normalizedTeamId]: normalizedPermissionSet,
+	          };
+	          const nextProjectRecord = normalizePlaygroundProjectRecord({
+	            ...normalizedProject,
+	            metadata: {
+	              ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),
+	              teamPermissionSets: nextTeamPermissionSets,
+	            },
+	          });
+	          const savePayload = buildPlaygroundProjectSavePayload(nextProjectRecord, {
+	            teamPermissionSets: nextTeamPermissionSets,
+	          });
+
+	          const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
+	            method: "PATCH",
+	            headers: {
+	              ...requestHeaders,
+	              "Content-Type": "application/json",
+	            },
+	            body: JSON.stringify(savePayload),
+	          });
+	          const data = await response.json().catch(() => ({}));
+	          if (!response.ok) {
+	            throw new Error(data?.message || data?.error || "Failed to update project team permissions.");
+	          }
+	          const updatedProject = getPlaygroundProjectResponseRecord(data, nextProjectRecord);
+	          if (updatedProject?.id) {
+	            commitLocalProjectRecord(updatedProject, {
+	              summary: updatedProject.summary || selectedProjectSummary,
+	              environments: selectedProjectEnvironments,
+	              recentThreads: selectedProjectRecentThreads,
+	              threads: selectedProjectRecentThreads,
+	              selectImmediately: true,
+	            });
+	          }
+	          return updatedProject;
+	        }
+
+	        function updateProjectTeamPermissionSet(teamId, updater) {
+	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+	          const normalizedProjectId = String(normalizedProject.id || "").trim();
+	          const normalizedTeamId = String(teamId || "").trim();
+	          if (!normalizedProjectId || !normalizedTeamId) {
+	            return;
+	          }
+	          const selectedTeam = Array.isArray(workspaceTeams)
+	            ? workspaceTeams.find((team) => String(team?.id || "") === normalizedTeamId) || null
+	            : null;
+	          const currentPermissionSet = getProjectTeamPermissionSet(normalizedProject, normalizedTeamId, selectedTeam?.permissionSet);
+	          const nextPermissionSet = normalizePlaygroundPermissionSet(
+	            typeof updater === "function" ? updater(currentPermissionSet) : updater,
+	            "team"
+	          );
+	          applyProjectTeamPermissionSetLocally(normalizedProjectId, normalizedTeamId, nextPermissionSet);
+	          void persistProjectTeamPermissionSet(normalizedTeamId, nextPermissionSet).catch((error) => {
+	            console.warn("Failed to save project team permissions", error);
+	            applyProjectTeamPermissionSetLocally(normalizedProjectId, normalizedTeamId, currentPermissionSet);
+	            setProjectSaveState({
+	              isSaving: false,
+	              error: error?.message || "Failed to save project team permissions.",
+	            });
+	          });
+	        }
+
+	        function updateProjectTeamPermissionRingAccess(teamId, ringId, nextAccess) {
+	          const ringDefinition = getPlaygroundPermissionRingDefinition(ringId);
+	          updateProjectTeamPermissionSet(teamId, (currentPermissionSet) => {
+	            const currentRings = currentPermissionSet.rings && typeof currentPermissionSet.rings === "object"
+	              ? currentPermissionSet.rings
+	              : {};
+	            const currentRingPolicy = currentRings[ringDefinition.id] || {
+	              defaultAccess: ringDefinition.defaultAccess,
+	            };
+	            return {
+	              ...currentPermissionSet,
+	              version: 1,
+	              subjectType: "team",
+	              rings: {
+	                ...currentRings,
+	                [ringDefinition.id]: {
+	                  ...currentRingPolicy,
+	                  defaultAccess: normalizePlaygroundPermissionAccess(nextAccess, ringDefinition.defaultAccess),
+	                },
+	              },
+	            };
+	          });
+	        }
+
+	        function updateProjectTeamPermissionActionRing(teamId, actionId, nextRingId) {
+	          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+	          if (!actionDefinition) {
+	            return;
+	          }
+	          updateProjectTeamPermissionSet(teamId, (currentPermissionSet) => {
+	            const currentActions = currentPermissionSet.actions && typeof currentPermissionSet.actions === "object"
+	              ? currentPermissionSet.actions
+	              : {};
+	            const currentActionPolicy = currentActions[actionDefinition.id] || {
+	              ringId: actionDefinition.ringId,
+	            };
+	            return {
+	              ...currentPermissionSet,
+	              version: 1,
+	              subjectType: "team",
+	              actions: {
+	                ...currentActions,
+	                [actionDefinition.id]: {
+	                  ...currentActionPolicy,
+	                  ringId: normalizePlaygroundPermissionRingId(nextRingId, actionDefinition.ringId),
+	                },
+	              },
+	            };
+	          });
+	        }
+
+	        function updateProjectTeamPermissionActionAccess(teamId, actionId, nextAccess) {
+	          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+	          if (!actionDefinition) {
+	            return;
+	          }
+	          updateProjectTeamPermissionSet(teamId, (currentPermissionSet) => {
+	            const currentActions = currentPermissionSet.actions && typeof currentPermissionSet.actions === "object"
+	              ? currentPermissionSet.actions
+	              : {};
+	            const currentActionPolicy = currentActions[actionDefinition.id] || {
+	              ringId: actionDefinition.ringId,
+	            };
+	            const nextPolicy = {
+	              ...currentActionPolicy,
+	              ringId: normalizePlaygroundPermissionRingId(currentActionPolicy.ringId, actionDefinition.ringId),
+	            };
+	            if (!nextAccess) {
+	              delete nextPolicy.access;
+	            } else {
+	              nextPolicy.access = normalizePlaygroundPermissionAccess(nextAccess);
+	            }
+	            return {
+	              ...currentPermissionSet,
+	              version: 1,
+	              subjectType: "team",
+	              actions: {
+	                ...currentActions,
+	                [actionDefinition.id]: nextPolicy,
+	              },
+	            };
+	          });
+	        }
+
         function buildMissionControlRecordForSave(overrides = {}) {
           const baseMissionControl = normalizePlaygroundProjectMissionControlRecord(
             selectedProjectMissionControlRef.current || selectedProjectMissionControl
@@ -117784,6 +120505,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             window.clearTimeout(taskScheduleDialogTimerRef.current);
             taskScheduleDialogTimerRef.current = null;
           }
+          setProjectTaskDetailScreenOpen(false);
           setSelectedTaskId("");
           if (typeof onCloseDetailOnly === "function") {
             onCloseDetailOnly();
@@ -122914,16 +125636,18 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           );
         }
 
-        function renderProjectWorkspaceActionButtons({ releaseControl = null } = {}) {
+        function renderProjectWorkspaceActionButtons({ releaseControl = null, showStrategy = true } = {}) {
           return React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-tasks-backlog-project-actions" },
-            React.createElement("button", {
-              type: "button",
-              className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button",
-              onClick: openMissionControlStrategySidebar,
-            },
-              React.createElement(FileText, { width: 14, height: 14, strokeWidth: 1.8 }),
-              React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Strategy")
-            ),
+            showStrategy
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button",
+                  onClick: openMissionControlStrategySidebar,
+                },
+                  React.createElement(FileText, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Strategy")
+                )
+              : null,
             releaseControl
           );
         }
@@ -123090,9 +125814,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           }
 
           function renderBacklogTaskRow(task, depth = 0, parentTaskId = null, visibleSiblingTasks = [], siblingIndex = 0, releaseSectionId = undefined) {
-            const assigneeName = getTaskAssigneeName(task.assigneeAgentId, "Unassigned") || "Unassigned";
             const isHumanTask = isHumanAssignedTask(task);
-            const assigneeClassName = "playground-tasks-backlog-assignee" + (task.assigneeAgentId ? "" : " is-unassigned");
             const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "001";
             const visibleChildTasks = (childrenByParentId[task.id] || []).filter((childTask) => visibleTaskIds.has(childTask.id));
             const isSubtask = isPlaygroundSubtaskRecord(task);
@@ -123152,7 +125874,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                     + (isDropAfter ? " is-drop-after" : ""),
                   style: getPlaygroundTaskColorStyle(task.taskColor),
                   draggable: isDraggable,
-                  onClick: () => handleSelectTask(task.id),
+                  onClick: () => openProjectTaskDetailScreen(task.id),
                   onContextMenu: (event) => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -123162,7 +125884,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   onKeyDown: (event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      handleSelectTask(task.id);
+                      openProjectTaskDetailScreen(task.id);
                     }
                   },
                   onDragStart: (event) => handleBacklogTaskDragStart(task, event),
@@ -123276,8 +125998,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                     React.createElement("div", { className: "playground-tasks-backlog-meta" },
                       renderTaskPreviewStatusControl(task),
                       React.createElement("div", { className: "playground-tasks-backlog-assignee-shell" },
-                        renderTaskAssigneeAvatar(task, "playground-tasks-backlog-assignee-avatar"),
-                        React.createElement("span", { className: assigneeClassName, title: assigneeName }, assigneeName)
+                        renderTaskAssigneeAvatar(task, "playground-tasks-backlog-assignee-avatar")
                       )
                     ),
                     React.createElement("button", {
@@ -123528,6 +126249,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             openTaskCount: openScopedBacklogTaskCount,
             headerAction: backlogHeaderAction,
             primaryActions: renderProjectWorkspaceActionButtons({
+              showStrategy: false,
               releaseControl: renderProjectReleasePickerControl({
                 popover: backlogToolbarPopover,
                 setPopover: setBacklogToolbarPopover,
@@ -123712,7 +126434,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   + (isDraggable ? " is-draggable" : "")
                   + (boardDraggingTaskId === task.id ? " is-dragging" : ""),
                 style: getPlaygroundTaskColorStyle(task.taskColor),
-                onClick: () => handleSelectTask(task.id),
+                onClick: () => openProjectTaskDetailScreen(task.id),
                 draggable: isDraggable,
                 onDragStart: (event) => {
                   if (!isDraggable) {
@@ -123909,7 +126631,6 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             });
           const activeSchedulePriorityPresentation = getPlaygroundTaskPriorityPresentation(scheduleDraft?.priority);
           const activeScheduleColorPresentation = getPlaygroundTaskColorPresentation(scheduleDraft?.taskColor);
-          const ActiveSchedulePriorityIcon = activeSchedulePriorityPresentation.Icon;
           const selectedScheduleAgent = agentsById[String(scheduleDraft?.agentId || "").trim()] || null;
           const activeScheduleProjectId = getPlaygroundScheduleProjectId(scheduleDraft);
           const activeScheduleProject = activeScheduleProjectId
@@ -123936,7 +126657,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             ? (scheduleParentTicketNumber + " " + (scheduleParentTask.title || "Untitled Task"))
             : "Choose parent";
           const activeScheduleTypeLabel = PLAYGROUND_TASK_TYPE_OPTIONS.find((option) => option.id === activeScheduleTaskType)?.label || "Task";
-          const ActiveScheduleTypeIcon = activeScheduleTaskType === "subtask" ? Check : Bookmark;
+          const ActiveScheduleTypeIcon = activeScheduleTaskType === "subtask" ? Check : (activeScheduleTaskType === "loop" ? RefreshCw : Bookmark);
           const blockedByTaskId = normalizePlaygroundIdList(scheduleDraft?.dependencyIds)[0] || "";
           const activeBlockedByTask = blockedByTaskId ? (tasksById[blockedByTaskId] || null) : null;
           const activeBlockedByLabel = activeBlockedByTask
@@ -124299,10 +127020,10 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                               renderScheduleDetailSelectControl({
                                 popoverId: "schedule-priority",
                                 valueLabel: activeSchedulePriorityPresentation.label,
-                                buttonContent: React.createElement("span", {
-                                    className: "playground-tasks-priority-value playground-tasks-detail-priority-value " + activeSchedulePriorityPresentation.toneClassName,
-                                  },
-                                    React.createElement(ActiveSchedulePriorityIcon, { className: "playground-tasks-priority-value-icon", strokeWidth: 1.9 }),
+                                  buttonContent: React.createElement("span", {
+                                      className: "playground-tasks-priority-value playground-tasks-detail-priority-value " + activeSchedulePriorityPresentation.toneClassName,
+                                    },
+                                    renderPlaygroundTaskPriorityGlyph(scheduleDraft?.priority),
                                     React.createElement("span", { className: "playground-tasks-priority-value-text playground-tasks-detail-select-trigger-label" }, activeSchedulePriorityPresentation.label)
                                   ),
                                 children: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) =>
@@ -125988,6 +128709,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const taskComments = normalizePlaygroundTaskCommentList(draftTask.comments)
             .slice()
             .sort((left, right) => String(left.createdAt || "").localeCompare(String(right.createdAt || "")));
+          const isFullPageTaskDetail = Boolean(projectTaskDetailScreenOpen);
           const taskSkillEntries = getEffectivePlaygroundTaskEnabledSkillIds(draftTask)
             .map((skillId) => resolveTaskSkillItem(skillId))
             .filter(Boolean);
@@ -126001,8 +128723,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
           const activeTaskPriorityPresentation = getPlaygroundTaskPriorityPresentation(draftTask.priority);
           const activeTaskColorPresentation = getPlaygroundTaskColorPresentation(draftTask.taskColor);
-          const ActiveTaskPriorityIcon = activeTaskPriorityPresentation.Icon;
-          const ActiveTaskTypeIcon = activeTaskType === "subtask" ? Check : Bookmark;
+          const ActiveTaskTypeIcon = activeTaskType === "subtask" ? Check : (activeTaskType === "loop" ? RefreshCw : Bookmark);
           const startedThreadRecord = startedThreadId
             ? selectedProjectRecentThreads.find((thread) => thread.id === startedThreadId) || null
             : null;
@@ -126334,7 +129055,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             );
           }
 
-          function renderTaskDetailThreadsSection() {
+          function renderTaskDetailThreadsSection(options = {}) {
+            const showThreadActions = options.showActions !== false;
             const hasThreadHistory = selectedTaskThreads.length > 0;
             const hasVisibleThreads = visibleTaskDetailThreads.length > 0;
             const taskThreadsLoading = taskDetailThreadsState.status === "loading";
@@ -126374,7 +129096,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   )
                 : React.createElement("div", { className: "playground-tasks-detail-thread-empty" },
                     React.createElement("div", { className: "playground-tasks-detail-thread-empty-copy" }, emptyCopy),
-                    !hasThreadHistory && !taskThreadsLoading && !canHumanReviewTask && !canAgentReviewTask
+                    showThreadActions && !hasThreadHistory && !taskThreadsLoading && !canHumanReviewTask && !canAgentReviewTask
                       ? React.createElement("button", {
                           type: "button",
                           className: "playground-tasks-empty-primary-button",
@@ -126393,7 +129115,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         )
                       : null
                   ),
-              canShowAdditionalStartWork || canRequestTaskChanges || canHumanReviewTask || canAgentReviewTask
+              showThreadActions && (canShowAdditionalStartWork || canRequestTaskChanges || canHumanReviewTask || canAgentReviewTask)
                 ? React.createElement("div", { className: "playground-tasks-detail-thread-footer" },
                     canShowAdditionalStartWork
                       ? React.createElement("button", {
@@ -126433,171 +129155,94 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           className: "playground-tasks-review-action-button is-approve",
                           disabled: saveState.isSaving || taskAgentReviewStartPending || typeof onStartAgentReviewThread !== "function",
                           onClick: () => void handleStartSelectedTaskAgentReview(),
-                        }, taskAgentReviewStartPending ? "Starting..." : "Start Agent Review")
+                      }, taskAgentReviewStartPending ? "Starting..." : "Start Agent Review")
                       : null
+                  )
+                : null,
+              options.showRunThreadAction
+                ? React.createElement("div", { className: "playground-tasks-ticket-thread-run-row" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-tasks-ticket-control-button",
+                      disabled: saveState.isSaving || taskStartDisabled,
+                      onClick: () => void handleStartTaskThread(draftTask),
+                      title: isHumanAssignedTask(draftTask)
+                        ? "Human-assigned tasks do not start agent threads."
+                        : taskStartDisabled
+                          ? "This ticket cannot be started right now."
+                          : "Run a thread from this ticket",
+                    },
+                      taskStartPending
+                        ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-environments-spin" })
+                        : React.createElement(Play, { width: 14, height: 14, strokeWidth: 2, "aria-hidden": "true" }),
+                      React.createElement("span", null, taskStartPending ? "Starting..." : "Run Thread")
+                    )
                   )
                 : null
             );
           }
 
-          return React.createElement("div", {
-              className: "playground-tasks-detail-shell" + (previewedTaskAttachment ? " is-preview-open" : ""),
-            },
-            React.createElement("div", { className: "playground-tasks-detail-main" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
-              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
-                React.createElement("div", { className: "playground-tasks-detail-navbar-title" },
-                  React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
-                    React.createElement("div", {
-                      className: "playground-tasks-backlog-project-icon " + (activeTaskType === "subtask" ? "is-subtask" : "is-task"),
-                      "aria-hidden": "true",
+          function renderTaskCommentDock() {
+            return React.createElement("div", { className: "playground-tasks-comment-dock" },
+              saveState.error
+                ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, saveState.error)
+                : saveState.isSaving
+                  ? React.createElement("div", { className: "playground-environments-muted playground-tasks-comment-feedback" }, "Saving changes...")
+                  : saveState.message
+                    ? React.createElement("div", { className: "playground-environments-success playground-tasks-comment-feedback" }, saveState.message)
+                    : editorDirtyRef.current
+                      ? React.createElement("div", { className: "playground-environments-muted playground-tasks-comment-feedback" }, "Unsaved task changes")
+                      : null,
+              React.createElement("div", { className: "playground-tasks-comment-runner" },
+                React.createElement("div", { className: "playground-tasks-comment-bar" + (getTaskCommentSubmissionDraft(taskCommentInputValue).isReview ? " is-review-mode" : "") },
+                  getTaskCommentSubmissionDraft(taskCommentInputValue).isReview
+                    ? React.createElement("span", { className: "playground-tasks-comment-mode-token" }, "/review")
+                    : null,
+                  React.createElement("textarea", {
+                    ref: taskCommentTextareaRef,
+                    rows: 1,
+                    className: "playground-tasks-comment-input",
+                    placeholder: getTaskCommentSubmissionDraft(taskCommentInputValue).isReview ? "Request changes" : "Add a comment",
+                    value: taskCommentInputValue,
+                    onChange: (event) => {
+                      const nextValue = event.target.value;
+                      if (/^\\/review(?:\\s+|$)/i.test(String(nextValue || "").trimStart())) {
+                        setTaskCommentMode("review");
+                        setTaskCommentInputValue(String(nextValue || "").trimStart().replace(/^\\/review(?:\\s+|$)/i, ""));
+                      } else {
+                        setTaskCommentInputValue(nextValue);
+                      }
+                      resizeTaskCommentTextarea(event.currentTarget);
                     },
-                      React.createElement(ActiveTaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 })
-                    ),
-                    renderPlaygroundTaskPriorityIcon(draftTask.priority, "playground-tasks-backlog-priority"),
-                    React.createElement("span", { className: "playground-tasks-detail-navbar-ticket" }, activeTicketNumber)
-                  ),
-                  React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
-                    React.createElement("input", {
-                      type: "text",
-                      className: "playground-content-title playground-tasks-detail-navbar-title-input",
-                      value: taskTitleInputValue,
-                      placeholder: "Task",
-                      "aria-label": "Task title",
-                      title: taskTitleInputValue || "Task",
-                      onChange: (event) => setTaskTitleInputValue(event.target.value),
-                      onBlur: commitTaskTitleInput,
-                      readOnly: isTaskConfigLocked,
-                      onKeyDown: (event) => {
-                        if (isTaskConfigLocked) {
-                          return;
-                        }
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          event.currentTarget.blur();
-                          return;
-                        }
-                        if (event.key === "Escape") {
-                          event.preventDefault();
-                          taskTitleSkipCommitRef.current = true;
-                          setTaskTitleInputValue(draftTask.title || "New Task");
-                          event.currentTarget.blur();
-                        }
-                      },
-                    })
-                  )
-                ),
-                React.createElement("div", { className: "playground-content-nav-center" }),
-                React.createElement("div", {
-                  className: "playground-content-nav-right playground-tasks-detail-navbar-actions",
-                  ref: taskDetailActionsRef,
-                },
-                  React.createElement("div", { className: "playground-tasks-detail-navbar-status" },
-                    renderTaskPreviewStatusControl(draftTask)
-                  ),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-header-icon-button is-plain" + (taskDetailPopover === "menu" ? " is-active" : ""),
-                      onClick: () => setTaskDetailPopover((current) => current === "menu" ? "" : "menu"),
-                      title: "Task actions",
-                      "aria-label": "Task actions",
-                    }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
-                    taskDetailPopover === "menu"
-                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          renderTaskActionsMenu(draftTask, {
-                            closeMenu: () => setTaskDetailPopover(""),
-                          })
-                        )
-                      : null
-                  ),
+                    onKeyDown: (event) => {
+                      if (event.key === "Backspace" && taskCommentMode === "review" && String(taskCommentInputValue || "").length === 0) {
+                        event.preventDefault();
+                        setTaskCommentMode("");
+                        return;
+                      }
+                      if (event.key === "Enter" && !event.shiftKey) {
+                        event.preventDefault();
+                        handleAddTaskComment();
+                      }
+                    },
+                  }),
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-files-header-icon-button is-plain",
-                    onClick: handleCloseTaskDetail,
-                    title: "Close task detail",
-                    "aria-label": "Close task detail",
-                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                )
-              ),
-              React.createElement("div", { className: "playground-tasks-detail-body" },
-                React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll" },
-                renderTaskDetailThreadsSection(),
-                React.createElement("div", { className: "playground-tasks-detail-description" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                    React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                      [
-                        {
-                          id: "bold",
-                          label: "Bold",
-                          icon: Bold,
-                        },
-                        {
-                          id: "italic",
-                          label: "Italic",
-                          icon: Italic,
-                        },
-                        {
-                          id: "underline",
-                          label: "Underline",
-                          icon: Underline,
-                        },
-                        {
-                          id: "list",
-                          label: "List",
-                          icon: List,
-                        },
-                      ].map((action) =>
-                        React.createElement("button", {
-                          key: action.id,
-                          type: "button",
-                          className: "playground-tasks-detail-format-button",
-                          title: action.label,
-                          "aria-label": action.label,
-                          disabled: isTaskConfigLocked,
-                          onMouseDown: (event) => event.preventDefault(),
-                          onClick: () => handleTaskDescriptionFormat(action.id),
-                        }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                      )
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isTaskDescriptionEditing ? " is-editing" : " is-preview") },
-                    !isTaskDescriptionEditing
-                      ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                          String(draftTask.description || "").trim()
-                            ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                content: draftTask.description,
-                                className: "playground-tasks-detail-description-preview tb-message-markdown",
-                              })
-                            : React.createElement("div", {
-                                className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                              }, "Add Description here")
-                        )
-                      : null,
-                    React.createElement("textarea", {
-                      ref: taskDescriptionTextareaRef,
-                      className: "playground-tasks-detail-description-input " + (isTaskDescriptionEditing ? "is-editing" : "is-preview"),
-                      rows: 1,
-                      placeholder: isTaskDescriptionEditing ? "Add Description here" : "",
-                      value: draftTask.description,
-                      readOnly: isTaskConfigLocked,
-                      onFocus: () => {
-                        if (!isTaskConfigLocked) {
-                          setIsTaskDescriptionEditing(true);
-                        }
-                      },
-                      onChange: (event) => {
-                        updateDraftField("description", event.target.value);
-                        resizeTaskDescriptionTextarea(event.currentTarget);
-                      },
-                      onBlur: () => {
-                        setIsTaskDescriptionEditing(false);
-                        commitDraftTaskIfDirty();
-                      },
-                    })
+                    className: "playground-tasks-comment-send-button",
+                    onClick: handleAddTaskComment,
+                    disabled: saveState.isSaving || !getTaskCommentSubmissionDraft(taskCommentInputValue).body,
+                    "aria-label": "Send comment",
+                    title: "Send comment",
+                  },
+                    React.createElement(ArrowUp, { className: "playground-tasks-comment-send-icon", strokeWidth: 1.9 })
                   )
-                ),
-                React.createElement("div", {
+                )
+              )
+            );
+          }
+
+          function renderTaskDetailFactsSection() {
+            return React.createElement("div", {
                   className: "playground-tasks-detail-facts"
                     + ((taskDetailSelectPopover || taskSkillsPopoverOpen || taskScheduleDialogState) ? " is-popover-open" : ""),
                 },
@@ -126663,7 +129308,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         React.createElement("span", {
                           className: "playground-tasks-priority-value playground-tasks-detail-priority-value " + activeTaskPriorityPresentation.toneClassName,
                         },
-                          React.createElement(ActiveTaskPriorityIcon, { className: "playground-tasks-priority-value-icon", strokeWidth: 1.9 }),
+                          renderPlaygroundTaskPriorityGlyph(draftTask.priority),
                           React.createElement("span", { className: "playground-tasks-priority-value-text playground-tasks-detail-select-trigger-label" }, activeTaskPriorityPresentation.label)
                         )
                       ),
@@ -126930,7 +129575,243 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   )
                 ))
                   : null
-              ),
+              )
+          }
+	          return React.createElement("div", {
+	              className: "playground-tasks-detail-shell"
+	                + (previewedTaskAttachment ? " is-preview-open" : "")
+	                + (isFullPageTaskDetail ? " is-ticket-full-page" : "")
+	                + (isFullPageTaskDetail && ticketDetailSidebarCollapsed ? " is-ticket-sidebar-collapsed" : ""),
+	            },
+            React.createElement("div", { className: "playground-tasks-detail-main" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
+              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
+	                isFullPageTaskDetail
+	                  ? React.createElement("div", { className: "playground-tasks-ticket-page-nav-title" },
+	                      React.createElement("div", { className: "playground-tasks-ticket-page-nav-ticket-row" },
+	                        React.createElement("button", {
+	                          type: "button",
+	                          className: "playground-tasks-ticket-page-nav-back",
+	                          onClick: handleCloseTaskDetail,
+	                          title: "Back",
+	                          "aria-label": "Back to project",
+	                        }, React.createElement(ChevronLeft, { width: 12, height: 12, strokeWidth: 1.9 })),
+	                        React.createElement("span", { className: "playground-tasks-ticket-page-nav-ticket" }, activeTicketNumber)
+	                      ),
+	                      React.createElement("input", {
+	                        type: "text",
+	                        className: "playground-content-title playground-tasks-detail-navbar-title-input playground-tasks-ticket-page-nav-title-input",
+                        value: taskTitleInputValue,
+                        placeholder: "Task",
+                        "aria-label": "Task title",
+                        title: taskTitleInputValue || "Task",
+                        onChange: (event) => setTaskTitleInputValue(event.target.value),
+                        onBlur: commitTaskTitleInput,
+                        readOnly: isTaskConfigLocked,
+                        onKeyDown: (event) => {
+                          if (isTaskConfigLocked) {
+                            return;
+                          }
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            event.currentTarget.blur();
+                            return;
+                          }
+                          if (event.key === "Escape") {
+                            event.preventDefault();
+                            taskTitleSkipCommitRef.current = true;
+                            setTaskTitleInputValue(draftTask.title || "New Task");
+                            event.currentTarget.blur();
+                          }
+                        },
+                      })
+                    )
+                  : React.createElement("div", { className: "playground-tasks-detail-navbar-title" },
+                      React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
+                        React.createElement("div", {
+                          className: "playground-tasks-backlog-project-icon "
+                            + (activeTaskType === "subtask" ? "is-subtask" : (activeTaskType === "loop" ? "is-loop" : "is-task")),
+                          "aria-hidden": "true",
+                        },
+                          React.createElement(ActiveTaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 })
+                        ),
+                        renderPlaygroundTaskPriorityIcon(draftTask.priority, "playground-tasks-backlog-priority"),
+                        React.createElement("span", { className: "playground-tasks-detail-navbar-ticket" }, activeTicketNumber)
+                      ),
+                      React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
+                        React.createElement("input", {
+                          type: "text",
+                          className: "playground-content-title playground-tasks-detail-navbar-title-input",
+                          value: taskTitleInputValue,
+                          placeholder: "Task",
+                          "aria-label": "Task title",
+                          title: taskTitleInputValue || "Task",
+                          onChange: (event) => setTaskTitleInputValue(event.target.value),
+                          onBlur: commitTaskTitleInput,
+                          readOnly: isTaskConfigLocked,
+                          onKeyDown: (event) => {
+                            if (isTaskConfigLocked) {
+                              return;
+                            }
+                            if (event.key === "Enter") {
+                              event.preventDefault();
+                              event.currentTarget.blur();
+                              return;
+                            }
+                            if (event.key === "Escape") {
+                              event.preventDefault();
+                              taskTitleSkipCommitRef.current = true;
+                              setTaskTitleInputValue(draftTask.title || "New Task");
+                              event.currentTarget.blur();
+                            }
+                          },
+                        })
+                      )
+                    ),
+                React.createElement("div", { className: "playground-content-nav-center" }),
+	                React.createElement("div", {
+	                  className: "playground-content-nav-right playground-tasks-detail-navbar-actions",
+	                  ref: taskDetailActionsRef,
+		                },
+			                  isFullPageTaskDetail
+			                    ? React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+			                        React.createElement("button", {
+			                          type: "button",
+			                          className: "playground-files-header-icon-button is-plain" + (taskDetailPopover === "menu" ? " is-active" : ""),
+			                          onClick: () => setTaskDetailPopover((current) => current === "menu" ? "" : "menu"),
+			                          title: "Task actions",
+			                          "aria-label": "Task actions",
+			                        }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
+			                        taskDetailPopover === "menu"
+			                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+			                              React.createElement("button", {
+			                                type: "button",
+			                                className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+			                                disabled: saveState.isSaving,
+			                                onClick: () => {
+			                                  setTaskDetailPopover("");
+			                                  void handleDeleteTask(draftTask.id);
+			                                },
+			                              },
+			                                React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+			                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+			                                  React.createElement("span", null, "Delete"),
+			                                  React.createElement("span", null, "Remove this ticket from the project.")
+			                                )
+			                              )
+			                            )
+			                          : null
+			                      )
+			                    : React.createElement(React.Fragment, null,
+			                        React.createElement("div", { className: "playground-tasks-detail-navbar-status" },
+			                          renderTaskPreviewStatusControl(draftTask)
+		                        ),
+		                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+	                    React.createElement("button", {
+	                      type: "button",
+                      className: "playground-files-header-icon-button is-plain" + (taskDetailPopover === "menu" ? " is-active" : ""),
+                      onClick: () => setTaskDetailPopover((current) => current === "menu" ? "" : "menu"),
+                      title: "Task actions",
+                      "aria-label": "Task actions",
+                    }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
+                    taskDetailPopover === "menu"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                          renderTaskActionsMenu(draftTask, {
+                            closeMenu: () => setTaskDetailPopover(""),
+	                          })
+	                        )
+	                      : null
+	                  )
+	                    ),
+	                  isFullPageTaskDetail
+	                    ? null
+	                    : React.createElement("button", {
+	                        type: "button",
+	                        className: "playground-files-header-icon-button is-plain playground-tasks-detail-close-button",
+	                        onClick: handleCloseTaskDetail,
+	                        title: "Close task detail",
+	                        "aria-label": "Close task detail",
+	                      }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+	                )
+	              ),
+              React.createElement("div", { className: "playground-tasks-detail-body" },
+                React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll" },
+                isFullPageTaskDetail ? null : renderTaskDetailThreadsSection(),
+                React.createElement("div", { className: "playground-tasks-detail-description" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                    React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                      [
+                        {
+                          id: "bold",
+                          label: "Bold",
+                          icon: Bold,
+                        },
+                        {
+                          id: "italic",
+                          label: "Italic",
+                          icon: Italic,
+                        },
+                        {
+                          id: "underline",
+                          label: "Underline",
+                          icon: Underline,
+                        },
+                        {
+                          id: "list",
+                          label: "List",
+                          icon: List,
+                        },
+                      ].map((action) =>
+                        React.createElement("button", {
+                          key: action.id,
+                          type: "button",
+                          className: "playground-tasks-detail-format-button",
+                          title: action.label,
+                          "aria-label": action.label,
+                          disabled: isTaskConfigLocked,
+                          onMouseDown: (event) => event.preventDefault(),
+                          onClick: () => handleTaskDescriptionFormat(action.id),
+                        }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isTaskDescriptionEditing ? " is-editing" : " is-preview") },
+                    !isTaskDescriptionEditing
+                      ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                          String(draftTask.description || "").trim()
+                            ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                content: draftTask.description,
+                                className: "playground-tasks-detail-description-preview tb-message-markdown",
+                              })
+                            : React.createElement("div", {
+                                className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                              }, "Add Description here")
+                        )
+                      : null,
+                    React.createElement("textarea", {
+                      ref: taskDescriptionTextareaRef,
+                      className: "playground-tasks-detail-description-input " + (isTaskDescriptionEditing ? "is-editing" : "is-preview"),
+                      rows: 1,
+                      placeholder: isTaskDescriptionEditing ? "Add Description here" : "",
+                      value: draftTask.description,
+                      readOnly: isTaskConfigLocked,
+                      onFocus: () => {
+                        if (!isTaskConfigLocked) {
+                          setIsTaskDescriptionEditing(true);
+                        }
+                      },
+                      onChange: (event) => {
+                        updateDraftField("description", event.target.value);
+                        resizeTaskDescriptionTextarea(event.currentTarget);
+                      },
+                      onBlur: () => {
+                        setIsTaskDescriptionEditing(false);
+                        commitDraftTaskIfDirty();
+                      },
+                    })
+                  )
+                ),
+                isFullPageTaskDetail ? null : renderTaskDetailFactsSection(),
                 React.createElement("div", { className: "playground-tasks-attachments" },
                   React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
                     React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),
@@ -127156,7 +130037,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               key: subtask.id,
                               type: "button",
                               className: "playground-tasks-subtask-row",
-                              onClick: () => handleSelectTask(subtask.id),
+                              onClick: () => handleSelectTask(subtask.id, { screen: projectTaskDetailScreenOpen }),
                             },
                               React.createElement("div", { className: "playground-tasks-subtask-main" },
                                 React.createElement("span", { className: "playground-tasks-subtask-ticket" }, subtaskTicketNumber),
@@ -127192,66 +130073,37 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       )
                     )
                     : React.createElement("div", { className: "playground-tasks-secondary-copy playground-tasks-comment-empty" }, "No comments yet.")
+                  ,
+                  isFullPageTaskDetail ? renderTaskCommentDock() : null
                 )
                 ),
-                React.createElement("div", { className: "playground-tasks-comment-dock" },
-                  saveState.error
-                    ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, saveState.error)
-                    : saveState.isSaving
-                      ? React.createElement("div", { className: "playground-environments-muted playground-tasks-comment-feedback" }, "Saving changes...")
-                      : saveState.message
-                        ? React.createElement("div", { className: "playground-environments-success playground-tasks-comment-feedback" }, saveState.message)
-                        : editorDirtyRef.current
-                          ? React.createElement("div", { className: "playground-environments-muted playground-tasks-comment-feedback" }, "Unsaved task changes")
-                          : null,
-                  React.createElement("div", { className: "playground-tasks-comment-runner" },
-                    React.createElement("div", { className: "playground-tasks-comment-bar" + (getTaskCommentSubmissionDraft(taskCommentInputValue).isReview ? " is-review-mode" : "") },
-                      getTaskCommentSubmissionDraft(taskCommentInputValue).isReview
-                        ? React.createElement("span", { className: "playground-tasks-comment-mode-token" }, "/review")
-                        : null,
-                      React.createElement("textarea", {
-                        ref: taskCommentTextareaRef,
-                        rows: 1,
-                        className: "playground-tasks-comment-input",
-                        placeholder: getTaskCommentSubmissionDraft(taskCommentInputValue).isReview ? "Request changes" : "Add a comment",
-                        value: taskCommentInputValue,
-                        onChange: (event) => {
-                          const nextValue = event.target.value;
-                          if (/^\\/review(?:\\s+|$)/i.test(String(nextValue || "").trimStart())) {
-                            setTaskCommentMode("review");
-                            setTaskCommentInputValue(String(nextValue || "").trimStart().replace(/^\\/review(?:\\s+|$)/i, ""));
-                          } else {
-                            setTaskCommentInputValue(nextValue);
-                          }
-                          resizeTaskCommentTextarea(event.currentTarget);
-                        },
-                        onKeyDown: (event) => {
-                          if (event.key === "Backspace" && taskCommentMode === "review" && String(taskCommentInputValue || "").length === 0) {
-                            event.preventDefault();
-                            setTaskCommentMode("");
-                            return;
-                          }
-                          if (event.key === "Enter" && !event.shiftKey) {
-                            event.preventDefault();
-                            handleAddTaskComment();
-                          }
-                        },
-                      }),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-tasks-comment-send-button",
-                        onClick: handleAddTaskComment,
-                        disabled: saveState.isSaving || !getTaskCommentSubmissionDraft(taskCommentInputValue).body,
-                        "aria-label": "Send comment",
-                        title: "Send comment",
-                      },
-                        React.createElement(ArrowUp, { className: "playground-tasks-comment-send-icon", strokeWidth: 1.9 })
-                      )
-                    )
-                  )
-                )
+                isFullPageTaskDetail ? null : renderTaskCommentDock()
               )
             ),
+		            isFullPageTaskDetail
+		              ? React.createElement("aside", { className: "playground-tasks-ticket-screen-sidebar" },
+		                  React.createElement("div", { className: "playground-tasks-ticket-sidebar-toolbar" },
+		                    React.createElement("button", {
+		                      type: "button",
+		                      className: "playground-files-header-icon-button is-plain playground-tasks-ticket-sidebar-toggle-button",
+		                      onClick: () => setTicketDetailSidebarCollapsed((current) => !current),
+		                      title: ticketDetailSidebarCollapsed ? "Open sidebar" : "Close sidebar",
+		                      "aria-label": ticketDetailSidebarCollapsed ? "Open sidebar" : "Close sidebar",
+		                      "aria-pressed": ticketDetailSidebarCollapsed ? "true" : "false",
+		                    },
+		                      ticketDetailSidebarCollapsed
+		                        ? React.createElement(PanelLeftOpen, { width: 16, height: 16, strokeWidth: 1.8 })
+		                        : React.createElement(PanelLeftClose, { width: 16, height: 16, strokeWidth: 1.8 })
+		                    )
+		                  ),
+		                  ticketDetailSidebarCollapsed
+			                    ? null
+			                    : React.createElement(React.Fragment, null,
+			                        renderTaskDetailFactsSection(),
+			                        renderTaskDetailThreadsSection({ showActions: false, showRunThreadAction: true })
+			                      )
+		                )
+	              : null,
             React.createElement("div", { className: "playground-tasks-detail-preview-pane" },
               previewedTaskAttachment
                 ? React.createElement("div", { className: "tb-runner-document-preview-host tb-runner-document-preview-host-inline playground-tasks-detail-preview-host" },
@@ -127269,7 +130121,40 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
         }
 
-        const isTaskDetailOpen = Boolean(selectedProjectId && draftTask?.id && taskView !== "threads");
+        function renderProjectTaskDetailScreen() {
+          return React.createElement("div", {
+              className: "playground-environments-page playground-tasks-project-workspace playground-tasks-ticket-screen",
+            },
+            React.createElement("section", {
+                className: "playground-environments-detail playground-tasks-project-workspace-detail playground-tasks-ticket-screen-detail",
+              },
+              React.createElement("div", {
+                  className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll playground-tasks-ticket-screen-scroll",
+                },
+                React.createElement("div", { className: "playground-project-workspace-inner playground-tasks-ticket-screen-inner" },
+                  React.createElement("div", { className: "playground-tasks-ticket-screen-panel" },
+                    renderTaskDetail()
+                  )
+                )
+              )
+            )
+          );
+        }
+
+        const isProjectTaskDetailScreenOpen = Boolean(
+          projectTaskDetailScreenOpen
+          && selectedProjectId
+          && selectedTaskId
+          && (taskView === "backlog" || taskView === "board")
+        );
+        const isTaskDetailOpen = Boolean(
+          selectedProjectId
+          && draftTask?.id
+          && taskView !== "threads"
+          && !isProjectTaskDetailScreenOpen
+          && taskView !== "backlog"
+          && taskView !== "board"
+        );
         const isScheduleDetailOpen = Boolean(isCalendarContext && scheduleViewMode === "setup");
         const isMissionControlDetailOpen = Boolean(selectedProjectId && missionControlStrategyOpen);
         const isDetailOpen = isTaskDetailOpen || isScheduleDetailOpen || isMissionControlDetailOpen;
@@ -127372,11 +130257,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   ? renderStandaloneCalendarWorkspace()
                   : projectComposerOpen && !selectedProject
                     ? renderProjectComposerSetupWorkspace()
-                    : selectedProject ? renderSelectedProjectWorkspace() : renderProjectLanding()
+                    : selectedProject
+                      ? (isProjectTaskDetailScreenOpen ? renderProjectTaskDetailScreen() : renderSelectedProjectWorkspace())
+                      : renderProjectLanding()
               )
             ),
             React.createElement("aside", { className: "playground-environments-detail playground-tasks-detail-panel" + (isTaskDetailOpen || isScheduleDetailOpen ? " is-project-task-detail" : "") },
-              renderTaskDetail()
+              isDetailOpen ? renderTaskDetail() : null
             )
           ),
           renderTaskEnvironmentFilePicker(),
@@ -129257,6 +132144,105 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
       }
 
+      const PLAYGROUND_PLATFORM_NAVIGATION_STATE_KEY = "__runnerPlatformNavigation";
+      const PLAYGROUND_PLATFORM_NAVIGATION_HISTORY_LIMIT = 200;
+      const PLAYGROUND_PLATFORM_NAVIGATION_RESTORE_SUPPRESSION_MS = 1800;
+      const PLAYGROUND_PLATFORM_NAVIGATION_FIELDS = [
+        "page",
+        "mode",
+        "view",
+        "threadId",
+        "contentMode",
+        "projectId",
+        "detailMode",
+        "taskId",
+        "scheduleId",
+        "workflowId",
+        "editorMode",
+        "resourceView",
+        "resourceType",
+        "resourceId",
+        "serverKind",
+        "environmentId",
+        "path",
+        "toolsView",
+        "pluginId",
+        "skillId",
+        "sectionId",
+        "teamId",
+        "teamTab",
+        "modelsTab",
+        "templateType",
+        "templateId",
+        "developSection",
+        "imagineView",
+        "mediaMode",
+        "filterMode",
+        "sortMode",
+      ];
+
+      function createPlaygroundPlatformNavigationToken() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2);
+      }
+
+      function normalizePlaygroundPlatformNavigationValue(value) {
+        if (value === undefined || value === null) return "";
+        if (typeof value === "boolean") return value ? "true" : "";
+        return String(value).trim();
+      }
+
+      function normalizePlaygroundPlatformNavigationEntry(entry) {
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+          return null;
+        }
+        const normalized = {};
+        PLAYGROUND_PLATFORM_NAVIGATION_FIELDS.forEach((field) => {
+          const value = normalizePlaygroundPlatformNavigationValue(entry[field]);
+          if (value || field === "page") {
+            normalized[field] = value;
+          }
+        });
+        if (!normalized.page) {
+          return null;
+        }
+        return normalized;
+      }
+
+      function getPlaygroundPlatformNavigationEntryKey(entry) {
+        const normalized = normalizePlaygroundPlatformNavigationEntry(entry);
+        return normalized ? JSON.stringify(normalized) : "";
+      }
+
+      function buildPlaygroundPlatformNavigationState(entry) {
+        const normalized = normalizePlaygroundPlatformNavigationEntry(entry);
+        if (!normalized) return null;
+        return {
+          [PLAYGROUND_PLATFORM_NAVIGATION_STATE_KEY]: true,
+          entry: normalized,
+        };
+      }
+
+      function getPlaygroundPlatformNavigationStateEntry(state) {
+        if (!state || typeof state !== "object" || !state[PLAYGROUND_PLATFORM_NAVIGATION_STATE_KEY]) {
+          return null;
+        }
+        return normalizePlaygroundPlatformNavigationEntry(state.entry);
+      }
+
+      function appendPlaygroundPlatformNavigationHistory(history, entry) {
+        const normalized = normalizePlaygroundPlatformNavigationEntry(entry);
+        if (!normalized) return history;
+        const entryKey = getPlaygroundPlatformNavigationEntryKey(normalized);
+        const previous = history.length > 0 ? history[history.length - 1] : null;
+        if (previous && getPlaygroundPlatformNavigationEntryKey(previous) === entryKey) {
+          return history;
+        }
+        return history.concat({
+          ...normalized,
+          visitedAt: new Date().toISOString(),
+        }).slice(-PLAYGROUND_PLATFORM_NAVIGATION_HISTORY_LIMIT);
+      }
+
       function DemoApp() {
         const isDemoMode = useMemo(() => {
           try {
@@ -129288,6 +132274,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
         });
         const [environmentsOpenToken, setEnvironmentsOpenToken] = useState(0);
         const [environmentsNavigationTargetId, setEnvironmentsNavigationTargetId] = useState("");
+        const [resourcesNavigationTarget, setResourcesNavigationTarget] = useState({
+          token: 0,
+          resourceType: "",
+          resourceId: "",
+        });
+        const resourceTemplatePreviewResources = useMemo(() => (
+          buildPlaygroundResourceTemplatePreviewResources(PLAYGROUND_RESOURCE_TEMPLATE_DATA)
+        ), []);
         const [accountMenuOpen, setAccountMenuOpen] = useState(false);
         const [accountMenuPlacement, setAccountMenuPlacement] = useState("sidebar");
         const [renderedAccountMenu, setRenderedAccountMenu] = useState(false);
@@ -131180,7 +134174,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (!hasRealAccess) {
             return;
           }
-          const requestedTeamId = String(options?.selectedTeamId || teamPageSelectedTeamId || "").trim();
+          const hasSelectedTeamIdOverride = options
+            && typeof options === "object"
+            && Object.prototype.hasOwnProperty.call(options, "selectedTeamId");
+          const requestedTeamId = String(hasSelectedTeamIdOverride ? options.selectedTeamId : teamPageSelectedTeamId || "").trim();
           setTeamPageLoading(true);
           setTeamPageError("");
           setTeamPageRequiresPlan(false);
@@ -131856,17 +134853,46 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function openMetronomePage(options = {}) {
           const normalizedProjectId = String(options?.projectId || "").trim();
           const normalizedWorkflowId = String(options?.workflowId || "").trim();
+          const normalizedRunId = String(options?.runId || "").trim();
+          const requestedMode = options?.mode === "runs"
+            ? "runs"
+            : options?.mode === "code"
+              ? "code"
+              : options?.mode === "edit"
+                ? "edit"
+                : "";
           setAccountMenuOpen(false);
           setSidebarWorkspaceMode("work");
           setMetronomeProjectFilterId(normalizedProjectId);
           setMetronomeOpenWorkflowRequest(normalizedWorkflowId
             ? {
                 workflowId: normalizedWorkflowId,
+                runId: normalizedRunId,
+                mode: requestedMode,
                 token: Date.now(),
               }
             : null);
           setActivePage("metronome");
         }
+
+        useEffect(() => {
+          const handleOpenMetronomeWorkflow = (event) => {
+            const detail = event?.detail && typeof event.detail === "object" ? event.detail : {};
+            const normalizedWorkflowId = String(detail.workflowId || "").trim();
+            if (!normalizedWorkflowId) {
+              return;
+            }
+            openMetronomePage({
+              workflowId: normalizedWorkflowId,
+              runId: String(detail.runId || "").trim(),
+              mode: detail.mode === "runs" ? "runs" : detail.mode === "code" ? "code" : "edit",
+            });
+          };
+          window.addEventListener("playground:open-metronome-workflow", handleOpenMetronomeWorkflow);
+          return () => {
+            window.removeEventListener("playground:open-metronome-workflow", handleOpenMetronomeWorkflow);
+          };
+        }, []);
 
         function openHelpPage() {
           setAccountMenuOpen(false);
@@ -139652,10 +142678,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const normalizedServerKind = normalizedView === "servers"
             ? normalizeDevelopServerPageKind(options.serverKind)
             : "";
+          const normalizedResourceId = normalizedView === "servers" ? String(options.resourceId || "").trim() : "";
+          const normalizedResourceType = normalizedResourceId
+            ? (options.resourceType === "database" ? "database" : "server")
+            : "";
           setAccountMenuOpen(false);
           setProfileEditorOpen(false);
           setResourcesView(normalizedView);
           setResourcesServerKind(normalizedServerKind);
+          setResourcesNavigationTarget({
+            token: normalizedResourceId ? createPlaygroundPlatformNavigationToken() : 0,
+            resourceType: normalizedResourceType,
+            resourceId: normalizedResourceId,
+          });
           setResourcesHeaderState({
             mode: "overview",
             title: "",
@@ -147228,23 +150263,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const renderPermissionsTab = () => {
             const teamPermissionSet = normalizePlaygroundPermissionSet(selectedTeam?.permissionSet, "team");
             return React.createElement("div", { className: "playground-team-detail-panel playground-team-permissions-panel" },
-              React.createElement("div", { className: "playground-plugins-section-header playground-team-permissions-header" },
-                React.createElement("div", { className: "playground-plugins-section-copy" },
-                  React.createElement("h2", { className: "playground-plugins-section-title" }, "Permission rings"),
-                  React.createElement("p", { className: "playground-plugins-section-description" },
-                    "Team permissions define the default action policy for people in this workspace. Runtime checks still use the strictest applicable rule across agent, project, and team scopes."
-                  )
-                )
-              ),
-              React.createElement("div", { className: "playground-agents-permissions-card playground-team-permissions-card" },
-                renderAgentPermissionsList(teamPermissionSet, {
-                  subjectType: "team",
-                  disabled: !canManageTeam || teamPageActionId === "team-permissions",
-                  onRingAccessChange: updateTeamPermissionRingAccess,
-                  onActionRingChange: updateTeamPermissionActionRing,
-                  onActionAccessChange: updateTeamPermissionActionAccess,
-                })
-              )
+              renderPlaygroundPermissionPanel(teamPermissionSet, {
+                subjectType: "team",
+                disabled: !canManageTeam || teamPageActionId === "team-permissions",
+                onRingAccessChange: updateTeamPermissionRingAccess,
+                onActionRingChange: updateTeamPermissionActionRing,
+                onActionAccessChange: updateTeamPermissionActionAccess,
+              })
             );
           };
 
@@ -148202,6 +151227,451 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : resourcesView;
         const activeResourcesServerKind = activeResourcesView === "servers" ? resourcesServerKind : "";
         const isResourcesPage = activePage === "resources" || activePage === "agents" || activePage === "environments";
+        const platformNavigationHistoryRef = useRef([]);
+        const platformNavigationInitializedRef = useRef(false);
+        const platformNavigationLastKeyRef = useRef("");
+        const platformNavigationRestoreRef = useRef(null);
+
+        const currentPlatformNavigationEntry = useMemo(() => {
+          if (activePage === "thread") {
+            return {
+              page: "thread",
+              threadId: currentThreadId,
+              contentMode: contentMode === "changes" ? "changes" : "chat",
+            };
+          }
+
+          if (activePage === "tasks" || activePage === "calendar") {
+            const requestedView = activePage === "calendar"
+              ? "calendar"
+              : tasksHeaderState.view === "board"
+                ? "board"
+                : tasksHeaderState.view === "backlog"
+                  ? "backlog"
+                  : "overview";
+            return {
+              page: activePage,
+              mode: tasksHeaderState.mode === "project"
+                ? "project"
+                : activePage === "calendar"
+                  ? "calendar"
+                  : "overview",
+              view: requestedView,
+              projectId: tasksHeaderState.projectId,
+              detailMode: tasksHeaderState.detailMode,
+              taskId: tasksHeaderState.taskId,
+              scheduleId: tasksHeaderState.scheduleId,
+            };
+          }
+
+          if (activePage === "metronome") {
+            const metronomeEditorOpen = metronomeTopNavState?.mode === "editor";
+            return {
+              page: "metronome",
+              mode: metronomeEditorOpen ? "detail" : "overview",
+              projectId: metronomeProjectFilterId,
+              workflowId: metronomeEditorOpen ? metronomeTopNavState?.workflowId : "",
+              editorMode: metronomeEditorOpen ? metronomeTopNavState?.editorMode : "",
+            };
+          }
+
+          if (isResourcesPage) {
+            return {
+              page: "resources",
+              mode: resourcesHeaderState.mode === "detail" ? "detail" : "overview",
+              resourceView: activeResourcesView,
+              resourceType: resourcesHeaderState.resourceType,
+              resourceId: resourcesHeaderState.resourceId,
+              serverKind: activeResourcesServerKind,
+            };
+          }
+
+          if (activePage === "tools" || activePage === "plugins" || activePage === "skills") {
+            return {
+              page: "tools",
+              mode: selectedPluginId || toolsSkillsHeaderState.mode === "detail" ? "detail" : "overview",
+              toolsView,
+              pluginId: toolsView === "plugins" ? selectedPluginId : "",
+              skillId: toolsView === "skills" ? toolsSkillsHeaderState.skillId : "",
+            };
+          }
+
+          if (activePage === "files") {
+            return {
+              page: "files",
+              environmentId: filesPageTopNav?.environmentId || environmentId,
+              path: filesPageTopNav?.path || "",
+              contentMode: filesPageTopNav?.contentMode === "changes" ? "changes" : "files",
+            };
+          }
+
+          if (activePage === "settings") {
+            return {
+              page: "settings",
+              sectionId: settingsSection,
+            };
+          }
+
+          if (activePage === "team") {
+            return {
+              page: "team",
+              teamId: teamPageSelectedTeamId,
+              teamTab: teamPageActiveTab,
+            };
+          }
+
+          if (activePage === "imagine") {
+            return {
+              page: "imagine",
+              imagineView: imagineActiveView,
+              mediaMode: imagineMediaMode,
+              filterMode: imagineFilterMode,
+              sortMode: imagineSortMode,
+            };
+          }
+
+          if (activePage === "models") {
+            return {
+              page: "models",
+              modelsTab: modelsPageTab,
+            };
+          }
+
+          if (activePage === "resource-templates") {
+            return {
+              page: "resource-templates",
+              templateType: resourceTemplateTypeFilter,
+              templateId: resourceTemplateSelectedId,
+            };
+          }
+
+          if (activePage === "develop") {
+            return {
+              page: "develop",
+              developSection: developHomeSection,
+            };
+          }
+
+          if (activePage === "inference") {
+            return {
+              page: "inference",
+              sectionId: "inference",
+            };
+          }
+
+          return {
+            page: activePage || "thread",
+          };
+        }, [
+          activePage,
+          activeResourcesServerKind,
+          activeResourcesView,
+          contentMode,
+          currentThreadId,
+          developHomeSection,
+          environmentId,
+          filesPageTopNav?.contentMode,
+          filesPageTopNav?.environmentId,
+          filesPageTopNav?.path,
+          imagineActiveView,
+          imagineFilterMode,
+          imagineMediaMode,
+          imagineSortMode,
+          isResourcesPage,
+          metronomeProjectFilterId,
+          metronomeTopNavState?.editorMode,
+          metronomeTopNavState?.mode,
+          metronomeTopNavState?.workflowId,
+          modelsPageTab,
+          resourcesHeaderState.mode,
+          resourcesHeaderState.resourceId,
+          resourcesHeaderState.resourceType,
+          resourceTemplateSelectedId,
+          resourceTemplateTypeFilter,
+          selectedPluginId,
+          settingsSection,
+          tasksHeaderState.detailMode,
+          tasksHeaderState.mode,
+          tasksHeaderState.projectId,
+          tasksHeaderState.scheduleId,
+          tasksHeaderState.taskId,
+          tasksHeaderState.view,
+          teamPageActiveTab,
+          teamPageSelectedTeamId,
+          toolsSkillsHeaderState.mode,
+          toolsSkillsHeaderState.skillId,
+          toolsView,
+        ]);
+
+        const applyPlatformNavigationEntry = useCallback((rawEntry) => {
+          const entry = normalizePlaygroundPlatformNavigationEntry(rawEntry);
+          if (!entry) return;
+          const entryKey = getPlaygroundPlatformNavigationEntryKey(entry);
+          platformNavigationRestoreRef.current = {
+            key: entryKey,
+            startedAt: Date.now(),
+          };
+
+          setAccountMenuOpen(false);
+          setNotificationsOpen(false);
+          setProfileEditorOpen(false);
+          setThreadSearchOpen(false);
+          setThreadActionMenuState(null);
+          setThreadNavMenuOpen(false);
+          setThreadTaskListMenuOpen(false);
+          setMetronomeTopNavMenuOpen(false);
+          setImagineToolbarPopover("");
+          setPluginsNavPopover("");
+
+          if (entry.page === "thread") {
+            setSidebarWorkspaceMode("work");
+            setActivePage("thread");
+            setCurrentThreadId(entry.threadId || "");
+            setContentMode(entry.contentMode === "changes" ? "changes" : "chat");
+            setThreadListMode("threads");
+            setChangesNavigationTarget(null);
+            setThreadTaskOpenRequest(null);
+            setThreadSubagentDetailOpen(false);
+            setThreadDeepResearchDetailOpen(false);
+            setThreadDocumentPreviewOpen(false);
+            setRunnerRenderKey((current) => current + 1);
+            return;
+          }
+
+          if (entry.page === "tasks" || entry.page === "calendar") {
+            const requestedView = entry.page === "calendar"
+              ? "calendar"
+              : entry.view === "board"
+                ? "board"
+                : entry.view === "overview"
+                  ? "overview"
+                  : "backlog";
+            setSidebarWorkspaceMode("work");
+            setTasksPageNavigationRequest({
+              token: createPlaygroundPlatformNavigationToken(),
+              projectId: entry.projectId || "",
+              view: requestedView,
+              taskId: entry.taskId || "",
+              missionControlAction: entry.detailMode === "mission-control" ? "open" : "",
+              projectComposerAction: "",
+            });
+            setActivePage(entry.page === "calendar" ? "calendar" : "tasks");
+            return;
+          }
+
+          if (entry.page === "metronome") {
+            openMetronomePage({
+              projectId: entry.projectId || "",
+              workflowId: entry.workflowId || "",
+            });
+            if (!entry.workflowId) {
+              window.setTimeout(() => {
+                const goOverview = metronomeTopNavActionsRef.current?.goOverview;
+                if (typeof goOverview === "function") {
+                  goOverview();
+                }
+              }, 0);
+            }
+            if (entry.workflowId && entry.editorMode) {
+              [0, 100, 300].forEach((delay) => {
+                window.setTimeout(() => {
+                  const setMode = metronomeTopNavActionsRef.current?.setMode;
+                  if (typeof setMode === "function") {
+                    setMode(entry.editorMode === "runs" ? "runs" : entry.editorMode === "code" ? "code" : "edit");
+                  }
+                }, delay);
+              });
+            }
+            return;
+          }
+
+          if (entry.page === "resources") {
+            const resourceView = entry.resourceView === "servers"
+              ? "servers"
+              : entry.resourceView === "computers"
+                ? "computers"
+                : "agents";
+            openResourcesView(resourceView, { serverKind: entry.serverKind || "" });
+            if (entry.mode !== "detail" || !entry.resourceId) {
+              setResourcesBackRequestToken((current) => current + 1);
+            }
+            if (resourceView === "agents") {
+              if (entry.resourceId === PLAYGROUND_AGENT_DRAFT_ID) {
+                setAgentCreationPageRequestToken((current) => current + 1);
+              } else if (entry.resourceId) {
+                setAgentPageSelectionRequest({
+                  agentId: entry.resourceId,
+                  token: createPlaygroundPlatformNavigationToken(),
+                });
+              }
+            } else if (resourceView === "computers" && entry.resourceId) {
+              setEnvironmentsNavigationTargetId(entry.resourceId);
+              setEnvironmentsOpenToken((current) => current + 1);
+            } else if (resourceView === "servers" && entry.resourceId) {
+              setResourcesNavigationTarget({
+                token: Date.now(),
+                resourceType: entry.resourceType === "database" ? "database" : "server",
+                resourceId: entry.resourceId,
+              });
+            }
+            return;
+          }
+
+          if (entry.page === "tools") {
+            const nextToolsView = entry.toolsView === "actions"
+              ? "actions"
+              : entry.toolsView === "skills"
+                ? "skills"
+                : "plugins";
+            openToolsView(nextToolsView, entry.skillId ? { skillId: entry.skillId } : {});
+            if (nextToolsView === "plugins") {
+              setSelectedPluginId(entry.pluginId || "");
+            } else if (nextToolsView === "skills" && !entry.skillId) {
+              setToolsSkillsBackRequestToken((current) => current + 1);
+            }
+            return;
+          }
+
+          if (entry.page === "files") {
+            setSidebarWorkspaceMode("work");
+            if (entry.environmentId || entry.path) {
+              setFilesPageNavigationRequest({
+                token: createPlaygroundPlatformNavigationToken(),
+                environmentId: entry.environmentId || "",
+                path: entry.path || "",
+                isFolder: true,
+                contentMode: entry.contentMode === "changes" ? "changes" : "files",
+              });
+            }
+            setActivePage("files");
+            return;
+          }
+
+          if (entry.page === "settings") {
+            openSettingsPage(entry.sectionId || "costs-plans");
+            return;
+          }
+
+          if (entry.page === "team") {
+            openTeamPage();
+            setTeamPageSelectedTeamId(entry.teamId || "");
+            setTeamPageActiveTab(entry.teamTab === "shares" || entry.teamTab === "invitations" || entry.teamTab === "permissions" ? entry.teamTab : "members");
+            return;
+          }
+
+          if (entry.page === "imagine") {
+            setImagineActiveView(
+              entry.imagineView === "my-templates" || entry.imagineView === "favourites" || entry.imagineView === "create-template"
+                ? entry.imagineView
+                : "explore"
+            );
+            setImagineMediaMode(entry.mediaMode === "video" ? "video" : "image");
+            setImagineFilterMode(entry.filterMode || "all");
+            setImagineSortMode(entry.sortMode || "featured");
+            openImaginePage();
+            return;
+          }
+
+          if (entry.page === "models") {
+            setModelsPageTab(entry.modelsTab === "provider" ? "provider" : "agent");
+            openModelsPage();
+            return;
+          }
+
+          if (entry.page === "resource-templates") {
+            setResourceTemplateSelectedId(entry.templateId || "");
+            openResourceTemplatesPage({
+              type: entry.templateType || "all",
+              templateId: entry.templateId || "",
+            });
+            return;
+          }
+
+          if (entry.page === "develop") {
+            openDevelopHome({
+              section: entry.developSection || "overview",
+            });
+            return;
+          }
+
+          if (entry.page === "inference") {
+            openInferencePage();
+            return;
+          }
+
+          if (entry.page === "configure") {
+            openConfigureHome();
+            return;
+          }
+
+          setActivePage(entry.page || "thread");
+        }, []);
+
+        useEffect(() => {
+          const entry = normalizePlaygroundPlatformNavigationEntry(currentPlatformNavigationEntry);
+          if (!entry || typeof window === "undefined" || !window.history) {
+            return;
+          }
+
+          const entryKey = getPlaygroundPlatformNavigationEntryKey(entry);
+          if (!entryKey) {
+            return;
+          }
+
+          const pendingRestore = platformNavigationRestoreRef.current;
+          if (pendingRestore) {
+            if (pendingRestore.key === entryKey) {
+              platformNavigationRestoreRef.current = null;
+              platformNavigationLastKeyRef.current = entryKey;
+              return;
+            }
+            if (Date.now() - pendingRestore.startedAt < PLAYGROUND_PLATFORM_NAVIGATION_RESTORE_SUPPRESSION_MS) {
+              return;
+            }
+            platformNavigationRestoreRef.current = null;
+          }
+
+          if (platformNavigationLastKeyRef.current === entryKey) {
+            return;
+          }
+
+          const nextState = buildPlaygroundPlatformNavigationState(entry);
+          if (!nextState) {
+            return;
+          }
+
+          platformNavigationHistoryRef.current = appendPlaygroundPlatformNavigationHistory(platformNavigationHistoryRef.current, entry);
+          window.__runnerPlatformNavigationHistory = platformNavigationHistoryRef.current;
+
+          if (!platformNavigationInitializedRef.current) {
+            platformNavigationInitializedRef.current = true;
+            platformNavigationLastKeyRef.current = entryKey;
+            window.history.replaceState({
+              ...(window.history.state && typeof window.history.state === "object" ? window.history.state : {}),
+              ...nextState,
+            }, "");
+            return;
+          }
+
+          platformNavigationLastKeyRef.current = entryKey;
+          window.history.pushState({
+            ...(window.history.state && typeof window.history.state === "object" ? window.history.state : {}),
+            ...nextState,
+          }, "");
+        }, [currentPlatformNavigationEntry]);
+
+        useEffect(() => {
+          function handlePlatformNavigationPopState(event) {
+            const entry = getPlaygroundPlatformNavigationStateEntry(event.state);
+            if (!entry) {
+              return;
+            }
+            applyPlatformNavigationEntry(entry);
+          }
+
+          window.addEventListener("popstate", handlePlatformNavigationPopState);
+          return () => window.removeEventListener("popstate", handlePlatformNavigationPopState);
+        }, [applyPlatformNavigationEntry]);
 
         useEffect(() => {
           if (activePage !== "resources" || activeResourcesView !== "servers" || !hasSessionAuth) {
@@ -152100,6 +155570,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 embeddedInResources: true,
                 embeddedResourcesView: activeResourcesView === "servers" ? "servers" : "computers",
                 embeddedServerKind: activeResourcesView === "servers" ? activeResourcesServerKind : "",
+                navigationResourceToken: resourcesNavigationTarget.token,
+                navigationTargetResourceType: resourcesNavigationTarget.resourceType,
+                navigationTargetResourceId: resourcesNavigationTarget.resourceId,
+                resourceTemplatePreviewResources,
                 topNavActionsPortalId: "playground-resources-nav-actions",
                 onResourcesHeaderChange: setResourcesHeaderState,
                 backRequestToken: resourcesBackRequestToken,
@@ -152141,6 +155615,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
             pricingUrl: ${JSON.stringify(aiosOrigin + "/pricing")},
             onOpenSkillSettings: (skillId) => openToolsView("skills", { skillId, preserveSidebarMode: true }),
           });
+        }
+
+        function getPlaygroundResourceTemplateMetronomePreviewWorkflowId(templateId) {
+          const normalizedTemplateId = String(templateId || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "_")
+            .replace(/^_+|_+$/g, "");
+          return normalizedTemplateId ? "builtin_template_" + normalizedTemplateId : "";
         }
 
         function renderResourceTemplatesPage() {
@@ -152259,6 +155742,46 @@ ${PROJECT_OVERVIEW_SCRIPT}
             notice: resourceTemplateNotice,
             setNotice: setResourceTemplateNotice,
             onPublishTemplate: publishResourceTemplateToProject,
+            onPreviewTemplate: (template) => {
+              const normalizedTemplateId = String(template?.id || "").trim();
+              const normalizedTemplateType = String(template?.type || "").trim();
+              if (!normalizedTemplateId) {
+                setResourceTemplateSelectedId(normalizedTemplateId);
+                return;
+              }
+              if (PLAYGROUND_RESOURCE_TEMPLATE_PREVIEW_TYPES.has(normalizedTemplateType)) {
+                const previewResourceId = getPlaygroundResourceTemplatePreviewResourceId(template);
+                const previewResourceType = getPlaygroundResourceTemplatePreviewResourceType(template);
+                if (!previewResourceId || !previewResourceType) {
+                  setResourceTemplateSelectedId(normalizedTemplateId);
+                  return;
+                }
+                setResourceTemplateSelectedId("");
+                setResourceTemplatePublishId("");
+                openResourcesView("servers", {
+                  serverKind: normalizedTemplateType,
+                  resourceType: previewResourceType,
+                  resourceId: previewResourceId,
+                  preserveSidebarMode: true,
+                });
+                return;
+              }
+              if (normalizedTemplateType !== "metronome") {
+                setResourceTemplateSelectedId(normalizedTemplateId);
+                return;
+              }
+              const previewWorkflowId = getPlaygroundResourceTemplateMetronomePreviewWorkflowId(normalizedTemplateId);
+              if (!previewWorkflowId) {
+                setResourceTemplateSelectedId(normalizedTemplateId);
+                return;
+              }
+              setResourceTemplateSelectedId("");
+              setResourceTemplatePublishId("");
+              openMetronomePage({
+                workflowId: previewWorkflowId,
+                mode: "edit",
+              });
+            },
           });
         }
 
@@ -155090,6 +158613,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             currentUserEmail: hasSessionAuth ? accountEmail : "",
                             currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                             canStartThreads: hasRealAccess,
+                            hasRealAccess,
                             taskRunStates: taskRunStates,
                             openTaskRequest: taskOpenRequest,
                             navigationRequest: tasksPageNavigationRequest,
@@ -155127,6 +158651,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             onOpenResourceTemplatesPage: openResourceTemplatesPage,
                             projectOverviewResourceFilter,
                             setProjectOverviewResourceFilter,
+                            workspaceTeams: teamPageTeams,
+                            workspaceTeamsLoading: teamPageLoading,
+                            workspaceTeamsRequiresPlan: teamPageRequiresPlan,
+                            onWorkspaceTeamsRequest: () => {
+                              void loadTeamPageData({ selectedTeamId: "" });
+                            },
+                            onOpenTeamPage: (teamId = "") => {
+                              const normalizedTeamId = String(teamId || "").trim();
+                              openTeamPage();
+                              setTeamPageSelectedTeamId(normalizedTeamId);
+                              void loadTeamPageData({ selectedTeamId: normalizedTeamId });
+                            },
                             onThreadOpen: (threadId, options = {}) => {
                               const normalizedThreadId = String(threadId || "").trim();
                               if (!normalizedThreadId) {
@@ -155612,6 +159148,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               currentUserEmail: hasSessionAuth ? accountEmail : "",
                               currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                               canStartThreads: hasRealAccess,
+                              hasRealAccess,
                               taskRunStates: taskRunStates,
                               openTaskRequest: threadTaskOpenRequest,
                               navigationRequest: null,
@@ -155693,6 +159230,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               onOpenResourceTemplatesPage: openResourceTemplatesPage,
                               projectOverviewResourceFilter,
                               setProjectOverviewResourceFilter,
+                              workspaceTeams: teamPageTeams,
+                              workspaceTeamsLoading: teamPageLoading,
+                              workspaceTeamsRequiresPlan: teamPageRequiresPlan,
+                              onWorkspaceTeamsRequest: () => {
+                                void loadTeamPageData({ selectedTeamId: "" });
+                              },
+                              onOpenTeamPage: (teamId = "") => {
+                                const normalizedTeamId = String(teamId || "").trim();
+                                openTeamPage();
+                                setTeamPageSelectedTeamId(normalizedTeamId);
+                                void loadTeamPageData({ selectedTeamId: normalizedTeamId });
+                              },
                               onThreadOpen: (threadId, options = {}) => {
                                 const normalizedThreadId = String(threadId || "").trim();
                                 if (!normalizedThreadId) {
@@ -156296,9 +159845,10 @@ function getServerBacklogTaskRunnerMetadata(task) {
 
 function getServerBacklogTaskType(task) {
   const metadata = getServerBacklogTaskRunnerMetadata(task);
-  return String(task?.taskType || task?.type || metadata?.taskType || "").trim().toLowerCase() === "subtask"
-    ? "subtask"
-    : "task";
+  const normalized = String(task?.taskType || task?.type || metadata?.taskType || "").trim().toLowerCase();
+  if (normalized === "subtask") return "subtask";
+  if (normalized === "loop" || normalized === "loop_task" || normalized === "metronome_loop") return "loop";
+  return "task";
 }
 
 function getServerBacklogTaskTicketNumber(task) {

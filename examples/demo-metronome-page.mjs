@@ -415,6 +415,7 @@ export const METRONOME_PAGE_CSS = String.raw`
       .playground-metronome-table-owner-avatar.is-computer-agents {
         background: transparent;
         border: 0;
+        border-radius: 0;
         box-shadow: none;
       }
 
@@ -436,6 +437,8 @@ export const METRONOME_PAGE_CSS = String.raw`
         width: 100%;
         height: 100%;
         object-fit: contain;
+        box-sizing: border-box;
+        padding: 3px;
       }
 
       .playground-metronome-table-owner-avatar.is-computer-agents .playground-metronome-table-owner-avatar-fallback {
@@ -1966,6 +1969,16 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-inspector-title-input {
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-metronome-inspector-title-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         font-size: 13px;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.94);
@@ -5411,6 +5424,7 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-top-nav-menu {
+        --playground-top-nav-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
         position: absolute;
         z-index: 2200;
         top: calc(100% + 8px);
@@ -5421,13 +5435,31 @@ export const METRONOME_PAGE_CSS = String.raw`
         flex-direction: column !important;
         align-items: stretch !important;
         gap: 0 !important;
-        padding: 0 !important;
-        border-radius: 10px;
+        padding: 4px 0 !important;
+        border-radius: 25px;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        background: #323232 !important;
+        border: 0 !important;
+        background: rgba(30, 30, 30, 0.5) !important;
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35) !important;
-        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
+      }
+
+      .playground-metronome-top-nav-menu::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-top-nav-popup-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .playground-metronome-top-nav-menu-id {
@@ -6199,6 +6231,34 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           },
         };
 
+        function getMetronomeDefaultNodeLabel(kind, subtype = "") {
+          const normalizedKind = String(kind || "").trim();
+          const meta = METRONOME_NODE_KIND_META[normalizedKind] || METRONOME_NODE_KIND_META.action;
+          if (normalizedKind === "action") return "Thread";
+          if (normalizedKind === "approval") return "User Approval";
+          return meta?.label || "Node";
+        }
+
+        function normalizeMetronomeNodeLabel(value, kind, subtype = "") {
+          const normalizedKind = String(kind || "").trim();
+          const normalizedValue = String(value || "").trim();
+          if (normalizedKind === "action" && /^start\s+(agent\s+)?thread$/i.test(normalizedValue)) {
+            return "Thread";
+          }
+          if (normalizedKind === "approval" && /^user\s+approval$/i.test(normalizedValue)) {
+            return "User Approval";
+          }
+          return normalizedValue || getMetronomeDefaultNodeLabel(normalizedKind, subtype);
+        }
+
+        function getMetronomeNodeDisplayLabel(nodeOrData) {
+          const source = nodeOrData && typeof nodeOrData === "object" ? nodeOrData : {};
+          const data = source.data && typeof source.data === "object" ? source.data : source;
+          const kind = String(data.kind || source.kind || "action").trim() || "action";
+          const subtype = String(data.subtype || source.subtype || "").trim();
+          return normalizeMetronomeNodeLabel(data.label || source.label || "", kind, subtype);
+        }
+
         const METRONOME_NODE_PALETTE_GROUPS = [
 	          {
 	            title: "Core",
@@ -6454,6 +6514,12 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             graphFactory: createDatabaseEnrichmentLoopMetronomeGraph,
           },
         ];
+
+        const METRONOME_RESOURCE_TEMPLATE_GRAPH_FACTORIES = Object.freeze({
+          "customer-support-email-metronome": createCustomerSupportEmailTemplateMetronomeGraph,
+          "weekly-executive-briefing": createWeeklyExecutiveBriefingTemplateMetronomeGraph,
+          "campaign-content-calendar": createCampaignContentCalendarTemplateMetronomeGraph,
+        });
 
         const METRONOME_BUILT_IN_WORKFLOWS = [
           {
@@ -6973,9 +7039,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             .map((branch, index) => {
               const source = branch && typeof branch === "object"
                 ? branch
-                : { label: String(branch || "").trim() };
-              const rawLabel = String(source.label || source.name || "").trim();
-              const isElse = String(source.id || "").trim() === "else" || rawLabel.toLowerCase() === "else" || rawLabel.toLowerCase() === "default";
+                : { label: String(branch || "") };
+              const rawLabel = String(source.label || source.name || "");
+              const normalizedRawLabel = rawLabel.trim().toLowerCase();
+              const isElse = String(source.id || "").trim() === "else" || normalizedRawLabel === "else" || normalizedRawLabel === "default";
               const baseId = isElse
                 ? "else"
                 : String(source.id || "condition-" + (index + 1)).trim() || "condition-" + (index + 1);
@@ -6992,7 +7059,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               return {
                 id,
                 label: isElse ? "Default" : rawLabel,
-                rule: String(source.rule || source.expression || source.value || "").trim(),
+                rule: String(source.rule || source.expression || source.value || ""),
               };
             })
             .filter(Boolean);
@@ -7218,6 +7285,23 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
         function stopMetronomeInputKeyPropagation(event) {
           if (!event || typeof event.stopPropagation !== "function") return;
           event.stopPropagation();
+          if (event.nativeEvent && typeof event.nativeEvent.stopImmediatePropagation === "function") {
+            event.nativeEvent.stopImmediatePropagation();
+          }
+        }
+
+        function getMetronomeTextInputKeyHandlers(handleKeyDown) {
+          return {
+            onKeyDownCapture: stopMetronomeInputKeyPropagation,
+            onKeyUpCapture: stopMetronomeInputKeyPropagation,
+            onKeyDown: (event) => {
+              stopMetronomeInputKeyPropagation(event);
+              if (typeof handleKeyDown === "function") {
+                handleKeyDown(event);
+              }
+            },
+            onKeyUp: stopMetronomeInputKeyPropagation,
+          };
         }
 
         function createMetronomeNode(kind, position, overrides = {}) {
@@ -7241,7 +7325,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             position: position || { x: 120, y: 140 },
             data: {
               kind,
-              label: overrides.label || meta.label,
+              label: normalizeMetronomeNodeLabel(overrides.label || meta.label, kind, normalizedSubtype),
               subtype: normalizedSubtype,
               description: overrides.description || getMetronomeSubtypeLabel(kind, normalizedSubtype),
 	              config: kind === "condition"
@@ -7275,7 +7359,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                       ),
                       ...(
                         normalizedSubtype === "email"
-                          ? buildDefaultMetronomeEmailTriggerConfig(activeWorkflow, { id: nodeId }, overrideConfig)
+                          ? buildDefaultMetronomeEmailTriggerConfig(null, { id: nodeId }, overrideConfig)
                           : {}
                       ),
                       ...overrideConfig,
@@ -7372,7 +7456,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               height: METRONOME_LOOP_NODE_DEFAULT_HEIGHT,
               ...(overrides.style && typeof overrides.style === "object" ? overrides.style : {}),
             };
-            nextNode.data.label = overrides.label || "While";
+            nextNode.data.label = normalizeMetronomeNodeLabel(overrides.label || meta.label, kind, normalizedSubtype);
             nextNode.data.description = overrides.description || getMetronomeSubtypeLabel(kind, normalizedSubtype);
           } else if (kind === "note") {
             nextNode.style = {
@@ -7395,7 +7479,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             id,
             source,
             target,
-            type: "simplebezier",
+            type: "metronomeOutput",
             ...(options.sourceHandle ? { sourceHandle: options.sourceHandle } : {}),
             ...(options.targetHandle ? { targetHandle: options.targetHandle } : {}),
           };
@@ -7773,6 +7857,313 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               createMetronomeEdge("edge_confident_database", "condition_enrichment_confidence", "database_update_enriched_record", { sourceHandle: "else" }),
               createMetronomeEdge("edge_reviewed_end", "database_update_reviewed_record", "end_database_reviewed"),
               createMetronomeEdge("edge_enriched_end", "database_update_enriched_record", "end_database_enriched"),
+            ],
+          };
+        }
+
+        function createCustomerSupportEmailTemplateMetronomeGraph(options = {}) {
+          const projectId = String(options.projectId || "").trim();
+          const projectName = String(options.projectName || "").trim();
+          const workspaceConfig = projectId
+            ? { contextType: "project", resource: "project", projectId, projectName }
+            : { contextType: "computer", resource: "computer" };
+          const trigger = createMetronomeNode("trigger", { x: 90, y: 280 }, {
+            id: "trigger_support_email",
+            subtype: "email",
+            label: "Support Email",
+            description: "Start when a customer support email arrives.",
+            config: {
+              triggerType: "email",
+              emailLocalPart: "support",
+              emailAddress: buildMetronomeEmailAddress("support"),
+              subjectContains: "",
+              bodyContains: "",
+              promptExtension: "Treat this email as a customer support request. Extract requester, account, urgency, product area, promised SLA, and the exact question before drafting.",
+            },
+          });
+          const classify = createMetronomeNode("action", { x: 405, y: 280 }, {
+            id: "thread_support_classify",
+            subtype: "start_thread",
+            label: "Classify",
+            description: "Classify intent, urgency, account, and product area.",
+            config: {
+              ...workspaceConfig,
+              message: "Classify the incoming support email. Return intent, urgency, customer/account, product area, blockers, and whether the case can be answered from available project context.",
+              inputContextScope: "all",
+            },
+          });
+          const research = createMetronomeNode("action", { x: 735, y: 280 }, {
+            id: "thread_support_research",
+            subtype: "start_thread",
+            label: "Research",
+            description: "Search project files, knowledge sources, and connected resources.",
+            config: {
+              ...workspaceConfig,
+              message: "Search the project context and connected resources for the support answer. Include exact references, source file names, prior decisions, and missing information.",
+              inputContextScope: "all",
+            },
+          });
+          const draft = createMetronomeNode("action", { x: 1065, y: 280 }, {
+            id: "thread_support_draft_reply",
+            subtype: "start_thread",
+            label: "Draft Reply",
+            description: "Draft a customer-ready answer with evidence and next steps.",
+            config: {
+              ...workspaceConfig,
+              message: "Draft a concise support reply. Use a helpful tone, cite the evidence gathered, list concrete next steps, and return NEEDS REVIEW if confidence is low, the answer affects billing/legal/security, or source context is missing.",
+              inputContextScope: "all",
+            },
+          });
+          const reviewGate = createMetronomeNode("condition", { x: 1395, y: 256 }, {
+            id: "condition_support_review_needed",
+            label: "Review Gate",
+            description: "Route low-confidence replies to human review.",
+            config: {
+              conditionType: "previous_output_contains",
+              conditions: [
+                { id: "condition-1", label: "Needs review", rule: "NEEDS REVIEW" },
+                { id: "else", label: "Ready", rule: "" },
+              ],
+            },
+          });
+          const reviewTask = createMetronomeNode("ticket", { x: 1740, y: 132 }, {
+            id: "ticket_support_human_review",
+            subtype: "add_subtask",
+            label: "Review Task",
+            description: "Create a review task for uncertain support replies.",
+            config: {
+              operation: "add_subtask",
+              projectId,
+              projectName,
+              subtaskTitle: "Review support reply",
+              subtaskInstructions: "Review the drafted support reply, fill missing context, and approve the final response before it is sent.",
+            },
+          });
+          const sendReply = createMetronomeNode("action", { x: 1740, y: 380 }, {
+            id: "thread_support_send_reply",
+            subtype: "start_thread",
+            label: "Send Reply",
+            description: "Prepare the approved response for delivery back to the customer.",
+            config: {
+              ...workspaceConfig,
+              message: "Prepare the final customer reply from the approved draft. Include the response, evidence summary, and any follow-up task that should be tracked.",
+              inputContextScope: "all",
+            },
+          });
+          const reviewEnd = createMetronomeNode("end", { x: 2070, y: 132 }, { id: "end_support_review" });
+          const sentEnd = createMetronomeNode("end", { x: 2070, y: 380 }, { id: "end_support_sent" });
+          return {
+            nodes: [trigger, classify, research, draft, reviewGate, reviewTask, sendReply, reviewEnd, sentEnd],
+            edges: [
+              createMetronomeEdge("edge_support_email_classify", "trigger_support_email", "thread_support_classify"),
+              createMetronomeEdge("edge_support_classify_research", "thread_support_classify", "thread_support_research"),
+              createMetronomeEdge("edge_support_research_draft", "thread_support_research", "thread_support_draft_reply"),
+              createMetronomeEdge("edge_support_draft_gate", "thread_support_draft_reply", "condition_support_review_needed"),
+              createMetronomeEdge("edge_support_gate_review", "condition_support_review_needed", "ticket_support_human_review", { sourceHandle: "condition-1" }),
+              createMetronomeEdge("edge_support_gate_send", "condition_support_review_needed", "thread_support_send_reply", { sourceHandle: "else" }),
+              createMetronomeEdge("edge_support_review_end", "ticket_support_human_review", "end_support_review"),
+              createMetronomeEdge("edge_support_send_end", "thread_support_send_reply", "end_support_sent"),
+            ],
+          };
+        }
+
+        function createWeeklyExecutiveBriefingTemplateMetronomeGraph(options = {}) {
+          const projectId = String(options.projectId || "").trim();
+          const projectName = String(options.projectName || "").trim();
+          const workspaceConfig = projectId
+            ? { contextType: "project", resource: "project", projectId, projectName }
+            : { contextType: "computer", resource: "computer" };
+          const trigger = createMetronomeNode("trigger", { x: 90, y: 280 }, {
+            id: "trigger_weekly_briefing_schedule",
+            subtype: "periodic",
+            label: "Weekly Schedule",
+            description: "Run every Monday morning.",
+            config: {
+              triggerType: "periodic",
+              scheduleType: "recurring",
+              schedulePresetId: "weekly",
+              cronExpression: "0 9 * * 1",
+              scheduledTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+              promptExtension: "Prepare a weekly executive briefing for the project using activity, metrics, files, and external changes.",
+            },
+          });
+          const activity = createMetronomeNode("action", { x: 405, y: 280 }, {
+            id: "thread_briefing_activity",
+            subtype: "start_thread",
+            label: "Activity",
+            description: "Collect recent project activity.",
+            config: {
+              ...workspaceConfig,
+              message: "Collect recent project activity: completed tickets, open risks, decisions, run summaries, releases, and notable conversations from the last week.",
+              inputContextScope: "all",
+            },
+          });
+          const metrics = createMetronomeNode("action", { x: 735, y: 280 }, {
+            id: "thread_briefing_metrics",
+            subtype: "start_thread",
+            label: "Metrics",
+            description: "Read KPI files and dashboards.",
+            config: {
+              ...workspaceConfig,
+              message: "Read KPI files, dashboards, and project resources. Extract headline metrics, deltas, anomalies, and missing data that leadership should know about.",
+              inputContextScope: "all",
+            },
+          });
+          const research = createMetronomeNode("action", { x: 1065, y: 280 }, {
+            id: "thread_briefing_external_context",
+            subtype: "start_thread",
+            label: "External Context",
+            description: "Research external changes if needed.",
+            config: {
+              ...workspaceConfig,
+              message: "Research external market, competitor, customer, or dependency changes that affect this project. Keep only decision-relevant signals.",
+              inputContextScope: "all",
+            },
+          });
+          const writeBrief = createMetronomeNode("action", { x: 1395, y: 280 }, {
+            id: "thread_briefing_write",
+            subtype: "start_thread",
+            label: "Write Brief",
+            description: "Write a concise weekly executive brief.",
+            config: {
+              ...workspaceConfig,
+              message: "Write the weekly executive brief with: headline summary, progress, key metrics, risks, decisions needed, and next actions. Keep it concise and scannable.",
+              inputContextScope: "all",
+            },
+          });
+          const actionItems = createMetronomeNode("ticket", { x: 1725, y: 280 }, {
+            id: "ticket_briefing_action_items",
+            subtype: "add_subtask",
+            label: "Action Items",
+            description: "Create follow-up work from briefing actions.",
+            config: {
+              operation: "add_subtask",
+              projectId,
+              projectName,
+              subtaskTitle: "Follow up on weekly executive briefing",
+              subtaskInstructions: "Create focused follow-up tasks for any decisions, risks, or action items called out in the weekly brief.",
+            },
+          });
+          const done = createMetronomeNode("end", { x: 2055, y: 280 }, { id: "end_weekly_briefing" });
+          return {
+            nodes: [trigger, activity, metrics, research, writeBrief, actionItems, done],
+            edges: [
+              createMetronomeEdge("edge_briefing_schedule_activity", "trigger_weekly_briefing_schedule", "thread_briefing_activity"),
+              createMetronomeEdge("edge_briefing_activity_metrics", "thread_briefing_activity", "thread_briefing_metrics"),
+              createMetronomeEdge("edge_briefing_metrics_research", "thread_briefing_metrics", "thread_briefing_external_context"),
+              createMetronomeEdge("edge_briefing_research_write", "thread_briefing_external_context", "thread_briefing_write"),
+              createMetronomeEdge("edge_briefing_write_actions", "thread_briefing_write", "ticket_briefing_action_items"),
+              createMetronomeEdge("edge_briefing_actions_end", "ticket_briefing_action_items", "end_weekly_briefing"),
+            ],
+          };
+        }
+
+        function createCampaignContentCalendarTemplateMetronomeGraph(options = {}) {
+          const projectId = String(options.projectId || "").trim();
+          const projectName = String(options.projectName || "").trim();
+          const workspaceConfig = projectId
+            ? { contextType: "project", resource: "project", projectId, projectName }
+            : { contextType: "computer", resource: "computer" };
+          const trigger = createMetronomeNode("trigger", { x: 90, y: 280 }, {
+            id: "trigger_campaign_calendar_schedule",
+            subtype: "periodic",
+            label: "Campaign Schedule",
+            description: "Run weekly during the campaign.",
+            config: {
+              triggerType: "periodic",
+              scheduleType: "recurring",
+              schedulePresetId: "weekly",
+              cronExpression: "0 10 * * 1",
+              scheduledTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+              promptExtension: "Plan campaign content for the next week. Preserve audience, offer, launch date, channels, brand constraints, and review requirements.",
+            },
+          });
+          const brief = createMetronomeNode("action", { x: 405, y: 280 }, {
+            id: "thread_campaign_read_brief",
+            subtype: "start_thread",
+            label: "Read Brief",
+            description: "Read the campaign brief and constraints.",
+            config: {
+              ...workspaceConfig,
+              message: "Read the campaign brief, launch plan, target audience, offer, channel constraints, and prior performance notes. Return the working content strategy for this week.",
+              inputContextScope: "all",
+            },
+          });
+          const ideas = createMetronomeNode("action", { x: 735, y: 280 }, {
+            id: "thread_campaign_content_ideas",
+            subtype: "start_thread",
+            label: "Ideas",
+            description: "Generate weekly content ideas.",
+            config: {
+              ...workspaceConfig,
+              message: "Generate a weekly content plan with post ideas, channels, intended audience, goal, CTA, and required assets.",
+              inputContextScope: "all",
+            },
+          });
+          const creative = createMetronomeNode("imagine", { x: 1065, y: 280 }, {
+            id: "imagine_campaign_creative_prompts",
+            label: "Creative Prompts",
+            description: "Draft image prompts for campaign creative.",
+            config: {
+              mediaMode: "image",
+              prompt: "Create campaign creative concepts for the weekly content plan. Keep composition brand-forward, conversion-focused, and channel-ready.",
+              templateId: "fashion-campaigns",
+              templateName: "Fashion campaigns",
+              projectId,
+              projectName,
+              inputContextScope: "all",
+            },
+          });
+          const posts = createMetronomeNode("action", { x: 1395, y: 280 }, {
+            id: "thread_campaign_draft_posts",
+            subtype: "start_thread",
+            label: "Draft Posts",
+            description: "Draft posts and campaign copy.",
+            config: {
+              ...workspaceConfig,
+              message: "Draft channel-specific posts from the content plan and creative prompts. Include headline, caption, CTA, asset direction, and review notes.",
+              inputContextScope: "all",
+            },
+          });
+          const approvalTask = createMetronomeNode("ticket", { x: 1725, y: 176 }, {
+            id: "ticket_campaign_approval",
+            subtype: "add_subtask",
+            label: "Approval Task",
+            description: "Create approval tasks for the content calendar.",
+            config: {
+              operation: "add_subtask",
+              projectId,
+              projectName,
+              subtaskTitle: "Approve weekly campaign content",
+              subtaskInstructions: "Review the generated content calendar, copy, and creative prompts. Approve, request revisions, or assign channel owners.",
+            },
+          });
+          const performanceReview = createMetronomeNode("ticket", { x: 1725, y: 390 }, {
+            id: "ticket_campaign_performance_review",
+            subtype: "add_subtask",
+            label: "Performance Review",
+            description: "Schedule follow-up review after launch.",
+            config: {
+              operation: "add_subtask",
+              projectId,
+              projectName,
+              subtaskTitle: "Review campaign content performance",
+              subtaskInstructions: "After the campaign window, review performance by channel and create next-week content recommendations.",
+            },
+          });
+          const approvalEnd = createMetronomeNode("end", { x: 2055, y: 176 }, { id: "end_campaign_approval_ready" });
+          const reviewEnd = createMetronomeNode("end", { x: 2055, y: 390 }, { id: "end_campaign_review_scheduled" });
+          return {
+            nodes: [trigger, brief, ideas, creative, posts, approvalTask, performanceReview, approvalEnd, reviewEnd],
+            edges: [
+              createMetronomeEdge("edge_campaign_calendar_brief", "trigger_campaign_calendar_schedule", "thread_campaign_read_brief"),
+              createMetronomeEdge("edge_campaign_brief_ideas", "thread_campaign_read_brief", "thread_campaign_content_ideas"),
+              createMetronomeEdge("edge_campaign_ideas_creative", "thread_campaign_content_ideas", "imagine_campaign_creative_prompts"),
+              createMetronomeEdge("edge_campaign_creative_posts", "imagine_campaign_creative_prompts", "thread_campaign_draft_posts"),
+              createMetronomeEdge("edge_campaign_posts_approval", "thread_campaign_draft_posts", "ticket_campaign_approval"),
+              createMetronomeEdge("edge_campaign_posts_review", "thread_campaign_draft_posts", "ticket_campaign_performance_review"),
+              createMetronomeEdge("edge_campaign_approval_end", "ticket_campaign_approval", "end_campaign_approval_ready"),
+              createMetronomeEdge("edge_campaign_review_end", "ticket_campaign_performance_review", "end_campaign_review_scheduled"),
             ],
           };
         }
@@ -8262,6 +8653,9 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const graph = graphFactory(options);
           const projectId = String(options?.projectId || "").trim();
           const projectName = String(options?.projectName || "").trim();
+          const sourceMetadata = sourceDefinition.metadata && typeof sourceDefinition.metadata === "object" && !Array.isArray(sourceDefinition.metadata)
+            ? sourceDefinition.metadata
+            : {};
           return normalizeMetronomeWorkflow({
             id: String(sourceDefinition.id || "builtin_workflow"),
             name: String(sourceDefinition.title || sourceDefinition.name || "Default workflow"),
@@ -8284,6 +8678,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               copy_only: true,
               defaultWorkflowId: String(sourceDefinition.id || "builtin_workflow"),
               default_workflow_id: String(sourceDefinition.id || "builtin_workflow"),
+              ...sourceMetadata,
               ...(projectId ? { projectId, project_id: projectId } : {}),
               ...(projectName ? { projectName, project_name: projectName } : {}),
             },
@@ -8292,6 +8687,50 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             createdAt: "",
             updatedAt: "",
           });
+        }
+
+        function getMetronomeResourceTemplateWorkflowId(templateId) {
+          const normalizedTemplateId = String(templateId || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "_")
+            .replace(/^_+|_+$/g, "");
+          return normalizedTemplateId ? "builtin_template_" + normalizedTemplateId : "";
+        }
+
+        function getMetronomeResourceTemplateGraphFactory(templateId) {
+          const normalizedTemplateId = String(templateId || "").trim();
+          return METRONOME_RESOURCE_TEMPLATE_GRAPH_FACTORIES[normalizedTemplateId] || createDefaultMetronomeGraph;
+        }
+
+        function createResourceTemplateMetronomePreviewWorkflow(template, options = {}) {
+          const sourceTemplate = template && typeof template === "object" ? template : {};
+          const templateId = String(sourceTemplate.id || "").trim();
+          if (!templateId || String(sourceTemplate.type || "").trim() !== "metronome") {
+            return null;
+          }
+          const workflowId = getMetronomeResourceTemplateWorkflowId(templateId);
+          if (!workflowId) {
+            return null;
+          }
+          const graphFactory = getMetronomeResourceTemplateGraphFactory(templateId);
+          return createBuiltInMetronomeWorkflow({
+            id: workflowId,
+            title: String(sourceTemplate.title || "Metronome template").trim() || "Metronome template",
+            copy: String(sourceTemplate.description || sourceTemplate.summary || "").trim(),
+            graphFactory: (graphOptions) => graphFactory({
+              ...(graphOptions || {}),
+              resourceTemplate: sourceTemplate,
+            }),
+            metadata: {
+              templatePreview: true,
+              template_preview: true,
+              resourceTemplateId: templateId,
+              resource_template_id: templateId,
+              resourceTemplateType: "metronome",
+              resource_template_type: "metronome",
+            },
+          }, options);
         }
 
         function removeMetronomeBuiltInMetadata(metadata) {
@@ -8470,13 +8909,18 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             : Array.isArray(definition.edges)
               ? definition.edges
               : [];
-          const nodes = normalizeMetronomeNodes(rawNodes);
-          const edges = normalizeMetronomeEdges(rawEdges);
           const projectId = readMetronomeWorkflowProjectId(workflow);
           const projectName = readMetronomeWorkflowProjectName(workflow);
           const metadata = buildMetronomeWorkflowProjectMetadata(workflow);
           const creator = normalizeMetronomeWorkflowCreator(workflow, metadata);
           const deployments = readMetronomeWorkflowDeployments(workflow);
+          const selectedDeploymentFromMetadata = String(
+            workflow.restoredFromDeploymentId
+            || workflow.restored_from_deployment_id
+            || metadata.restoredFromDeploymentId
+            || metadata.restored_from_deployment_id
+            || ""
+          ).trim();
           const activeDeploymentFromMetadata = String(
             workflow.activeDeploymentId
             || workflow.active_deployment_id
@@ -8484,9 +8928,27 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             || metadata.active_deployment_id
             || ""
           ).trim();
+          const selectedDeployment = deployments.find((deployment) => deployment.id === selectedDeploymentFromMetadata)
+            || deployments.find((deployment) => deployment.id === activeDeploymentFromMetadata)
+            || deployments.find((deployment) => deployment.status === "active")
+            || null;
           const activeDeployment = deployments.find((deployment) => deployment.id === activeDeploymentFromMetadata)
             || deployments.find((deployment) => deployment.status === "active")
             || null;
+          const graphDeployment = selectedDeployment && (
+            (Array.isArray(selectedDeployment.nodes) && selectedDeployment.nodes.length)
+            || (Array.isArray(selectedDeployment.edges) && selectedDeployment.edges.length)
+          )
+            ? selectedDeployment
+            : null;
+          const graphRawNodes = graphDeployment && Array.isArray(graphDeployment.nodes) && graphDeployment.nodes.length
+            ? graphDeployment.nodes
+            : rawNodes;
+          const graphRawEdges = graphDeployment && Array.isArray(graphDeployment.edges) && graphDeployment.edges.length
+            ? graphDeployment.edges
+            : rawEdges;
+          const nodes = normalizeMetronomeNodes(graphRawNodes);
+          const edges = normalizeMetronomeEdgesForNodes(graphRawEdges, nodes);
           const activeDeploymentId = activeDeployment?.id || activeDeploymentFromMetadata;
           const activeDeploymentVersion = activeDeployment?.version || Number(metadata.activeDeploymentVersion || metadata.active_deployment_version || 0) || 0;
           const publishedAt = String(
@@ -8532,7 +8994,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
         function normalizeMetronomeEdges(edges) {
           return (Array.isArray(edges) ? edges : [])
             .filter((edge) => edge && typeof edge === "object")
-            .map((edge) => {
+            .map((edge, index) => {
               const {
                 label,
                 labelBgPadding,
@@ -8546,9 +9008,62 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               } = edge;
               return {
                 ...rest,
-                type: "simplebezier",
+                id: String(rest.id || "edge_" + String(rest.source || "") + "_" + String(rest.target || "") + "_" + index).trim() || "edge_" + index,
+                source: String(rest.source || rest.sourceId || rest.source_id || "").trim(),
+                target: String(rest.target || rest.targetId || rest.target_id || "").trim(),
+                type: "metronomeOutput",
               };
-            });
+            })
+            .filter((edge) => edge.source && edge.target);
+        }
+
+        function getMetronomeSourceHandleIdsForNode(node) {
+          const kind = String(node?.data?.kind || "").trim();
+          if (kind === "end" || kind === "note") return [];
+          if (kind === "loop") return ["loop-left", "loop-right"];
+          if (kind === "condition" || kind === "approval") {
+            const conditions = kind === "approval"
+              ? normalizeMetronomeApprovalBranches(node?.data?.config?.conditions)
+              : normalizeMetronomeConditionBranches(node?.data?.config?.conditions, node?.data?.config?.conditionType || node?.data?.subtype);
+            return conditions.map((branch) => String(branch?.id || "").trim()).filter(Boolean);
+          }
+          return ["node-output"];
+        }
+
+        function getMetronomeTargetHandleIdsForNode(node) {
+          const kind = String(node?.data?.kind || "").trim();
+          if (kind === "loop") return ["loop-left", "loop-right"];
+          if (kind === "note") return [];
+          return ["node-input"];
+        }
+
+        function normalizeMetronomeEdgesForNodes(edges, nodes) {
+          const normalizedEdges = normalizeMetronomeEdges(edges);
+          const nodeById = new Map((Array.isArray(nodes) ? nodes : []).map((node) => [String(node?.id || ""), node]));
+          return normalizedEdges
+            .map((edge) => {
+              const sourceNode = nodeById.get(String(edge.source || ""));
+              const targetNode = nodeById.get(String(edge.target || ""));
+              if (!sourceNode || !targetNode) return null;
+              const sourceHandles = getMetronomeSourceHandleIdsForNode(sourceNode);
+              const targetHandles = getMetronomeTargetHandleIdsForNode(targetNode);
+              if (sourceHandles.length === 0 || targetHandles.length === 0) return null;
+              const currentSourceHandle = String(edge.sourceHandle || "").trim();
+              const currentTargetHandle = String(edge.targetHandle || "").trim();
+              const sourceHandle = sourceHandles.includes(currentSourceHandle)
+                ? currentSourceHandle
+                : sourceHandles[0];
+              const targetHandle = targetHandles.includes(currentTargetHandle)
+                ? currentTargetHandle
+                : targetHandles[0];
+              return {
+                ...edge,
+                sourceHandle,
+                targetHandle,
+                type: "metronomeOutput",
+              };
+            })
+            .filter(Boolean);
         }
 
         function sanitizeMetronomeNodeForPersistence(node) {
@@ -8596,7 +9111,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
         function createMetronomePersistedWorkflowSnapshot(workflow, nodes, edges) {
           const baseWorkflow = workflow && typeof workflow === "object" ? workflow : {};
           const persistedNodes = createMetronomePersistedNodes(nodes);
-          const persistedEdges = createMetronomePersistedEdges(edges);
+          const persistedEdges = normalizeMetronomeEdgesForNodes(
+            (Array.isArray(edges) ? edges : []).map(sanitizeMetronomeEdgeForPersistence),
+            persistedNodes
+          );
           return normalizeMetronomeWorkflow({
             ...baseWorkflow,
             nodes: persistedNodes,
@@ -8691,6 +9209,12 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             restored_from_deployment_version: selectedDeployment?.version || 0,
             ...(activeDeployment?.publishedAt ? { publishedAt: activeDeployment.publishedAt, published_at: activeDeployment.publishedAt } : {}),
           };
+          const selectedNodes = selectedDeployment && Array.isArray(selectedDeployment.nodes) && selectedDeployment.nodes.length
+            ? selectedDeployment.nodes
+            : baseWorkflow.nodes;
+          const selectedEdges = selectedDeployment && Array.isArray(selectedDeployment.edges) && selectedDeployment.edges.length
+            ? selectedDeployment.edges
+            : baseWorkflow.edges;
           return normalizeMetronomeWorkflow({
             ...baseWorkflow,
             deployments,
@@ -8698,6 +9222,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             activeDeploymentVersion: activeDeployment?.version || 0,
             publishedAt: activeDeployment?.publishedAt || "",
             metadata: nextMetadata,
+            nodes: selectedNodes,
+            edges: selectedEdges,
           });
         }
 
@@ -8814,6 +9340,22 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 ? data.workflow
                 : data;
           return normalizeMetronomeWorkflow(rawWorkflow);
+        }
+
+        async function fetchMetronomeWorkflowWithGraphFromApi(workflowId, preferredSelectedVersionId = "") {
+          const workflow = await fetchMetronomeWorkflowFromApi(workflowId);
+          if (hasMetronomeWorkflowGraphEdges(workflow)) {
+            return workflow;
+          }
+          try {
+            const versions = await fetchMetronomeVersionsApi(workflow.id || workflowId);
+            if (Array.isArray(versions) && versions.length) {
+              return createMetronomeWorkflowWithVersionList(workflow, versions, preferredSelectedVersionId);
+            }
+          } catch (error) {
+            console.warn("[Metronome] Failed to hydrate workflow graph from versions", error);
+          }
+          return workflow;
         }
 
         async function readMetronomeApiJson(response, fallbackMessage) {
@@ -9454,10 +9996,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             method: "GET",
             credentials: "same-origin",
           });
-          if (!response.ok) {
-            throw new Error("Failed to load Metronome runs.");
-          }
-          const data = await response.json();
+          const data = await readMetronomeApiJson(response, "Failed to load Metronome runs.");
           const rawItems = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
           return rawItems.map(normalizeMetronomeRun).filter((run) => run.id);
         }
@@ -9551,11 +10090,13 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const metadata = stripMetronomeDeploymentMetadata(buildMetronomeWorkflowProjectMetadata(workflow));
           const definitionNodes = (Array.isArray(nodes) ? nodes : []).map((node) => {
             const data = node?.data && typeof node.data === "object" ? node.data : {};
+            const kind = String(data.kind || node?.kind || "action");
+            const subtype = String(data.subtype || node?.subtype || "");
             const definitionNode = {
               id: String(node?.id || ""),
-              kind: String(data.kind || node?.kind || "action"),
-              subtype: String(data.subtype || node?.subtype || ""),
-              label: String(data.label || node?.label || ""),
+              kind,
+              subtype,
+              label: getMetronomeNodeDisplayLabel({ ...node, data: { ...data, kind, subtype } }),
               description: String(data.description || node?.description || ""),
               config: data.config && typeof data.config === "object"
                 ? data.config
@@ -10465,7 +11006,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const next = workflows.map((workflow) => {
             if (workflow.id !== normalized.id) return workflow;
             seen.add(normalized.id);
-            return normalized;
+            return mergeMetronomeWorkflowGraphFallback(workflow, normalized);
           });
           return seen.has(normalized.id) ? next : [normalized, ...next];
         }
@@ -10481,7 +11022,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             if (workflowId === oldId || workflowId === normalized.id) {
               replaced = true;
               if (!inserted) {
-                items.push(normalized);
+                items.push(mergeMetronomeWorkflowGraphFallback(workflow, normalized));
                 inserted = true;
               }
               return items;
@@ -10490,6 +11031,58 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             return items;
           }, []);
           return replaced ? next : [normalized, ...next];
+        }
+
+        function hasMetronomeWorkflowGraphEdges(workflow) {
+          const source = workflow && typeof workflow === "object" ? workflow : {};
+          const definition = source.definition && typeof source.definition === "object" ? source.definition : {};
+          const edges = Array.isArray(source.edges)
+            ? source.edges
+            : Array.isArray(definition.edges)
+              ? definition.edges
+              : [];
+          return edges.length > 0;
+        }
+
+        function hasMetronomeWorkflowGraphNodes(workflow) {
+          const source = workflow && typeof workflow === "object" ? workflow : {};
+          const definition = source.definition && typeof source.definition === "object" ? source.definition : {};
+          const nodes = Array.isArray(source.nodes)
+            ? source.nodes
+            : Array.isArray(definition.nodes)
+              ? definition.nodes
+              : [];
+          return nodes.length > 0;
+        }
+
+        function mergeMetronomeWorkflowGraphFallback(previousWorkflow, nextWorkflow) {
+          const next = normalizeMetronomeWorkflow(nextWorkflow);
+          if (!next.id) return next;
+          const previous = previousWorkflow ? normalizeMetronomeWorkflow(previousWorkflow) : null;
+          if (!previous || previous.id !== next.id || hasMetronomeWorkflowGraphEdges(next) || !hasMetronomeWorkflowGraphEdges(previous)) {
+            return next;
+          }
+          const fallbackNodes = hasMetronomeWorkflowGraphNodes(next) ? next.nodes : previous.nodes;
+          const fallbackEdges = normalizeMetronomeEdgesForNodes(previous.edges, fallbackNodes);
+          if (!fallbackEdges.length) return next;
+          return normalizeMetronomeWorkflow({
+            ...next,
+            nodes: fallbackNodes,
+            edges: fallbackEdges,
+          });
+        }
+
+        function mergeMetronomeWorkflowListPreservingGraphs(nextWorkflows, currentWorkflows, fallbackWorkflows = []) {
+          const previousById = new Map();
+          [...(Array.isArray(fallbackWorkflows) ? fallbackWorkflows : []), ...(Array.isArray(currentWorkflows) ? currentWorkflows : [])]
+            .forEach((workflow) => {
+              const workflowId = String(workflow?.id || "").trim();
+              if (workflowId) previousById.set(workflowId, workflow);
+            });
+          return (Array.isArray(nextWorkflows) ? nextWorkflows : []).map((workflow) => {
+            const workflowId = String(workflow?.id || "").trim();
+            return mergeMetronomeWorkflowGraphFallback(previousById.get(workflowId), workflow);
+          });
         }
 
         function formatMetronomeDate(value) {
@@ -10586,27 +11179,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	              })
 	            );
 	          }
-	          const title = kind === "trigger"
-            ? "Trigger"
-            : kind === "action"
-            ? "Thread"
-            : isTicketNode
-              ? "Ticket"
-            : isApprovalNode
-              ? "User Approval"
-            : isImagineNode
-              ? "Imagine"
-            : isFunctionNode
-              ? "Function"
-            : isDatabaseNode
-              ? "Database"
-            : isMetronomeNode
-              ? "Metronome"
-            : isEndNode
-              ? "End"
-              : isConditionNode
-                ? "Condition"
-              : (data?.label || meta.label);
+	          const title = getMetronomeNodeDisplayLabel(data);
           const threadAgentLabel = String(config.agentName || config.agentId || "Computer Agent").trim();
           const threadTargetLabel = String(
             config.contextType === "project"
@@ -10813,7 +11386,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             zoomOnScroll: true,
             zoomOnPinch: true,
             connectionMode: "loose",
-            defaultEdgeOptions: { type: "simplebezier" },
+            defaultEdgeOptions: { type: "metronomeOutput" },
           },
             React.createElement(Background, { color: "rgba(255,255,255,0.16)", gap: 18, size: 1 }),
             React.createElement("div", { className: "playground-metronome-flow-controls" },
@@ -11023,6 +11596,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const [isMetronomeCodeDirty, setIsMetronomeCodeDirty] = useState(false);
           const [metronomeRuns, setMetronomeRuns] = useState([]);
           const [isLoadingMetronomeRuns, setIsLoadingMetronomeRuns] = useState(false);
+          const [metronomeRunsError, setMetronomeRunsError] = useState("");
           const [metronomeDeploymentEvents, setMetronomeDeploymentEvents] = useState([]);
           const [isLoadingMetronomeDeploymentEvents, setIsLoadingMetronomeDeploymentEvents] = useState(false);
           const [metronomeDeploymentEventsError, setMetronomeDeploymentEventsError] = useState("");
@@ -11031,6 +11605,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const [metronomeTriggerEventsError, setMetronomeTriggerEventsError] = useState("");
           const [metronomeTriggerTestState, setMetronomeTriggerTestState] = useState({ status: "idle", message: "" });
           const [selectedMetronomeRunId, setSelectedMetronomeRunId] = useState("");
+          const pendingMetronomeOpenRunRef = useRef({ workflowId: "", runId: "", mode: "" });
           const [metronomeEditorHighlightRunId, setMetronomeEditorHighlightRunId] = useState("");
           const [isMetronomeRunSidebarOpen, setIsMetronomeRunSidebarOpen] = useState(false);
           const [isMetronomeRunSidebarMenuOpen, setIsMetronomeRunSidebarMenuOpen] = useState(false);
@@ -11088,12 +11663,26 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 projectName: selectedMetronomeProjectFilter?.name || "",
               }));
           }, [normalizedMetronomeProjectFilterId, selectedMetronomeProjectFilter]);
+          const resourceTemplateMetronomePreviewWorkflows = useMemo(() => {
+            const templates = typeof PLAYGROUND_RESOURCE_TEMPLATE_DATA !== "undefined" && Array.isArray(PLAYGROUND_RESOURCE_TEMPLATE_DATA)
+              ? PLAYGROUND_RESOURCE_TEMPLATE_DATA
+              : [];
+            return templates
+              .filter((template) => String(template?.type || "").trim() === "metronome")
+              .map((template) => createResourceTemplateMetronomePreviewWorkflow(template, {
+                projectId: normalizedMetronomeProjectFilterId,
+                projectName: selectedMetronomeProjectFilter?.name || "",
+              }))
+              .filter(Boolean);
+          }, [normalizedMetronomeProjectFilterId, selectedMetronomeProjectFilter]);
           const activeStoredWorkflow = useMemo(() => {
             return workflows.find((workflow) => workflow && workflow.id === activeWorkflowId) || null;
           }, [workflows, activeWorkflowId]);
           const activeBuiltInWorkflow = useMemo(() => {
-            return builtInMetronomeWorkflows.find((workflow) => workflow && workflow.id === activeWorkflowId) || null;
-          }, [builtInMetronomeWorkflows, activeWorkflowId]);
+            return builtInMetronomeWorkflows.find((workflow) => workflow && workflow.id === activeWorkflowId)
+              || resourceTemplateMetronomePreviewWorkflows.find((workflow) => workflow && workflow.id === activeWorkflowId)
+              || null;
+          }, [builtInMetronomeWorkflows, resourceTemplateMetronomePreviewWorkflows, activeWorkflowId]);
           const activeWorkflow = activeStoredWorkflow || activeBuiltInWorkflow || null;
           const isActiveWorkflowBuiltIn = Boolean(activeBuiltInWorkflow && isMetronomeWorkflowBuiltIn(activeBuiltInWorkflow));
           const isEditor = Boolean(activeWorkflow);
@@ -11103,6 +11692,15 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const visibleWorkflowRows = useMemo(() => {
             return [...builtInMetronomeWorkflows, ...visibleWorkflows];
           }, [builtInMetronomeWorkflows, visibleWorkflows]);
+          useEffect(() => {
+            if (!activeWorkflowId || isLoadingMetronomes || !isMetronomeApiAvailable || activeWorkflow) {
+              return;
+            }
+            setActiveWorkflowId("");
+            setMetronomeRuns([]);
+            setSelectedMetronomeRunId("");
+            setMetronomeRunsError("Metronome workflow not found. Select a persisted workflow from the list.");
+          }, [activeWorkflowId, activeWorkflow, isLoadingMetronomes, isMetronomeApiAvailable]);
           const metronomeShareWorkflow = useMemo(() => {
             const normalizedWorkflowId = String(metronomeShareWorkflowId || "").trim();
             if (!normalizedWorkflowId) return null;
@@ -11282,39 +11880,81 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 
           useEffect(() => {
             if (!normalizedMetronomeProjectFilterId || !activeWorkflowId) return;
+            if (activeBuiltInWorkflow) return;
             if (!visibleWorkflowRows.some((workflow) => workflow.id === activeWorkflowId)) {
               setActiveWorkflowId("");
             }
-          }, [activeWorkflowId, normalizedMetronomeProjectFilterId, visibleWorkflowRows]);
+          }, [activeWorkflowId, activeBuiltInWorkflow, normalizedMetronomeProjectFilterId, visibleWorkflowRows]);
 
           useEffect(() => {
             const requestedWorkflowId = String(openWorkflowRequest?.workflowId || "").trim();
+            const requestedRunId = String(openWorkflowRequest?.runId || "").trim();
+            const requestedMode = openWorkflowRequest?.mode === "runs"
+              ? "runs"
+              : openWorkflowRequest?.mode === "code"
+                ? "code"
+                : openWorkflowRequest?.mode === "edit"
+                  ? "edit"
+                  : "";
             const requestToken = openWorkflowRequest?.token;
             if (!requestedWorkflowId) {
               return;
             }
-            const targetWorkflow = workflows.find((workflow) => workflow && workflow.id === requestedWorkflowId);
-            if (targetWorkflow) {
-              setActiveWorkflowId(targetWorkflow.id);
-              setMetronomeEditorMode("edit");
+            pendingMetronomeOpenRunRef.current = {
+              workflowId: requestedWorkflowId,
+              runId: requestedRunId,
+              mode: requestedMode,
+            };
+            const applyRequestedWorkflow = (workflow) => {
+              if (!workflow?.id) return;
+              setActiveWorkflowId(workflow.id);
+              setMetronomeEditorMode(requestedMode || "edit");
+              if (requestedRunId) {
+                setSelectedMetronomeRunId(requestedRunId);
+              }
               if (typeof onOpenWorkflowRequestHandled === "function") {
                 onOpenWorkflowRequestHandled(requestToken);
               }
+            };
+            const targetWorkflow = workflows.find((workflow) => workflow && workflow.id === requestedWorkflowId)
+              || builtInMetronomeWorkflows.find((workflow) => workflow && workflow.id === requestedWorkflowId)
+              || resourceTemplateMetronomePreviewWorkflows.find((workflow) => workflow && workflow.id === requestedWorkflowId);
+            if (targetWorkflow) {
+              if (
+                !isMetronomeWorkflowBuiltIn(targetWorkflow)
+                && isMetronomeApiAvailable
+                && (!hasMetronomeWorkflowGraphNodes(targetWorkflow) || !hasMetronomeWorkflowGraphEdges(targetWorkflow))
+              ) {
+                let cancelled = false;
+                void fetchMetronomeWorkflowWithGraphFromApi(requestedWorkflowId)
+                  .then((loadedWorkflow) => {
+                    if (cancelled || !loadedWorkflow?.id) {
+                      if (!cancelled) applyRequestedWorkflow(targetWorkflow);
+                      return;
+                    }
+                    setWorkflows((current) => replaceMetronomeWorkflowById(current, loadedWorkflow.id, loadedWorkflow));
+                    applyRequestedWorkflow(loadedWorkflow);
+                  })
+                  .catch((error) => {
+                    console.warn("[Metronome] Failed to hydrate requested workflow before opening", error);
+                    if (!cancelled) applyRequestedWorkflow(targetWorkflow);
+                  });
+                return () => {
+                  cancelled = true;
+                };
+              }
+              applyRequestedWorkflow(targetWorkflow);
               return;
             }
-            if (isLoadingMetronomes || !isMetronomeApiAvailable) {
+            if (isLoadingMetronomes) {
               return;
             }
             let cancelled = false;
-            void fetchMetronomeWorkflowFromApi(requestedWorkflowId)
+            void fetchMetronomeWorkflowWithGraphFromApi(requestedWorkflowId)
               .then((loadedWorkflow) => {
                 if (cancelled || !loadedWorkflow?.id) return;
                 setWorkflows((current) => replaceMetronomeWorkflowById(current, loadedWorkflow.id, loadedWorkflow));
-                setActiveWorkflowId(loadedWorkflow.id);
-                setMetronomeEditorMode("edit");
-                if (typeof onOpenWorkflowRequestHandled === "function") {
-                  onOpenWorkflowRequestHandled(requestToken);
-                }
+                applyRequestedWorkflow(loadedWorkflow);
               })
               .catch((error) => {
                 console.warn("[Metronome] Failed to open requested workflow", error);
@@ -11322,7 +11962,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             return () => {
               cancelled = true;
             };
-          }, [openWorkflowRequest, workflows, onOpenWorkflowRequestHandled, isLoadingMetronomes, isMetronomeApiAvailable]);
+          }, [openWorkflowRequest, workflows, builtInMetronomeWorkflows, resourceTemplateMetronomePreviewWorkflows, onOpenWorkflowRequestHandled, isLoadingMetronomes, isMetronomeApiAvailable]);
 
           useEffect(() => {
             if (!normalizedMetronomeProjectFilterId) {
@@ -11524,7 +12164,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             void fetchMetronomeWorkflowsFromApi(normalizedMetronomeProjectFilterId)
               .then((items) => {
                 if (cancelled) return;
-                setWorkflows(items);
+                const storedItems = filterMetronomeWorkflowsByProject(readMetronomeWorkflowsFromStorage(), normalizedMetronomeProjectFilterId);
+                setWorkflows((current) => mergeMetronomeWorkflowListPreservingGraphs(items, current, storedItems));
                 setIsMetronomeApiAvailable(true);
               })
               .catch((error) => {
@@ -11560,7 +12201,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 
           useEffect(() => {
             const nextNodes = activeWorkflow?.nodes || [];
-            const nextEdges = normalizeMetronomeEdges(activeWorkflow?.edges || []);
+            const nextEdges = normalizeMetronomeEdgesForNodes(activeWorkflow?.edges || [], nextNodes);
             setNodes(nextNodes);
             setEdges(nextEdges);
             const persistedKey = activeWorkflow
@@ -11616,8 +12257,9 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 
           useEffect(() => {
             let cancelled = false;
-            if (!activeWorkflowId || isActiveWorkflowBuiltIn || !isMetronomeApiAvailable) {
+            if (!activeWorkflowId || isActiveWorkflowBuiltIn) {
               setMetronomeRuns([]);
+              setMetronomeRunsError("");
               setSelectedMetronomeRunId("");
               setIsLoadingMetronomeRuns(false);
               return () => {
@@ -11625,16 +12267,32 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               };
             }
             setIsLoadingMetronomeRuns(true);
+            setMetronomeRunsError("");
             void fetchMetronomeRunsApi(activeWorkflowId)
               .then((items) => {
                 if (cancelled) return;
                 setMetronomeRuns(items);
-                setSelectedMetronomeRunId((current) => current && items.some((run) => run.id === current) ? current : (items[0]?.id || ""));
+                setMetronomeRunsError("");
+                const pendingOpen = pendingMetronomeOpenRunRef.current || {};
+                const pendingRunId = pendingOpen.workflowId === activeWorkflowId
+                  ? String(pendingOpen.runId || "").trim()
+                  : "";
+                const hasPendingRun = pendingRunId && items.some((run) => run.id === pendingRunId);
+                setSelectedMetronomeRunId((current) => {
+                  if (hasPendingRun) return pendingRunId;
+                  return current && items.some((run) => run.id === current) ? current : (items[0]?.id || "");
+                });
+                if (pendingOpen.workflowId === activeWorkflowId && (!pendingRunId || hasPendingRun || items.length)) {
+                  pendingMetronomeOpenRunRef.current = { workflowId: "", runId: "", mode: "" };
+                }
               })
               .catch((error) => {
                 if (!cancelled) {
                   console.warn("[Metronome] Failed to load runs", error);
                   setMetronomeRuns([]);
+                  setMetronomeRunsError(error?.status === 404
+                    ? "This Metronome workflow was not found on the backend. Return to Metronomes and open a persisted workflow."
+                    : (error?.message || "Failed to load Metronome runs."));
                   setSelectedMetronomeRunId("");
                 }
               })
@@ -11644,7 +12302,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             return () => {
               cancelled = true;
             };
-          }, [activeWorkflowId, isActiveWorkflowBuiltIn, isMetronomeApiAvailable]);
+          }, [activeWorkflowId, isActiveWorkflowBuiltIn]);
 
           useEffect(() => {
             let cancelled = false;
@@ -12133,7 +12791,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	              },
 	            };
 	          }), [nodes, metronomeRunHighlight, isActiveWorkflowBuiltIn, updateInlineMetronomeNote, handleLoopResizeStart]);
-          const renderedMetronomeEdges = useMemo(() => normalizeMetronomeEdges(edges).map((edge) => {
+          const renderedMetronomeEdges = useMemo(() => normalizeMetronomeEdgesForNodes(edges, nodes).map((edge) => {
             const edgeId = String(edge.id || "");
             const isActive = metronomeRunHighlight.activeEdgeId === edgeId;
             const isCompleted = metronomeRunHighlight.completedEdgeIds.has(edgeId);
@@ -12154,6 +12812,22 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           }), [edges, nodes, metronomeRunHighlight]);
           const nodeTypes = useMemo(() => ({ metronome: MetronomeWorkflowNode }), []);
           const edgeTypes = useMemo(() => ({ metronomeOutput: MetronomeOutputEdge }), []);
+          const metronomeFlowGraphKey = useMemo(() => {
+            const nodeKey = (Array.isArray(nodes) ? nodes : [])
+              .map((node) => String(node?.id || ""))
+              .filter(Boolean)
+              .join(",");
+            const edgeKey = (Array.isArray(renderedMetronomeEdges) ? renderedMetronomeEdges : [])
+              .map((edge) => [
+                edge?.id,
+                edge?.source,
+                edge?.sourceHandle,
+                edge?.target,
+                edge?.targetHandle,
+              ].map((part) => String(part || "")).join(":"))
+              .join(",");
+            return [activeWorkflowId || "metronome", nodeKey, edgeKey].join("|");
+          }, [activeWorkflowId, nodes, renderedMetronomeEdges]);
           const isSemanticNodeChange = useCallback((change) => {
             if (!change || !change.type) return false;
             if (change.type === "select" || change.type === "position" || change.type === "dimensions") {
@@ -12249,6 +12923,33 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             setActiveWorkflowId(workflow.id);
           }, [isMetronomeApiAvailable, normalizedMetronomeProjectFilterId, selectedMetronomeProjectFilter, openCreateWorkflowModal, currentMetronomeUserCreator]);
 
+          const openMetronomeWorkflow = useCallback((workflow) => {
+            const workflowId = String(workflow?.id || "").trim();
+            if (!workflowId) return;
+            setOpenMetronomeOverviewMenuWorkflowId("");
+            if (
+              !isMetronomeWorkflowBuiltIn(workflow)
+              && isMetronomeApiAvailable
+              && (!hasMetronomeWorkflowGraphNodes(workflow) || !hasMetronomeWorkflowGraphEdges(workflow))
+            ) {
+              void fetchMetronomeWorkflowWithGraphFromApi(workflowId, readMetronomeSelectedDeploymentId(workflow))
+                .then((loadedWorkflow) => {
+                  if (!loadedWorkflow?.id) {
+                    setActiveWorkflowId(workflowId);
+                    return;
+                  }
+                  setWorkflows((current) => replaceMetronomeWorkflowById(current, workflowId, loadedWorkflow));
+                  setActiveWorkflowId(loadedWorkflow.id);
+                })
+                .catch((error) => {
+                  console.warn("[Metronome] Failed to hydrate workflow before opening", error);
+                  setActiveWorkflowId(workflowId);
+                });
+              return;
+            }
+            setActiveWorkflowId(workflowId);
+          }, [isMetronomeApiAvailable]);
+
           const openEditWorkflowModal = useCallback(() => {
             if (!activeWorkflow || isActiveWorkflowBuiltIn) return;
             setWorkflowNameDraft(activeWorkflow.name || "Untitled Metronome");
@@ -12329,8 +13030,19 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           }, [workflowNameModal, workflowNameDraft, isMetronomeApiAvailable, closeWorkflowNameModal, workflows, activeWorkflow, activeWorkflowId, nodes, edges, normalizedMetronomeProjectFilterId, selectedMetronomeProjectFilter, currentMetronomeUserCreator]);
 
           const validateMetronomeDefinitionForPublishUi = useCallback(async (definition, options = {}) => {
-            if (!definition || typeof definition !== "object" || !isMetronomeApiAvailable) {
-              return true;
+            if (!definition || typeof definition !== "object") {
+              setMetronomePublishState({
+                status: "error",
+                message: "The workflow is not ready to publish.",
+                issues: [{
+                  code: "missing_definition",
+                  message: "Create a workflow graph before publishing.",
+                  nodeId: "",
+                  edgeId: "",
+                  severity: "error",
+                }],
+              });
+              return false;
             }
             const showLoading = options.showLoading !== false;
             if (showLoading) {
@@ -12346,6 +13058,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 });
                 return false;
               }
+              setIsMetronomeApiAvailable(true);
               setMetronomePublishState((current) => {
                 if (current.status === "loading") return current;
                 return { status: "idle", message: "" };
@@ -12357,7 +13070,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               setMetronomePublishState(getMetronomePublishErrorState(error));
               return false;
             }
-          }, [isMetronomeApiAvailable]);
+          }, []);
 
           const publishActiveWorkflowVersion = useCallback(async () => {
             if (!activeWorkflowId || !activeWorkflow) return;
@@ -12424,10 +13137,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               });
               setMetronomePublishState({ status: "loading", message: "" });
               setWorkflows((current) => replaceMetronomeWorkflow(current, nextWorkflow));
-              if (!isMetronomeApiAvailable) {
-                setMetronomePublishState({ status: "idle", message: "" });
-                return;
-              }
               try {
                 const workflowToSave = normalizeMetronomeWorkflow({
                   ...nextWorkflow,
@@ -12479,10 +13188,12 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   setActiveWorkflowId(hydratedWorkflow.id);
                 }
                 await refreshMetronomeDeploymentEvents(hydratedWorkflow.id || publishedWorkflow.id || workflowIdForVersion);
+                setIsMetronomeApiAvailable(true);
                 setMetronomePublishState({ status: "idle", message: "" });
               } catch (error) {
                 console.warn("[Metronome] Failed to publish selected version", error);
                 if (!error?.status || error.status >= 500) setIsMetronomeApiAvailable(false);
+                setWorkflows((current) => replaceMetronomeWorkflow(current, activeWorkflow));
                 setMetronomePublishState(getMetronomePublishErrorState(error));
               }
               return;
@@ -12530,10 +13241,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             if (!canPublish) return;
             setMetronomePublishState({ status: "loading", message: "" });
             setWorkflows((current) => replaceMetronomeWorkflow(current, nextWorkflow));
-            if (!isMetronomeApiAvailable) {
-              setMetronomePublishState({ status: "idle", message: "" });
-              return;
-            }
             try {
               const workflowToSave = normalizeMetronomeWorkflow({
                 ...nextWorkflow,
@@ -12563,13 +13270,15 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 setActiveWorkflowId(hydratedWorkflow.id);
               }
               await refreshMetronomeDeploymentEvents(hydratedWorkflow.id || publishedWorkflow.id || workflowIdForVersion);
+              setIsMetronomeApiAvailable(true);
               setMetronomePublishState({ status: "idle", message: "" });
             } catch (error) {
               console.warn("[Metronome] Failed to publish deployment version", error);
               if (!error?.status || error.status >= 500) setIsMetronomeApiAvailable(false);
+              setWorkflows((current) => replaceMetronomeWorkflow(current, activeWorkflow));
               setMetronomePublishState(getMetronomePublishErrorState(error));
             }
-          }, [activeWorkflow, activeWorkflowId, nodes, edges, isMetronomeApiAvailable, refreshMetronomeDeploymentEvents, validateMetronomeDefinitionForPublishUi]);
+          }, [activeWorkflow, activeWorkflowId, nodes, edges, refreshMetronomeDeploymentEvents, validateMetronomeDefinitionForPublishUi]);
 
           const saveActiveWorkflowVersion = useCallback(async (versionDetails = {}) => {
             if (!activeWorkflowId || !activeWorkflow) return;
@@ -12617,10 +13326,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             });
             setMetronomePublishState({ status: "loading", message: "" });
             setWorkflows((current) => replaceMetronomeWorkflow(current, nextWorkflow));
-            if (!isMetronomeApiAvailable) {
-              setMetronomePublishState({ status: "idle", message: "" });
-              return;
-            }
             try {
               const savedWorkflow = await saveMetronomeWorkflowApi(nextWorkflow);
               const workflowIdForVersion = savedWorkflow.id || nextWorkflow.id;
@@ -12643,13 +13348,15 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               if (hydratedWorkflow.id && hydratedWorkflow.id !== activeWorkflowId) {
                 setActiveWorkflowId(hydratedWorkflow.id);
               }
+              setIsMetronomeApiAvailable(true);
               setMetronomePublishState({ status: "idle", message: "" });
             } catch (error) {
               console.warn("[Metronome] Failed to save workflow version", error);
-              setIsMetronomeApiAvailable(false);
-              setMetronomePublishState({ status: "idle", message: "" });
+              if (!error?.status || error.status >= 500) setIsMetronomeApiAvailable(false);
+              setWorkflows((current) => replaceMetronomeWorkflow(current, activeWorkflow));
+              setMetronomePublishState(getMetronomePublishErrorState(error));
             }
-          }, [activeWorkflow, activeWorkflowId, nodes, edges, isMetronomeApiAvailable]);
+          }, [activeWorkflow, activeWorkflowId, nodes, edges]);
 
           const openCreateWorkflowVersionModal = useCallback(() => {
             if (!activeWorkflow) return;
@@ -12723,10 +13430,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             });
             setMetronomePublishState({ status: "loading", message: "" });
             setWorkflows((current) => replaceMetronomeWorkflow(current, nextWorkflow));
-            if (!isMetronomeApiAvailable) {
-              setMetronomePublishState({ status: "idle", message: "" });
-              return;
-            }
             try {
               const savedWorkflow = await saveMetronomeWorkflowApi(nextWorkflow);
               const workflowIdForVersion = savedWorkflow.id || nextWorkflow.id;
@@ -12757,13 +13460,15 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               if (hydratedWorkflow.id && hydratedWorkflow.id !== activeWorkflowId) {
                 setActiveWorkflowId(hydratedWorkflow.id);
               }
+              setIsMetronomeApiAvailable(true);
               setMetronomePublishState({ status: "idle", message: "" });
             } catch (error) {
               console.warn("[Metronome] Failed to edit workflow version", error);
               if (!error?.status || error.status >= 500) setIsMetronomeApiAvailable(false);
-              setMetronomePublishState({ status: "idle", message: "" });
+              setWorkflows((current) => replaceMetronomeWorkflow(current, activeWorkflow));
+              setMetronomePublishState(getMetronomePublishErrorState(error));
             }
-          }, [activeWorkflow, activeWorkflowId, isMetronomeApiAvailable]);
+          }, [activeWorkflow, activeWorkflowId]);
 
           const deleteWorkflowVersion = useCallback(async (deploymentId) => {
             const normalizedDeploymentId = String(deploymentId || "").trim();
@@ -12833,10 +13538,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               setSelectedNodeId("");
             }
             setWorkflows((current) => replaceMetronomeWorkflow(current, nextWorkflow));
-            if (!isMetronomeApiAvailable) {
-              setMetronomePublishState({ status: "idle", message: "" });
-              return;
-            }
             try {
               await deleteMetronomeVersionApi(activeWorkflowId, normalizedDeploymentId);
               const savedWorkflow = await saveMetronomeWorkflowApi(nextWorkflow);
@@ -12856,6 +13557,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               if (hydratedWorkflow.id && hydratedWorkflow.id !== activeWorkflowId) {
                 setActiveWorkflowId(hydratedWorkflow.id);
               }
+              setIsMetronomeApiAvailable(true);
               setMetronomePublishState({ status: "idle", message: "" });
             } catch (error) {
               console.warn("[Metronome] Failed to delete workflow version", error);
@@ -12865,9 +13567,9 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 setEdges(createMetronomePersistedEdges(activeWorkflow.edges || []));
               }
               if (!error?.status || error.status >= 500) setIsMetronomeApiAvailable(false);
-              setMetronomePublishState({ status: "idle", message: "" });
+              setMetronomePublishState(getMetronomePublishErrorState(error));
             }
-          }, [activeWorkflow, activeWorkflowId, nodes, edges, isMetronomeApiAvailable, setNodes, setEdges]);
+          }, [activeWorkflow, activeWorkflowId, nodes, edges, setNodes, setEdges]);
 
           const commitWorkflowVersionModal = useCallback(async () => {
             if (!workflowVersionModal) return;
@@ -12887,18 +13589,37 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             const deployments = readMetronomeWorkflowDeployments(activeWorkflow);
             const targetDeployment = deployments.find((deployment) => deployment.id === normalizedDeploymentId);
             if (!targetDeployment) return;
-            const nextNodes = createMetronomePersistedNodes(targetDeployment.nodes || targetDeployment.definition?.nodes || []);
-            const nextEdges = createMetronomePersistedEdges(targetDeployment.edges || targetDeployment.definition?.edges || []);
-            const definitionForPublish = targetDeployment.definition && typeof targetDeployment.definition === "object"
-              ? targetDeployment.definition
-              : createMetronomeWorkflowDefinition(activeWorkflow, nextNodes, nextEdges);
+            const selectedDeploymentId = readMetronomeSelectedDeploymentId(activeWorkflow);
+            const shouldPublishCurrentEditor = targetDeployment.id === selectedDeploymentId;
+            const nextNodes = shouldPublishCurrentEditor
+              ? createMetronomePersistedNodes(nodes)
+              : createMetronomePersistedNodes(targetDeployment.nodes || targetDeployment.definition?.nodes || []);
+            const nextEdges = shouldPublishCurrentEditor
+              ? createMetronomePersistedEdges(edges)
+              : createMetronomePersistedEdges(targetDeployment.edges || targetDeployment.definition?.edges || []);
+            const definitionForPublish = shouldPublishCurrentEditor
+              ? createMetronomeWorkflowDefinition(activeWorkflow, nextNodes, nextEdges)
+              : targetDeployment.definition && typeof targetDeployment.definition === "object"
+                ? targetDeployment.definition
+                : createMetronomeWorkflowDefinition(activeWorkflow, nextNodes, nextEdges);
             const canPublish = await validateMetronomeDefinitionForPublishUi(definitionForPublish, { showLoading: true });
             if (!canPublish) return;
             const now = new Date().toISOString();
+            const deploymentForPublish = normalizeMetronomeDeploymentVersion({
+              ...targetDeployment,
+              nodes: nextNodes,
+              edges: nextEdges,
+              definition: definitionForPublish,
+              triggerSummary: deriveMetronomeTriggerSummary(nextNodes),
+              nodeCount: nextNodes.length,
+              edgeCount: nextEdges.length,
+              updatedAt: now,
+              updated_at: now,
+            });
             const nextDeployments = deployments.map((deployment) => {
               if (deployment.id === targetDeployment.id) {
                 return {
-                  ...deployment,
+                  ...deploymentForPublish,
                   status: "active",
                   publishedAt: now,
                 };
@@ -12928,7 +13649,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               status: "active",
               nodes: nextNodes,
               edges: nextEdges,
-              triggerSummary: targetDeployment.triggerSummary || deriveMetronomeTriggerSummary(nextNodes),
+              triggerSummary: deploymentForPublish.triggerSummary || deriveMetronomeTriggerSummary(nextNodes),
               deployments: nextDeployments,
               activeDeploymentId: targetDeployment.id,
               activeDeploymentVersion: targetDeployment.version,
@@ -12941,10 +13662,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             setEdges(nextEdges);
             setSelectedNodeId("");
             setWorkflows((current) => replaceMetronomeWorkflow(current, nextWorkflow));
-            if (!isMetronomeApiAvailable) {
-              setMetronomePublishState({ status: "idle", message: "" });
-              return;
-            }
             try {
               const workflowToSave = normalizeMetronomeWorkflow({
                 ...nextWorkflow,
@@ -12962,20 +13679,20 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   nextNodes,
                   nextEdges,
                   {
-                    label: targetDeployment.label,
-                    description: targetDeployment.description,
+                    label: deploymentForPublish.label,
+                    description: deploymentForPublish.description,
                   }
                 );
               } catch (versionUpdateError) {
                 const message = String(versionUpdateError?.message || "").toLowerCase();
                 const isImmutableVersion = versionUpdateError?.status === 400 && message.includes("immutable");
-                if (versionUpdateError?.status === 404) {
+                if (versionUpdateError?.status === 404 || isImmutableVersion) {
                   const createdVersion = await createMetronomeVersionApi(workflowIdForVersion, { ...nextWorkflow, id: workflowIdForVersion }, nextNodes, nextEdges, {
-                    label: targetDeployment.label,
-                    description: targetDeployment.description,
+                    label: deploymentForPublish.label,
+                    description: deploymentForPublish.description,
                   });
                   versionIdForPublish = createdVersion.id || versionIdForPublish;
-                } else if (!isImmutableVersion) {
+                } else {
                   throw versionUpdateError;
                 }
               }
@@ -12996,13 +13713,17 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 setActiveWorkflowId(hydratedWorkflow.id);
               }
               await refreshMetronomeDeploymentEvents(hydratedWorkflow.id || publishedWorkflow.id || workflowIdForVersion);
+              setIsMetronomeApiAvailable(true);
               setMetronomePublishState({ status: "idle", message: "" });
             } catch (error) {
               console.warn("[Metronome] Failed to publish saved version", error);
               if (!error?.status || error.status >= 500) setIsMetronomeApiAvailable(false);
+              setNodes(createMetronomePersistedNodes(activeWorkflow.nodes || []));
+              setEdges(createMetronomePersistedEdges(activeWorkflow.edges || []));
+              setWorkflows((current) => replaceMetronomeWorkflow(current, activeWorkflow));
               setMetronomePublishState(getMetronomePublishErrorState(error));
             }
-          }, [activeWorkflow, activeWorkflowId, isMetronomeApiAvailable, setNodes, setEdges, refreshMetronomeDeploymentEvents, validateMetronomeDefinitionForPublishUi]);
+          }, [activeWorkflow, activeWorkflowId, setNodes, setEdges, refreshMetronomeDeploymentEvents, validateMetronomeDefinitionForPublishUi]);
 
           const restoreActiveWorkflowVersion = useCallback(async (deploymentId) => {
             const normalizedDeploymentId = String(deploymentId || "").trim();
@@ -13049,23 +13770,23 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             setEdges(nextEdges);
             setSelectedNodeId("");
             setWorkflows((current) => replaceMetronomeWorkflow(current, nextWorkflow));
-            if (!isMetronomeApiAvailable) {
-              setMetronomePublishState({ status: "idle", message: "" });
-              return;
-            }
             try {
               const savedWorkflow = await saveMetronomeWorkflowApi(nextWorkflow);
               setWorkflows((current) => replaceMetronomeWorkflowById(current, nextWorkflow.id, savedWorkflow));
               if (savedWorkflow.id && savedWorkflow.id !== activeWorkflowId) {
                 setActiveWorkflowId(savedWorkflow.id);
               }
+              setIsMetronomeApiAvailable(true);
               setMetronomePublishState({ status: "idle", message: "" });
             } catch (error) {
               console.warn("[Metronome] Failed to restore workflow version", error);
-              setIsMetronomeApiAvailable(false);
-              setMetronomePublishState({ status: "idle", message: "" });
+              if (!error?.status || error.status >= 500) setIsMetronomeApiAvailable(false);
+              setNodes(createMetronomePersistedNodes(activeWorkflow.nodes || []));
+              setEdges(createMetronomePersistedEdges(activeWorkflow.edges || []));
+              setWorkflows((current) => replaceMetronomeWorkflow(current, activeWorkflow));
+              setMetronomePublishState(getMetronomePublishErrorState(error));
             }
-          }, [activeWorkflow, activeWorkflowId, isMetronomeApiAvailable, setNodes, setEdges]);
+          }, [activeWorkflow, activeWorkflowId, setNodes, setEdges]);
 
           const unpublishActiveWorkflow = useCallback(async () => {
             if (!activeWorkflowId || !activeWorkflow) return;
@@ -13109,10 +13830,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             });
             setMetronomePublishState({ status: "loading", message: "" });
             setWorkflows((current) => replaceMetronomeWorkflow(current, nextWorkflow));
-            if (!isMetronomeApiAvailable) {
-              setMetronomePublishState({ status: "idle", message: "" });
-              return;
-            }
             try {
               const savedWorkflow = await saveMetronomeWorkflowApi(nextWorkflow);
               const unpublishedWorkflow = await publishMetronomeWorkflowApi(savedWorkflow.id || nextWorkflow.id, false);
@@ -13121,13 +13838,15 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 setActiveWorkflowId(unpublishedWorkflow.id);
               }
               await refreshMetronomeDeploymentEvents(unpublishedWorkflow.id || savedWorkflow.id || nextWorkflow.id);
+              setIsMetronomeApiAvailable(true);
               setMetronomePublishState({ status: "idle", message: "" });
             } catch (error) {
               console.warn("[Metronome] Failed to unpublish workflow", error);
               if (!error?.status || error.status >= 500) setIsMetronomeApiAvailable(false);
+              setWorkflows((current) => replaceMetronomeWorkflow(current, activeWorkflow));
               setMetronomePublishState(getMetronomePublishErrorState(error));
             }
-          }, [activeWorkflow, activeWorkflowId, nodes, edges, isMetronomeApiAvailable, refreshMetronomeDeploymentEvents]);
+          }, [activeWorkflow, activeWorkflowId, nodes, edges, refreshMetronomeDeploymentEvents]);
 
           const createWorkflowCopy = useCallback(async (sourceWorkflow, options = {}) => {
             if (!sourceWorkflow) return;
@@ -13324,7 +14043,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             }
             const parsed = parseMetronomePythonSdkFiles(metronomeCodeFiles, activeWorkflow.name);
             const nextNodes = Array.isArray(parsed.nodes) ? parsed.nodes : [];
-            const nextEdges = normalizeMetronomeEdges(parsed.edges);
+            const nextEdges = normalizeMetronomeEdgesForNodes(parsed.edges, nextNodes);
             pushGraphHistory();
             setNodes(nextNodes);
             setEdges(nextEdges);
@@ -13650,7 +14369,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               nextParams.sourceHandle = nextParams.sourceHandle || "node-output";
             }
             pushGraphHistory();
-            setEdges((current) => addEdge({ ...nextParams, type: "simplebezier" }, current));
+            setEdges((current) => normalizeMetronomeEdgesForNodes(
+              addEdge({ ...nextParams, type: "metronomeOutput" }, current),
+              nodes
+            ));
           }, [isActiveWorkflowBuiltIn, nodes, setEdges, pushGraphHistory]);
 
           const handleDragStart = useCallback((event, item) => {
@@ -13994,11 +14716,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                                 className: "is-clickable is-built-in",
                                 tabIndex: 0,
                                 role: "button",
-                                onClick: () => setActiveWorkflowId(workflow.id),
+                                onClick: () => openMetronomeWorkflow(workflow),
                                 onKeyDown: (event) => {
                                   if (event.key === "Enter" || event.key === " ") {
                                     event.preventDefault();
-                                    setActiveWorkflowId(workflow.id);
+                                    openMetronomeWorkflow(workflow);
                                   }
                                 },
                               }
@@ -14007,11 +14729,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                                 className: "is-clickable",
                                 tabIndex: 0,
                                 role: "button",
-                                onClick: () => setActiveWorkflowId(workflow.id),
+                                onClick: () => openMetronomeWorkflow(workflow),
                                 onKeyDown: (event) => {
                                   if (event.key === "Enter" || event.key === " ") {
                                     event.preventDefault();
-                                    setActiveWorkflowId(workflow.id);
+                                    openMetronomeWorkflow(workflow);
                                   }
                                 },
                               };
@@ -15739,8 +16461,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                             value: branch.label || "",
                             placeholder: isElseBranch ? "Default" : branchLabelPlaceholder,
                             disabled: isLockedBranch,
-                            onKeyDown: stopMetronomeInputKeyPropagation,
-                            onKeyUp: stopMetronomeInputKeyPropagation,
+                            ...getMetronomeTextInputKeyHandlers(),
                             onChange: (event) => updateConditionBranch(branch.id, { label: event.target.value }),
                           }),
                           React.createElement("input", {
@@ -15749,8 +16470,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                             value: branch.rule || "",
                             placeholder: isElseBranch ? "No match" : branchRulePlaceholder,
                             disabled: isLockedBranch,
-                            onKeyDown: stopMetronomeInputKeyPropagation,
-                            onKeyUp: stopMetronomeInputKeyPropagation,
+                            ...getMetronomeTextInputKeyHandlers(),
                             onChange: (event) => updateConditionBranch(branch.id, { rule: event.target.value }),
                           }),
                           React.createElement("button", {
@@ -17315,10 +18035,9 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             );
             const showTypeSelector = !["action", "approval", "end", "note", "ticket", "imagine", "function"].includes(kind);
             const isThreadNode = kind === "action" && subtype === "start_thread";
-            const rawNodeLabel = String(selectedNode.data?.label || "").trim();
-            const inspectorNodeLabel = isThreadNode && (!rawNodeLabel || rawNodeLabel === "Start agent thread" || rawNodeLabel === "Start a thread")
-              ? "Thread"
-              : rawNodeLabel;
+            const rawNodeLabel = String(selectedNode.data?.label || "");
+            const defaultNodeLabel = getMetronomeDefaultNodeLabel(kind, subtype);
+            const inspectorNodeLabel = getMetronomeNodeDisplayLabel(selectedNode);
             return React.createElement("aside", {
               className: "playground-metronome-node-inspector" + (isActiveWorkflowBuiltIn ? " is-readonly" : ""),
             },
@@ -17362,24 +18081,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                               React.createElement(Metronome, { width: 14, height: 14, strokeWidth: 1.9 })
                             )
 	                      : React.createElement("span", { className: "playground-metronome-inspector-node-kind" }, meta.label)
-	                  ),
+                  ),
                   React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
-                    React.createElement("input", {
-                      type: "text",
-                      className: "playground-content-title playground-tasks-detail-navbar-title-input playground-metronome-inspector-title-input",
-                      value: inspectorNodeLabel,
-                      placeholder: isThreadNode ? "Thread" : meta.label,
-                      "aria-label": "Node label",
-                      disabled: isActiveWorkflowBuiltIn,
-                      readOnly: isActiveWorkflowBuiltIn,
-                      onChange: (event) => updateSelectedNodeData({ label: event.target.value }),
-                      onKeyDown: (event) => {
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          event.currentTarget.blur();
-                        }
-                      },
-                    })
+                    React.createElement("span", {
+                      className: "playground-content-title playground-metronome-inspector-title-text",
+                    }, inspectorNodeLabel)
                   )
                 ),
                 React.createElement("div", { className: "playground-content-nav-center" }),
@@ -17393,6 +18099,25 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   disabled: isActiveWorkflowBuiltIn,
                   "aria-disabled": isActiveWorkflowBuiltIn ? "true" : "false",
                 },
+                React.createElement("div", { className: "playground-metronome-field playground-metronome-node-name-field" },
+                  renderMetronomeFieldTitle("Name"),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-metronome-input",
+                    value: rawNodeLabel,
+                    placeholder: defaultNodeLabel,
+                    "aria-label": "Node name",
+                    disabled: isActiveWorkflowBuiltIn,
+                    readOnly: isActiveWorkflowBuiltIn,
+                    onChange: (event) => updateSelectedNodeData({ label: event.target.value }),
+                    ...getMetronomeTextInputKeyHandlers((event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        event.currentTarget.blur();
+                      }
+                    }),
+                  })
+                ),
                 showTypeSelector ? React.createElement("div", { className: "playground-metronome-field" },
                   renderMetronomeFieldTitle("Type"),
                   React.createElement("select", {
@@ -18340,6 +19065,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             const threads = Array.isArray(output.threads) ? output.threads : [];
             const logs = Array.isArray(output.logs) ? output.logs : [];
             const prompt = getMetronomeRunPrompt(run);
+            const traceNodeById = new Map((Array.isArray(nodes) ? nodes : []).map((node) => [String(node?.id || ""), node]));
             const traceItems = [];
             if (includeComposerPrompt && prompt && prompt !== "Manual workflow run") {
               traceItems.push(React.createElement("div", { key: "prompt", className: "playground-metronome-run-user-row" },
@@ -18353,13 +19079,14 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 const stepKind = String(step.kind || "").toLowerCase();
                 const stepSubtype = String(step.subtype || step.type || "").toLowerCase();
                 const rawStepLabel = String(step.label || "").trim();
+                const stepNode = traceNodeById.get(String(step.nodeId || "").trim()) || null;
                 const isThreadStep = stepKind === "thread"
                   || stepSubtype === "thread"
                   || stepSubtype === "start_thread"
                   || /start\s+agent\s+thread/i.test(rawStepLabel);
-                const stepTitle = isThreadStep
-                  ? "Thread"
-                  : String(rawStepLabel || getMetronomeSubtypeLabel(step.kind, step.subtype) || step.kind || "Workflow step").trim();
+                const stepTitle = stepNode
+                  ? getMetronomeNodeDisplayLabel(stepNode)
+                  : normalizeMetronomeNodeLabel(rawStepLabel || getMetronomeSubtypeLabel(step.kind, step.subtype) || step.kind || "Workflow step", stepKind || step.kind, stepSubtype || step.subtype);
                 const readableOutputText = stepKind === "trigger" || stepKind === "condition"
                   ? ""
                   : isThreadStep
@@ -18462,6 +19189,15 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                               React.createElement("span", { className: "playground-metronome-table-subtitle" }, "Loading runs...")
                             )
                           )
+                        : metronomeRunsError
+                          ? React.createElement("tr", null,
+                              React.createElement("td", { colSpan: 6 },
+                                React.createElement("div", { className: "playground-metronome-table-main" },
+                                  React.createElement("div", { className: "playground-metronome-table-title" }, "Runs unavailable"),
+                                  React.createElement("div", { className: "playground-metronome-table-subtitle" }, metronomeRunsError)
+                                )
+                              )
+                            )
                         : metronomeRuns.length
                           ? metronomeRuns.map((run) => React.createElement("tr", {
                               key: run.id,
@@ -18784,6 +19520,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                       ),
                       React.createElement(ReactFlowProvider, null,
                         React.createElement(MetronomeFlowCanvas, {
+                          key: metronomeFlowGraphKey,
                           nodes: renderedMetronomeNodes,
                           edges: renderedMetronomeEdges,
                           nodeTypes,
