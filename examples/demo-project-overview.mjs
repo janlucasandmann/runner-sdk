@@ -342,11 +342,25 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-sidebar-milestone-row {
+        position: relative;
+        display: grid;
+        align-items: center;
+        gap: 6px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        width: 100%;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        overflow: visible;
+      }
+
+      .playground-project-overview-sidebar-milestone-trigger {
         appearance: none;
+        min-width: 0;
+        width: 100%;
+        padding: 0;
         border: 0;
         background: transparent;
-        width: 100%;
-        grid-template-columns: minmax(0, 1fr);
         color: inherit;
         font: inherit;
         text-align: left;
@@ -361,8 +375,66 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         background: transparent;
       }
 
-      .playground-project-overview-sidebar-milestone-row:hover .playground-project-overview-sidebar-chip {
+      .playground-project-overview-sidebar-milestone-trigger:hover .playground-project-overview-sidebar-chip {
         color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-sidebar-card,
+      .playground-project-overview-sidebar-rows {
+        overflow: visible;
+      }
+
+      .playground-project-overview-sidebar-icon-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        flex: 0 0 26px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.66);
+        cursor: pointer;
+      }
+
+      .playground-project-overview-sidebar-icon-button:hover,
+      .playground-project-overview-sidebar-milestone-menu-shell.is-open .playground-project-overview-sidebar-icon-button {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-sidebar-milestone-menu-shell {
+        position: relative;
+        display: inline-flex;
+        justify-content: flex-end;
+        z-index: 240;
+      }
+
+      .playground-project-overview-sidebar-milestone-menu-shell.is-open {
+        z-index: 420;
+      }
+
+      .playground-project-overview-sidebar-milestone-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        min-width: 190px;
+        width: max-content;
+        max-width: min(260px, calc(100vw - 32px));
+        padding: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        background: #323232;
+        color: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+        z-index: 480;
+        transform-origin: top right;
       }
 
       .playground-project-overview-sidebar-muted {
@@ -1867,7 +1939,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-activity-card.is-main .playground-project-overview-activity-list {
-        gap: 8px;
+        gap: 0;
       }
 
       .playground-project-overview-activity-card.is-main .playground-project-overview-activity-row {
@@ -1875,9 +1947,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         align-items: center;
         gap: 10px;
         min-height: 0;
-        padding: 10px 12px;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.05);
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0;
+        background: transparent;
       }
 
       .playground-project-overview-activity-card.is-main .playground-project-overview-activity-row::after {
@@ -2475,6 +2548,58 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         position: relative;
         overflow: visible;
         z-index: 70;
+      }
+
+      .playground-project-settings-root {
+        gap: 42px;
+      }
+
+      .playground-project-settings-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+        position: relative;
+        overflow: visible;
+      }
+
+      .playground-project-settings-wallpaper-section {
+        width: 100%;
+        max-width: none;
+      }
+
+      .playground-project-settings-wallpaper-section .playground-tasks-project-wallpaper-picker {
+        margin-bottom: 0;
+      }
+
+      .playground-project-settings-wallpaper-section .playground-tasks-project-wallpaper-picker-preview {
+        height: 260px;
+      }
+
+      .playground-project-settings-rules-section .playground-project-overview-rules-list {
+        margin-top: 0;
+      }
+
+      .playground-project-settings-rules-section {
+        margin-bottom: 42px;
+      }
+
+      .playground-project-settings-rules-section .playground-project-overview-rules-empty .playground-tasks-empty-title {
+        font-size: 12px;
+      }
+
+      .playground-project-settings-access-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
+        position: relative;
+        overflow: visible;
+      }
+
+      .playground-project-teams-add-button,
+      .playground-project-settings-add-rule-button {
+        font-size: 12px;
       }
 
       .playground-project-team-permissions-header {
@@ -3678,7 +3803,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-resources-table-header,
       .playground-project-overview-resources-table-row {
         display: grid;
-        grid-template-columns: minmax(0, 1.8fr) minmax(96px, 0.85fr) minmax(0, 1.45fr) minmax(92px, 0.8fr) minmax(112px, 0.8fr);
+        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.45fr) minmax(92px, 0.8fr) minmax(112px, 0.8fr);
         align-items: center;
         gap: 16px;
       }
@@ -3711,8 +3836,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         line-height: 1.45;
       }
 
-      .playground-project-overview-resource-cell.is-type,
-      .playground-project-overview-resource-cell.is-status,
+      .playground-project-overview-resource-cell.is-creator,
       .playground-project-overview-resource-cell.is-date {
         color: rgba(255, 255, 255, 0.56);
         white-space: nowrap;
@@ -3732,7 +3856,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-resources-home {
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: 0;
         width: 100%;
       }
 
@@ -3765,21 +3889,9 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.58);
       }
 
-      .playground-project-resource-template-link {
-        border: 0;
-        background: transparent;
-        color: #66a6ff;
-        padding: 0;
-        font: inherit;
-        font-size: 12px;
-        line-height: 1.4;
-        cursor: pointer;
-        white-space: nowrap;
-      }
-
       .playground-project-resource-template-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 12px;
       }
 
@@ -3805,13 +3917,23 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-resource-template-card-icon {
         width: 34px;
         height: 34px;
-        border-radius: 10px;
+        border-radius: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         flex: 0 0 auto;
-        background: rgba(102, 166, 255, 0.14);
-        color: #66a6ff;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-resource-template-actions {
+        display: flex;
+        justify-content: center;
+        margin-top: 2px;
+      }
+
+      .playground-project-resource-template-browse-button.playground-project-overview-summary-mission-button {
+        margin-left: 0;
       }
 
       .playground-project-resource-template-card-title {
@@ -3828,102 +3950,153 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-resources-table-card {
         position: relative;
-        border-radius: 15px;
-        padding: 1px;
-        overflow: hidden;
+        border-radius: 0;
+        border: 0;
+        background: transparent;
+        overflow: visible;
       }
 
       .playground-project-resources-table-card::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
+        content: none;
       }
 
       .playground-project-resources-table-inner {
         position: relative;
         z-index: 1;
-        border-radius: inherit;
-        overflow: hidden;
+        border-radius: 0;
+        overflow: visible;
         background: transparent;
       }
 
       .playground-project-resources-toolbar {
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 14px;
-        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 0 0 12px;
+        min-width: 0;
+        width: 100%;
       }
 
-      .playground-project-resources-toolbar-title {
-        margin: 0 auto 0 0;
-        font-size: 14px;
-        line-height: 1.35;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-project-resources-filters {
-        display: flex;
+      .playground-project-resources-toolbar-actions {
+        display: inline-flex;
         align-items: center;
         justify-content: flex-end;
-        flex-wrap: wrap;
-        gap: 8px;
+        gap: 12px;
+        flex: 0 0 auto;
+        min-width: 0;
       }
 
-      .playground-project-resources-filter {
-        height: 34px;
+      .playground-project-resources-toolbar .playground-files-library-search {
+        flex: 1 1 360px;
+        max-width: 360px;
+      }
+
+      .playground-project-resources-toolbar .playground-files-library-new-button {
+        height: 32px;
+      }
+
+      .playground-project-resources-toolbar .playground-files-library-icon-button {
+        width: 30px;
+        height: 30px;
+      }
+
+      .playground-project-resources-new-shell,
+      .playground-project-resources-filter-shell {
+        position: relative;
+        display: inline-flex;
+        justify-content: flex-end;
+      }
+
+      .playground-project-resources-new-shell.is-open,
+      .playground-project-resources-filter-shell.is-open {
+        z-index: 320;
+      }
+
+      .playground-project-resources-new-menu,
+      .playground-project-resources-filter-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        min-width: 230px;
+        width: max-content;
+        max-width: min(300px, calc(100vw - 32px));
+        padding: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        background: #323232;
+        color: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        z-index: 420;
+        transform-origin: top right;
+      }
+
+      .playground-project-resources-menu-divider {
+        height: 1px;
+        margin: 6px 4px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-resources-view-toggle {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        min-height: 34px;
+        padding: 2px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .playground-project-resources-view-button {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
         border: 0;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.06);
+        background: transparent;
         color: rgba(255, 255, 255, 0.62);
-        padding: 0 12px;
-        font: inherit;
-        font-size: 12px;
         cursor: pointer;
       }
 
-      .playground-project-resources-filter.is-active {
+      .playground-project-resources-view-button.is-active {
         background: rgba(255, 255, 255, 0.16);
         color: rgba(255, 255, 255, 0.96);
       }
 
       .playground-project-resources-row {
         display: grid;
-        grid-template-columns: minmax(240px, 1.45fr) minmax(120px, 0.55fr) minmax(150px, 0.7fr) minmax(140px, 0.65fr);
+        grid-template-columns: minmax(0, 1.34fr) minmax(168px, 0.74fr) minmax(82px, 0.34fr) 28px;
         min-height: 54px;
-        gap: 16px;
-        padding: 12px 14px;
+        gap: 12px;
+        padding: 12px 0;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
         background: transparent;
         color: rgba(255, 255, 255, 0.96);
         align-items: center;
         width: 100%;
+        box-sizing: border-box;
       }
 
-      button.playground-project-resources-row {
+      button.playground-project-resources-row,
+      .playground-project-resources-row[role="button"] {
         border-left: 0;
         border-right: 0;
         border-bottom: 0;
         font: inherit;
         text-align: left;
         cursor: pointer;
+      }
+
+      .playground-project-resources-row.is-menu-open {
+        position: relative;
+        z-index: 340;
       }
 
       .playground-project-resources-row:not(.is-header):hover {
@@ -3946,15 +4119,33 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-resource-title-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
+        width: 34px;
+        height: 34px;
+        border-radius: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         flex: 0 0 auto;
         color: rgba(255, 255, 255, 0.72);
-        background: rgba(255, 255, 255, 0.06);
+        background: transparent;
+      }
+
+      .playground-project-resource-title-icon .playground-files-entry-icon:not(.is-large):not(.is-thumbnail) {
+        width: 34px;
+        height: 34px;
+        box-sizing: border-box;
+        border-radius: 6px;
+        border: 0;
+        background: transparent;
+      }
+
+      .playground-project-resource-title-icon svg.playground-files-entry-icon:not(.is-large):not(.is-thumbnail) {
+        padding: 10px;
+      }
+
+      .playground-project-resource-title-icon .playground-files-entry-icon.is-asset:not(.is-large):not(.is-thumbnail) {
+        padding: 7px;
+        object-fit: contain;
       }
 
       .playground-project-resource-title-copy {
@@ -3989,6 +4180,105 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.46);
       }
 
+      .playground-project-resources-creator {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .playground-project-resources-creator-avatar {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 24px;
+        border-radius: 999px;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 600;
+      }
+
+      .playground-project-resources-creator-avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .playground-project-resources-creator-avatar-fallback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+      }
+
+      .playground-project-resources-creator-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-resources-row-action {
+        position: relative;
+        justify-self: end;
+        overflow: visible;
+        min-width: 0;
+      }
+
+      .playground-project-resources-action-shell {
+        position: relative;
+        display: inline-flex;
+        justify-content: flex-end;
+        overflow: visible;
+      }
+
+      .playground-project-resources-action-shell.is-open {
+        z-index: 450;
+      }
+
+      .playground-project-resources-action-button {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.62);
+        cursor: pointer;
+      }
+
+      .playground-project-resources-action-button:hover,
+      .playground-project-resources-action-shell.is-open .playground-project-resources-action-button {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-resources-action-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        left: auto;
+        min-width: 196px;
+        padding: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        background: #323232;
+        color: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        z-index: 500;
+        transform-origin: top right;
+      }
+
       .playground-project-resources-empty {
         padding: 34px 14px;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -3997,15 +4287,87 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.5);
       }
 
+      .playground-project-resources-empty.has-templates {
+        padding: 18px 0 20px;
+        text-align: left;
+      }
+
+      .playground-project-resources-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 12px;
+        padding: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-project-resources-grid-card {
+        min-width: 0;
+        min-height: 132px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 14px;
+        border: 0;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.96);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-project-resources-grid-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-project-resources-grid-card-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        min-width: 0;
+        width: 100%;
+      }
+
+      .playground-project-resources-grid-card-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+      }
+
       @media (max-width: 1100px) {
         .playground-project-resource-template-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .playground-project-resources-row {
-          grid-template-columns: minmax(180px, 1fr) minmax(100px, 0.5fr) minmax(120px, 0.6fr);
+          grid-template-columns: minmax(0, 1fr) minmax(156px, 0.54fr) 28px;
         }
 
+        .playground-project-resources-row > :nth-child(3) {
+          display: none;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .playground-project-resources-toolbar {
+          gap: 14px;
+        }
+
+        .playground-project-resources-toolbar .playground-files-library-search {
+          flex-basis: 220px;
+        }
+
+        .playground-project-resources-row {
+          grid-template-columns: minmax(0, 1fr) 28px;
+        }
+
+        .playground-project-resources-row > :nth-child(2),
+        .playground-project-resources-row > :nth-child(3),
         .playground-project-resources-row > :nth-child(4) {
           display: none;
         }
@@ -4320,6 +4682,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         max-width: min(720px, calc(100vw - 32px));
       }
 
+      .playground-project-overview-rule-editor-modal {
+        max-width: min(520px, calc(100vw - 32px));
+      }
+
       .playground-project-overview-outcome-delete-button {
         margin-right: auto;
       }
@@ -4328,6 +4694,11 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         display: flex;
         flex-direction: column;
         gap: 14px;
+      }
+
+      .playground-project-overview-rule-modal-textarea {
+        min-height: 112px;
+        resize: vertical;
       }
 
       .playground-project-overview-outcome-ticket-list {
@@ -5411,7 +5782,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	              { id: "general", label: "General" },
 	              { id: "resources", label: "Resources" },
 		              { id: "strategy", label: "Strategy" },
-		              { id: "permissions", label: "Teams" },
+		              { id: "permissions", label: "Settings" },
 		            ];
             return React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs" },
               React.createElement("div", { className: "playground-project-overview-chart-tabs" },
@@ -5432,6 +5803,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                       }
                       if (typeof setProjectOverviewFileToolbarPopover === "function") {
                         setProjectOverviewFileToolbarPopover("");
+                      }
+                      if (typeof setProjectOverviewResourceToolbarPopover === "function") {
+                        setProjectOverviewResourceToolbarPopover("");
                       }
                       if (typeof setProjectOverviewFilesSubview === "function") {
                         setProjectOverviewFilesSubview("overview");
@@ -5711,7 +6085,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 seen.add(id);
                 return true;
               })
-              .slice(0, 4);
+              .slice(0, 3);
           })();
 
           const projectOverviewResourceTypeFilters = (() => {
@@ -5792,7 +6166,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             return "file";
           }
 
-          const projectOverviewResourceRows = (() => {
+          const projectOverviewAllResourceRows = (() => {
             const seen = new Set();
             const rows = [];
             function pushResourceRow(row) {
@@ -5832,6 +6206,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               const type = classifyProjectOverviewFileResource(attachment);
               pushResourceRow({
                 key: "attachment:" + (path || attachment?.id || index),
+                kind: "attachment",
                 type,
                 title,
                 subtitle: path || "Project attachment",
@@ -5847,6 +6222,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               const type = classifyProjectOverviewFileResource(item);
               pushResourceRow({
                 key: "file:" + (path || item?.id || index),
+                kind: "file",
                 type,
                 title,
                 subtitle: path || "Workspace file",
@@ -5863,6 +6239,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               const subtitle = String(item?.description || item?.endpoint || item?.url || item?.id || "").trim();
               pushResourceRow({
                 key: "resource:" + (item?.id || type + ":" + title + ":" + index),
+                kind: "runtime",
                 type,
                 title,
                 subtitle,
@@ -5872,16 +6249,20 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 path: "",
               });
             });
+            return rows.sort((left, right) => String(left.title || "").localeCompare(String(right.title || "")));
+          })();
+          const projectOverviewResourceRows = (() => {
             const filter = String(projectOverviewResourceFilter || "all").trim();
-            return rows
+            const resourceSearch = String(projectOverviewResourceSearchQuery || "").trim().toLowerCase();
+            return projectOverviewAllResourceRows
               .filter((row) => filter === "all" || row.type === filter)
               .filter((row) => {
-                if (!normalizedSearchQuery) {
+                if (!resourceSearch) {
                   return true;
                 }
-                return [row.title, row.subtitle, row.status, row.type].join(" ").toLowerCase().includes(normalizedSearchQuery);
-              })
-              .sort((left, right) => String(left.title || "").localeCompare(String(right.title || "")));
+                const creator = getProjectOverviewResourceCreator(row);
+                return [row.title, row.subtitle, creator.name, creator.email, row.type].join(" ").toLowerCase().includes(resourceSearch);
+              });
           })();
 
           const hasOverviewProjectAttachments = overviewProjectAttachments.length > 0;
@@ -6647,9 +7028,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     ? React.createElement("div", { className: "playground-project-overview-resources-table" },
                         React.createElement("div", { className: "playground-project-overview-resources-table-header" },
                           React.createElement("div", null, "Title"),
-                          React.createElement("div", null, "Type"),
                           React.createElement("div", null, "Endpoint"),
-                          React.createElement("div", null, "Status"),
+                          React.createElement("div", null, "Creator"),
                           React.createElement("div", null, "Date")
                         ),
                         visibleResourceItems.slice(0, 12).map((resource) => renderOverviewResourceRow(resource))
@@ -7092,13 +7472,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               React.createElement("div", { className: "playground-project-overview-resource-cell" },
                 React.createElement("div", { className: "playground-plugin-row-title" }, resource?.title || "Untitled Resource")
               ),
-              React.createElement("div", { className: "playground-project-overview-resource-cell is-type" }, resource?.type || "Resource"),
               React.createElement("div", {
                 className: "playground-project-overview-resource-cell is-endpoint",
                 title: resource?.endpoint || "",
               }, resource?.endpoint || "Internal"),
-              React.createElement("div", { className: "playground-project-overview-resource-cell is-status" },
-                React.createElement("span", { className: "playground-project-overview-resource-status" }, resource?.status || "draft")
+              React.createElement("div", { className: "playground-project-overview-resource-cell is-creator" },
+                renderProjectOverviewResourceCreator({ record: resource })
               ),
               React.createElement("div", { className: "playground-project-overview-resource-cell is-date" },
                 (typeof formatThreadSearchTimestamp === "function"
@@ -9382,74 +9761,711 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
-          function renderProjectOverviewResourcesHome() {
-            return React.createElement("div", { className: "playground-project-overview-resources-home" },
+          function openProjectOverviewNewResource(type) {
+            const normalizedType = String(type || "").trim();
+            if (!normalizedType) {
+              return;
+            }
+            if (typeof setProjectOverviewResourceToolbarPopover === "function") {
+              setProjectOverviewResourceToolbarPopover("");
+            }
+            if (normalizedType === "file") {
+              const normalizedProjectId = String(selectedProjectId || "").trim();
+              const normalizedEnvironmentId = String(
+                selectedProject?.defaultEnvironmentId
+                || activeProjectAttachmentEnvironmentId
+                || ""
+              ).trim();
+              if (typeof onOpenFilesPage === "function") {
+                onOpenFilesPage({
+                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                  projectId: normalizedProjectId,
+                  environmentId: normalizedEnvironmentId,
+                });
+              }
+              return;
+            }
+            if (typeof setProjectOverviewHomeTab === "function") {
+              setProjectOverviewHomeTab("resources");
+            }
+            if (typeof setProjectOverviewFilesSubview === "function") {
+              const meta = getProjectOverviewResourceTypeMeta(normalizedType);
+              setProjectOverviewFilesSubview(meta.subview || "resources");
+            }
+          }
+
+          function renderProjectOverviewRecommendedTemplatesEmptyState() {
+            return React.createElement("div", { className: "playground-project-resources-empty has-templates" },
               React.createElement("section", { className: "playground-project-resource-template-section" },
                 React.createElement("div", { className: "playground-project-resource-template-header" },
                   React.createElement("div", null,
                     React.createElement("h3", { className: "playground-project-resource-template-title" }, "Recommended templates"),
                     React.createElement("p", { className: "playground-project-resource-template-copy" }, "Start with resources that fit this project type, then publish them into the project when they are ready.")
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-resource-template-link",
-                    onClick: () => typeof onOpenResourceTemplatesPage === "function" && onOpenResourceTemplatesPage({ type: "all" }),
-                  }, "Browse all templates")
+                  )
                 ),
                 projectOverviewRecommendedTemplates.length > 0
                   ? React.createElement("div", { className: "playground-project-resource-template-grid" },
                       projectOverviewRecommendedTemplates.map((template) => renderProjectOverviewTemplateCard(template))
                     )
-                  : React.createElement("div", { className: "playground-project-resources-empty" }, "No recommended templates available yet.")
-              ),
-              React.createElement("section", { className: "playground-project-resources-table-card" },
-                React.createElement("div", { className: "playground-project-resources-table-inner" },
-                  React.createElement("div", { className: "playground-project-resources-toolbar" },
-                    React.createElement("h3", { className: "playground-project-resources-toolbar-title" }, "Project resources"),
-                    React.createElement("div", { className: "playground-project-resources-filters" },
-                      projectOverviewResourceTypeFilters.map((type) =>
-                        React.createElement("button", {
-                          key: type.id,
-                          type: "button",
-                          className: "playground-project-resources-filter" + (String(projectOverviewResourceFilter || "all") === String(type.id) ? " is-active" : ""),
-                          onClick: () => setProjectOverviewResourceFilter(String(type.id || "all")),
-                        }, type.label || type.id)
+                  : React.createElement("div", { className: "playground-project-resources-empty" }, "No recommended templates available yet."),
+                React.createElement("div", { className: "playground-project-resource-template-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-resource-template-browse-button",
+                    onClick: () => typeof onOpenResourceTemplatesPage === "function" && onOpenResourceTemplatesPage({ type: "all" }),
+                  },
+                    React.createElement(Layers, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Browse all templates")
+                  )
+                )
+              )
+            );
+          }
+
+          function renderProjectOverviewResourceNewMenu() {
+            if (projectOverviewResourceToolbarPopover !== "new") {
+              return null;
+            }
+            const resourceTypes = projectOverviewResourceTypeFilters.filter((type) => String(type?.id || "") !== "all");
+            return React.createElement("div", {
+                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-resources-new-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                onClick: (event) => event.stopPropagation(),
+              },
+              resourceTypes.map((type) => {
+                const meta = getProjectOverviewResourceTypeMeta(type.id);
+                const Icon = meta.Icon || Layers;
+                return React.createElement("button", {
+                    key: type.id,
+                    type: "button",
+                    className: "tb-popup-row playground-project-team-menu-item",
+                    onClick: () => openProjectOverviewNewResource(type.id),
+                  },
+                  React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, type.label || meta.label || type.id)
+                );
+              }),
+              React.createElement("div", { className: "playground-project-resources-menu-divider" }),
+              React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row playground-project-team-menu-item",
+                  onClick: () => {
+                    if (typeof setProjectOverviewResourceToolbarPopover === "function") {
+                      setProjectOverviewResourceToolbarPopover("");
+                    }
+                    if (typeof onOpenResourceTemplatesPage === "function") {
+                      onOpenResourceTemplatesPage({ type: "all" });
+                    }
+                  },
+                },
+                React.createElement(Layers, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Templates")
+              )
+            );
+          }
+
+          function renderProjectOverviewResourceFilterMenu() {
+            if (projectOverviewResourceToolbarPopover !== "filter") {
+              return null;
+            }
+            return React.createElement("div", {
+                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-resources-filter-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                onClick: (event) => event.stopPropagation(),
+              },
+              projectOverviewResourceTypeFilters.map((type) =>
+                renderProjectOverviewTaskToolbarOption({
+                  option: { id: type.id, label: type.label || type.id },
+                  active: String(projectOverviewResourceFilter || "all") === String(type.id),
+                  onClick: () => {
+                    setProjectOverviewResourceFilter(String(type.id || "all"));
+                    if (typeof setProjectOverviewResourceToolbarPopover === "function") {
+                      setProjectOverviewResourceToolbarPopover("");
+                    }
+                  },
+                })
+              )
+            );
+          }
+
+          function getProjectOverviewResourceRowMenuId(row) {
+            return "resource:" + String(row?.key || row?.id || row?.path || row?.title || "").trim();
+          }
+
+          function closeProjectOverviewResourceMenu() {
+            if (typeof setProjectOverviewResourceMenuId === "function") {
+              setProjectOverviewResourceMenuId("");
+            }
+          }
+
+          function getProjectOverviewResourceRowEnvironmentId(row) {
+            return String(
+              row?.record?.environmentId
+              || row?.environmentId
+              || selectedProject?.defaultEnvironmentId
+              || activeProjectAttachmentEnvironmentId
+              || ""
+            ).trim();
+          }
+
+          function getProjectOverviewResourceRowPath(row) {
+            return normalizeHistoryPath(
+              row?.path
+              || row?.record?.sourcePath
+              || row?.record?.workspacePath
+              || row?.record?.path
+              || ""
+            );
+          }
+
+          async function removeProjectOverviewTemplateResource(row) {
+            const rowKey = String(row?.key || "").trim();
+            const templateId = String(
+              row?.record?.templateId
+              || row?.record?.id
+              || row?.template?.templateId
+              || row?.template?.id
+              || ""
+            ).trim();
+            const nextTemplates = projectOverviewPublishedTemplates.filter((item, index) => {
+              const itemTemplateId = String(item?.templateId || item?.id || "").trim();
+              if (templateId) {
+                return itemTemplateId !== templateId;
+              }
+              return "template:" + (itemTemplateId || String(item?.type || "file").trim() + ":" + index) !== rowKey;
+            });
+            await persistProjectOverviewSidebarProjectUpdate({}, { resourceTemplates: nextTemplates });
+          }
+
+          async function removeProjectOverviewAttachmentResource(row) {
+            const rowAttachmentId = String(row?.record?.id || row?.id || "").trim();
+            const rowPath = getProjectOverviewResourceRowPath(row);
+            const rowEnvironmentId = getProjectOverviewResourceRowEnvironmentId(row);
+            const currentAttachments = normalizePlaygroundTaskAttachmentList(projectOverviewDraft?.attachments || selectedProject?.attachments);
+            const nextAttachments = currentAttachments.filter((attachment) => {
+              const attachmentId = String(attachment?.id || "").trim();
+              const attachmentEnvironmentId = String(attachment?.environmentId || "").trim();
+              const attachmentPath = normalizeHistoryPath(attachment?.sourcePath || attachment?.workspacePath || attachment?.path || "");
+              if (rowAttachmentId && attachmentId === rowAttachmentId) {
+                return false;
+              }
+              if (rowPath && attachmentPath === rowPath && (!rowEnvironmentId || !attachmentEnvironmentId || attachmentEnvironmentId === rowEnvironmentId)) {
+                return false;
+              }
+              return true;
+            });
+            await persistProjectOverviewSidebarProjectUpdate(
+              { attachments: nextAttachments },
+              { attachments: nextAttachments }
+            );
+          }
+
+          async function removeProjectOverviewFileActivityResource(row) {
+            const rowPath = getProjectOverviewResourceRowPath(row);
+            const rowEnvironmentId = getProjectOverviewResourceRowEnvironmentId(row);
+            const suppressedFileKey = normalizedSelectedProjectId && rowEnvironmentId && rowPath
+              ? normalizedSelectedProjectId + "\u0000" + rowEnvironmentId + "\u0000" + rowPath
+              : "";
+            if (!suppressedFileKey) {
+              setProjectOverviewFileActivityState?.((current) => ({
+                ...current,
+                items: (Array.isArray(current?.items) ? current.items : []).filter((item) => {
+                  if (row?.record?.id && item?.id === row.record.id) {
+                    return false;
+                  }
+                  const itemPath = normalizeHistoryPath(item?.path || item?.sourcePath || item?.workspacePath || "");
+                  return !(rowPath && itemPath === rowPath);
+                }),
+              }));
+              return;
+            }
+            const nextDeletedFileKeys = Array.from(new Set(
+              (Array.isArray(selectedProjectOverviewDeletedFileKeys) ? selectedProjectOverviewDeletedFileKeys : [])
+                .concat([suppressedFileKey])
+                .map((value) => String(value || "").trim())
+                .filter(Boolean)
+            )).slice(-250);
+            setProjectOverviewSuppressedFileKeys?.(nextDeletedFileKeys);
+            setProjectOverviewFileActivityState?.((current) => ({
+              ...current,
+              items: (Array.isArray(current?.items) ? current.items : []).filter((item) => {
+                const itemEnvironmentId = String(item?.environmentId || "").trim();
+                const itemPath = normalizeHistoryPath(item?.path || item?.sourcePath || item?.workspacePath || "");
+                return !(itemEnvironmentId === rowEnvironmentId && itemPath === rowPath);
+              }),
+            }));
+            await persistProjectOverviewSidebarProjectUpdate({}, { projectOverviewDeletedFileKeys: nextDeletedFileKeys });
+          }
+
+          async function removeProjectOverviewRuntimeResource(row) {
+            const resourceId = String(row?.record?.id || row?.id || "").trim();
+            if (!resourceId) {
+              return;
+            }
+            const headers = new Headers(requestHeaders || {});
+            headers.set("Content-Type", "application/json");
+            const response = await fetch(backendUrl + "/servers/" + encodeURIComponent(resourceId), {
+              method: "PATCH",
+              headers,
+              body: JSON.stringify({ projectId: null }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to remove resource from project.");
+            }
+            setProjectOverviewServerResourcesState?.((current) => ({
+              ...current,
+              status: current?.status || "ready",
+              error: "",
+              items: (Array.isArray(current?.items) ? current.items : []).filter((item) => String(item?.id || "") !== resourceId),
+            }));
+          }
+
+          async function handleRemoveProjectOverviewResourceFromProject(row) {
+            const kind = String(row?.kind || "").trim();
+            closeProjectOverviewResourceMenu();
+            try {
+              if (kind === "template") {
+                await removeProjectOverviewTemplateResource(row);
+              } else if (kind === "attachment") {
+                await removeProjectOverviewAttachmentResource(row);
+              } else if (kind === "file") {
+                await removeProjectOverviewFileActivityResource(row);
+              } else if (kind === "runtime") {
+                await removeProjectOverviewRuntimeResource(row);
+              }
+            } catch (error) {
+              if (typeof window !== "undefined") {
+                window.alert(error instanceof Error ? error.message : "Failed to remove resource from project.");
+              }
+            }
+          }
+
+          function renderProjectOverviewResourceRowMenu(row) {
+            const menuId = getProjectOverviewResourceRowMenuId(row);
+            if (!menuId || projectOverviewResourceMenuId !== menuId) {
+              return null;
+            }
+            return React.createElement("div", {
+                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-resources-action-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                onClick: (event) => event.stopPropagation(),
+              },
+              React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row playground-project-team-menu-item is-danger",
+                  onClick: () => handleRemoveProjectOverviewResourceFromProject(row),
+                },
+                React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Remove from project")
+              )
+            );
+          }
+
+          function isProjectOverviewFileResourceRow(row) {
+            return row?.kind === "attachment" || row?.kind === "file";
+          }
+
+          function buildProjectOverviewFileIconEntry(row) {
+            const record = row?.record && typeof row.record === "object" ? row.record : {};
+            const path = normalizeHistoryPath(
+              row?.path
+              || record.path
+              || record.sourcePath
+              || record.workspacePath
+              || ""
+            );
+            const name = String(
+              record.filename
+              || record.name
+              || record.title
+              || row?.title
+              || getHistoryPathName(path)
+              || "Untitled file"
+            ).trim();
+            const rawMimeType = String(
+              record.mimeType
+              || record.contentType
+              || record.fileType
+              || (/[/]/.test(String(record.type || "")) ? record.type : "")
+              || ""
+            ).trim();
+            return {
+              name: name || getHistoryPathName(path) || "Untitled file",
+              path,
+              isFolder: Boolean(record.isFolder || record.type === "folder" || record.mimeType === "inode/directory"),
+              mimeType: rawMimeType,
+            };
+          }
+
+          function renderProjectOverviewResourceIcon(row, Icon) {
+            if (isProjectOverviewFileResourceRow(row) && typeof PlaygroundFileIcon === "function") {
+              const record = row?.record && typeof row.record === "object" ? row.record : {};
+              const iconEntry = buildProjectOverviewFileIconEntry(row);
+              const iconEnvironmentId = String(
+                record.environmentId
+                || row?.environmentId
+                || activeProjectAttachmentEnvironmentId
+                || selectedProject?.defaultEnvironmentId
+                || ""
+              ).trim();
+              return React.createElement("span", { className: "playground-project-resource-title-icon is-file" },
+                React.createElement(PlaygroundFileIcon, {
+                  entry: iconEntry,
+                  environmentId: iconEnvironmentId,
+                  backendUrl,
+                  useThumbnail: true,
+                })
+              );
+            }
+            const ResourceIcon = Icon || Layers;
+            return React.createElement("span", { className: "playground-project-resource-title-icon" },
+              React.createElement(ResourceIcon, { width: 16, height: 16, strokeWidth: 1.8 })
+            );
+          }
+
+          function readProjectOverviewResourceCreatorString(record, keys = []) {
+            const source = record && typeof record === "object" && !Array.isArray(record) ? record : null;
+            if (!source) return "";
+            for (const key of keys) {
+              const value = source[key];
+              if (typeof value === "string" && value.trim()) return value.trim();
+              if (typeof value === "number" && Number.isFinite(value)) return String(value);
+            }
+            return "";
+          }
+
+          function readProjectOverviewResourceCreatorObject(record, keys = []) {
+            const source = record && typeof record === "object" && !Array.isArray(record) ? record : null;
+            if (!source) return null;
+            for (const key of keys) {
+              const value = source[key];
+              if (value && typeof value === "object" && !Array.isArray(value)) return value;
+            }
+            return null;
+          }
+
+          function getProjectOverviewResourceAgentAvatarUrl(agent) {
+            const rawAvatarUrl = String(
+              (typeof getPlaygroundAgentProfilePhotoUrl === "function"
+                ? getPlaygroundAgentProfilePhotoUrl(agent)
+                : "")
+              || agent?.profilePhotoUrl
+              || agent?.avatarUrl
+              || agent?.photoUrl
+              || ""
+            ).trim();
+            return typeof normalizeSessionPhotoUrl === "function"
+              ? normalizeSessionPhotoUrl(rawAvatarUrl)
+              : rawAvatarUrl;
+          }
+
+          function findProjectOverviewResourceCreatorAgent(agentId, creatorName = "") {
+            const agents = Array.isArray(sortedAgents) ? sortedAgents : [];
+            const normalizedAgentId = String(agentId || "").trim().toLowerCase();
+            const normalizedCreatorName = String(creatorName || "").trim().toLowerCase();
+            if (normalizedAgentId) {
+              const match = agents.find((agent) => {
+                const candidateIds = [
+                  agent?.id,
+                  agent?.agentId,
+                  agent?.agent_id,
+                  agent?.slug,
+                ].map((value) => String(value || "").trim().toLowerCase()).filter(Boolean);
+                return candidateIds.includes(normalizedAgentId);
+              });
+              if (match) return match;
+            }
+            if (normalizedCreatorName) {
+              return agents.find((agent) => String(agent?.name || agent?.displayName || "").trim().toLowerCase() === normalizedCreatorName) || null;
+            }
+            return null;
+          }
+
+          function isProjectOverviewCurrentUserCreator(creator) {
+            const values = [
+              creator?.id,
+              creator?.userId,
+              creator?.email,
+              creator?.name,
+            ].map((value) => String(value || "").trim().toLowerCase()).filter(Boolean);
+            if (!values.length) return false;
+            const currentValues = [
+              currentUserEmail,
+              currentUserName,
+            ].map((value) => String(value || "").trim().toLowerCase()).filter(Boolean);
+            return currentValues.some((value) => values.includes(value));
+          }
+
+          function getProjectOverviewResourceCreator(row) {
+            const record = row?.record && typeof row.record === "object" && !Array.isArray(row.record) ? row.record : {};
+            const metadata = record.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
+            const definition = record.definition && typeof record.definition === "object" && !Array.isArray(record.definition) ? record.definition : {};
+            const sources = [row, record, metadata, definition].filter((source) => source && typeof source === "object" && !Array.isArray(source));
+            const creator = sources
+              .map((source) => readProjectOverviewResourceCreatorObject(source, ["creator", "createdBy", "created_by", "author", "actor", "owner", "user"]))
+              .find(Boolean) || {};
+            const rawCreatedBy = sources
+              .map((source) => readProjectOverviewResourceCreatorString(source, ["createdBy", "created_by", "author", "actor", "owner"]))
+              .find(Boolean) || "";
+            const rawType = readProjectOverviewResourceCreatorString(creator, ["type", "kind", "creatorType", "creator_type", "role"])
+              || sources.map((source) => readProjectOverviewResourceCreatorString(source, ["creatorType", "creator_type", "createdByType", "created_by_type", "authorType", "actorType"])).find(Boolean)
+              || "";
+            const agentId = readProjectOverviewResourceCreatorString(creator, ["agentId", "agent_id"])
+              || sources.map((source) => readProjectOverviewResourceCreatorString(source, ["creatorAgentId", "creator_agent_id", "createdByAgentId", "created_by_agent_id", "authorAgentId", "actorAgentId", "agentId", "agent_id"])).find(Boolean)
+              || "";
+            const userId = readProjectOverviewResourceCreatorString(creator, ["userId", "user_id"])
+              || sources.map((source) => readProjectOverviewResourceCreatorString(source, ["creatorUserId", "creator_user_id", "createdByUserId", "created_by_user_id", "authorUserId", "actorUserId", "userId", "user_id"])).find(Boolean)
+              || "";
+            const id = readProjectOverviewResourceCreatorString(creator, ["id"])
+              || agentId
+              || userId
+              || sources.map((source) => readProjectOverviewResourceCreatorString(source, ["creatorId", "creator_id", "createdById", "created_by_id", "authorId", "actorId"])).find(Boolean)
+              || rawCreatedBy;
+            const email = readProjectOverviewResourceCreatorString(creator, ["email"])
+              || sources.map((source) => readProjectOverviewResourceCreatorString(source, ["creatorEmail", "creator_email", "createdByEmail", "created_by_email", "authorEmail", "actorEmail", "email"])).find(Boolean)
+              || "";
+            const rawName = readProjectOverviewResourceCreatorString(creator, ["name", "displayName", "display_name", "label", "email"])
+              || sources.map((source) => readProjectOverviewResourceCreatorString(source, ["creatorName", "creator_name", "createdByName", "created_by_name", "createdByLabel", "created_by_label", "authorName", "actorName", "ownerName", "userName", "actor"])).find(Boolean)
+              || (!agentId && !userId ? rawCreatedBy : "");
+            const rawAvatarUrl = readProjectOverviewResourceCreatorString(creator, ["photoUrl", "photoURL", "avatarUrl", "avatarURL", "avatar", "picture"])
+              || sources.map((source) => readProjectOverviewResourceCreatorString(source, ["creatorAvatarUrl", "creator_avatar_url", "creatorPhotoUrl", "creator_photo_url", "createdByAvatarUrl", "created_by_avatar_url", "authorAvatarUrl", "actorAvatarUrl", "ownerAvatarUrl", "avatarUrl", "photoUrl", "picture"])).find(Boolean)
+              || "";
+            const normalizedType = String(rawType || "").trim().toLowerCase();
+            const type = normalizedType.includes("agent")
+              ? "agent"
+              : normalizedType.includes("user") || normalizedType.includes("human") || normalizedType.includes("person")
+                ? "user"
+                : agentId
+                  ? "agent"
+                  : userId || email
+                    ? "user"
+                    : "";
+            const agent = type === "agent" || agentId
+              ? findProjectOverviewResourceCreatorAgent(agentId || id, rawName)
+              : null;
+            if (agent) {
+              return {
+                type: "agent",
+                id: String(agent?.id || agentId || id || "").trim(),
+                agentId: String(agent?.id || agentId || "").trim(),
+                userId: "",
+                email: String(agent?.email || email || "").trim(),
+                name: String(agent?.name || agent?.displayName || rawName || "Agent").trim(),
+                avatarUrl: getProjectOverviewResourceAgentAvatarUrl(agent) || rawAvatarUrl,
+              };
+            }
+            const normalizedCreator = {
+              type: type || "user",
+              id,
+              agentId,
+              userId,
+              email,
+              name: rawName || email || "Me",
+              avatarUrl: rawAvatarUrl,
+            };
+            if (isProjectOverviewCurrentUserCreator(normalizedCreator) || (!rawName && !email && !userId && !agentId && !id)) {
+              return {
+                ...normalizedCreator,
+                type: "user",
+                name: "Me",
+                avatarUrl: currentUserAvatarUrl || normalizedCreator.avatarUrl || "",
+              };
+            }
+            return normalizedCreator;
+          }
+
+          function renderProjectOverviewResourceCreatorAvatar(creator) {
+            const name = String(creator?.name || "Me").trim();
+            const avatarUrl = String(creator?.avatarUrl || "").trim();
+            if (avatarUrl && (typeof canRenderAvatarImage !== "function" || canRenderAvatarImage(avatarUrl))) {
+              return React.createElement("img", {
+                className: "playground-project-resources-creator-avatar playground-project-resources-creator-avatar-image",
+                src: avatarUrl,
+                alt: name || "Creator",
+                draggable: false,
+              });
+            }
+            return React.createElement("span", { className: "playground-project-resources-creator-avatar" },
+              React.createElement("span", { className: "playground-project-resources-creator-avatar-fallback" },
+                getProjectOverviewSidebarInitials(name || "Me")
+              )
+            );
+          }
+
+          function renderProjectOverviewResourceCreator(row) {
+            const creator = getProjectOverviewResourceCreator(row);
+            const name = String(creator?.name || "Me").trim() || "Me";
+            return React.createElement("div", {
+                className: "playground-project-resources-creator",
+                title: creator?.email ? name + " · " + creator.email : name,
+              },
+              renderProjectOverviewResourceCreatorAvatar({ ...creator, name }),
+              React.createElement("span", { className: "playground-project-resources-creator-name" }, name)
+            );
+          }
+
+          function renderProjectOverviewResourceTableRows() {
+            if (!projectOverviewAllResourceRows.length) {
+              return renderProjectOverviewRecommendedTemplatesEmptyState();
+            }
+            if (!projectOverviewResourceRows.length) {
+              return React.createElement("div", { className: "playground-project-resources-empty" }, "No resources match this view yet.");
+            }
+            if (projectOverviewResourceViewMode === "grid") {
+              return React.createElement("div", { className: "playground-project-resources-grid" },
+                projectOverviewResourceRows.map((row) => {
+                  const meta = getProjectOverviewResourceTypeMeta(row.type);
+                  const Icon = meta.Icon || Layers;
+                  return React.createElement("button", {
+                      key: row.key,
+                      type: "button",
+                      className: "playground-project-resources-grid-card",
+                      onClick: () => openProjectOverviewResourceRow(row),
+                    },
+                    React.createElement("div", { className: "playground-project-resources-grid-card-top" },
+                      renderProjectOverviewResourceIcon(row, Icon),
+                      React.createElement("span", { className: "playground-project-resource-title-copy" },
+                        React.createElement("span", { className: "playground-project-resource-title-main" }, row.title || "Untitled resource"),
+                        row.subtitle
+                          ? React.createElement("span", { className: "playground-project-resource-title-sub" }, row.subtitle)
+                          : null
                       )
+                    ),
+                    React.createElement("div", { className: "playground-project-resources-grid-card-meta" },
+                      React.createElement("span", { className: "playground-project-resources-cell" }, meta.label),
+                      React.createElement("span", { className: "playground-project-resources-cell" }, row.updatedLabel || "-")
+                    )
+                  );
+                })
+              );
+            }
+            return React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-project-resources-row is-header" },
+                React.createElement("div", null, "Resource"),
+                React.createElement("div", null, "Creator"),
+                React.createElement("div", null, "Updated"),
+                React.createElement("div", null, "")
+              ),
+              projectOverviewResourceRows.map((row) => {
+                const meta = getProjectOverviewResourceTypeMeta(row.type);
+                const Icon = meta.Icon || Layers;
+                const rowMenuId = getProjectOverviewResourceRowMenuId(row);
+                const rowMenuOpen = projectOverviewResourceMenuId === rowMenuId;
+                return React.createElement("div", {
+                    key: row.key,
+                    role: "button",
+                    tabIndex: 0,
+                    className: "playground-project-resources-row" + (rowMenuOpen ? " is-menu-open" : ""),
+                    onClick: () => openProjectOverviewResourceRow(row),
+                    onKeyDown: (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openProjectOverviewResourceRow(row);
+                      }
+                    },
+                  },
+                  React.createElement("div", { className: "playground-project-resource-title-cell" },
+                    renderProjectOverviewResourceIcon(row, Icon),
+                    React.createElement("span", { className: "playground-project-resource-title-copy" },
+                      React.createElement("span", { className: "playground-project-resource-title-main" }, row.title || "Untitled resource")
                     )
                   ),
-                  React.createElement("div", { className: "playground-project-resources-row is-header" },
-                    React.createElement("div", null, "Resource"),
-                    React.createElement("div", null, "Type"),
-                    React.createElement("div", null, "Status"),
-                    React.createElement("div", null, "Updated")
-                  ),
-                  projectOverviewResourceRows.length
-                    ? projectOverviewResourceRows.map((row) => {
-                        const meta = getProjectOverviewResourceTypeMeta(row.type);
-                        const Icon = meta.Icon || Layers;
-                        return React.createElement("button", {
-                            key: row.key,
-                            type: "button",
-                            className: "playground-project-resources-row",
-                            onClick: () => openProjectOverviewResourceRow(row),
-                          },
-                          React.createElement("div", { className: "playground-project-resource-title-cell" },
-                            React.createElement("span", { className: "playground-project-resource-title-icon" },
-                              React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.8 })
-                            ),
-                            React.createElement("span", { className: "playground-project-resource-title-copy" },
-                              React.createElement("span", { className: "playground-project-resource-title-main" }, row.title || "Untitled resource"),
-                              row.subtitle
-                                ? React.createElement("span", { className: "playground-project-resource-title-sub" }, row.subtitle)
-                                : null
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-project-resources-cell" }, meta.label),
-                          React.createElement("div", { className: "playground-project-resources-cell" }, row.status || "Linked"),
-                          React.createElement("div", { className: "playground-project-resources-cell" }, row.updatedLabel || "-")
-                        );
+                  React.createElement("div", { className: "playground-project-resources-cell" }, renderProjectOverviewResourceCreator(row)),
+                  React.createElement("div", { className: "playground-project-resources-cell" }, row.updatedLabel || "-"),
+                  React.createElement("div", { className: "playground-project-resources-row-action" },
+                    React.createElement("div", {
+                        className: "playground-tasks-toolbar-popup-shell playground-project-resources-action-shell" + (rowMenuOpen ? " is-open" : ""),
+                      },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-project-resources-action-button",
+                        onClick: (event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          if (typeof setProjectOverviewResourceToolbarPopover === "function") {
+                            setProjectOverviewResourceToolbarPopover("");
+                          }
+                          setProjectOverviewResourceMenuId?.((current) => current === rowMenuId ? "" : rowMenuId);
+                        },
+                        "aria-label": "Resource actions for " + (row.title || "resource"),
+                        "aria-expanded": rowMenuOpen ? "true" : "false",
+                      }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
+                      renderProjectOverviewResourceRowMenu(row)
+                    )
+                  )
+                );
+              })
+            );
+          }
+
+          function renderProjectOverviewResourcesHome() {
+            return React.createElement("div", { className: "playground-project-overview-resources-home" },
+              React.createElement("section", { className: "playground-project-resources-table-card" },
+                React.createElement("div", { className: "playground-project-resources-table-inner" },
+                  React.createElement("div", { className: "playground-project-resources-toolbar playground-files-library-title-row" },
+                    React.createElement("label", { className: "playground-files-library-search" },
+                      React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
+                      React.createElement("input", {
+                        type: "search",
+                        value: projectOverviewResourceSearchQuery,
+                        onChange: (event) => setProjectOverviewResourceSearchQuery(event.target.value),
+                        className: "playground-files-library-search-input",
+                        placeholder: "Search resources",
+                        "aria-label": "Search project resources",
                       })
-                    : React.createElement("div", { className: "playground-project-resources-empty" }, "No resources match this view yet.")
+                    ),
+                    React.createElement("div", { className: "playground-files-library-actions playground-project-resources-toolbar-actions" },
+                      React.createElement("div", { className: "playground-project-resources-new-shell playground-files-library-new-anchor playground-tasks-toolbar-popup-shell" + (projectOverviewResourceToolbarPopover === "new" ? " is-open" : "") },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-library-new-button" + (projectOverviewResourceToolbarPopover === "new" ? " is-active" : ""),
+                          onClick: (event) => {
+                            event.stopPropagation();
+                            closeProjectOverviewResourceMenu();
+                            setProjectOverviewResourceToolbarPopover((current) => current === "new" ? "" : "new");
+                          },
+                        },
+                          React.createElement("span", null, "New"),
+                          React.createElement(ChevronDown, { width: 18, height: 18, strokeWidth: 1.8 })
+                        ),
+                        renderProjectOverviewResourceNewMenu()
+                      ),
+                      React.createElement("div", { className: "playground-project-resources-filter-shell playground-files-library-control-anchor playground-tasks-toolbar-popup-shell" + (projectOverviewResourceToolbarPopover === "filter" ? " is-open" : "") },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-library-icon-button" + (projectOverviewResourceToolbarPopover === "filter" || String(projectOverviewResourceFilter || "all") !== "all" ? " is-active" : ""),
+                          onClick: (event) => {
+                            event.stopPropagation();
+                            closeProjectOverviewResourceMenu();
+                            setProjectOverviewResourceToolbarPopover((current) => current === "filter" ? "" : "filter");
+                          },
+                          title: "Filter resources",
+                          "aria-label": "Filter resources",
+                        }, React.createElement(SlidersHorizontal, { width: 19, height: 19, strokeWidth: 1.8 })),
+                        renderProjectOverviewResourceFilterMenu()
+                      ),
+                      React.createElement("span", { className: "playground-files-library-divider", "aria-hidden": "true" }),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-library-icon-button" + (projectOverviewResourceViewMode === "grid" ? " is-active" : ""),
+                        onClick: () => {
+                          closeProjectOverviewResourceMenu();
+                          setProjectOverviewResourceViewMode("grid");
+                        },
+                        title: "Grid view",
+                        "aria-label": "Grid view",
+                      }, React.createElement(Grid3x3, { width: 20, height: 20, strokeWidth: 1.8 })),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-library-icon-button" + (projectOverviewResourceViewMode === "list" ? " is-active" : ""),
+                        onClick: () => {
+                          closeProjectOverviewResourceMenu();
+                          setProjectOverviewResourceViewMode("list");
+                        },
+                        title: "List view",
+                        "aria-label": "List view",
+                      }, React.createElement(List, { width: 21, height: 21, strokeWidth: 1.8 }))
+                    )
+                  ),
+                  renderProjectOverviewResourceTableRows()
                 )
               )
             );
@@ -9643,7 +10659,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           async function persistProjectOverviewSidebarProjectUpdate(projectUpdates = {}, metadataUpdates = {}) {
             const baseProject = normalizePlaygroundProjectRecord(projectOverviewDraft || selectedProject);
             const normalizedProjectId = String(baseProject.id || normalizedSelectedProjectId || "").trim();
-            if (!normalizedProjectId || normalizedProjectId === PLAYGROUND_PROJECT_DRAFT_ID) {
+            if (!normalizedProjectId) {
               return null;
             }
             const baseMetadata = getProjectOverviewSidebarMetadata(baseProject);
@@ -9700,6 +10716,187 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               setProjectOverviewSidebarPropertyPopover("");
             }
             void persistProjectOverviewSidebarProjectUpdate(projectUpdates, metadataUpdates);
+          }
+
+          function getProjectOverviewWallpaperOptions() {
+            return typeof PLAYGROUND_PROJECT_WALLPAPER_OPTIONS !== "undefined" && Array.isArray(PLAYGROUND_PROJECT_WALLPAPER_OPTIONS)
+              ? PLAYGROUND_PROJECT_WALLPAPER_OPTIONS
+              : [];
+          }
+
+          function getProjectOverviewWallpaperId(projectRecord = projectOverviewDraft) {
+            const wallpaperOptions = getProjectOverviewWallpaperOptions();
+            const fallbackId = wallpaperOptions[0]?.id || "";
+            const metadata = projectRecord?.metadata && typeof projectRecord.metadata === "object" && !Array.isArray(projectRecord.metadata)
+              ? projectRecord.metadata
+              : {};
+            if (typeof getPlaygroundProjectWallpaperId === "function") {
+              return getPlaygroundProjectWallpaperId(projectRecord?.wallpaperId || metadata.wallpaperId, fallbackId);
+            }
+            return String(projectRecord?.wallpaperId || metadata.wallpaperId || fallbackId || "").trim();
+          }
+
+          function getProjectOverviewWallpaperConfig(wallpaperId, projectRecord = projectOverviewDraft) {
+            const wallpaperOptions = getProjectOverviewWallpaperOptions();
+            const fallback = wallpaperOptions[0] || { id: "", name: "Background", url: "" };
+            if (typeof getPlaygroundProjectWallpaperConfig === "function") {
+              return getPlaygroundProjectWallpaperConfig(wallpaperId || projectRecord, 0) || fallback;
+            }
+            const normalizedWallpaperId = String(wallpaperId || "").trim();
+            return wallpaperOptions.find((option) => option.id === normalizedWallpaperId) || fallback;
+          }
+
+          function buildProjectOverviewWallpaperBackgroundImage(wallpaperId, projectRecord = projectOverviewDraft) {
+            if (typeof buildProjectWallpaperBackgroundImage === "function") {
+              return buildProjectWallpaperBackgroundImage(wallpaperId, projectRecord);
+            }
+            const wallpaper = getProjectOverviewWallpaperConfig(wallpaperId, projectRecord);
+            return wallpaper?.url ? "url(" + wallpaper.url + ")" : "";
+          }
+
+          function commitProjectOverviewWallpaperDraft(wallpaperId, useCardBackgroundAsWallpaper = true) {
+            const normalizedWallpaperId = getProjectOverviewWallpaperId({
+              wallpaperId,
+              metadata: { wallpaperId },
+            });
+            if (!normalizedWallpaperId || typeof setProjectDraft !== "function") {
+              return;
+            }
+            setProjectDraft((current) => {
+              if (!current || String(current.id || "") !== normalizedSelectedProjectId) {
+                return current;
+              }
+              const currentMetadata = current.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
+                ? current.metadata
+                : {};
+              return normalizePlaygroundProjectRecord({
+                ...current,
+                wallpaperId: normalizedWallpaperId,
+                useCardBackgroundAsWallpaper,
+                metadata: {
+                  ...currentMetadata,
+                  wallpaperId: normalizedWallpaperId,
+                  useCardBackgroundAsWallpaper,
+                },
+              });
+            });
+          }
+
+          async function handleProjectOverviewWallpaperStep(direction) {
+            const wallpaperOptions = getProjectOverviewWallpaperOptions();
+            if (!wallpaperOptions.length || projectSaveState?.isSaving) {
+              return;
+            }
+            const step = direction === "prev" ? -1 : 1;
+            const baseProject = normalizePlaygroundProjectRecord(projectOverviewDraft || selectedProject);
+            const currentWallpaperId = getProjectOverviewWallpaperId(baseProject);
+            const currentIndex = wallpaperOptions.findIndex((wallpaper) => wallpaper.id === currentWallpaperId);
+            const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
+            const nextIndex = (safeCurrentIndex + step + wallpaperOptions.length) % wallpaperOptions.length;
+            const nextWallpaper = wallpaperOptions[nextIndex] || wallpaperOptions[0];
+            if (!nextWallpaper?.id || nextWallpaper.id === currentWallpaperId) {
+              return;
+            }
+
+            if (projectWallpaperTransitionTimerRef?.current) {
+              window.clearTimeout(projectWallpaperTransitionTimerRef.current);
+              projectWallpaperTransitionTimerRef.current = null;
+            }
+
+            if (typeof setProjectWallpaperTransition === "function") {
+              setProjectWallpaperTransition({
+                token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                direction: step > 0 ? "next" : "prev",
+                from: buildProjectOverviewWallpaperBackgroundImage(currentWallpaperId, baseProject),
+                to: buildProjectOverviewWallpaperBackgroundImage(nextWallpaper.id, baseProject),
+                fromPreview: "url(" + (wallpaperOptions[safeCurrentIndex]?.url || wallpaperOptions[0]?.url || "") + ")",
+                toPreview: "url(" + nextWallpaper.url + ")",
+              });
+              if (projectWallpaperTransitionTimerRef) {
+                projectWallpaperTransitionTimerRef.current = window.setTimeout(() => {
+                  setProjectWallpaperTransition(null);
+                  projectWallpaperTransitionTimerRef.current = null;
+                }, 380);
+              }
+            }
+
+            if (projectDraftWallpaperIdRef) {
+              projectDraftWallpaperIdRef.current = nextWallpaper.id;
+            }
+            if (projectDraftUseCardBackgroundAsWallpaperRef) {
+              projectDraftUseCardBackgroundAsWallpaperRef.current = true;
+            }
+            commitProjectOverviewWallpaperDraft(nextWallpaper.id, true);
+
+            const updatedProject = await persistProjectOverviewSidebarProjectUpdate({
+              wallpaperId: nextWallpaper.id,
+              useCardBackgroundAsWallpaper: true,
+            }, {
+              wallpaperId: nextWallpaper.id,
+              useCardBackgroundAsWallpaper: true,
+            });
+            if (!updatedProject) {
+              commitProjectOverviewWallpaperDraft(currentWallpaperId, baseProject.useCardBackgroundAsWallpaper !== false);
+            }
+          }
+
+          function renderProjectOverviewWallpaperSettingsSection() {
+            const wallpaperOptions = getProjectOverviewWallpaperOptions();
+            if (!wallpaperOptions.length) {
+              return null;
+            }
+            const currentWallpaperId = getProjectOverviewWallpaperId(projectOverviewDraft);
+            const currentWallpaper = getProjectOverviewWallpaperConfig(currentWallpaperId, projectOverviewDraft);
+            const previewBackgroundImage = currentWallpaper?.url ? "url(" + currentWallpaper.url + ")" : undefined;
+            const isPreviewTransitioning = projectWallpaperTransition
+              && typeof projectWallpaperTransition.fromPreview === "string"
+              && typeof projectWallpaperTransition.toPreview === "string";
+            return React.createElement("section", { className: "playground-project-settings-section playground-project-settings-wallpaper-section" },
+              React.createElement("div", { className: "playground-project-overview-strategy-add-row playground-project-overview-rules-inline-title-row" },
+                React.createElement("h2", { className: "playground-project-overview-strategy-add-title" }, "Background")
+              ),
+              React.createElement("div", { className: "playground-tasks-project-wallpaper-picker" },
+                React.createElement("div", {
+                    className: "playground-tasks-project-wallpaper-picker-preview" + (isPreviewTransitioning ? " is-" + projectWallpaperTransition.direction : ""),
+                    style: isPreviewTransitioning ? undefined : { backgroundImage: previewBackgroundImage },
+                    "aria-hidden": "true",
+                  },
+                  isPreviewTransitioning
+                    ? React.createElement(React.Fragment, null,
+                        React.createElement("div", {
+                          className: "playground-tasks-project-wallpaper-picker-preview-image is-outgoing",
+                          style: { backgroundImage: projectWallpaperTransition.fromPreview },
+                        }),
+                        React.createElement("div", {
+                          className: "playground-tasks-project-wallpaper-picker-preview-image is-incoming",
+                          style: { backgroundImage: projectWallpaperTransition.toPreview },
+                        })
+                      )
+                    : null
+                ),
+                React.createElement("div", { className: "playground-tasks-project-wallpaper-picker-controls" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-tasks-project-wallpaper-picker-button",
+                    onClick: () => void handleProjectOverviewWallpaperStep("prev"),
+                    disabled: projectSaveState?.isSaving,
+                    "aria-label": "Previous background image",
+                    title: "Previous background image",
+                  }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
+                  React.createElement("div", { className: "playground-tasks-project-wallpaper-picker-label" },
+                    currentWallpaper?.name || "Background"
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-tasks-project-wallpaper-picker-button",
+                    onClick: () => void handleProjectOverviewWallpaperStep("next"),
+                    disabled: projectSaveState?.isSaving,
+                    "aria-label": "Next background image",
+                    title: "Next background image",
+                  }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
+                )
+              )
+            );
           }
 
           function renderProjectOverviewSidebarSelectOption(option) {
@@ -9979,23 +11176,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties")
                 ),
                 React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
-                  renderProjectOverviewSidebarRow("Status", currentStatusOption.label, {
-                    editable: true,
-                    content: renderProjectOverviewSidebarSelectControl("status", renderStatusContent(currentStatusOption), {
-                      children: statusOptions.map((option) => renderProjectOverviewSidebarSelectOption({
-                        id: option.id,
-                        label: option.label,
-                        selected: option.id === currentStatusOption.id,
-                        icon: React.createElement("span", { className: "playground-project-overview-sidebar-status-dot" }),
-                        onSelect: () => updateProjectOverviewSidebarProjectProperty({
-                          status: option.id,
-                          state: option.id,
-                        }, {
-                          status: option.id,
-                        }),
-                      })),
-                    }),
-                  }),
                   renderProjectOverviewSidebarRow("Priority", getPlaygroundTaskPriorityLabel(currentPriorityValue), {
                     editable: true,
                     content: renderProjectOverviewSidebarSelectControl("priority", renderPlaygroundTaskPriorityLabel(currentPriorityValue), {
@@ -10124,32 +11304,98 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               ),
               React.createElement("section", { className: "playground-project-overview-sidebar-card" },
                 React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Milestones")
+                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Milestones"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-sidebar-icon-button",
+                    onClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      if (typeof setProjectOverviewMilestoneMenuId === "function") {
+                        setProjectOverviewMilestoneMenuId("");
+                      }
+                      if (typeof openReleaseComposer === "function") {
+                        openReleaseComposer();
+                      }
+                    },
+                    title: "Add milestone",
+                    "aria-label": "Add milestone",
+                  }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }))
                 ),
                 releaseSections.length > 0
                   ? React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
-                      releaseSections.map((section) =>
-                        React.createElement("button", {
+                      releaseSections.map((section) => {
+                        const releaseId = String(section.releaseId || "").trim();
+                        const menuId = "milestone:" + (releaseId || section.key || "");
+                        const isMenuOpen = projectOverviewMilestoneMenuId === menuId;
+                        return React.createElement("div", {
                           key: section.key,
-                          type: "button",
                           className: "playground-project-overview-sidebar-row playground-project-overview-sidebar-milestone-row",
-                          onClick: () => {
-                            if (typeof setSelectedReleaseId === "function") {
-                              setSelectedReleaseId(section.releaseId || "");
-                            }
-                            if (typeof setTaskView === "function") {
-                              setTaskView("backlog");
-                            }
-                          },
                         },
-                          React.createElement("div", { className: "playground-project-overview-sidebar-row-value is-full" },
-                            React.createElement("span", { className: "playground-project-overview-sidebar-chip" },
-                              section.title,
-                              React.createElement("span", { className: "playground-project-overview-sidebar-muted" }, String(section.tasks.length))
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-project-overview-sidebar-milestone-trigger",
+                            onClick: () => {
+                              if (typeof setSelectedReleaseId === "function") {
+                                setSelectedReleaseId(releaseId);
+                              }
+                              if (typeof setTaskView === "function") {
+                                setTaskView("backlog");
+                              }
+                            },
+                          },
+                            React.createElement("div", { className: "playground-project-overview-sidebar-row-value is-full" },
+                              React.createElement("span", { className: "playground-project-overview-sidebar-chip" },
+                                section.title,
+                                React.createElement("span", { className: "playground-project-overview-sidebar-muted" }, String(section.tasks.length))
+                              )
                             )
+                          ),
+                          React.createElement("div", {
+                              className: "playground-project-overview-sidebar-milestone-menu-shell" + (isMenuOpen ? " is-open" : ""),
+                            },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-project-overview-sidebar-icon-button",
+                              onClick: (event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                if (typeof setProjectOverviewMilestoneMenuId === "function") {
+                                  setProjectOverviewMilestoneMenuId((current) => current === menuId ? "" : menuId);
+                                }
+                              },
+                              title: "Milestone actions",
+                              "aria-label": "Milestone actions for " + (section.title || "milestone"),
+                              "aria-expanded": isMenuOpen ? "true" : "false",
+                            }, React.createElement(EllipsisVertical, { width: 14, height: 14, strokeWidth: 1.8 })),
+                            isMenuOpen
+                              ? React.createElement("div", {
+                                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-overview-sidebar-milestone-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                                  onClick: (event) => event.stopPropagation(),
+                                },
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "tb-popup-row playground-project-team-menu-item is-danger",
+                                    disabled: !releaseId,
+                                    onClick: (event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      if (typeof setProjectOverviewMilestoneMenuId === "function") {
+                                        setProjectOverviewMilestoneMenuId("");
+                                      }
+                                      if (releaseId && typeof handleDeleteRelease === "function") {
+                                        void handleDeleteRelease(releaseId);
+                                      }
+                                    },
+                                  },
+                                    React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                    React.createElement("span", null, "Delete milestone")
+                                  )
+                                )
+                              : null
                           )
-                        )
-                      )
+                        );
+                      })
                     )
                   : React.createElement("div", { className: "playground-project-overview-sidebar-empty" }, "No milestone")
               )
@@ -10559,11 +11805,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                           React.createElement("div", { className: "playground-tasks-empty-copy" },
                             "Add outcomes manually or run Mission Control to turn the strategy into measurable project outcomes."
                           )
-                        ),
-                    React.createElement("div", { className: "playground-project-overview-strategy-add-row playground-project-overview-rules-inline-title-row" },
-                      React.createElement("h2", { className: "playground-project-overview-strategy-add-title" }, "Rules")
-                    ),
-                    renderProjectOverviewRulesPanel({ inline: true })
+                        )
                   ),
                   React.createElement("div", { className: "playground-project-overview-strategy-card is-notes" },
                     React.createElement("div", { className: "playground-tasks-detail-description playground-project-overview-strategy-notes" },
@@ -10633,6 +11875,90 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	            const ruleEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
 	            const canAddRule = Boolean(normalizePlaygroundProjectRuleEntry(projectRuleInputValue))
 	              && !projectSaveState.isSaving;
+
+	            function closeProjectOverviewRuleComposer() {
+	              if (typeof setProjectRuleComposerOpen === "function") {
+	                setProjectRuleComposerOpen(false);
+	              }
+	              if (typeof setProjectRuleInputValue === "function") {
+	                setProjectRuleInputValue("");
+	              }
+	            }
+
+	            function renderProjectOverviewRuleComposerModal() {
+	              if (!projectRuleComposerOpen) {
+	                return null;
+	              }
+	              const content = React.createElement("div", {
+	                  className: "playground-tasks-project-modal-backdrop",
+	                  onClick: closeProjectOverviewRuleComposer,
+	                },
+	                React.createElement("form", {
+	                    className: "playground-tasks-project-modal playground-project-overview-rule-editor-modal",
+	                    onClick: (event) => event.stopPropagation(),
+	                    onSubmit: (event) => {
+	                      event.preventDefault();
+	                      void handleAddProjectRuleEntry();
+	                    },
+	                  },
+	                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
+	                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+	                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+	                        React.createElement(Shield, { width: 18, height: 18, strokeWidth: 1.9 })
+	                      ),
+	                      React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "Add Rule")
+	                    ),
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+	                      onClick: closeProjectOverviewRuleComposer,
+	                      title: "Close",
+	                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+	                  ),
+	                  React.createElement("div", { className: "playground-project-overview-outcome-editor-body" },
+	                    React.createElement("label", { className: "playground-tasks-project-modal-field" },
+	                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Rule"),
+	                      React.createElement("textarea", {
+	                        ref: projectRuleComposerTextareaRef,
+	                        className: "playground-environments-textarea playground-project-overview-rule-modal-textarea",
+	                        rows: 4,
+	                        value: projectRuleInputValue,
+	                        placeholder: "Describe the rule agents should follow in this project",
+	                        onChange: (event) => {
+	                          setProjectRuleInputValue(event.target.value);
+	                          resizeTaskDescriptionTextarea(event.currentTarget);
+	                        },
+	                        onKeyDown: (event) => {
+	                          if (event.key === "Escape") {
+	                            event.preventDefault();
+	                            closeProjectOverviewRuleComposer();
+	                          }
+	                        },
+	                      })
+	                    )
+	                  ),
+	                  projectSaveState?.error
+	                    ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, projectSaveState.error)
+	                    : null,
+	                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-environments-action-button",
+	                      onClick: closeProjectOverviewRuleComposer,
+	                    }, "Cancel"),
+	                    React.createElement("button", {
+	                      type: "submit",
+	                      className: "playground-environments-action-button is-primary",
+	                      disabled: !canAddRule,
+	                    }, projectSaveState.isSaving ? "Saving..." : "Add Rule")
+	                  )
+	                )
+	              );
+	              if (typeof document !== "undefined" && document.body) {
+	                return createPortal(content, document.body);
+	              }
+	              return content;
+	            }
 
 	            return React.createElement("section", {
 	                className: "playground-project-overview-rules-tab" + (isInline ? " is-inline" : ""),
@@ -10721,46 +12047,37 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                    ? React.createElement("div", { className: "playground-environments-muted playground-tasks-comment-feedback" }, "Saving changes...")
 	                    : null
 	              ),
-	              React.createElement("div", {
-	                  className: "playground-project-overview-rules-composer-shell playground-tasks-backlog-composer-shell"
-	                    + (isInline ? " is-inline" : "")
-	                    + (projectWallpaperActive ? " is-project-wallpaper-active" : ""),
+	              renderProjectOverviewRuleComposerModal()
+	            );
+	          }
+
+	          function renderProjectOverviewSettingsRulesSection() {
+	            return React.createElement("section", { className: "playground-project-settings-section playground-project-settings-rules-section" },
+	              React.createElement("div", { className: "playground-project-overview-strategy-add-row playground-project-overview-rules-inline-title-row" },
+	                React.createElement("h2", { className: "playground-project-overview-strategy-add-title" }, "Rules"),
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-files-control-button playground-project-teams-add-button playground-project-settings-add-rule-button",
+	                  onClick: () => {
+	                    if (typeof setProjectRuleInputValue === "function") {
+	                      setProjectRuleInputValue("");
+	                    }
+	                    if (typeof setProjectRuleComposerOpen === "function") {
+	                      setProjectRuleComposerOpen(true);
+	                    }
+	                    window.requestAnimationFrame(() => {
+	                      const textarea = projectRuleComposerTextareaRef.current;
+	                      if (!textarea) return;
+	                      textarea.focus();
+	                      resizeTaskDescriptionTextarea(textarea);
+	                    });
+	                  },
 	                },
-	                React.createElement("div", { className: "tb-runner-chat playground-project-overview-rules-runner" },
-	                  React.createElement("div", { className: "task-input-box" },
-	                    React.createElement("div", { className: "tb-composer-textarea-shell" },
-	                      React.createElement("textarea", {
-	                        ref: projectRuleComposerTextareaRef,
-	                        rows: 1,
-	                        className: "sidebar-textarea",
-	                        value: projectRuleInputValue,
-	                        placeholder: "Add a project rule",
-	                        onChange: (event) => {
-	                          setProjectRuleInputValue(event.target.value);
-	                          resizeTaskDescriptionTextarea(event.currentTarget);
-	                        },
-	                        onKeyDown: (event) => {
-	                          if (event.key === "Enter" && !event.shiftKey) {
-	                            event.preventDefault();
-	                            void handleAddProjectRuleEntry();
-	                          }
-	                        },
-	                      })
-	                    ),
-	                    React.createElement("div", { className: "task-input-controls task-input-controls-full" },
-	                      React.createElement("div", { className: "task-input-spacer" }),
-	                      React.createElement("button", {
-	                        type: "button",
-	                        className: "task-run-button task-run-button-full",
-	                        onClick: () => void handleAddProjectRuleEntry(),
-	                        disabled: !canAddRule,
-	                        "aria-label": "Add rule",
-	                        title: "Add rule",
-	                      }, React.createElement(ArrowUp, { className: "task-send-icon", strokeWidth: 2.1 }))
-	                    )
-	                  )
+	                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                  React.createElement("span", null, "Add Rule")
 	                )
-	              )
+	              ),
+	              renderProjectOverviewRulesPanel({ inline: true })
 	            );
 	          }
 
@@ -10924,7 +12241,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	            };
 
 	            const renderProjectTeamTable = () =>
-	              React.createElement(React.Fragment, null,
+	              React.createElement("section", { className: "playground-project-settings-access-section" },
 	                React.createElement("div", { className: "playground-project-teams-table-heading" },
 	                  React.createElement("h2", { className: "playground-project-teams-table-title" }, "Manage Project Access"),
 	                  hasRealAccess
@@ -11022,7 +12339,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                    onClick: () => setProjectOverviewPermissionTeamId?.(""),
 	                  },
 	                    React.createElement(ArrowLeft, { width: 13, height: 13, strokeWidth: 1.9 }),
-	                    React.createElement("span", null, "Teams")
+	                    React.createElement("span", null, "Settings")
 	                  ),
 	                  React.createElement("div", { className: "playground-project-team-permissions-title" },
 	                    (selectedPermissionTeam.name || "Team") + " Permissions"
@@ -11048,9 +12365,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	            }
 
 	            return React.createElement("section", {
-	                className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section",
+	                className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root",
 	              },
-	              renderProjectTeamTable()
+	              renderProjectOverviewWallpaperSettingsSection(),
+	              renderProjectOverviewPluginsPanel(),
+	              renderProjectTeamTable(),
+	              renderProjectOverviewSettingsRulesSection()
 	            );
 	          }
 

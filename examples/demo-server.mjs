@@ -32902,6 +32902,14 @@ const html = `<!doctype html>
         overflow: hidden;
       }
 
+      .playground-content-body.is-tasks-page .playground-tasks-main-scroll.is-projects-home > .playground-projects-overview-surface.is-card-grid {
+        padding: 42px 50px 56px;
+        display: block;
+        flex: 0 0 auto;
+        min-height: 100%;
+        overflow: visible;
+      }
+
       .playground-projects-overview-inner {
         width: 100%;
         max-width: none;
@@ -32911,6 +32919,15 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 0;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-projects-overview-inner {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        margin: 0 auto;
+        min-height: auto;
+        flex: initial;
+        gap: 30px;
       }
 
       .playground-projects-list-shell {
@@ -33295,6 +33312,11 @@ const html = `<!doctype html>
         align-items: center;
         justify-content: space-between;
         gap: 18px;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-projects-overview-title-block {
+        padding-bottom: 0;
+        border-bottom: 0;
       }
 
       .playground-projects-overview-title-copy {
@@ -45317,6 +45339,133 @@ ${METRONOME_PAGE_CSS}
         overflow: hidden;
       }
 
+      .playground-metronome-run-thread-surface {
+        background: transparent;
+      }
+
+      .tb-runner-chat.playground-metronome-run-thread-surface .tb-log-scroll.is-custom-empty-state {
+        flex-direction: row !important;
+        justify-content: center !important;
+        align-items: flex-start !important;
+        padding: 12px 20px 180px !important;
+      }
+
+      .tb-runner-chat.playground-metronome-run-thread-surface .tb-content-width.is-custom-empty-state {
+        width: min(100%, 56rem) !important;
+        max-width: 56rem !important;
+        display: block !important;
+        align-items: initial !important;
+        justify-content: initial !important;
+      }
+
+      .playground-metronome-run-thread-list {
+        width: 100%;
+        min-height: auto;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-metronome-run-thread-turn {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-metronome-run-thread-user-shell {
+        align-self: flex-end;
+        max-width: min(760px, 72%);
+      }
+
+      .playground-metronome-run-thread-work-header {
+        margin-top: 34px;
+      }
+
+      .playground-metronome-run-thread-work {
+        margin-top: 8px;
+      }
+
+      .playground-metronome-run-thread-work .agent-steps-container {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+
+      .playground-metronome-run-thread-log-step {
+        width: 100%;
+        max-width: 980px;
+      }
+
+      .playground-metronome-run-thread-summary {
+        margin-top: 36px;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-output-markdown {
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 5px;
+        color: rgba(255, 255, 255, 0.54);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-item {
+        min-width: 0;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-label {
+        color: rgba(255, 255, 255, 0.38);
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-separator {
+        color: rgba(255, 255, 255, 0.24);
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-id {
+        color: rgba(102, 166, 255, 0.8);
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-link {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: #66a6ff;
+        font: inherit;
+        font-size: 10px;
+        line-height: 1.2;
+        cursor: pointer;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-trace-field {
+        margin-top: 10px;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-trace-field-label {
+        margin-bottom: 5px;
+        color: rgba(255, 255, 255, 0.44);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
       .playground-demo-page,
       .playground-demo-thread-shell,
       .playground-demo-changes-shell {
@@ -46021,7 +46170,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Cog, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -49085,6 +49234,551 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           return "";
         }
         return meta.metronomeId + ":" + meta.runId;
+      }
+
+      function isGenericMetronomeRunPromptText(value) {
+        const normalized = String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+        return !normalized
+          || normalized === "manual workflow run"
+          || normalized === "manual trigger received.";
+      }
+
+      function readMetronomeRunPromptCandidate(value) {
+        if (value === null || typeof value === "undefined") return "";
+        if (typeof value === "string") {
+          const trimmed = value.trim();
+          return isGenericMetronomeRunPromptText(trimmed) ? "" : trimmed;
+        }
+        if (typeof value !== "object") {
+          const trimmed = String(value || "").trim();
+          return isGenericMetronomeRunPromptText(trimmed) ? "" : trimmed;
+        }
+        const preferredKeys = [
+          "userMessage",
+          "user_message",
+          "displayMessage",
+          "display_message",
+          "triggerMessage",
+          "trigger_message",
+          "message",
+          "prompt",
+          "body",
+          "text",
+          "content",
+        ];
+        for (const key of preferredKeys) {
+          const candidate = readMetronomeRunPromptCandidate(value[key]);
+          if (candidate) return candidate;
+        }
+        for (const key of ["thread", "trigger", "event", "input", "inputs", "payload", "email"]) {
+          const nested = value[key];
+          if (nested && typeof nested === "object") {
+            const candidate = readMetronomeRunPromptCandidate(nested);
+            if (candidate) return candidate;
+          }
+        }
+        return "";
+      }
+
+      function extractMetronomeReadableOutputText(value) {
+        if (value === null || typeof value === "undefined") return "";
+        if (typeof value === "string") {
+          const trimmed = value.trim();
+          if (!trimmed) return "";
+          try {
+            return extractMetronomeReadableOutputText(JSON.parse(trimmed));
+          } catch {
+            return trimmed;
+          }
+        }
+        if (typeof value !== "object") {
+          return String(value || "").trim();
+        }
+        if (Array.isArray(value)) {
+          return value
+            .map((item) => extractMetronomeReadableOutputText(item))
+            .filter(Boolean)
+            .join("\\n\\n");
+        }
+        const preferredKeys = [
+          "output_text",
+          "outputText",
+          "markdown",
+          "text",
+          "message",
+          "summary",
+          "content",
+          "response",
+        ];
+        for (const key of preferredKeys) {
+          const extracted = extractMetronomeReadableOutputText(value[key]);
+          if (extracted) return extracted;
+        }
+        for (const key of ["result", "output", "data"]) {
+          const nested = value[key];
+          if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+            const extracted = extractMetronomeReadableOutputText(nested);
+            if (extracted) return extracted;
+          }
+        }
+        return "";
+      }
+
+      function normalizeMetronomeRunMarkdownText(value) {
+        return String(value || "")
+          .replace(/\\\\r\\\\n/g, "\\n")
+          .replace(/\\\\n/g, "\\n")
+          .replace(/\\\\r/g, "\\n")
+          .replace(new RegExp("\\\\\\\\([*_\\\\x60\\\\[\\\\]\\\\(\\\\)#+\\\\-.!>])", "g"), "$1")
+          .trim();
+      }
+
+      function formatMetronomeRunValue(value) {
+        if (value === null || typeof value === "undefined") return "";
+        if (typeof value === "string") {
+          const trimmed = value.trim();
+          if (!trimmed) return "";
+          try {
+            return JSON.stringify(JSON.parse(trimmed), null, 2);
+          } catch {
+            return trimmed;
+          }
+        }
+        try {
+          return JSON.stringify(value, null, 2);
+        } catch {
+          return String(value || "");
+        }
+      }
+
+      function getMetronomeRunPrompt(run) {
+        const output = run?.output && typeof run.output === "object" ? run.output : {};
+        const steps = Array.isArray(output.steps) ? output.steps : [];
+        const candidates = [
+          run?.prompt,
+          run?.displayPrompt,
+          run?.displayMessage,
+          run?.userMessage,
+          run?.message,
+          run?.input,
+          run?.inputs,
+          output?.trigger,
+          output?.input,
+          output?.inputs,
+          output?.prompt,
+          output?.message,
+        ];
+        const triggerStep = steps.find((step) => String(step?.kind || "").toLowerCase() === "trigger") || steps[0] || null;
+        if (triggerStep) {
+          candidates.push(triggerStep.input, triggerStep.inputs, triggerStep.output, triggerStep.summary);
+        }
+        for (const candidate of candidates) {
+          const prompt = readMetronomeRunPromptCandidate(candidate);
+          if (prompt) return prompt;
+        }
+        return "Manual workflow run";
+      }
+
+      function isGenericMetronomeRunSummaryText(value) {
+        const normalized = String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+        return !normalized
+          || normalized === "metronome run completed."
+          || normalized === "metronome run completed"
+          || normalized === "workflow reached the end node."
+          || normalized === "workflow reached the end node";
+      }
+
+      function getMetronomeRunTraceRecord(value) {
+        return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      }
+
+      function getFirstMetronomeRunTraceRecord(...values) {
+        for (const value of values) {
+          const record = getMetronomeRunTraceRecord(value);
+          if (Object.keys(record).length) return record;
+        }
+        return {};
+      }
+
+      function getMetronomeRunTraceStepKind(step) {
+        const safeStep = getMetronomeRunTraceRecord(step);
+        return String(
+          safeStep.kind
+          || safeStep.nodeType
+          || safeStep.node_type
+          || safeStep.type
+          || safeStep.subtype
+          || safeStep.action
+          || ""
+        ).trim().toLowerCase();
+      }
+
+      function getMetronomeRunTraceStepOutputRecord(step) {
+        const safeStep = getMetronomeRunTraceRecord(step);
+        return getMetronomeRunTraceRecord(safeStep.output || safeStep.result || safeStep.data);
+      }
+
+      function getMetronomeRunTraceStepThreadId(step, thread) {
+        const safeStep = getMetronomeRunTraceRecord(step);
+        const stepOutput = getMetronomeRunTraceStepOutputRecord(safeStep);
+        const outputThread = getMetronomeRunTraceRecord(stepOutput.thread || stepOutput.threadRecord || stepOutput.thread_record);
+        return String(
+          thread?.id
+          || thread?.threadId
+          || thread?.thread_id
+          || safeStep.threadId
+          || safeStep.thread_id
+          || stepOutput.threadId
+          || stepOutput.thread_id
+          || outputThread.id
+          || outputThread.threadId
+          || outputThread.thread_id
+          || ""
+        ).trim();
+      }
+
+      function findMetronomeRunThreadForStep(step, threads) {
+        if (!Array.isArray(threads)) return null;
+        const safeStep = getMetronomeRunTraceRecord(step);
+        const stepOutput = getMetronomeRunTraceStepOutputRecord(safeStep);
+        const outputThread = getMetronomeRunTraceRecord(stepOutput.thread || stepOutput.threadRecord || stepOutput.thread_record);
+        const threadIdCandidates = [
+          safeStep.threadId,
+          safeStep.thread_id,
+          stepOutput.threadId,
+          stepOutput.thread_id,
+          outputThread.id,
+          outputThread.threadId,
+          outputThread.thread_id,
+        ].map((value) => String(value || "").trim()).filter(Boolean);
+        if (threadIdCandidates.length) {
+          const matchedByThreadId = threads.find((thread) => {
+            const candidateId = String(thread?.id || thread?.threadId || thread?.thread_id || "").trim();
+            return candidateId && threadIdCandidates.includes(candidateId);
+          });
+          if (matchedByThreadId) return matchedByThreadId;
+        }
+
+        const nodeIdCandidates = [
+          safeStep.nodeId,
+          safeStep.node_id,
+          stepOutput.nodeId,
+          stepOutput.node_id,
+          outputThread.nodeId,
+          outputThread.node_id,
+        ].map((value) => String(value || "").trim()).filter(Boolean);
+        if (!nodeIdCandidates.length) return null;
+        return threads.find((thread) => {
+          const candidateNodeId = String(thread?.nodeId || thread?.node_id || "").trim();
+          return candidateNodeId && nodeIdCandidates.includes(candidateNodeId);
+        }) || null;
+      }
+
+      function isMetronomeRunTraceThreadStep(step, thread) {
+        const safeStep = getMetronomeRunTraceRecord(step);
+        const kind = getMetronomeRunTraceStepKind(safeStep);
+        const subtype = String(safeStep.subtype || safeStep.type || safeStep.nodeSubtype || safeStep.node_subtype || "").trim().toLowerCase();
+        const stepOutput = getMetronomeRunTraceStepOutputRecord(safeStep);
+        const outputThread = getMetronomeRunTraceRecord(stepOutput.thread || stepOutput.threadRecord || stepOutput.thread_record);
+        if (thread || getMetronomeRunTraceStepThreadId(safeStep, outputThread)) return true;
+        return [
+          "thread",
+          "action",
+          "start_thread",
+          "agent",
+          "agent_thread",
+        ].includes(kind) || [
+          "thread",
+          "start_thread",
+          "agent_thread",
+        ].includes(subtype);
+      }
+
+      function getMetronomeRunTraceThreadRuntimeMeta(step, thread, context = {}) {
+        const threadId = getMetronomeRunTraceStepThreadId(step, thread);
+        const knownThreads = Array.isArray(context?.threads) ? context.threads : [];
+        const agents = Array.isArray(context?.agents) ? context.agents : [];
+        const environments = Array.isArray(context?.environments) ? context.environments : [];
+        const knownThread = threadId
+          ? knownThreads.find((item) => String(item?.id || "").trim() === threadId) || null
+          : null;
+        const safeThread = getMetronomeRunTraceRecord(thread);
+        const safeStep = getMetronomeRunTraceRecord(step);
+        const stepConfig = getMetronomeRunTraceRecord(safeStep.config);
+        const stepInput = getMetronomeRunTraceRecord(safeStep.input);
+        const stepOutput = getMetronomeRunTraceStepOutputRecord(safeStep);
+        const stepResult = getMetronomeRunTraceRecord(safeStep.result);
+        const stepData = getMetronomeRunTraceRecord(safeStep.data);
+        const outputThread = getMetronomeRunTraceRecord(stepOutput.thread || stepOutput.threadRecord || stepOutput.thread_record);
+        const resultThread = getMetronomeRunTraceRecord(stepResult.thread || stepResult.threadRecord || stepResult.thread_record);
+        const dataThread = getMetronomeRunTraceRecord(stepData.thread || stepData.threadRecord || stepData.thread_record);
+        const threadMetadata = getMetronomeRunTraceRecord(safeThread.metadata);
+        const knownThreadMetadata = getMetronomeRunTraceRecord(knownThread?.metadata);
+        const runnerPlayground = knownThreadMetadata.runnerPlayground && typeof knownThreadMetadata.runnerPlayground === "object" && !Array.isArray(knownThreadMetadata.runnerPlayground)
+          ? knownThreadMetadata.runnerPlayground
+          : {};
+        const taskPreview = runnerPlayground.taskPreview && typeof runnerPlayground.taskPreview === "object" && !Array.isArray(runnerPlayground.taskPreview)
+          ? runnerPlayground.taskPreview
+          : {};
+        const agentRecord = getFirstMetronomeRunTraceRecord(
+          safeThread.agent,
+          safeStep.agent,
+          stepOutput.agent,
+          outputThread.agent,
+          resultThread.agent,
+          dataThread.agent
+        );
+        const computerRecord = getFirstMetronomeRunTraceRecord(
+          safeThread.computer,
+          safeThread.environment,
+          safeStep.computer,
+          safeStep.environment,
+          stepOutput.computer,
+          stepOutput.environment,
+          outputThread.computer,
+          outputThread.environment,
+          resultThread.computer,
+          resultThread.environment,
+          dataThread.computer,
+          dataThread.environment
+        );
+
+        const agentId = String(
+          safeThread.agentId
+          || safeThread.agent_id
+          || safeStep.agentId
+          || safeStep.agent_id
+          || stepConfig.agentId
+          || stepConfig.agent_id
+          || stepInput.agentId
+          || stepInput.agent_id
+          || stepOutput.agentId
+          || stepOutput.agent_id
+          || outputThread.agentId
+          || outputThread.agent_id
+          || resultThread.agentId
+          || resultThread.agent_id
+          || dataThread.agentId
+          || dataThread.agent_id
+          || knownThread?.agentId
+          || taskPreview.agentId
+          || agentRecord.id
+          || ""
+        ).trim();
+        const computerId = String(
+          safeThread.environmentId
+          || safeThread.environment_id
+          || safeThread.computerId
+          || safeThread.computer_id
+          || safeStep.environmentId
+          || safeStep.environment_id
+          || safeStep.computerId
+          || safeStep.computer_id
+          || stepConfig.environmentId
+          || stepConfig.environment_id
+          || stepConfig.computerId
+          || stepConfig.computer_id
+          || stepInput.environmentId
+          || stepInput.environment_id
+          || stepInput.computerId
+          || stepInput.computer_id
+          || stepOutput.environmentId
+          || stepOutput.environment_id
+          || stepOutput.computerId
+          || stepOutput.computer_id
+          || outputThread.environmentId
+          || outputThread.environment_id
+          || outputThread.computerId
+          || outputThread.computer_id
+          || resultThread.environmentId
+          || resultThread.environment_id
+          || resultThread.computerId
+          || resultThread.computer_id
+          || dataThread.environmentId
+          || dataThread.environment_id
+          || dataThread.computerId
+          || dataThread.computer_id
+          || knownThread?.environmentId
+          || taskPreview.environmentId
+          || computerRecord.id
+          || ""
+        ).trim();
+
+        const agentNameFromId = agentId
+          ? agents.find((agent) => String(agent?.id || "").trim() === agentId)?.name || ""
+          : "";
+        const computerNameFromId = computerId
+          ? environments.find((environment) => String(environment?.id || "").trim() === computerId)?.name || ""
+          : "";
+        const agentName = String(
+          safeThread.agentName
+          || safeThread.agent_name
+          || threadMetadata.agentName
+          || threadMetadata.agent_name
+          || safeStep.agentName
+          || safeStep.agent_name
+          || stepConfig.agentName
+          || stepConfig.agent_name
+          || stepInput.agentName
+          || stepInput.agent_name
+          || stepOutput.agentName
+          || stepOutput.agent_name
+          || outputThread.agentName
+          || outputThread.agent_name
+          || resultThread.agentName
+          || resultThread.agent_name
+          || dataThread.agentName
+          || dataThread.agent_name
+          || knownThread?.agentName
+          || taskPreview.agentName
+          || agentRecord.name
+          || agentRecord.label
+          || agentNameFromId
+          || ""
+        ).trim();
+        const computerName = String(
+          safeThread.environmentName
+          || safeThread.environment_name
+          || safeThread.computerName
+          || safeThread.computer_name
+          || threadMetadata.environmentName
+          || threadMetadata.environment_name
+          || threadMetadata.computerName
+          || threadMetadata.computer_name
+          || safeStep.environmentName
+          || safeStep.environment_name
+          || safeStep.computerName
+          || safeStep.computer_name
+          || stepConfig.environmentName
+          || stepConfig.environment_name
+          || stepConfig.computerName
+          || stepConfig.computer_name
+          || stepInput.environmentName
+          || stepInput.environment_name
+          || stepInput.computerName
+          || stepInput.computer_name
+          || stepOutput.environmentName
+          || stepOutput.environment_name
+          || stepOutput.computerName
+          || stepOutput.computer_name
+          || outputThread.environmentName
+          || outputThread.environment_name
+          || outputThread.computerName
+          || outputThread.computer_name
+          || resultThread.environmentName
+          || resultThread.environment_name
+          || resultThread.computerName
+          || resultThread.computer_name
+          || dataThread.environmentName
+          || dataThread.environment_name
+          || dataThread.computerName
+          || dataThread.computer_name
+          || knownThread?.environmentName
+          || taskPreview.environmentName
+          || computerRecord.name
+          || computerRecord.label
+          || computerNameFromId
+          || ""
+        ).trim();
+
+        return {
+          agentName: agentName || (agentId ? "Agent" : ""),
+          computerName: computerName || (computerId ? "Computer" : ""),
+        };
+      }
+
+      function renderMetronomeRunTraceThreadRuntimeMeta(meta) {
+        const agentName = String(meta?.agentName || "").trim();
+        const computerName = String(meta?.computerName || "").trim();
+        if (!agentName && !computerName) return null;
+        return React.createElement("div", { className: "playground-metronome-run-thread-runtime-row" },
+          agentName
+            ? React.createElement("span", { className: "playground-metronome-run-thread-runtime-item" },
+                React.createElement("span", { className: "playground-metronome-run-thread-runtime-label" }, "Agent"),
+                " ",
+                agentName
+              )
+            : null,
+          agentName && computerName
+            ? React.createElement("span", { className: "playground-metronome-run-thread-runtime-separator" }, "·")
+            : null,
+          computerName
+            ? React.createElement("span", { className: "playground-metronome-run-thread-runtime-item" },
+                React.createElement("span", { className: "playground-metronome-run-thread-runtime-label" }, "Computer"),
+                " ",
+                computerName
+              )
+            : null
+        );
+      }
+
+      function extractMetronomeThreadReadableOutputText(step, thread) {
+        const candidates = [
+          step?.output,
+          step?.result,
+          step?.data,
+          thread?.output,
+          thread?.result,
+          thread?.data,
+          thread?.summary,
+          step?.summary,
+        ];
+        for (const candidate of candidates) {
+          const text = extractMetronomeReadableOutputText(candidate);
+          if (text) return text;
+        }
+        return "";
+      }
+
+      function getMetronomeRunSummaryText(run) {
+        const output = run?.output && typeof run.output === "object" ? run.output : {};
+        const steps = Array.isArray(output.steps) ? output.steps : [];
+        const threads = Array.isArray(output.threads) ? output.threads : [];
+        for (let index = threads.length - 1; index >= 0; index -= 1) {
+          const thread = threads[index];
+          const threadText = extractMetronomeReadableOutputText(thread?.summary)
+            || extractMetronomeReadableOutputText(thread?.output)
+            || extractMetronomeReadableOutputText(thread?.result)
+            || extractMetronomeReadableOutputText(thread?.data);
+          if (threadText && !isGenericMetronomeRunSummaryText(threadText)) {
+            return threadText;
+          }
+        }
+        for (let index = steps.length - 1; index >= 0; index -= 1) {
+          const step = steps[index];
+          const kind = String(step?.kind || "").toLowerCase();
+          const subtype = String(step?.subtype || step?.type || "").toLowerCase();
+          const isThreadStep = kind === "thread" || subtype === "thread" || subtype === "start_thread";
+          if (!isThreadStep) continue;
+          const thread = findMetronomeRunThreadForStep(step, threads);
+          const threadText = extractMetronomeThreadReadableOutputText(step, thread);
+          if (threadText && !isGenericMetronomeRunSummaryText(threadText)) {
+            return threadText;
+          }
+        }
+        const candidates = [
+          output.runSummary,
+          output.run_summary,
+          output.summary,
+          output.message,
+          run?.summary,
+          run?.result,
+          run?.error,
+        ];
+        for (const candidate of candidates) {
+          const text = extractMetronomeReadableOutputText(candidate);
+          if (text && !isGenericMetronomeRunSummaryText(text)) return text;
+        }
+        const finalStep = steps[steps.length - 1] || null;
+        const finalStepText = extractMetronomeReadableOutputText(finalStep?.output) || String(finalStep?.summary || "").trim();
+        if (finalStepText && !isGenericMetronomeRunSummaryText(finalStepText)) return finalStepText;
+        const completedStepCount = steps.length;
+        const threadCount = threads.length;
+        if (completedStepCount || threadCount) {
+          return "Workflow completed with " + completedStepCount + " step" + (completedStepCount === 1 ? "" : "s")
+            + (threadCount ? " and " + threadCount + " thread" + (threadCount === 1 ? "" : "s") : "") + ".";
+        }
+        return "";
       }
 
       function normalizeThreadList(items) {
@@ -106794,6 +107488,14 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         onOpenResourceTemplatesPage,
         projectOverviewResourceFilter = "all",
         setProjectOverviewResourceFilter = () => {},
+        projectOverviewResourceSearchQuery = "",
+        setProjectOverviewResourceSearchQuery = () => {},
+        projectOverviewResourceViewMode = "list",
+        setProjectOverviewResourceViewMode = () => {},
+        projectOverviewResourceToolbarPopover = "",
+        setProjectOverviewResourceToolbarPopover = () => {},
+        projectOverviewResourceMenuId = "",
+        setProjectOverviewResourceMenuId = () => {},
         workspaceTeams = [],
         workspaceTeamsLoading = false,
         workspaceTeamsRequiresPlan = false,
@@ -106938,6 +107640,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const [ticketDetailSidebarCollapsed, setTicketDetailSidebarCollapsed] = useState(false);
         const [projectOverviewPermissionTeamId, setProjectOverviewPermissionTeamId] = useState("");
         const [projectOverviewTeamMenuId, setProjectOverviewTeamMenuId] = useState("");
+        const [projectOverviewMilestoneMenuId, setProjectOverviewMilestoneMenuId] = useState("");
         const workspaceTeamsCount = Array.isArray(workspaceTeams) ? workspaceTeams.length : 0;
         function requestProjectOverviewWorkspaceTeams() {
           if (!hasRealAccess || workspaceTeamsLoading || workspaceTeamsRequiresPlan || workspaceTeamsCount > 0) {
@@ -107141,6 +107844,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	        const selectedProjectMissionControlRef = useRef(buildEmptyPlaygroundProjectMissionControl());
 	        const [projectRulesDraft, setProjectRulesDraft] = useState("");
 	        const [projectRuleInputValue, setProjectRuleInputValue] = useState("");
+	        const [projectRuleComposerOpen, setProjectRuleComposerOpen] = useState(false);
 	        const [projectRuleEditingIndex, setProjectRuleEditingIndex] = useState(-1);
 	        const [projectRuleEditingValue, setProjectRuleEditingValue] = useState("");
 	        const [isMissionControlDocumentEditing, setIsMissionControlDocumentEditing] = useState(false);
@@ -109472,9 +110176,37 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           return () => document.removeEventListener("mousedown", handleProjectOverviewSidebarPropertyPointerDown);
         }, [projectOverviewSidebarPropertyPopover]);
         useEffect(() => {
+          if (!projectOverviewTeamMenuId && !projectOverviewMilestoneMenuId && !projectOverviewResourceMenuId) return undefined;
+
+          function handleProjectOverviewMenusPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target) {
+              return;
+            }
+            if (target.closest(".playground-project-team-action-shell") || target.closest(".playground-project-teams-add-shell")) {
+              return;
+            }
+            if (target.closest(".playground-project-overview-sidebar-milestone-menu-shell")) {
+              return;
+            }
+            if (target.closest(".playground-project-resources-action-shell")) {
+              return;
+            }
+            setProjectOverviewTeamMenuId("");
+            setProjectOverviewMilestoneMenuId("");
+            setProjectOverviewResourceMenuId("");
+          }
+
+          document.addEventListener("mousedown", handleProjectOverviewMenusPointerDown);
+          return () => document.removeEventListener("mousedown", handleProjectOverviewMenusPointerDown);
+        }, [projectOverviewTeamMenuId, projectOverviewMilestoneMenuId, projectOverviewResourceMenuId]);
+        useEffect(() => {
           setProjectOverviewVisibleThreadCount(5);
           setProjectOverviewVisibleActivityCount(3);
           setProjectOverviewSidebarPropertyPopover("");
+          setProjectOverviewTeamMenuId("");
+          setProjectOverviewMilestoneMenuId("");
+          setProjectOverviewResourceMenuId("");
         }, [projectOverviewThreadFilterMode, projectOverviewThreadSearchQuery, projectOverviewThreadSortMode, selectedProjectId]);
         useEffect(() => {
           setTaskDetailThreadToolbarPopover("");
@@ -116645,6 +117377,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          }
 	          setProjectRulesDraft(String(selectedProjectRules || ""));
 	          setProjectRuleInputValue("");
+	          setProjectRuleComposerOpen(false);
 	          setProjectRuleEditingIndex(-1);
 	          setProjectRuleEditingValue("");
 	        }, [
@@ -119394,7 +120127,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	        async function persistProjectPermissionSet(nextPermissionSet) {
 	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
 	          const normalizedProjectId = String(normalizedProject.id || "").trim();
-	          if (!normalizedProjectId || normalizedProjectId === PLAYGROUND_PROJECT_DRAFT_ID) {
+	          if (!normalizedProjectId) {
 	            return null;
 	          }
 	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(nextPermissionSet, "project");
@@ -119676,7 +120409,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          const normalizedProjectId = String(normalizedProject.id || "").trim();
 	          const normalizedTeamId = String(teamId || "").trim();
 	          const normalizedAction = action === "add" ? "add" : "remove";
-	          if (!normalizedProjectId || !normalizedTeamId || normalizedTeamId === "all_agents" || normalizedProjectId === PLAYGROUND_PROJECT_DRAFT_ID) {
+	          if (!normalizedProjectId || !normalizedTeamId || normalizedTeamId === "all_agents") {
 	            return null;
 	          }
 	          const currentTeamPermissionSets = getProjectTeamPermissionSets(normalizedProject);
@@ -119774,7 +120507,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
 	          const normalizedProjectId = String(normalizedProject.id || "").trim();
 	          const normalizedTeamId = String(teamId || "").trim();
-	          if (!normalizedProjectId || !normalizedTeamId || normalizedProjectId === PLAYGROUND_PROJECT_DRAFT_ID) {
+	          if (!normalizedProjectId || !normalizedTeamId) {
 	            return null;
 	          }
 	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(nextPermissionSet, "team");
@@ -121953,10 +122686,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          const nextRules = serializePlaygroundProjectRuleEntries([...currentEntries, nextEntry]);
 	          setProjectRuleInputValue("");
 	          setProjectRulesDraft(nextRules);
-	          window.requestAnimationFrame(() => {
-	            resizeTaskDescriptionTextarea(projectRuleComposerTextareaRef.current);
-	            projectRuleComposerTextareaRef.current?.focus();
-	          });
+	          setProjectRuleComposerOpen(false);
 	          await saveProjectRules(nextRules);
 	        }
 
@@ -124666,6 +125396,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             ...buildEmptyPlaygroundProjectSummary(),
             ...(project.summary && typeof project.summary === "object" ? project.summary : {}),
           };
+          const wallpaper = getPlaygroundProjectWallpaperConfig(project, index);
           const projectIconConfig = getPlaygroundProjectIconConfig(project.icon);
           const ProjectIcon = projectIconConfig.icon;
           const projectBlueprint = getPlaygroundProjectBlueprint(project.projectType || project.type || project.metadata?.projectType || project.metadata?.blueprintId);
@@ -124676,6 +125407,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               className: "playground-tasks-project-card",
               role: "button",
               tabIndex: 0,
+              style: {
+                backgroundImage: 'linear-gradient(180deg, rgba(9, 10, 12, 0.12), rgba(9, 10, 12, 0.48)), url("' + wallpaper.url + '")',
+              },
               onClick: () => handleSelectProject(project.id),
               onKeyDown: (event) => {
                 if (event.key === "Enter" || event.key === " ") {
@@ -125915,63 +126649,69 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             );
           }
 
-          return React.createElement("div", { className: "playground-tasks-view-section playground-projects-overview-surface" },
+          const hasProjects = projects.length > 0;
+
+          return React.createElement("div", { className: "playground-tasks-view-section playground-projects-overview-surface" + (hasProjects ? " is-card-grid" : "") },
             React.createElement("div", { className: "playground-projects-overview-inner" },
-              React.createElement("div", { className: "playground-projects-list-shell" },
-                React.createElement("div", { className: "playground-projects-list-toolbar" },
-                  React.createElement("div", { className: "playground-projects-list-toolbar-left" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-projects-list-view-pill",
-                    }, "All projects"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-projects-list-add-button",
-                      onClick: () => openProjectComposer(),
-                      title: "Add Project",
-                      "aria-label": "Add Project",
-                    }, React.createElement(Plus, { strokeWidth: 1.8 }))
-                  ),
-                  React.createElement("div", { className: "playground-projects-list-toolbar-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-projects-list-icon-button",
-                      title: "Filter projects",
-                      "aria-label": "Filter projects",
-                    }, React.createElement(SlidersHorizontal, { strokeWidth: 1.8 })),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-projects-list-icon-button",
-                      title: "View options",
-                      "aria-label": "View options",
-                    }, React.createElement(SlidersHorizontal, { strokeWidth: 1.8 })),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-projects-list-icon-button",
-                      title: "Layout",
-                      "aria-label": "Layout",
-                    }, React.createElement(PanelLeft, { strokeWidth: 1.8 }))
-                  )
-                ),
-                filteredProjects.length > 0
-                  ? React.createElement("div", { className: "playground-projects-list-table" },
-                      React.createElement("div", { className: "playground-projects-list-header", "aria-hidden": "true" },
-                        React.createElement("div", { className: "playground-projects-list-header-cell" }, "Name"),
-                        React.createElement("div", { className: "playground-projects-list-header-cell" }, "Health"),
-                        React.createElement("div", { className: "playground-projects-list-header-cell" }, "Priority"),
-                        React.createElement("div", { className: "playground-projects-list-header-cell" }, "Lead"),
-                        React.createElement("div", { className: "playground-projects-list-header-cell playground-projects-list-col-target" }, "Target date"),
-                        React.createElement("div", { className: "playground-projects-list-header-cell playground-projects-list-col-issues" }, "Issues"),
-                        React.createElement("div", { className: "playground-projects-list-header-cell" }, "Status")
+              hasProjects
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("div", { className: "playground-projects-overview-title-block" },
+                      React.createElement("div", { className: "playground-projects-overview-title-copy" },
+                        React.createElement("h1", { className: "playground-project-overview-summary-title" }, "Organize your work in projects")
                       ),
-                      React.createElement("div", { className: "playground-projects-list-body" },
-                        filteredProjects.map((project, index) => renderProjectListRow(project, index))
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-projects-overview-add-button",
+                        onClick: () => openProjectComposer(),
+                      },
+                        React.createElement(Plus, { strokeWidth: 1.8, "aria-hidden": "true" }),
+                        React.createElement("span", null, "Add Project")
                       )
-                    )
-                  : projects.length === 0
-                    ? renderProjectsListEmptyState()
-                    : renderNoMatchingProjectsState()
-              )
+                    ),
+                    filteredProjects.length > 0
+                      ? React.createElement("div", { className: "playground-tasks-project-grid" },
+                          filteredProjects.map((project, index) => renderProjectCard(project, index))
+                        )
+                      : renderNoMatchingProjectsState()
+                  )
+                : React.createElement("div", { className: "playground-projects-list-shell" },
+                    React.createElement("div", { className: "playground-projects-list-toolbar" },
+                      React.createElement("div", { className: "playground-projects-list-toolbar-left" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-projects-list-view-pill",
+                        }, "All projects"),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-projects-list-add-button",
+                          onClick: () => openProjectComposer(),
+                          title: "Add Project",
+                          "aria-label": "Add Project",
+                        }, React.createElement(Plus, { strokeWidth: 1.8 }))
+                      ),
+                      React.createElement("div", { className: "playground-projects-list-toolbar-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-projects-list-icon-button",
+                          title: "Filter projects",
+                          "aria-label": "Filter projects",
+                        }, React.createElement(SlidersHorizontal, { strokeWidth: 1.8 })),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-projects-list-icon-button",
+                          title: "View options",
+                          "aria-label": "View options",
+                        }, React.createElement(SlidersHorizontal, { strokeWidth: 1.8 })),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-projects-list-icon-button",
+                          title: "Layout",
+                          "aria-label": "Layout",
+                        }, React.createElement(PanelLeft, { strokeWidth: 1.8 }))
+                      )
+                    ),
+                    renderProjectsListEmptyState()
+                  )
             )
           );
         }
@@ -132775,6 +133515,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [metronomeTopNavMenuOpen, setMetronomeTopNavMenuOpen] = useState(false);
         const [isMetronomeNodeDetailOpen, setIsMetronomeNodeDetailOpen] = useState(false);
         const [collapsedMetronomeRunGroups, setCollapsedMetronomeRunGroups] = useState({});
+        const [metronomeRunTraceSelection, setMetronomeRunTraceSelection] = useState(null);
+        const [metronomeRunTraceState, setMetronomeRunTraceState] = useState({
+          key: "",
+          status: "idle",
+          run: null,
+          error: "",
+        });
+        const [metronomeRunTraceWorkExpanded, setMetronomeRunTraceWorkExpanded] = useState(true);
         const metronomeTopNavMenuRef = useRef(null);
         const wasMetronomeVisualEditorOpenRef = useRef(false);
         const metronomeTopNavActionsRef = useRef({
@@ -132986,6 +133734,38 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 : project
             )));
           });
+          setWelcomeWidgetsState((current) => {
+            const currentProjectId = String(current?.projectId || current?.project?.id || "").trim();
+            if (currentProjectId !== normalizedProjectRecord.id) {
+              return current;
+            }
+            const nextProject = mergePlaygroundProjectRecords(projectRecord, current?.project) || normalizedProjectRecord;
+            return {
+              ...current,
+              projectId: normalizedProjectRecord.id,
+              project: nextProject,
+            };
+          });
+          setWelcomeProjectPickerProjects((current) => {
+            if (!Array.isArray(current) || !current.some((project) => project?.id === normalizedProjectRecord.id)) {
+              return current;
+            }
+            return sortPlaygroundProjectsByRecent(current.map((project) => (
+              project.id === normalizedProjectRecord.id
+                ? mergePlaygroundProjectRecords(projectRecord, project) || normalizedProjectRecord
+                : project
+            )));
+          });
+          setThreadProjectPickerProjects((current) => {
+            if (!Array.isArray(current) || !current.some((project) => project?.id === normalizedProjectRecord.id)) {
+              return current;
+            }
+            return sortPlaygroundProjectsByRecent(current.map((project) => (
+              project.id === normalizedProjectRecord.id
+                ? mergePlaygroundProjectRecords(projectRecord, project) || normalizedProjectRecord
+                : project
+            )));
+          });
         }, []);
         const [settingsSection, setSettingsSection] = useState("costs-plans");
         const [contentMode, setContentMode] = useState("chat");
@@ -133116,6 +133896,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [resourceTemplateSlideIndex, setResourceTemplateSlideIndex] = useState(0);
         const [resourceTemplateToolbarPopover, setResourceTemplateToolbarPopover] = useState("");
         const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
+        const [projectOverviewResourceSearchQuery, setProjectOverviewResourceSearchQuery] = useState("");
+        const [projectOverviewResourceViewMode, setProjectOverviewResourceViewMode] = useState("list");
+        const [projectOverviewResourceToolbarPopover, setProjectOverviewResourceToolbarPopover] = useState("");
+        const [projectOverviewResourceMenuId, setProjectOverviewResourceMenuId] = useState("");
         const resolvedModelsPageAgentModelOptions = useMemo(() => (
           Array.isArray(modelsPageAgentModelOptions) && modelsPageAgentModelOptions.length > 0
             ? modelsPageAgentModelOptions
@@ -135388,7 +136172,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const normalizedProjectId = String(options?.projectId || "").trim();
           const normalizedWorkflowId = String(options?.workflowId || "").trim();
           const normalizedRunId = String(options?.runId || "").trim();
-          const requestedMode = options?.mode === "runs"
+          const requestedMode = options?.mode === "run-detail"
+            ? "run-detail"
+            : options?.mode === "runs"
             ? "runs"
             : options?.mode === "code"
               ? "code"
@@ -135397,6 +136183,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 : "";
           setAccountMenuOpen(false);
           setSidebarWorkspaceMode("work");
+          setMetronomeRunTraceSelection(null);
           setMetronomeProjectFilterId(normalizedProjectId);
           setMetronomeOpenWorkflowRequest(normalizedWorkflowId
             ? {
@@ -135409,6 +136196,198 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setActivePage("metronome");
         }
 
+        function createMetronomeRunTraceThreadId(key) {
+          const normalizedKey = String(key || "").trim();
+          return normalizedKey ? "metronome-run:" + normalizedKey : "";
+        }
+
+        function buildFallbackMetronomeRunTraceRun(selection) {
+          const threads = Array.isArray(selection?.threads) ? selection.threads : [];
+          const normalizedThreads = threads.map((thread) => {
+            const meta = getThreadMetronomeMetadata(thread) || {};
+            return {
+              id: String(thread?.id || "").trim(),
+              nodeId: String(meta.nodeId || "").trim(),
+              nodeName: String(meta.nodeName || thread?.title || "Thread").trim(),
+              summary: String(thread?.summary || thread?.message || "").trim(),
+              output: thread?.output || thread?.result || thread?.metadata?.output || null,
+              createdAt: thread?.createdAt || "",
+              updatedAt: thread?.updatedAt || "",
+            };
+          }).filter((thread) => thread.id);
+          const promptCandidates = [
+            selection?.input,
+            selection?.latestThread?.metadata?.metronome,
+            selection?.latestThread?.metadata?.metronomeWorkflow,
+            ...threads.map((thread) => thread?.metadata?.metronome),
+            ...threads.map((thread) => thread?.metadata?.metronomeWorkflow),
+          ];
+          let prompt = "";
+          for (const candidate of promptCandidates) {
+            prompt = readMetronomeRunPromptCandidate(candidate);
+            if (prompt) break;
+          }
+          return {
+            id: String(selection?.runId || "").trim(),
+            status: String(selection?.status || "completed").trim() || "completed",
+            createdAt: selection?.createdAt || selection?.latestThread?.createdAt || selection?.latestThread?.updatedAt || "",
+            input: {
+              source: "thread_sidebar",
+              prompt,
+            },
+            output: {
+              steps: [],
+              threads: normalizedThreads,
+            },
+          };
+        }
+
+        function normalizeMetronomeRunTraceResponse(data, selection) {
+          const rawRun = data?.data?.run
+            || data?.data?.metronomeRun
+            || data?.run
+            || data?.metronomeRun
+            || data?.data
+            || data;
+          const fallbackRun = buildFallbackMetronomeRunTraceRun(selection);
+          const run = rawRun && typeof rawRun === "object" && !Array.isArray(rawRun) ? rawRun : {};
+          const output = run.output && typeof run.output === "object" && !Array.isArray(run.output) ? run.output : {};
+          const fallbackOutput = fallbackRun.output && typeof fallbackRun.output === "object" ? fallbackRun.output : {};
+          return {
+            ...fallbackRun,
+            ...run,
+            id: String(run.id || run.runId || fallbackRun.id || "").trim(),
+            input: {
+              ...(fallbackRun.input && typeof fallbackRun.input === "object" ? fallbackRun.input : {}),
+              ...(run.input && typeof run.input === "object" ? run.input : {}),
+              ...(run.inputs && typeof run.inputs === "object" ? run.inputs : {}),
+            },
+            output: {
+              ...fallbackOutput,
+              ...output,
+              steps: Array.isArray(output.steps) ? output.steps : Array.isArray(fallbackOutput.steps) ? fallbackOutput.steps : [],
+              threads: Array.isArray(output.threads) && output.threads.length
+                ? output.threads
+                : Array.isArray(fallbackOutput.threads)
+                  ? fallbackOutput.threads
+                  : [],
+              logs: Array.isArray(output.logs) ? output.logs : Array.isArray(fallbackOutput.logs) ? fallbackOutput.logs : [],
+            },
+          };
+        }
+
+        function openMetronomeRunTraceThread(entry) {
+          const workflowId = String(entry?.metronomeId || "").trim();
+          const runId = String(entry?.runId || "").trim();
+          const key = String(entry?.key || getSidebarMetronomeRunGroupKey({ metronomeId: workflowId, runId }) || "").trim();
+          if (!workflowId || !runId || !key) {
+            return;
+          }
+          const syntheticThreadId = createMetronomeRunTraceThreadId(key);
+          setAccountMenuOpen(false);
+          setSidebarWorkspaceMode("work");
+          setActivePage("thread");
+          setCurrentThreadId(syntheticThreadId);
+          setContentMode("chat");
+          setThreadListMode("threads");
+          setThreadNavMenuOpen(false);
+          setThreadTaskListMenuOpen(false);
+          setThreadActionMenuState(null);
+          setThreadAgentSelectionOverride(null);
+          setPendingThreadRunRequest(null);
+          setThreadTaskOpenRequest(null);
+          setChangesNavigationTarget(null);
+          setMetronomeRunTraceSelection({
+            key,
+            workflowId,
+            runId,
+            workflowName: String(entry?.workflowName || "Metronome").trim() || "Metronome",
+            threads: Array.isArray(entry?.threads) ? entry.threads : [],
+            latestThread: entry?.latestThread || null,
+          });
+          setMetronomeRunTraceState({
+            key,
+            status: "loading",
+            run: buildFallbackMetronomeRunTraceRun(entry),
+            error: "",
+          });
+          setMetronomeRunTraceWorkExpanded(true);
+          setRunnerRenderKey((current) => current + 1);
+        }
+
+        useEffect(() => {
+          const selection = metronomeRunTraceSelection;
+          const key = String(selection?.key || "").trim();
+          const workflowId = String(selection?.workflowId || "").trim();
+          const runId = String(selection?.runId || "").trim();
+          if (activePage !== "thread" || !key || !workflowId || !runId || !hasRealAccess) {
+            if (!key) {
+              setMetronomeRunTraceState((current) => (
+                current.key ? { key: "", status: "idle", run: null, error: "" } : current
+              ));
+            }
+            return undefined;
+          }
+
+          let cancelled = false;
+          setMetronomeRunTraceState({
+            key,
+            status: "loading",
+            run: buildFallbackMetronomeRunTraceRun(selection),
+            error: "",
+          });
+
+          const loadRunTrace = async () => {
+            try {
+              const { response, data } = await fetchJsonWithTimeout(
+                proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId) + "/runs/" + encodeURIComponent(runId),
+                { method: "GET", headers: authRequestHeaders },
+                12000
+              );
+              if (cancelled) return;
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load Metronome run.");
+              }
+              setMetronomeRunTraceState({
+                key,
+                status: "loaded",
+                run: normalizeMetronomeRunTraceResponse(data, selection),
+                error: "",
+              });
+            } catch (error) {
+              if (cancelled) return;
+              setMetronomeRunTraceState({
+                key,
+                status: "error",
+                run: buildFallbackMetronomeRunTraceRun(selection),
+                error: error instanceof Error ? error.message : "Failed to load Metronome run.",
+              });
+            }
+          };
+
+          void loadRunTrace();
+
+          return () => {
+            cancelled = true;
+          };
+        }, [
+          activePage,
+          authRequestHeaders,
+          hasRealAccess,
+          metronomeRunTraceSelection,
+          proxyBackendBase,
+        ]);
+
+        useEffect(() => {
+          const key = String(metronomeRunTraceSelection?.key || "").trim();
+          if (!key) {
+            return;
+          }
+          if (String(currentThreadId || "").trim() !== createMetronomeRunTraceThreadId(key)) {
+            setMetronomeRunTraceSelection(null);
+          }
+        }, [currentThreadId, metronomeRunTraceSelection?.key]);
+
         useEffect(() => {
           const handleOpenMetronomeWorkflow = (event) => {
             const detail = event?.detail && typeof event.detail === "object" ? event.detail : {};
@@ -135419,7 +136398,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             openMetronomePage({
               workflowId: normalizedWorkflowId,
               runId: String(detail.runId || "").trim(),
-              mode: detail.mode === "runs" ? "runs" : detail.mode === "code" ? "code" : "edit",
+              mode: detail.mode === "run-detail" ? "run-detail" : detail.mode === "runs" ? "runs" : detail.mode === "code" ? "code" : "edit",
             });
           };
           window.addEventListener("playground:open-metronome-workflow", handleOpenMetronomeWorkflow);
@@ -142621,6 +143600,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setInitialThreadPrivateMode(false);
           setActivePage("thread");
           setCurrentThreadId("");
+          setMetronomeRunTraceSelection(null);
           setThreadAgentSelectionOverride(null);
           setPendingThreadRunRequest(null);
           setContentMode("chat");
@@ -142640,6 +143620,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setThreadNavMenuOpen(false);
           setActivePage("thread");
           setCurrentThreadId(threadId);
+          setMetronomeRunTraceSelection(null);
           setThreadAgentSelectionOverride(null);
           setPendingThreadRunRequest(null);
           setChangesNavigationTarget(null);
@@ -152274,6 +153255,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (activePage === "calendar") {
             return "Calendar";
           }
+          if (activePage === "thread" && metronomeRunTraceSelection?.key) {
+            return metronomeRunTraceSelection.workflowName || "Metronome run";
+          }
           if (!hasRealAccess && !currentThreadId) {
             return hasDemoAccess ? "ACP Demo" : "Sign In Required";
           }
@@ -152281,7 +153265,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return "New Thread";
           }
           return selectedKnownThread?.title || "Current thread";
-        }, [activePage, currentThreadId, hasDemoAccess, hasRealAccess, isResourcesPage, selectedKnownThread]);
+        }, [activePage, currentThreadId, hasDemoAccess, hasRealAccess, isResourcesPage, metronomeRunTraceSelection, selectedKnownThread]);
         const selectedThreadStartedLabel = useMemo(() => {
           const startedAt = typeof selectedKnownThread?.createdAt === "string" ? selectedKnownThread.createdAt.trim() : "";
           return startedAt ? formatPlaygroundFileDate(startedAt) : "Unknown";
@@ -154737,6 +155721,443 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
         }
 
+        function getMetronomeRunTraceThreadStepIcon(step) {
+          const kind = getMetronomeRunTraceStepKind(step);
+          if (kind === "trigger") return Zap;
+          if (kind === "condition") return Split;
+          if (kind === "thread" || kind === "action") return Play;
+          if (kind === "end") return Square;
+          if (kind === "imagine") return Clapperboard;
+          if (kind === "function") return FunctionSquare;
+          if (kind === "database") return Database;
+          if (kind === "ticket") return Bookmark;
+          if (kind === "metronome") return Metronome;
+          if (kind === "loop") return RefreshCw;
+          if (kind === "note") return StickyNote;
+          return Circle;
+        }
+
+        function getMetronomeRunTraceThreadStepTitle(step) {
+          return String(
+            step?.nodeName
+            || step?.nodeLabel
+            || step?.label
+            || step?.title
+            || step?.name
+            || (String(step?.kind || "").trim() ? String(step.kind).slice(0, 1).toUpperCase() + String(step.kind).slice(1) : "")
+            || "Workflow step"
+          ).trim();
+        }
+
+        function getMetronomeRunTraceStepInput(step) {
+          if (step?.input !== null && typeof step?.input !== "undefined") return step.input;
+          const output = step?.output && typeof step.output === "object" ? step.output : {};
+          return output.input || output.inputs || output.context || output.inputSummary || "";
+        }
+
+        function getMetronomeRunTraceConditionBranchLabel(step) {
+          const output = step?.output && typeof step.output === "object" ? step.output : {};
+          return String(
+            step?.branchLabel
+              || output.branchLabel
+              || output.branch?.label
+              || output.branchName
+              || output.selectedBranch
+              || output.selectedBranchLabel
+              || "Default"
+          ).trim() || "Default";
+        }
+
+        function getMetronomeRunTraceConditionReason(step) {
+          const output = step?.output && typeof step.output === "object" ? step.output : {};
+          return String(
+            step?.branchReason
+              || output.branchReason
+              || output.branch?.reason
+              || output.reason
+              || output.message
+              || ""
+          ).trim();
+        }
+
+        function renderMetronomeRunTraceThreadMarkdown(value, className = "tb-message-markdown tb-message-markdown-summary") {
+          const text = normalizeMetronomeRunMarkdownText(extractMetronomeReadableOutputText(value) || value);
+          if (!text) return null;
+          return React.createElement(PlaygroundTaskDescriptionMarkdown, {
+            content: text,
+            className,
+          });
+        }
+
+        function renderMetronomeRunTraceThreadValue(value) {
+          const markdown = renderMetronomeRunTraceThreadMarkdown(value, "playground-metronome-run-output-markdown tb-message-markdown");
+          if (markdown) return markdown;
+          const formatted = formatMetronomeRunValue(value);
+          if (!formatted) return null;
+          return React.createElement("pre", { className: "playground-metronome-run-output-block" }, formatted);
+        }
+
+        function isMetronomeRunTraceEmailTrigger(run) {
+          const input = run?.input && typeof run.input === "object" ? run.input : {};
+          const output = run?.output && typeof run.output === "object" ? run.output : {};
+          const triggerType = String(run?.triggerType || input.triggerType || input.type || output.triggerType || "").toLowerCase();
+          return triggerType === "email" || triggerType === "email_received" || Boolean(input.email || input.from || input.sender || input.subject);
+        }
+
+        function renderMetronomeRunTraceUserPrompt(run) {
+          const input = run?.input && typeof run.input === "object" ? run.input : {};
+          if (isMetronomeRunTraceEmailTrigger(run)) {
+            const email = input.email && typeof input.email === "object" ? input.email : {};
+            const from = String(input.from || input.sender || email.from || email.sender || "").trim();
+            const subject = String(input.subject || email.subject || "Inbound email").trim();
+            const body = String(input.body || input.text || input.message || email.body || email.text || getMetronomeRunPrompt(run) || "").trim();
+            return React.createElement("div", { className: "task-prompt-in-session-context is-email-origin playground-metronome-run-thread-email-message" },
+              from ? React.createElement("div", { className: "playground-metronome-run-email-from" }, "From ", from) : null,
+              React.createElement("div", { className: "playground-metronome-run-email-subject" }, subject),
+              body ? React.createElement("div", { className: "playground-metronome-run-email-body" }, body) : null
+            );
+          }
+          return React.createElement("div", { className: "task-prompt-in-session-context" },
+            renderMetronomeRunTraceThreadMarkdown(getMetronomeRunPrompt(run), "tb-message-markdown tb-message-markdown-user")
+          );
+        }
+
+        function getMetronomeRunTraceSteps(run) {
+          const output = run?.output && typeof run.output === "object" ? run.output : {};
+          const steps = Array.isArray(output.steps) ? output.steps : [];
+          if (steps.length) {
+            return steps;
+          }
+          const threads = Array.isArray(output.threads) ? output.threads : [];
+          return threads.map((thread, index) => ({
+            id: "thread:" + (thread.id || index),
+            nodeId: thread.nodeId || "",
+            nodeName: thread.nodeName || thread.title || "Thread",
+            kind: "thread",
+            threadId: thread.id || thread.threadId || thread.thread_id || "",
+            agentName: thread.agentName || thread.agent_name || "",
+            computerName: thread.computerName || thread.computer_name || thread.environmentName || thread.environment_name || "",
+            environmentName: thread.environmentName || thread.environment_name || "",
+            output: thread.output || thread.summary || thread.result || thread.data || "",
+            summary: thread.summary || "",
+          }));
+        }
+
+        function renderMetronomeRunTraceStepLog(step, run) {
+          const output = run?.output && typeof run.output === "object" ? run.output : {};
+          const threads = Array.isArray(output.threads) ? output.threads : [];
+          const thread = findMetronomeRunThreadForStep(step, threads);
+          const kind = getMetronomeRunTraceStepKind(step);
+          const isThreadStep = isMetronomeRunTraceThreadStep(step, thread);
+          const threadId = getMetronomeRunTraceStepThreadId(step, thread);
+          const runtimeMeta = isThreadStep
+            ? getMetronomeRunTraceThreadRuntimeMeta(step, thread, {
+                threads: realThreadsRef.current || [],
+                agents: runtimeAgentsForComposer || [],
+                environments: runtimeEnvironments || [],
+              })
+            : null;
+          const StepIcon = getMetronomeRunTraceThreadStepIcon(step);
+          const title = getMetronomeRunTraceThreadStepTitle(step);
+          const readableOutputText = kind === "trigger" || kind === "condition"
+            ? ""
+            : isThreadStep
+              ? extractMetronomeThreadReadableOutputText(step, thread)
+              : extractMetronomeReadableOutputText(step?.output || step?.result || step?.data);
+          const summary = String(
+            kind === "condition"
+              ? ""
+              : isThreadStep
+                ? (readableOutputText ? "" : thread?.prompt || step?.summary || step?.status || "")
+                : step?.summary || step?.status || ""
+          ).trim();
+          const conditionInput = kind === "condition" ? getMetronomeRunTraceStepInput(step) : null;
+          const conditionInputText = kind === "condition" ? formatMetronomeRunValue(conditionInput) : "";
+          const conditionBranchLabel = kind === "condition" ? getMetronomeRunTraceConditionBranchLabel(step) : "";
+          const conditionReason = kind === "condition" ? getMetronomeRunTraceConditionReason(step) : "";
+          return React.createElement("div", { className: "playground-metronome-run-trace-step playground-metronome-run-thread-log-step" },
+            React.createElement("div", { className: "playground-metronome-run-trace-heading" },
+              React.createElement("span", { className: "playground-metronome-run-trace-icon" },
+                React.createElement(StepIcon, { width: 13, height: 13, strokeWidth: 1.9 })
+              ),
+              React.createElement("div", { className: "playground-metronome-run-trace-title-group" },
+                React.createElement("div", { className: "playground-metronome-run-trace-title" }, title),
+                threadId
+                  ? React.createElement("div", { className: "playground-metronome-run-thread-meta-row" },
+                      React.createElement("span", { className: "playground-metronome-run-thread-id" }, threadId),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-metronome-run-thread-link",
+                        onClick: () => handleThreadSelect(threadId),
+                      }, "Show thread")
+                    )
+                  : null,
+                isThreadStep
+                  ? renderMetronomeRunTraceThreadRuntimeMeta(runtimeMeta)
+                  : null
+              )
+            ),
+            summary
+              ? React.createElement("div", { className: "playground-metronome-run-trace-summary" }, summary)
+              : null,
+            kind === "condition" && conditionInputText
+              ? React.createElement("div", { className: "playground-metronome-run-trace-field" },
+                  React.createElement("div", { className: "playground-metronome-run-trace-field-label" }, "Input"),
+                  renderMetronomeRunTraceThreadValue(conditionInput)
+                )
+              : null,
+            kind === "condition"
+              ? React.createElement("div", { className: "playground-metronome-run-trace-field" },
+                  React.createElement("div", { className: "playground-metronome-run-trace-field-label" }, "Branch"),
+                  React.createElement("div", { className: "playground-metronome-run-branch-result" },
+                    React.createElement("span", { className: "playground-metronome-run-branch-chip" }, conditionBranchLabel || "Default"),
+                    conditionReason ? React.createElement("span", { className: "playground-metronome-run-branch-reason" }, conditionReason) : null
+                  )
+                )
+              : null,
+            readableOutputText
+              ? renderMetronomeRunTraceThreadMarkdown(readableOutputText, "playground-metronome-run-output-markdown tb-message-markdown")
+              : null
+          );
+        }
+
+        function buildMetronomeRunTraceContinuationPrompt(run, selection) {
+          const steps = getMetronomeRunTraceSteps(run);
+          const prompt = getMetronomeRunPrompt(run);
+          const summary = getMetronomeRunSummaryText(run);
+          const workflowName = String(selection?.workflowName || "Metronome").trim() || "Metronome";
+          const workflowId = String(selection?.workflowId || run?.metronomeId || run?.workflowId || "").trim();
+          const runId = String(selection?.runId || run?.id || run?.runId || "").trim();
+          const runThreads = Array.isArray(run?.output?.threads) ? run.output.threads : [];
+          const stepSummaries = steps.map((step, index) => {
+            const kind = String(step?.kind || "step").trim() || "step";
+            const title = getMetronomeRunTraceThreadStepTitle(step);
+            const thread = findMetronomeRunThreadForStep(step, runThreads);
+            const outputText = extractMetronomeReadableOutputText(step?.output || step?.result || step?.data || step?.summary || "");
+            return [
+              (index + 1) + ". " + title + " (" + kind + ")",
+              thread?.id ? "Thread ID: " + thread.id : "",
+              outputText ? "Output: " + outputText : "",
+            ].filter(Boolean).join("\\n");
+          }).filter(Boolean);
+          return [
+            "You are continuing from a Metronome workflow run.",
+            "Use the workflow context below as prior work. Do not rerun the workflow unless the user explicitly asks you to. Answer the user's next message directly and continue from this run state.",
+            "Workflow: " + workflowName,
+            workflowId ? "Workflow ID: " + workflowId : "",
+            runId ? "Run ID: " + runId : "",
+            prompt ? "Original trigger or user message:\\n" + prompt : "",
+            summary ? "Run summary:\\n" + summary : "",
+            stepSummaries.length ? "Node trace:\\n" + stepSummaries.join("\\n\\n") : "",
+          ].filter(Boolean).join("\\n\\n");
+        }
+
+        function renderMetronomeRunTraceThreadContent() {
+          const selection = metronomeRunTraceSelection;
+          const run = metronomeRunTraceState.run || buildFallbackMetronomeRunTraceRun(selection || {});
+          const steps = getMetronomeRunTraceSteps(run);
+          const summaryText = getMetronomeRunSummaryText(run);
+          const status = metronomeRunTraceState.status;
+          const isExpanded = metronomeRunTraceWorkExpanded;
+          return React.createElement("div", { className: "playground-metronome-run-thread-list" },
+              React.createElement("div", { className: "tb-turn tb-turn-user playground-metronome-run-thread-turn" },
+                React.createElement("div", { className: "tb-user-turn-shell tb-thread-history-anchor playground-metronome-run-thread-user-shell" },
+                  renderMetronomeRunTraceUserPrompt(run)
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "tb-work-header playground-metronome-run-thread-work-header",
+                  "aria-expanded": isExpanded ? "true" : "false",
+                  onClick: () => setMetronomeRunTraceWorkExpanded((current) => !current),
+                },
+                  React.createElement("span", { className: "tb-work-label" },
+                    React.createElement("span", null, status === "loading" ? "Loading Metronome run" : "Metronome worked"),
+                    isExpanded
+                      ? React.createElement(ChevronUp, { className: "tb-chevron", strokeWidth: 1.8 })
+                      : React.createElement(ChevronDown, { className: "tb-chevron", strokeWidth: 1.8 })
+                  ),
+                  React.createElement("div", { className: "tb-turn-environment-pill" },
+                    React.createElement(Metronome, { className: "tb-turn-environment-icon", strokeWidth: 1.6 }),
+                    React.createElement("span", { className: "tb-turn-environment-label" }, selection?.workflowName || "Metronome")
+                  )
+                ),
+                React.createElement("div", {
+                  className: ("tb-work-collapse playground-metronome-run-thread-work " + (isExpanded ? "is-expanded" : "collapsed")).trim(),
+                },
+                  React.createElement("div", { className: "tb-work-collapse-inner" },
+                    React.createElement("div", { className: "agent-steps-container" },
+                      metronomeRunTraceState.error
+                        ? React.createElement("div", { className: "agent-step-item" },
+                            React.createElement("div", { className: "agent-step-content" },
+                              React.createElement("div", { className: "playground-metronome-run-sidebar-copy" }, metronomeRunTraceState.error)
+                            )
+                          )
+                        : null,
+                      steps.length
+                        ? steps.map((step, index) => React.createElement("div", {
+                            key: step.id || step.nodeId || index,
+                            className: "agent-step-item",
+                          },
+                            React.createElement("div", { className: "agent-step-content" },
+                              renderMetronomeRunTraceStepLog(step, run)
+                            )
+                          ))
+                        : React.createElement("div", { className: "agent-step-item" },
+                            React.createElement("div", { className: "agent-step-content" },
+                              React.createElement("div", { className: "playground-metronome-run-sidebar-copy" },
+                                status === "loading" ? "Loading workflow trace..." : "No workflow steps were recorded."
+                              )
+                            )
+                          )
+                    )
+                  )
+                ),
+                summaryText
+                  ? React.createElement("div", { className: "tb-turn-summary tb-thread-history-anchor is-latest-summary playground-metronome-run-thread-summary" },
+                      React.createElement("div", { className: "tb-turn-response" },
+                        renderMetronomeRunTraceThreadMarkdown(summaryText, "tb-message-markdown tb-message-markdown-summary")
+                      )
+                    )
+                  : null
+              )
+          );
+        }
+
+        function renderMetronomeRunTraceThreadSurface() {
+          const selection = metronomeRunTraceSelection;
+          const run = metronomeRunTraceState.run || buildFallbackMetronomeRunTraceRun(selection || {});
+          return React.createElement(RunnerChat, {
+            key: "metronome-run-trace:" + String(selection?.key || "") + ":" + runnerRenderKey,
+            className: "playground-thread-runner playground-metronome-run-thread-surface",
+            backendUrl: proxyBackendBase,
+            apiKey: effectiveApiKey,
+            fetchCustomSkills: computerAgentsMode ? handleFetchCustomSkills : undefined,
+            speechToTextUrl: speechToTextUrl || undefined,
+            requestHeaders,
+            appId: "runner-web-sdk-demo",
+            inputMode: computerAgentsMode ? "computer-agents" : "minimal",
+            computerAgents: computerAgentsMode ? {
+              ...demoComputerAgents,
+              projects: {
+                items: runnerWorkspaceProjects,
+                selectedProjectId: latestInteractedProjectId || "",
+                onProjectChange: (nextProjectId) => {
+                  const normalizedProjectId = String(nextProjectId || "").trim();
+                  setLatestInteractedProjectId(normalizedProjectId);
+                },
+              },
+            } : undefined,
+            environments: computerAgentsMode ? runtimeEnvironments.map((environment) => ({
+              ...environment,
+              ...(resolvedEnvironmentId && environment.id === resolvedEnvironmentId ? { isDefault: true } : {})
+            })) : undefined,
+            agents: computerAgentsMode ? runtimeAgentsForComposer.map((agent) => (
+              buildPlaygroundRunnerAgentOption(agent, resolvedComposerAgentId && agent.id === resolvedComposerAgentId ? { isDefault: true } : {})
+            )) : undefined,
+            isAgentSelectionBlocked: computerAgentsMode ? isComposerAgentSelectionBlocked : undefined,
+            onBlockedAgentSelect: computerAgentsMode ? handleBlockedComposerAgentSelect : undefined,
+            skills: computerAgentsMode ? demoSkills : undefined,
+            enabledSkillIds: computerAgentsMode ? runnerEnabledSkillIds : undefined,
+            onSkillsChange: computerAgentsMode ? setRunnerEnabledSkillIds : undefined,
+            skillDefaults: getDemoImageGenerationSkillDefaults(),
+            environmentId: resolvedEnvironmentId || undefined,
+            agentId: resolvedComposerAgentId || undefined,
+            autoFocusComposer: true,
+            keepFocusOnSubmit: true,
+            showUsageInStatus: false,
+            placeholder: "Continue this workflow",
+            hiddenSystemPrompt: buildMetronomeRunTraceContinuationPrompt(run, selection || {}),
+            emptyState: renderMetronomeRunTraceThreadContent(),
+            onOpenPluginsOverview: () => {
+              setSelectedPluginId("");
+              setPluginsSearchQuery("");
+              openToolsView("plugins");
+            },
+            onOpenPlansBudget: () => {
+              setSidebarWorkspaceMode("configure");
+              setActivePage("settings");
+              setSettingsSection("costs-plans");
+            },
+            onThreadIdChange: (threadId) => {
+              const normalizedThreadId = String(threadId || "").trim();
+              if (!normalizedThreadId) {
+                return;
+              }
+              setMetronomeRunTraceSelection(null);
+              setActivePage("thread");
+              setCurrentThreadId(normalizedThreadId);
+              setPendingThreadRunRequest((current) => (
+                current && current.threadId === normalizedThreadId ? current : null
+              ));
+              void refreshThreads();
+            },
+            onThreadTitleChange: (threadId, nextTitle) => {
+              upsertRealThreadTitle(threadId, nextTitle);
+              void refreshThreads();
+            },
+            onRunStart: (threadId) => {
+              const normalizedThreadId = String(threadId || "").trim();
+              if (!normalizedThreadId) {
+                return;
+              }
+              setMetronomeRunTraceSelection(null);
+              setActivePage("thread");
+              setCurrentThreadId(normalizedThreadId);
+              updateRealThreadStatus(normalizedThreadId, "running");
+              void refreshThreads();
+              void loadThreadGroundTruthStatus(normalizedThreadId);
+            },
+            onThreadStatusChange: (threadId, nextStatus) => {
+              const normalizedThreadId = String(threadId || "").trim();
+              const normalizedStatus = String(nextStatus || "").trim();
+              if (!normalizedThreadId || !normalizedStatus) {
+                return;
+              }
+              updateRealThreadStatus(normalizedThreadId, normalizedStatus);
+              if (normalizedStatus === "permission_asked" || normalizedStatus === "running") {
+                void refreshThreads(undefined, normalizedThreadId, { silent: true });
+              }
+            },
+            onRunFinish: (_result, threadId) => {
+              const normalizedThreadId = String(threadId || "").trim();
+              if (!normalizedThreadId) {
+                return;
+              }
+              setActivePage("thread");
+              setCurrentThreadId(normalizedThreadId);
+              void loadThreadGroundTruthStatus(normalizedThreadId);
+              void refreshThreads();
+            },
+            onRunCancel: (threadId) => {
+              const normalizedThreadId = String(threadId || "").trim();
+              if (!normalizedThreadId) {
+                return;
+              }
+              setActivePage("thread");
+              setCurrentThreadId(normalizedThreadId);
+              updateRealThreadStatus(normalizedThreadId, "cancelled");
+              void loadThreadGroundTruthStatus(normalizedThreadId);
+              void refreshThreads(undefined, normalizedThreadId);
+            },
+            onRunError: (_error, threadId) => {
+              const normalizedThreadId = String(threadId || "").trim();
+              if (!normalizedThreadId) {
+                return;
+              }
+              void loadThreadGroundTruthStatus(normalizedThreadId);
+              void refreshThreads();
+            },
+            onAgentChange: (nextAgentId) => {
+              setPreferredAgentId(String(nextAgentId || "").trim());
+            },
+            onEnvironmentChange: (nextEnvironmentId) => {
+              setEnvironmentId(String(nextEnvironmentId || "").trim());
+            },
+            onDocumentPreviewOpenChange: () => {},
+            onDeepResearchDetailOpenChange: () => {},
+          });
+        }
+
         function renderSidebarMetronomeRunEntry(entry) {
           const groupKey = String(entry?.key || "").trim();
           if (!groupKey) {
@@ -154749,11 +156170,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
             ? formatCompactThreadActivityTime(resolveThreadSortTimestamp(latestThread))
             : "";
           const activeRunId = String(metronomeTopNavState?.runId || "").trim();
-          const isActive = activePage === "metronome"
+          const isActiveMetronomeEditorRun = activePage === "metronome"
             && metronomeTopNavState?.mode === "editor"
             && String(metronomeTopNavState?.workflowId || "").trim() === String(entry.metronomeId || "").trim()
             && Boolean(activeRunId)
             && activeRunId === String(entry.runId || "").trim();
+          const isActiveThreadRunTrace = activePage === "thread"
+            && String(metronomeRunTraceSelection?.key || "").trim() === groupKey;
+          const isActive = isActiveMetronomeEditorRun || isActiveThreadRunTrace;
 
           return React.createElement("div", {
             key: groupKey,
@@ -154765,11 +156189,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-metronome-run-main",
-                onClick: () => openMetronomePage({
-                  workflowId: entry.metronomeId,
-                  runId: entry.runId,
-                  mode: "runs",
-                }),
+                onClick: () => openMetronomeRunTraceThread(entry),
                 "aria-label": "Open Metronome run " + (entry.workflowName || "Metronome"),
               },
                 React.createElement("span", { className: "sidebar-metronome-run-icon" },
@@ -155706,16 +157126,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 )
               : null,
             extraActions: isProjectDetailView
-              ? React.createElement("button", {
-                  type: "button",
-                  className: "playground-top-nav-pill-button playground-tasks-top-nav-edit-button",
-                  "aria-label": "Project settings",
-                  title: "Project settings",
-                  onClick: () => setTasksProjectSettingsRequestToken((current) => current + 1),
-                },
-                  React.createElement(Cog, { strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Settings")
-                )
+              ? null
               : React.createElement("button", {
                   type: "button",
                   className: "playground-content-menu-button",
@@ -159312,6 +160723,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             onOpenResourceTemplatesPage: openResourceTemplatesPage,
                             projectOverviewResourceFilter,
                             setProjectOverviewResourceFilter,
+                            projectOverviewResourceSearchQuery,
+                            setProjectOverviewResourceSearchQuery,
+                            projectOverviewResourceViewMode,
+                            setProjectOverviewResourceViewMode,
+                            projectOverviewResourceToolbarPopover,
+                            setProjectOverviewResourceToolbarPopover,
+                            projectOverviewResourceMenuId,
+                            setProjectOverviewResourceMenuId,
                             workspaceTeams: teamPageTeams,
                             workspaceTeamsLoading: teamPageLoading,
                             workspaceTeamsRequiresPlan: teamPageRequiresPlan,
@@ -159422,7 +160841,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           React.createElement("div", { className: "playground-view-pane" + (contentMode === "chat" ? "" : " is-hidden") },
                             React.createElement("div", { className: "runner-host" },
                               (hasRealAccess || (hasDemoAccess && showInitialThreadWelcome))
-                                ? React.createElement(RunnerChat, {
+                                ? metronomeRunTraceSelection?.key
+                                  ? renderMetronomeRunTraceThreadSurface()
+                                  : React.createElement(RunnerChat, {
                                     key: runnerRenderKey,
                                     className: "playground-thread-runner"
                                       + (selectedThreadShellBackground ? " is-project-wallpaper-active" : "")
@@ -159891,6 +161312,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               onOpenResourceTemplatesPage: openResourceTemplatesPage,
                               projectOverviewResourceFilter,
                               setProjectOverviewResourceFilter,
+                              projectOverviewResourceSearchQuery,
+                              setProjectOverviewResourceSearchQuery,
+                              projectOverviewResourceViewMode,
+                              setProjectOverviewResourceViewMode,
+                              projectOverviewResourceToolbarPopover,
+                              setProjectOverviewResourceToolbarPopover,
+                              projectOverviewResourceMenuId,
+                              setProjectOverviewResourceMenuId,
                               workspaceTeams: teamPageTeams,
                               workspaceTeamsLoading: teamPageLoading,
                               workspaceTeamsRequiresPlan: teamPageRequiresPlan,
