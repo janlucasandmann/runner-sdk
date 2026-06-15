@@ -45,7 +45,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-sidebar-card {
-        border: 0;
+        border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 10px;
         background: rgba(255, 255, 255, 0.05);
         padding: 12px;
@@ -148,6 +148,221 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .playground-project-overview-sidebar-row-value.is-editable {
+        overflow: visible;
+        white-space: normal;
+      }
+
+      .playground-project-overview-sidebar-row-value.is-full {
+        width: 100%;
+      }
+
+      .playground-project-overview-sidebar-select-shell {
+        position: relative;
+        z-index: 1;
+        min-width: 0;
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+      }
+
+      .playground-project-overview-sidebar-select-shell.is-open {
+        z-index: 340;
+      }
+
+      .playground-project-overview-sidebar-select-trigger {
+        min-width: 0;
+        max-width: 100%;
+        min-height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 6px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        padding: 0;
+        color: rgba(255, 255, 255, 0.86);
+        font: inherit;
+        font-size: 12px;
+        line-height: 1.25;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-sidebar-select-trigger:hover,
+      .playground-project-overview-sidebar-select-trigger.is-open {
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-sidebar-select-trigger.is-empty {
+        color: rgba(255, 255, 255, 0.46);
+      }
+
+      .playground-project-overview-sidebar-select-trigger-copy {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-sidebar-select-trigger-caret {
+        width: 12px;
+        height: 12px;
+        flex: 0 0 12px;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-project-overview-sidebar-select-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: auto;
+        z-index: 360;
+        width: min(280px, calc(100vw - 48px));
+        max-height: min(320px, calc(100vh - 120px));
+        overflow: auto;
+        padding: 6px;
+      }
+
+      .playground-project-overview-sidebar-select-option {
+        width: 100%;
+        min-height: 34px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 16px;
+        align-items: center;
+        gap: 10px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        padding: 7px 8px;
+        color: rgba(255, 255, 255, 0.82);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-sidebar-select-option:hover,
+      .playground-project-overview-sidebar-select-option.is-selected {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-sidebar-select-option-main {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        overflow: hidden;
+      }
+
+      .playground-project-overview-sidebar-select-option-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-project-overview-sidebar-select-option-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        line-height: 1.25;
+        font-weight: 500;
+      }
+
+      .playground-project-overview-sidebar-select-option-description {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 11px;
+        line-height: 1.25;
+        color: rgba(255, 255, 255, 0.46);
+      }
+
+      .playground-project-overview-sidebar-select-option-check {
+        width: 14px;
+        height: 14px;
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-project-overview-sidebar-date-fields {
+        width: 100%;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 6px;
+      }
+
+      .playground-project-overview-sidebar-date-field {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .playground-project-overview-sidebar-date-field-label {
+        font-size: 9px;
+        line-height: 1;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-project-overview-sidebar-date-input {
+        min-width: 0;
+        width: 100%;
+        height: 24px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        padding: 0;
+        color: rgba(255, 255, 255, 0.84);
+        font: inherit;
+        font-size: 11px;
+        line-height: 1;
+        color-scheme: dark;
+        outline: none;
+      }
+
+      .playground-project-overview-sidebar-date-input:focus {
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-sidebar-select-option .playground-tasks-priority-value,
+      .playground-project-overview-sidebar-select-trigger .playground-tasks-priority-value {
+        font-size: 12px;
+        line-height: 1.25;
+      }
+
+      .playground-project-overview-sidebar-milestone-row {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        width: 100%;
+        grid-template-columns: minmax(0, 1fr);
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-sidebar-milestone-row .playground-project-overview-sidebar-chip {
+        width: 100%;
+        justify-content: space-between;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-project-overview-sidebar-milestone-row:hover .playground-project-overview-sidebar-chip {
+        color: rgba(255, 255, 255, 0.96);
       }
 
       .playground-project-overview-sidebar-muted {
@@ -1640,6 +1855,92 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         display: flex;
         flex-direction: column;
         gap: 18px;
+      }
+
+      .playground-project-overview-activity-card.is-main {
+        gap: 12px;
+      }
+
+      .playground-project-overview-activity-card.is-main .playground-project-overview-activity-title {
+        font-size: 14px;
+        line-height: 1.35;
+      }
+
+      .playground-project-overview-activity-card.is-main .playground-project-overview-activity-list {
+        gap: 8px;
+      }
+
+      .playground-project-overview-activity-card.is-main .playground-project-overview-activity-row {
+        grid-template-columns: 24px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        min-height: 0;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-project-overview-activity-card.is-main .playground-project-overview-activity-row::after {
+        display: none;
+      }
+
+      .playground-project-overview-activity-card.is-main .playground-project-overview-activity-avatar {
+        width: 22px;
+        height: 22px;
+      }
+
+      .playground-project-overview-activity-card.is-main .playground-project-overview-activity-copy {
+        padding: 0;
+        font-size: 12px;
+      }
+
+      .playground-project-overview-activity-show-more {
+        position: relative;
+        isolation: isolate;
+        align-self: flex-end;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.86);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-activity-show-more::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+        padding: 1px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04)),
+          rgba(255, 255, 255, 0.06);
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+      }
+
+      .playground-project-overview-activity-show-more:hover {
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-activity-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 4px;
       }
 
       .playground-project-overview-latest-update-card {
@@ -3282,6 +3583,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         display: flex;
         flex-direction: column;
         gap: 0;
+      }
+
+      .playground-project-overview-general-grid .playground-project-overview-threads-section {
+        margin-bottom: 24px;
       }
 
       .playground-project-overview-threads-table {
@@ -5098,7 +5403,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
           const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
           const normalizedProjectOverviewHomeTab = projectOverviewHomeTab === "rules" ? "strategy" : projectOverviewHomeTab;
-	          const activeProjectOverviewHomeTab = normalizedProjectOverviewHomeTab === "resources" || normalizedProjectOverviewHomeTab === "strategy" || normalizedProjectOverviewHomeTab === "plugins" || normalizedProjectOverviewHomeTab === "permissions"
+	          const activeProjectOverviewHomeTab = normalizedProjectOverviewHomeTab === "resources" || normalizedProjectOverviewHomeTab === "strategy" || normalizedProjectOverviewHomeTab === "permissions"
 	            ? normalizedProjectOverviewHomeTab
 	            : "general";
           function renderProjectOverviewHomeTabs() {
@@ -5106,7 +5411,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	              { id: "general", label: "General" },
 	              { id: "resources", label: "Resources" },
 		              { id: "strategy", label: "Strategy" },
-		              { id: "plugins", label: "Plugins" },
 		              { id: "permissions", label: "Teams" },
 		            ];
             return React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs" },
@@ -7022,7 +7326,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           }
 
           function renderProjectOverviewThreadsSection() {
-            return React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section" },
+            return React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section" },
               renderOverviewSectionHeader("Threads", null),
               React.createElement("div", { className: "playground-plugins-search-row", ref: projectOverviewThreadsToolbarRef },
                 React.createElement("div", { className: "playground-plugins-search-shell" },
@@ -7282,7 +7586,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 
           function buildProjectOverviewActivityItems() {
             const items = [];
-            projectOverviewFilteredThreads.slice(0, 8).forEach((thread) => {
+            projectOverviewFilteredThreads.forEach((thread) => {
               const { safeThread, displayThreadTitle } = typeof getSidebarThreadTitleParts === "function"
                 ? getSidebarThreadTitleParts(thread)
                 : { safeThread: thread, displayThreadTitle: thread?.title || "Untitled thread" };
@@ -7309,7 +7613,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 timeLabel: typeof formatRelativeThreadTime === "function" ? (formatRelativeThreadTime(safeThread?.updatedAt || safeThread?.createdAt) || "") : "",
               });
             });
-            (projectOverviewFileActivityState?.items || []).slice(0, 8).forEach((row, index) => {
+            (projectOverviewFileActivityState?.items || []).forEach((row, index) => {
               const assigneeId = String(row?.assigneeId || "").trim();
               const fileActivityActor = resolveProjectOverviewActivityActor(assigneeId, row?.assignee || "Agent");
               const fileTaskId = String(row?.taskId || "").trim();
@@ -7328,7 +7632,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 timeLabel: String(row?.dateLabel || "").trim(),
               });
             });
-            normalizedOverviewTasks.slice(0, 8).forEach((task) => {
+            normalizedOverviewTasks.forEach((task) => {
               const assigneeId = String(task?.assigneeAgentId || "").trim();
               const timestamp = Date.parse(String(task?.updatedAt || task?.createdAt || ""));
               const actorName = typeof getTaskAssigneeName === "function"
@@ -7350,8 +7654,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             });
             return items
               .filter((item) => item.object)
-              .sort((left, right) => (right.time || 0) - (left.time || 0))
-              .slice(0, 8);
+              .sort((left, right) => (right.time || 0) - (left.time || 0));
           }
 
           function renderProjectOverviewActivityAvatar(item) {
@@ -7376,35 +7679,61 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           }
 
           function renderProjectOverviewActivitySection() {
-            const activityItems = buildProjectOverviewActivityItems();
-            return React.createElement("section", { className: "playground-project-overview-activity-card" },
+            const allActivityItems = buildProjectOverviewActivityItems();
+            const visibleActivityCount = Math.max(3, Number(projectOverviewVisibleActivityCount) || 3);
+            const activityItems = allActivityItems.slice(0, visibleActivityCount);
+            const hasMoreActivityItems = activityItems.length < allActivityItems.length;
+            const hasLessActivityItems = visibleActivityCount > 3;
+            return React.createElement("section", { className: "playground-project-overview-activity-card is-main" },
               React.createElement("div", { className: "playground-project-overview-activity-header" },
                 React.createElement("h2", { className: "playground-project-overview-activity-title" }, "Activity")
               ),
               activityItems.length > 0
-                ? React.createElement("div", { className: "playground-project-overview-activity-list" },
-                    activityItems.map((item) =>
-                      React.createElement("div", { key: item.id, className: "playground-project-overview-activity-row" },
-                        renderProjectOverviewActivityAvatar(item),
-                        React.createElement("div", { className: "playground-project-overview-activity-copy" },
-                          React.createElement("span", { className: "playground-project-overview-activity-actor" }, item.actor),
-                          React.createElement("span", null, " " + item.verb + " "),
-                          item.taskId && typeof handleSelectTask === "function"
-                            ? React.createElement("button", {
-                                type: "button",
-                                className: "playground-project-overview-activity-object is-clickable",
-                                onClick: (event) => {
-                                  event.stopPropagation();
-                                  handleSelectTask(item.taskId);
-                                },
-                              }, item.object)
-                            : React.createElement("span", { className: "playground-project-overview-activity-object" }, item.object),
-                          item.timeLabel
-                            ? React.createElement("span", { className: "playground-project-overview-activity-time" }, " · " + item.timeLabel)
-                            : null
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("div", { className: "playground-project-overview-activity-list" },
+                      activityItems.map((item) =>
+                        React.createElement("div", { key: item.id, className: "playground-project-overview-activity-row" },
+                          renderProjectOverviewActivityAvatar(item),
+                          React.createElement("div", { className: "playground-project-overview-activity-copy" },
+                            React.createElement("span", { className: "playground-project-overview-activity-actor" }, item.actor),
+                            React.createElement("span", null, " " + item.verb + " "),
+                            item.taskId && typeof handleSelectTask === "function"
+                              ? React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-project-overview-activity-object is-clickable",
+                                  onClick: (event) => {
+                                    event.stopPropagation();
+                                    handleSelectTask(item.taskId);
+                                  },
+                                }, item.object)
+                              : React.createElement("span", { className: "playground-project-overview-activity-object" }, item.object),
+                            item.timeLabel
+                              ? React.createElement("span", { className: "playground-project-overview-activity-time" }, " · " + item.timeLabel)
+                              : null
+                          )
                         )
                       )
-                    )
+                    ),
+                    hasMoreActivityItems || hasLessActivityItems
+                      ? React.createElement("div", { className: "playground-project-overview-activity-actions" },
+                          hasLessActivityItems
+                            ? React.createElement("button", {
+                                type: "button",
+                                className: "playground-project-overview-activity-show-more",
+                                onClick: () => setProjectOverviewVisibleActivityCount(3),
+                              }, "Show less")
+                            : null,
+                          hasMoreActivityItems
+                            ? React.createElement("button", {
+                                type: "button",
+                                className: "playground-project-overview-activity-show-more",
+                                onClick: () => setProjectOverviewVisibleActivityCount((current) =>
+                                  Math.min(allActivityItems.length, Math.max(3, Number(current) || 3) + 10)
+                                ),
+                              }, "Show more")
+                            : null
+                        )
+                      : null
                   )
                 : React.createElement("div", { className: "playground-project-overview-activity-empty" },
                     "Project activity will appear here once agents create tasks, run threads, or update files."
@@ -7638,6 +7967,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 
           function PlaygroundProjectOverviewProgressUsageChart({ dailyCtBuckets, maxDailyCt, maxProgressValue, series }) {
             const canvasRef = useRef(null);
+            const chartRef = useRef(null);
             const chartSignature = JSON.stringify({
               buckets: dailyCtBuckets.map((bucket) => ({
                 key: bucket?.key || "",
@@ -7651,6 +7981,13 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 values: Array.isArray(entry.values) ? entry.values : [],
               })),
             });
+
+            useEffect(() => () => {
+              if (chartRef.current) {
+                chartRef.current.destroy();
+                chartRef.current = null;
+              }
+            }, []);
 
             useEffect(() => {
               const canvas = canvasRef.current;
@@ -7690,7 +8027,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     return;
                   }
                   const x = activeElement.x;
-                  const label = labels[activeIndex] || "";
+                  const label = String(chartInstance?.data?.labels?.[activeIndex] || "");
                   if (!label) {
                     return;
                   }
@@ -7777,195 +8114,202 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   ctx.restore();
                 },
               };
-              const chart = new Chart(canvas, {
+              const chartData = {
+                labels,
+                datasets: [
+                  {
+                    id: "dailyCT",
+                    type: "bar",
+                    label: "Compute Tokens",
+                    data: dailyCtValues,
+                    yAxisID: "ct",
+                    backgroundColor: (context) => makeVerticalGradient(context, [
+                      [0, "rgba(102, 166, 255, 0.82)"],
+                      [1, "rgba(91, 103, 230, 0.64)"],
+                    ], "rgba(95, 112, 230, 0.72)"),
+                    borderColor: "rgba(95, 112, 230, 0.75)",
+                    borderWidth: 0,
+                    borderRadius: 2,
+                    barPercentage: 0.72,
+                    categoryPercentage: 0.86,
+                    maxBarThickness: 10,
+                    order: 4,
+                  },
+                  {
+                    id: "scope",
+                    type: "line",
+                    label: "Scope",
+                    data: seriesById.scope || [],
+                    yAxisID: "progress",
+                    borderColor: "rgba(160, 160, 166, 0.62)",
+                    backgroundColor: "rgba(160, 160, 166, 0.16)",
+                    borderWidth: 1.7,
+                    fill: false,
+                    pointBackgroundColor: "rgba(190, 190, 196, 0.86)",
+                    pointBorderColor: "#050505",
+                    pointBorderWidth: 2,
+                    pointRadius: (context) => context.dataIndex === (seriesById.scope || []).length - 1 ? 5 : 0,
+                    pointHoverRadius: 5,
+                    tension: 0.28,
+                    order: 1,
+                  },
+                  {
+                    id: "started",
+                    type: "line",
+                    label: "Started",
+                    data: seriesById.started || [],
+                    yAxisID: "progress",
+                    borderColor: "rgb(255, 209, 26)",
+                    backgroundColor: (context) => makeVerticalGradient(context, [
+                      [0, "rgba(255, 209, 26, 0.2)"],
+                      [0.62, "rgba(255, 209, 26, 0.08)"],
+                      [1, "rgba(255, 209, 26, 0)"],
+                    ], "rgba(255, 209, 26, 0.08)"),
+                    borderWidth: 2,
+                    fill: false,
+                    pointBackgroundColor: "rgb(255, 209, 26)",
+                    pointBorderColor: "#050505",
+                    pointBorderWidth: 2,
+                    pointRadius: (context) => context.dataIndex === (seriesById.started || []).length - 1 ? 5 : 0,
+                    pointHoverRadius: 5,
+                    tension: 0.28,
+                    order: 2,
+                  },
+                  {
+                    id: "completed",
+                    type: "line",
+                    label: "Completed",
+                    data: seriesById.completed || [],
+                    yAxisID: "progress",
+                    borderColor: "rgb(111, 116, 255)",
+                    backgroundColor: (context) => makeVerticalGradient(context, [
+                      [0, "rgba(111, 116, 255, 0.32)"],
+                      [0.55, "rgba(111, 116, 255, 0.16)"],
+                      [1, "rgba(111, 116, 255, 0)"],
+                    ], "rgba(111, 116, 255, 0.14)"),
+                    borderWidth: 2,
+                    fill: "origin",
+                    pointBackgroundColor: "rgb(111, 116, 255)",
+                    pointBorderColor: "#050505",
+                    pointBorderWidth: 2,
+                    pointRadius: (context) => context.dataIndex === (seriesById.completed || []).length - 1 ? 5 : 0,
+                    pointHoverRadius: 5,
+                    tension: 0.28,
+                    order: 3,
+                  },
+                ],
+              };
+              const chartOptions = {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                normalized: true,
+                interaction: {
+                  intersect: false,
+                  mode: "index",
+                },
+                layout: {
+                  padding: {
+                    top: 28,
+                    right: 0,
+                    bottom: 0,
+                    left: 0,
+                  },
+                },
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    enabled: true,
+                    backgroundColor: "rgba(8, 8, 8, 0.96)",
+                    borderColor: "rgba(255, 255, 255, 0.14)",
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    titleColor: "rgba(255, 255, 255, 0.94)",
+                    bodyColor: "rgba(255, 255, 255, 0.78)",
+                    padding: 10,
+                    callbacks: {
+                      label: (context) => {
+                        const datasetId = context.dataset?.id || "";
+                        const value = Math.max(0, Number(context.parsed?.y || 0));
+                        if (datasetId === "dailyCT") {
+                          return "Compute Tokens: " + formatProjectOverviewCt(value) + " CT";
+                        }
+                        return String(context.dataset?.label || "Progress") + ": " + formatProjectOverviewInteger(value);
+                      },
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    type: "category",
+                    bounds: "data",
+                    offset: false,
+                    grid: { display: false, offset: false, drawBorder: false },
+                    border: { display: false },
+                    ticks: {
+                      align: "inner",
+                      autoSkip: false,
+                      color: "rgba(255, 255, 255, 0.5)",
+                      font: {
+                        size: 12,
+                        weight: "400",
+                        family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+                      },
+                      maxRotation: 0,
+                      minRotation: 0,
+                      padding: 12,
+                      callback: (_value, index) => {
+                        if (index === 0 || index === labels.length - 1) {
+                          return labels[index] || "";
+                        }
+                        return "";
+                      },
+                    },
+                  },
+                  progress: {
+                    display: false,
+                    type: "linear",
+                    position: "left",
+                    min: 0,
+                    max: Math.max(1, Math.ceil(maxProgressValue * 1.18)),
+                    ticks: {
+                      display: false,
+                      maxTicksLimit: 4,
+                    },
+                    grid: {
+                      display: false,
+                      drawTicks: false,
+                    },
+                    border: { display: false },
+                  },
+                  ct: {
+                    display: false,
+                    type: "linear",
+                    position: "right",
+                    min: 0,
+                    max: Math.max(1, Math.ceil(maxDailyCt * 4)),
+                    ticks: { display: false },
+                    grid: { display: false, drawTicks: false },
+                    border: { display: false },
+                  },
+                },
+              };
+
+              if (chartRef.current) {
+                chartRef.current.data = chartData;
+                chartRef.current.options = chartOptions;
+                chartRef.current.update("none");
+                return undefined;
+              }
+
+              chartRef.current = new Chart(canvas, {
                 type: "bar",
-                data: {
-                  labels,
-                  datasets: [
-                    {
-                      id: "dailyCT",
-                      type: "bar",
-                      label: "Compute Tokens",
-                      data: dailyCtValues,
-                      yAxisID: "ct",
-                      backgroundColor: (context) => makeVerticalGradient(context, [
-                        [0, "rgba(102, 166, 255, 0.82)"],
-                        [1, "rgba(91, 103, 230, 0.64)"],
-                      ], "rgba(95, 112, 230, 0.72)"),
-                      borderColor: "rgba(95, 112, 230, 0.75)",
-                      borderWidth: 0,
-                      borderRadius: 2,
-                      barPercentage: 0.72,
-                      categoryPercentage: 0.86,
-                      maxBarThickness: 10,
-                      order: 4,
-                    },
-                    {
-                      id: "scope",
-                      type: "line",
-                      label: "Scope",
-                      data: seriesById.scope || [],
-                      yAxisID: "progress",
-                      borderColor: "rgba(160, 160, 166, 0.62)",
-                      backgroundColor: "rgba(160, 160, 166, 0.16)",
-                      borderWidth: 1.7,
-                      fill: false,
-                      pointBackgroundColor: "rgba(190, 190, 196, 0.86)",
-                      pointBorderColor: "#050505",
-                      pointBorderWidth: 2,
-                      pointRadius: (context) => context.dataIndex === (seriesById.scope || []).length - 1 ? 5 : 0,
-                      pointHoverRadius: 5,
-                      tension: 0.28,
-                      order: 1,
-                    },
-                    {
-                      id: "started",
-                      type: "line",
-                      label: "Started",
-                      data: seriesById.started || [],
-                      yAxisID: "progress",
-                      borderColor: "rgb(255, 209, 26)",
-                      backgroundColor: (context) => makeVerticalGradient(context, [
-                        [0, "rgba(255, 209, 26, 0.2)"],
-                        [0.62, "rgba(255, 209, 26, 0.08)"],
-                        [1, "rgba(255, 209, 26, 0)"],
-                      ], "rgba(255, 209, 26, 0.08)"),
-                      borderWidth: 2,
-                      fill: false,
-                      pointBackgroundColor: "rgb(255, 209, 26)",
-                      pointBorderColor: "#050505",
-                      pointBorderWidth: 2,
-                      pointRadius: (context) => context.dataIndex === (seriesById.started || []).length - 1 ? 5 : 0,
-                      pointHoverRadius: 5,
-                      tension: 0.28,
-                      order: 2,
-                    },
-                    {
-                      id: "completed",
-                      type: "line",
-                      label: "Completed",
-                      data: seriesById.completed || [],
-                      yAxisID: "progress",
-                      borderColor: "rgb(111, 116, 255)",
-                      backgroundColor: (context) => makeVerticalGradient(context, [
-                        [0, "rgba(111, 116, 255, 0.32)"],
-                        [0.55, "rgba(111, 116, 255, 0.16)"],
-                        [1, "rgba(111, 116, 255, 0)"],
-                      ], "rgba(111, 116, 255, 0.14)"),
-                      borderWidth: 2,
-                      fill: "origin",
-                      pointBackgroundColor: "rgb(111, 116, 255)",
-                      pointBorderColor: "#050505",
-                      pointBorderWidth: 2,
-                      pointRadius: (context) => context.dataIndex === (seriesById.completed || []).length - 1 ? 5 : 0,
-                      pointHoverRadius: 5,
-                      tension: 0.28,
-                      order: 3,
-                    },
-                  ],
-                },
-                options: {
-                  animation: { duration: 180 },
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  normalized: true,
-                  interaction: {
-                    intersect: false,
-                    mode: "index",
-                  },
-                  layout: {
-                    padding: {
-                      top: 28,
-                      right: 0,
-                      bottom: 0,
-                      left: 0,
-                    },
-                  },
-                  plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                      enabled: true,
-                      backgroundColor: "rgba(8, 8, 8, 0.96)",
-                      borderColor: "rgba(255, 255, 255, 0.14)",
-                      borderWidth: 1,
-                      cornerRadius: 8,
-                      displayColors: true,
-                      titleColor: "rgba(255, 255, 255, 0.94)",
-                      bodyColor: "rgba(255, 255, 255, 0.78)",
-                      padding: 10,
-                      callbacks: {
-                        label: (context) => {
-                          const datasetId = context.dataset?.id || "";
-                          const value = Math.max(0, Number(context.parsed?.y || 0));
-                          if (datasetId === "dailyCT") {
-                            return "Compute Tokens: " + formatProjectOverviewCt(value) + " CT";
-                          }
-                          return String(context.dataset?.label || "Progress") + ": " + formatProjectOverviewInteger(value);
-                        },
-                      },
-                    },
-                  },
-                  scales: {
-                    x: {
-                      type: "category",
-                      bounds: "data",
-                      offset: false,
-                      grid: { display: false, offset: false, drawBorder: false },
-                      border: { display: false },
-                      ticks: {
-                        align: "inner",
-                        autoSkip: false,
-                        color: "rgba(255, 255, 255, 0.5)",
-                        font: {
-                          size: 12,
-                          weight: "400",
-                          family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-                        },
-                        maxRotation: 0,
-                        minRotation: 0,
-                        padding: 12,
-                        callback: (_value, index) => {
-                          if (index === 0 || index === labels.length - 1) {
-                            return labels[index] || "";
-                          }
-                          return "";
-                        },
-                      },
-                    },
-                    progress: {
-                      display: false,
-                      type: "linear",
-                      position: "left",
-                      min: 0,
-                      max: Math.max(1, Math.ceil(maxProgressValue * 1.18)),
-                      ticks: {
-                        display: false,
-                        maxTicksLimit: 4,
-                      },
-                      grid: {
-                        display: false,
-                        drawTicks: false,
-                      },
-                      border: { display: false },
-                    },
-                    ct: {
-                      display: false,
-                      type: "linear",
-                      position: "right",
-                      min: 0,
-                      max: Math.max(1, Math.ceil(maxDailyCt * 4)),
-                      ticks: { display: false },
-                      grid: { display: false, drawTicks: false },
-                      border: { display: false },
-                    },
-                  },
-                },
+                data: chartData,
+                options: chartOptions,
                 plugins: [edgeToEdgeChartAreaPlugin, hoverGuidePlugin],
               });
-
-              return () => {
-                chart.destroy();
-              };
+              return undefined;
             }, [chartSignature]);
 
             return React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
@@ -9114,7 +9458,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           function renderProjectOverviewGeneralPanel() {
             return React.createElement("div", { className: "playground-project-overview-general-grid" },
               renderProjectOverviewProgressUsageChartSection(),
-              renderProjectOverviewLatestUpdateSection(),
+              renderProjectOverviewActivitySection(),
               renderProjectOverviewSetupSection(),
               renderProjectOverviewThreadsSection()
             );
@@ -9146,7 +9490,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             if (typeof getProjectListLead === "function") {
               const lead = getProjectListLead(selectedProject);
               return {
+                id: String(lead?.id || lead?.userId || lead?.email || "").trim(),
                 name: String(lead?.name || "Unassigned").trim() || "Unassigned",
+                email: String(lead?.email || "").trim(),
                 avatarUrl: String(lead?.avatarUrl || "").trim(),
               };
             }
@@ -9171,7 +9517,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 || ""
             ).trim();
             return {
+              id: String(selectedProject?.leadUserId || metadata.leadUserId || metadataLead.userId || metadataLead.id || metadata.leadEmail || "").trim(),
               name: name || "Unassigned",
+              email: String(selectedProject?.leadEmail || metadata.leadEmail || metadataLead.email || "").trim(),
               avatarUrl,
             };
           }
@@ -9232,12 +9580,236 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             }
           }
 
+          function getProjectOverviewSidebarMetadata(project = selectedProject) {
+            return project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+              ? project.metadata
+              : {};
+          }
+
+          function getProjectOverviewSidebarDateInputValue(value) {
+            const raw = String(value || "").trim();
+            if (!raw) return "";
+            const isoMatch = raw.match(/^\d{4}-\d{2}-\d{2}/);
+            if (isoMatch) return isoMatch[0];
+            const timestamp = Date.parse(raw);
+            if (!Number.isFinite(timestamp)) return "";
+            try {
+              return new Date(timestamp).toISOString().slice(0, 10);
+            } catch {
+              return "";
+            }
+          }
+
+          function getProjectOverviewSidebarStatusValue() {
+            const metadata = getProjectOverviewSidebarMetadata(projectOverviewDraft);
+            const raw = String(projectOverviewDraft?.status || projectOverviewDraft?.state || metadata.status || "backlog")
+              .trim()
+              .toLowerCase()
+              .replace(/[\s-]+/g, "_");
+            if (["done", "finished", "complete"].includes(raw)) return "completed";
+            if (["doing", "active"].includes(raw)) return "in_progress";
+            return ["backlog", "in_progress", "on_track", "at_risk", "blocked", "completed"].includes(raw) ? raw : "backlog";
+          }
+
+          function getProjectOverviewSidebarPriorityValue() {
+            const metadata = getProjectOverviewSidebarMetadata(projectOverviewDraft);
+            const raw = String(projectOverviewDraft?.priority || metadata.priority || "medium").trim().toLowerCase();
+            return PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === raw) ? raw : "medium";
+          }
+
+          function getProjectOverviewSidebarProjectTypeValue() {
+            const metadata = getProjectOverviewSidebarMetadata(projectOverviewDraft);
+            return String(projectOverviewDraft?.projectType || projectOverviewDraft?.type || metadata.projectType || metadata.blueprintId || "blank").trim() || "blank";
+          }
+
+          function getProjectOverviewSidebarEnvironmentValue() {
+            const metadata = getProjectOverviewSidebarMetadata(projectOverviewDraft);
+            return String(projectOverviewDraft?.defaultEnvironmentId || metadata.defaultEnvironmentId || activeProjectAttachmentEnvironmentId || "").trim();
+          }
+
+          function commitProjectOverviewSidebarProjectRecord(projectRecord) {
+            if (!projectRecord?.id || typeof commitLocalProjectRecord !== "function") {
+              return;
+            }
+            commitLocalProjectRecord(projectRecord, {
+              summary: projectRecord.summary || selectedProjectSummary,
+              environments: selectedProjectEnvironments,
+              recentThreads: selectedProjectRecentThreads,
+              threads: selectedProjectRecentThreads,
+              selectImmediately: true,
+            });
+          }
+
+          async function persistProjectOverviewSidebarProjectUpdate(projectUpdates = {}, metadataUpdates = {}) {
+            const baseProject = normalizePlaygroundProjectRecord(projectOverviewDraft || selectedProject);
+            const normalizedProjectId = String(baseProject.id || normalizedSelectedProjectId || "").trim();
+            if (!normalizedProjectId || normalizedProjectId === PLAYGROUND_PROJECT_DRAFT_ID) {
+              return null;
+            }
+            const baseMetadata = getProjectOverviewSidebarMetadata(baseProject);
+            const nextMetadata = {
+              ...baseMetadata,
+              ...(metadataUpdates && typeof metadataUpdates === "object" ? metadataUpdates : {}),
+            };
+            const nextProjectRecord = normalizePlaygroundProjectRecord({
+              ...baseProject,
+              ...(projectUpdates && typeof projectUpdates === "object" ? projectUpdates : {}),
+              metadata: nextMetadata,
+              updatedAt: new Date().toISOString(),
+            });
+            commitProjectOverviewSidebarProjectRecord(nextProjectRecord);
+            if (typeof setProjectSaveState === "function") {
+              setProjectSaveState({ isSaving: true, error: "", message: "" });
+            }
+            try {
+              const payload = buildPlaygroundProjectSavePayload(nextProjectRecord, metadataUpdates);
+              const headers = new Headers(requestHeaders || {});
+              headers.set("Content-Type", "application/json");
+              const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
+                method: "PATCH",
+                headers,
+                body: JSON.stringify(payload),
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to update project.");
+              }
+              const updatedProject = getPlaygroundProjectResponseRecord(data, nextProjectRecord);
+              if (updatedProject?.id) {
+                commitProjectOverviewSidebarProjectRecord(updatedProject);
+              }
+              if (typeof setProjectSaveState === "function") {
+                setProjectSaveState({ isSaving: false, error: "", message: "Saved" });
+              }
+              return updatedProject || nextProjectRecord;
+            } catch (error) {
+              commitProjectOverviewSidebarProjectRecord(baseProject);
+              if (typeof setProjectSaveState === "function") {
+                setProjectSaveState({
+                  isSaving: false,
+                  error: error instanceof Error ? error.message : "Failed to update project.",
+                  message: "",
+                });
+              }
+              return null;
+            }
+          }
+
+          function updateProjectOverviewSidebarProjectProperty(projectUpdates = {}, metadataUpdates = {}) {
+            if (typeof setProjectOverviewSidebarPropertyPopover === "function") {
+              setProjectOverviewSidebarPropertyPopover("");
+            }
+            void persistProjectOverviewSidebarProjectUpdate(projectUpdates, metadataUpdates);
+          }
+
+          function renderProjectOverviewSidebarSelectOption(option) {
+            const optionId = String(option?.id || option?.key || option?.label || "").trim();
+            const label = String(option?.label || option?.name || optionId || "Option").trim();
+            const description = String(option?.description || option?.email || "").trim();
+            return React.createElement("button", {
+                key: optionId || label,
+                type: "button",
+                className: "playground-project-overview-sidebar-select-option" + (option?.selected ? " is-selected" : ""),
+                onClick: option?.onSelect,
+              },
+              React.createElement("span", { className: "playground-project-overview-sidebar-select-option-main" },
+                option?.icon || null,
+                React.createElement("span", { className: "playground-project-overview-sidebar-select-option-copy" },
+                  React.createElement("span", { className: "playground-project-overview-sidebar-select-option-label" }, label),
+                  description
+                    ? React.createElement("span", { className: "playground-project-overview-sidebar-select-option-description" }, description)
+                    : null
+                )
+              ),
+              option?.selected
+                ? React.createElement(Check, { className: "playground-project-overview-sidebar-select-option-check", strokeWidth: 2 })
+                : React.createElement("span", null)
+            );
+          }
+
+          function renderProjectOverviewSidebarSelectControl(id, content, options = {}) {
+            const normalizedId = String(id || "").trim();
+            const isOpen = Boolean(normalizedId && projectOverviewSidebarPropertyPopover === normalizedId);
+            return React.createElement("span", {
+                className: "playground-project-overview-sidebar-select-shell playground-tasks-toolbar-popup-shell" + (isOpen ? " is-open" : ""),
+              },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-project-overview-sidebar-select-trigger" + (isOpen ? " is-open" : "") + (options.empty ? " is-empty" : ""),
+                onClick: (event) => {
+                  event.stopPropagation();
+                  if (typeof setProjectOverviewSidebarPropertyPopover === "function") {
+                    setProjectOverviewSidebarPropertyPopover(isOpen ? "" : normalizedId);
+                  }
+                },
+                "aria-expanded": isOpen ? "true" : "false",
+              },
+                React.createElement("span", { className: "playground-project-overview-sidebar-select-trigger-copy" }, content),
+                React.createElement(ChevronDown, { className: "playground-project-overview-sidebar-select-trigger-caret", strokeWidth: 2 })
+              ),
+              isOpen
+                ? React.createElement("div", {
+                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-overview-sidebar-select-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                    onClick: (event) => event.stopPropagation(),
+                  }, options.children)
+                : null
+            );
+          }
+
+          function buildProjectOverviewSidebarLeadOptions() {
+            const currentLead = getProjectOverviewSidebarLead();
+            const options = [];
+            const seen = new Set();
+            function addOption(option) {
+              const name = String(option?.name || option?.label || "").trim();
+              const email = String(option?.email || "").trim();
+              const id = String(option?.id || option?.userId || option?.agentId || email || name || "").trim();
+              if (!id && !name) return;
+              const key = (id || email || name).toLowerCase();
+              if (seen.has(key)) return;
+              seen.add(key);
+              options.push({
+                id: id || key,
+                name: name || email || "Project lead",
+                email,
+                avatarUrl: String(option?.avatarUrl || option?.photoUrl || option?.profilePhotoUrl || "").trim(),
+              });
+            }
+            addOption({
+              id: "__unassigned__",
+              name: "Unassigned",
+            });
+            addOption({
+              id: currentUserEmail || currentUserName || "current-user",
+              name: currentUserName || currentUserEmail || "Me",
+              email: currentUserEmail,
+              avatarUrl: currentUserAvatarUrl,
+            });
+            addOption({
+              id: currentLead.id || currentLead.email || currentLead.name,
+              name: currentLead.name,
+              email: currentLead.email,
+              avatarUrl: currentLead.avatarUrl,
+            });
+            (Array.isArray(sortedAgents) ? sortedAgents : []).forEach((agent) => {
+              addOption({
+                id: agent.id,
+                name: agent.name,
+                email: agent.email,
+                avatarUrl: agent.profilePhotoUrl || agent.avatarUrl || agent.photoUrl,
+              });
+            });
+            return options;
+          }
+
           function renderProjectOverviewSidebarRow(label, value, options = {}) {
             const content = options.content || React.createElement("span", null, value || "None");
             return React.createElement("div", { className: "playground-project-overview-sidebar-row" },
               React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, label),
               React.createElement("div", {
-                className: "playground-project-overview-sidebar-row-value" + (!value && !options.content ? " playground-project-overview-sidebar-muted" : ""),
+                className: "playground-project-overview-sidebar-row-value"
+                  + (!value && !options.content ? " playground-project-overview-sidebar-muted" : "")
+                  + (options.editable ? " is-editable" : ""),
               }, content)
             );
           }
@@ -9360,43 +9932,186 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               { id: "databases", label: "Databases", count: databaseResourceCount, Icon: Database },
               { id: "imagine", label: "Imagine Resources", count: projectOverviewImagineResources.length, Icon: Clapperboard },
             ];
+            const statusOptions = [
+              { id: "backlog", label: "Backlog" },
+              { id: "in_progress", label: "In progress" },
+              { id: "on_track", label: "On track" },
+              { id: "at_risk", label: "At risk" },
+              { id: "blocked", label: "Blocked" },
+              { id: "completed", label: "Completed" },
+            ];
+            const currentStatusValue = getProjectOverviewSidebarStatusValue();
+            const currentStatusOption = statusOptions.find((option) => option.id === currentStatusValue) || statusOptions[0];
+            const currentPriorityValue = getProjectOverviewSidebarPriorityValue();
+            const currentProjectTypeValue = getProjectOverviewSidebarProjectTypeValue();
+            const currentProjectType = typeof getPlaygroundProjectBlueprint === "function"
+              ? getPlaygroundProjectBlueprint(currentProjectTypeValue)
+              : null;
+            const currentProjectTypeLabel = String(currentProjectType?.title || projectTypeLabel || "Blank Project").trim();
+            const currentEnvironmentValue = getProjectOverviewSidebarEnvironmentValue();
+            const currentEnvironment = projectComposerAvailableEnvironments.find((environment) => String(environment?.id || "") === currentEnvironmentValue)
+              || activeProjectAttachmentEnvironment
+              || projectComposerAvailableEnvironments[0]
+              || null;
+            const currentEnvironmentLabel = String(
+              currentEnvironment?.name
+                || defaultComputerLabel
+                || "Default"
+            ).trim();
+            const startDateInputValue = getProjectOverviewSidebarDateInputValue(selectedProject?.startDate || metadata.startDate);
+            const targetDateInputValue = getProjectOverviewSidebarDateInputValue(selectedProject?.targetDate || selectedProject?.dueDate || metadata.targetDate || metadata.dueDate);
+            const leadOptions = buildProjectOverviewSidebarLeadOptions();
+            const selectedLeadKey = String(lead.id || lead.email || lead.name || "").trim().toLowerCase();
+            const renderStatusContent = (option) => React.createElement(React.Fragment, null,
+              React.createElement("span", { className: "playground-project-overview-sidebar-status-dot" }),
+              React.createElement("span", null, option?.label || "Backlog")
+            );
+            const renderProjectTypeIcon = (blueprint) => {
+              const Icon = blueprint?.Icon || Rocket;
+              return React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
+                React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.85 })
+              );
+            };
 
             return React.createElement("aside", { className: "playground-project-overview-sidebar", "aria-label": "Project settings" },
               React.createElement("section", { className: "playground-project-overview-sidebar-card" },
                 React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties"),
-                  typeof openProjectComposerForEdit === "function"
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: "playground-project-overview-sidebar-action",
-                        onClick: () => openProjectComposerForEdit(selectedProject),
-                      }, "Edit")
-                    : null
+                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties")
                 ),
                 React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
-                  renderProjectOverviewSidebarRow("Status", getProjectOverviewSidebarStatusLabel(), {
-                    content: React.createElement(React.Fragment, null,
-                      React.createElement("span", { className: "playground-project-overview-sidebar-status-dot" }),
-                      React.createElement("span", null, getProjectOverviewSidebarStatusLabel())
-                    ),
+                  renderProjectOverviewSidebarRow("Status", currentStatusOption.label, {
+                    editable: true,
+                    content: renderProjectOverviewSidebarSelectControl("status", renderStatusContent(currentStatusOption), {
+                      children: statusOptions.map((option) => renderProjectOverviewSidebarSelectOption({
+                        id: option.id,
+                        label: option.label,
+                        selected: option.id === currentStatusOption.id,
+                        icon: React.createElement("span", { className: "playground-project-overview-sidebar-status-dot" }),
+                        onSelect: () => updateProjectOverviewSidebarProjectProperty({
+                          status: option.id,
+                          state: option.id,
+                        }, {
+                          status: option.id,
+                        }),
+                      })),
+                    }),
                   }),
-                  renderProjectOverviewSidebarRow("Priority", getProjectOverviewSidebarPriorityLabel()),
+                  renderProjectOverviewSidebarRow("Priority", getPlaygroundTaskPriorityLabel(currentPriorityValue), {
+                    editable: true,
+                    content: renderProjectOverviewSidebarSelectControl("priority", renderPlaygroundTaskPriorityLabel(currentPriorityValue), {
+                      children: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) => renderProjectOverviewSidebarSelectOption({
+                        id: option.id,
+                        label: option.label,
+                        selected: option.id === currentPriorityValue,
+                        icon: renderPlaygroundTaskPriorityIcon(option.id),
+                        onSelect: () => updateProjectOverviewSidebarProjectProperty({
+                          priority: option.id,
+                        }, {
+                          priority: option.id,
+                        }),
+                      })),
+                    }),
+                  }),
                   renderProjectOverviewSidebarRow("Lead", lead.name, {
-                    content: React.createElement("span", { className: "playground-project-overview-sidebar-lead" },
+                    editable: true,
+                    content: renderProjectOverviewSidebarSelectControl("lead", React.createElement("span", { className: "playground-project-overview-sidebar-lead" },
                       renderProjectOverviewSidebarAvatar(lead.name, lead.avatarUrl),
                       React.createElement("span", null, lead.name)
-                    ),
+                    ), {
+                      empty: !lead.name || lead.name === "Unassigned",
+                      children: leadOptions.map((option) => {
+                        const optionKey = String(option.id || option.email || option.name || "").trim().toLowerCase();
+                        const isUnassigned = option.id === "__unassigned__";
+                        const isSelected = Boolean(optionKey && selectedLeadKey && (optionKey === selectedLeadKey || (isUnassigned && selectedLeadKey === "unassigned")));
+                        return renderProjectOverviewSidebarSelectOption({
+                          id: option.id,
+                          label: option.name,
+                          description: option.email,
+                          selected: isSelected || (!selectedLeadKey && isUnassigned),
+                          icon: renderProjectOverviewSidebarAvatar(option.name, option.avatarUrl),
+                          onSelect: () => {
+                            const leadRecord = isUnassigned
+                              ? null
+                              : {
+                                  id: option.id,
+                                  userId: option.id,
+                                  name: option.name,
+                                  email: option.email,
+                                  avatarUrl: option.avatarUrl,
+                                };
+                            updateProjectOverviewSidebarProjectProperty({
+                              leadUserId: isUnassigned ? "" : option.id,
+                              leadName: isUnassigned ? "" : option.name,
+                              leadEmail: isUnassigned ? "" : option.email,
+                              leadAvatarUrl: isUnassigned ? "" : option.avatarUrl,
+                            }, {
+                              leadUserId: isUnassigned ? "" : option.id,
+                              leadName: isUnassigned ? "" : option.name,
+                              leadEmail: isUnassigned ? "" : option.email,
+                              leadAvatarUrl: isUnassigned ? "" : option.avatarUrl,
+                              lead: leadRecord,
+                            });
+                          },
+                        });
+                      }),
+                    }),
                   }),
-                  renderProjectOverviewSidebarRow("Issues", String(issueCount)),
-                  renderProjectOverviewSidebarRow("Dates", targetDateLabel || startDateLabel, {
-                    content: React.createElement("span", null,
-                      startDateLabel || "Start",
-                      React.createElement("span", { className: "playground-project-overview-sidebar-muted" }, " → "),
-                      targetDateLabel || "Target"
-                    ),
+                  renderProjectOverviewSidebarRow("Type", currentProjectTypeLabel, {
+                    editable: true,
+                    content: renderProjectOverviewSidebarSelectControl("type", React.createElement(React.Fragment, null,
+                      renderProjectTypeIcon(currentProjectType),
+                      React.createElement("span", null, currentProjectTypeLabel)
+                    ), {
+                      children: PLAYGROUND_PROJECT_BLUEPRINT_OPTIONS.map((blueprint) => renderProjectOverviewSidebarSelectOption({
+                        id: blueprint.id,
+                        label: blueprint.title,
+                        description: blueprint.description,
+                        selected: blueprint.id === getPlaygroundProjectBlueprintId(currentProjectTypeValue),
+                        icon: renderProjectTypeIcon(blueprint),
+                        onSelect: () => {
+                          const blueprintMetadata = typeof buildPlaygroundProjectBlueprintMetadata === "function"
+                            ? buildPlaygroundProjectBlueprintMetadata(blueprint)
+                            : { projectType: blueprint.id, blueprintId: blueprint.id };
+                          updateProjectOverviewSidebarProjectProperty({
+                            projectType: blueprint.id,
+                            type: blueprint.id,
+                          }, {
+                            ...blueprintMetadata,
+                            projectType: blueprint.id,
+                            blueprintId: blueprint.id,
+                          });
+                        },
+                      })),
+                    }),
                   }),
-                  renderProjectOverviewSidebarRow("Type", projectTypeLabel || "Blank Project"),
-                  renderProjectOverviewSidebarRow("Computer", defaultComputerLabel)
+                  renderProjectOverviewSidebarRow("Computer", currentEnvironmentLabel, {
+                    editable: true,
+                    content: renderProjectOverviewSidebarSelectControl("computer", React.createElement(React.Fragment, null,
+                      React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.85 }),
+                      React.createElement("span", null, currentEnvironmentLabel)
+                    ), {
+                      children: projectComposerAvailableEnvironments.length > 0
+                        ? projectComposerAvailableEnvironments.map((environment) => {
+                            const environmentId = String(environment?.id || "").trim();
+                            const environmentName = String(environment?.name || environment?.label || "Computer").trim();
+                            return renderProjectOverviewSidebarSelectOption({
+                              id: environmentId,
+                              label: environmentName,
+                              description: environment?.isDefault ? "Default computer" : "",
+                              selected: environmentId && environmentId === currentEnvironmentValue,
+                              icon: React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.85 }),
+                              onSelect: () => updateProjectOverviewSidebarProjectProperty({
+                                defaultEnvironmentId: environmentId,
+                                defaultEnvironmentName: environmentName,
+                              }, {
+                                defaultEnvironmentId: environmentId || null,
+                                defaultEnvironmentName: environmentName,
+                              }),
+                            });
+                          })
+                        : React.createElement("div", { className: "playground-project-overview-sidebar-empty" }, "No computers available.")
+                    }),
+                  }),
                 )
               ),
               React.createElement("section", { className: "playground-project-overview-sidebar-card" },
@@ -9414,9 +10129,20 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 releaseSections.length > 0
                   ? React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
                       releaseSections.map((section) =>
-                        React.createElement("div", { key: section.key, className: "playground-project-overview-sidebar-row" },
-                          React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, "Milestone"),
-                          React.createElement("div", { className: "playground-project-overview-sidebar-row-value" },
+                        React.createElement("button", {
+                          key: section.key,
+                          type: "button",
+                          className: "playground-project-overview-sidebar-row playground-project-overview-sidebar-milestone-row",
+                          onClick: () => {
+                            if (typeof setSelectedReleaseId === "function") {
+                              setSelectedReleaseId(section.releaseId || "");
+                            }
+                            if (typeof setTaskView === "function") {
+                              setTaskView("backlog");
+                            }
+                          },
+                        },
+                          React.createElement("div", { className: "playground-project-overview-sidebar-row-value is-full" },
                             React.createElement("span", { className: "playground-project-overview-sidebar-chip" },
                               section.title,
                               React.createElement("span", { className: "playground-project-overview-sidebar-muted" }, String(section.tasks.length))
@@ -9426,20 +10152,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                       )
                     )
                   : React.createElement("div", { className: "playground-project-overview-sidebar-empty" }, "No milestone")
-              ),
-              React.createElement("section", { className: "playground-project-overview-sidebar-card is-activity" },
-                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                  React.createElement("h2", { className: "playground-project-overview-sidebar-title playground-project-overview-sidebar-title-with-caret" },
-                    React.createElement("span", null, "Activity"),
-                    React.createElement(ChevronDown, { className: "playground-project-overview-sidebar-title-caret", strokeWidth: 1.9 })
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-sidebar-see-all",
-                    onClick: () => typeof setProjectOverviewHomeTab === "function" && setProjectOverviewHomeTab("general"),
-                  }, "See all")
-                ),
-                renderProjectOverviewSidebarActivity()
               )
             );
           }
@@ -10346,11 +11058,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 ? renderProjectOverviewResourcesPanel()
                 : activeProjectOverviewHomeTab === "strategy"
                   ? renderProjectOverviewStrategyPanel()
-                  : activeProjectOverviewHomeTab === "plugins"
-                      ? renderProjectOverviewPluginsPanel()
-                      : activeProjectOverviewHomeTab === "permissions"
-                        ? renderProjectOverviewPermissionsPanel()
-                        : renderProjectOverviewGeneralPanel();
+                  : activeProjectOverviewHomeTab === "permissions"
+                    ? renderProjectOverviewPermissionsPanel()
+                    : renderProjectOverviewGeneralPanel();
 
 	          return React.createElement("div", { className: "playground-tasks-view-section playground-project-overview-view is-" + activeProjectOverviewHomeTab },
             React.createElement("div", { className: "playground-project-overview-hero-shell" },

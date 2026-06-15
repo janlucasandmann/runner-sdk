@@ -1,4 +1,4 @@
-import { CSSProperties, ChangeEvent, DragEvent as ReactDragEvent, Fragment, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, SyntheticEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, ChangeEvent, ClipboardEvent, DragEvent as ReactDragEvent, Fragment, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, SyntheticEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowUp as LucideArrowUp,
@@ -16934,9 +16934,8 @@ export function RunnerChat({
     })();
   }, [currentThreadId, hasRunningTurn, isPreparingRun, onRunError, pendingQueuedMessages]);
 
-  function handleInputChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    const nextValue = event.target.value;
-    setInputSelectionStart(event.target.selectionStart ?? nextValue.length);
+  function applyComposerInputValue(nextValue: string, selectionStart: number) {
+    setInputSelectionStart(selectionStart);
     if (!stagedThreadContextCommand && !stagedResourceCreationCommand && !stagedAgentCreationCommand && !stagedSkillCreationCommand && !stagedSlideCreationCommand && !stagedResearchCreationCommand && !stagedScrapeCreationCommand && !stagedParseCreationCommand && !stagedAdCreationCommand && !stagedBacklogCommand) {
       const autoStageCommand = parseAutoStageThreadContextCommand(nextValue);
       if (autoStageCommand) {
@@ -17010,6 +17009,43 @@ export function RunnerChat({
       speechBaseInputRef.current = nextValue;
       speechTranscriptRef.current = "";
     }
+  }
+
+  function handleInputChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    const nextValue = event.target.value;
+    applyComposerInputValue(nextValue, event.target.selectionStart ?? nextValue.length);
+  }
+
+  function handleInputPaste(event: ClipboardEvent<HTMLTextAreaElement>) {
+    const clipboardText = event.clipboardData.getData("text/plain") || event.clipboardData.getData("text");
+    if (!clipboardText || !/[\r\n]$/.test(clipboardText)) {
+      return;
+    }
+
+    const normalizedClipboardText = clipboardText.replace(/[\r\n]+$/g, "");
+    if (normalizedClipboardText === clipboardText) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const textarea = event.currentTarget;
+    const currentValue = textarea.value;
+    const selectionStart = textarea.selectionStart ?? currentValue.length;
+    const selectionEnd = textarea.selectionEnd ?? selectionStart;
+    const nextValue = currentValue.slice(0, selectionStart) + normalizedClipboardText + currentValue.slice(selectionEnd);
+    const nextSelectionStart = selectionStart + normalizedClipboardText.length;
+
+    applyComposerInputValue(nextValue, nextSelectionStart);
+
+    window.requestAnimationFrame(() => {
+      const activeTextarea = textareaRef.current;
+      if (!activeTextarea) {
+        return;
+      }
+      activeTextarea.focus();
+      activeTextarea.setSelectionRange(nextSelectionStart, nextSelectionStart);
+    });
   }
 
   function handleInputSelectionChange(event: SyntheticEvent<HTMLTextAreaElement>) {
@@ -21559,6 +21595,7 @@ export function RunnerChat({
                   className={`sidebar-textarea ${hasStagedComposerCommand ? "sidebar-textarea-staged" : ""}`.trim()}
                   value={input}
                   onChange={handleInputChange}
+                  onPaste={handleInputPaste}
                   onSelect={handleInputSelectionChange}
                   onClick={handleInputSelectionChange}
                   onKeyUp={handleInputSelectionChange}

@@ -2358,6 +2358,22 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   justify-content: end;
 }
 
+.tb-runner-chat .tb-log-metronome-minimap-branch {
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  display: block;
+  position: relative;
+  overflow: visible;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-branch-lines {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
 .tb-runner-chat .tb-log-metronome-minimap-slot {
   min-width: 0;
   width: 132px;
@@ -2365,6 +2381,13 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-slot.is-branch-node {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 40px;
 }
 
 .tb-runner-chat .tb-log-metronome-minimap-node {
@@ -2384,7 +2407,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-log-metronome-minimap-node.is-active {
-  border-color: #4da3ff;
+  border-color: rgba(77, 163, 255, 0.5);
   box-shadow: 0 0 0 1px rgba(77, 163, 255, 0.52);
   color: #fff;
 }
@@ -2401,15 +2424,15 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 7px;
+  border-radius: 5px;
   background: rgba(255, 255, 255, 0.09);
   color: rgba(255, 255, 255, 0.85);
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
 }
 
 .tb-runner-chat .tb-log-metronome-minimap-node-icon .tb-log-card-small-icon {
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
 }
 
 .tb-runner-chat .tb-log-metronome-minimap-node-icon.is-trigger {

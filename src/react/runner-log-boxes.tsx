@@ -4262,6 +4262,176 @@ function buildMetronomeWorkflowPathAroundActive({
   return [...before, activeNodeId, ...after];
 }
 
+function getMetronomeWorkflowIncomingEdges(edges: MetronomeWorkflowMiniEdge[]) {
+  const incomingByTarget = new Map<string, MetronomeWorkflowMiniEdge[]>();
+  for (const edge of edges) {
+    incomingByTarget.set(edge.target, [...(incomingByTarget.get(edge.target) || []), edge]);
+  }
+  return incomingByTarget;
+}
+
+function getMetronomeWorkflowOutgoingEdges(edges: MetronomeWorkflowMiniEdge[]) {
+  const outgoingBySource = new Map<string, MetronomeWorkflowMiniEdge[]>();
+  for (const edge of edges) {
+    outgoingBySource.set(edge.source, [...(outgoingBySource.get(edge.source) || []), edge]);
+  }
+  return outgoingBySource;
+}
+
+function buildMetronomeWorkflowBranchMiniMap({
+  activeNodeId,
+  path,
+  nodes,
+  edges,
+}: {
+  activeNodeId: string | null;
+  path: string[];
+  nodes: MetronomeWorkflowMiniNode[];
+  edges: MetronomeWorkflowMiniEdge[];
+}): {
+  condition: MetronomeWorkflowMiniNode;
+  items: Array<{
+    node: MetronomeWorkflowMiniNode;
+    x: number;
+    y: number;
+  }>;
+  links: Array<{
+    source: string;
+    target: string;
+    sourceX: number;
+    sourceY: number;
+    targetX: number;
+    targetY: number;
+  }>;
+  width: number;
+  height: number;
+} | null {
+  if (!activeNodeId) return null;
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const outgoingBySource = getMetronomeWorkflowOutgoingEdges(edges);
+  const incomingByTarget = getMetronomeWorkflowIncomingEdges(edges);
+  const activeIndex = Math.max(0, path.indexOf(activeNodeId));
+  const nearbyIds = new Set(path.slice(Math.max(0, activeIndex - 2), activeIndex + 3));
+  const nearbyConditions = Array.from(nearbyIds)
+    .map((id) => nodeById.get(id) || null)
+    .filter((node): node is MetronomeWorkflowMiniNode =>
+      Boolean(node && node.kind === "condition" && (outgoingBySource.get(node.id) || []).length > 1)
+    );
+  if (!nearbyConditions.length) return null;
+
+  const pathIndexById = new Map(path.map((id, index) => [id, index]));
+  const condition = nearbyConditions
+    .slice()
+    .sort((a, b) =>
+      Math.abs((pathIndexById.get(a.id) ?? activeIndex) - activeIndex)
+      - Math.abs((pathIndexById.get(b.id) ?? activeIndex) - activeIndex)
+    )[0];
+  const outgoing = (outgoingBySource.get(condition.id) || [])
+    .filter((edge) => nodeById.has(edge.target));
+  if (outgoing.length < 2) return null;
+
+  const branchNodeIds = new Set(outgoing.map((edge) => edge.target));
+  const activeBranchIndex = Math.max(0, outgoing.findIndex((edge) => {
+    if (edge.target === activeNodeId) return true;
+    const nextEdges = outgoingBySource.get(edge.target) || [];
+    return nextEdges.some((nextEdge) => nextEdge.target === activeNodeId);
+  }));
+  const sortedOutgoing = outgoing
+    .map((edge, index) => ({ edge, index }))
+    .sort((a, b) => {
+      if (a.index === activeBranchIndex) return 1;
+      if (b.index === activeBranchIndex) return -1;
+      return a.index - b.index;
+    })
+    .map((entry) => entry.edge);
+
+  const incoming = (incomingByTarget.get(condition.id) || [])
+    .filter((edge) => nodeById.has(edge.source) && !branchNodeIds.has(edge.source));
+  const prefixId = incoming.find((edge) => path.includes(edge.source))?.source || incoming[0]?.source || null;
+  const nodeWidth = 132;
+  const nodeHeight = 40;
+  const gapX = 56;
+  const rowGap = 64;
+  const paddingX = 0;
+  const paddingY = 2;
+  const prefixColumnCount = prefixId ? 1 : 0;
+  const conditionColumn = prefixColumnCount;
+  const branchColumn = conditionColumn + 1;
+  const nextColumn = branchColumn + 1;
+  const branchRows: Array<{
+    edge: MetronomeWorkflowMiniEdge;
+    branchNode: MetronomeWorkflowMiniNode;
+    nextNode?: MetronomeWorkflowMiniNode;
+  }> = [];
+  for (const edge of sortedOutgoing) {
+    const branchNode = nodeById.get(edge.target);
+    if (!branchNode) continue;
+    const nextNode = (outgoingBySource.get(edge.target) || [])
+      .map((nextEdge) => nodeById.get(nextEdge.target) || null)
+      .find((node): node is MetronomeWorkflowMiniNode => Boolean(node));
+    branchRows.push({ edge, branchNode, nextNode });
+  }
+  if (branchRows.length < 2) return null;
+
+  const graphHeight = paddingY * 2 + nodeHeight + (branchRows.length - 1) * (nodeHeight + rowGap);
+  const conditionY = paddingY + ((branchRows.length - 1) * (nodeHeight + rowGap)) / 2;
+  const itemsById = new Map<string, { node: MetronomeWorkflowMiniNode; x: number; y: number }>();
+  const putItem = (node: MetronomeWorkflowMiniNode | null | undefined, column: number, y: number) => {
+    if (!node || itemsById.has(node.id)) return;
+    itemsById.set(node.id, {
+      node,
+      x: paddingX + column * (nodeWidth + gapX),
+      y,
+    });
+  };
+
+  putItem(prefixId ? nodeById.get(prefixId) : null, 0, conditionY);
+  putItem(condition, conditionColumn, conditionY);
+  branchRows.forEach((row, rowIndex) => {
+    const y = paddingY + rowIndex * (nodeHeight + rowGap);
+    putItem(row.branchNode, branchColumn, y);
+    putItem(row.nextNode, nextColumn, y);
+  });
+
+  const links: Array<{
+    source: string;
+    target: string;
+    sourceX: number;
+    sourceY: number;
+    targetX: number;
+    targetY: number;
+  }> = [];
+  const addLink = (sourceId?: string | null, targetId?: string | null) => {
+    if (!sourceId || !targetId) return;
+    const source = itemsById.get(sourceId);
+    const target = itemsById.get(targetId);
+    if (!source || !target) return;
+    links.push({
+      source: sourceId,
+      target: targetId,
+      sourceX: source.x + nodeWidth,
+      sourceY: source.y + nodeHeight / 2,
+      targetX: target.x,
+      targetY: target.y + nodeHeight / 2,
+    });
+  };
+
+  if (prefixId) addLink(prefixId, condition.id);
+  branchRows.forEach((row) => {
+    addLink(condition.id, row.branchNode.id);
+    if (row.nextNode) addLink(row.branchNode.id, row.nextNode.id);
+  });
+
+  const usedColumns = Math.max(nextColumn + 1, ...Array.from(itemsById.values()).map((item) => Math.floor(item.x / (nodeWidth + gapX)) + 1));
+  return {
+    condition,
+    items: Array.from(itemsById.values()),
+    links,
+    width: paddingX * 2 + usedColumns * nodeWidth + Math.max(0, usedColumns - 1) * gapX,
+    height: graphHeight,
+  };
+}
+
 function getMetronomeWorkflowMiniNodeIcon(kind: string): ReactNode {
   const normalizedKind = String(kind || "").toLowerCase();
   if (normalizedKind === "trigger") return <Zap className="tb-log-card-small-icon" strokeWidth={1.8} />;
@@ -4295,6 +4465,12 @@ function MetronomeWorkflowLogBox({ log }: { log: RunnerLog; timeLabel?: string }
   if (activeNodeId && !path.includes(activeNodeId)) {
     path = buildMetronomeWorkflowPathAroundActive({ activeNodeId, edges });
   }
+  const branchMiniMap = buildMetronomeWorkflowBranchMiniMap({
+    activeNodeId,
+    path,
+    nodes,
+    edges,
+  });
   const activeIndex = activeNodeId ? Math.max(0, path.indexOf(activeNodeId)) : 0;
   const rawSlots = [-2, -1, 0, 1, 2].map((offset) => {
     const id = path[activeIndex + offset];
@@ -4347,35 +4523,77 @@ function MetronomeWorkflowLogBox({ log }: { log: RunnerLog; timeLabel?: string }
           <span className="tb-log-compact-action-title">{workflowTitle}</span>
         </span>
         <span className="tb-log-metronome-minimap" aria-label="Metronome workflow progress">
-          <span className="tb-log-metronome-minimap-track">
-            {slots.map((node, index) => {
-              const previousNode = index > 0 ? slots[index - 1] : null;
-              const connector = index > 0 ? (
+          {branchMiniMap ? (
+            <span
+              className="tb-log-metronome-minimap-branch"
+              style={{ width: branchMiniMap.width, height: branchMiniMap.height }}
+            >
+              <svg
+                className="tb-log-metronome-minimap-branch-lines"
+                width={branchMiniMap.width}
+                height={branchMiniMap.height}
+                viewBox={`0 0 ${branchMiniMap.width} ${branchMiniMap.height}`}
+                aria-hidden="true"
+              >
+                {branchMiniMap.links.map((link) => {
+                  const delta = Math.max(24, Math.min(60, Math.abs(link.targetX - link.sourceX) * 0.45));
+                  return (
+                    <path
+                      key={`${link.source}->${link.target}`}
+                      d={`M ${link.sourceX} ${link.sourceY} C ${link.sourceX + delta} ${link.sourceY}, ${link.targetX - delta} ${link.targetY}, ${link.targetX} ${link.targetY}`}
+                      fill="none"
+                      stroke="rgba(255, 255, 255, 0.25)"
+                      strokeWidth="1"
+                    />
+                  );
+                })}
+              </svg>
+              {branchMiniMap.items.map(({ node, x, y }) => (
                 <span
-                  key={`connector-${index}`}
-                  className={`tb-log-metronome-minimap-connector ${edgeExistsBetween(previousNode?.id, node?.id) ? "" : "is-empty"}`.trim()}
-                  aria-hidden="true"
-                />
-              ) : null;
-              return (
-                <Fragment key={`${node?.id || "empty"}-${index}`}>
-                  {connector}
-                  <span className="tb-log-metronome-minimap-slot">
-                    {node ? (
-                      <span className={`tb-log-metronome-minimap-node ${node.id === activeNodeId ? "is-active" : ""}`.trim()}>
-                        <span className={`tb-log-metronome-minimap-node-icon is-${node.kind}`} aria-hidden="true">
-                          {getMetronomeWorkflowMiniNodeIcon(node.kind)}
-                        </span>
-                        <span className="tb-log-metronome-minimap-node-title" title={node.label}>{node.label}</span>
-                      </span>
-                    ) : (
-                      <span className="tb-log-metronome-minimap-node is-placeholder" aria-hidden="true" />
-                    )}
+                  key={node.id}
+                  className={`tb-log-metronome-minimap-slot is-branch-node ${node.id === branchMiniMap.condition.id ? "is-condition-slot" : ""}`.trim()}
+                  style={{ transform: `translate(${x}px, ${y}px)` }}
+                >
+                  <span className={`tb-log-metronome-minimap-node ${node.id === activeNodeId ? "is-active" : ""}`.trim()}>
+                    <span className={`tb-log-metronome-minimap-node-icon is-${node.kind}`} aria-hidden="true">
+                      {getMetronomeWorkflowMiniNodeIcon(node.kind)}
+                    </span>
+                    <span className="tb-log-metronome-minimap-node-title" title={node.label}>{node.label}</span>
                   </span>
-                </Fragment>
-              );
-            })}
-          </span>
+                </span>
+              ))}
+            </span>
+          ) : (
+            <span className="tb-log-metronome-minimap-track">
+              {slots.map((node, index) => {
+                const previousNode = index > 0 ? slots[index - 1] : null;
+                const connector = index > 0 ? (
+                  <span
+                    key={`connector-${index}`}
+                    className={`tb-log-metronome-minimap-connector ${edgeExistsBetween(previousNode?.id, node?.id) ? "" : "is-empty"}`.trim()}
+                    aria-hidden="true"
+                  />
+                ) : null;
+                return (
+                  <Fragment key={`${node?.id || "empty"}-${index}`}>
+                    {connector}
+                    <span className="tb-log-metronome-minimap-slot">
+                      {node ? (
+                        <span className={`tb-log-metronome-minimap-node ${node.id === activeNodeId ? "is-active" : ""}`.trim()}>
+                          <span className={`tb-log-metronome-minimap-node-icon is-${node.kind}`} aria-hidden="true">
+                            {getMetronomeWorkflowMiniNodeIcon(node.kind)}
+                          </span>
+                          <span className="tb-log-metronome-minimap-node-title" title={node.label}>{node.label}</span>
+                        </span>
+                      ) : (
+                        <span className="tb-log-metronome-minimap-node is-placeholder" aria-hidden="true" />
+                      )}
+                    </span>
+                  </Fragment>
+                );
+              })}
+            </span>
+          )}
         </span>
       </button>
       {userMessage ? (

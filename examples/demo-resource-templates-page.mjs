@@ -3,296 +3,264 @@ export const RESOURCE_TEMPLATES_PAGE_CSS = String.raw`
         width: 100%;
         height: 100%;
         min-height: 0;
+        border-radius: inherit;
+        background: #050505;
         overflow-y: auto;
-        padding: 48px 50px 64px;
         box-sizing: border-box;
-        color: #fff;
+        color: rgba(255, 255, 255, 0.94);
       }
 
       .playground-resource-templates-page-inner {
-        width: min(100%, 1180px);
+        box-sizing: border-box;
+        width: min(100%, calc(var(--playground-centered-page-max-width) + 88px));
+        max-width: calc(var(--playground-centered-page-max-width) + 88px);
         margin: 0 auto;
-      }
-
-      .playground-resource-templates-hero {
+        padding: 42px 44px 48px;
         display: flex;
         flex-direction: column;
-        gap: 18px;
-        margin-bottom: 28px;
-      }
-
-      .playground-resource-templates-hero-top {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
         gap: 20px;
       }
 
-      .playground-resource-templates-eyebrow {
-        margin: 0 0 8px;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 12px;
-        line-height: 1.35;
-      }
-
-      .playground-resource-templates-title {
+      .playground-resource-templates-hero-heading {
         margin: 0;
-        font-size: 32px;
-        line-height: 1.08;
+        text-align: center;
+        font-size: 24px;
+        line-height: 1.2;
         font-weight: 500;
-        letter-spacing: 0;
+        letter-spacing: -0.02em;
+        color: rgba(255, 255, 255, 0.98);
       }
 
-      .playground-resource-templates-copy {
-        max-width: 640px;
-        margin: 10px 0 0;
-        color: rgba(255, 255, 255, 0.62);
+      .playground-resource-templates-hero-slide-content {
+        width: min(100%, 650px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+        text-align: center;
+      }
+
+      .playground-resource-templates-hero-pills {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+      }
+
+      .playground-resource-templates-hero-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        padding: 0 16px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.86);
+        color: #111;
+        font-size: 12px;
+        font-weight: 500;
+        box-shadow: 0 14px 44px rgba(0, 0, 0, 0.16);
+      }
+
+      .playground-resource-templates-hero-pill.is-incoming {
+        animation: playground-metronome-hero-pill-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      .playground-resource-templates-hero-pill.is-outgoing {
+        position: absolute;
+        inset: 0 auto auto 50%;
+        transform: translateX(-50%);
+        animation: playground-metronome-hero-pill-out 260ms cubic-bezier(0.7, 0, 0.84, 0) both;
+        pointer-events: none;
+      }
+
+      .playground-resource-templates-hero-pill-icon {
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.08);
+        color: #0d0d0d;
+      }
+
+      .playground-resource-templates-hero-copy {
+        margin: 0;
+        max-width: 560px;
+        color: rgba(0, 0, 0, 0.7);
         font-size: 13px;
         line-height: 1.55;
       }
 
+      .playground-resource-templates-hero-cta {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        min-height: 32px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: #0d0d0d;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+
+      .playground-resource-templates-hero-dot {
+        width: 8px;
+        height: 8px;
+        display: block;
+        flex: 0 0 auto;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        appearance: none;
+        background: rgba(255, 255, 255, 0.28);
+        transition: background-color 160ms ease, transform 160ms ease;
+        cursor: pointer;
+      }
+
+      .playground-resource-templates-hero-dot.is-active {
+        background: rgba(255, 255, 255, 0.96);
+        transform: scale(1.1);
+      }
+
       .playground-resource-templates-notice {
-        min-height: 20px;
+        min-height: 18px;
         color: #66a6ff;
         font-size: 12px;
         line-height: 1.4;
       }
 
-      .playground-resource-templates-featured-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      .playground-resource-templates-card {
-        min-width: 0;
-        min-height: 170px;
-        display: flex;
-        flex-direction: column;
+      .playground-resource-templates-section-header {
         align-items: flex-start;
-        gap: 12px;
-        padding: 16px;
-        border: 0;
-        border-radius: 15px;
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
-        font: inherit;
-        text-align: left;
-        cursor: pointer;
-      }
-
-      .playground-resource-templates-card:hover {
-        background: rgba(255, 255, 255, 0.075);
-      }
-
-      .playground-resource-templates-card-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(102, 166, 255, 0.14);
-        color: #66a6ff;
-      }
-
-      .playground-resource-templates-card-meta {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: rgba(255, 255, 255, 0.52);
-        font-size: 11px;
-        line-height: 1.3;
-      }
-
-      .playground-resource-templates-card-title {
-        margin: 0;
-        font-size: 15px;
-        line-height: 1.25;
-        font-weight: 500;
-      }
-
-      .playground-resource-templates-card-summary {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.62);
-        font-size: 12px;
-        line-height: 1.45;
-      }
-
-      .playground-resource-templates-table-card {
-        position: relative;
-        padding: 1px;
-        border-radius: 15px;
-      }
-
-      .playground-resource-templates-table-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04) 45%, rgba(102, 166, 255, 0.24));
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        pointer-events: none;
-      }
-
-      .playground-resource-templates-table-inner {
-        position: relative;
-        z-index: 1;
-        overflow: hidden;
-        border-radius: inherit;
-        background: transparent;
       }
 
       .playground-resource-templates-toolbar {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 14px;
+        justify-content: flex-start;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
-      .playground-resource-templates-search {
+      .playground-resource-templates-toolbar .playground-plugins-toolbar-controls {
+        margin-left: auto;
+      }
+
+      .playground-resource-templates-filter-shell .playground-tasks-toolbar-popup-menu {
+        left: 0;
+        right: auto;
+        transform-origin: top left;
+      }
+
+      .playground-resource-templates-resource-table .playground-resource-templates-col-main {
+        width: 42%;
+      }
+
+      .playground-resource-templates-resource-table .playground-resource-templates-col-category {
+        width: 16%;
+      }
+
+      .playground-resource-templates-resource-table .playground-resource-templates-col-difficulty {
+        width: 14%;
+      }
+
+      .playground-resource-templates-resource-table .playground-resource-templates-col-setup {
+        width: 14%;
+      }
+
+      .playground-resource-templates-resource-table .playground-resource-templates-col-actions {
+        width: 76px;
+      }
+
+      .playground-resource-templates-template-main {
         min-width: 0;
-        flex: 1 1 auto;
-        height: 38px;
         display: flex;
         align-items: center;
-        gap: 9px;
-        padding: 0 13px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.05);
-        color: rgba(255, 255, 255, 0.6);
+        gap: 12px;
       }
 
-      .playground-resource-templates-search input {
-        min-width: 0;
-        flex: 1 1 auto;
-        border: 0;
-        outline: none;
-        background: transparent;
-        color: #fff;
-        font: inherit;
-        font-size: 12px;
-      }
-
-      .playground-resource-templates-filter {
+      .playground-resource-templates-template-icon {
+        width: 38px;
         height: 38px;
-        border: 0;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.84);
-        padding: 0 14px;
-        font: inherit;
-        font-size: 12px;
-        cursor: pointer;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.94);
+        flex: 0 0 auto;
       }
 
-      .playground-resource-templates-filter.is-active {
-        background: rgba(102, 166, 255, 0.16);
-        color: #fff;
-      }
-
-      .playground-resource-templates-table {
+      .playground-resource-templates-template-copy {
+        min-width: 0;
         display: flex;
         flex-direction: column;
-      }
-
-      .playground-resource-templates-row {
-        min-height: 58px;
-        display: grid;
-        grid-template-columns: minmax(260px, 1.5fr) minmax(110px, 0.55fr) minmax(150px, 0.75fr) minmax(160px, 0.8fr) auto;
-        gap: 16px;
-        align-items: center;
-        padding: 12px 14px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-      }
-
-      .playground-resource-templates-row.is-clickable {
-        cursor: pointer;
-      }
-
-      .playground-resource-templates-row.is-clickable:focus-visible {
-        outline: 1px solid rgba(255, 255, 255, 0.38);
-        outline-offset: -1px;
-      }
-
-      .playground-resource-templates-row.is-header {
-        min-height: 36px;
-        color: rgba(255, 255, 255, 0.46);
-        font-size: 11px;
+        gap: 3px;
       }
 
       .playground-resource-templates-row-title {
         min-width: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .playground-resource-templates-row-icon {
-        width: 28px;
-        height: 28px;
-        flex: 0 0 28px;
-        border-radius: 8px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(102, 166, 255, 0.14);
-        color: #66a6ff;
-      }
-
-      .playground-resource-templates-row-name {
-        min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        color: rgba(255, 255, 255, 0.92);
         font-size: 13px;
         font-weight: 500;
       }
 
       .playground-resource-templates-row-summary {
         min-width: 0;
-        margin-top: 3px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(255, 255, 255, 0.46);
         font-size: 11px;
+        line-height: 1.35;
       }
 
       .playground-resource-templates-row-cell {
         min-width: 0;
-        color: rgba(255, 255, 255, 0.72);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: rgba(255, 255, 255, 0.62);
         font-size: 12px;
       }
 
-      .playground-resource-templates-row-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-      }
-
-      .playground-resource-templates-action {
-        height: 30px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
+      .playground-resource-templates-publish-button {
+        min-height: 28px;
+        padding: 0;
         border: 0;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
-        padding: 0 12px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
         font: inherit;
         font-size: 12px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
         cursor: pointer;
       }
 
-      .playground-resource-templates-action.is-primary {
-        background: #fff;
-        color: #000;
+      .playground-resource-templates-publish-button:hover,
+      .playground-resource-templates-publish-button:focus-visible {
+        color: rgba(255, 255, 255, 0.98);
+        outline: none;
+      }
+
+      .playground-resource-templates-table-empty {
+        padding: 28px 0;
       }
 
       .playground-resource-templates-empty {
@@ -411,16 +379,23 @@ export const RESOURCE_TEMPLATES_PAGE_CSS = String.raw`
       }
 
       @media (max-width: 980px) {
-        .playground-resource-templates-featured-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .playground-resource-templates-page-inner {
+          padding: 30px 18px 42px;
         }
 
-        .playground-resource-templates-row {
-          grid-template-columns: minmax(0, 1fr);
-          gap: 7px;
+        .playground-resource-templates-toolbar .playground-plugins-search-shell {
+          flex: 1 1 100%;
+          width: 100%;
+          min-width: 0;
+          max-width: none;
         }
 
-        .playground-resource-templates-row.is-header {
+        .playground-resource-templates-resource-table .playground-resource-templates-col-difficulty,
+        .playground-resource-templates-resource-table .playground-resource-templates-col-setup,
+        .playground-resource-templates-resource-table th:nth-child(3),
+        .playground-resource-templates-resource-table td:nth-child(3),
+        .playground-resource-templates-resource-table th:nth-child(4),
+        .playground-resource-templates-resource-table td:nth-child(4) {
           display: none;
         }
       }
@@ -454,6 +429,10 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
         setNotice,
         onPublishTemplate,
         onPreviewTemplate,
+        templateSlideIndex,
+        setTemplateSlideIndex,
+        templateToolbarPopover,
+        setTemplateToolbarPopover,
       }) {
         const templateList = Array.isArray(templates) ? templates : [];
         const typeList = Array.isArray(types) && types.length
@@ -464,6 +443,10 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
         const normalizedSearch = String(searchQuery || "").trim().toLowerCase();
         const selectedTemplate = templateList.find((template) => String(template.id || "") === String(selectedTemplateId || ""));
         const publishTemplate = templateList.find((template) => String(template.id || "") === String(publishTemplateId || ""));
+        const normalizedTemplateSlideIndex = Math.max(0, Number(templateSlideIndex || 0) || 0);
+        const normalizedTemplateToolbarPopover = String(templateToolbarPopover || "");
+        const updateTemplateSlideIndex = typeof setTemplateSlideIndex === "function" ? setTemplateSlideIndex : () => {};
+        const updateTemplateToolbarPopover = typeof setTemplateToolbarPopover === "function" ? setTemplateToolbarPopover : () => {};
         const filteredTemplates = templateList.filter((template) => {
           const typeMatches = normalizedActiveType === "all" || String(template.type || "") === normalizedActiveType;
           if (!typeMatches) return false;
@@ -477,7 +460,18 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
           ].join(" ").toLowerCase();
           return haystack.includes(normalizedSearch);
         });
-        const featuredTemplates = templateList.filter((template) => template.featured).slice(0, 4);
+        const featuredTemplates = templateList.filter((template) => template.featured).slice(0, 6);
+        const heroTemplates = (featuredTemplates.length ? featuredTemplates : templateList).slice(0, 6);
+        const activeHeroIndex = heroTemplates.length ? normalizedTemplateSlideIndex % heroTemplates.length : 0;
+        const activeHeroTemplate = heroTemplates[activeHeroIndex] || null;
+        const outgoingHeroTemplate = heroTemplates.length > 1 ? heroTemplates[(activeHeroIndex + heroTemplates.length - 1) % heroTemplates.length] : null;
+        const activeTypeOption = typeList.find((type) => String(type.id || "") === normalizedActiveType) || typeList[0] || { id: "all", label: "All templates" };
+        const templateCountByType = templateList.reduce((counts, template) => {
+          const type = String(template.type || "").trim();
+          counts.all = (counts.all || 0) + 1;
+          if (type) counts[type] = (counts[type] || 0) + 1;
+          return counts;
+        }, { all: 0 });
 
         function closeModal() {
           if (typeof setSelectedTemplateId === "function") setSelectedTemplateId("");
@@ -493,6 +487,7 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
 
         function previewTemplate(template) {
           if (!template) return;
+          updateTemplateToolbarPopover("");
           const previewableTemplateTypes = new Set(["metronome", "web_app", "function", "database"]);
           if (previewableTemplateTypes.has(String(template.type || "").trim()) && typeof onPreviewTemplate === "function") {
             onPreviewTemplate(template);
@@ -503,27 +498,42 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
           }
         }
 
-        function renderFeaturedCard(template) {
+        function renderHeroTemplatePill(template, className) {
+          if (!template) return null;
+          return React.createElement("div", { className },
+            React.createElement("span", { className: "playground-resource-templates-hero-pill-icon" }, renderTemplateIcon(template.type, 13)),
+            React.createElement("span", null, template.title || "Template")
+          );
+        }
+
+        function renderTemplateFilterOption(option) {
+          const optionId = String(option?.id || "all");
+          const count = Math.max(0, Number(templateCountByType[optionId] || 0) || 0);
           return React.createElement("button", {
-              key: "featured:" + String(template.id || template.title),
+              key: optionId,
               type: "button",
-              className: "playground-resource-templates-card",
-              onClick: () => previewTemplate(template),
+              className: "tb-popup-row tb-popup-row-select" + (normalizedActiveType === optionId ? " selected" : ""),
+              onClick: () => {
+                if (typeof setActiveType === "function") setActiveType(optionId);
+                updateTemplateToolbarPopover("");
+              },
             },
-            React.createElement("span", { className: "playground-resource-templates-card-icon" }, renderTemplateIcon(template.type, 17)),
-            React.createElement("span", { className: "playground-resource-templates-card-meta" },
-              String(template.typeLabel || "Template"),
-              String(template.estimatedSetup || "") ? "· " + String(template.estimatedSetup) : ""
+            React.createElement("span", { className: "tb-popup-check-slot" },
+              normalizedActiveType === optionId
+                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                : null
             ),
-            React.createElement("h3", { className: "playground-resource-templates-card-title" }, template.title || "Untitled template"),
-            React.createElement("p", { className: "playground-resource-templates-card-summary" }, template.summary || template.description || "")
+            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+              React.createElement("span", null, option?.label || optionId),
+              React.createElement("span", null, count === 1 ? "1 resource" : count + " resources")
+            )
           );
         }
 
         function renderTemplateRow(template) {
-          return React.createElement("div", {
+          return React.createElement("tr", {
               key: "template:" + String(template.id || template.title),
-              className: "playground-resource-templates-row is-clickable",
+              className: "is-clickable",
               tabIndex: 0,
               role: "button",
               onClick: () => previewTemplate(template),
@@ -534,29 +544,28 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
                 }
               },
             },
-            React.createElement("div", { className: "playground-resource-templates-row-title" },
-              React.createElement("span", { className: "playground-resource-templates-row-icon" }, renderTemplateIcon(template.type, 14)),
-              React.createElement("div", { className: "playground-resource-templates-row-copy" },
-                React.createElement("div", { className: "playground-resource-templates-row-name" }, template.title || "Untitled template"),
-                React.createElement("div", { className: "playground-resource-templates-row-summary" }, template.summary || "")
+            React.createElement("td", null,
+              React.createElement("div", { className: "playground-resource-templates-template-main" },
+                React.createElement("span", { className: "playground-resource-templates-template-icon" }, renderTemplateIcon(template.type, 16)),
+                React.createElement("div", { className: "playground-resource-templates-template-copy" },
+                  React.createElement("div", { className: "playground-resource-templates-row-title" }, template.title || "Untitled template"),
+                  React.createElement("div", { className: "playground-resource-templates-row-summary" }, template.summary || "")
+                )
               )
             ),
-            React.createElement("div", { className: "playground-resource-templates-row-cell" }, template.typeLabel || template.type || "Template"),
-            React.createElement("div", { className: "playground-resource-templates-row-cell" }, template.difficulty || "Standard"),
-            React.createElement("div", { className: "playground-resource-templates-row-cell" }, template.estimatedSetup || "5 min"),
-            React.createElement("div", { className: "playground-resource-templates-row-actions" },
+            React.createElement("td", null,
+              React.createElement("span", { className: "playground-resource-templates-row-cell" }, template.typeLabel || template.type || "Template")
+            ),
+            React.createElement("td", null,
+              React.createElement("span", { className: "playground-resource-templates-row-cell" }, template.difficulty || "Standard")
+            ),
+            React.createElement("td", null,
+              React.createElement("span", { className: "playground-resource-templates-row-cell" }, template.estimatedSetup || "5 min")
+            ),
+            React.createElement("td", { className: "is-actions" },
               React.createElement("button", {
                 type: "button",
-                className: "playground-resource-templates-action",
-                onClick: (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  previewTemplate(template);
-                },
-              }, "View"),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-resource-templates-action is-primary",
+                className: "playground-resource-templates-publish-button",
                 onClick: (event) => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -565,6 +574,67 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
                   }
                 },
               }, "Publish")
+            )
+          );
+        }
+
+        function renderTemplatesTable() {
+          return React.createElement("div", { className: "playground-auth-users-table-shell playground-metronome-table-shell playground-resource-templates-table-shell" },
+            React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-metronome-workflow-table playground-resource-templates-resource-table" },
+              React.createElement("thead", null,
+                React.createElement("tr", null,
+                  React.createElement("th", { className: "playground-resource-templates-col-main" }, "Resource"),
+                  React.createElement("th", { className: "playground-resource-templates-col-category" }, "Category"),
+                  React.createElement("th", { className: "playground-resource-templates-col-difficulty" }, "Difficulty"),
+                  React.createElement("th", { className: "playground-resource-templates-col-setup" }, "Setup"),
+                  React.createElement("th", { className: "is-actions playground-resource-templates-col-actions" }, "")
+                )
+              ),
+              React.createElement("tbody", null,
+                filteredTemplates.length > 0
+                  ? filteredTemplates.map(renderTemplateRow)
+                  : React.createElement("tr", null,
+                      React.createElement("td", { colSpan: 5 },
+                        React.createElement("div", { className: "playground-metronome-table-main playground-resource-templates-table-empty" },
+                          React.createElement("div", { className: "playground-metronome-table-title" }, "No resources match this filter"),
+                          React.createElement("div", { className: "playground-metronome-table-subtitle" }, "Adjust search or choose another category.")
+                        )
+                      )
+                    )
+              )
+            )
+          );
+        }
+
+        function renderTemplateToolbar() {
+          return React.createElement("div", { className: "playground-plugins-search-row playground-resource-templates-toolbar" },
+            React.createElement("div", { className: "playground-plugins-search-shell" },
+              React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+              React.createElement("input", {
+                type: "search",
+                value: searchQuery || "",
+                onChange: (event) => typeof setSearchQuery === "function" && setSearchQuery(event.target.value),
+                className: "playground-plugins-search",
+                placeholder: "Search resources",
+              })
+            ),
+            React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell playground-resource-templates-filter-shell" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button is-bare is-backlog-filter" + (normalizedTemplateToolbarPopover === "filter" || normalizedActiveType !== "all" ? " is-active" : ""),
+                  onClick: () => updateTemplateToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                  title: activeTypeOption?.label || "Filter",
+                },
+                  React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Filter")
+                ),
+                normalizedTemplateToolbarPopover === "filter"
+                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                      typeList.map(renderTemplateFilterOption)
+                    )
+                  : null
+              )
             )
           );
         }
@@ -673,55 +743,60 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
         }
 
         return React.createElement("div", { className: "playground-resource-templates-page" },
-          React.createElement("div", { className: "playground-resource-templates-page-inner" },
-            React.createElement("section", { className: "playground-resource-templates-hero" },
-              React.createElement("div", { className: "playground-resource-templates-hero-top" },
-                React.createElement("div", null,
-                  React.createElement("p", { className: "playground-resource-templates-eyebrow" }, "Infrastructure templates"),
-                  React.createElement("h1", { className: "playground-resource-templates-title" }, "Start from reusable project resources"),
-                  React.createElement("p", { className: "playground-resource-templates-copy" },
-                    "Use templates to create metronomes, files, databases, functions, web apps, and Imagine resources that match the way a project is meant to operate."
-                  )
+          React.createElement("div", { className: "playground-resource-templates-page-inner playground-plugins-page" },
+            React.createElement("h2", { className: "playground-resource-templates-hero-heading playground-tools-overview-heading" }, "Start from reusable project resources"),
+            React.createElement("section", { className: "playground-plugins-hero-slider playground-metronome-hero-slider playground-resource-templates-hero-slider" },
+              React.createElement("div", { className: "playground-plugins-hero-slide" },
+                React.createElement("div", { className: "playground-resource-templates-hero-slide-content" },
+                  React.createElement("div", { className: "playground-resource-templates-hero-pills" },
+                    outgoingHeroTemplate
+                      ? renderHeroTemplatePill(outgoingHeroTemplate, "playground-resource-templates-hero-pill is-outgoing")
+                      : null,
+                    renderHeroTemplatePill(activeHeroTemplate, "playground-resource-templates-hero-pill is-incoming")
+                  ),
+                  activeHeroTemplate
+                    ? React.createElement("p", { className: "playground-resource-templates-hero-copy" },
+                        activeHeroTemplate.summary || activeHeroTemplate.description || ""
+                      )
+                    : null
                 ),
-                React.createElement("div", { className: "playground-resource-templates-notice" }, notice || "")
-              ),
-              React.createElement("div", { className: "playground-resource-templates-featured-grid" },
-                featuredTemplates.map(renderFeaturedCard)
+                activeHeroTemplate
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-resource-templates-hero-cta",
+                      onClick: () => previewTemplate(activeHeroTemplate),
+                    },
+                      React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.9 }),
+                      React.createElement("span", null, "Open preview")
+                    )
+                  : null,
+                heroTemplates.length > 1
+                  ? React.createElement("div", { className: "playground-plugins-hero-dots" },
+                      heroTemplates.map((template, index) => React.createElement("button", {
+                        key: String(template.id || index),
+                        type: "button",
+                        className: "playground-resource-templates-hero-dot" + (index === activeHeroIndex ? " is-active" : ""),
+                        "aria-label": "Show " + String(template.title || "template"),
+                        onClick: () => updateTemplateSlideIndex(index),
+                      }))
+                    )
+                  : null
               )
             ),
-            React.createElement("section", { className: "playground-resource-templates-table-card" },
-              React.createElement("div", { className: "playground-resource-templates-table-inner" },
-                React.createElement("div", { className: "playground-resource-templates-toolbar" },
-                  React.createElement("div", { className: "playground-resource-templates-search" },
-                    React.createElement(Search, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("input", {
-                      value: searchQuery || "",
-                      onChange: (event) => typeof setSearchQuery === "function" && setSearchQuery(event.target.value),
-                      placeholder: "Search templates",
-                    })
+            React.createElement("section", { className: "playground-plugins-section" },
+              React.createElement("div", { className: "playground-plugins-section-header playground-resource-templates-section-header" },
+                React.createElement("div", { className: "playground-plugins-section-copy" },
+                  React.createElement("h3", { className: "playground-plugins-section-title" }, "Resources"),
+                  React.createElement("p", { className: "playground-plugins-section-subtitle" },
+                    "Reusable templates for metronomes, files, web apps, functions, databases, and Imagine resources."
                   ),
-                  typeList.map((type) =>
-                    React.createElement("button", {
-                      key: String(type.id),
-                      type: "button",
-                      className: "playground-resource-templates-filter" + (normalizedActiveType === String(type.id) ? " is-active" : ""),
-                      onClick: () => typeof setActiveType === "function" && setActiveType(String(type.id || "all")),
-                    }, type.label || type.id)
-                  )
-                ),
-                React.createElement("div", { className: "playground-resource-templates-table" },
-                  React.createElement("div", { className: "playground-resource-templates-row is-header" },
-                    React.createElement("div", null, "Template"),
-                    React.createElement("div", null, "Type"),
-                    React.createElement("div", null, "Difficulty"),
-                    React.createElement("div", null, "Setup"),
-                    React.createElement("div", null, "")
-                  ),
-                  filteredTemplates.length > 0
-                    ? filteredTemplates.map(renderTemplateRow)
-                    : React.createElement("div", { className: "playground-resource-templates-empty" }, "No templates match this filter.")
+                  notice
+                    ? React.createElement("div", { className: "playground-resource-templates-notice" }, notice)
+                    : null
                 )
-              )
+              ),
+              renderTemplateToolbar(),
+              renderTemplatesTable()
             )
           ),
           renderTemplateModal(selectedTemplate),

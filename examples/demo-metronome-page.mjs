@@ -1316,7 +1316,7 @@ export const METRONOME_PAGE_CSS = String.raw`
         z-index: 10;
         width: 150px;
         max-height: calc(100% - 48px);
-        overflow: auto;
+        overflow: visible;
         margin: 0;
         border-radius: 0;
         background: transparent;
@@ -1541,6 +1541,8 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-palette-header {
+        width: max-content;
+        max-width: min(520px, calc(100vw - 72px));
         display: flex;
         align-items: center;
         gap: 10px;
@@ -1549,7 +1551,8 @@ export const METRONOME_PAGE_CSS = String.raw`
 
       .playground-metronome-palette-title {
         min-width: 0;
-        flex: 1;
+        flex: 0 1 auto;
+        max-width: min(460px, calc(100vw - 118px));
         color: rgba(255, 255, 255, 0.9);
         font-size: 14px;
         font-weight: 500;
@@ -1580,6 +1583,9 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-palette-list {
+        width: 150px;
+        max-height: calc(100vh - 94px);
+        overflow: auto;
         border-radius: 15px;
         background: rgba(255, 255, 255, 0.1);
         padding: 11px 10px 12px;
@@ -11551,6 +11557,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const [activeWorkflowId, setActiveWorkflowId] = useState("");
           const [nodes, setNodes, onNodesChange] = useNodesState([]);
           const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+          const [metronomeFlowMountVersion, setMetronomeFlowMountVersion] = useState(0);
+          const [isMetronomeFlowReady, setIsMetronomeFlowReady] = useState(false);
           const [selectedNodeId, setSelectedNodeId] = useState("");
           const [activeMetronomeRichTextField, setActiveMetronomeRichTextField] = useState("");
           const [isMetronomeSchedulePopoverOpen, setIsMetronomeSchedulePopoverOpen] = useState(false);
@@ -12200,6 +12208,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           }, []);
 
           useEffect(() => {
+            let cancelled = false;
+            setIsMetronomeFlowReady(false);
             const nextNodes = activeWorkflow?.nodes || [];
             const nextEdges = normalizeMetronomeEdgesForNodes(activeWorkflow?.edges || [], nextNodes);
             setNodes(nextNodes);
@@ -12249,6 +12259,19 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             setMetronomeEnvironmentFilePickerSelectedPaths([]);
             setMetronomeEnvironmentFilePickerState({ status: "idle", error: "" });
             setIsMetronomeAttachmentUploading(false);
+            const markFlowReady = () => {
+              if (cancelled) return;
+              setMetronomeFlowMountVersion((version) => version + 1);
+              setIsMetronomeFlowReady(Boolean(activeWorkflow));
+            };
+            if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+              window.requestAnimationFrame(markFlowReady);
+            } else {
+              setTimeout(markFlowReady, 0);
+            }
+            return () => {
+              cancelled = true;
+            };
           }, [activeWorkflowId, activeWorkflow?.id]);
 
           useEffect(() => {
@@ -12278,10 +12301,17 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   ? String(pendingOpen.runId || "").trim()
                   : "";
                 const hasPendingRun = pendingRunId && items.some((run) => run.id === pendingRunId);
+                const shouldOpenRunSidebar = pendingOpen.workflowId === activeWorkflowId && pendingOpen.mode === "runs";
                 setSelectedMetronomeRunId((current) => {
                   if (hasPendingRun) return pendingRunId;
                   return current && items.some((run) => run.id === current) ? current : (items[0]?.id || "");
                 });
+                if (shouldOpenRunSidebar && (!pendingRunId || hasPendingRun || items.length)) {
+                  setSelectedNodeId("");
+                  setIsMetronomePublishMenuOpen(false);
+                  setIsMetronomeRunSidebarMenuOpen(false);
+                  setIsMetronomeRunSidebarOpen(true);
+                }
                 if (pendingOpen.workflowId === activeWorkflowId && (!pendingRunId || hasPendingRun || items.length)) {
                   pendingMetronomeOpenRunRef.current = { workflowId: "", runId: "", mode: "" };
                 }
@@ -12346,10 +12376,19 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             void fetchMetronomeVersionsApi(activeWorkflowId)
               .then((versions) => {
                 if (cancelled || !versions.length) return;
+                let hydratedActiveWorkflow = null;
                 setWorkflows((current) => current.map((workflow) => {
                   if (workflow.id !== activeWorkflowId) return workflow;
-                  return createMetronomeWorkflowWithVersionList(workflow, versions);
+                  hydratedActiveWorkflow = createMetronomeWorkflowWithVersionList(workflow, versions);
+                  return hydratedActiveWorkflow;
                 }));
+                const hydratedNodes = Array.isArray(hydratedActiveWorkflow?.nodes) ? hydratedActiveWorkflow.nodes : [];
+                const hydratedEdges = normalizeMetronomeEdgesForNodes(hydratedActiveWorkflow?.edges || [], hydratedNodes);
+                if (!edges.length && hydratedEdges.length) {
+                  setNodes(hydratedNodes);
+                  setEdges(hydratedEdges);
+                  setMetronomeFlowMountVersion((version) => version + 1);
+                }
               })
               .catch((error) => {
                 if (!cancelled) {
@@ -12359,7 +12398,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             return () => {
               cancelled = true;
             };
-          }, [activeWorkflowId, isActiveWorkflowBuiltIn, isMetronomeApiAvailable]);
+          }, [activeWorkflowId, isActiveWorkflowBuiltIn, isMetronomeApiAvailable, edges.length, setNodes, setEdges]);
 
           useEffect(() => {
             let cancelled = false;
@@ -14330,12 +14369,13 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             onTopNavStateChange({
               mode: "editor",
               workflowId: activeWorkflow.id,
+              runId: selectedMetronomeRunId || "",
               title: activeWorkflow.name || "Untitled Metronome",
               status: isActiveWorkflowBuiltIn ? "default" : activeWorkflow.status === "active" ? "active" : "draft",
               readOnly: isActiveWorkflowBuiltIn,
               editorMode: metronomeEditorMode === "runs" ? "runs" : metronomeEditorMode === "code" ? "code" : "edit",
             });
-          }, [onTopNavStateChange, activeWorkflow?.id, activeWorkflow?.name, activeWorkflow?.status, isActiveWorkflowBuiltIn, metronomeEditorMode]);
+          }, [onTopNavStateChange, activeWorkflow?.id, activeWorkflow?.name, activeWorkflow?.status, isActiveWorkflowBuiltIn, metronomeEditorMode, selectedMetronomeRunId]);
 
           useEffect(() => () => {
             if (topNavActionsRef) {
@@ -19518,39 +19558,41 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                       React.createElement("div", { className: "playground-metronome-editor-content-header" },
                         renderMetronomePublishControl()
                       ),
-                      React.createElement(ReactFlowProvider, null,
-                        React.createElement(MetronomeFlowCanvas, {
-                          key: metronomeFlowGraphKey,
-                          nodes: renderedMetronomeNodes,
-                          edges: renderedMetronomeEdges,
-                          nodeTypes,
-                          edgeTypes,
-                          onNodesChange: handleNodesChangeWithHistory,
-                          onEdgesChange: handleEdgesChangeWithHistory,
-                          onConnect: handleConnect,
-                          onNodeDragStop: handleMetronomeNodeDragStop,
-                          onCreateNode: handleCreateNode,
-                          onSelectNode: (nodeId) => {
-                            setIsMetronomeRunSidebarOpen(false);
-                            setIsMetronomePublishMenuOpen(false);
-                            setSelectedNodeId(nodeId);
-                          },
-                          onPaneClick: () => setSelectedNodeId(""),
-                          onUndo: undoGraphChange,
-                          onRedo: redoGraphChange,
-                          canUndo: graphUndoStack.length > 0,
-                          canRedo: graphRedoStack.length > 0,
-                          readOnly: isActiveWorkflowBuiltIn,
-                          interactionMode: metronomeCanvasInteractionMode,
-                          onInteractionModeChange: setMetronomeCanvasInteractionMode,
-                          onViewportChange: (viewport) => {
-                            const nextZoom = Number(viewport?.zoom);
-                            if (Number.isFinite(nextZoom) && nextZoom > 0) {
-                              setMetronomeFlowZoom(nextZoom);
-                            }
-                          },
-                        })
-                      ),
+                      isMetronomeFlowReady
+                        ? React.createElement(ReactFlowProvider, { key: metronomeFlowGraphKey + "|mount:" + metronomeFlowMountVersion },
+                            React.createElement(MetronomeFlowCanvas, {
+                              key: metronomeFlowGraphKey,
+                              nodes: renderedMetronomeNodes,
+                              edges: renderedMetronomeEdges,
+                              nodeTypes,
+                              edgeTypes,
+                              onNodesChange: handleNodesChangeWithHistory,
+                              onEdgesChange: handleEdgesChangeWithHistory,
+                              onConnect: handleConnect,
+                              onNodeDragStop: handleMetronomeNodeDragStop,
+                              onCreateNode: handleCreateNode,
+                              onSelectNode: (nodeId) => {
+                                setIsMetronomeRunSidebarOpen(false);
+                                setIsMetronomePublishMenuOpen(false);
+                                setSelectedNodeId(nodeId);
+                              },
+                              onPaneClick: () => setSelectedNodeId(""),
+                              onUndo: undoGraphChange,
+                              onRedo: redoGraphChange,
+                              canUndo: graphUndoStack.length > 0,
+                              canRedo: graphRedoStack.length > 0,
+                              readOnly: isActiveWorkflowBuiltIn,
+                              interactionMode: metronomeCanvasInteractionMode,
+                              onInteractionModeChange: setMetronomeCanvasInteractionMode,
+                              onViewportChange: (viewport) => {
+                                const nextZoom = Number(viewport?.zoom);
+                                if (Number.isFinite(nextZoom) && nextZoom > 0) {
+                                  setMetronomeFlowZoom(nextZoom);
+                                }
+                              },
+                            })
+                          )
+                        : React.createElement("div", { className: "playground-metronome-flow" }),
                       renderPalette()
                     )
                   ),

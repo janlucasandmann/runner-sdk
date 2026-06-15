@@ -1354,6 +1354,143 @@ const html = `<!doctype html>
         background: rgba(255, 255, 255, 0.08);
       }
 
+      .sidebar-metronome-run-group {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .sidebar-metronome-run-item {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 8px 8px 10px;
+        border-radius: 10px;
+        color: white;
+        position: relative;
+        transition: background-color 160ms ease;
+      }
+
+      .sidebar-metronome-run-item:hover,
+      .sidebar-metronome-run-item.is-active {
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .sidebar-metronome-run-main {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .sidebar-metronome-run-icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .sidebar-metronome-run-icon svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      .sidebar-metronome-run-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .sidebar-metronome-run-title {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .sidebar-metronome-run-meta,
+      .sidebar-metronome-run-time {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 12px;
+        white-space: nowrap;
+      }
+
+      .sidebar-metronome-run-side {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+      }
+
+      .sidebar-metronome-run-toggle {
+        width: 22px;
+        height: 22px;
+        flex: 0 0 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.58);
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .sidebar-metronome-run-toggle:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .sidebar-metronome-run-toggle svg {
+        width: 13px;
+        height: 13px;
+        transition: transform 160ms ease;
+      }
+
+      .sidebar-metronome-run-group.is-collapsed .sidebar-metronome-run-toggle svg {
+        transform: rotate(-90deg);
+      }
+
+      .sidebar-metronome-run-threads {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-left: 18px;
+        padding-left: 8px;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .sidebar-thread-item.is-metronome-child {
+        padding-left: 8px;
+        padding-right: 54px;
+      }
+
+      .sidebar-thread-item.is-metronome-child .sidebar-thread-title {
+        color: rgba(255, 255, 255, 0.58);
+      }
+
       .sidebar-thread-main {
         min-width: 0;
         flex: 1;
@@ -32331,8 +32468,10 @@ const html = `<!doctype html>
       }
 
       .playground-project-workspace-inner.playground-tasks-ticket-screen-inner {
-        width: min(100%, var(--playground-centered-page-max-width));
-        max-width: var(--playground-centered-page-max-width);
+        width: 100%;
+        max-width: none;
+        margin-left: 0;
+        margin-right: 0;
       }
 
       .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell {
@@ -32359,11 +32498,24 @@ const html = `<!doctype html>
         padding-right: 0 !important;
       }
 
-      .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar {
-        grid-template-columns: minmax(0, 1fr) 0 auto;
-        gap: 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
+	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar {
+	        grid-template-columns: minmax(0, 1fr) 0 auto;
+	        gap: 0;
+	        padding-bottom: 12px;
+	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	      }
+
+	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar-actions {
+	        align-self: end;
+	        padding-bottom: 4px;
+	      }
+
+	      .playground-tasks-ticket-page-actions {
+	        display: inline-flex;
+	        align-items: center;
+	        justify-content: flex-end;
+	        gap: 6px;
+	      }
 
       .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar .playground-content-nav-center {
         display: none;
@@ -32437,27 +32589,30 @@ const html = `<!doctype html>
       .playground-tasks-ticket-screen-panel .playground-tasks-comments > .playground-tasks-comment-dock {
         margin-top: 12px;
         padding: 0;
+        background: transparent;
       }
 
 	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page {
 	        grid-template-columns: minmax(0, 1fr) 320px 0px;
-	        gap: 0;
+	        column-gap: 42px;
+	        row-gap: 0;
 	      }
 
 	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page.is-preview-open {
 	        grid-template-columns: minmax(0, 1fr) 320px minmax(300px, 360px);
+	        column-gap: 42px;
+	        row-gap: 0;
+	      }
+
+	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page.is-ticket-sidebar-collapsed {
+	        grid-template-columns: minmax(0, 1fr) 0px 0px;
 	        gap: 0;
 	      }
 
-		      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page.is-ticket-sidebar-collapsed {
-		        grid-template-columns: minmax(0, 1fr) 34px 0px;
-		        gap: 0;
-		      }
-
-		      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page.is-ticket-sidebar-collapsed.is-preview-open {
-		        grid-template-columns: minmax(0, 1fr) 34px minmax(300px, 360px);
-		        gap: 0;
-		      }
+	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page.is-ticket-sidebar-collapsed.is-preview-open {
+	        grid-template-columns: minmax(0, 1fr) 0px minmax(300px, 360px);
+	        gap: 0;
+	      }
 
       .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page > .playground-tasks-detail-main {
         grid-column: 1;
@@ -32483,13 +32638,13 @@ const html = `<!doctype html>
 		        transition: width 220ms cubic-bezier(0.16, 1, 0.3, 1), flex-basis 220ms cubic-bezier(0.16, 1, 0.3, 1);
 		      }
 
-		      .playground-tasks-detail-shell.is-ticket-full-page.is-ticket-sidebar-collapsed > .playground-tasks-ticket-screen-sidebar {
-		        flex-basis: 34px;
-		        width: 34px;
-		        min-width: 34px;
-		        overflow: visible;
-		        pointer-events: auto;
-		      }
+	      .playground-tasks-detail-shell.is-ticket-full-page.is-ticket-sidebar-collapsed > .playground-tasks-ticket-screen-sidebar {
+	        flex-basis: 0;
+	        width: 0;
+	        min-width: 0;
+	        overflow: hidden;
+	        pointer-events: none;
+	      }
 
 	      .playground-tasks-ticket-screen-sidebar::-webkit-scrollbar {
 	        display: none;
@@ -32555,14 +32710,6 @@ const html = `<!doctype html>
 		        flex: 0 0 auto;
 		      }
 
-		      .playground-tasks-ticket-sidebar-toolbar {
-		        display: flex;
-		        align-items: center;
-		        justify-content: flex-end;
-		        min-height: 32px;
-		        width: 100%;
-		      }
-
       .playground-tasks-ticket-controls-card {
         gap: 12px;
       }
@@ -32620,6 +32767,32 @@ const html = `<!doctype html>
       .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar-ticket {
         color: rgba(255, 255, 255, 0.7);
         font-weight: 400;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-attachments-environment-button,
+      .playground-tasks-ticket-screen-panel .playground-tasks-skills-manage-button {
+        min-height: 0 !important;
+        height: auto;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        color: #66a6ff !important;
+        font-weight: 400 !important;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-attachments-environment-button::before,
+      .playground-tasks-ticket-screen-panel .playground-tasks-skills-manage-button::before {
+        content: none !important;
+        display: none !important;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-attachments-environment-button:hover:not(:disabled),
+      .playground-tasks-ticket-screen-panel .playground-tasks-skills-manage-button:hover:not(:disabled),
+      .playground-tasks-ticket-screen-panel .playground-tasks-skills-manage-button.is-active {
+        background: transparent !important;
+        color: #66a6ff !important;
       }
 
       .playground-tasks-detail-shell {
@@ -33627,11 +33800,11 @@ const html = `<!doctype html>
         border-bottom: 0;
       }
 
-      .playground-tasks-detail-threads-section .playground-plugins-section-title {
-        font-size: 14px;
-        font-weight: 400;
-        line-height: 1.3;
-      }
+	      .playground-tasks-detail-threads-section .playground-plugins-section-title {
+	        font-size: 12px;
+	        font-weight: 400;
+	        line-height: 1.3;
+	      }
 
       .playground-tasks-detail-threads-section .playground-plugins-search-row {
         align-items: stretch;
@@ -36684,6 +36857,10 @@ const html = `<!doctype html>
         border-bottom: 0;
       }
 
+      .playground-tasks-comments-toolbar .playground-tasks-detail-section-title {
+        margin-bottom: 0;
+      }
+
       .playground-tasks-comments-list {
         display: flex;
         flex-direction: column;
@@ -38137,6 +38314,14 @@ const html = `<!doctype html>
       .playground-tasks-project-modal-connectors {
         margin-top: 0;
         padding-top: 0;
+      }
+
+      .playground-tasks-project-modal-connectors .playground-tasks-project-modal-plugins-header {
+        margin-top: 18px;
+      }
+
+      .playground-tasks-project-modal-connectors .playground-tasks-secondary-copy {
+        max-width: 720px;
       }
 
       .playground-tasks-project-modal-connectors .playground-tasks-connectors-list {
@@ -41800,6 +41985,7 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-content-body.is-tasks-page .playground-environments-page.playground-tasks-ticket-screen:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll {
+        padding-right: 0;
         padding-bottom: 10px;
       }
 
@@ -45835,7 +46021,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Cog, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -48842,6 +49028,63 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           taskTicketNumber: ticketNumber,
           displayThreadTitle,
         };
+      }
+
+      function getThreadMetronomeMetadata(thread) {
+        const safeThread = normalizeThreadItem(thread || {});
+        const metadata = safeThread?.metadata && typeof safeThread.metadata === "object" && !Array.isArray(safeThread.metadata)
+          ? safeThread.metadata
+          : {};
+        const metronome = metadata?.metronome && typeof metadata.metronome === "object" && !Array.isArray(metadata.metronome)
+          ? metadata.metronome
+          : metadata?.metronomeWorkflow && typeof metadata.metronomeWorkflow === "object" && !Array.isArray(metadata.metronomeWorkflow)
+            ? metadata.metronomeWorkflow
+            : {};
+        const metronomeId = String(
+          metronome.metronomeId
+          || metronome.workflowId
+          || metronome.id
+          || ""
+        ).trim();
+        const runId = String(
+          metronome.runId
+          || metronome.workflowRunId
+          || ""
+        ).trim();
+        if (!metronomeId || !runId) {
+          return null;
+        }
+        const title = String(safeThread.title || "").trim();
+        const titleParts = title.match(/^([^:]{1,120}):\s*(.+)$/);
+        const workflowName = String(
+          metronome.metronomeName
+          || metronome.workflowName
+          || metronome.name
+          || (titleParts ? titleParts[1] : "")
+          || "Metronome"
+        ).trim();
+        const nodeName = String(
+          metronome.nodeName
+          || metronome.nodeLabel
+          || metronome.nodeTitle
+          || (titleParts ? titleParts[2] : "")
+          || title
+          || "Thread"
+        ).trim();
+        return {
+          metronomeId,
+          runId,
+          nodeId: String(metronome.nodeId || "").trim(),
+          workflowName,
+          nodeName,
+        };
+      }
+
+      function getSidebarMetronomeRunGroupKey(meta) {
+        if (!meta?.metronomeId || !meta?.runId) {
+          return "";
+        }
+        return meta.metronomeId + ":" + meta.runId;
       }
 
       function normalizeThreadList(items) {
@@ -52349,6 +52592,64 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           || runnerPlayground?.resourceTemplatePreview
           || runnerPlayground?.resource_template_preview
         );
+      }
+
+      function buildPlaygroundResourceTemplateMaterializedMetadata(record) {
+        const metadata = record?.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata)
+          ? record.metadata
+          : {};
+        const runnerPlayground = metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+          ? metadata.runnerPlayground
+          : {};
+        const templateId = String(
+          metadata.resourceTemplateId
+          || metadata.resource_template_id
+          || runnerPlayground.resourceTemplateId
+          || runnerPlayground.resource_template_id
+          || ""
+        ).trim();
+        const templateType = String(
+          metadata.resourceTemplateType
+          || metadata.resource_template_type
+          || runnerPlayground.resourceTemplateType
+          || runnerPlayground.resource_template_type
+          || ""
+        ).trim();
+        const stripPreviewFlags = (source) => {
+          const next = {};
+          Object.entries(source && typeof source === "object" ? source : {}).forEach(([key, value]) => {
+            if ([
+              "resourceTemplatePreview",
+              "resource_template_preview",
+              "templatePreview",
+              "template_preview",
+            ].includes(key)) {
+              return;
+            }
+            next[key] = value;
+          });
+          return next;
+        };
+        const nextMetadata = stripPreviewFlags(metadata);
+        const nextRunnerPlayground = stripPreviewFlags(runnerPlayground);
+        nextMetadata.createdFromResourceTemplate = true;
+        nextMetadata.created_from_resource_template = true;
+        if (templateId) {
+          nextMetadata.resourceTemplateId = templateId;
+          nextMetadata.resource_template_id = templateId;
+          nextRunnerPlayground.resourceTemplateId = templateId;
+          nextRunnerPlayground.resource_template_id = templateId;
+        }
+        if (templateType) {
+          nextMetadata.resourceTemplateType = templateType;
+          nextMetadata.resource_template_type = templateType;
+          nextRunnerPlayground.resourceTemplateType = templateType;
+          nextRunnerPlayground.resource_template_type = templateType;
+        }
+        nextRunnerPlayground.createdFromResourceTemplate = true;
+        nextRunnerPlayground.created_from_resource_template = true;
+        nextMetadata.runnerPlayground = nextRunnerPlayground;
+        return nextMetadata;
       }
 
       function createPlaygroundResourceTemplatePreviewFile(filePath, content, options = {}) {
@@ -81017,34 +81318,188 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           });
         }
 
+        function buildMaterializedServerFromTemplatePreview(previewServer) {
+          const now = new Date().toISOString();
+          return normalizePlaygroundServerRecord({
+            ...previewServer,
+            id: "",
+            userId: "",
+            serviceUrl: "",
+            customDomain: "",
+            cloudRunServiceName: "",
+            imageUrl: "",
+            status: "draft",
+            lastDeployedAt: "",
+            metadata: buildPlaygroundResourceTemplateMaterializedMetadata(previewServer),
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+
+        async function writeTemplatePreviewServerFilesToServer(previewServerId, targetServerId) {
+          const normalizedPreviewServerId = String(previewServerId || "").trim();
+          const normalizedTargetServerId = String(targetServerId || "").trim();
+          if (!normalizedPreviewServerId || !normalizedTargetServerId) {
+            throw new Error("Template preview source files could not be resolved.");
+          }
+
+          const previewFiles = Array.isArray(resourceTemplatePreviewServerFilesById[normalizedPreviewServerId])
+            ? resourceTemplatePreviewServerFilesById[normalizedPreviewServerId]
+            : [];
+          const previewContentByPath = resourceTemplatePreviewServerFileContentById[normalizedPreviewServerId] || {};
+          const fileEntries = previewFiles
+            .filter((file) => file && !file.isFolder)
+            .map((file) => ({
+              ...file,
+              path: normalizeHistoryPath(file.path || ""),
+            }))
+            .filter((file) => file.path);
+
+          if (fileEntries.length === 0) {
+            throw new Error("This template preview does not include source files to deploy.");
+          }
+
+          setServerFileTransferState({
+            isUploading: false,
+            error: "",
+            message: "Creating source files...",
+          });
+
+          for (const file of fileEntries) {
+            const writeUrl = buildPlaygroundServerFileContentUrl(backendUrl, normalizedTargetServerId, file.path);
+            if (!writeUrl) {
+              throw new Error("Invalid template source path: " + file.path);
+            }
+            const content = typeof previewContentByPath[file.path] === "string" ? previewContentByPath[file.path] : "";
+            const response = await fetch(writeUrl, {
+              method: "PUT",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ content }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create " + file.path + ".");
+            }
+          }
+
+          setServerFilesById((current) => ({
+            ...current,
+            [normalizedTargetServerId]: fileEntries,
+          }));
+
+          const activePreviewEditorPath = normalizeHistoryPath(serverFileEditorState.path || "");
+          const openPath = activePreviewEditorPath && Object.prototype.hasOwnProperty.call(previewContentByPath, activePreviewEditorPath)
+            ? activePreviewEditorPath
+            : fileEntries[0]?.path || "";
+          if (openPath) {
+            const openContent = typeof previewContentByPath[openPath] === "string" ? previewContentByPath[openPath] : "";
+            setServerFileEditorState((current) => ({
+              ...current,
+              path: openPath,
+              status: "ready",
+              value: openContent,
+              initialValue: openContent,
+              error: "",
+              saveError: "",
+              saveMessage: "",
+              isSaving: false,
+            }));
+          }
+
+          await loadServerFiles(normalizedTargetServerId);
+          setServerFileTransferState({
+            isUploading: false,
+            error: "",
+            message: "Created source files",
+          });
+        }
+
+        async function materializeSelectedServerTemplatePreviewForDeploy() {
+          const previewServer = selectedServerTemplatePreview
+            || (draftServer && isPlaygroundResourceTemplatePreviewRecord(draftServer) ? normalizePlaygroundServerRecord(draftServer) : null);
+          if (!previewServer?.id) {
+            throw new Error("Template preview server could not be resolved.");
+          }
+
+          setServerSaveState({
+            isSaving: true,
+            error: "",
+            message: "Creating resource...",
+          });
+
+          const savedServer = await persistServerRecord(buildMaterializedServerFromTemplatePreview(previewServer));
+          if (!savedServer?.id) {
+            throw new Error("Server creation response did not include an id.");
+          }
+
+          upsertLocalServerRecord(savedServer);
+          selectedServerIdRef.current = savedServer.id;
+          serverSeededSelectionRef.current = savedServer.id;
+          setSelectedDatabaseId("");
+          setDraftDatabase(null);
+          setIsHomeViewActive(false);
+          setSelectedServerId(savedServer.id);
+          setDraftServer(savedServer);
+          serverEditorDirtyRef.current = false;
+          serverAutosaveQueuedRef.current = null;
+
+          await writeTemplatePreviewServerFilesToServer(previewServer.id, savedServer.id);
+
+          setServerSaveState({
+            isSaving: false,
+            error: "",
+            message: "",
+          });
+          return savedServer;
+        }
+
         async function handleDeployServer() {
           if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
             return;
           }
-          if (isSelectedServerTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftServer)) {
-            return;
-          }
+          const shouldMaterializeTemplatePreview = isSelectedServerTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftServer);
 
-          if (serverFileEditorState.status === "ready" && serverFileEditorState.path && serverFileEditorState.value !== serverFileEditorState.initialValue) {
+          if (!shouldMaterializeTemplatePreview && serverFileEditorState.status === "ready" && serverFileEditorState.path && serverFileEditorState.value !== serverFileEditorState.initialValue) {
             await handleServerFileSave();
           }
 
-          await commitDraftServerIfDirty();
+          if (!shouldMaterializeTemplatePreview) {
+            await commitDraftServerIfDirty();
+          }
 
           setServerDeploymentStatusDismissed(false);
           setServerDeploymentState({
             isDeploying: true,
             isInvoking: false,
             error: "",
-            message: "",
+            message: shouldMaterializeTemplatePreview ? "Creating resource from template..." : "",
             lastResponseText: "",
             deployProgress: 0.08,
           });
           startServerDeployProgressTimer();
 
           try {
+            const serverToDeploy = shouldMaterializeTemplatePreview
+              ? await materializeSelectedServerTemplatePreviewForDeploy()
+              : normalizePlaygroundServerRecord(draftServer);
+            const serverToDeployId = String(serverToDeploy?.id || "").trim();
+            if (!serverToDeployId) {
+              throw new Error("No server was available to deploy.");
+            }
+            if (shouldMaterializeTemplatePreview) {
+              setServerDeploymentState((current) => ({
+                ...current,
+                isDeploying: true,
+                error: "",
+                message: "Deploying " + (serverToDeploy.name || "resource") + "...",
+                deployProgress: Math.max(Number(current.deployProgress || 0), 0.2),
+              }));
+            }
             const response = await fetch(
-              backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/deploy",
+              backendUrl + "/servers/" + encodeURIComponent(serverToDeployId) + "/deploy",
               {
                 method: "POST",
                 headers: {
@@ -81074,7 +81529,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                 ...current,
                 [updatedServer.id]: updatedServer,
               }));
-              if (selectedServerIdRef.current === updatedServer.id) {
+              if (selectedServerIdRef.current === updatedServer.id || serverToDeployId === updatedServer.id) {
                 setDraftServer(updatedServer);
               }
             }
@@ -81088,12 +81543,18 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               lastResponseText: "",
               deployProgress: 1,
             });
-            void loadServerContext(draftServer.id, { force: true });
-            void loadServerAnalytics(draftServer.id, { force: true });
-            void loadServerDeployments(draftServer.id, { force: true });
-            void loadServerLogs(draftServer.id, "deployment", { force: true });
+            void loadServerContext(serverToDeployId, { force: true });
+            void loadServerAnalytics(serverToDeployId, { force: true });
+            void loadServerDeployments(serverToDeployId, { force: true });
+            void loadServerLogs(serverToDeployId, "deployment", { force: true });
           } catch (error) {
             clearServerDeployProgressTimer();
+            setServerSaveState((current) => ({
+              ...current,
+              isSaving: false,
+              error: current.error,
+              message: "",
+            }));
             setServerDeploymentState({
               isDeploying: false,
               isInvoking: false,
@@ -86724,7 +87185,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   type: "button",
                   className: "playground-server-deploy-pill-button is-primary",
                   onClick: () => void handleDeployServer(),
-                  disabled: isServerTemplatePreview || serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                  disabled: serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
                 },
                   serverDeploymentState.isDeploying
                     ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
@@ -87069,7 +87530,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                       type: "button",
                       className: "playground-environments-action-button is-primary",
                       onClick: () => void handleDeployServer(),
-                      disabled: isServerTemplatePreview || serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                      disabled: serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
                     },
                       serverDeploymentState.isDeploying
                         ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
@@ -106560,12 +107021,14 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	        const taskDetailAutoLoadKeyRef = useRef("");
 	        const reportedProjectScopeIdRef = useRef("");
 	        const projectLocalNameOverridesRef = useRef(new Map());
-			        const [projectOverviewServerResourcesState, setProjectOverviewServerResourcesState] = useState({
+	        const [projectOverviewServerResourcesState, setProjectOverviewServerResourcesState] = useState({
 	          status: "idle",
 	          error: "",
 	          items: [],
 	        });
 	        const [projectOverviewVisibleThreadCount, setProjectOverviewVisibleThreadCount] = useState(5);
+	        const [projectOverviewVisibleActivityCount, setProjectOverviewVisibleActivityCount] = useState(3);
+	        const [projectOverviewSidebarPropertyPopover, setProjectOverviewSidebarPropertyPopover] = useState("");
 	        const [projectFullAutoState, setProjectFullAutoState] = useState({
 	          projectId: "",
 	          enabled: false,
@@ -106657,6 +107120,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const [boardBlockedPickerState, setBoardBlockedPickerState] = useState(null);
         const [taskCommentInputValue, setTaskCommentInputValue] = useState("");
         const [taskCommentMode, setTaskCommentMode] = useState("");
+        const [taskCommentComposerOpen, setTaskCommentComposerOpen] = useState(false);
         const [previewedTaskAttachmentId, setPreviewedTaskAttachmentId] = useState("");
         const [taskLoadState, setTaskLoadState] = useState({
           status: "idle",
@@ -108994,7 +109458,23 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           return () => document.removeEventListener("mousedown", handleProjectOverviewFileToolbarPointerDown);
         }, [projectOverviewFileToolbarPopover]);
         useEffect(() => {
+          if (!projectOverviewSidebarPropertyPopover) return undefined;
+
+          function handleProjectOverviewSidebarPropertyPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || target.closest(".playground-project-overview-sidebar-select-shell")) {
+              return;
+            }
+            setProjectOverviewSidebarPropertyPopover("");
+          }
+
+          document.addEventListener("mousedown", handleProjectOverviewSidebarPropertyPointerDown);
+          return () => document.removeEventListener("mousedown", handleProjectOverviewSidebarPropertyPointerDown);
+        }, [projectOverviewSidebarPropertyPopover]);
+        useEffect(() => {
           setProjectOverviewVisibleThreadCount(5);
+          setProjectOverviewVisibleActivityCount(3);
+          setProjectOverviewSidebarPropertyPopover("");
         }, [projectOverviewThreadFilterMode, projectOverviewThreadSearchQuery, projectOverviewThreadSortMode, selectedProjectId]);
         useEffect(() => {
           setTaskDetailThreadToolbarPopover("");
@@ -115414,6 +115894,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         useEffect(() => {
           setProjectOverviewVisibleThreadCount(5);
+          setProjectOverviewVisibleActivityCount(3);
         }, [selectedProjectId, taskView]);
 
         useEffect(() => {
@@ -116067,6 +116548,10 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         useLayoutEffect(() => {
           resizeTaskCommentTextarea(taskCommentTextareaRef.current);
         }, [draftTask?.id, isCalendarScheduleDetailMode, selectedScheduleId, taskCommentInputValue]);
+
+        useEffect(() => {
+          setTaskCommentComposerOpen(false);
+        }, [draftTask?.id]);
 
         useEffect(() => {
           const textarea = taskDescriptionTextareaRef.current;
@@ -117166,6 +117651,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
             setTaskCommentInputValue("");
             setTaskCommentMode("");
+            setTaskCommentComposerOpen(false);
             if (commentSubmission.isReview) {
               const taskForReviewRequest = nextTaskRecord || normalizePlaygroundTaskRecord({
                 ...draftTask,
@@ -124724,6 +125210,14 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                       )
                     ),
                     React.createElement("div", { className: "playground-tasks-connectors playground-tasks-project-modal-connectors" },
+                      React.createElement("div", { className: "playground-plugins-section-header playground-tasks-project-modal-plugins-header" },
+                        React.createElement("div", { className: "playground-plugins-section-copy" },
+                          React.createElement("h3", { className: "playground-plugins-section-title" }, "Project Plugins"),
+                          React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                            "Connect project-scoped plugin access so agents can read and write the right repositories, drives, and workspaces while they work."
+                          )
+                        )
+                      ),
                       React.createElement("div", { className: "playground-tasks-connectors-list" },
                         projectConnectorEntries.map((connector) =>
                           React.createElement("div", {
@@ -127320,9 +127814,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                           onClick: openTaskEnvironmentFilePicker,
                           disabled: taskAttachmentTransferState.isProcessing || !activeTaskEnvironmentId,
                           title: activeTaskEnvironmentId
-                            ? "Add files from " + (activeTaskEnvironment?.name || "the selected environment")
-                            : "Select an environment first",
-                        }, "From Environment")
+                            ? "Add files from " + (activeTaskEnvironment?.name || "the selected computer")
+                            : "Select a computer first",
+                        }, "From Computer")
                       )
                     ),
                     React.createElement("input", {
@@ -129672,36 +130166,50 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                  className: "playground-content-nav-right playground-tasks-detail-navbar-actions",
 	                  ref: taskDetailActionsRef,
 		                },
-			                  isFullPageTaskDetail
-			                    ? React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-			                        React.createElement("button", {
-			                          type: "button",
-			                          className: "playground-files-header-icon-button is-plain" + (taskDetailPopover === "menu" ? " is-active" : ""),
-			                          onClick: () => setTaskDetailPopover((current) => current === "menu" ? "" : "menu"),
-			                          title: "Task actions",
-			                          "aria-label": "Task actions",
-			                        }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
-			                        taskDetailPopover === "menu"
-			                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-			                              React.createElement("button", {
-			                                type: "button",
-			                                className: "tb-popup-row playground-tasks-detail-menu-item-danger",
-			                                disabled: saveState.isSaving,
-			                                onClick: () => {
-			                                  setTaskDetailPopover("");
-			                                  void handleDeleteTask(draftTask.id);
-			                                },
-			                              },
-			                                React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-			                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-			                                  React.createElement("span", null, "Delete"),
-			                                  React.createElement("span", null, "Remove this ticket from the project.")
-			                                )
-			                              )
-			                            )
-			                          : null
-			                      )
-			                    : React.createElement(React.Fragment, null,
+				                  isFullPageTaskDetail
+				                    ? React.createElement("div", { className: "playground-tasks-ticket-page-actions" },
+				                        React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+				                          React.createElement("button", {
+				                            type: "button",
+				                            className: "playground-files-header-icon-button is-plain" + (taskDetailPopover === "menu" ? " is-active" : ""),
+				                            onClick: () => setTaskDetailPopover((current) => current === "menu" ? "" : "menu"),
+				                            title: "Task actions",
+				                            "aria-label": "Task actions",
+				                          }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
+				                          taskDetailPopover === "menu"
+				                            ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+				                                React.createElement("button", {
+				                                  type: "button",
+				                                  className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+				                                  disabled: saveState.isSaving,
+				                                  onClick: () => {
+				                                    setTaskDetailPopover("");
+				                                    void handleDeleteTask(draftTask.id);
+				                                  },
+				                                },
+				                                  React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+				                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+				                                    React.createElement("span", null, "Delete"),
+				                                    React.createElement("span", null, "Remove this ticket from the project.")
+				                                  )
+				                                )
+				                              )
+				                            : null
+				                        ),
+				                        React.createElement("button", {
+				                          type: "button",
+				                          className: "playground-files-header-icon-button is-plain playground-tasks-ticket-sidebar-toggle-button",
+				                          onClick: () => setTicketDetailSidebarCollapsed((current) => !current),
+				                          title: ticketDetailSidebarCollapsed ? "Open sidebar" : "Close sidebar",
+				                          "aria-label": ticketDetailSidebarCollapsed ? "Open sidebar" : "Close sidebar",
+				                          "aria-pressed": ticketDetailSidebarCollapsed ? "true" : "false",
+				                        },
+				                          ticketDetailSidebarCollapsed
+				                            ? React.createElement(PanelLeftOpen, { width: 16, height: 16, strokeWidth: 1.8 })
+				                            : React.createElement(PanelLeftClose, { width: 16, height: 16, strokeWidth: 1.8 })
+				                        )
+				                      )
+				                    : React.createElement(React.Fragment, null,
 			                        React.createElement("div", { className: "playground-tasks-detail-navbar-status" },
 			                          renderTaskPreviewStatusControl(draftTask)
 		                        ),
@@ -129822,9 +130330,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       onClick: openTaskEnvironmentFilePicker,
                       disabled: isTaskConfigLocked || taskAttachmentTransferState.isProcessing || !activeTaskEnvironmentId,
                       title: activeTaskEnvironmentId
-                        ? "Add files from " + (activeTaskEnvironment?.name || "the selected environment")
-                        : "Select an environment first",
-                      }, "From Environment")
+                        ? "Add files from " + (activeTaskEnvironment?.name || "the selected computer")
+                        : "Select a computer first",
+                      }, "From Computer")
                     )
                   ),
                   React.createElement("input", {
@@ -130050,7 +130558,27 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No subtasks yet.")
                 ),
                 React.createElement("div", { className: "playground-tasks-comments" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Comments"),
+                  React.createElement("div", { className: "playground-tasks-attachments-toolbar playground-tasks-comments-toolbar" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Comments"),
+                    isFullPageTaskDetail
+                      ? React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button playground-tasks-subtasks-add-button playground-tasks-comments-add-button" + (taskCommentComposerOpen ? " is-active" : ""),
+                          onClick: () => {
+                            setTaskCommentComposerOpen((current) => {
+                              const nextValue = !current;
+                              if (nextValue && typeof window !== "undefined") {
+                                window.setTimeout(focusTaskCommentTextarea, 0);
+                              }
+                              return nextValue;
+                            });
+                          },
+                          title: taskCommentComposerOpen ? "Close comment" : "Add comment",
+                          "aria-label": taskCommentComposerOpen ? "Close comment" : "Add comment",
+                          "aria-expanded": taskCommentComposerOpen ? "true" : "false",
+                        }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
+                      : null
+                  ),
                   taskComments.length > 0
                     ? React.createElement("div", { className: "playground-tasks-comments-list" },
                         taskComments.map((comment) =>
@@ -130074,7 +130602,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     )
                     : React.createElement("div", { className: "playground-tasks-secondary-copy playground-tasks-comment-empty" }, "No comments yet.")
                   ,
-                  isFullPageTaskDetail ? renderTaskCommentDock() : null
+                  isFullPageTaskDetail && taskCommentComposerOpen ? renderTaskCommentDock() : null
                 )
                 ),
                 isFullPageTaskDetail ? null : renderTaskCommentDock()
@@ -130082,20 +130610,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
             ),
 		            isFullPageTaskDetail
 		              ? React.createElement("aside", { className: "playground-tasks-ticket-screen-sidebar" },
-		                  React.createElement("div", { className: "playground-tasks-ticket-sidebar-toolbar" },
-		                    React.createElement("button", {
-		                      type: "button",
-		                      className: "playground-files-header-icon-button is-plain playground-tasks-ticket-sidebar-toggle-button",
-		                      onClick: () => setTicketDetailSidebarCollapsed((current) => !current),
-		                      title: ticketDetailSidebarCollapsed ? "Open sidebar" : "Close sidebar",
-		                      "aria-label": ticketDetailSidebarCollapsed ? "Open sidebar" : "Close sidebar",
-		                      "aria-pressed": ticketDetailSidebarCollapsed ? "true" : "false",
-		                    },
-		                      ticketDetailSidebarCollapsed
-		                        ? React.createElement(PanelLeftOpen, { width: 16, height: 16, strokeWidth: 1.8 })
-		                        : React.createElement(PanelLeftClose, { width: 16, height: 16, strokeWidth: 1.8 })
-		                    )
-		                  ),
 		                  ticketDetailSidebarCollapsed
 			                    ? null
 			                    : React.createElement(React.Fragment, null,
@@ -132260,6 +132774,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [metronomeTopNavState, setMetronomeTopNavState] = useState(null);
         const [metronomeTopNavMenuOpen, setMetronomeTopNavMenuOpen] = useState(false);
         const [isMetronomeNodeDetailOpen, setIsMetronomeNodeDetailOpen] = useState(false);
+        const [collapsedMetronomeRunGroups, setCollapsedMetronomeRunGroups] = useState({});
         const metronomeTopNavMenuRef = useRef(null);
         const wasMetronomeVisualEditorOpenRef = useRef(false);
         const metronomeTopNavActionsRef = useRef({
@@ -132598,6 +133113,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [resourceTemplateSelectedId, setResourceTemplateSelectedId] = useState("");
         const [resourceTemplatePublishId, setResourceTemplatePublishId] = useState("");
         const [resourceTemplateNotice, setResourceTemplateNotice] = useState("");
+        const [resourceTemplateSlideIndex, setResourceTemplateSlideIndex] = useState(0);
+        const [resourceTemplateToolbarPopover, setResourceTemplateToolbarPopover] = useState("");
         const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
         const resolvedModelsPageAgentModelOptions = useMemo(() => (
           Array.isArray(modelsPageAgentModelOptions) && modelsPageAgentModelOptions.length > 0
@@ -132697,6 +133214,23 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [settingsTriggersSuccess, setSettingsTriggersSuccess] = useState("");
         const pluginsNavActionsRef = useRef(null);
         const sidebarWorkspaceMenuRef = useRef(null);
+        const resourceTemplateHeroCount = (() => {
+          const templates = Array.isArray(PLAYGROUND_RESOURCE_TEMPLATE_DATA) ? PLAYGROUND_RESOURCE_TEMPLATE_DATA : [];
+          const featuredTemplates = templates.filter((template) => template.featured);
+          return Math.min((featuredTemplates.length ? featuredTemplates : templates).length, 6);
+        })();
+        useEffect(() => {
+          if (activePage !== "resource-templates" || resourceTemplateHeroCount <= 1) return undefined;
+          const timer = window.setInterval(() => {
+            setResourceTemplateSlideIndex((current) => (current + 1) % resourceTemplateHeroCount);
+          }, 4200);
+          return () => window.clearInterval(timer);
+        }, [activePage, resourceTemplateHeroCount]);
+        useEffect(() => {
+          if (activePage === "resource-templates") return undefined;
+          setResourceTemplateToolbarPopover("");
+          return undefined;
+        }, [activePage]);
         useEffect(() => {
           if (!pluginsOverviewToolbarPopover) return undefined;
 
@@ -142762,6 +143296,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
           const nextType = String(options.type || "all").trim() || "all";
           setResourceTemplateTypeFilter(nextType);
+          setResourceTemplateToolbarPopover("");
           if (options.templateId) {
             setResourceTemplateSelectedId(String(options.templateId || "").trim());
           }
@@ -153263,6 +153798,41 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         const visibleThreadItems = recentThreadItems;
         const displayedThreadItems = visibleThreadItems.slice(0, threadDisplayCount);
+        const displayedSidebarThreadEntries = useMemo(() => {
+          const entries = [];
+          const groupsByKey = new Map();
+          displayedThreadItems.forEach((thread) => {
+            const meta = getThreadMetronomeMetadata(thread);
+            const groupKey = getSidebarMetronomeRunGroupKey(meta);
+            if (!groupKey) {
+              entries.push({
+                kind: "thread",
+                key: String(thread?.id || generateId("thread")),
+                thread,
+              });
+              return;
+            }
+            let group = groupsByKey.get(groupKey);
+            if (!group) {
+              group = {
+                kind: "metronome-run",
+                key: groupKey,
+                metronomeId: meta.metronomeId,
+                runId: meta.runId,
+                workflowName: meta.workflowName || "Metronome",
+                threads: [],
+                latestThread: thread,
+              };
+              groupsByKey.set(groupKey, group);
+              entries.push(group);
+            }
+            group.threads.push(thread);
+            if (resolveThreadSortTimestamp(thread) > resolveThreadSortTimestamp(group.latestThread)) {
+              group.latestThread = thread;
+            }
+          });
+          return entries;
+        }, [displayedThreadItems]);
         const hasMoreThreadItems =
           displayedThreadItems.length < visibleThreadItems.length || realThreadsHasMore;
         const sidebarEmptyStateCopy = isThreadsLoading
@@ -154167,15 +154737,94 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
         }
 
+        function renderSidebarMetronomeRunEntry(entry) {
+          const groupKey = String(entry?.key || "").trim();
+          if (!groupKey) {
+            return null;
+          }
+          const isCollapsed = Boolean(collapsedMetronomeRunGroups[groupKey]);
+          const threads = Array.isArray(entry.threads) ? entry.threads : [];
+          const latestThread = entry.latestThread || threads[0] || null;
+          const lastActivityText = latestThread
+            ? formatCompactThreadActivityTime(resolveThreadSortTimestamp(latestThread))
+            : "";
+          const activeRunId = String(metronomeTopNavState?.runId || "").trim();
+          const isActive = activePage === "metronome"
+            && metronomeTopNavState?.mode === "editor"
+            && String(metronomeTopNavState?.workflowId || "").trim() === String(entry.metronomeId || "").trim()
+            && Boolean(activeRunId)
+            && activeRunId === String(entry.runId || "").trim();
+
+          return React.createElement("div", {
+            key: groupKey,
+            className: "sidebar-metronome-run-group" + (isCollapsed ? " is-collapsed" : "") + (isActive ? " is-active" : ""),
+          },
+            React.createElement("div", {
+              className: "sidebar-metronome-run-item" + (isActive ? " is-active" : ""),
+            },
+              React.createElement("button", {
+                type: "button",
+                className: "sidebar-metronome-run-main",
+                onClick: () => openMetronomePage({
+                  workflowId: entry.metronomeId,
+                  runId: entry.runId,
+                  mode: "runs",
+                }),
+                "aria-label": "Open Metronome run " + (entry.workflowName || "Metronome"),
+              },
+                React.createElement("span", { className: "sidebar-metronome-run-icon" },
+                  React.createElement(Metronome, { strokeWidth: 1.85 })
+                ),
+                React.createElement("span", { className: "sidebar-metronome-run-copy" },
+                  React.createElement("span", { className: "sidebar-metronome-run-title" }, entry.workflowName || "Metronome")
+                )
+              ),
+              React.createElement("div", { className: "sidebar-metronome-run-side" },
+                lastActivityText
+                  ? React.createElement("span", {
+                      className: "sidebar-metronome-run-time",
+                      title: latestThread ? formatThreadSearchTimestamp(resolveThreadSortTimestamp(latestThread)) || "" : "",
+                    }, lastActivityText)
+                  : null,
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-metronome-run-toggle",
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setCollapsedMetronomeRunGroups((current) => ({
+                      ...current,
+                      [groupKey]: !current[groupKey],
+                    }));
+                  },
+                  "aria-label": isCollapsed ? "Expand Metronome threads" : "Collapse Metronome threads",
+                  "aria-expanded": isCollapsed ? "false" : "true",
+                },
+                  React.createElement(ChevronDown, { strokeWidth: 1.8 })
+                )
+              )
+            ),
+            !isCollapsed && threads.length
+              ? React.createElement("div", { className: "sidebar-metronome-run-threads" },
+                  threads.map((thread) => renderSidebarThreadRow(thread, { metronomeChild: true }))
+                )
+              : null
+          );
+        }
+
         function renderSidebarThreadRow(thread, options = {}) {
           try {
-            const { pinned = false } = options;
+            const { pinned = false, metronomeChild = false } = options;
             const {
               safeThread,
               taskPreview,
               taskTicketNumber,
-              displayThreadTitle,
+              displayThreadTitle: rawDisplayThreadTitle,
             } = getSidebarThreadTitleParts(thread);
+            const metronomeMeta = metronomeChild ? getThreadMetronomeMetadata(safeThread) : null;
+            const displayThreadTitle = metronomeChild && metronomeMeta?.nodeName
+              ? metronomeMeta.nodeName
+              : rawDisplayThreadTitle;
             const safeThreadId = typeof safeThread.id === "string" && safeThread.id.trim() ? safeThread.id.trim() : generateId("thread");
             const isActive = activeSidebarThreadId === safeThreadId;
             const isRunning = String(safeThread?.status || "").trim().toLowerCase() === "running";
@@ -154196,7 +154845,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
             return React.createElement("div", {
               key: safeThreadId,
-              className: (pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (isActive ? " is-active" : "") + (needsPermissionAttention ? " has-permission-attention" : ""),
+              className: (pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (isActive ? " is-active" : "") + (needsPermissionAttention ? " has-permission-attention" : "") + (metronomeChild ? " is-metronome-child" : ""),
             },
               pinned
                 ? React.createElement(Pin, { className: "sidebar-pin-icon", strokeWidth: 1.75 })
@@ -154260,12 +154909,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
             );
           } catch (error) {
             const fallbackThread = normalizeThreadItem(thread);
+            const fallbackMetronomeMeta = options?.metronomeChild ? getThreadMetronomeMetadata(fallbackThread) : null;
             const fallbackSafeThreadId = typeof fallbackThread.id === "string" && fallbackThread.id.trim() ? fallbackThread.id.trim() : generateId("thread");
             const fallbackMetaText = threadMetaLabel(fallbackThread);
             const {
               taskTicketNumber,
-              displayThreadTitle,
+              displayThreadTitle: fallbackRawDisplayThreadTitle,
             } = getSidebarThreadTitleParts(fallbackThread);
+            const displayThreadTitle = options?.metronomeChild && fallbackMetronomeMeta?.nodeName
+              ? fallbackMetronomeMeta.nodeName
+              : fallbackRawDisplayThreadTitle;
             const canManageThread = hasRealAccess && isRealThreadId(fallbackSafeThreadId);
             const isMenuOpen = canManageThread && threadActionMenuState?.threadId === fallbackSafeThreadId;
             const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === fallbackSafeThreadId;
@@ -154275,7 +154928,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             console.error("Failed to render sidebar thread row", error, thread);
             return React.createElement("div", {
               key: fallbackSafeThreadId,
-              className: (options?.pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (activeSidebarThreadId === fallbackSafeThreadId ? " is-active" : "") + (fallbackNeedsPermissionAttention ? " has-permission-attention" : ""),
+              className: (options?.pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (activeSidebarThreadId === fallbackSafeThreadId ? " is-active" : "") + (fallbackNeedsPermissionAttention ? " has-permission-attention" : "") + (options?.metronomeChild ? " is-metronome-child" : ""),
             },
               options?.pinned
                 ? React.createElement(Pin, { className: "sidebar-pin-icon", strokeWidth: 1.75 })
@@ -155056,12 +155709,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
               ? React.createElement("button", {
                   type: "button",
                   className: "playground-top-nav-pill-button playground-tasks-top-nav-edit-button",
-                  "aria-label": "Edit project",
-                  title: "Edit project",
+                  "aria-label": "Project settings",
+                  title: "Project settings",
                   onClick: () => setTasksProjectSettingsRequestToken((current) => current + 1),
                 },
-                  React.createElement(SquarePen, { strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Edit")
+                  React.createElement(Cog, { strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Settings")
                 )
               : React.createElement("button", {
                   type: "button",
@@ -155742,6 +156395,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
             notice: resourceTemplateNotice,
             setNotice: setResourceTemplateNotice,
             onPublishTemplate: publishResourceTemplateToProject,
+            templateSlideIndex: resourceTemplateSlideIndex,
+            setTemplateSlideIndex: setResourceTemplateSlideIndex,
+            templateToolbarPopover: resourceTemplateToolbarPopover,
+            setTemplateToolbarPopover: setResourceTemplateToolbarPopover,
             onPreviewTemplate: (template) => {
               const normalizedTemplateId = String(template?.id || "").trim();
               const normalizedTemplateType = String(template?.type || "").trim();
@@ -157623,7 +158280,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             ? React.createElement("div", { className: "sidebar-empty-state" }, sidebarEmptyStateCopy)
                             : null
                           : React.createElement("div", { className: "sidebar-thread-list" },
-                              displayedThreadItems.map((thread) => renderSidebarThreadRow(thread)),
+                              displayedSidebarThreadEntries.map((entry) => (
+                                entry?.kind === "metronome-run"
+                                  ? renderSidebarMetronomeRunEntry(entry)
+                                  : renderSidebarThreadRow(entry.thread)
+                              )),
                               hasMoreThreadItems
                                 ? React.createElement("button", {
                                     type: "button",
