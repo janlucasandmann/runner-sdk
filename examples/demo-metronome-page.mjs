@@ -6362,6 +6362,19 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               { id: "extract_data", label: "Extract Structured Data" },
             ],
           },
+          table: {
+            label: "Table",
+            copy: "Parse CSV or TSV files into records and batches for database, Firecrawl, thread, and loop nodes.",
+            color: "#39B877",
+            gradient: "linear-gradient(180deg, #39B877 0%, #2B8B59 100%)",
+            iconColor: "#fff",
+            iconShadow: "drop-shadow(0px 0px 3px rgba(0,0,0,0.5))",
+            Icon: typeof TableProperties !== "undefined" ? TableProperties : Database,
+            subtypes: [
+              { id: "parse_csv", label: "Parse CSV" },
+              { id: "parse_tsv", label: "Parse TSV" },
+            ],
+          },
           database: {
             label: "Database",
             copy: "Insert, update, or delete documents in a Computer Agents database resource.",
@@ -6492,6 +6505,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               title: "Data & Web",
               items: [
                 { id: "firecrawl", kind: "firecrawl", label: "Firecrawl" },
+                { id: "table", kind: "table", label: "Table" },
               ],
             },
 	          {
@@ -6596,6 +6610,13 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             : "web_search";
         }
 
+        function normalizeMetronomeTableOperation(value) {
+          const normalized = String(value || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+          return ["parse_csv", "parse_tsv"].includes(normalized)
+            ? normalized
+            : "parse_csv";
+        }
+
         function createDefaultMetronomeThreadOutputConfig(overrides = {}) {
           const outputMode = String(overrides.outputMode || overrides.output_mode || "").trim() === "structured"
             ? "structured"
@@ -6633,6 +6654,21 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             ...base,
             operation: normalizedOperation,
             inputBinding: normalizeMetronomeDataBinding(base.inputBinding, normalizedOperation === "web_search" ? "last.text" : "last.urls"),
+          };
+        }
+
+        function createDefaultMetronomeTableConfig(operation, overrides = {}) {
+          const normalizedOperation = normalizeMetronomeTableOperation(operation || overrides.operation);
+          return {
+            operation: normalizedOperation,
+            inputBinding: normalizeMetronomeDataBinding(overrides.inputBinding || overrides.input_binding, "trigger.input.files"),
+            filePath: String(overrides.filePath || overrides.file_path || ""),
+            delimiter: String(overrides.delimiter || (normalizedOperation === "parse_tsv" ? "\\t" : "")),
+            hasHeader: overrides.hasHeader === undefined && overrides.has_header === undefined ? true : Boolean(overrides.hasHeader ?? overrides.has_header),
+            batchSize: Number.isFinite(Number(overrides.batchSize || overrides.batch_size)) ? Number(overrides.batchSize || overrides.batch_size) : 5,
+            outputKey: String(overrides.outputKey || overrides.output_key || "table"),
+            ...overrides,
+            operation: normalizedOperation,
           };
         }
 
@@ -7698,6 +7734,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                     }
                 : kind === "firecrawl"
                   ? createDefaultMetronomeFirecrawlConfig(normalizedSubtype, overrideConfig)
+                : kind === "table"
+                  ? createDefaultMetronomeTableConfig(normalizedSubtype, overrideConfig)
                 : kind === "database"
                   ? createDefaultMetronomeDatabaseConfig(normalizedSubtype, overrideConfig)
 	                : kind === "imagine"
@@ -10567,6 +10605,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           if (normalizedKind === "imagine") return "ImagineNode";
           if (normalizedKind === "function") return "FunctionNode";
           if (normalizedKind === "firecrawl") return "FirecrawlNode";
+          if (normalizedKind === "table") return "TableNode";
           if (normalizedKind === "database") return "DatabaseNode";
           if (normalizedKind === "metronome") return "MetronomeRunNode";
           if (normalizedKind === "loop") return "LoopNode";
@@ -10583,6 +10622,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           if (normalizedKind === "ticket") return ["operation", normalizeMetronomeTicketOperation(normalizedSubtype)];
           if (normalizedKind === "imagine") return ["operation", normalizedSubtype || "start_imagine"];
           if (normalizedKind === "firecrawl") return ["operation", normalizeMetronomeFirecrawlOperation(normalizedSubtype)];
+          if (normalizedKind === "table") return ["operation", normalizeMetronomeTableOperation(normalizedSubtype)];
           if (normalizedKind === "database") return ["operation", normalizedSubtype || "insert_document"];
           if (normalizedKind === "metronome") return ["operation", normalizedSubtype || "run_workflow"];
           if (normalizedKind === "loop") return ["loop_type", normalizeMetronomeLoopType(normalizedSubtype)];
@@ -10709,6 +10749,14 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             args.push(["formats", configReader.take("formats")]);
             args.push(["save_artifacts", configReader.take("saveArtifacts", "save_artifacts")]);
             args.push(["output_key", configReader.take("outputKey", "output_key")]);
+          } else if (className === "TableNode") {
+            configReader.remove("operation");
+            args.push(["input_binding", configReader.take("inputBinding", "input_binding")]);
+            args.push(["file_path", configReader.take("filePath", "file_path")]);
+            args.push(["delimiter", configReader.take("delimiter")]);
+            args.push(["has_header", configReader.take("hasHeader", "has_header")]);
+            args.push(["batch_size", configReader.take("batchSize", "batch_size")]);
+            args.push(["output_key", configReader.take("outputKey", "output_key")]);
           } else if (className === "DatabaseNode") {
             configReader.remove("operation");
             args.push(["database_id", configReader.take("databaseId", "database_id")]);
@@ -10782,6 +10830,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             "    ImagineNode,",
             "    FunctionNode,",
             "    FirecrawlNode,",
+            "    TableNode,",
             "    DatabaseNode,",
             "    MetronomeRunNode,",
             "    LoopNode,",
@@ -11073,6 +11122,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             ImagineNode: "imagine",
             FunctionNode: "function",
             FirecrawlNode: "firecrawl",
+            TableNode: "table",
             DatabaseNode: "database",
             MetronomeRunNode: "metronome",
             LoopNode: "loop",
@@ -11084,6 +11134,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             TicketNode: "operation",
             ImagineNode: "operation",
             FirecrawlNode: "operation",
+            TableNode: "operation",
             DatabaseNode: "operation",
             MetronomeRunNode: "operation",
             LoopNode: "loop_type",
@@ -11273,6 +11324,22 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               if (limit !== undefined) config.limit = limit;
               if (formats !== undefined) config.formats = formats;
               if (saveArtifacts !== undefined) config.saveArtifacts = Boolean(saveArtifacts);
+              if (outputKey !== undefined) config.outputKey = outputKey;
+            }
+            if (className === "TableNode") {
+              subtype = normalizeMetronomeTableOperation(subtype);
+              config.operation = subtype;
+              const inputBinding = getMetronomePythonCallKeyword(nodeCall, "input_binding", undefined);
+              const filePath = getMetronomePythonCallKeyword(nodeCall, "file_path", undefined);
+              const delimiter = getMetronomePythonCallKeyword(nodeCall, "delimiter", undefined);
+              const hasHeader = getMetronomePythonCallKeyword(nodeCall, "has_header", undefined);
+              const batchSize = getMetronomePythonCallKeyword(nodeCall, "batch_size", undefined);
+              const outputKey = getMetronomePythonCallKeyword(nodeCall, "output_key", undefined);
+              if (inputBinding !== undefined) config.inputBinding = inputBinding;
+              if (filePath !== undefined) config.filePath = filePath;
+              if (delimiter !== undefined) config.delimiter = delimiter;
+              if (hasHeader !== undefined) config.hasHeader = Boolean(hasHeader);
+              if (batchSize !== undefined) config.batchSize = batchSize;
               if (outputKey !== undefined) config.outputKey = outputKey;
             }
             if (className === "DatabaseNode") {
@@ -11572,11 +11639,12 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	          const isImagineNode = kind === "imagine";
 	          const isFunctionNode = kind === "function";
 	          const isFirecrawlNode = kind === "firecrawl";
+	          const isTableNode = kind === "table";
 	          const isDatabaseNode = kind === "database";
 	          const isMetronomeNode = kind === "metronome";
 	          const isNoteNode = kind === "note";
 	          const isLoopNode = kind === "loop";
-		          const shouldHideBody = kind === "action" || kind === "trigger" || isApprovalNode || isTicketNode || isImagineNode || isFunctionNode || isFirecrawlNode || isDatabaseNode || isMetronomeNode || isEndNode || isConditionNode;
+		          const shouldHideBody = kind === "action" || kind === "trigger" || isApprovalNode || isTicketNode || isImagineNode || isFunctionNode || isFirecrawlNode || isTableNode || isDatabaseNode || isMetronomeNode || isEndNode || isConditionNode;
 	          const config = data?.config || {};
 	          const renderResizeHandle = (corner, className) => React.createElement("span", {
 	            className: "playground-metronome-loop-resize-handle " + className + " nodrag",
@@ -11664,6 +11732,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               : isFunctionNode
                 ? String(config.functionName || config.functionId || "Select function").trim()
               : isFirecrawlNode
+                ? getMetronomeSubtypeLabel(kind, data?.subtype)
+              : isTableNode
                 ? getMetronomeSubtypeLabel(kind, data?.subtype)
               : isDatabaseNode
                 ? ""
@@ -18489,6 +18559,86 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 )
               );
             };
+            const renderTableSettings = () => {
+              const operation = normalizeMetronomeTableOperation(config.operation || subtype);
+              return React.createElement(React.Fragment, null,
+                renderMetronomeDataBindingSelect({
+                  title: "Table source",
+                  fieldKey: "inputBinding",
+                  fallback: "trigger.input.files",
+                  options: [
+                    { id: "trigger.input.files", label: "Trigger files" },
+                    { id: "trigger.input", label: "Trigger input" },
+                    { id: "last.files", label: "Previous node files" },
+                    { id: "last.text", label: "Previous node text" },
+                    { id: "last.records", label: "Previous node records" },
+                    { id: "workflow.context", label: "Full workflow context" },
+                  ],
+                }),
+                React.createElement("div", { className: "playground-metronome-field" },
+                  renderMetronomeFieldTitle("Fallback file path or URL", "Used when the source binding does not contain inline CSV/TSV text or a file reference."),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-metronome-input",
+                    value: config.filePath || config.file_path || "",
+                    placeholder: operation === "parse_tsv" ? "/workspace/uploads/data.tsv" : "/workspace/uploads/data.csv",
+                    onKeyDown: stopMetronomeInputKeyPropagation,
+                    onKeyUp: stopMetronomeInputKeyPropagation,
+                    onChange: (event) => updateSelectedNodeConfig("filePath", event.target.value),
+                  })
+                ),
+                React.createElement("div", { className: "playground-metronome-field" },
+                  renderMetronomeFieldTitle("Delimiter", "Leave empty to auto-detect comma, semicolon, or tab-delimited data."),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-metronome-input",
+                    value: config.delimiter || "",
+                    placeholder: operation === "parse_tsv" ? "\\t" : "auto",
+                    onKeyDown: stopMetronomeInputKeyPropagation,
+                    onKeyUp: stopMetronomeInputKeyPropagation,
+                    onChange: (event) => updateSelectedNodeConfig("delimiter", event.target.value),
+                  })
+                ),
+                React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
+                  React.createElement("div", { className: "playground-metronome-switch-copy" },
+                    React.createElement("span", null, "First row contains headers"),
+                    React.createElement("small", null, "Headers are normalized into snake_case keys while preserving the original labels.")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-metronome-switch" + (config.hasHeader === false || config.has_header === false ? "" : " is-on"),
+                    role: "switch",
+                    "aria-checked": config.hasHeader === false || config.has_header === false ? "false" : "true",
+                    onClick: () => updateSelectedNodeConfig("hasHeader", config.hasHeader === false || config.has_header === false),
+                  })
+                ),
+                React.createElement("div", { className: "playground-metronome-field" },
+                  renderMetronomeFieldTitle("Batch size", "Creates a batches array for downstream database or loop nodes. Use 0 to disable batching."),
+                  React.createElement("input", {
+                    type: "number",
+                    min: "0",
+                    max: "10000",
+                    className: "playground-metronome-input",
+                    value: Number.isFinite(Number(config.batchSize || config.batch_size)) ? String(config.batchSize || config.batch_size) : "5",
+                    onKeyDown: stopMetronomeInputKeyPropagation,
+                    onKeyUp: stopMetronomeInputKeyPropagation,
+                    onChange: (event) => updateSelectedNodeConfig("batchSize", Math.max(0, Number(event.target.value) || 0)),
+                  })
+                ),
+                React.createElement("div", { className: "playground-metronome-field" },
+                  renderMetronomeFieldTitle("Output key"),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-metronome-input",
+                    value: config.outputKey || config.output_key || "table",
+                    placeholder: "table",
+                    onKeyDown: stopMetronomeInputKeyPropagation,
+                    onKeyUp: stopMetronomeInputKeyPropagation,
+                    onChange: (event) => updateSelectedNodeConfig("outputKey", event.target.value),
+                  })
+                )
+              );
+            };
             const renderDatabaseSettings = () => {
               const isDeleteOperation = subtype === "delete_document";
               const isBulkWriteOperation = subtype === "insert_many_documents" || subtype === "upsert_many_documents";
@@ -19013,6 +19163,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           ? React.createElement("span", { className: "playground-metronome-inspector-node-kind is-icon", "aria-label": "Firecrawl" },
                               React.createElement(Flame, { width: 14, height: 14, strokeWidth: 1.9 })
                             )
+                        : kind === "table"
+                          ? React.createElement("span", { className: "playground-metronome-inspector-node-kind is-icon", "aria-label": "Table" },
+                              React.createElement(typeof TableProperties !== "undefined" ? TableProperties : Database, { width: 14, height: 14, strokeWidth: 1.9 })
+                            )
                         : kind === "database"
                           ? React.createElement("span", { className: "playground-metronome-inspector-node-kind is-icon", "aria-label": "Database" },
                               React.createElement(Database, { width: 14, height: 14, strokeWidth: 1.9 })
@@ -19156,6 +19310,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                         });
                       } else if (kind === "firecrawl") {
                         updateSelectedNodeConfigPatch(createDefaultMetronomeFirecrawlConfig(nextSubtype, config));
+                      } else if (kind === "table") {
+                        updateSelectedNodeConfigPatch(createDefaultMetronomeTableConfig(nextSubtype, config));
                       } else if (kind === "database") {
                         updateSelectedNodeConfigPatch(createDefaultMetronomeDatabaseConfig(nextSubtype, config));
                       } else if (kind === "loop") {
@@ -19249,6 +19405,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	                      )
                   : kind === "database"
                     ? renderDatabaseSettings()
+                  : kind === "table"
+                    ? renderTableSettings()
                   : kind === "firecrawl"
                     ? renderFirecrawlSettings()
                   : kind === "metronome"
@@ -19835,6 +19993,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             if (kind === "imagine") return Clapperboard;
             if (kind === "function") return FunctionSquare;
             if (kind === "firecrawl") return Flame;
+            if (kind === "table") return typeof TableProperties !== "undefined" ? TableProperties : Database;
             if (kind === "database") return Database;
             if (kind === "ticket") return Bookmark;
             if (kind === "metronome") return Metronome;

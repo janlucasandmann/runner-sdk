@@ -26060,6 +26060,10 @@ const html = `<!doctype html>
         transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
       }
 
+      .playground-environments-action-button {
+        font-weight: 500;
+      }
+
       .playground-environments-page:not(.playground-agents-page) .playground-environments-action-button,
       .playground-environments-page:not(.playground-agents-page) .playground-environments-add-button {
         min-height: 30px;
@@ -32966,6 +32970,17 @@ const html = `<!doctype html>
         overflow: visible;
       }
 
+      .playground-content-body.is-tasks-page .playground-tasks-main-scroll.is-projects-home > .playground-projects-overview-surface.is-empty-hero {
+        width: min(100%, calc(var(--playground-centered-page-max-width) + 88px));
+        max-width: calc(var(--playground-centered-page-max-width) + 88px);
+        margin: 0 auto;
+        padding: 42px 44px 48px;
+        display: block;
+        flex: 0 0 auto;
+        min-height: auto;
+        overflow: visible;
+      }
+
       .playground-projects-overview-inner {
         width: 100%;
         max-width: none;
@@ -32981,6 +32996,15 @@ const html = `<!doctype html>
         width: min(100%, var(--playground-centered-page-max-width));
         max-width: var(--playground-centered-page-max-width);
         margin: 0 auto;
+        min-height: auto;
+        flex: initial;
+        gap: 30px;
+      }
+
+      .playground-projects-overview-surface.is-empty-hero .playground-projects-overview-inner {
+        width: 100%;
+        max-width: none;
+        margin: 0;
         min-height: auto;
         flex: initial;
         gap: 30px;
@@ -33375,6 +33399,11 @@ const html = `<!doctype html>
         border-bottom: 0;
       }
 
+      .playground-projects-overview-surface.is-empty-hero .playground-projects-overview-title-block {
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
       .playground-projects-overview-title-copy {
         min-width: 0;
         display: flex;
@@ -33610,9 +33639,21 @@ const html = `<!doctype html>
         }
       }
 
+      @media (max-width: 980px) {
+        .playground-content-body.is-tasks-page .playground-tasks-main-scroll.is-projects-home > .playground-projects-overview-surface.is-empty-hero {
+          padding: 24px 18px 36px;
+        }
+      }
+
       @media (max-width: 767px) {
         .playground-content-body.is-tasks-page .playground-tasks-main-scroll.is-projects-home > .playground-projects-overview-surface {
           padding: 0;
+        }
+
+        .playground-content-body.is-tasks-page .playground-tasks-main-scroll.is-projects-home > .playground-projects-overview-surface.is-empty-hero {
+          width: 100%;
+          max-width: none;
+          padding: 24px 18px 36px;
         }
 
         .playground-projects-working-agent-card {
@@ -37710,6 +37751,18 @@ const html = `<!doctype html>
         backdrop-filter: blur(10px);
       }
 
+      .playground-tasks-project-modal-backdrop.playground-tasks-project-initial-setup-backdrop {
+        z-index: 10020;
+        background: rgba(0, 0, 0, 0);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        transition: background-color 150ms linear !important;
+      }
+
+      .playground-tasks-project-modal-backdrop.playground-tasks-project-initial-setup-backdrop.is-visible {
+        background: rgba(0, 0, 0, 0.5);
+      }
+
       .playground-agent-runtime-thread-modal-backdrop {
         z-index: 140;
       }
@@ -38110,6 +38163,7 @@ const html = `<!doctype html>
         flex-direction: column;
         gap: 10px;
         margin: 0 0 14px;
+        position: relative;
       }
 
       .playground-tasks-project-blueprint-heading {
@@ -38135,7 +38189,7 @@ const html = `<!doctype html>
         padding: 8px 10px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px;
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.05);
         color: #ffffff;
         display: flex;
         align-items: center;
@@ -38189,6 +38243,37 @@ const html = `<!doctype html>
         height: 16px;
         flex: 0 0 auto;
         color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-tasks-project-blueprint-section.is-open {
+        z-index: 120;
+      }
+
+      .playground-tasks-toolbar-popup-shell .playground-tasks-toolbar-popup-menu.playground-tasks-project-blueprint-popover {
+        right: 0;
+        width: min(460px, calc(100vw - 48px));
+        min-width: min(460px, calc(100vw - 48px));
+        max-height: min(196px, calc(100vh - 160px));
+        padding: 8px;
+        overflow-y: auto;
+      }
+
+      .playground-tasks-project-blueprint-popover .playground-tasks-project-blueprint-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .playground-tasks-project-blueprint-popover .playground-tasks-project-blueprint-option {
+        border-color: transparent;
+        border-radius: 10px;
+        background: transparent;
+      }
+
+      .playground-tasks-project-blueprint-popover .playground-tasks-project-blueprint-option:hover,
+      .playground-tasks-project-blueprint-popover .playground-tasks-project-blueprint-option.is-active {
+        border-color: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.08);
+        transform: none;
       }
 
       .playground-tasks-project-blueprint-modal {
@@ -38380,6 +38465,124 @@ const html = `<!doctype html>
         height: 16px;
         flex: 0 0 auto;
         color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-tasks-project-composer-modal.playground-tasks-project-initial-setup-modal {
+        --tb-runner-input-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        width: min(640px, calc(100vw - 48px));
+        position: relative;
+        overflow: visible;
+        padding: 16px;
+        border: 0 !important;
+        border-radius: 25px;
+        background: rgba(30, 30, 30, 0.5) !important;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        transform-origin: center;
+        opacity: 0.5;
+        transform: scale(0.5);
+        transition: opacity 150ms linear, transform 150ms linear !important;
+        will-change: opacity, transform;
+      }
+
+      .playground-tasks-project-composer-modal.playground-tasks-project-initial-setup-modal.is-visible {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .playground-tasks-project-composer-modal.playground-tasks-project-initial-setup-modal::before {
+        content: "" !important;
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: block !important;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--tb-task-input-border, var(--tb-runner-input-border));
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-tasks-project-composer-modal.playground-tasks-project-initial-setup-modal::after {
+        content: none !important;
+        display: none !important;
+      }
+
+      .playground-tasks-project-initial-setup-modal .playground-tasks-project-modal-top {
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .playground-tasks-project-initial-setup-body {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-tasks-project-initial-setup-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-tasks-project-initial-setup-label {
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 500;
+      }
+
+      .playground-tasks-project-initial-setup-modal .playground-tasks-project-blueprint-section {
+        margin: 0;
+        gap: 0;
+      }
+
+      .playground-tasks-project-initial-setup-modal .playground-environments-runtime-popup-shell.is-open {
+        z-index: 130;
+      }
+
+      .playground-tasks-project-initial-setup-modal .playground-tasks-project-blueprint-icon {
+        background: transparent;
+        color: #ffffff;
+      }
+
+      .playground-tasks-project-initial-setup-modal .playground-tasks-project-lead-selector {
+        min-height: 48px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-tasks-project-initial-setup-modal .playground-tasks-project-lead-selector:hover {
+        border-color: rgba(255, 255, 255, 0.1);
+        background: transparent;
+      }
+
+      .playground-tasks-project-initial-setup-modal .playground-tasks-project-lead-chevron {
+        display: none;
+      }
+
+      .playground-tasks-project-initial-setup-goal-editor {
+        margin-top: 0;
+        padding-top: 0;
+      }
+
+      .playground-tasks-project-initial-setup-modal .playground-tasks-project-modal-actions {
+        margin-top: 16px;
       }
 
       .playground-mission-control-studio-body {
@@ -107833,6 +108036,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         });
         const [projectComposerOpen, setProjectComposerOpen] = useState(false);
         const [projectComposerMode, setProjectComposerMode] = useState("create");
+        const [projectInitialSetupModalVisible, setProjectInitialSetupModalVisible] = useState(false);
+        const [projectInitialSetupModalClosing, setProjectInitialSetupModalClosing] = useState(false);
+        const projectInitialSetupModalCloseTimerRef = useRef(null);
+        const projectInitialSetupModalFrameRef = useRef(null);
+        const projectInitialSetupModalAnimationMs = 150;
         const [projectIconPickerOpen, setProjectIconPickerOpen] = useState(false);
         const [projectBlueprintPickerOpen, setProjectBlueprintPickerOpen] = useState(false);
         const [projectSidebarPopover, setProjectSidebarPopover] = useState("");
@@ -107850,6 +108058,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const projectDescriptionEditingRef = useRef(false);
         const [projectComposerEnvironmentPopoverOpen, setProjectComposerEnvironmentPopoverOpen] = useState(false);
         const projectComposerEnvironmentPopoverRef = useRef(null);
+        const projectBlueprintPickerRef = useRef(null);
         const [projectPreviewedAttachmentId, setProjectPreviewedAttachmentId] = useState("");
         const [projectAttachmentTransferState, setProjectAttachmentTransferState] = useState({
           uploadingIds: [],
@@ -107868,6 +108077,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const [projectEnvironmentFilePickerSelectedPaths, setProjectEnvironmentFilePickerSelectedPaths] = useState([]);
         const [taskView, setTaskView] = useState(() => isStandaloneCalendarMode ? "calendar" : "overview");
         const [projectOverviewChartTimescale, setProjectOverviewChartTimescale] = useState("day");
+        const [projectOverviewPerformanceRange, setProjectOverviewPerformanceRange] = useState("1m");
         const [projectOverviewHomeTab, setProjectOverviewHomeTab] = useState("general");
         const [projectOverviewSidebarCollapsed, setProjectOverviewSidebarCollapsed] = useState(false);
         const [ticketDetailSidebarCollapsed, setTicketDetailSidebarCollapsed] = useState(false);
@@ -114767,6 +114977,16 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         function openProjectComposer(options = {}) {
+          if (projectInitialSetupModalCloseTimerRef.current) {
+            window.clearTimeout(projectInitialSetupModalCloseTimerRef.current);
+            projectInitialSetupModalCloseTimerRef.current = null;
+          }
+          if (projectInitialSetupModalFrameRef.current) {
+            window.cancelAnimationFrame(projectInitialSetupModalFrameRef.current);
+            projectInitialSetupModalFrameRef.current = null;
+          }
+          setProjectInitialSetupModalVisible(false);
+          setProjectInitialSetupModalClosing(false);
           const defaultProjectEnvironmentId = projectComposerDefaultEnvironmentId || null;
           const initialName = String(options?.name || "").trim();
           const initialDescription = String(options?.description || options?.goal || "").trim();
@@ -114828,13 +115048,27 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           setProjectIconPickerOpen(false);
           setProjectSidebarPopover("");
           setMissionControlStrategyOpen(false);
-          setMissionControlSetupOpen(true);
-          setMissionControlSetupResetToken((current) => current + 1);
-          void ensureMissionControlAgent();
+          setMissionControlSetupOpen(false);
           setProjectComposerOpen(true);
+          projectInitialSetupModalFrameRef.current = window.requestAnimationFrame(() => {
+            projectInitialSetupModalFrameRef.current = window.requestAnimationFrame(() => {
+              projectInitialSetupModalFrameRef.current = null;
+              setProjectInitialSetupModalVisible(true);
+            });
+          });
         }
 
         function openProjectComposerForEdit(projectRecord) {
+          if (projectInitialSetupModalCloseTimerRef.current) {
+            window.clearTimeout(projectInitialSetupModalCloseTimerRef.current);
+            projectInitialSetupModalCloseTimerRef.current = null;
+          }
+          if (projectInitialSetupModalFrameRef.current) {
+            window.cancelAnimationFrame(projectInitialSetupModalFrameRef.current);
+            projectInitialSetupModalFrameRef.current = null;
+          }
+          setProjectInitialSetupModalVisible(false);
+          setProjectInitialSetupModalClosing(false);
           const normalizedProject = normalizePlaygroundProjectRecord(projectRecord || selectedProject || buildPlaygroundDefaultProjectDraft());
           const projectIndex = projects.findIndex((project) => project.id === normalizedProject.id);
           const activeEditDraft = projectComposerOpen
@@ -114886,9 +115120,19 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           setProjectComposerOpen(true);
         }
 
-        function closeProjectComposer() {
+        function finishCloseProjectComposer() {
           projectDraftNameDirtyRef.current = false;
           projectDraftTypedNameRef.current = "";
+          if (projectInitialSetupModalCloseTimerRef.current) {
+            window.clearTimeout(projectInitialSetupModalCloseTimerRef.current);
+            projectInitialSetupModalCloseTimerRef.current = null;
+          }
+          if (projectInitialSetupModalFrameRef.current) {
+            window.cancelAnimationFrame(projectInitialSetupModalFrameRef.current);
+            projectInitialSetupModalFrameRef.current = null;
+          }
+          setProjectInitialSetupModalVisible(false);
+          setProjectInitialSetupModalClosing(false);
           setProjectComposerOpen(false);
           setMissionControlSetupOpen(false);
           setProjectComposerMode("create");
@@ -114917,6 +115161,33 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             isSaving: false,
             error: "",
           });
+        }
+
+        function closeProjectComposer(options = {}) {
+          const shouldAnimateInitialSetupClose = options?.animate !== false
+            && projectComposerOpen
+            && projectComposerMode === "create"
+            && !missionControlSetupOpen
+            && !selectedProject;
+          if (shouldAnimateInitialSetupClose) {
+            if (projectInitialSetupModalClosing) {
+              return;
+            }
+            setProjectIconPickerOpen(false);
+            setProjectBlueprintPickerOpen(false);
+            setProjectComposerEnvironmentPopoverOpen(false);
+            setProjectInitialSetupModalVisible(false);
+            setProjectInitialSetupModalClosing(true);
+            if (projectInitialSetupModalCloseTimerRef.current) {
+              window.clearTimeout(projectInitialSetupModalCloseTimerRef.current);
+            }
+            projectInitialSetupModalCloseTimerRef.current = window.setTimeout(() => {
+              projectInitialSetupModalCloseTimerRef.current = null;
+              finishCloseProjectComposer();
+            }, projectInitialSetupModalAnimationMs);
+            return;
+          }
+          finishCloseProjectComposer();
         }
 
         useEffect(() => {
@@ -116059,6 +116330,14 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               window.clearTimeout(projectWallpaperTransitionTimerRef.current);
               projectWallpaperTransitionTimerRef.current = null;
             }
+            if (projectInitialSetupModalCloseTimerRef.current) {
+              window.clearTimeout(projectInitialSetupModalCloseTimerRef.current);
+              projectInitialSetupModalCloseTimerRef.current = null;
+            }
+            if (projectInitialSetupModalFrameRef.current) {
+              window.cancelAnimationFrame(projectInitialSetupModalFrameRef.current);
+              projectInitialSetupModalFrameRef.current = null;
+            }
           };
         }, []);
 
@@ -116182,6 +116461,23 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           document.addEventListener("mousedown", handleProjectComposerEnvironmentPopoverPointerDown);
           return () => document.removeEventListener("mousedown", handleProjectComposerEnvironmentPopoverPointerDown);
         }, [projectComposerEnvironmentPopoverOpen]);
+
+        useEffect(() => {
+          if (!projectBlueprintPickerOpen) {
+            return undefined;
+          }
+
+          function handleProjectBlueprintPickerPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !projectBlueprintPickerRef.current || projectBlueprintPickerRef.current.contains(target)) {
+              return;
+            }
+            setProjectBlueprintPickerOpen(false);
+          }
+
+          document.addEventListener("mousedown", handleProjectBlueprintPickerPointerDown);
+          return () => document.removeEventListener("mousedown", handleProjectBlueprintPickerPointerDown);
+        }, [projectBlueprintPickerOpen]);
 
         useEffect(() => {
           if (!projectCardMenuProjectId) return undefined;
@@ -119980,7 +120276,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             }
 
             if (options?.closeAfterSave !== false) {
-              closeProjectComposer();
+              closeProjectComposer({ animate: false });
             } else {
               setProjectDraft((current) => normalizePlaygroundProjectRecord({
                 ...(current && typeof current === "object" ? current : {}),
@@ -126361,11 +126657,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               },
                 React.createElement("button", {
                   type: "button",
-                  className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger playground-tasks-project-modal-environment-button" + (selectedProjectEnvironmentOption ? "" : " is-empty") + (projectComposerEnvironmentPopoverOpen ? " is-active" : ""),
-                  onClick: () => {
-                    setProjectIconPickerOpen(false);
-                    setProjectComposerEnvironmentPopoverOpen((current) => !current);
-                  },
+	                  className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger playground-tasks-project-modal-environment-button" + (selectedProjectEnvironmentOption ? "" : " is-empty") + (projectComposerEnvironmentPopoverOpen ? " is-active" : ""),
+	                  onClick: () => {
+	                    setProjectIconPickerOpen(false);
+	                    setProjectBlueprintPickerOpen(false);
+	                    setProjectComposerEnvironmentPopoverOpen((current) => !current);
+	                  },
                   title: projectDefaultEnvironmentLabel,
                   "aria-expanded": projectComposerEnvironmentPopoverOpen ? "true" : "false",
                   disabled: projectComposerAvailableEnvironments.length === 0,
@@ -126435,20 +126732,23 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             );
           }
 
-          function renderProjectBlueprintSelector() {
-            const BlueprintIcon = selectedProjectBlueprint.Icon || getPlaygroundProjectIconConfig(selectedProjectBlueprint.iconId).icon;
-            return React.createElement("div", { className: "playground-tasks-project-blueprint-section" },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-tasks-project-blueprint-trigger",
-                onClick: () => {
-                  setProjectIconPickerOpen(false);
-                  setProjectComposerEnvironmentPopoverOpen(false);
-                  setProjectBlueprintPickerOpen(true);
-                },
-                "aria-haspopup": "dialog",
-                "aria-expanded": projectBlueprintPickerOpen ? "true" : "false",
-              },
+	          function renderProjectBlueprintSelector() {
+	            const BlueprintIcon = selectedProjectBlueprint.Icon || getPlaygroundProjectIconConfig(selectedProjectBlueprint.iconId).icon;
+	            return React.createElement("div", {
+	                className: "playground-tasks-project-blueprint-section playground-tasks-toolbar-popup-shell" + (projectBlueprintPickerOpen ? " is-open" : ""),
+	                ref: projectBlueprintPickerRef,
+	              },
+	              React.createElement("button", {
+	                type: "button",
+	                className: "playground-tasks-project-blueprint-trigger",
+	                onClick: () => {
+	                  setProjectIconPickerOpen(false);
+	                  setProjectComposerEnvironmentPopoverOpen(false);
+	                  setProjectBlueprintPickerOpen((current) => !current);
+	                },
+	                "aria-haspopup": "listbox",
+	                "aria-expanded": projectBlueprintPickerOpen ? "true" : "false",
+	              },
                 React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-main" },
                     React.createElement("span", {
                       className: "playground-tasks-project-blueprint-icon",
@@ -126459,49 +126759,21 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                     React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-title" }, selectedProjectBlueprint.title),
                   React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-description" }, selectedProjectBlueprint.description)
                     )
-                ),
-                React.createElement(ChevronDown, { className: "playground-tasks-project-blueprint-chevron", strokeWidth: 1.8 })
-              )
-            );
-          }
-
-          function renderProjectBlueprintPickerModal() {
-            if (!projectBlueprintPickerOpen) {
-              return null;
-            }
-            const modalElement = React.createElement("div", {
-                className: "playground-tasks-project-modal-backdrop playground-tasks-project-blueprint-modal-backdrop",
-                onClick: () => setProjectBlueprintPickerOpen(false),
-              },
-              React.createElement("div", {
-                  className: "playground-tasks-project-modal playground-tasks-project-blueprint-modal",
-                  role: "dialog",
-                  "aria-modal": "true",
-                  "aria-label": "Choose project type",
-                  onClick: (event) => event.stopPropagation(),
-                },
-                React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                    React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "Choose Project Type")
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                    onClick: () => setProjectBlueprintPickerOpen(false),
-                    title: "Close",
-                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                ),
-                React.createElement("div", { className: "playground-tasks-project-blueprint-modal-body" },
-                  React.createElement("div", { className: "playground-tasks-project-blueprint-grid" },
-                    PLAYGROUND_PROJECT_BLUEPRINT_OPTIONS.map((blueprint) => renderProjectBlueprintOption(blueprint))
-                  )
-                )
-              )
-            );
-            return typeof document !== "undefined" && document.body
-              ? createPortal(modalElement, document.body)
-              : modalElement;
-          }
+	                ),
+	                React.createElement(ChevronDown, { className: "playground-tasks-project-blueprint-chevron", strokeWidth: 1.8 })
+	              ),
+	              projectBlueprintPickerOpen
+	                ? React.createElement("div", {
+	                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-blueprint-popover playground-tasks-toolbar-popup-menu-animate-down-in",
+	                    role: "listbox",
+	                  },
+	                    React.createElement("div", { className: "playground-tasks-project-blueprint-grid" },
+	                      PLAYGROUND_PROJECT_BLUEPRINT_OPTIONS.map((blueprint) => renderProjectBlueprintOption(blueprint))
+	                    )
+	                  )
+	                : null
+	            );
+	          }
 
           function getProjectDraftLeadDisplay() {
             const metadata = projectDraft?.metadata && typeof projectDraft.metadata === "object" && !Array.isArray(projectDraft.metadata)
@@ -126576,15 +126848,16 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             });
           }
 
-          function renderProjectLeadSelector() {
+          function renderProjectLeadSelector(options = {}) {
             const lead = getProjectDraftLeadDisplay();
+            const label = String(options?.label || "Lead").trim() || "Lead";
             return React.createElement("button", {
                 type: "button",
                 className: "playground-tasks-project-lead-selector",
                 onClick: assignCurrentUserAsProjectLead,
                 title: "Project lead",
               },
-              React.createElement("span", { className: "playground-tasks-project-lead-label" }, "Lead"),
+              React.createElement("span", { className: "playground-tasks-project-lead-label" }, label),
               React.createElement("span", { className: "playground-tasks-project-lead-person" },
                 canRenderAvatarImage(lead.avatarUrl)
                   ? React.createElement("img", {
@@ -126607,8 +126880,77 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             );
           }
 
+          const isInitialProjectSetupModal = !embedded && projectComposerMode === "create";
+
+          function renderProjectInitialSetupField(label, child, className = "") {
+            return React.createElement("div", {
+                className: "playground-tasks-project-initial-setup-field" + (className ? " " + className : ""),
+              },
+              React.createElement("div", { className: "playground-tasks-project-initial-setup-label" }, label),
+              child
+            );
+          }
+
+          function renderProjectInitialGoalField() {
+            return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor" },
+              React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Project goal"),
+                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                  [
+                    { id: "bold", label: "Bold", icon: Bold },
+                    { id: "italic", label: "Italic", icon: Italic },
+                    { id: "underline", label: "Underline", icon: Underline },
+                    { id: "list", label: "List", icon: List },
+                  ].map((action) =>
+                    React.createElement("button", {
+                      key: action.id,
+                      type: "button",
+                      className: "playground-tasks-detail-format-button",
+                      title: action.label,
+                      "aria-label": action.label,
+                      onMouseDown: (event) => event.preventDefault(),
+                      onClick: () => handleProjectDescriptionFormat(action.id),
+                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isProjectDescriptionEditing ? " is-editing" : " is-preview") },
+                !isProjectDescriptionEditing
+                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                      String(projectDraft.description || "").trim()
+                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                            content: projectDraft.description,
+                            className: "playground-tasks-detail-description-preview tb-message-markdown",
+                          })
+                        : React.createElement("div", {
+                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                          }, "Define the project goal, scope, working style, and constraints.")
+                    )
+                  : null,
+                React.createElement("textarea", {
+                  ref: projectDescriptionTextareaRef,
+                  className: "playground-tasks-detail-description-input " + (isProjectDescriptionEditing ? "is-editing" : "is-preview"),
+                  rows: 1,
+                  placeholder: isProjectDescriptionEditing ? "Define the project goal, scope, working style, and constraints." : "",
+                  value: projectDraft.description,
+                  onFocus: () => setProjectDescriptionEditing(true),
+                  onChange: (event) => {
+                    setProjectDraft((current) => ({ ...current, description: event.target.value }));
+                    resizeTaskDescriptionTextarea(event.currentTarget);
+                  },
+                  onBlur: () => {
+                    setProjectDescriptionEditing(false);
+                  },
+                })
+              )
+            );
+          }
+
           const projectComposerForm = React.createElement("form", {
-                  className: "playground-tasks-project-modal playground-tasks-project-composer-modal",
+                  className: "playground-tasks-project-modal playground-tasks-project-composer-modal"
+                    + (isInitialProjectSetupModal ? " playground-tasks-project-initial-setup-modal" : "")
+                    + (isInitialProjectSetupModal && projectInitialSetupModalVisible ? " is-visible" : "")
+                    + (isInitialProjectSetupModal && projectInitialSetupModalClosing ? " is-closing" : ""),
                   onClick: (event) => event.stopPropagation(),
                   onKeyDown: handleComposerSubmitShortcut,
                   onSubmit: (event) => void (projectComposerMode === "edit" ? handleSaveProject(event) : handleCreateProject(event)),
@@ -126663,16 +127005,23 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                         className: "playground-settings-icon-button playground-tasks-project-modal-close",
                         onClick: () => closeProjectComposer(),
                         title: "Close",
-                      }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                ),
-                embedded ? renderProjectWallpaperPicker() : null,
-                renderProjectBlueprintSelector(),
-                renderProjectLeadSelector(),
-                React.createElement("div", { className: "playground-tasks-attachments playground-tasks-project-modal-attachments" },
-                  React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),
-                      React.createElement("div", { className: "playground-tasks-attachments-actions" },
-                        React.createElement("button", {
+	                      }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+	                ),
+	                embedded ? renderProjectWallpaperPicker() : null,
+	                isInitialProjectSetupModal
+	                  ? React.createElement("div", { className: "playground-tasks-project-initial-setup-body" },
+	                      renderProjectLeadSelector({ label: "Project lead" }),
+	                      renderProjectBlueprintSelector(),
+	                      renderProjectInitialGoalField()
+	                    )
+	                  : null,
+	                isInitialProjectSetupModal ? null : renderProjectBlueprintSelector(),
+	                isInitialProjectSetupModal ? null : renderProjectLeadSelector(),
+	                isInitialProjectSetupModal ? null : React.createElement("div", { className: "playground-tasks-attachments playground-tasks-project-modal-attachments" },
+	                  React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+	                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),
+	                      React.createElement("div", { className: "playground-tasks-attachments-actions" },
+	                        React.createElement("button", {
                           type: "button",
                           className: "playground-environments-action-button playground-tasks-attachments-environment-button",
                           onClick: openProjectEnvironmentFilePicker,
@@ -126786,14 +127135,14 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                     projectAttachmentTransferState.isProcessing
                       ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Uploading attachments...")
                       : null,
-                    projectAttachmentTransferState.error
-                      ? React.createElement("div", { className: "playground-environments-error" }, projectAttachmentTransferState.error)
-                      : null
-                  ),
-                React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Goal"),
-                    React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+	                    projectAttachmentTransferState.error
+	                      ? React.createElement("div", { className: "playground-environments-error" }, projectAttachmentTransferState.error)
+	                      : null
+	                  ),
+	                isInitialProjectSetupModal ? null : React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
+	                  React.createElement("div", { className: "playground-tasks-detail-section-header" },
+	                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Goal"),
+	                    React.createElement("div", { className: "playground-tasks-detail-format-actions" },
                       [
                         { id: "bold", label: "Bold", icon: Bold },
                         { id: "italic", label: "Italic", icon: Italic },
@@ -126871,24 +127220,28 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               )
           ;
 
-          if (embedded) {
-            return React.createElement(React.Fragment, null,
-              React.createElement("div", { className: "playground-mission-control-setup-form" },
-                projectComposerForm
-              ),
-              renderProjectBlueprintPickerModal()
-            );
-          }
+	          if (embedded) {
+	            return React.createElement(React.Fragment, null,
+	              React.createElement("div", { className: "playground-mission-control-setup-form" },
+	                projectComposerForm
+	              )
+	            );
+	          }
 
-          return React.createElement(React.Fragment, null,
-            React.createElement("div", {
-                className: "playground-tasks-project-modal-backdrop",
-                onClick: () => closeProjectComposer(),
-              },
-              projectComposerForm
-            ),
-            renderProjectBlueprintPickerModal()
-          );
+	          const modalElement = React.createElement(React.Fragment, null,
+		            React.createElement("div", {
+		                className: "playground-tasks-project-modal-backdrop"
+                      + (isInitialProjectSetupModal ? " playground-tasks-project-initial-setup-backdrop" : "")
+                      + (isInitialProjectSetupModal && projectInitialSetupModalVisible ? " is-visible" : "")
+                      + (isInitialProjectSetupModal && projectInitialSetupModalClosing ? " is-closing" : ""),
+		                onClick: () => closeProjectComposer(),
+		              },
+	              projectComposerForm
+	            )
+	          );
+          return isInitialProjectSetupModal && typeof document !== "undefined" && document.body
+            ? createPortal(modalElement, document.body)
+            : modalElement;
         }
 
         function renderReleaseComposerDialog() {
@@ -127449,7 +127802,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
           const hasProjects = projects.length > 0;
 
-          return React.createElement("div", { className: "playground-tasks-view-section playground-projects-overview-surface" + (hasProjects ? " is-card-grid" : "") },
+          return React.createElement("div", { className: "playground-tasks-view-section playground-projects-overview-surface" + (hasProjects ? " is-card-grid" : " is-empty-hero") },
             React.createElement("div", { className: "playground-projects-overview-inner" },
               hasProjects
                 ? React.createElement(React.Fragment, null,
@@ -127472,43 +127825,21 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                         )
                       : renderNoMatchingProjectsState()
                   )
-                : React.createElement("div", { className: "playground-projects-list-shell" },
-                    React.createElement("div", { className: "playground-projects-list-toolbar" },
-                      React.createElement("div", { className: "playground-projects-list-toolbar-left" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-projects-list-view-pill",
-                        }, "All projects"),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-projects-list-add-button",
-                          onClick: () => openProjectComposer(),
-                          title: "Add Project",
-                          "aria-label": "Add Project",
-                        }, React.createElement(Plus, { strokeWidth: 1.8 }))
+                : React.createElement(React.Fragment, null,
+                    React.createElement("div", { className: "playground-projects-overview-title-block" },
+                      React.createElement("div", { className: "playground-projects-overview-title-copy" },
+                        React.createElement("h1", { className: "playground-project-overview-summary-title" }, "Organize your work in projects")
                       ),
-                      React.createElement("div", { className: "playground-projects-list-toolbar-actions" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-projects-list-icon-button",
-                          title: "Filter projects",
-                          "aria-label": "Filter projects",
-                        }, React.createElement(SlidersHorizontal, { strokeWidth: 1.8 })),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-projects-list-icon-button",
-                          title: "View options",
-                          "aria-label": "View options",
-                        }, React.createElement(SlidersHorizontal, { strokeWidth: 1.8 })),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-projects-list-icon-button",
-                          title: "Layout",
-                          "aria-label": "Layout",
-                        }, React.createElement(PanelLeft, { strokeWidth: 1.8 }))
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-projects-overview-add-button",
+                        onClick: () => openProjectComposer(),
+                      },
+                        React.createElement(Plus, { strokeWidth: 1.8, "aria-hidden": "true" }),
+                        React.createElement("span", null, "Add Project")
                       )
                     ),
-                    renderProjectsListEmptyState()
+                    renderProjectWorkingAgentEmptyState()
                   )
             )
           );
@@ -132216,6 +132547,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return null;
         }
 
+        const isProjectInitialSetupModalOpen = Boolean(
+          projectComposerOpen
+          && projectComposerMode === "create"
+          && !missionControlSetupOpen
+          && !selectedProject
+        );
+
         if (isDetailOnlyMode) {
           return React.createElement("div", { className: "playground-tasks-page is-inline-detail" },
             React.createElement("aside", { className: "playground-environments-detail playground-tasks-detail-panel is-inline-detail" },
@@ -132242,10 +132580,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
           React.createElement("div", { className: "playground-tasks-shell" + (isDetailOpen ? " is-detail-open" : "") + (isTaskAttachmentPreviewOpen ? " is-preview-open" : "") },
             React.createElement("section", { className: "playground-tasks-main" },
               React.createElement("div", {
-                  className: "playground-tasks-main-scroll" + (selectedProject || projectComposerOpen || isStandaloneCalendarMode ? " is-project-workspace" : " is-projects-home"),
+                  className: "playground-tasks-main-scroll" + (selectedProject || (projectComposerOpen && !isProjectInitialSetupModalOpen) || isStandaloneCalendarMode ? " is-project-workspace" : " is-projects-home"),
                   onClick: handleTaskSurfaceClick,
                 },
-                !selectedProject && !projectComposerOpen && !isStandaloneCalendarMode && !useUnifiedProjectNav
+                !selectedProject && (!projectComposerOpen || isProjectInitialSetupModalOpen) && !isStandaloneCalendarMode && !useUnifiedProjectNav
                   ? React.createElement("div", { className: "playground-content-nav playground-tasks-project-navbar playground-tasks-project-home-navbar playground-tasks-home-width" },
                       React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tasks-project-navbar-title" },
                         React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
@@ -132308,7 +132646,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   : null,
                 isStandaloneCalendarMode
                   ? renderStandaloneCalendarWorkspace()
-                  : projectComposerOpen && !selectedProject
+                  : projectComposerOpen && !selectedProject && !isProjectInitialSetupModalOpen
                     ? renderProjectComposerSetupWorkspace()
                     : selectedProject
                       ? (isProjectTaskDetailScreenOpen ? renderProjectTaskDetailScreen() : renderSelectedProjectWorkspace())

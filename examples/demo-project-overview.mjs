@@ -1197,8 +1197,9 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         position: relative;
         display: flex;
         flex-direction: column;
-        gap: 14px;
-        padding: 20px;
+        gap: 16px;
+        min-height: 438px;
+        padding: 18px 18px 14px;
         border: 0;
         border-radius: 15px;
         background: transparent;
@@ -1206,6 +1207,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         backdrop-filter: blur(50px);
         color: rgba(255, 255, 255, 0.96);
         overflow: hidden;
+        box-shadow: none;
       }
 
       .playground-project-overview-progress-combo-card::before {
@@ -1222,6 +1224,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         mask-origin: content-box, border-box;
         mask-repeat: repeat, repeat;
         mask-size: auto, auto;
+        z-index: 2;
       }
 
       .playground-project-overview-progress-combo-card > * {
@@ -1229,11 +1232,11 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         z-index: 1;
       }
 
-      .playground-project-overview-progress-combo-header {
+      .playground-project-overview-progress-combo-topbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
+        gap: 14px;
       }
 
       .playground-project-overview-progress-combo-title {
@@ -1244,7 +1247,76 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.96);
       }
 
+      .playground-project-overview-progress-combo-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .playground-project-overview-progress-combo-ranges {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        height: 24px;
+        padding: 2px;
+        box-sizing: border-box;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        background: transparent;
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+      }
+
+      .playground-project-overview-progress-combo-range {
+        height: 18px;
+        min-width: 28px;
+        padding: 0 7px;
+        border: 0;
+        border-radius: 20px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        font: inherit;
+        font-size: 11px;
+        line-height: 1rem;
+        font-weight: 400;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
+      }
+
+      .playground-project-overview-progress-combo-range:hover {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-project-overview-progress-combo-range.is-active {
+        background: rgba(255, 255, 255, 0.3);
+        color: #fff;
+      }
+
+      .playground-project-overview-progress-combo-download {
+        width: 30px;
+        height: 30px;
+        border: 0;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.74);
+        box-shadow: none;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-progress-combo-download:hover {
+        color: #fff;
+        background: transparent;
+      }
+
       .playground-project-overview-progress-combo-meta {
+        display: inline-block;
+        margin-left: 4px;
+        vertical-align: baseline;
         font-size: 12px;
         line-height: 1.3;
         color: rgba(255, 255, 255, 0.52);
@@ -1254,71 +1326,85 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-progress-combo-chart {
         width: 100%;
         min-width: 0;
+        flex: 1 1 auto;
         position: relative;
       }
 
       .playground-project-overview-progress-combo-chart-frame {
         position: relative;
         width: 100%;
-        height: 330px;
-        min-height: 330px;
+        height: 284px;
+        min-height: 284px;
       }
 
       .playground-project-overview-progress-combo-canvas {
         display: block;
         width: 100% !important;
-        height: 330px !important;
+        height: 284px !important;
       }
 
-      .playground-project-overview-progress-combo-legend {
+      .playground-project-overview-progress-combo-metrics {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 24px;
-        width: 100%;
-        max-width: none;
+        min-width: 0;
       }
 
-      .playground-project-overview-progress-combo-legend-row {
+      .playground-project-overview-progress-combo-metric {
         min-width: 0;
-        flex: 0 1 auto;
+        flex: 1 1 0;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 7px;
-        font-size: 12px;
-        line-height: 1.25;
+        gap: 8px;
       }
 
-      .playground-project-overview-progress-combo-legend-name {
+      .playground-project-overview-progress-combo-metric-label {
         min-width: 0;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.25;
+        color: rgba(255, 255, 255, 0.62);
         font-weight: 500;
       }
 
-      .playground-project-overview-progress-combo-legend-count {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
+      .playground-project-overview-progress-combo-metric-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.45);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+      }
+
+      .playground-project-overview-progress-combo-metric-dot.is-cost {
+        background: rgb(95, 112, 230);
+        box-shadow: 0 0 0 3px rgba(95, 112, 230, 0.12);
+      }
+
+      .playground-project-overview-progress-combo-metric-dot.is-completed {
+        background: #4da3ff;
+        box-shadow: 0 0 0 3px rgba(77, 163, 255, 0.12);
+      }
+
+      .playground-project-overview-progress-combo-metric-dot.is-started {
+        background: #7effff;
+        box-shadow: 0 0 0 3px rgba(126, 255, 255, 0.12);
+      }
+
+      .playground-project-overview-progress-combo-metric-dot.is-scope {
+        background: rgba(255, 255, 255, 0.45);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+      }
+
+      .playground-project-overview-progress-combo-metric-value {
         color: rgba(255, 255, 255, 0.86);
-        font-size: 13px;
+        font-size: 18px;
         line-height: 1.1;
-        font-weight: 600;
-      }
-
-      .playground-project-overview-progress-combo-legend-count::before {
-        content: "△";
-        color: rgba(255, 255, 255, 0.55);
-        font-size: 13px;
-        line-height: 1;
-        transform: translateY(-1px);
-      }
-
-      .playground-project-overview-progress-combo-legend-count.is-cost::before {
-        content: none;
+        font-weight: 500;
+        letter-spacing: 0;
       }
 
       .playground-project-overview-progress-combo-ct {
@@ -1340,6 +1426,43 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-progress-swatch.is-cost {
         background: rgb(95, 112, 230);
+      }
+
+      @media (max-width: 760px) {
+        .playground-project-overview-progress-combo-card {
+          min-height: 0;
+          padding: 16px 14px 12px;
+        }
+
+        .playground-project-overview-progress-combo-topbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .playground-project-overview-progress-combo-actions {
+          width: 100%;
+          justify-content: space-between;
+        }
+
+        .playground-project-overview-progress-combo-ranges {
+          overflow-x: auto;
+          max-width: calc(100% - 38px);
+        }
+
+        .playground-project-overview-progress-combo-metrics {
+          gap: 18px;
+          flex-wrap: wrap;
+        }
+
+        .playground-project-overview-progress-combo-metric-value {
+          font-size: 24px;
+        }
+
+        .playground-project-overview-progress-combo-chart-frame,
+        .playground-project-overview-progress-combo-canvas {
+          height: 240px !important;
+          min-height: 240px;
+        }
       }
 
       @media (max-width: 1180px) {
@@ -1904,11 +2027,11 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-progress-swatch.is-started {
-        background: rgb(255, 209, 26);
+        background: #7effff;
       }
 
       .playground-project-overview-progress-swatch.is-completed {
-        background: rgb(111, 116, 255);
+        background: #4da3ff;
       }
 
       .playground-project-overview-progress-swatch.is-scope {
@@ -8543,6 +8666,17 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 
               const labels = dailyCtBuckets.map((bucket) => String(bucket?.label || ""));
               const dailyCtValues = dailyCtBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0)));
+              const longRangeTickIndexes = (() => {
+                if (labels.length < 90) {
+                  return null;
+                }
+                const targetCount = labels.length >= 365 ? 7 : 6;
+                const indexes = new Set();
+                for (let tickIndex = 0; tickIndex < targetCount; tickIndex += 1) {
+                  indexes.add(Math.round(((labels.length - 1) * tickIndex) / Math.max(1, targetCount - 1)));
+                }
+                return indexes;
+              })();
               const seriesById = series.reduce((map, entry) => {
                 map[entry.id] = Array.isArray(entry.values) ? entry.values : [];
                 return map;
@@ -8615,21 +8749,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               };
               const edgeToEdgeChartAreaPlugin = {
                 id: "projectOverviewProgressEdgeToEdgeChartArea",
-                afterLayout: (chartInstance) => {
-                  const chartArea = chartInstance?.chartArea;
-                  const xScale = chartInstance?.scales?.x;
-                  if (!chartArea || !xScale || !Number.isFinite(chartInstance.width)) {
-                    return;
-                  }
-                  const left = 0;
-                  const right = Math.max(left, chartInstance.width);
-                  chartArea.left = left;
-                  chartArea.right = right;
-                  chartArea.width = right - left;
-                  xScale.left = left;
-                  xScale.right = right;
-                  xScale.width = right - left;
-                },
                 beforeDatasetsDraw: (chartInstance) => {
                   const ctx = chartInstance?.ctx;
                   const chartArea = chartInstance?.chartArea;
@@ -8653,8 +8772,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                       continue;
                     }
                     ctx.beginPath();
-                    ctx.moveTo(0, y);
-                    ctx.lineTo(chartInstance.width, y);
+                    ctx.moveTo(chartArea.left, y);
+                    ctx.lineTo(chartArea.right, y);
                     ctx.stroke();
                   }
                   ctx.restore();
@@ -8689,7 +8808,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     yAxisID: "progress",
                     borderColor: "rgba(160, 160, 166, 0.62)",
                     backgroundColor: "rgba(160, 160, 166, 0.16)",
-                    borderWidth: 1.7,
+                    borderWidth: 1.25,
                     fill: false,
                     pointBackgroundColor: "rgba(190, 190, 196, 0.86)",
                     pointBorderColor: "#050505",
@@ -8705,15 +8824,15 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     label: "Started",
                     data: seriesById.started || [],
                     yAxisID: "progress",
-                    borderColor: "rgb(255, 209, 26)",
+                    borderColor: "#7EFFFF",
                     backgroundColor: (context) => makeVerticalGradient(context, [
-                      [0, "rgba(255, 209, 26, 0.2)"],
-                      [0.62, "rgba(255, 209, 26, 0.08)"],
-                      [1, "rgba(255, 209, 26, 0)"],
-                    ], "rgba(255, 209, 26, 0.08)"),
-                    borderWidth: 2,
+                      [0, "rgba(126, 255, 255, 0.2)"],
+                      [0.62, "rgba(126, 255, 255, 0.08)"],
+                      [1, "rgba(126, 255, 255, 0)"],
+                    ], "rgba(126, 255, 255, 0.08)"),
+                    borderWidth: 1.5,
                     fill: false,
-                    pointBackgroundColor: "rgb(255, 209, 26)",
+                    pointBackgroundColor: "#7EFFFF",
                     pointBorderColor: "#050505",
                     pointBorderWidth: 2,
                     pointRadius: (context) => context.dataIndex === (seriesById.started || []).length - 1 ? 5 : 0,
@@ -8727,15 +8846,15 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     label: "Completed",
                     data: seriesById.completed || [],
                     yAxisID: "progress",
-                    borderColor: "rgb(111, 116, 255)",
+                    borderColor: "#4da3ff",
                     backgroundColor: (context) => makeVerticalGradient(context, [
-                      [0, "rgba(111, 116, 255, 0.32)"],
-                      [0.55, "rgba(111, 116, 255, 0.16)"],
-                      [1, "rgba(111, 116, 255, 0)"],
-                    ], "rgba(111, 116, 255, 0.14)"),
-                    borderWidth: 2,
+                      [0, "rgba(77, 163, 255, 0.32)"],
+                      [0.55, "rgba(77, 163, 255, 0.16)"],
+                      [1, "rgba(77, 163, 255, 0)"],
+                    ], "rgba(77, 163, 255, 0.14)"),
+                    borderWidth: 1.5,
                     fill: "origin",
-                    pointBackgroundColor: "rgb(111, 116, 255)",
+                    pointBackgroundColor: "#4da3ff",
                     pointBorderColor: "#050505",
                     pointBorderWidth: 2,
                     pointRadius: (context) => context.dataIndex === (seriesById.completed || []).length - 1 ? 5 : 0,
@@ -8756,8 +8875,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 },
                 layout: {
                   padding: {
-                    top: 28,
-                    right: 0,
+                    top: 12,
+                    right: 4,
                     bottom: 0,
                     left: 0,
                   },
@@ -8796,18 +8915,41 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     ticks: {
                       align: "inner",
                       autoSkip: false,
-                      color: "rgba(255, 255, 255, 0.5)",
+                      color: "rgba(255, 255, 255, 0.38)",
                       font: {
-                        size: 12,
+                        size: 11,
                         weight: "400",
                         family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
                       },
                       maxRotation: 0,
                       minRotation: 0,
-                      padding: 12,
+                      padding: 10,
                       callback: (_value, index) => {
-                        if (index === 0 || index === labels.length - 1) {
+                        const bucket = dailyCtBuckets[index];
+                        const key = String(bucket?.key || "");
+                        const date = key ? new Date(key + "T00:00:00") : null;
+                        if (longRangeTickIndexes) {
+                          return longRangeTickIndexes.has(index)
+                            ? (date && !Number.isNaN(date.getTime())
+                              ? date.toLocaleDateString("en-US", { month: "short" })
+                              : (labels[index] || ""))
+                            : "";
+                        }
+                        if (labels.length === 30) {
+                          return index === 0 || index === labels.length - 1
+                            ? (labels[index] || "")
+                            : "";
+                        }
+                        if (labels.length <= 7) {
                           return labels[index] || "";
+                        }
+                        if (date && !Number.isNaN(date.getTime()) && date.getDate() <= 2) {
+                          return date.toLocaleDateString("en-US", { month: "short" });
+                        }
+                        if (index === 0 || index === labels.length - 1) {
+                          return date && !Number.isNaN(date.getTime())
+                            ? date.toLocaleDateString("en-US", { month: "short" })
+                            : (labels[index] || "");
                         }
                         return "";
                       },
@@ -8830,12 +8972,23 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     border: { display: false },
                   },
                   ct: {
-                    display: false,
+                    display: true,
                     type: "linear",
-                    position: "right",
+                    position: "left",
                     min: 0,
-                    max: Math.max(1, Math.ceil(maxDailyCt * 4)),
-                    ticks: { display: false },
+                    max: Math.max(1, Math.ceil(maxDailyCt * 1.22)),
+                    ticks: {
+                      display: true,
+                      maxTicksLimit: 4,
+                      color: "rgba(255, 255, 255, 0.34)",
+                      padding: 8,
+                      font: {
+                        size: 11,
+                        weight: "400",
+                        family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+                      },
+                      callback: (value) => formatProjectOverviewCt(value),
+                    },
                     grid: { display: false, drawTicks: false },
                     border: { display: false },
                   },
@@ -8870,7 +9023,18 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 
           function renderProjectOverviewProgressUsageChartSection() {
             const progressStats = getProjectOverviewProgressStats();
-            const dailyCtBuckets = buildProjectOverviewDailyCtBuckets(30);
+            const performanceRangeOptions = [
+              { id: "5d", label: "5D", bucketCount: 5 },
+              { id: "1m", label: "1M", bucketCount: 30 },
+              { id: "6m", label: "6M", bucketCount: 180 },
+              { id: "1y", label: "1Y", bucketCount: 365 },
+            ];
+            const activePerformanceRangeId = typeof projectOverviewPerformanceRange === "string"
+              ? projectOverviewPerformanceRange
+              : "1m";
+            const activePerformanceRange = performanceRangeOptions.find((option) => option.id === activePerformanceRangeId)
+              || performanceRangeOptions[2];
+            const dailyCtBuckets = buildProjectOverviewDailyCtBuckets(activePerformanceRange.bucketCount);
             const series = buildProjectOverviewProgressSeriesForBuckets(dailyCtBuckets);
             const maxSeriesValue = Math.max(
               0,
@@ -8886,24 +9050,69 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
             const maxDailyCt = Math.max(1, ...dailyCtBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0))));
             const totalDailyCt = dailyCtBuckets.reduce((sum, bucket) => sum + Math.max(0, Number(bucket?.totalCT || 0)), 0);
+            const performanceKpis = progressStats.rows
+              .map((row) => ({
+                id: row.id,
+                label: row.label,
+                value: formatProjectOverviewInteger(row.value),
+              }))
+              .concat({
+                id: "cost",
+                label: "Cost",
+                value: formatProjectOverviewCt(totalDailyCt) + " CT",
+              });
+            const handlePerformanceRangeSelect = (nextRangeId) => {
+              if (typeof setProjectOverviewPerformanceRange === "function") {
+                setProjectOverviewPerformanceRange(nextRangeId);
+              }
+            };
+            const handlePerformanceChartDownload = () => {
+              if (typeof document === "undefined") {
+                return;
+              }
+              const canvas = document.querySelector(".playground-project-overview-progress-combo-canvas");
+              if (!canvas || typeof canvas.toDataURL !== "function") {
+                return;
+              }
+              const link = document.createElement("a");
+              link.href = canvas.toDataURL("image/png");
+              link.download = "project-recent-performance.png";
+              link.click();
+            };
 
             return React.createElement("section", { className: "playground-project-overview-progress-combo-card" },
-              React.createElement("div", { className: "playground-project-overview-progress-combo-legend" },
-                progressStats.rows.map((row) =>
-                  React.createElement("div", { key: row.id, className: "playground-project-overview-progress-combo-legend-row" },
-                    React.createElement("div", { className: "playground-project-overview-progress-combo-legend-name" },
-                      React.createElement("span", { className: "playground-project-overview-progress-swatch is-" + row.id }),
-                      React.createElement("span", null, row.label)
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-progress-combo-legend-count" }, row.value)
-                  )
-                ),
-                React.createElement("div", { className: "playground-project-overview-progress-combo-legend-row" },
-                  React.createElement("div", { className: "playground-project-overview-progress-combo-legend-name" },
-                    React.createElement("span", { className: "playground-project-overview-progress-swatch is-cost" }),
-                    React.createElement("span", null, "Cost")
+              React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
+                React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Recent performance"),
+                React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-ranges", role: "group", "aria-label": "Performance range" },
+                    performanceRangeOptions.map((option) =>
+                      React.createElement("button", {
+                        key: option.id,
+                        type: "button",
+                        className: "playground-project-overview-progress-combo-range" + (activePerformanceRange.id === option.id ? " is-active" : ""),
+                        onClick: () => handlePerformanceRangeSelect(option.id),
+                        "aria-pressed": activePerformanceRange.id === option.id ? "true" : "false",
+                      }, option.label)
+                    )
                   ),
-                  React.createElement("div", { className: "playground-project-overview-progress-combo-legend-count is-cost" }, formatProjectOverviewCt(totalDailyCt) + " CT")
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-progress-combo-download",
+                    onClick: handlePerformanceChartDownload,
+                    title: "Download chart",
+                    "aria-label": "Download recent performance chart",
+                  }, React.createElement(Download, { width: 15, height: 15, strokeWidth: 1.8 }))
+                )
+              ),
+              React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
+                performanceKpis.map((item) =>
+                  React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+                    React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+                      React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
+                      React.createElement("span", null, item.label)
+                    ),
+                    React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
+                  )
                 )
               ),
               React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
