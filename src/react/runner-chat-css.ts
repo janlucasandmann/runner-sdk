@@ -3126,6 +3126,11 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   color: #fff;
 }
 
+.tb-runner-chat .tb-log-metronome-minimap-node-icon.is-firecrawl {
+  background: linear-gradient(to top, #b83200, #ff4d00);
+  color: #fff;
+}
+
 .tb-runner-chat .tb-log-metronome-minimap-node-icon.is-database {
   background: linear-gradient(to top, #027559, #088263);
   color: #fff;

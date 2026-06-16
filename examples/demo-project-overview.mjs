@@ -1184,17 +1184,49 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-progress-combo-card {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        box-sizing: border-box;
         width: 100%;
         min-width: 0;
+        position: relative;
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        padding: 0;
+        gap: 14px;
+        padding: 20px;
         border: 0;
-        border-radius: 0;
+        border-radius: 15px;
         background: transparent;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
         color: rgba(255, 255, 255, 0.96);
         overflow: hidden;
+      }
+
+      .playground-project-overview-progress-combo-card::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-project-overview-progress-combo-card > * {
+        position: relative;
+        z-index: 1;
       }
 
       .playground-project-overview-progress-combo-header {
@@ -1943,34 +1975,81 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-activity-card.is-main .playground-project-overview-activity-row {
-        grid-template-columns: 24px minmax(0, 1fr);
+        grid-template-columns: 28px minmax(0, 1fr);
         align-items: center;
-        gap: 10px;
-        min-height: 0;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        gap: 12px;
+        min-height: 50px;
+        padding: 8px 0;
+        border-bottom: 0;
         border-radius: 0;
         background: transparent;
       }
 
-      .playground-project-overview-activity-card.is-main .playground-project-overview-activity-row::after {
-        display: none;
+      .playground-project-overview-activity-card.is-main .playground-project-overview-activity-row:not(:last-child)::after {
+        display: block;
+        left: 12px;
+        top: 30px;
+        bottom: -8px;
+        width: 1px;
+        background: rgba(255, 255, 255, 0.12);
       }
 
       .playground-project-overview-activity-card.is-main .playground-project-overview-activity-avatar {
-        width: 22px;
-        height: 22px;
+        width: 24px;
+        height: 24px;
       }
 
       .playground-project-overview-activity-card.is-main .playground-project-overview-activity-copy {
         padding: 0;
         font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-project-overview-activity-participants {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex: 0 0 auto;
+        min-width: 0;
+      }
+
+      .playground-project-overview-activity-participant-avatar {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 24px;
+        border-radius: 999px;
+        overflow: hidden;
+        border: 2px solid #050505;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-activity-participant-avatar + .playground-project-overview-activity-participant-avatar {
+        margin-left: -7px;
+      }
+
+      .playground-project-overview-activity-participant-avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .playground-project-overview-activity-participant-avatar-fallback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.82);
       }
 
       .playground-project-overview-activity-show-more {
         position: relative;
         isolation: isolate;
-        align-self: flex-end;
+        align-self: flex-start;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -2011,7 +2090,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-activity-actions {
         display: flex;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: flex-start;
         gap: 8px;
         margin-top: 4px;
       }
@@ -2226,7 +2305,11 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.58);
       }
 
-      .playground-project-overview-activity-actor,
+      .playground-project-overview-activity-actor {
+        color: #fff;
+        font-weight: 400;
+      }
+
       .playground-project-overview-activity-object {
         color: rgba(255, 255, 255, 0.94);
         font-weight: 600;
@@ -2240,7 +2323,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         margin: 0;
         font: inherit;
         color: rgba(255, 255, 255, 0.94);
-        font-weight: 600;
+        font-weight: 400;
         text-align: left;
         cursor: pointer;
       }
@@ -7963,6 +8046,52 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             };
           }
 
+          function formatProjectOverviewActivityTimeLabel(value, fallbackLabel = "") {
+            const parsed = typeof value === "number"
+              ? value
+              : Date.parse(String(value || ""));
+            if (!Number.isFinite(parsed) || parsed <= 0) {
+              const fallback = String(fallbackLabel || "").trim();
+              const compactMatch = fallback.match(/^(\d+)\s*([MHDW])$/i);
+              if (!compactMatch) return fallback;
+              const amount = Math.max(1, Number(compactMatch[1]) || 1);
+              const unitKey = compactMatch[2].toUpperCase();
+              const unit = unitKey === "M"
+                ? "minute"
+                : unitKey === "H"
+                  ? "hour"
+                  : unitKey === "D"
+                    ? "day"
+                    : "week";
+              return amount + " " + unit + (amount === 1 ? "" : "s") + " ago";
+            }
+            const diffMs = Math.max(0, Date.now() - parsed);
+            const minuteMs = 60 * 1000;
+            const hourMs = 60 * minuteMs;
+            const dayMs = 24 * hourMs;
+            const weekMs = 7 * dayMs;
+            const monthMs = 30 * dayMs;
+            const amount = diffMs < hourMs
+              ? Math.max(1, Math.round(diffMs / minuteMs))
+              : diffMs < dayMs
+                ? Math.max(1, Math.round(diffMs / hourMs))
+                : diffMs < weekMs
+                  ? Math.max(1, Math.round(diffMs / dayMs))
+                  : diffMs < monthMs
+                    ? Math.max(1, Math.round(diffMs / weekMs))
+                    : Math.max(1, Math.round(diffMs / monthMs));
+            const unit = diffMs < hourMs
+              ? "minute"
+              : diffMs < dayMs
+                ? "hour"
+                : diffMs < weekMs
+                  ? "day"
+                  : diffMs < monthMs
+                    ? "week"
+                    : "month";
+            return amount + " " + unit + (amount === 1 ? "" : "s") + " ago";
+          }
+
           function buildProjectOverviewActivityItems() {
             const items = [];
             projectOverviewFilteredThreads.forEach((thread) => {
@@ -7989,7 +8118,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 object: displayThreadTitle || "Untitled thread",
                 taskId: threadTaskId,
                 time: Number.isFinite(timestamp) ? timestamp : 0,
-                timeLabel: typeof formatRelativeThreadTime === "function" ? (formatRelativeThreadTime(safeThread?.updatedAt || safeThread?.createdAt) || "") : "",
+                timeLabel: formatProjectOverviewActivityTimeLabel(safeThread?.updatedAt || safeThread?.createdAt),
               });
             });
             (projectOverviewFileActivityState?.items || []).forEach((row, index) => {
@@ -8008,7 +8137,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 object: String(row?.title || row?.path || "file").trim(),
                 taskId: fileTaskId,
                 time: Number.isFinite(timestamp) ? timestamp : 0,
-                timeLabel: String(row?.dateLabel || "").trim(),
+                timeLabel: formatProjectOverviewActivityTimeLabel(timestamp, row?.dateLabel),
               });
             });
             normalizedOverviewTasks.forEach((task) => {
@@ -8028,7 +8157,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 object: task?.title || "Untitled task",
                 taskId: String(task?.id || "").trim(),
                 time: Number.isFinite(timestamp) ? timestamp : 0,
-                timeLabel: typeof formatRelativeThreadTime === "function" ? (formatRelativeThreadTime(task?.updatedAt || task?.createdAt) || "") : "",
+                timeLabel: formatProjectOverviewActivityTimeLabel(task?.updatedAt || task?.createdAt),
               });
             });
             return items
@@ -8036,8 +8165,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               .sort((left, right) => (right.time || 0) - (left.time || 0));
           }
 
-          function renderProjectOverviewActivityAvatar(item) {
-            const className = "playground-project-overview-activity-avatar";
+          function renderProjectOverviewActivityAvatar(item, className = "playground-project-overview-activity-avatar") {
             const actorId = String(item?.actorId || item?.task?.assigneeAgentId || "").trim();
             if (actorId && typeof renderTaskActorAvatar === "function") {
               const avatar = renderTaskActorAvatar(actorId, className);
@@ -8057,15 +8185,54 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             return React.createElement("div", { className });
           }
 
+          function getProjectOverviewActivityParticipantKey(item) {
+            const actorId = String(item?.actorId || item?.task?.assigneeAgentId || "").trim();
+            if (actorId) {
+              return "id:" + actorId;
+            }
+            const actorName = String(item?.actor || "").trim().toLowerCase();
+            return actorName ? "name:" + actorName : "";
+          }
+
+          function buildProjectOverviewActivityParticipants(items) {
+            const seen = new Set();
+            return (Array.isArray(items) ? items : [])
+              .filter((item) => {
+                const key = getProjectOverviewActivityParticipantKey(item);
+                if (!key || seen.has(key)) {
+                  return false;
+                }
+                seen.add(key);
+                return true;
+              })
+              .slice(0, 5);
+          }
+
+          function renderProjectOverviewActivityParticipants(items) {
+            const participants = buildProjectOverviewActivityParticipants(items);
+            if (!participants.length) {
+              return null;
+            }
+            return React.createElement("div", { className: "playground-project-overview-activity-participants", "aria-label": "Activity participants" },
+              participants.map((item) =>
+                React.cloneElement(
+                  renderProjectOverviewActivityAvatar(item, "playground-project-overview-activity-participant-avatar"),
+                  { key: getProjectOverviewActivityParticipantKey(item) || item.id }
+                )
+              )
+            );
+          }
+
           function renderProjectOverviewActivitySection() {
             const allActivityItems = buildProjectOverviewActivityItems();
-            const visibleActivityCount = Math.max(3, Number(projectOverviewVisibleActivityCount) || 3);
+            const visibleActivityCount = Math.max(5, Number(projectOverviewVisibleActivityCount) || 5);
             const activityItems = allActivityItems.slice(0, visibleActivityCount);
             const hasMoreActivityItems = activityItems.length < allActivityItems.length;
-            const hasLessActivityItems = visibleActivityCount > 3;
+            const hasLessActivityItems = visibleActivityCount > 5;
             return React.createElement("section", { className: "playground-project-overview-activity-card is-main" },
               React.createElement("div", { className: "playground-project-overview-activity-header" },
-                React.createElement("h2", { className: "playground-project-overview-activity-title" }, "Activity")
+                React.createElement("h2", { className: "playground-project-overview-activity-title" }, "Activity"),
+                renderProjectOverviewActivityParticipants(activityItems)
               ),
               activityItems.length > 0
                 ? React.createElement(React.Fragment, null,
@@ -8099,7 +8266,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                             ? React.createElement("button", {
                                 type: "button",
                                 className: "playground-project-overview-activity-show-more",
-                                onClick: () => setProjectOverviewVisibleActivityCount(3),
+                                onClick: () => setProjectOverviewVisibleActivityCount(5),
                               }, "Show less")
                             : null,
                           hasMoreActivityItems
@@ -8107,7 +8274,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                                 type: "button",
                                 className: "playground-project-overview-activity-show-more",
                                 onClick: () => setProjectOverviewVisibleActivityCount((current) =>
-                                  Math.min(allActivityItems.length, Math.max(3, Number(current) || 3) + 10)
+                                  Math.min(allActivityItems.length, Math.max(5, Number(current) || 5) + 10)
                                 ),
                               }, "Show more")
                             : null

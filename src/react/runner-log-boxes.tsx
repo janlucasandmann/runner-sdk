@@ -29,6 +29,7 @@ import {
   FilePlus,
   FileSearch,
   FileText,
+  Flame,
   Folder,
   FolderOpen,
   Globe,
@@ -4439,6 +4440,7 @@ function getMetronomeWorkflowMiniNodeIcon(kind: string): ReactNode {
   if (normalizedKind === "condition") return <Split className="tb-log-card-small-icon" strokeWidth={1.8} />;
   if (normalizedKind === "imagine") return <Clapperboard className="tb-log-card-small-icon" strokeWidth={1.8} />;
   if (normalizedKind === "function") return <Code2 className="tb-log-card-small-icon" strokeWidth={1.8} />;
+  if (normalizedKind === "firecrawl") return <Flame className="tb-log-card-small-icon" strokeWidth={1.8} />;
   if (normalizedKind === "database") return <HardDrive className="tb-log-card-small-icon" strokeWidth={1.8} />;
   if (normalizedKind === "metronome") return <Metronome className="tb-log-card-small-icon" strokeWidth={1.8} />;
   if (normalizedKind === "loop") return <RefreshCw className="tb-log-card-small-icon" strokeWidth={1.8} />;

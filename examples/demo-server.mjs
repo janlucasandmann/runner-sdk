@@ -5475,6 +5475,62 @@ const html = `<!doctype html>
         box-shadow: 0 0 0 2px #0b0b0c;
       }
 
+      .playground-files-control-button.playground-tasks-nav-issue-button {
+        --playground-project-overview-control-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        height: 30px;
+        min-height: 30px;
+        margin-left: 0;
+        padding: 0 14px;
+        overflow: hidden;
+        border: 0;
+        border-color: transparent;
+        background: transparent;
+        gap: 8px;
+      }
+
+      .playground-unified-top-navbar .playground-files-control-button.playground-tasks-nav-issue-button {
+        margin-left: 0;
+      }
+
+      .playground-files-control-button.playground-tasks-nav-issue-button:hover,
+      .playground-files-control-button.playground-tasks-nav-issue-button.is-active {
+        border-color: transparent;
+      }
+
+      .playground-files-control-button.playground-tasks-nav-issue-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-control-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-tasks-nav-issue-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-tasks-nav-issue-button svg {
+        width: 14px;
+        height: 14px;
+      }
+
       .playground-content-body {
         flex: 1;
         min-height: 0;
@@ -37645,7 +37701,7 @@ const html = `<!doctype html>
       .playground-tasks-project-modal-backdrop {
         position: fixed;
         inset: 0;
-        z-index: 44;
+        z-index: 180;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -37868,6 +37924,85 @@ const html = `<!doctype html>
 
       .playground-tasks-project-modal-textarea::placeholder {
         color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-tasks-issue-modal {
+        width: min(720px, calc(100vw - 48px));
+        max-height: calc(100vh - 48px);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-tasks-issue-modal-body {
+        min-height: 0;
+        overflow: auto;
+        display: grid;
+        gap: 14px;
+        padding-right: 4px;
+      }
+
+      .playground-tasks-issue-modal-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .playground-tasks-issue-modal-field.is-full {
+        grid-column: 1 / -1;
+      }
+
+      .playground-tasks-issue-modal-input,
+      .playground-tasks-issue-modal-select {
+        width: 100%;
+        height: 38px;
+        padding: 0 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.94);
+        font: inherit;
+        font-size: 13px;
+        outline: none;
+      }
+
+      .playground-tasks-issue-modal-select {
+        color-scheme: dark;
+      }
+
+      .playground-tasks-issue-modal-input::placeholder,
+      .playground-tasks-issue-modal-textarea::placeholder {
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-tasks-issue-modal-textarea {
+        min-height: 118px;
+        resize: vertical;
+      }
+
+      .playground-tasks-issue-modal-check-row {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.035);
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .playground-tasks-issue-modal-check-row input {
+        width: 14px;
+        height: 14px;
+        margin: 0;
+      }
+
+      @media (max-width: 720px) {
+        .playground-tasks-issue-modal-grid {
+          grid-template-columns: 1fr;
+        }
       }
 
       .playground-tasks-project-modal-description {
@@ -45413,33 +45548,75 @@ ${METRONOME_PAGE_CSS}
         margin-top: 4px;
       }
 
-      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-row {
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-title-line .playground-metronome-run-thread-meta-row {
+        flex: 0 1 auto;
+        min-width: 0;
+        margin-top: 0;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-title-line {
+        min-width: 0;
         display: flex;
         align-items: center;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 5px;
-        color: rgba(255, 255, 255, 0.54);
-        font-size: 11px;
-        line-height: 1.35;
+        gap: 7px;
+        flex-wrap: nowrap;
       }
 
-      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-item {
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-title-text {
+        flex: 1 1 auto;
+        min-width: 64px;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-row {
+        display: inline-flex;
+        align-items: center;
+        flex: 0 1 auto;
         min-width: 0;
+        gap: 5px;
+        color: #fff;
+        font-size: 12px;
+        line-height: 1.35;
+        white-space: nowrap;
       }
 
-      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-label {
-        color: rgba(255, 255, 255, 0.38);
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-agent,
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-computer {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-agent {
+        gap: 4px;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-agent-name,
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-computer {
+        color: #fff;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-thread-step-avatar {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        border-radius: 999px;
+        object-fit: cover;
+        background: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.74);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        font-weight: 600;
+        letter-spacing: 0;
       }
 
       .playground-metronome-run-thread-surface .playground-metronome-run-thread-runtime-separator {
-        color: rgba(255, 255, 255, 0.24);
-      }
-
-      .playground-metronome-run-thread-surface .playground-metronome-run-thread-id {
-        color: rgba(102, 166, 255, 0.8);
-        font-size: 10px;
-        line-height: 1.2;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.28);
       }
 
       .playground-metronome-run-thread-surface .playground-metronome-run-thread-link {
@@ -49604,12 +49781,48 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           || ""
         ).trim();
 
-        const agentNameFromId = agentId
-          ? agents.find((agent) => String(agent?.id || "").trim() === agentId)?.name || ""
-          : "";
+        const agentFromId = agentId
+          ? agents.find((agent) => String(agent?.id || "").trim() === agentId) || null
+          : null;
+        const agentNameFromId = agentFromId?.name || "";
         const computerNameFromId = computerId
           ? environments.find((environment) => String(environment?.id || "").trim() === computerId)?.name || ""
           : "";
+        const explicitAgentPhotoUrl = normalizeSessionPhotoUrl(
+          safeThread.agentPhotoUrl
+          || safeThread.agent_photo_url
+          || safeThread.agentAvatarUrl
+          || safeThread.agent_avatar_url
+          || threadMetadata.agentPhotoUrl
+          || threadMetadata.agent_photo_url
+          || threadMetadata.agentAvatarUrl
+          || threadMetadata.agent_avatar_url
+          || safeStep.agentPhotoUrl
+          || safeStep.agent_photo_url
+          || stepConfig.agentPhotoUrl
+          || stepConfig.agent_photo_url
+          || stepInput.agentPhotoUrl
+          || stepInput.agent_photo_url
+          || stepOutput.agentPhotoUrl
+          || stepOutput.agent_photo_url
+          || outputThread.agentPhotoUrl
+          || outputThread.agent_photo_url
+          || resultThread.agentPhotoUrl
+          || resultThread.agent_photo_url
+          || dataThread.agentPhotoUrl
+          || dataThread.agent_photo_url
+          || knownThread?.agentPhotoUrl
+          || knownThread?.agent_photo_url
+          || taskPreview.agentPhotoUrl
+          || taskPreview.agent_photo_url
+          || agentRecord.photoUrl
+          || agentRecord.photoURL
+          || agentRecord.avatarUrl
+          || agentRecord.avatarURL
+          || agentRecord.avatar
+          || agentRecord.picture
+          || ""
+        );
         const agentName = String(
           safeThread.agentName
           || safeThread.agent_name
@@ -49684,32 +49897,49 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         return {
           agentName: agentName || (agentId ? "Agent" : ""),
           computerName: computerName || (computerId ? "Computer" : ""),
+          agentPhotoUrl: explicitAgentPhotoUrl
+            || (agentFromId ? getPlaygroundAgentRunnerPhotoUrl(agentFromId) : "")
+            || (Object.keys(agentRecord).length ? getPlaygroundAgentRunnerPhotoUrl(agentRecord) : ""),
         };
       }
 
-      function renderMetronomeRunTraceThreadRuntimeMeta(meta) {
+      function renderMetronomeRunTraceThreadRuntimeMeta(meta, options = {}) {
         const agentName = String(meta?.agentName || "").trim();
         const computerName = String(meta?.computerName || "").trim();
+        const showSeparator = options?.showSeparator !== false;
         if (!agentName && !computerName) return null;
-        return React.createElement("div", { className: "playground-metronome-run-thread-runtime-row" },
+        return React.createElement("span", { className: "playground-metronome-run-thread-runtime-row" },
+          showSeparator
+            ? React.createElement("span", { className: "playground-metronome-run-thread-runtime-separator", "aria-hidden": "true" }, "·")
+            : null,
           agentName
-            ? React.createElement("span", { className: "playground-metronome-run-thread-runtime-item" },
-                React.createElement("span", { className: "playground-metronome-run-thread-runtime-label" }, "Agent"),
-                " ",
-                agentName
+            ? React.createElement("span", { className: "playground-metronome-run-thread-runtime-agent" },
+                React.createElement("span", { className: "playground-metronome-run-thread-runtime-agent-name" }, agentName)
               )
             : null,
-          agentName && computerName
-            ? React.createElement("span", { className: "playground-metronome-run-thread-runtime-separator" }, "·")
-            : null,
           computerName
-            ? React.createElement("span", { className: "playground-metronome-run-thread-runtime-item" },
-                React.createElement("span", { className: "playground-metronome-run-thread-runtime-label" }, "Computer"),
-                " ",
-                computerName
+            ? React.createElement("span", { className: "playground-metronome-run-thread-runtime-computer" },
+                (agentName ? " on " : "On ") + computerName
               )
             : null
         );
+      }
+
+      function renderMetronomeRunTraceThreadStepAvatar(meta) {
+        const agentName = String(meta?.agentName || "").trim();
+        const agentPhotoUrl = normalizeSessionPhotoUrl(meta?.agentPhotoUrl || "");
+        if (agentPhotoUrl) {
+          return React.createElement("img", {
+            className: "playground-metronome-run-thread-step-avatar",
+            src: agentPhotoUrl,
+            alt: "",
+          });
+        }
+        if (!agentName) return null;
+        return React.createElement("span", {
+          className: "playground-metronome-run-thread-step-avatar",
+          "aria-hidden": "true",
+        }, getAccountInitials(agentName));
       }
 
       function extractMetronomeThreadReadableOutputText(step, thread) {
@@ -107505,9 +107735,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         onRequestSidebarCollapse,
         useUnifiedProjectNav = false,
         onTasksHeaderChange,
+        onProjectIssueCreateHandlerChange,
         projectNavBackRequestToken = 0,
         projectNavViewRequest = null,
         projectNavSettingsRequestToken = 0,
+        projectNavIssueRequest = null,
         detailOnly,
         onCloseDetailOnly,
         standaloneMode,
@@ -107565,6 +107797,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const handledProjectNavBackRequestTokenRef = useRef(0);
         const handledProjectNavViewRequestTokenRef = useRef("");
         const handledProjectNavSettingsRequestTokenRef = useRef(0);
+        const handledProjectNavIssueRequestTokenRef = useRef("");
         const taskConnectorBrowserOpenFrameRef = useRef(null);
         const projectGithubPreparationPromisesRef = useRef(new Map());
         const projectWorkspaceLoadTokenRef = useRef("");
@@ -107730,7 +107963,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          items: [],
 	        });
 	        const [projectOverviewVisibleThreadCount, setProjectOverviewVisibleThreadCount] = useState(5);
-	        const [projectOverviewVisibleActivityCount, setProjectOverviewVisibleActivityCount] = useState(3);
+	        const [projectOverviewVisibleActivityCount, setProjectOverviewVisibleActivityCount] = useState(5);
 	        const [projectOverviewSidebarPropertyPopover, setProjectOverviewSidebarPropertyPopover] = useState("");
 	        const [projectFullAutoState, setProjectFullAutoState] = useState({
 	          projectId: "",
@@ -107810,6 +108043,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const [selectedTaskId, setSelectedTaskId] = useState("");
         const [draftTask, setDraftTask] = useState(null);
         const [projectTaskDetailScreenOpen, setProjectTaskDetailScreenOpen] = useState(false);
+        const [issueComposerOpen, setIssueComposerOpen] = useState(false);
+        const [issueComposerDraft, setIssueComposerDraft] = useState(buildPlaygroundDefaultTaskDraft());
+        const [issueComposerSaveState, setIssueComposerSaveState] = useState({
+          isSaving: false,
+          error: "",
+        });
         const [isTaskDescriptionEditing, setIsTaskDescriptionEditing] = useState(false);
         const [taskDetailsCollapsed, setTaskDetailsCollapsed] = useState(false);
         const [taskTitleInputValue, setTaskTitleInputValue] = useState("");
@@ -108285,6 +108524,108 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             ...(backlogComposerEnvironmentId && environment.id === backlogComposerEnvironmentId ? { isDefault: true } : {}),
           }));
         }, [availableBacklogEnvironments, backlogComposerEnvironmentId]);
+
+        function getDefaultIssueComposerEnvironmentId() {
+          const projectDefaultEnvironmentId = getPlaygroundProjectDefaultEnvironmentId(selectedProject);
+          if (projectDefaultEnvironmentId && availableBacklogEnvironments.some((environment) => environment.id === projectDefaultEnvironmentId)) {
+            return projectDefaultEnvironmentId;
+          }
+          return availableBacklogEnvironments.find((environment) => environment.isDefault)?.id
+            || availableBacklogEnvironments[0]?.id
+            || "";
+        }
+
+        function buildProjectIssueComposerDraft() {
+          const now = new Date().toISOString();
+          return normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata({
+            ...buildPlaygroundDefaultTaskDraft(),
+            projectId: selectedProjectId || selectedProject?.id || null,
+            title: "",
+            description: "",
+            taskType: "task",
+            parentTaskId: null,
+            status: "todo",
+            priority: "medium",
+            taskColor: PLAYGROUND_TASK_COLOR_OPTIONS[0].id,
+            releaseId: selectedReleaseId || null,
+            sprintId: null,
+            assigneeAgentId: defaultTaskAssigneeId || null,
+            reviewRequired: false,
+            reviewerAgentId: null,
+            environmentId: getDefaultIssueComposerEnvironmentId() || null,
+            dependencyIds: [],
+            scheduledStartAt: null,
+            scheduledEndAt: null,
+            scheduleType: "one-time",
+            cronExpression: null,
+            dueAt: null,
+            sortOrder: Date.now(),
+            createdAt: now,
+            updatedAt: now,
+            metadata: {
+              runnerPlayground: {
+                source: "manual_issue_composer",
+              },
+            },
+          }));
+        }
+
+        function openProjectIssueComposer() {
+          if (!selectedProjectId && !selectedProject?.id) {
+            return false;
+          }
+          setProjectSidebarPopover("");
+          setTaskDetailPopover("");
+          setTaskDetailSelectPopover("");
+          setTaskSkillsPopoverOpen(false);
+          setIssueComposerDraft(buildProjectIssueComposerDraft());
+          setIssueComposerSaveState({
+            isSaving: false,
+            error: "",
+          });
+          setIssueComposerOpen(true);
+          return true;
+        }
+
+        function closeProjectIssueComposer() {
+          if (issueComposerSaveState.isSaving) {
+            return;
+          }
+          setIssueComposerOpen(false);
+          setIssueComposerDraft(buildPlaygroundDefaultTaskDraft());
+          setIssueComposerSaveState({
+            isSaving: false,
+            error: "",
+          });
+        }
+
+        function updateIssueComposerDraft(updater) {
+          setIssueComposerDraft((current) => normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata(
+            typeof updater === "function" ? updater(current) : updater
+          )));
+          setIssueComposerSaveState((current) => ({
+            ...current,
+            error: "",
+          }));
+        }
+
+        function updateIssueComposerField(field, value) {
+          updateIssueComposerDraft((current) => ({
+            ...current,
+            [field]: value,
+          }));
+        }
+
+        useEffect(() => {
+          if (!useUnifiedProjectNav || typeof onProjectIssueCreateHandlerChange !== "function") {
+            return undefined;
+          }
+          onProjectIssueCreateHandlerChange(() => openProjectIssueComposer());
+          return () => {
+            onProjectIssueCreateHandlerChange(null);
+          };
+        }, [onProjectIssueCreateHandlerChange, selectedProject?.id, selectedProjectId, useUnifiedProjectNav]);
+
         const projectAttachmentHostRecord = missionControlStrategyOpen
           ? selectedProject
           : ((projectComposerOpen || !selectedProject) ? projectDraft : selectedProject);
@@ -110202,7 +110543,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }, [projectOverviewTeamMenuId, projectOverviewMilestoneMenuId, projectOverviewResourceMenuId]);
         useEffect(() => {
           setProjectOverviewVisibleThreadCount(5);
-          setProjectOverviewVisibleActivityCount(3);
+          setProjectOverviewVisibleActivityCount(5);
           setProjectOverviewSidebarPropertyPopover("");
           setProjectOverviewTeamMenuId("");
           setProjectOverviewMilestoneMenuId("");
@@ -112932,8 +113273,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           const candidates = [
             normalizedProject.defaultEnvironmentId,
             normalizedProject.metadata?.defaultEnvironmentId,
-            selectedEnvironmentId,
             Array.isArray(projectEnvironments) && projectEnvironments.length > 0 ? projectEnvironments[0]?.id : "",
+            backlogComposerEnvironmentId,
+            initialEnvironmentId,
           ];
           for (const candidate of candidates) {
             const normalizedCandidate = String(candidate || "").trim();
@@ -114666,6 +115008,17 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             openProjectComposerForEdit(selectedProject);
           }
         }, [projectNavSettingsRequestToken, selectedProject, useUnifiedProjectNav]);
+
+        useEffect(() => {
+          const requestToken = String(projectNavIssueRequest?.token || "").trim();
+          if (!useUnifiedProjectNav || !requestToken || handledProjectNavIssueRequestTokenRef.current === requestToken) {
+            return;
+          }
+          handledProjectNavIssueRequestTokenRef.current = requestToken;
+          if (projectNavIssueRequest?.action === "create") {
+            openProjectIssueComposer();
+          }
+        }, [projectNavIssueRequest, selectedProject?.id, selectedProjectId, useUnifiedProjectNav]);
 
         function buildProjectWallpaperBackgroundImage(wallpaperId, fallbackProject = projectDraft) {
           const wallpaper = getPlaygroundProjectWallpaperConfig(
@@ -116618,7 +116971,6 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   }
                 : null
           );
-
           if (typeof onNavigationRequestHandled === "function") {
             onNavigationRequestHandled(requestToken);
           }
@@ -116626,7 +116978,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         useEffect(() => {
           setProjectOverviewVisibleThreadCount(5);
-          setProjectOverviewVisibleActivityCount(3);
+          setProjectOverviewVisibleActivityCount(5);
         }, [selectedProjectId, taskView]);
 
         useEffect(() => {
@@ -119089,6 +119441,126 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             sortOrder: mergedTask.sortOrder,
             metadata,
           };
+        }
+
+        async function handleSaveProjectIssue(event) {
+          event?.preventDefault?.();
+          if (issueComposerSaveState.isSaving) {
+            return;
+          }
+
+          const targetProjectId = String(issueComposerDraft?.projectId || selectedProjectId || selectedProject?.id || "").trim();
+          const nextTitle = normalizePlaygroundEditableTaskTitle(issueComposerDraft?.title, "");
+          if (!targetProjectId) {
+            setIssueComposerSaveState({
+              isSaving: false,
+              error: "Project is unavailable.",
+            });
+            return;
+          }
+          if (!nextTitle) {
+            setIssueComposerSaveState({
+              isSaving: false,
+              error: "Issue title is required.",
+            });
+            return;
+          }
+
+          const nextTaskType = normalizePlaygroundTaskType(issueComposerDraft?.taskType);
+          const nextParentTaskId = nextTaskType === "subtask"
+            ? normalizePlaygroundParentTaskId(issueComposerDraft?.parentTaskId)
+            : null;
+          if (nextTaskType === "subtask" && !nextParentTaskId) {
+            setIssueComposerSaveState({
+              isSaving: false,
+              error: "Choose a parent ticket for this subtask.",
+            });
+            return;
+          }
+
+          const nextDependencyIds = normalizePlaygroundIdList(issueComposerDraft?.dependencyIds).slice(0, 1);
+          const nextStatus = nextDependencyIds.length > 0 && issueComposerDraft?.status !== "done"
+            ? "blocked"
+            : (PLAYGROUND_TASK_STATUS_OPTIONS.some((option) => option.id === issueComposerDraft?.status) ? issueComposerDraft.status : "todo");
+          const nextScheduleType = issueComposerDraft?.scheduleType === "recurring" ? "recurring" : "one-time";
+          const nextScheduledStartAt = issueComposerDraft?.scheduledStartAt || null;
+          const nextCronExpression = nextScheduleType === "recurring" && nextScheduledStartAt
+            ? (issueComposerDraft?.cronExpression || buildPlaygroundCronExpressionForPreset("daily", nextScheduledStartAt))
+            : null;
+          const now = new Date().toISOString();
+          const taskDraft = normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata({
+            ...issueComposerDraft,
+            id: "",
+            projectId: targetProjectId,
+            title: nextTitle,
+            taskType: nextTaskType,
+            parentTaskId: nextParentTaskId,
+            status: nextStatus,
+            priority: PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === issueComposerDraft?.priority) ? issueComposerDraft.priority : "medium",
+            taskColor: getPlaygroundTaskColorId(issueComposerDraft?.taskColor),
+            releaseId: issueComposerDraft?.releaseId || null,
+            sprintId: issueComposerDraft?.sprintId || null,
+            assigneeAgentId: issueComposerDraft?.assigneeAgentId || null,
+            reviewRequired: issueComposerDraft?.reviewRequired === true,
+            reviewerAgentId: issueComposerDraft?.reviewRequired === true ? (issueComposerDraft?.reviewerAgentId || null) : null,
+            environmentId: issueComposerDraft?.environmentId || null,
+            dependencyIds: nextDependencyIds,
+            scheduledStartAt: nextScheduledStartAt,
+            scheduledEndAt: issueComposerDraft?.scheduledEndAt || null,
+            scheduleType: nextScheduleType,
+            cronExpression: nextCronExpression,
+            dueAt: issueComposerDraft?.dueAt || null,
+            completedAt: nextStatus === "done" ? now : null,
+            sortOrder: Date.now(),
+            createdAt: now,
+            updatedAt: now,
+          }));
+
+          setIssueComposerSaveState({
+            isSaving: true,
+            error: "",
+          });
+
+          try {
+            const response = await fetch(backendUrl + "/tasks", {
+              method: "POST",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(buildTaskUpdatePayload(taskDraft, {
+                projectId: targetProjectId,
+              })),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create issue.");
+            }
+
+            const createdTask = getPlaygroundTaskResponseRecord(data);
+            if (!createdTask?.id) {
+              throw new Error("Issue creation failed.");
+            }
+
+            commitLocalTaskRecord(createdTask, {
+              selectTask: true,
+              syncDraft: true,
+              markClean: true,
+            });
+            setTaskView("backlog");
+            setProjectTaskDetailScreenOpen(true);
+            setIssueComposerOpen(false);
+            setIssueComposerDraft(buildPlaygroundDefaultTaskDraft());
+            setIssueComposerSaveState({
+              isSaving: false,
+              error: "",
+            });
+          } catch (error) {
+            setIssueComposerSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to create issue.",
+            });
+          }
         }
 
         async function patchTaskRecord(taskRecord, overrides = {}) {
@@ -125495,6 +125967,332 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           return null;
         }
 
+        function renderIssueComposerField(label, control, options = {}) {
+          return React.createElement("label", {
+              className: "playground-tasks-project-modal-field playground-tasks-issue-modal-field" + (options.full ? " is-full" : ""),
+            },
+            React.createElement("div", { className: "playground-tasks-project-modal-label" }, label),
+            control
+          );
+        }
+
+        function renderProjectIssueComposerDialog() {
+          if (!issueComposerOpen) {
+            return null;
+          }
+
+          const normalizedIssueType = normalizePlaygroundTaskType(issueComposerDraft.taskType);
+          const selectedDependencyId = normalizePlaygroundIdList(issueComposerDraft.dependencyIds)[0] || "";
+          const parentTicketCandidates = tasks
+            .filter((task) => task?.id && !isPlaygroundSubtaskRecord(task))
+            .slice()
+            .sort((left, right) => {
+              const leftTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[left.id] || left.ticketNumber);
+              const rightTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[right.id] || right.ticketNumber);
+              if (leftTicketNumber !== rightTicketNumber) {
+                return leftTicketNumber - rightTicketNumber;
+              }
+              return String(left.title || "").localeCompare(String(right.title || ""));
+            });
+          const dependencyCandidates = tasks
+            .filter((task) => task?.id)
+            .slice()
+            .sort((left, right) => {
+              const leftTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[left.id] || left.ticketNumber);
+              const rightTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[right.id] || right.ticketNumber);
+              if (leftTicketNumber !== rightTicketNumber) {
+                return leftTicketNumber - rightTicketNumber;
+              }
+              return String(left.title || "").localeCompare(String(right.title || ""));
+            });
+          const scheduleMode = issueComposerDraft.scheduledStartAt
+            ? (issueComposerDraft.scheduleType === "recurring" ? "recurring" : "one-time")
+            : "none";
+          const recurrencePresetId = getPlaygroundTaskSchedulePresetId(issueComposerDraft.cronExpression) || "daily";
+          const modalElement = React.createElement("div", {
+              className: "playground-tasks-project-modal-backdrop",
+              onClick: () => closeProjectIssueComposer(),
+            },
+            React.createElement("form", {
+                className: "playground-tasks-project-modal playground-tasks-issue-modal",
+                role: "dialog",
+                "aria-modal": "true",
+                "aria-label": "New issue",
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => void handleSaveProjectIssue(event),
+              },
+              React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                    React.createElement(Bookmark, { width: 18, height: 18, strokeWidth: 1.9 })
+                  ),
+                  React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "New Issue")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                  onClick: () => closeProjectIssueComposer(),
+                  title: "Close",
+                  disabled: issueComposerSaveState.isSaving,
+                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+              ),
+              React.createElement("div", { className: "playground-tasks-issue-modal-body" },
+                renderIssueComposerField("Title", React.createElement("input", {
+                  type: "text",
+                  className: "playground-tasks-issue-modal-input",
+                  value: issueComposerDraft.title || "",
+                  placeholder: "Issue title",
+                  autoFocus: true,
+                  onChange: (event) => updateIssueComposerField("title", event.target.value),
+                }), { full: true }),
+                renderIssueComposerField("Description", React.createElement("textarea", {
+                  className: "playground-tasks-project-modal-textarea playground-tasks-issue-modal-textarea",
+                  value: issueComposerDraft.description || "",
+                  placeholder: "Describe the expected outcome, context, constraints, and acceptance criteria.",
+                  onChange: (event) => updateIssueComposerField("description", event.target.value),
+                }), { full: true }),
+                React.createElement("div", { className: "playground-tasks-issue-modal-grid" },
+                  renderIssueComposerField("Ticket number", React.createElement("input", {
+                    type: "text",
+                    className: "playground-tasks-issue-modal-input",
+                    value: issueComposerDraft.ticketNumber || "",
+                    placeholder: "Auto",
+                    onChange: (event) => updateIssueComposerField("ticketNumber", event.target.value),
+                  })),
+                  renderIssueComposerField("Type", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: normalizedIssueType,
+                    onChange: (event) => {
+                      const nextType = normalizePlaygroundTaskType(event.target.value);
+                      updateIssueComposerDraft((current) => ({
+                        ...current,
+                        taskType: nextType,
+                        parentTaskId: nextType === "subtask" ? current.parentTaskId : null,
+                      }));
+                    },
+                  },
+                    PLAYGROUND_TASK_TYPE_OPTIONS.map((option) =>
+                      React.createElement("option", { key: option.id, value: option.id }, option.label)
+                    )
+                  )),
+                  normalizedIssueType === "subtask"
+                    ? renderIssueComposerField("Parent ticket", React.createElement("select", {
+                        className: "playground-tasks-issue-modal-select",
+                        value: issueComposerDraft.parentTaskId || "",
+                        onChange: (event) => updateIssueComposerField("parentTaskId", event.target.value || null),
+                      },
+                        React.createElement("option", { value: "" }, "Choose parent"),
+                        parentTicketCandidates.map((task) =>
+                          React.createElement("option", { key: task.id, value: task.id },
+                            (taskTicketNumbersById[task.id] || task.ticketNumber || "000") + " - " + (task.title || "Untitled Task")
+                          )
+                        )
+                      ))
+                    : null,
+                  renderIssueComposerField("Status", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: issueComposerDraft.status || "todo",
+                    onChange: (event) => {
+                      const nextStatus = event.target.value;
+                      updateIssueComposerDraft((current) => ({
+                        ...current,
+                        status: nextStatus,
+                        dependencyIds: nextStatus === "blocked" ? normalizePlaygroundIdList(current.dependencyIds) : [],
+                        completedAt: nextStatus === "done" ? (current.completedAt || new Date().toISOString()) : null,
+                      }));
+                    },
+                  },
+                    PLAYGROUND_TASK_STATUS_OPTIONS.map((option) =>
+                      React.createElement("option", { key: option.id, value: option.id }, option.label)
+                    )
+                  )),
+                  renderIssueComposerField("Priority", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: issueComposerDraft.priority || "medium",
+                    onChange: (event) => updateIssueComposerField("priority", event.target.value),
+                  },
+                    PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) =>
+                      React.createElement("option", { key: option.id, value: option.id }, option.label)
+                    )
+                  )),
+                  renderIssueComposerField("Color", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: getPlaygroundTaskColorId(issueComposerDraft.taskColor),
+                    onChange: (event) => updateIssueComposerField("taskColor", event.target.value),
+                  },
+                    PLAYGROUND_TASK_COLOR_OPTIONS.map((option) =>
+                      React.createElement("option", { key: option.id, value: option.id }, option.label)
+                    )
+                  )),
+                  renderIssueComposerField("Milestone", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: issueComposerDraft.releaseId || "",
+                    onChange: (event) => updateIssueComposerField("releaseId", event.target.value || null),
+                  },
+                    React.createElement("option", { value: "" }, "None"),
+                    releases
+                      .slice()
+                      .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
+                      .map((release) =>
+                        React.createElement("option", { key: release.id, value: release.id }, release.name || "Untitled Milestone")
+                      )
+                  )),
+                  renderIssueComposerField("Sprint", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: issueComposerDraft.sprintId || "",
+                    onChange: (event) => updateIssueComposerField("sprintId", event.target.value || null),
+                  },
+                    React.createElement("option", { value: "" }, "None"),
+                    sprints
+                      .slice()
+                      .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
+                      .map((sprint) =>
+                        React.createElement("option", { key: sprint.id, value: sprint.id }, sprint.name || "Untitled Sprint")
+                      )
+                  )),
+                  renderIssueComposerField("Assignee", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: issueComposerDraft.assigneeAgentId || "",
+                    onChange: (event) => updateIssueComposerField("assigneeAgentId", event.target.value || null),
+                  },
+                    React.createElement("option", { value: "" }, "Unassigned"),
+                    assignableActors.map((actor) =>
+                      React.createElement("option", { key: actor.id, value: actor.id }, getTaskAssigneeOptionLabel(actor))
+                    )
+                  )),
+                  renderIssueComposerField("Reviewer", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: issueComposerDraft.reviewRequired ? (issueComposerDraft.reviewerAgentId || "") : "",
+                    disabled: issueComposerDraft.reviewRequired !== true,
+                    onChange: (event) => updateIssueComposerField("reviewerAgentId", event.target.value || null),
+                  },
+                    React.createElement("option", { value: "" }, "No specific reviewer"),
+                    assignableActors.map((actor) =>
+                      React.createElement("option", { key: actor.id, value: actor.id }, getTaskAssigneeOptionLabel(actor))
+                    )
+                  )),
+                  renderIssueComposerField("Review", React.createElement("span", { className: "playground-tasks-issue-modal-check-row" },
+                    React.createElement("input", {
+                      type: "checkbox",
+                      checked: issueComposerDraft.reviewRequired === true,
+                      onChange: (event) => updateIssueComposerDraft((current) => ({
+                        ...current,
+                        reviewRequired: event.target.checked,
+                        reviewerAgentId: event.target.checked ? current.reviewerAgentId : null,
+                      })),
+                    }),
+                    React.createElement("span", null, "Require review")
+                  )),
+                  renderIssueComposerField("Environment", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: issueComposerDraft.environmentId || "",
+                    onChange: (event) => updateIssueComposerField("environmentId", event.target.value || null),
+                  },
+                    React.createElement("option", { value: "" }, "Project Default"),
+                    availableBacklogEnvironments.map((environment) =>
+                      React.createElement("option", { key: environment.id, value: environment.id }, environment.name + (environment.isDefault ? " (Default)" : ""))
+                    )
+                  )),
+                  renderIssueComposerField("Blocked by", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: selectedDependencyId,
+                    onChange: (event) => {
+                      const nextDependencyId = event.target.value || "";
+                      updateIssueComposerDraft((current) => ({
+                        ...current,
+                        dependencyIds: nextDependencyId ? [nextDependencyId] : [],
+                        status: nextDependencyId ? "blocked" : (current.status === "blocked" ? "todo" : current.status),
+                      }));
+                    },
+                  },
+                    React.createElement("option", { value: "" }, "None"),
+                    dependencyCandidates.map((task) =>
+                      React.createElement("option", { key: task.id, value: task.id },
+                        (taskTicketNumbersById[task.id] || task.ticketNumber || "000") + " - " + (task.title || "Untitled Task")
+                      )
+                    )
+                  )),
+                  renderIssueComposerField("Schedule", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: scheduleMode,
+                    onChange: (event) => {
+                      const nextMode = event.target.value;
+                      updateIssueComposerDraft((current) => ({
+                        ...current,
+                        scheduledStartAt: nextMode === "none" ? null : current.scheduledStartAt,
+                        scheduledEndAt: nextMode === "none" ? null : current.scheduledEndAt,
+                        scheduleType: nextMode === "recurring" ? "recurring" : "one-time",
+                        cronExpression: nextMode === "recurring"
+                          ? (current.cronExpression || buildPlaygroundCronExpressionForPreset("daily", current.scheduledStartAt || Date.now()))
+                          : null,
+                      }));
+                    },
+                  },
+                    React.createElement("option", { value: "none" }, "None"),
+                    React.createElement("option", { value: "one-time" }, "One-time"),
+                    React.createElement("option", { value: "recurring" }, "Recurring")
+                  )),
+                  renderIssueComposerField("Start", React.createElement("input", {
+                    type: "datetime-local",
+                    className: "playground-tasks-issue-modal-input",
+                    value: toPlaygroundDatetimeLocalValue(issueComposerDraft.scheduledStartAt),
+                    onChange: (event) => {
+                      const nextStart = fromPlaygroundDatetimeLocalValue(event.target.value);
+                      updateIssueComposerDraft((current) => ({
+                        ...current,
+                        scheduledStartAt: nextStart,
+                        scheduleType: current.scheduleType === "recurring" ? "recurring" : "one-time",
+                        cronExpression: current.scheduleType === "recurring"
+                          ? buildPlaygroundCronExpressionForPreset(getPlaygroundTaskSchedulePresetId(current.cronExpression) || "daily", nextStart || Date.now())
+                          : null,
+                      }));
+                    },
+                  })),
+                  renderIssueComposerField("Recurrence", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: recurrencePresetId,
+                    disabled: scheduleMode !== "recurring",
+                    onChange: (event) => updateIssueComposerField(
+                      "cronExpression",
+                      buildPlaygroundCronExpressionForPreset(event.target.value, issueComposerDraft.scheduledStartAt || Date.now())
+                    ),
+                  },
+                    PLAYGROUND_TASK_SCHEDULE_PRESETS.map((preset) =>
+                      React.createElement("option", { key: preset.id, value: preset.id }, preset.label)
+                    )
+                  )),
+                  renderIssueComposerField("Due", React.createElement("input", {
+                    type: "datetime-local",
+                    className: "playground-tasks-issue-modal-input",
+                    value: toPlaygroundDatetimeLocalValue(issueComposerDraft.dueAt),
+                    onChange: (event) => updateIssueComposerField("dueAt", fromPlaygroundDatetimeLocalValue(event.target.value)),
+                  }))
+                ),
+                issueComposerSaveState.error
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, issueComposerSaveState.error)
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button",
+                  onClick: () => closeProjectIssueComposer(),
+                  disabled: issueComposerSaveState.isSaving,
+                }, "Cancel"),
+                React.createElement("button", {
+                  type: "submit",
+                  className: "playground-environments-action-button is-primary",
+                  disabled: issueComposerSaveState.isSaving || !String(issueComposerDraft.title || "").trim(),
+                }, issueComposerSaveState.isSaving ? "Creating..." : "Create Issue")
+              )
+            )
+          );
+
+          return typeof document !== "undefined" && document.body
+            ? createPortal(modalElement, document.body)
+            : modalElement;
+        }
+
         function renderProjectComposerDialog(options = {}) {
           const embedded = options?.embedded === true;
           if (!projectComposerOpen || (!embedded && missionControlSetupOpen)) {
@@ -131430,6 +132228,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             renderTaskParentPickerDialog(),
             renderTaskEnvironmentChangeDialog(),
             renderTaskDeleteDialog(),
+            renderProjectIssueComposerDialog(),
             renderProjectComposerDialog(),
             renderReleaseComposerDialog(),
             renderCalendarUpgradeModal(),
@@ -133960,6 +134759,17 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [tasksProjectBackRequestToken, setTasksProjectBackRequestToken] = useState(0);
         const [tasksProjectViewRequest, setTasksProjectViewRequest] = useState(null);
         const [tasksProjectSettingsRequestToken, setTasksProjectSettingsRequestToken] = useState(0);
+        const [tasksProjectIssueRequest, setTasksProjectIssueRequest] = useState(null);
+        const [topNavIssueComposerOpen, setTopNavIssueComposerOpen] = useState(false);
+        const [topNavIssueDraft, setTopNavIssueDraft] = useState(buildPlaygroundDefaultTaskDraft());
+        const [topNavIssueSaveState, setTopNavIssueSaveState] = useState({
+          isSaving: false,
+          error: "",
+        });
+        const tasksProjectIssueCreateHandlerRef = useRef(null);
+        const handleProjectIssueCreateHandlerChange = useCallback((handler) => {
+          tasksProjectIssueCreateHandlerRef.current = typeof handler === "function" ? handler : null;
+        }, []);
         const [pluginDetailTab, setPluginDetailTab] = useState("general");
         const [pluginDetailCapabilityIndex, setPluginDetailCapabilityIndex] = useState(0);
         const [pluginDetailCapabilityOutgoingIndex, setPluginDetailCapabilityOutgoingIndex] = useState(null);
@@ -155749,6 +156559,25 @@ ${PROJECT_OVERVIEW_SCRIPT}
           ).trim();
         }
 
+        function getMetronomeRunTraceThreadDisplayTitle(step, thread) {
+          const safeStep = getMetronomeRunTraceRecord(step);
+          const safeThread = getMetronomeRunTraceRecord(thread);
+          const stepOutput = getMetronomeRunTraceStepOutputRecord(safeStep);
+          const outputThread = getMetronomeRunTraceRecord(stepOutput.thread || stepOutput.threadRecord || stepOutput.thread_record);
+          return String(
+            safeThread.title
+            || safeThread.threadTitle
+            || safeThread.thread_title
+            || safeThread.name
+            || safeStep.threadTitle
+            || safeStep.thread_title
+            || outputThread.title
+            || outputThread.threadTitle
+            || outputThread.thread_title
+            || getMetronomeRunTraceThreadStepTitle(safeStep)
+          ).trim();
+        }
+
         function getMetronomeRunTraceStepInput(step) {
           if (step?.input !== null && typeof step?.input !== "undefined") return step.input;
           const output = step?.output && typeof step.output === "object" ? step.output : {};
@@ -155858,7 +156687,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
               })
             : null;
           const StepIcon = getMetronomeRunTraceThreadStepIcon(step);
-          const title = getMetronomeRunTraceThreadStepTitle(step);
+          const title = isThreadStep
+            ? getMetronomeRunTraceThreadDisplayTitle(step, thread)
+            : getMetronomeRunTraceThreadStepTitle(step);
           const readableOutputText = kind === "trigger" || kind === "condition"
             ? ""
             : isThreadStep
@@ -155875,26 +156706,35 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const conditionInputText = kind === "condition" ? formatMetronomeRunValue(conditionInput) : "";
           const conditionBranchLabel = kind === "condition" ? getMetronomeRunTraceConditionBranchLabel(step) : "";
           const conditionReason = kind === "condition" ? getMetronomeRunTraceConditionReason(step) : "";
+          const runtimeMetaContent = isThreadStep
+            ? renderMetronomeRunTraceThreadRuntimeMeta(runtimeMeta, { showSeparator: false })
+            : null;
+          const stepIconContent = isThreadStep
+            ? renderMetronomeRunTraceThreadStepAvatar(runtimeMeta)
+            : null;
           return React.createElement("div", { className: "playground-metronome-run-trace-step playground-metronome-run-thread-log-step" },
             React.createElement("div", { className: "playground-metronome-run-trace-heading" },
               React.createElement("span", { className: "playground-metronome-run-trace-icon" },
-                React.createElement(StepIcon, { width: 13, height: 13, strokeWidth: 1.9 })
+                stepIconContent || React.createElement(StepIcon, { width: 13, height: 13, strokeWidth: 1.9 })
               ),
               React.createElement("div", { className: "playground-metronome-run-trace-title-group" },
-                React.createElement("div", { className: "playground-metronome-run-trace-title" }, title),
-                threadId
+                React.createElement("div", { className: "playground-metronome-run-thread-title-line" },
+                  React.createElement("div", { className: "playground-metronome-run-trace-title playground-metronome-run-thread-title-text" }, title),
+                  threadId
+                    ? React.createElement("div", { className: "playground-metronome-run-thread-meta-row" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-metronome-run-thread-link",
+                          onClick: () => handleThreadSelect(threadId),
+                        }, "Show thread")
+                      )
+                    : null
+                ),
+                runtimeMetaContent
                   ? React.createElement("div", { className: "playground-metronome-run-thread-meta-row" },
-                      React.createElement("span", { className: "playground-metronome-run-thread-id" }, threadId),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-metronome-run-thread-link",
-                        onClick: () => handleThreadSelect(threadId),
-                      }, "Show thread")
+                      runtimeMetaContent
                     )
                   : null,
-                isThreadStep
-                  ? renderMetronomeRunTraceThreadRuntimeMeta(runtimeMeta)
-                  : null
               )
             ),
             summary
@@ -155971,7 +156811,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   onClick: () => setMetronomeRunTraceWorkExpanded((current) => !current),
                 },
                   React.createElement("span", { className: "tb-work-label" },
-                    React.createElement("span", null, status === "loading" ? "Loading Metronome run" : "Metronome worked"),
+                    React.createElement("span", null, status === "loading" ? "Loading Metronome run" : "Metronome Working Logs"),
                     isExpanded
                       ? React.createElement(ChevronUp, { className: "tb-chevron", strokeWidth: 1.8 })
                       : React.createElement(ChevronDown, { className: "tb-chevron", strokeWidth: 1.8 })
@@ -157086,6 +157926,363 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
+        function getTopNavIssueProjectId() {
+          return String(tasksHeaderState.projectId || latestInteractedProjectId || "").trim();
+        }
+
+        function getDefaultTopNavIssueAssigneeId() {
+          const preferredAgent = getPlaygroundPreferredDefaultAgent(runtimeAgents);
+          return preferredAgent?.id || runtimeAgents[0]?.id || "";
+        }
+
+        function getDefaultTopNavIssueEnvironmentId() {
+          const currentEnvironmentId = String(resolvedEnvironmentId || environmentId || "").trim();
+          if (currentEnvironmentId && runtimeEnvironments.some((item) => item?.id === currentEnvironmentId)) {
+            return currentEnvironmentId;
+          }
+          return runtimeEnvironments.find((item) => item?.isDefault)?.id
+            || runtimeEnvironments[0]?.id
+            || "";
+        }
+
+        function buildTopNavIssueDraft() {
+          const now = new Date().toISOString();
+          return normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata({
+            ...buildPlaygroundDefaultTaskDraft(),
+            projectId: getTopNavIssueProjectId() || null,
+            title: "",
+            description: "",
+            taskType: "task",
+            parentTaskId: null,
+            status: "todo",
+            priority: "medium",
+            taskColor: PLAYGROUND_TASK_COLOR_OPTIONS[0].id,
+            assigneeAgentId: getDefaultTopNavIssueAssigneeId() || null,
+            reviewRequired: false,
+            reviewerAgentId: null,
+            environmentId: getDefaultTopNavIssueEnvironmentId() || null,
+            createdAt: now,
+            updatedAt: now,
+            metadata: {
+              runnerPlayground: {
+                source: "top_nav_issue_composer",
+              },
+            },
+          }));
+        }
+
+        function openTopNavIssueComposer() {
+          setTopNavIssueDraft(buildTopNavIssueDraft());
+          setTopNavIssueSaveState({
+            isSaving: false,
+            error: "",
+          });
+          setTopNavIssueComposerOpen(true);
+        }
+
+        function closeTopNavIssueComposer() {
+          if (topNavIssueSaveState.isSaving) {
+            return;
+          }
+          setTopNavIssueComposerOpen(false);
+          setTopNavIssueDraft(buildPlaygroundDefaultTaskDraft());
+          setTopNavIssueSaveState({
+            isSaving: false,
+            error: "",
+          });
+        }
+
+        function updateTopNavIssueDraft(updater) {
+          setTopNavIssueDraft((current) => normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata(
+            typeof updater === "function" ? updater(current) : updater
+          )));
+          setTopNavIssueSaveState((current) => ({
+            ...current,
+            error: "",
+          }));
+        }
+
+        function updateTopNavIssueField(field, value) {
+          updateTopNavIssueDraft((current) => ({
+            ...current,
+            [field]: value,
+          }));
+        }
+
+        function buildTopNavIssuePayload(taskRecord, projectIdForIssue) {
+          const mergedTask = normalizePlaygroundTaskRecord({
+            ...normalizePlaygroundTaskRecord(taskRecord),
+            projectId: projectIdForIssue,
+          });
+          const metadata = buildPlaygroundTaskMetadata(mergedTask, {
+            ticketNumber: mergedTask.ticketNumber,
+            taskType: mergedTask.taskType,
+            parentTaskId: mergedTask.parentTaskId,
+            assigneeAgentId: mergedTask.assigneeAgentId,
+            reviewRequired: mergedTask.reviewRequired,
+            reviewerAgentId: mergedTask.reviewerAgentId,
+            environmentId: mergedTask.environmentId,
+            taskColor: mergedTask.taskColor,
+            scheduleType: mergedTask.scheduleType,
+            cronExpression: mergedTask.cronExpression,
+            scheduleTimezone: mergedTask.scheduleTimezone,
+            scheduleEnabled: mergedTask.scheduleEnabled,
+            attachments: mergedTask.attachments,
+            enabledSkills: mergedTask.enabledSkills,
+            connectors: mergedTask.connectors,
+          });
+          return {
+            projectId: projectIdForIssue,
+            releaseId: mergedTask.releaseId,
+            ticketNumber: mergedTask.ticketNumber,
+            type: mergedTask.taskType,
+            parentTaskId: null,
+            title: mergedTask.title,
+            description: mergedTask.description,
+            status: mergedTask.status,
+            priority: mergedTask.priority,
+            sprintId: mergedTask.sprintId,
+            assigneeAgentId: isPlaygroundHumanAssigneeId(mergedTask.assigneeAgentId) ? null : mergedTask.assigneeAgentId,
+            reviewRequired: mergedTask.reviewRequired,
+            reviewerAgentId: mergedTask.reviewerAgentId,
+            environmentId: mergedTask.environmentId,
+            dependencyIds: mergedTask.dependencyIds,
+            linkedThreadIds: mergedTask.linkedThreadIds,
+            lastStartedThreadId: mergedTask.lastStartedThreadId,
+            scheduledStartAt: mergedTask.scheduledStartAt,
+            scheduledEndAt: mergedTask.scheduledEndAt,
+            dueAt: mergedTask.dueAt,
+            completedAt: mergedTask.completedAt,
+            sortOrder: mergedTask.sortOrder,
+            metadata,
+          };
+        }
+
+        async function handleSaveTopNavIssue(event) {
+          event?.preventDefault?.();
+          if (topNavIssueSaveState.isSaving) {
+            return;
+          }
+          const projectIdForIssue = getTopNavIssueProjectId();
+          const title = normalizePlaygroundEditableTaskTitle(topNavIssueDraft?.title, "");
+          if (!projectIdForIssue) {
+            setTopNavIssueSaveState({ isSaving: false, error: "Project is unavailable." });
+            return;
+          }
+          if (!title) {
+            setTopNavIssueSaveState({ isSaving: false, error: "Issue title is required." });
+            return;
+          }
+          const now = new Date().toISOString();
+          const status = PLAYGROUND_TASK_STATUS_OPTIONS.some((option) => option.id === topNavIssueDraft?.status)
+            ? topNavIssueDraft.status
+            : "todo";
+          const taskDraft = normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata({
+            ...topNavIssueDraft,
+            id: "",
+            projectId: projectIdForIssue,
+            title,
+            taskType: normalizePlaygroundTaskType(topNavIssueDraft?.taskType) === "loop" ? "loop" : "task",
+            parentTaskId: null,
+            priority: PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === topNavIssueDraft?.priority) ? topNavIssueDraft.priority : "medium",
+            status,
+            reviewRequired: topNavIssueDraft?.reviewRequired === true,
+            reviewerAgentId: topNavIssueDraft?.reviewRequired === true ? (topNavIssueDraft?.reviewerAgentId || null) : null,
+            environmentId: topNavIssueDraft?.environmentId || null,
+            completedAt: status === "done" ? now : null,
+            sortOrder: Date.now(),
+            createdAt: now,
+            updatedAt: now,
+          }));
+
+          setTopNavIssueSaveState({ isSaving: true, error: "" });
+          try {
+            const response = await fetch(proxyBackendBase + "/tasks", {
+              method: "POST",
+              headers: {
+                ...authRequestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(buildTopNavIssuePayload(taskDraft, projectIdForIssue)),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create issue.");
+            }
+            const createdTask = getPlaygroundTaskResponseRecord(data);
+            setTopNavIssueComposerOpen(false);
+            setTopNavIssueDraft(buildPlaygroundDefaultTaskDraft());
+            setTopNavIssueSaveState({ isSaving: false, error: "" });
+            setLatestInteractedProjectId(projectIdForIssue);
+            setTasksPageNavigationRequest({
+              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              projectId: projectIdForIssue,
+              view: "backlog",
+              taskId: createdTask?.id || "",
+            });
+            setActivePage("tasks");
+          } catch (error) {
+            setTopNavIssueSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to create issue.",
+            });
+          }
+        }
+
+        function renderTopNavIssueField(label, control, options = {}) {
+          return React.createElement("label", {
+              className: "playground-tasks-project-modal-field playground-tasks-issue-modal-field" + (options.full ? " is-full" : ""),
+            },
+            React.createElement("div", { className: "playground-tasks-project-modal-label" }, label),
+            control
+          );
+        }
+
+        function renderTopNavIssueComposerDialog() {
+          if (!topNavIssueComposerOpen) {
+            return null;
+          }
+          const assignableActors = runtimeAgents.concat(buildPlaygroundHumanAssigneeOption());
+          const modalElement = React.createElement("div", {
+              className: "playground-tasks-project-modal-backdrop",
+              onClick: () => closeTopNavIssueComposer(),
+            },
+            React.createElement("form", {
+                className: "playground-tasks-project-modal playground-tasks-issue-modal",
+                role: "dialog",
+                "aria-modal": "true",
+                "aria-label": "New issue",
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => void handleSaveTopNavIssue(event),
+              },
+              React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                    React.createElement(Bookmark, { width: 18, height: 18, strokeWidth: 1.9 })
+                  ),
+                  React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "New Issue")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                  onClick: () => closeTopNavIssueComposer(),
+                  title: "Close",
+                  disabled: topNavIssueSaveState.isSaving,
+                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+              ),
+              React.createElement("div", { className: "playground-tasks-issue-modal-body" },
+                renderTopNavIssueField("Title", React.createElement("input", {
+                  type: "text",
+                  className: "playground-tasks-issue-modal-input",
+                  value: topNavIssueDraft.title || "",
+                  placeholder: "Issue title",
+                  autoFocus: true,
+                  onChange: (event) => updateTopNavIssueField("title", event.target.value),
+                }), { full: true }),
+                renderTopNavIssueField("Description", React.createElement("textarea", {
+                  className: "playground-tasks-project-modal-textarea playground-tasks-issue-modal-textarea",
+                  value: topNavIssueDraft.description || "",
+                  placeholder: "Describe the expected outcome, context, constraints, and acceptance criteria.",
+                  onChange: (event) => updateTopNavIssueField("description", event.target.value),
+                }), { full: true }),
+                React.createElement("div", { className: "playground-tasks-issue-modal-grid" },
+                  renderTopNavIssueField("Type", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: normalizePlaygroundTaskType(topNavIssueDraft.taskType) === "loop" ? "loop" : "task",
+                    onChange: (event) => updateTopNavIssueField("taskType", event.target.value),
+                  },
+                    PLAYGROUND_TASK_TYPE_OPTIONS
+                      .filter((option) => option.id !== "subtask")
+                      .map((option) => React.createElement("option", { key: option.id, value: option.id }, option.label))
+                  )),
+                  renderTopNavIssueField("Status", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: topNavIssueDraft.status || "todo",
+                    onChange: (event) => updateTopNavIssueField("status", event.target.value),
+                  },
+                    PLAYGROUND_TASK_STATUS_OPTIONS.map((option) => React.createElement("option", { key: option.id, value: option.id }, option.label))
+                  )),
+                  renderTopNavIssueField("Priority", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: topNavIssueDraft.priority || "medium",
+                    onChange: (event) => updateTopNavIssueField("priority", event.target.value),
+                  },
+                    PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) => React.createElement("option", { key: option.id, value: option.id }, option.label))
+                  )),
+                  renderTopNavIssueField("Assignee", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: topNavIssueDraft.assigneeAgentId || "",
+                    onChange: (event) => updateTopNavIssueField("assigneeAgentId", event.target.value || null),
+                  },
+                    React.createElement("option", { value: "" }, "Unassigned"),
+                    assignableActors.map((actor) => React.createElement("option", { key: actor.id, value: actor.id },
+                      isPlaygroundHumanAssigneeId(actor.id) ? "Me" : (actor.name || actor.id)
+                    ))
+                  )),
+                  renderTopNavIssueField("Review", React.createElement("span", { className: "playground-tasks-issue-modal-check-row" },
+                    React.createElement("input", {
+                      type: "checkbox",
+                      checked: topNavIssueDraft.reviewRequired === true,
+                      onChange: (event) => updateTopNavIssueDraft((current) => ({
+                        ...current,
+                        reviewRequired: event.target.checked,
+                        reviewerAgentId: event.target.checked ? current.reviewerAgentId : null,
+                      })),
+                    }),
+                    React.createElement("span", null, "Require review")
+                  )),
+                  renderTopNavIssueField("Reviewer", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: topNavIssueDraft.reviewRequired ? (topNavIssueDraft.reviewerAgentId || "") : "",
+                    disabled: topNavIssueDraft.reviewRequired !== true,
+                    onChange: (event) => updateTopNavIssueField("reviewerAgentId", event.target.value || null),
+                  },
+                    React.createElement("option", { value: "" }, "No specific reviewer"),
+                    assignableActors.map((actor) => React.createElement("option", { key: actor.id, value: actor.id },
+                      isPlaygroundHumanAssigneeId(actor.id) ? "Me" : (actor.name || actor.id)
+                    ))
+                  )),
+                  renderTopNavIssueField("Computer", React.createElement("select", {
+                    className: "playground-tasks-issue-modal-select",
+                    value: topNavIssueDraft.environmentId || "",
+                    onChange: (event) => updateTopNavIssueField("environmentId", event.target.value || null),
+                  },
+                    React.createElement("option", { value: "" }, "Project default"),
+                    runtimeEnvironments.map((environment) => React.createElement("option", { key: environment.id, value: environment.id },
+                      environment.name || environment.id
+                    ))
+                  )),
+                  renderTopNavIssueField("Due", React.createElement("input", {
+                    type: "datetime-local",
+                    className: "playground-tasks-issue-modal-input",
+                    value: toPlaygroundDatetimeLocalValue(topNavIssueDraft.dueAt),
+                    onChange: (event) => updateTopNavIssueField("dueAt", fromPlaygroundDatetimeLocalValue(event.target.value)),
+                  }))
+                ),
+                topNavIssueSaveState.error
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, topNavIssueSaveState.error)
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button",
+                  onClick: () => closeTopNavIssueComposer(),
+                  disabled: topNavIssueSaveState.isSaving,
+                }, "Cancel"),
+                React.createElement("button", {
+                  type: "submit",
+                  className: "playground-environments-action-button is-primary",
+                  disabled: topNavIssueSaveState.isSaving || !String(topNavIssueDraft.title || "").trim(),
+                }, topNavIssueSaveState.isSaving ? "Creating..." : "Create Issue")
+              )
+            )
+          );
+          return typeof document !== "undefined" && document.body
+            ? createPortal(modalElement, document.body)
+            : modalElement;
+        }
+
         function renderTasksPageNav() {
           const isProjectDetailView = tasksHeaderState.mode === "project";
           const projectTitle = String(tasksHeaderState.title || "").trim() || "Project";
@@ -157126,7 +158323,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 )
               : null,
             extraActions: isProjectDetailView
-              ? null
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button is-backlog-sort playground-tasks-nav-issue-button",
+                  "aria-label": "New issue",
+                  title: "New issue",
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    openTopNavIssueComposer();
+                  },
+                },
+                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  React.createElement("span", null, "Issue")
+                )
               : React.createElement("button", {
                   type: "button",
                   className: "playground-content-menu-button",
@@ -159861,6 +161071,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             renderThreadRenameModal(),
             renderThreadProjectPickerModal(),
             renderWelcomeProjectPickerModal(),
+            renderTopNavIssueComposerDialog(),
             renderedAccountMenu
               ? React.createElement("div", {
                   className: "account-menu-scrim",
@@ -160830,9 +162041,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             standaloneMode: activePage === "calendar" ? "calendar" : "",
                             useUnifiedProjectNav: activePage === "tasks",
                             onTasksHeaderChange: setTasksHeaderState,
+                            onProjectIssueCreateHandlerChange: handleProjectIssueCreateHandlerChange,
                             projectNavBackRequestToken: tasksProjectBackRequestToken,
                             projectNavViewRequest: tasksProjectViewRequest,
                             projectNavSettingsRequestToken: tasksProjectSettingsRequestToken,
+                            projectNavIssueRequest: tasksProjectIssueRequest,
                           })
                           : hasDemoAccess
                             ? renderDemoFeaturePage("tasks")

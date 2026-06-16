@@ -6347,6 +6347,21 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               { id: "invoke_function", label: "Invoke function" },
             ],
           },
+          firecrawl: {
+            label: "Firecrawl",
+            copy: "Search, scrape, parse, and extract structured data for downstream workflow nodes.",
+            color: "#FF4D00",
+            gradient: "linear-gradient(180deg, #FF4D00 0%, #B83200 100%)",
+            iconColor: "#fff",
+            iconShadow: "drop-shadow(0px 0px 3px rgba(0,0,0,0.5))",
+            Icon: Flame,
+            subtypes: [
+              { id: "web_search", label: "Web Search" },
+              { id: "scrape_url", label: "Scrape URL" },
+              { id: "parse_document", label: "Parse Document" },
+              { id: "extract_data", label: "Extract Structured Data" },
+            ],
+          },
           database: {
             label: "Database",
             copy: "Insert, update, or delete documents in a Computer Agents database resource.",
@@ -6356,6 +6371,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             Icon: Database,
             subtypes: [
               { id: "insert_document", label: "Insert document" },
+              { id: "insert_many_documents", label: "Insert many documents" },
+              { id: "upsert_many_documents", label: "Upsert many documents" },
               { id: "update_document", label: "Update document" },
               { id: "delete_document", label: "Delete document" },
             ],
@@ -6382,6 +6399,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               { id: "workflow_context_contains", label: "Workflow context contains" },
               { id: "project_tickets", label: "Project tickets" },
               { id: "database_field", label: "Database field" },
+              { id: "database_documents", label: "Database documents" },
             ],
           },
           approval: {
@@ -6470,6 +6488,12 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	              { id: "metronome", kind: "metronome", label: "Metronome" },
 	            ],
 	          },
+            {
+              title: "Data & Web",
+              items: [
+                { id: "firecrawl", kind: "firecrawl", label: "Firecrawl" },
+              ],
+            },
 	          {
 	            title: "Logic",
 	            items: [
@@ -6544,6 +6568,91 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           return normalized === "latest" || normalized === "latest_only" || normalized === "recent"
             ? "latest"
             : "all";
+        }
+
+        const METRONOME_WORKFLOW_DATA_BINDING_OPTIONS = [
+          { id: "last.text", label: "Previous node text" },
+          { id: "last.json", label: "Previous node JSON" },
+          { id: "last.urls", label: "Previous node URLs" },
+          { id: "last.documents", label: "Previous node documents" },
+          { id: "last.records", label: "Previous node records" },
+          { id: "last.files", label: "Previous node files" },
+          { id: "workflow.context", label: "Full workflow context" },
+          { id: "trigger.input", label: "Trigger input" },
+        ];
+
+        const METRONOME_THREAD_OUTPUT_FIELDS = ["text", "json", "urls", "files", "records", "artifacts"];
+
+        function normalizeMetronomeDataBinding(value, fallback = "last.text") {
+          const normalized = String(value || "").trim();
+          if (normalized) return normalized;
+          return String(fallback || "last.text");
+        }
+
+        function normalizeMetronomeFirecrawlOperation(value) {
+          const normalized = String(value || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+          return ["web_search", "scrape_url", "parse_document", "extract_data"].includes(normalized)
+            ? normalized
+            : "web_search";
+        }
+
+        function createDefaultMetronomeThreadOutputConfig(overrides = {}) {
+          const outputMode = String(overrides.outputMode || overrides.output_mode || "").trim() === "structured"
+            ? "structured"
+            : "text";
+          return {
+            outputMode,
+            requireJsonOutput: Boolean(overrides.requireJsonOutput || overrides.require_json_output),
+            outputFieldsJson: String(overrides.outputFieldsJson || overrides.output_fields_json || JSON.stringify(METRONOME_THREAD_OUTPUT_FIELDS, null, 2)),
+            outputContractJson: String(overrides.outputContractJson || overrides.output_contract_json || "{\n  \"summary\": \"\",\n  \"urls\": [],\n  \"records\": [],\n  \"artifacts\": []\n}"),
+          };
+        }
+
+        function createDefaultMetronomeFirecrawlConfig(operation, overrides = {}) {
+          const normalizedOperation = normalizeMetronomeFirecrawlOperation(operation || overrides.operation);
+          const base = {
+            operation: normalizedOperation,
+            credentialRef: String(overrides.credentialRef || overrides.credential_ref || "workspace:FIRECRAWL_API_KEY"),
+            credentialVaultId: String(overrides.credentialVaultId || overrides.credential_vault_id || ""),
+            credentialVaultName: String(overrides.credentialVaultName || overrides.credential_vault_name || ""),
+            credentialSecretId: String(overrides.credentialSecretId || overrides.credential_secret_id || ""),
+            credentialSecretName: String(overrides.credentialSecretName || overrides.credential_secret_name || ""),
+            inputBinding: normalizeMetronomeDataBinding(overrides.inputBinding || overrides.input_binding, normalizedOperation === "web_search" ? "last.text" : "last.urls"),
+            query: String(overrides.query || ""),
+            url: String(overrides.url || ""),
+            filePath: String(overrides.filePath || overrides.file_path || ""),
+            prompt: String(overrides.prompt || ""),
+            schemaJson: String(overrides.schemaJson || overrides.schema_json || "{\n  \"type\": \"object\",\n  \"properties\": {}\n}"),
+            limit: Number.isFinite(Number(overrides.limit)) ? Number(overrides.limit) : 5,
+            formats: String(overrides.formats || "markdown,html"),
+            saveArtifacts: overrides.saveArtifacts === undefined && overrides.save_artifacts === undefined ? true : Boolean(overrides.saveArtifacts ?? overrides.save_artifacts),
+            outputKey: String(overrides.outputKey || overrides.output_key || "firecrawl"),
+            ...overrides,
+          };
+          return {
+            ...base,
+            operation: normalizedOperation,
+            inputBinding: normalizeMetronomeDataBinding(base.inputBinding, normalizedOperation === "web_search" ? "last.text" : "last.urls"),
+          };
+        }
+
+        function createDefaultMetronomeDatabaseConfig(operation, overrides = {}) {
+          const normalizedOperation = String(operation || overrides.operation || "insert_document").trim() || "insert_document";
+          const isBulk = normalizedOperation === "insert_many_documents" || normalizedOperation === "upsert_many_documents";
+          return {
+            operation: normalizedOperation,
+            databaseId: "",
+            databaseName: "",
+            collection: "",
+            documentId: "",
+            documentJson: "{\n  \"source\": \"metronome\",\n  \"payload\": \"{{ input }}\"\n}",
+            inputBinding: normalizeMetronomeDataBinding(overrides.inputBinding || overrides.input_binding, isBulk ? "last.records" : "last.json"),
+            recordsBinding: normalizeMetronomeDataBinding(overrides.recordsBinding || overrides.records_binding, "last.records"),
+            documentTemplateJson: String(overrides.documentTemplateJson || overrides.document_template_json || "{\n  \"source\": \"metronome\",\n  \"record\": \"{{ record }}\"\n}"),
+            upsertKey: String(overrides.upsertKey || overrides.upsert_key || "id"),
+            ...overrides,
+            operation: normalizedOperation,
+          };
         }
 
         function isMetronomeDatabasePlainObject(value) {
@@ -7155,7 +7264,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
         }
 
         const METRONOME_CONDITION_TYPES = new Set(["previous_output_contains", "database_document_field", "ticket_status", "json"]);
-        const METRONOME_LOOP_TYPES = new Set(["fixed_count", "workflow_context_contains", "project_tickets", "database_field"]);
+        const METRONOME_LOOP_TYPES = new Set(["fixed_count", "workflow_context_contains", "project_tickets", "database_field", "database_documents"]);
         const METRONOME_TICKET_OPERATIONS = new Set(["adapt_ticket", "add_ticket_comment", "move_ticket_status", "start_work_on_ticket", "add_subtask"]);
 
         function normalizeMetronomeConditionType(value) {
@@ -7587,6 +7696,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                       payloadJson: "{\n  \"input\": \"{{ input }}\"\n}",
                       ...overrideConfig,
                     }
+                : kind === "firecrawl"
+                  ? createDefaultMetronomeFirecrawlConfig(normalizedSubtype, overrideConfig)
+                : kind === "database"
+                  ? createDefaultMetronomeDatabaseConfig(normalizedSubtype, overrideConfig)
 	                : kind === "imagine"
 	                  ? {
 	                      mediaMode: "image",
@@ -7623,6 +7736,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 		                      environmentId: METRONOME_FALLBACK_COMPUTERS[0].id,
 		                      environmentName: METRONOME_FALLBACK_COMPUTERS[0].name,
 		                      inputContextScope: "all",
+                          ...createDefaultMetronomeThreadOutputConfig(overrideConfig),
 			                      ...overrideConfig,
 			                    }
 		                : kind === "note"
@@ -9936,6 +10050,56 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           ].includes(kind) || kind.endsWith("_auth");
         }
 
+        function isMetronomeSecretsServerKind(value) {
+          const kind = normalizeMetronomeServerKind(value);
+          if (!kind) return false;
+          return [
+            "secret",
+            "secrets",
+            "secret_store",
+            "secrets_store",
+            "secret_vault",
+            "secrets_vault",
+            "vault",
+          ].includes(kind) || kind.endsWith("_secret") || kind.endsWith("_secrets") || kind.endsWith("_secret_vault") || kind.endsWith("_secrets_vault");
+        }
+
+        function decodeMetronomeCredentialPart(value) {
+          const normalized = String(value || "").trim();
+          if (!normalized) return "";
+          try {
+            return decodeURIComponent(normalized);
+          } catch (_error) {
+            return normalized;
+          }
+        }
+
+        function encodeMetronomeCredentialPart(value) {
+          return encodeURIComponent(String(value || "").trim());
+        }
+
+        function parseMetronomeSecretCredentialRef(value) {
+          const normalized = String(value || "").trim();
+          const parts = normalized.split(":");
+          if (parts[0] !== "secrets" || parts.length < 3) {
+            return { vaultId: "", secretId: "", legacyRef: normalized };
+          }
+          return {
+            vaultId: decodeMetronomeCredentialPart(parts[1]),
+            secretId: decodeMetronomeCredentialPart(parts.slice(2).join(":")),
+            legacyRef: "",
+          };
+        }
+
+        function buildMetronomeSecretCredentialRef(vaultId, secretId) {
+          const normalizedVaultId = String(vaultId || "").trim();
+          const normalizedSecretId = String(secretId || "").trim();
+          if (!normalizedVaultId || !normalizedSecretId) {
+            return "";
+          }
+          return "secrets:" + encodeMetronomeCredentialPart(normalizedVaultId) + ":" + encodeMetronomeCredentialPart(normalizedSecretId);
+        }
+
         function isMetronomeFunctionResourceRecord(item, normalizedKind = "") {
           if (!item || typeof item !== "object") return false;
           if (isMetronomeFunctionServerKind(normalizedKind)) return true;
@@ -10016,10 +10180,47 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 || kindCandidates.find(isMetronomeDatabaseServerKind)
                 || kindCandidates.find(isMetronomeWebAppServerKind)
                 || kindCandidates.find(isMetronomeAuthServerKind)
+                || kindCandidates.find(isMetronomeSecretsServerKind)
                 || inferredFunctionKind
                 || kindCandidates[0]
                 || "";
               return { id, name: name || id, kind, raw: item };
+            })
+            .filter(Boolean);
+        }
+
+        async function fetchMetronomeSecretVaultSecretsApi(vaultId) {
+          const normalizedVaultId = String(vaultId || "").trim();
+          if (!normalizedVaultId) return [];
+          const response = await fetch("/api/real/servers/" + encodeURIComponent(normalizedVaultId) + "/secrets", {
+            method: "GET",
+            credentials: "same-origin",
+          });
+          if (!response.ok) {
+            throw new Error("Failed to load secrets");
+          }
+          const data = await response.json();
+          const rawItems = Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.secrets)
+              ? data.secrets
+              : Array.isArray(data?.items)
+                ? data.items
+                : Array.isArray(data)
+                  ? data
+                  : [];
+          return rawItems
+            .map((item) => {
+              if (!item || typeof item !== "object") return null;
+              const id = String(item.id || item.secretId || item.secret_id || "").trim();
+              const name = String(item.name || item.label || id).trim();
+              if (!id || !name) return null;
+              return {
+                id,
+                name,
+                description: String(item.description || "").trim(),
+                maskedValue: String(item.maskedValue || item.masked_value || "").trim(),
+              };
             })
             .filter(Boolean);
         }
@@ -10308,18 +10509,9 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               parentId: node?.parentId || node?.parentNode ? String(node.parentId || node.parentNode) : undefined,
               extent: node?.extent ? String(node.extent) : undefined,
             };
-            const definitionConfig = { ...definitionNode.config };
-            delete definitionConfig.outputTypes;
-            delete definitionConfig.output_types;
-            delete definitionConfig.outputContract;
-            delete definitionConfig.output_contract;
-            delete definitionConfig.requireJsonOutput;
-            delete definitionConfig.require_json_output;
-            delete definitionConfig.jsonOutputSchema;
-            delete definitionConfig.json_output_schema;
             return {
               ...definitionNode,
-              config: definitionConfig,
+              config: { ...definitionNode.config },
             };
           });
           return {
@@ -10374,6 +10566,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           if (normalizedKind === "ticket") return "TicketNode";
           if (normalizedKind === "imagine") return "ImagineNode";
           if (normalizedKind === "function") return "FunctionNode";
+          if (normalizedKind === "firecrawl") return "FirecrawlNode";
           if (normalizedKind === "database") return "DatabaseNode";
           if (normalizedKind === "metronome") return "MetronomeRunNode";
           if (normalizedKind === "loop") return "LoopNode";
@@ -10389,6 +10582,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           if (normalizedKind === "trigger") return ["trigger_type", normalizedSubtype || "manual"];
           if (normalizedKind === "ticket") return ["operation", normalizeMetronomeTicketOperation(normalizedSubtype)];
           if (normalizedKind === "imagine") return ["operation", normalizedSubtype || "start_imagine"];
+          if (normalizedKind === "firecrawl") return ["operation", normalizeMetronomeFirecrawlOperation(normalizedSubtype)];
           if (normalizedKind === "database") return ["operation", normalizedSubtype || "insert_document"];
           if (normalizedKind === "metronome") return ["operation", normalizedSubtype || "run_workflow"];
           if (normalizedKind === "loop") return ["loop_type", normalizeMetronomeLoopType(normalizedSubtype)];
@@ -10457,7 +10651,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             args.push(["project_id", configReader.take("projectId", "project_id")]);
             args.push(["project_name", configReader.take("projectName", "project_name")]);
             args.push(["input_context_scope", configReader.take("inputContextScope", "input_context_scope", "contextScope", "context_scope")]);
-            configReader.remove("contextType", "resource", "requireJsonOutput", "require_json_output", "jsonOutputSchema", "json_output_schema");
+            args.push(["output_mode", configReader.take("outputMode", "output_mode")]);
+            args.push(["require_json_output", configReader.take("requireJsonOutput", "require_json_output")]);
+            args.push(["output_fields", configReader.take("outputFieldsJson", "output_fields_json", "outputFields", "output_fields")]);
+            args.push(["output_contract", configReader.take("outputContractJson", "output_contract_json", "outputContract", "output_contract", "jsonOutputSchema", "json_output_schema")]);
+            configReader.remove("contextType", "resource");
           } else if (className === "TicketNode") {
             args.push(["project_id", configReader.take("projectId", "project_id")]);
             args.push(["project_name", configReader.take("projectName", "project_name")]);
@@ -10498,12 +10696,30 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             args.push(["function_name", configReader.take("functionName", "function_name")]);
             args.push(["payload", configReader.take("payload", "payloadJson", "payload_json")]);
             configReader.remove("outputKey", "output_key");
+          } else if (className === "FirecrawlNode") {
+            configReader.remove("operation");
+            args.push(["credential_ref", configReader.take("credentialRef", "credential_ref")]);
+            args.push(["input_binding", configReader.take("inputBinding", "input_binding")]);
+            args.push(["query", configReader.take("query")]);
+            args.push(["url", configReader.take("url")]);
+            args.push(["file_path", configReader.take("filePath", "file_path")]);
+            args.push(["prompt", configReader.take("prompt")]);
+            args.push(["schema", configReader.take("schemaJson", "schema_json", "schema")]);
+            args.push(["limit", configReader.take("limit")]);
+            args.push(["formats", configReader.take("formats")]);
+            args.push(["save_artifacts", configReader.take("saveArtifacts", "save_artifacts")]);
+            args.push(["output_key", configReader.take("outputKey", "output_key")]);
           } else if (className === "DatabaseNode") {
+            configReader.remove("operation");
             args.push(["database_id", configReader.take("databaseId", "database_id")]);
             args.push(["database_name", configReader.take("databaseName", "database_name")]);
             args.push(["collection", configReader.take("collection", "collectionName", "collection_name")]);
             args.push(["document_id", configReader.take("documentId", "document_id")]);
             args.push(["document", configReader.take("document", "documentJson", "document_json")]);
+            args.push(["input_binding", configReader.take("inputBinding", "input_binding")]);
+            args.push(["records_binding", configReader.take("recordsBinding", "records_binding")]);
+            args.push(["document_template", configReader.take("documentTemplateJson", "document_template_json", "documentTemplate", "document_template")]);
+            args.push(["upsert_key", configReader.take("upsertKey", "upsert_key")]);
             configReader.remove("outputKey", "output_key");
           } else if (className === "MetronomeRunNode") {
             args.push(["workflow_id", configReader.take("workflowId", "workflow_id")]);
@@ -10522,13 +10738,14 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             args.push(["database_field_path", configReader.take("databaseFieldPath", "database_field_path")]);
             args.push(["database_operator", configReader.take("databaseOperator", "database_operator")]);
             args.push(["database_compare_value", configReader.take("databaseCompareValue", "database_compare_value")]);
+            args.push(["database_limit", configReader.take("databaseLimit", "database_limit")]);
             args.push(["break_condition", configReader.take("rule", "breakCondition", "break_condition")]);
 		          } else if (className === "NoteNode") {
             args.push(["text", configReader.take("message", "text")]);
           }
           if (node?.label) args.push(["label", node.label]);
           if (node?.description) args.push(["description", node.description]);
-          configReader.remove("outputTypes", "output_types", "outputContract", "output_contract");
+          configReader.remove("outputTypes", "output_types");
           const remainingConfig = Object.fromEntries(
             Object.entries(configReader.rest).filter(([, value]) => value !== undefined)
           );
@@ -10564,6 +10781,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             "    ConditionNode,",
             "    ImagineNode,",
             "    FunctionNode,",
+            "    FirecrawlNode,",
             "    DatabaseNode,",
             "    MetronomeRunNode,",
             "    LoopNode,",
@@ -10854,6 +11072,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             TicketNode: "ticket",
             ImagineNode: "imagine",
             FunctionNode: "function",
+            FirecrawlNode: "firecrawl",
             DatabaseNode: "database",
             MetronomeRunNode: "metronome",
             LoopNode: "loop",
@@ -10864,6 +11083,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             TriggerNode: "trigger_type",
             TicketNode: "operation",
             ImagineNode: "operation",
+            FirecrawlNode: "operation",
             DatabaseNode: "operation",
             MetronomeRunNode: "operation",
             LoopNode: "loop_type",
@@ -10937,6 +11157,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               const projectId = getMetronomePythonCallKeyword(nodeCall, "project_id", undefined);
               const projectName = getMetronomePythonCallKeyword(nodeCall, "project_name", undefined);
               const inputContextScope = getMetronomePythonCallKeyword(nodeCall, "input_context_scope", undefined);
+              const outputMode = getMetronomePythonCallKeyword(nodeCall, "output_mode", undefined);
+              const requireJsonOutput = getMetronomePythonCallKeyword(nodeCall, "require_json_output", undefined);
+              const outputFields = getMetronomePythonCallKeyword(nodeCall, "output_fields", undefined);
+              const outputContract = getMetronomePythonCallKeyword(nodeCall, "output_contract", undefined);
               if (message !== undefined) config.message = message;
               if (agentId !== undefined) config.agentId = agentId;
               if (agentName !== undefined) config.agentName = agentName;
@@ -10945,6 +11169,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               if (projectId !== undefined) config.projectId = projectId;
               if (projectName !== undefined) config.projectName = projectName;
               if (inputContextScope !== undefined) config.inputContextScope = normalizeMetronomeInputContextScope(inputContextScope);
+              if (outputMode !== undefined) config.outputMode = outputMode;
+              if (requireJsonOutput !== undefined) config.requireJsonOutput = Boolean(requireJsonOutput);
+              if (outputFields !== undefined) config.outputFieldsJson = typeof outputFields === "string" ? outputFields : JSON.stringify(outputFields, null, 2);
+              if (outputContract !== undefined) config.outputContractJson = typeof outputContract === "string" ? outputContract : JSON.stringify(outputContract, null, 2);
               if (projectId || projectName) config.contextType = "project";
             }
             if (className === "TicketNode") {
@@ -11021,17 +11249,51 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               if (functionName !== undefined) config.functionName = functionName;
               if (payload !== undefined) config.payload = payload;
             }
+            if (className === "FirecrawlNode") {
+              subtype = normalizeMetronomeFirecrawlOperation(subtype);
+              config.operation = subtype;
+              const credentialRef = getMetronomePythonCallKeyword(nodeCall, "credential_ref", undefined);
+              const inputBinding = getMetronomePythonCallKeyword(nodeCall, "input_binding", undefined);
+              const query = getMetronomePythonCallKeyword(nodeCall, "query", undefined);
+              const url = getMetronomePythonCallKeyword(nodeCall, "url", undefined);
+              const filePath = getMetronomePythonCallKeyword(nodeCall, "file_path", undefined);
+              const prompt = getMetronomePythonCallKeyword(nodeCall, "prompt", undefined);
+              const schema = getMetronomePythonCallKeyword(nodeCall, "schema", undefined);
+              const limit = getMetronomePythonCallKeyword(nodeCall, "limit", undefined);
+              const formats = getMetronomePythonCallKeyword(nodeCall, "formats", undefined);
+              const saveArtifacts = getMetronomePythonCallKeyword(nodeCall, "save_artifacts", undefined);
+              const outputKey = getMetronomePythonCallKeyword(nodeCall, "output_key", undefined);
+              if (credentialRef !== undefined) config.credentialRef = credentialRef;
+              if (inputBinding !== undefined) config.inputBinding = inputBinding;
+              if (query !== undefined) config.query = query;
+              if (url !== undefined) config.url = url;
+              if (filePath !== undefined) config.filePath = filePath;
+              if (prompt !== undefined) config.prompt = prompt;
+              if (schema !== undefined) config.schemaJson = typeof schema === "string" ? schema : JSON.stringify(schema, null, 2);
+              if (limit !== undefined) config.limit = limit;
+              if (formats !== undefined) config.formats = formats;
+              if (saveArtifacts !== undefined) config.saveArtifacts = Boolean(saveArtifacts);
+              if (outputKey !== undefined) config.outputKey = outputKey;
+            }
             if (className === "DatabaseNode") {
               const databaseId = getMetronomePythonCallKeyword(nodeCall, "database_id", undefined);
               const databaseName = getMetronomePythonCallKeyword(nodeCall, "database_name", undefined);
               const collection = getMetronomePythonCallKeyword(nodeCall, "collection", undefined);
               const documentId = getMetronomePythonCallKeyword(nodeCall, "document_id", undefined);
               const document = getMetronomePythonCallKeyword(nodeCall, "document", undefined);
+              const inputBinding = getMetronomePythonCallKeyword(nodeCall, "input_binding", undefined);
+              const recordsBinding = getMetronomePythonCallKeyword(nodeCall, "records_binding", undefined);
+              const documentTemplate = getMetronomePythonCallKeyword(nodeCall, "document_template", undefined);
+              const upsertKey = getMetronomePythonCallKeyword(nodeCall, "upsert_key", undefined);
               if (databaseId !== undefined) config.databaseId = databaseId;
               if (databaseName !== undefined) config.databaseName = databaseName;
               if (collection !== undefined) config.collection = collection;
               if (documentId !== undefined) config.documentId = documentId;
               if (document !== undefined) config.document = document;
+              if (inputBinding !== undefined) config.inputBinding = inputBinding;
+              if (recordsBinding !== undefined) config.recordsBinding = recordsBinding;
+              if (documentTemplate !== undefined) config.documentTemplateJson = typeof documentTemplate === "string" ? documentTemplate : JSON.stringify(documentTemplate, null, 2);
+              if (upsertKey !== undefined) config.upsertKey = upsertKey;
             }
             if (className === "MetronomeRunNode") {
               const workflowId = getMetronomePythonCallKeyword(nodeCall, "workflow_id", undefined);
@@ -11057,6 +11319,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               const databaseFieldPath = getMetronomePythonCallKeyword(nodeCall, "database_field_path", undefined);
               const databaseOperator = getMetronomePythonCallKeyword(nodeCall, "database_operator", undefined);
               const databaseCompareValue = getMetronomePythonCallKeyword(nodeCall, "database_compare_value", undefined);
+              const databaseLimit = getMetronomePythonCallKeyword(nodeCall, "database_limit", undefined);
               if (iterations !== undefined) config.iterations = iterations;
               if (maxIterations !== undefined) config.maxIterations = maxIterations;
               if (contextContains !== undefined) config.contextContainsText = contextContains;
@@ -11069,6 +11332,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               if (databaseFieldPath !== undefined) config.databaseFieldPath = databaseFieldPath;
               if (databaseOperator !== undefined) config.databaseOperator = databaseOperator;
               if (databaseCompareValue !== undefined) config.databaseCompareValue = databaseCompareValue;
+              if (databaseLimit !== undefined) config.databaseLimit = databaseLimit;
               const breakCondition = getMetronomePythonCallKeyword(nodeCall, "break_condition", undefined);
               if (breakCondition !== undefined) config.rule = breakCondition;
             }
@@ -11307,11 +11571,12 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const isTicketNode = kind === "ticket";
 	          const isImagineNode = kind === "imagine";
 	          const isFunctionNode = kind === "function";
+	          const isFirecrawlNode = kind === "firecrawl";
 	          const isDatabaseNode = kind === "database";
 	          const isMetronomeNode = kind === "metronome";
 	          const isNoteNode = kind === "note";
 	          const isLoopNode = kind === "loop";
-		          const shouldHideBody = kind === "action" || kind === "trigger" || isApprovalNode || isTicketNode || isImagineNode || isFunctionNode || isDatabaseNode || isMetronomeNode || isEndNode || isConditionNode;
+		          const shouldHideBody = kind === "action" || kind === "trigger" || isApprovalNode || isTicketNode || isImagineNode || isFunctionNode || isFirecrawlNode || isDatabaseNode || isMetronomeNode || isEndNode || isConditionNode;
 	          const config = data?.config || {};
 	          const renderResizeHandle = (corner, className) => React.createElement("span", {
 	            className: "playground-metronome-loop-resize-handle " + className + " nodrag",
@@ -11398,6 +11663,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 ? String(config.templateName || config.templateId || "Select template").trim()
               : isFunctionNode
                 ? String(config.functionName || config.functionId || "Select function").trim()
+              : isFirecrawlNode
+                ? getMetronomeSubtypeLabel(kind, data?.subtype)
               : isDatabaseNode
                 ? ""
               : isMetronomeNode
@@ -11792,6 +12059,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const [graphUndoStack, setGraphUndoStack] = useState([]);
           const [graphRedoStack, setGraphRedoStack] = useState([]);
           const [metronomeServerResources, setMetronomeServerResources] = useState([]);
+          const [metronomeSecretVaultSecretsByVaultId, setMetronomeSecretVaultSecretsByVaultId] = useState({});
+          const [metronomeSecretVaultSecretsLoadingId, setMetronomeSecretVaultSecretsLoadingId] = useState("");
           const [metronomeCodeRunState, setMetronomeCodeRunState] = useState({ status: "idle", message: "" });
           const [metronomeCodeFilesDraft, setMetronomeCodeFilesDraft] = useState([]);
           const [activeMetronomeCodeFilePath, setActiveMetronomeCodeFilePath] = useState("main.py");
@@ -11965,6 +12234,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 ? metronomeNodeSchemaRegistry.nodeKinds
                 : Object.keys(METRONOME_NODE_KIND_META).filter((kind) => kind !== "approval")
             );
+            supportedKinds.add("firecrawl");
             return METRONOME_NODE_PALETTE_GROUPS
               .map((group) => ({
                 ...group,
@@ -12047,6 +12317,41 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               .filter((resource) => isMetronomeAuthServerKind(resource.kind))
               .map((resource) => ({ id: resource.id, name: resource.name || resource.id }));
           }, [metronomeServerResources]);
+          const metronomeSecretVaultOptions = useMemo(() => {
+            return metronomeServerResources
+              .filter((resource) => {
+                if (isMetronomeSecretsServerKind(resource.kind)) return true;
+                const id = String(resource.id || "").toLowerCase();
+                const name = String(resource.name || "").toLowerCase();
+                return id.startsWith("sec_") || /\b(secret|secrets|vault)\b/.test(name);
+              })
+              .map((resource) => ({ id: resource.id, name: resource.name || resource.id }));
+          }, [metronomeServerResources]);
+          const loadMetronomeSecretVaultSecrets = useCallback(async (vaultId, options = {}) => {
+            const normalizedVaultId = String(vaultId || "").trim();
+            if (!normalizedVaultId) return [];
+            if (!options.force && Array.isArray(metronomeSecretVaultSecretsByVaultId[normalizedVaultId])) {
+              return metronomeSecretVaultSecretsByVaultId[normalizedVaultId];
+            }
+            setMetronomeSecretVaultSecretsLoadingId(normalizedVaultId);
+            try {
+              const secrets = await fetchMetronomeSecretVaultSecretsApi(normalizedVaultId);
+              setMetronomeSecretVaultSecretsByVaultId((current) => ({
+                ...current,
+                [normalizedVaultId]: secrets,
+              }));
+              return secrets;
+            } catch (error) {
+              console.warn("[Metronome] Failed to load secrets", error);
+              setMetronomeSecretVaultSecretsByVaultId((current) => ({
+                ...current,
+                [normalizedVaultId]: [],
+              }));
+              return [];
+            } finally {
+              setMetronomeSecretVaultSecretsLoadingId((current) => current === normalizedVaultId ? "" : current);
+            }
+          }, [metronomeSecretVaultSecretsByVaultId]);
           const defaultMetronomeAgentOption = useMemo(() => {
             return getMetronomePreferredOption(metronomeAgentOptions, ["assistant"], METRONOME_FALLBACK_AGENTS[0]);
           }, [metronomeAgentOptions]);
@@ -12729,6 +13034,24 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           }, [activeWorkflow, activeWorkflowId, nodes, edges, isActiveWorkflowBuiltIn, isMetronomeApiAvailable, isLoadingMetronomes]);
 
 	          const selectedNode = useMemo(() => nodes.find((node) => node.id === selectedNodeId) || null, [nodes, selectedNodeId]);
+          const selectedFirecrawlCredentialVaultId = useMemo(() => {
+            if (!selectedNode || selectedNode.data?.kind !== "firecrawl") return "";
+            const selectedConfig = selectedNode.data?.config && typeof selectedNode.data.config === "object" ? selectedNode.data.config : {};
+            const explicitVaultId = String(selectedConfig.credentialVaultId || selectedConfig.credential_vault_id || "").trim();
+            if (explicitVaultId) return explicitVaultId;
+            return parseMetronomeSecretCredentialRef(selectedConfig.credentialRef || selectedConfig.credential_ref || "").vaultId;
+          }, [selectedNode]);
+          useEffect(() => {
+            if (!selectedFirecrawlCredentialVaultId) return undefined;
+            if (Array.isArray(metronomeSecretVaultSecretsByVaultId[selectedFirecrawlCredentialVaultId])) return undefined;
+            let cancelled = false;
+            void loadMetronomeSecretVaultSecrets(selectedFirecrawlCredentialVaultId).then(() => {
+              if (cancelled) return;
+            });
+            return () => {
+              cancelled = true;
+            };
+          }, [selectedFirecrawlCredentialVaultId, metronomeSecretVaultSecretsByVaultId, loadMetronomeSecretVaultSecrets]);
           const selectedTicketNodeProjectId = useMemo(() => {
             if (!selectedNode || selectedNode.data?.kind !== "ticket") return "";
             return String(selectedNode.data?.config?.projectId || "").trim();
@@ -15252,6 +15575,33 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               React.createElement("span", null, title),
               renderMetronomeFieldTooltip(tooltip)
             );
+            const renderMetronomeDataBindingSelect = ({
+              title,
+              tooltip = "",
+              fieldKey = "inputBinding",
+              fallback = "last.text",
+              options = METRONOME_WORKFLOW_DATA_BINDING_OPTIONS,
+            } = {}) => React.createElement("div", { className: "playground-metronome-field" },
+              renderMetronomeFieldTitle(title || "Input binding", tooltip || "Choose which upstream workflow output this node should consume."),
+              React.createElement("select", {
+                className: "playground-metronome-select",
+                value: normalizeMetronomeDataBinding(config[fieldKey] || config[fieldKey.replace(/[A-Z]/g, (letter) => "_" + letter.toLowerCase())], fallback),
+                onChange: (event) => updateSelectedNodeConfig(fieldKey, event.target.value),
+              },
+                options.map((option) => React.createElement("option", { key: option.id, value: option.id }, option.label))
+              )
+            );
+            const renderMetronomeJsonEditorField = ({ title, tooltip = "", fieldKey, value, path = "config.json" }) => React.createElement("div", { className: "playground-metronome-field" },
+              renderMetronomeFieldTitle(title, tooltip),
+              React.createElement("div", { className: "playground-metronome-inline-code-editor" },
+                React.createElement(MetronomeGeneratedCodeEditor, {
+                  file: { path, language: "json" },
+                  value: value === undefined ? String(config[fieldKey] || "") : String(value || ""),
+                  readOnly: isActiveWorkflowBuiltIn,
+                  onChange: (nextValue) => updateSelectedNodeConfig(fieldKey, String(nextValue || "")),
+                })
+              )
+            );
             const getMetronomeTriggerStatusLabel = (status) => {
               const normalized = String(status || "").trim().toLowerCase();
               if (normalized === "matched") return "Matched";
@@ -16756,8 +17106,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 { id: "done", label: "Done" },
                 { id: "canceled", label: "Canceled" },
               ];
-              const renderMaxIterationsField = () => React.createElement("div", { className: "playground-metronome-field" },
-                renderMetronomeFieldTitle("Safety limit", "Maximum loop iterations before the workflow stops to prevent runaway automation."),
+              const renderMaxIterationsField = (label = "Safety limit", description = "Maximum loop iterations before the workflow stops to prevent runaway automation.") => React.createElement("div", { className: "playground-metronome-field" },
+                renderMetronomeFieldTitle(label, description),
                 React.createElement("input", {
                   type: "number",
                   min: 1,
@@ -16777,7 +17127,9 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                       ? "Runs enclosed steps until the accumulated workflow summaries contain the target text."
                       : selectedLoopType === "project_tickets"
                         ? "Runs enclosed steps while matching project tickets still exist."
-                        : "Runs enclosed steps while matching database documents still exist."
+                        : selectedLoopType === "database_documents"
+                          ? "Prepares matching documents from a database collection for downstream steps."
+                          : "Runs enclosed steps while matching database documents still exist."
                 ),
                 selectedLoopType === "fixed_count"
                   ? React.createElement("div", { className: "playground-metronome-field" },
@@ -16844,7 +17196,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                       renderMaxIterationsField()
                     )
                   : null,
-                selectedLoopType === "database_field"
+                (selectedLoopType === "database_field" || selectedLoopType === "database_documents")
                   ? React.createElement(React.Fragment, null,
                       React.createElement("div", { className: "playground-metronome-field" },
                         renderMetronomeFieldTitle("Database"),
@@ -16878,7 +17230,12 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                       ),
                       React.createElement("div", { className: "playground-metronome-condition-compact-grid" },
                         React.createElement("div", { className: "playground-metronome-field" },
-                          renderMetronomeFieldTitle("Field path"),
+                          renderMetronomeFieldTitle(
+                            selectedLoopType === "database_documents" ? "Filter field path" : "Field path",
+                            selectedLoopType === "database_documents"
+                              ? "Optional. Leave empty to include every document in the collection."
+                              : "Field path checked before repeating the loop."
+                          ),
                           React.createElement("input", {
                             type: "text",
                             className: "playground-metronome-input",
@@ -16899,7 +17256,9 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                             React.createElement("option", { value: "equals" }, "Equals"),
                             React.createElement("option", { value: "not_equals" }, "Not equals"),
                             React.createElement("option", { value: "contains" }, "Contains"),
-                            React.createElement("option", { value: "not_contains" }, "Not contains")
+                            React.createElement("option", { value: "not_contains" }, "Not contains"),
+                            React.createElement("option", { value: "exists" }, "Exists"),
+                            React.createElement("option", { value: "not_exists" }, "Does not exist")
                           )
                         )
                       ),
@@ -16910,12 +17269,18 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           className: "playground-metronome-input",
                           value: loopConfig.databaseCompareValue,
                           placeholder: "pending",
+                          disabled: loopConfig.databaseOperator === "exists" || loopConfig.databaseOperator === "not_exists",
                           onKeyDown: stopMetronomeInputKeyPropagation,
                           onKeyUp: stopMetronomeInputKeyPropagation,
                           onChange: (event) => updateSelectedNodeConfig("databaseCompareValue", event.target.value),
                         })
                       ),
-                      renderMaxIterationsField()
+                      renderMaxIterationsField(
+                        selectedLoopType === "database_documents" ? "Document limit" : "Safety limit",
+                        selectedLoopType === "database_documents"
+                          ? "Maximum number of documents exposed to downstream nodes."
+                          : "Maximum loop iterations before the workflow stops to prevent runaway automation."
+                      )
                     )
                   : null
               );
@@ -17520,6 +17885,44 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   },
                 })
               ),
+              React.createElement("div", { className: "playground-metronome-field" },
+                renderMetronomeFieldTitle("Output mode", "Structured output lets downstream Firecrawl, Database, and Function nodes bind to JSON, URLs, files, records, and artifacts."),
+                React.createElement("select", {
+                  className: "playground-metronome-select",
+                  value: String(config.outputMode || config.output_mode || "text") === "structured" ? "structured" : "text",
+                  onChange: (event) => updateSelectedNodeConfig("outputMode", event.target.value),
+                },
+                  React.createElement("option", { value: "text" }, "Narrative text"),
+                  React.createElement("option", { value: "structured" }, "Structured JSON")
+                )
+              ),
+              React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
+                React.createElement("div", { className: "playground-metronome-switch-copy" },
+                  React.createElement("span", null, "Require JSON output"),
+                  React.createElement("small", null, "Ask the agent to produce machine-readable output for deterministic downstream nodes.")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-metronome-switch" + (config.requireJsonOutput || config.require_json_output ? " is-on" : ""),
+                  role: "switch",
+                  "aria-checked": config.requireJsonOutput || config.require_json_output ? "true" : "false",
+                  onClick: () => updateSelectedNodeConfig("requireJsonOutput", !(config.requireJsonOutput || config.require_json_output)),
+                })
+              ),
+              renderMetronomeJsonEditorField({
+                title: "Output fields",
+                tooltip: "Fields that this thread can expose to following nodes.",
+                fieldKey: "outputFieldsJson",
+                value: config.outputFieldsJson || config.output_fields_json || JSON.stringify(METRONOME_THREAD_OUTPUT_FIELDS, null, 2),
+                path: "output-fields.json",
+              }),
+              renderMetronomeJsonEditorField({
+                title: "Output contract",
+                tooltip: "Optional JSON shape the agent should return when structured output is enabled.",
+                fieldKey: "outputContractJson",
+                value: config.outputContractJson || config.output_contract_json || "{\n  \"summary\": \"\",\n  \"urls\": [],\n  \"records\": [],\n  \"artifacts\": []\n}",
+                path: "output-contract.json",
+              }),
               renderMetronomeAttachmentModalPortal()
             );
             const renderImagineSettings = () => {
@@ -17846,8 +18249,249 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   : null
               );
             };
+            const renderFirecrawlSettings = () => {
+              const operation = normalizeMetronomeFirecrawlOperation(config.operation || subtype);
+            const isSearch = operation === "web_search";
+            const isScrape = operation === "scrape_url";
+            const isParse = operation === "parse_document";
+            const isExtract = operation === "extract_data";
+              const parsedCredentialRef = parseMetronomeSecretCredentialRef(config.credentialRef || config.credential_ref || "");
+              const credentialVaultId = String(config.credentialVaultId || config.credential_vault_id || parsedCredentialRef.vaultId || "").trim();
+              const credentialSecretId = String(config.credentialSecretId || config.credential_secret_id || parsedCredentialRef.secretId || "").trim();
+              const credentialVaultSecrets = credentialVaultId && Array.isArray(metronomeSecretVaultSecretsByVaultId[credentialVaultId])
+                ? metronomeSecretVaultSecretsByVaultId[credentialVaultId]
+                : [];
+              const isCredentialSecretsLoading = credentialVaultId && metronomeSecretVaultSecretsLoadingId === credentialVaultId;
+              return React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-metronome-field" },
+                  renderMetronomeFieldTitle("Firecrawl credential", "Use the managed Computer Agents Firecrawl credential by default, billed in Compute Tokens. Choose a Secrets resource to use your own key."),
+                  React.createElement("select", {
+                    className: "playground-metronome-select",
+                    value: credentialVaultId,
+                    onKeyDown: stopMetronomeInputKeyPropagation,
+                    onKeyUp: stopMetronomeInputKeyPropagation,
+                    onChange: (event) => {
+                      const nextVaultId = String(event.target.value || "").trim();
+                      const nextVault = metronomeSecretVaultOptions.find((option) => option.id === nextVaultId) || null;
+                      updateSelectedNodeConfigPatch({
+                        credentialVaultId: nextVaultId,
+                        credentialVaultName: nextVault?.name || "",
+                        credentialSecretId: "",
+                        credentialSecretName: "",
+                        credentialRef: nextVaultId ? "" : "workspace:FIRECRAWL_API_KEY",
+                      });
+                      if (nextVaultId) {
+                        void loadMetronomeSecretVaultSecrets(nextVaultId, { force: true });
+                      }
+                    },
+                  },
+                    React.createElement("option", { value: "" }, "Computer Agents Firecrawl"),
+                    metronomeSecretVaultOptions.map((option) =>
+                      React.createElement("option", { key: option.id, value: option.id }, option.name)
+                    )
+                  )
+                ),
+                credentialVaultId
+                  ? React.createElement("div", { className: "playground-metronome-field" },
+                      renderMetronomeFieldTitle("Credential", "Select the Firecrawl API key stored in the chosen secrets resource."),
+                      React.createElement("select", {
+                        className: "playground-metronome-select",
+                        value: credentialSecretId,
+                        disabled: isCredentialSecretsLoading,
+                        onKeyDown: stopMetronomeInputKeyPropagation,
+                        onKeyUp: stopMetronomeInputKeyPropagation,
+                        onChange: (event) => {
+                          const nextSecretId = String(event.target.value || "").trim();
+                          const nextSecret = credentialVaultSecrets.find((secret) => secret.id === nextSecretId) || null;
+                          updateSelectedNodeConfigPatch({
+                            credentialSecretId: nextSecretId,
+                            credentialSecretName: nextSecret?.name || "",
+                            credentialRef: nextSecretId ? buildMetronomeSecretCredentialRef(credentialVaultId, nextSecretId) : "",
+                          });
+                        },
+                      },
+                        React.createElement("option", { value: "" }, isCredentialSecretsLoading ? "Loading credentials..." : "Select credential"),
+                        credentialVaultSecrets.map((secret) =>
+                          React.createElement("option", { key: secret.id, value: secret.id }, secret.name)
+                        )
+                      )
+                    )
+                  : null,
+                credentialVaultId && !isCredentialSecretsLoading && !credentialVaultSecrets.length
+                  ? React.createElement("p", { className: "playground-metronome-field-hint" }, "No credentials found in this secrets resource yet.")
+                  : null,
+                !credentialVaultId
+                  ? React.createElement("p", { className: "playground-metronome-field-hint" }, "Managed by Computer Agents and billed in Compute Tokens.")
+                  : null,
+                !metronomeSecretVaultOptions.length
+                  ? React.createElement("p", { className: "playground-metronome-field-hint" }, "Create a Secrets resource in Develop mode to use your own Firecrawl key.")
+                  : null,
+                isSearch
+                  ? React.createElement(React.Fragment, null,
+                      renderMetronomeDataBindingSelect({
+                        title: "Search query source",
+                        fieldKey: "inputBinding",
+                        fallback: "last.text",
+                        options: [
+                          { id: "last.text", label: "Previous node text" },
+                          { id: "last.json.query", label: "Previous node JSON query" },
+                          { id: "trigger.input", label: "Trigger input" },
+                          { id: "workflow.context", label: "Full workflow context" },
+                        ],
+                      }),
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        renderMetronomeFieldTitle("Fallback query", "Used when the selected binding does not provide a query."),
+                        React.createElement("input", {
+                          type: "text",
+                          className: "playground-metronome-input",
+                          value: config.query || "",
+                          placeholder: "latest pricing changes",
+                          onKeyDown: stopMetronomeInputKeyPropagation,
+                          onKeyUp: stopMetronomeInputKeyPropagation,
+                          onChange: (event) => updateSelectedNodeConfig("query", event.target.value),
+                        })
+                      )
+                    )
+                  : null,
+                isScrape
+                  ? React.createElement(React.Fragment, null,
+                      renderMetronomeDataBindingSelect({
+                        title: "URL source",
+                        fieldKey: "inputBinding",
+                        fallback: "last.urls",
+                        options: [
+                          { id: "last.urls", label: "Previous node URLs" },
+                          { id: "last.json.url", label: "Previous node JSON URL" },
+                          { id: "trigger.input.url", label: "Trigger input URL" },
+                        ],
+                      }),
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        renderMetronomeFieldTitle("Fallback URL"),
+                        React.createElement("input", {
+                          type: "url",
+                          className: "playground-metronome-input",
+                          value: config.url || "",
+                          placeholder: "https://example.com",
+                          onKeyDown: stopMetronomeInputKeyPropagation,
+                          onKeyUp: stopMetronomeInputKeyPropagation,
+                          onChange: (event) => updateSelectedNodeConfig("url", event.target.value),
+                        })
+                      ),
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        renderMetronomeFieldTitle("Formats"),
+                        React.createElement("input", {
+                          type: "text",
+                          className: "playground-metronome-input",
+                          value: config.formats || "markdown,html",
+                          placeholder: "markdown,html",
+                          onKeyDown: stopMetronomeInputKeyPropagation,
+                          onKeyUp: stopMetronomeInputKeyPropagation,
+                          onChange: (event) => updateSelectedNodeConfig("formats", event.target.value),
+                        })
+                      )
+                    )
+                  : null,
+                isParse
+                  ? React.createElement(React.Fragment, null,
+                      renderMetronomeDataBindingSelect({
+                        title: "Document source",
+                        fieldKey: "inputBinding",
+                        fallback: "last.files",
+                        options: [
+                          { id: "last.files", label: "Previous node files" },
+                          { id: "last.documents", label: "Previous node documents" },
+                          { id: "last.json.filePath", label: "Previous node JSON file path" },
+                        ],
+                      }),
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        renderMetronomeFieldTitle("Fallback file path"),
+                        React.createElement("input", {
+                          type: "text",
+                          className: "playground-metronome-input",
+                          value: config.filePath || config.file_path || "",
+                          placeholder: "/workspace/uploads/report.pdf",
+                          onKeyDown: stopMetronomeInputKeyPropagation,
+                          onKeyUp: stopMetronomeInputKeyPropagation,
+                          onChange: (event) => updateSelectedNodeConfig("filePath", event.target.value),
+                        })
+                      )
+                    )
+                  : null,
+                isExtract
+                  ? React.createElement(React.Fragment, null,
+                      renderMetronomeDataBindingSelect({
+                        title: "Extraction source",
+                        fieldKey: "inputBinding",
+                        fallback: "last.documents",
+                        options: [
+                          { id: "last.documents", label: "Previous node documents" },
+                          { id: "last.json", label: "Previous node JSON" },
+                          { id: "last.text", label: "Previous node text" },
+                          { id: "workflow.context", label: "Full workflow context" },
+                        ],
+                      }),
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        renderMetronomeFieldTitle("Extraction prompt"),
+                        React.createElement("textarea", {
+                          className: "playground-metronome-textarea",
+                          value: config.prompt || "",
+                          placeholder: "Extract company name, price, date, and source URL.",
+                          onKeyDown: stopMetronomeInputKeyPropagation,
+                          onKeyUp: stopMetronomeInputKeyPropagation,
+                          onChange: (event) => updateSelectedNodeConfig("prompt", event.target.value),
+                        })
+                      ),
+                      renderMetronomeJsonEditorField({
+                        title: "Output schema",
+                        fieldKey: "schemaJson",
+                        value: config.schemaJson || config.schema_json || "{\n  \"type\": \"object\",\n  \"properties\": {}\n}",
+                        path: "extract-schema.json",
+                      })
+                    )
+                  : null,
+                React.createElement("div", { className: "playground-metronome-field" },
+                  renderMetronomeFieldTitle("Limit"),
+                  React.createElement("input", {
+                    type: "number",
+                    min: "1",
+                    max: "50",
+                    className: "playground-metronome-input",
+                    value: Number.isFinite(Number(config.limit)) ? String(config.limit) : "5",
+                    onKeyDown: stopMetronomeInputKeyPropagation,
+                    onKeyUp: stopMetronomeInputKeyPropagation,
+                    onChange: (event) => updateSelectedNodeConfig("limit", Number(event.target.value) || 1),
+                  })
+                ),
+                React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
+                  React.createElement("div", { className: "playground-metronome-switch-copy" },
+                    React.createElement("span", null, "Save artifacts"),
+                    React.createElement("small", null, "Store scraped pages, parsed documents, and extracted records as workflow artifacts for following nodes.")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-metronome-switch" + (config.saveArtifacts === false || config.save_artifacts === false ? "" : " is-on"),
+                    role: "switch",
+                    "aria-checked": config.saveArtifacts === false || config.save_artifacts === false ? "false" : "true",
+                    onClick: () => updateSelectedNodeConfig("saveArtifacts", config.saveArtifacts === false || config.save_artifacts === false),
+                  })
+                ),
+                React.createElement("div", { className: "playground-metronome-field" },
+                  renderMetronomeFieldTitle("Output key"),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-metronome-input",
+                    value: config.outputKey || config.output_key || "firecrawl",
+                    placeholder: "firecrawl",
+                    onKeyDown: stopMetronomeInputKeyPropagation,
+                    onKeyUp: stopMetronomeInputKeyPropagation,
+                    onChange: (event) => updateSelectedNodeConfig("outputKey", event.target.value),
+                  })
+                )
+              );
+            };
             const renderDatabaseSettings = () => {
               const isDeleteOperation = subtype === "delete_document";
+              const isBulkWriteOperation = subtype === "insert_many_documents" || subtype === "upsert_many_documents";
               const documentJson = String(config.documentJson || config.document || "{\n  \"source\": \"metronome\",\n  \"payload\": \"{{ input }}\"\n}");
               const databaseEditMode = String(config.databaseEditMode || "direct") === "json" ? "json" : "direct";
               const parsedDocument = parseMetronomeDatabaseDocumentObject(documentJson);
@@ -18245,6 +18889,48 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                     onChange: (event) => updateSelectedNodeConfig("documentId", event.target.value),
                   })
                 ),
+                isBulkWriteOperation
+                  ? React.createElement(React.Fragment, null,
+                      renderMetronomeDataBindingSelect({
+                        title: "Records source",
+                        tooltip: "Choose where this database write reads the array of records from.",
+                        fieldKey: "recordsBinding",
+                        fallback: "last.records",
+                        options: [
+                          { id: "last.records", label: "Previous node records" },
+                          { id: "last.json.records", label: "Previous node JSON records" },
+                          { id: "last.documents", label: "Previous node documents" },
+                          { id: "workflow.context.records", label: "Workflow context records" },
+                        ],
+                      }),
+                      subtype === "upsert_many_documents"
+                        ? React.createElement("div", { className: "playground-metronome-field" },
+                            renderMetronomeFieldTitle("Upsert key", "Field used to match existing documents before writing."),
+                            React.createElement("input", {
+                              type: "text",
+                              className: "playground-metronome-input",
+                              value: config.upsertKey || config.upsert_key || "id",
+                              placeholder: "id",
+                              onKeyDown: stopMetronomeInputKeyPropagation,
+                              onKeyUp: stopMetronomeInputKeyPropagation,
+                              onChange: (event) => updateSelectedNodeConfig("upsertKey", event.target.value),
+                            })
+                          )
+                        : null,
+                      renderMetronomeJsonEditorField({
+                        title: "Document template",
+                        tooltip: "Template applied to each incoming record before writing to the collection.",
+                        fieldKey: "documentTemplateJson",
+                        value: config.documentTemplateJson || config.document_template_json || "{\n  \"source\": \"metronome\",\n  \"record\": \"{{ record }}\"\n}",
+                        path: "document-template.json",
+                      })
+                    )
+                  : renderMetronomeDataBindingSelect({
+                      title: "Input source",
+                      tooltip: "Choose which upstream output should populate this database operation.",
+                      fieldKey: "inputBinding",
+                      fallback: "last.json",
+                    }),
 	                isDeleteOperation
 	                  ? React.createElement("div", { className: "playground-metronome-field" },
 	                      renderMetronomeFieldTitle("Delete metadata"),
@@ -18322,6 +19008,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                         : kind === "function"
                           ? React.createElement("span", { className: "playground-metronome-inspector-node-kind is-icon", "aria-label": "Function" },
                               React.createElement(FunctionSquare, { width: 14, height: 14, strokeWidth: 1.9 })
+                            )
+                        : kind === "firecrawl"
+                          ? React.createElement("span", { className: "playground-metronome-inspector-node-kind is-icon", "aria-label": "Firecrawl" },
+                              React.createElement(Flame, { width: 14, height: 14, strokeWidth: 1.9 })
                             )
                         : kind === "database"
                           ? React.createElement("span", { className: "playground-metronome-inspector-node-kind is-icon", "aria-label": "Database" },
@@ -18464,6 +19154,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           comment: config.comment || "",
                           fieldsJson: config.fieldsJson || "{\n  \"status\": \"planned\"\n}",
                         });
+                      } else if (kind === "firecrawl") {
+                        updateSelectedNodeConfigPatch(createDefaultMetronomeFirecrawlConfig(nextSubtype, config));
+                      } else if (kind === "database") {
+                        updateSelectedNodeConfigPatch(createDefaultMetronomeDatabaseConfig(nextSubtype, config));
                       } else if (kind === "loop") {
                         const nextLoopType = normalizeMetronomeLoopType(nextSubtype);
                         updateSelectedNodeConfigPatch(createDefaultMetronomeLoopConfig(nextLoopType, config));
@@ -18555,6 +19249,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	                      )
                   : kind === "database"
                     ? renderDatabaseSettings()
+                  : kind === "firecrawl"
+                    ? renderFirecrawlSettings()
                   : kind === "metronome"
                     ? React.createElement(React.Fragment, null,
                         React.createElement("div", { className: "playground-metronome-field" },
@@ -19138,6 +19834,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             if (kind === "end") return Square;
             if (kind === "imagine") return Clapperboard;
             if (kind === "function") return FunctionSquare;
+            if (kind === "firecrawl") return Flame;
             if (kind === "database") return Database;
             if (kind === "ticket") return Bookmark;
             if (kind === "metronome") return Metronome;
