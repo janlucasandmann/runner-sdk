@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode, type WheelEvent as ReactWheelEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode, type WheelEvent as ReactWheelEvent } from "react";
 import {
   ChevronDown as LucideChevronDown,
   ChevronLeft as LucideChevronLeft,
@@ -57,6 +57,7 @@ import {
   type RunnerSpreadsheetPreviewControls,
   type RunnerSpreadsheetSaveOptions,
 } from "./runner-spreadsheet-preview.js";
+import { getRunnerSpreadsheetFormat } from "./runner-spreadsheet-utils.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
 const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
@@ -77,6 +78,15 @@ interface AttachmentDirectoryPreviewState {
   error?: string | null;
 }
 
+interface RunnerPreviewEditableCodeSource {
+  key: string;
+  text: string;
+  language?: string;
+  filename: string;
+  mimeType: string;
+  canSave: boolean;
+}
+
 function getWebSearchPreviewSourceDomain(source: RunnerWebSearchPreviewSource): string {
   if (source.domain) {
     return source.domain;
@@ -86,6 +96,27 @@ function getWebSearchPreviewSourceDomain(source: RunnerWebSearchPreviewSource): 
   } catch {
     return "";
   }
+}
+
+function getRunnerPreviewTextMimeType(filename?: string | null, mimeType?: string | null, language?: string | null): string {
+  const normalizedMimeType = String(mimeType || "").trim();
+  if (normalizedMimeType) return normalizedMimeType;
+  const extension = String(filename || "").trim().toLowerCase().split(".").pop() || "";
+  if (extension === "csv") return "text/csv;charset=utf-8";
+  if (extension === "tsv") return "text/tab-separated-values;charset=utf-8";
+  if (extension === "md" || extension === "markdown" || language === "markdown") return "text/markdown;charset=utf-8";
+  if (extension === "html" || extension === "htm" || language === "html") return "text/html;charset=utf-8";
+  if (extension === "json" || language === "json") return "application/json;charset=utf-8";
+  return "text/plain;charset=utf-8";
+}
+
+function isRunnerPreviewEditableTextDocumentKind(kind: RunnerDocumentPreviewKind | null): boolean {
+  return kind === "text" || kind === "markdown" || kind === "html";
+}
+
+function isRunnerPreviewEditableSpreadsheetCode(filename?: string | null, mimeType?: string | null): boolean {
+  const format = getRunnerSpreadsheetFormat(filename, mimeType);
+  return format === "csv" || format === "tsv";
 }
 
 function getWebSearchPreviewFaviconUrl(domain: string): string {
@@ -405,6 +436,13 @@ export function RunnerDocumentPreviewDrawer({
   const [spreadsheetPreviewMode, setSpreadsheetPreviewMode] = useState<"preview" | "code">("preview");
   const [attachmentDiffMode, setAttachmentDiffMode] = useState(false);
   const [spreadsheetPreviewControls, setSpreadsheetPreviewControls] = useState<RunnerSpreadsheetPreviewControls | null>(null);
+  const [editableCodeDraft, setEditableCodeDraft] = useState("");
+  const [editableCodeBaseline, setEditableCodeBaseline] = useState("");
+  const [editableCodeSourceKey, setEditableCodeSourceKey] = useState("");
+  const [editableCodeSaveState, setEditableCodeSaveState] = useState<{
+    status: "idle" | "saving" | "saved" | "error";
+    message: string;
+  }>({ status: "idle", message: "" });
   const [imagePreviewZoom, setImagePreviewZoom] = useState(1);
   const [imagePreviewToolMode, setImagePreviewToolMode] = useState<"idle" | "select" | "crop">("idle");
   const [imageNaturalSize, setImageNaturalSize] = useState<RunnerImageNaturalSize>({ width: 0, height: 0 });
@@ -483,6 +521,91 @@ export function RunnerDocumentPreviewDrawer({
     attachment.diffContent.trim()
   );
   const isAttachmentDiffMode = canShowAttachmentDiff && attachmentDiffMode;
+  const editableCodeSource = useMemo<RunnerPreviewEditableCodeSource | null>(() => {
+    if (documentPreviewState.status !== "ready") {
+      return null;
+    }
+
+    if (
+      isRunnerPreviewEditableTextDocumentKind(documentPreviewState.kind)
+      && typeof documentPreviewState.text === "string"
+    ) {
+      const language = documentPreviewState.kind === "markdown"
+        ? "markdown"
+        : documentPreviewState.kind === "html"
+          ? "html"
+          : undefined;
+      const text = documentPreviewState.text;
+      return {
+        key: JSON.stringify(["text", attachment.id, attachment.filename, documentPreviewState.kind, text.length, text.slice(0, 80), text.slice(-80)]),
+        text,
+        language,
+        filename: attachment.filename,
+        mimeType: getRunnerPreviewTextMimeType(attachment.filename, attachment.mimeType, language),
+        canSave: Boolean(onDocumentBlobSave),
+      };
+    }
+
+    if (documentPreviewState.kind === "spreadsheet" && spreadsheetPreviewMode === "code" && spreadsheetPreviewControls) {
+      const text = spreadsheetPreviewControls.codeText || "";
+      return {
+        key: JSON.stringify(["spreadsheet", attachment.id, attachment.filename, spreadsheetPreviewControls.codeLanguage, text.length, text.slice(0, 80), text.slice(-80)]),
+        text,
+        language: spreadsheetPreviewControls.codeLanguage || undefined,
+        filename: attachment.filename,
+        mimeType: getRunnerPreviewTextMimeType(attachment.filename, attachment.mimeType, spreadsheetPreviewControls.codeLanguage),
+        canSave: Boolean(onDocumentBlobSave && isRunnerPreviewEditableSpreadsheetCode(attachment.filename, attachment.mimeType)),
+      };
+    }
+
+    return null;
+  }, [
+    attachment.filename,
+    attachment.id,
+    attachment.mimeType,
+    documentPreviewState.kind,
+    documentPreviewState.status,
+    documentPreviewState.text,
+    onDocumentBlobSave,
+    spreadsheetPreviewControls,
+    spreadsheetPreviewMode,
+  ]);
+  useEffect(() => {
+    const nextSourceKey = editableCodeSource?.key || "";
+    if (nextSourceKey === editableCodeSourceKey) {
+      return;
+    }
+    setEditableCodeSourceKey(nextSourceKey);
+    const nextSourceText = editableCodeSource?.text || "";
+    setEditableCodeDraft(nextSourceText);
+    setEditableCodeBaseline(nextSourceText);
+    setEditableCodeSaveState({ status: "idle", message: "" });
+  }, [editableCodeSource, editableCodeSourceKey]);
+  const editableCodeText = editableCodeSourceKey && editableCodeSource?.key === editableCodeSourceKey
+    ? editableCodeDraft
+    : editableCodeSource?.text || "";
+  const isEditableCodeDirty = Boolean(editableCodeSource && editableCodeText !== editableCodeBaseline);
+  const handleEditableCodeSave = useCallback(async () => {
+    if (!editableCodeSource?.canSave || !onDocumentBlobSave || editableCodeSaveState.status === "saving") {
+      return;
+    }
+
+    setEditableCodeSaveState({ status: "saving", message: "" });
+    try {
+      const blob = new Blob([editableCodeText], { type: editableCodeSource.mimeType || "text/plain;charset=utf-8" });
+      await Promise.resolve(onDocumentBlobSave(blob, {
+        filename: editableCodeSource.filename,
+        mimeType: editableCodeSource.mimeType,
+      }));
+      setEditableCodeBaseline(editableCodeText);
+      setEditableCodeSaveState({ status: "saved", message: "Saved" });
+    } catch (error) {
+      setEditableCodeSaveState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Failed to save file.",
+      });
+    }
+  }, [editableCodeSaveState.status, editableCodeSource, editableCodeText, onDocumentBlobSave]);
   const requestHeadersWithApiKey = useMemo(
     () => buildRunnerPreviewHeaders(requestHeaders, apiKey),
     [apiKey, requestHeaders]
@@ -848,12 +971,16 @@ export function RunnerDocumentPreviewDrawer({
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation?.();
+      if (isPreviewCodeMode && editableCodeSource?.canSave) {
+        void handleEditableCodeSave();
+        return;
+      }
       spreadsheetPreviewControls?.onSave();
     }
 
     window.addEventListener("keydown", handleSpreadsheetSaveShortcut, true);
     return () => window.removeEventListener("keydown", handleSpreadsheetSaveShortcut, true);
-  }, [isSpreadsheetAttachment, spreadsheetPreviewControls]);
+  }, [editableCodeSource?.canSave, handleEditableCodeSave, isPreviewCodeMode, isSpreadsheetAttachment, spreadsheetPreviewControls]);
 
   useEffect(() => {
     if (
@@ -2055,7 +2182,7 @@ export function RunnerDocumentPreviewDrawer({
           </>
         )
     : null;
-  const spreadsheetPreviewHeaderActions = isSpreadsheetAttachment && spreadsheetPreviewControls?.canSave
+  const spreadsheetPreviewHeaderActions = isSpreadsheetAttachment && spreadsheetPreviewControls?.canSave && spreadsheetPreviewMode !== "code"
     ? (
       <>
         <button
@@ -2095,9 +2222,34 @@ export function RunnerDocumentPreviewDrawer({
       </>
     )
     : null;
+  const editableCodeHeaderActions = isPreviewCodeMode && editableCodeSource?.canSave
+    ? (
+      <>
+        {editableCodeSaveState.message ? (
+          <span className={`tb-attachment-preview-code-save-message is-${editableCodeSaveState.status}`}>
+            {editableCodeSaveState.message}
+          </span>
+        ) : null}
+        <button
+          type="button"
+          className="playground-code-preview-header-save-button tb-spreadsheet-preview-header-save-button"
+          onClick={() => void handleEditableCodeSave()}
+          disabled={!isEditableCodeDirty || editableCodeSaveState.status === "saving"}
+          title="Save file"
+        >
+          {editableCodeSaveState.status === "saving" ? (
+            <LucideLoaderCircle className="tb-context-action-notice-icon-spinner" width={14} height={14} strokeWidth={1.9} />
+          ) : (
+            <LucideHardDrive width={14} height={14} strokeWidth={1.9} />
+          )}
+          <span>{editableCodeSaveState.status === "saving" ? "Saving..." : "Save"}</span>
+        </button>
+      </>
+    )
+    : null;
   const hasDrawerHeaderActions = Boolean(
     (isBuiltInImageToolModeActive ? builtInImagePreviewHeaderActions : (
-      spreadsheetPreviewHeaderActions || headerActions || builtInImagePreviewHeaderActions || canShowAttachmentDiff || canTogglePreviewCode || headerActionsAfterPreviewToggle || (showCloseButton && onClose)
+      editableCodeHeaderActions || spreadsheetPreviewHeaderActions || headerActions || builtInImagePreviewHeaderActions || canShowAttachmentDiff || canTogglePreviewCode || headerActionsAfterPreviewToggle || (showCloseButton && onClose)
     ))
   );
   const shouldRenderImagePreviewZoomControl = Boolean(imagePreviewFullscreen && isImageAttachment && effectiveImagePreviewUrl);
@@ -2182,6 +2334,7 @@ export function RunnerDocumentPreviewDrawer({
                 builtInImagePreviewHeaderActions
               ) : (
 	                <>
+	                  {editableCodeHeaderActions}
 	                  {spreadsheetPreviewHeaderActions}
 	                  {builtInImagePreviewHeaderActions}
 	                  {canShowAttachmentDiff ? (
@@ -2405,12 +2558,15 @@ export function RunnerDocumentPreviewDrawer({
             markdownPreviewMode === "code" && typeof documentPreviewState.text === "string" ? (
               <div className="tb-attachment-preview-code-shell">
                 <RunnerCodeViewer
-                  content={documentPreviewState.text}
+                  content={editableCodeSource?.key === editableCodeSourceKey ? editableCodeText : documentPreviewState.text}
                   filePath={attachment.filename}
                   language="html"
                   maxHeight={inline ? 520 : 980}
                   showLineNumbers
                   className="tb-log-card-code-hide-scrollbars"
+                  readOnly={!editableCodeSource?.canSave}
+                  onChange={setEditableCodeDraft}
+                  fillHeight
                 />
               </div>
             ) : (
@@ -2426,12 +2582,15 @@ export function RunnerDocumentPreviewDrawer({
             markdownPreviewMode === "code" ? (
               <div className="tb-attachment-preview-code-shell">
                 <RunnerCodeViewer
-                  content={documentPreviewState.text}
+                  content={editableCodeSource?.key === editableCodeSourceKey ? editableCodeText : documentPreviewState.text}
                   filePath={attachment.filename}
                   language="markdown"
                   maxHeight={inline ? 520 : 980}
                   showLineNumbers
                   className="tb-log-card-code-hide-scrollbars"
+                  readOnly={!editableCodeSource?.canSave}
+                  onChange={setEditableCodeDraft}
+                  fillHeight
                 />
               </div>
             ) : (
@@ -2451,11 +2610,14 @@ export function RunnerDocumentPreviewDrawer({
           ) : documentPreviewState.kind === "text" && typeof documentPreviewState.text === "string" ? (
             <div className="tb-attachment-preview-code-shell">
               <RunnerCodeViewer
-                content={documentPreviewState.text}
+                content={editableCodeSource?.key === editableCodeSourceKey ? editableCodeText : documentPreviewState.text}
                 filePath={attachment.filename}
                 maxHeight={inline ? 520 : 980}
                 showLineNumbers
                 className="tb-log-card-code-hide-scrollbars"
+                readOnly={!editableCodeSource?.canSave}
+                onChange={setEditableCodeDraft}
+                fillHeight
               />
             </div>
           ) : documentPreviewState.kind === "spreadsheet" && documentPreviewState.blob ? (
@@ -2473,12 +2635,15 @@ export function RunnerDocumentPreviewDrawer({
               {spreadsheetPreviewMode === "code" ? (
                 <div className="tb-attachment-preview-code-shell">
                   <RunnerCodeViewer
-                    content={spreadsheetPreviewControls?.codeText || ""}
+                    content={editableCodeSource?.key === editableCodeSourceKey ? editableCodeText : spreadsheetPreviewControls?.codeText || ""}
                     filePath={attachment.filename}
                     language={spreadsheetPreviewControls?.codeLanguage || "json"}
                     maxHeight={inline ? 520 : 980}
                     showLineNumbers
                     className="tb-log-card-code-hide-scrollbars"
+                    readOnly={!editableCodeSource?.canSave}
+                    onChange={setEditableCodeDraft}
+                    fillHeight
                   />
                 </div>
               ) : null}

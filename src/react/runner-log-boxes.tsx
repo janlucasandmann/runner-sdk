@@ -833,6 +833,9 @@ export function RunnerCodeViewer({
   maxHeight,
   showLineNumbers = false,
   className,
+  readOnly = true,
+  onChange,
+  fillHeight = false,
 }: {
   content: string;
   filePath?: string;
@@ -840,15 +843,20 @@ export function RunnerCodeViewer({
   maxHeight?: number;
   showLineNumbers?: boolean;
   className?: string;
+  readOnly?: boolean;
+  onChange?: (value: string) => void;
+  fillHeight?: boolean;
 }) {
   const [EditorComponent, setEditorComponent] = useState<any>(null);
   const resolvedLanguage = language || detectCodeLanguage(content, filePath);
   const lineCount = Math.max(1, content.split("\n").length);
   const naturalHeight = Math.max(lineCount * 18 + 8, 26);
-  const height = typeof maxHeight === "number" ? Math.min(naturalHeight, maxHeight) : naturalHeight;
-  const isScrollable = typeof maxHeight === "number" && naturalHeight > maxHeight;
+  const height: number | string = fillHeight ? "100%" : typeof maxHeight === "number" ? Math.min(naturalHeight, maxHeight) : naturalHeight;
+  const isScrollable = fillHeight || (typeof maxHeight === "number" && naturalHeight > maxHeight);
   const normalizedFilePath = normalizeRunnerFilePath(filePath);
-  const editorKey = `${resolvedLanguage}:${normalizedFilePath || "inline"}:${content.length}:${height}:${showLineNumbers ? "ln" : "nln"}`;
+  const editorKey = readOnly
+    ? `${resolvedLanguage}:${normalizedFilePath || "inline"}:${content.length}:${height}:${showLineNumbers ? "ln" : "nln"}`
+    : `${resolvedLanguage}:${normalizedFilePath || "inline"}:${showLineNumbers ? "ln" : "nln"}:editable`;
 
   useEffect(() => {
     let isCancelled = false;
@@ -874,9 +882,14 @@ export function RunnerCodeViewer({
           path={normalizedFilePath}
           theme="runner-log-transparent"
           value={content}
+          onChange={(value: string | undefined) => {
+            if (!readOnly) {
+              onChange?.(value || "");
+            }
+          }}
           options={{
-            readOnly: true,
-            domReadOnly: true,
+            readOnly,
+            domReadOnly: readOnly,
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
             fontSize: 12,
@@ -896,8 +909,8 @@ export function RunnerCodeViewer({
             hideCursorInOverviewRuler: true,
             overviewRulerBorder: false,
             renderLineHighlight: "none",
-            contextmenu: false,
-            selectionHighlight: false,
+            contextmenu: !readOnly,
+            selectionHighlight: readOnly ? false : true,
             occurrencesHighlight: "off",
             glyphMargin: false,
             lineDecorationsWidth: showLineNumbers ? 8 : 0,
@@ -910,9 +923,18 @@ export function RunnerCodeViewer({
           }}
         />
       ) : (
-        <pre className="tb-log-card-code-fallback">
-          <code>{content}</code>
-        </pre>
+        readOnly ? (
+          <pre className="tb-log-card-code-fallback">
+            <code>{content}</code>
+          </pre>
+        ) : (
+          <textarea
+            className="tb-log-card-code-fallback tb-log-card-code-editor-fallback"
+            value={content}
+            onChange={(event) => onChange?.(event.target.value)}
+            spellCheck={false}
+          />
+        )
       )}
     </div>
   );

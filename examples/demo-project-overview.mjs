@@ -1924,6 +1924,71 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         z-index: 1;
       }
 
+      .playground-project-overview-general-empty-state {
+        --playground-home-widget-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        min-height: 438px;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 20px;
+        border: 0;
+        border-radius: 15px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+        overflow: hidden;
+      }
+
+      .playground-project-overview-general-empty-state::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-home-widget-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-project-overview-general-empty-state > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-project-overview-general-empty-content {
+        min-height: 320px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-project-overview-general-empty-action {
+        margin-top: 8px;
+      }
+
+      .playground-project-overview-general-empty-action .playground-tasks-empty-primary-button {
+        font-weight: 500;
+      }
+
+      .playground-project-overview-general-empty-button {
+        font-weight: 500;
+      }
+
       .playground-project-overview-progress-card {
         min-height: 360px;
       }
@@ -10847,7 +10912,72 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
+          function shouldShowProjectOverviewGeneralEmptyState() {
+            const progressStats = getProjectOverviewProgressStats();
+            const hasTasks = progressStats.scopeCount > 0
+              || normalizedOverviewTasks.length > 0
+              || Number(selectedProjectSummary?.tasksCount || 0) > 0
+              || Number(selectedProjectSummary?.openTasksCount || 0) > 0;
+            const hasThreads = projectThreads.length > 0
+              || Number(selectedProjectSummary?.threadsCount || 0) > 0;
+            const hasActivity = buildProjectOverviewActivityItems().length > 0;
+            const hasMissionControlDocument = Boolean(
+              String(missionControlDocumentDraft || selectedProjectMissionControl?.document || "").trim()
+              || String(selectedProjectMissionControl?.summary || "").trim()
+            );
+            return !hasTasks
+              && !hasThreads
+              && !hasActivity
+              && !projectHasCostData
+              && !hasMissionControlDocument;
+          }
+
+          function renderProjectOverviewGeneralEmptyState() {
+            const isMissionControlRunning = typeof isSelectedProjectMissionControlRunning !== "undefined"
+              && Boolean(isSelectedProjectMissionControlRunning);
+            const canOpenMissionControl = typeof openMissionControlComposer === "function";
+            return React.createElement("section", { className: "playground-project-overview-general-empty-state" },
+              React.createElement("div", {
+                  className: "playground-settings-usage-chart-empty is-tall playground-auth-users-empty-state playground-configure-usage-empty-state playground-project-overview-general-empty-content",
+                },
+                React.createElement("img", {
+                  className: "playground-auth-users-empty-state-image",
+                  src: "/img/empty-state/no-agent-usage.avif",
+                  alt: "",
+                  "aria-hidden": "true",
+                  draggable: "false",
+                }),
+                React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "Kick off this project"),
+                React.createElement("div", { className: "playground-auth-users-empty-state-copy" },
+                  "Run Mission Control to generate the first strategy, backlog, and next steps for this project."
+                ),
+                React.createElement("div", { className: "playground-project-overview-general-empty-action" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-tasks-empty-primary-button playground-project-overview-general-empty-button",
+                    disabled: !canOpenMissionControl || isMissionControlRunning,
+                    onClick: () => {
+                      if (canOpenMissionControl) {
+                        openMissionControlComposer({ keepStrategyOpen: true });
+                      }
+                    },
+                  },
+                    isMissionControlRunning
+                      ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 2, className: "playground-files-state-loader" })
+                      : React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 2 }),
+                    React.createElement("span", null, isMissionControlRunning ? "Running Mission Control" : "Run Mission Control")
+                  )
+                )
+              )
+            );
+          }
+
           function renderProjectOverviewGeneralPanel() {
+            if (shouldShowProjectOverviewGeneralEmptyState()) {
+              return React.createElement("div", { className: "playground-project-overview-general-grid" },
+                renderProjectOverviewGeneralEmptyState()
+              );
+            }
             return React.createElement("div", { className: "playground-project-overview-general-grid" },
               renderProjectOverviewProgressUsageChartSection(),
               renderProjectOverviewActivitySection(),
@@ -11989,6 +12119,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             }
 
             function renderProjectOverviewOutcomeEditorModal() {
+              if (typeof renderSharedProjectOverviewOutcomeEditorModal === "function") {
+                return renderSharedProjectOverviewOutcomeEditorModal({
+                  normalizedOverviewTasks,
+                  strategyBrief,
+                });
+              }
               const index = Number(projectOverviewOutcomeEditorState?.index);
               const draft = getProjectOverviewOutcomeEditorDraft(index);
               if (!projectOverviewOutcomeEditorState || !Number.isInteger(index) || index < 0) {

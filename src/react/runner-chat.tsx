@@ -15170,38 +15170,38 @@ export function RunnerChat({
   }
 
   async function createWorkspaceAttachment(item: RunnerChatFileNode, sourceEnvironmentId: string): Promise<LocalAttachment> {
-    const downloadUrl = buildEnvironmentFileDownloadUrl(normalizedBackendUrl, sourceEnvironmentId, item.path);
-    if (!downloadUrl) {
+    const workspacePath = normalizeRunnerPreviewWorkspacePath(item.path || item.id);
+    if (!workspacePath) {
       throw new Error(`Failed to prepare ${item.name} for attachment.`);
     }
 
-    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
-    const response = await fetch(downloadUrl, {
-      method: "GET",
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to load ${item.name} (${response.status})`);
-    }
-
-    const blob = await response.blob();
-    const mimeType = blob.type || item.mimeType || "application/octet-stream";
-    const file = new File([blob], item.name, { type: mimeType });
-    const type = attachmentTypeForFile(mimeType, item.name);
-    const resolvedAttachment = await uploadAttachment({
+    const filename = String(item.name || workspacePath.split("/").filter(Boolean).pop() || "file").trim() || "file";
+    const previewAttachment = buildRunnerPreviewAttachmentFromPath(workspacePath, {
       backendUrl: normalizedBackendUrl,
-      apiKey: apiKey.trim(),
-      requestHeaders,
-      file,
       environmentId: sourceEnvironmentId,
+      idPrefix: "workspace",
     });
+    const mimeType = String(item.mimeType || previewAttachment.mimeType || "application/octet-stream").trim() || "application/octet-stream";
+    const type = attachmentTypeForFile(mimeType, filename);
+    const resolvedAttachment: RunnerAttachment = {
+      ...previewAttachment,
+      id: previewAttachment.id,
+      filename,
+      mimeType,
+      size: typeof item.size === "number" && Number.isFinite(item.size) ? item.size : 0,
+      type,
+      uploadedAt: String(item.modifiedTime || item.createdTime || new Date().toISOString()),
+      workspacePath,
+      sourcePath: workspacePath,
+      sourceEnvironmentId,
+    };
+    const file = new File([""], filename, { type: mimeType });
 
     return {
       id: generateId("workspace"),
       file,
       type,
-      previewUrl: type === "image" ? URL.createObjectURL(blob) : undefined,
+      previewUrl: type === "image" ? previewAttachment.previewUrl || previewAttachment.url : undefined,
       source: "workspace",
       sourceEnvironmentId,
       resolvedAttachment,

@@ -18,7 +18,7 @@ import {
 export interface RunnerSpreadsheetSaveOptions {
   filename: string;
   mimeType: string;
-  workbook: RunnerSpreadsheetWorkbook;
+  workbook?: RunnerSpreadsheetWorkbook;
 }
 
 export interface RunnerSpreadsheetPreviewControls {

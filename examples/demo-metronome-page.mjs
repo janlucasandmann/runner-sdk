@@ -6410,6 +6410,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             subtypes: [
               { id: "fixed_count", label: "Fixed count" },
               { id: "workflow_context_contains", label: "Workflow context contains" },
+              { id: "input_items", label: "Input items" },
               { id: "project_tickets", label: "Project tickets" },
               { id: "database_field", label: "Database field" },
               { id: "database_documents", label: "Database documents" },
@@ -6591,6 +6592,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           { id: "last.documents", label: "Previous node documents" },
           { id: "last.records", label: "Previous node records" },
           { id: "last.files", label: "Previous node files" },
+          { id: "previous.table.batches", label: "Previous table batches" },
+          { id: "previous.thread.records", label: "Previous thread records" },
+          { id: "current.records", label: "Current loop records" },
+          { id: "current.record", label: "Current loop record" },
+          { id: "current.batch", label: "Current loop batch" },
           { id: "workflow.context", label: "Full workflow context" },
           { id: "trigger.input", label: "Trigger input" },
         ];
@@ -6626,6 +6632,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             requireJsonOutput: Boolean(overrides.requireJsonOutput || overrides.require_json_output),
             outputFieldsJson: String(overrides.outputFieldsJson || overrides.output_fields_json || JSON.stringify(METRONOME_THREAD_OUTPUT_FIELDS, null, 2)),
             outputContractJson: String(overrides.outputContractJson || overrides.output_contract_json || "{\n  \"summary\": \"\",\n  \"urls\": [],\n  \"records\": [],\n  \"artifacts\": []\n}"),
+            outputKey: String(overrides.outputKey || overrides.output_key || "thread"),
           };
         }
 
@@ -6848,6 +6855,13 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             copy: "When a database document is added, call a function, enrich the record, and branch to approval if confidence is low.",
             Icon: Database,
             graphFactory: createDatabaseEnrichmentLoopMetronomeGraph,
+          },
+          {
+            id: "restaurant-hyper-enrichment",
+            title: "Restaurant enrichment pipeline",
+            copy: "Parse a restaurant CSV into batches, search for menu pages with Firecrawl, structure results with a thread, and upsert batch outputs.",
+            Icon: Flame,
+            graphFactory: createRestaurantHyperEnrichmentMetronomeGraph,
           },
         ];
 
@@ -7300,7 +7314,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
         }
 
         const METRONOME_CONDITION_TYPES = new Set(["previous_output_contains", "database_document_field", "ticket_status", "json"]);
-        const METRONOME_LOOP_TYPES = new Set(["fixed_count", "workflow_context_contains", "project_tickets", "database_field", "database_documents"]);
+        const METRONOME_LOOP_TYPES = new Set(["fixed_count", "workflow_context_contains", "input_items", "project_tickets", "database_field", "database_documents"]);
         const METRONOME_TICKET_OPERATIONS = new Set(["adapt_ticket", "add_ticket_comment", "move_ticket_status", "start_work_on_ticket", "add_subtask"]);
 
         function normalizeMetronomeConditionType(value) {
@@ -7342,6 +7356,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             contextContainsText: String(source.contextContainsText || source.context_contains || source.contextContains || "").trim(),
             projectId: String(source.projectId || source.project_id || "").trim(),
             projectName: String(source.projectName || source.project_name || "").trim(),
+            inputBinding: String(source.inputBinding || source.input_binding || "previous.batches").trim() || "previous.batches",
             ticketStatusValue: String(source.ticketStatusValue || source.ticket_status || source.status || "planned").trim() || "planned",
             databaseId: String(source.databaseId || source.database_id || "").trim(),
             databaseName: String(source.databaseName || source.database_name || "").trim(),
@@ -8200,6 +8215,180 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               createMetronomeEdge("edge_confident_database", "condition_enrichment_confidence", "database_update_enriched_record", { sourceHandle: "else" }),
               createMetronomeEdge("edge_reviewed_end", "database_update_reviewed_record", "end_database_reviewed"),
               createMetronomeEdge("edge_enriched_end", "database_update_enriched_record", "end_database_enriched"),
+            ],
+          };
+        }
+
+        function createRestaurantHyperEnrichmentMetronomeGraph(options = {}) {
+          const projectId = String(options.projectId || "").trim();
+          const projectName = String(options.projectName || "").trim();
+          const workspaceConfig = projectId
+            ? { contextType: "project", resource: "project", projectId, projectName }
+            : { contextType: "computer", resource: "computer" };
+          const trigger = createMetronomeNode("trigger", { x: 90, y: 300 }, {
+            id: "trigger_restaurant_csv",
+            subtype: "thread_event",
+            label: "CSV Input",
+            description: "Start from @restaurant-enrichment with an attached restaurant CSV.",
+            config: {
+              triggerType: "thread_event",
+              threadCommand: "@restaurant-enrichment",
+              promptExtension: "Use the attached restaurant CSV as the batch input. Preserve Record ID, Company name, Website URL, Country, and City.",
+            },
+          });
+          const table = createMetronomeNode("table", { x: 390, y: 300 }, {
+            id: "table_parse_restaurants",
+            subtype: "parse_csv",
+            label: "Parse CSV",
+            description: "Convert the uploaded CSV into restaurant records and batches of 5.",
+            config: {
+              operation: "parse_csv",
+              inputBinding: "workflow.trigger.input.files",
+              hasHeader: true,
+              batchSize: 5,
+              outputKey: "restaurant_table",
+            },
+          });
+          const loop = createMetronomeNode("loop", { x: 700, y: 140 }, {
+            id: "loop_restaurant_batches",
+            subtype: "input_items",
+            label: "Batch Loop",
+            description: "Loop through CSV batches so search and extraction can short-circuit per batch.",
+            style: { width: 1080, height: 360 },
+            config: {
+              loopType: "input_items",
+              inputBinding: "previous.restaurant_table.batches",
+              maxIterations: 500,
+              progressSignal: "Each iteration should produce menu-detection records for the current batch.",
+              successCriteria: "Every input restaurant in the batch has a structured output record.",
+              noProgressLimit: 3,
+            },
+          });
+          const search = createMetronomeNode("firecrawl", { x: 74, y: 128 }, {
+            id: "firecrawl_find_menu_pages",
+            parentId: "loop_restaurant_batches",
+            subtype: "web_search",
+            label: "Find Menus",
+            description: "Search the web for official menu pages for the current restaurant batch.",
+            config: {
+              operation: "web_search",
+              inputBinding: "current.records",
+              query: [
+                "Find official menu pages for these restaurants. Prefer official websites, menu URLs, PDF menus, ordering pages, and image menu pages.",
+                "Return result pages that help determine whether a menu exists online.",
+                "Batch records:",
+                "{{ input }}",
+              ].join("\\n"),
+              limit: 8,
+              outputKey: "menu_search",
+            },
+          });
+          const detectMenus = createMetronomeNode("action", { x: 404, y: 128 }, {
+            id: "thread_detect_menus",
+            parentId: "loop_restaurant_batches",
+            subtype: "start_thread",
+            label: "Detect Menus",
+            description: "Map search results back to the batch and produce structured menu-detection records.",
+            config: {
+              ...workspaceConfig,
+              message: [
+                "You are processing one batch in a restaurant enrichment workflow.",
+                "Use the current batch records and Firecrawl search results to produce exactly one output record per input restaurant.",
+                "Do not invent menu URLs. If the evidence is weak, set menu_found to false and explain briefly.",
+                "Preserve the input Record ID / record_id, company name, website URL, country, and city.",
+              ].join("\\n"),
+              inputContextScope: "all",
+              outputMode: "structured",
+              requireJsonOutput: true,
+              outputKey: "menu_detection",
+              outputContractJson: JSON.stringify({
+                summary: "",
+                records: [
+                  {
+                    record_id: "",
+                    company_name: "",
+                    website_url: "",
+                    country: "",
+                    city: "",
+                    menu_found: false,
+                    menu_url: null,
+                    menu_source_type: null,
+                    confidence: 0,
+                    evidence_urls: [],
+                    notes: "",
+                  },
+                ],
+              }, null, 2),
+            },
+          });
+          const persist = createMetronomeNode("database", { x: 734, y: 128 }, {
+            id: "database_upsert_menu_detection",
+            parentId: "loop_restaurant_batches",
+            subtype: "upsert_many_documents",
+            label: "Persist Batch",
+            description: "Write structured menu-detection records into a Computer Agents database collection.",
+            config: {
+              operation: "upsert_many_documents",
+              collection: "restaurant_enrichment",
+              databaseCollection: "restaurant_enrichment",
+              recordsBinding: "previous.menu_detection.records",
+              upsertKey: "record_id",
+              documentTemplateJson: JSON.stringify({
+                step: "menu_detection",
+                source: "metronome.restaurant_hyper_enrichment",
+                record_id: "{{ input.record_id }}",
+                company_name: "{{ input.company_name }}",
+                menu_found: "{{ input.menu_found }}",
+                menu_url: "{{ input.menu_url }}",
+                payload: "{{ input }}",
+              }, null, 2),
+              outputKey: "persisted_menu_detection",
+            },
+          });
+          const report = createMetronomeNode("action", { x: 1840, y: 620 }, {
+            id: "thread_restaurant_run_report",
+            subtype: "start_thread",
+            label: "Run Report",
+            description: "Summarize the batch run and list remaining production steps.",
+            config: {
+              ...workspaceConfig,
+              message: [
+                "Summarize this restaurant enrichment workflow run from the structured workflow context.",
+                "Report parsed rows, processed batches, menu_found count if available, persisted records, failures, and next implementation steps for extraction, enrichment, outcome.csv, cost report, and accuracy report.",
+              ].join("\\n"),
+              inputContextScope: "all",
+              outputMode: "structured",
+              requireJsonOutput: true,
+              outputKey: "run_report",
+              outputContractJson: JSON.stringify({
+                summary: "",
+                parsed_rows: null,
+                processed_batches: null,
+                menu_found_count: null,
+                persisted_records: null,
+                failures: [],
+                next_steps: [],
+              }, null, 2),
+            },
+          });
+          const done = createMetronomeNode("end", { x: 2160, y: 620 }, {
+            id: "end_restaurant_enrichment",
+            subtype: "complete",
+            label: "End",
+            description: "Finish after the run report is produced.",
+            config: {},
+          });
+          return {
+            nodes: [trigger, table, loop, search, detectMenus, persist, report, done],
+            edges: [
+              createMetronomeEdge("edge_restaurant_trigger_table", "trigger_restaurant_csv", "table_parse_restaurants"),
+              createMetronomeEdge("edge_restaurant_table_loop", "table_parse_restaurants", "loop_restaurant_batches", { targetHandle: "loop-left" }),
+              createMetronomeEdge("edge_restaurant_loop_search", "loop_restaurant_batches", "firecrawl_find_menu_pages", { sourceHandle: "loop-left", targetHandle: "node-input" }),
+              createMetronomeEdge("edge_restaurant_search_detect", "firecrawl_find_menu_pages", "thread_detect_menus"),
+              createMetronomeEdge("edge_restaurant_detect_persist", "thread_detect_menus", "database_upsert_menu_detection"),
+              createMetronomeEdge("edge_restaurant_persist_loop_end", "database_upsert_menu_detection", "loop_restaurant_batches", { sourceHandle: "node-output", targetHandle: "loop-right" }),
+              createMetronomeEdge("edge_restaurant_loop_report", "loop_restaurant_batches", "thread_restaurant_run_report", { sourceHandle: "loop-right", targetHandle: "node-input" }),
+              createMetronomeEdge("edge_restaurant_report_end", "thread_restaurant_run_report", "end_restaurant_enrichment"),
             ],
           };
         }
@@ -10692,6 +10881,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             args.push(["project_name", configReader.take("projectName", "project_name")]);
             args.push(["input_context_scope", configReader.take("inputContextScope", "input_context_scope", "contextScope", "context_scope")]);
             args.push(["output_mode", configReader.take("outputMode", "output_mode")]);
+            args.push(["output_key", configReader.take("outputKey", "output_key")]);
             args.push(["require_json_output", configReader.take("requireJsonOutput", "require_json_output")]);
             args.push(["output_fields", configReader.take("outputFieldsJson", "output_fields_json", "outputFields", "output_fields")]);
             args.push(["output_contract", configReader.take("outputContractJson", "output_contract_json", "outputContract", "output_contract", "jsonOutputSchema", "json_output_schema")]);
@@ -10776,6 +10966,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           } else if (className === "LoopNode") {
             args.push(["iterations", configReader.take("iterations", "count")]);
             args.push(["max_iterations", configReader.take("maxIterations", "max_iterations")]);
+            args.push(["input_binding", configReader.take("inputBinding", "input_binding")]);
             args.push(["context_contains", configReader.take("contextContainsText", "context_contains", "contextContains")]);
             args.push(["project_id", configReader.take("projectId", "project_id")]);
             args.push(["project_name", configReader.take("projectName", "project_name")]);
@@ -11209,6 +11400,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               const projectName = getMetronomePythonCallKeyword(nodeCall, "project_name", undefined);
               const inputContextScope = getMetronomePythonCallKeyword(nodeCall, "input_context_scope", undefined);
               const outputMode = getMetronomePythonCallKeyword(nodeCall, "output_mode", undefined);
+              const outputKey = getMetronomePythonCallKeyword(nodeCall, "output_key", undefined);
               const requireJsonOutput = getMetronomePythonCallKeyword(nodeCall, "require_json_output", undefined);
               const outputFields = getMetronomePythonCallKeyword(nodeCall, "output_fields", undefined);
               const outputContract = getMetronomePythonCallKeyword(nodeCall, "output_contract", undefined);
@@ -11221,6 +11413,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               if (projectName !== undefined) config.projectName = projectName;
               if (inputContextScope !== undefined) config.inputContextScope = normalizeMetronomeInputContextScope(inputContextScope);
               if (outputMode !== undefined) config.outputMode = outputMode;
+              if (outputKey !== undefined) config.outputKey = outputKey;
               if (requireJsonOutput !== undefined) config.requireJsonOutput = Boolean(requireJsonOutput);
               if (outputFields !== undefined) config.outputFieldsJson = typeof outputFields === "string" ? outputFields : JSON.stringify(outputFields, null, 2);
               if (outputContract !== undefined) config.outputContractJson = typeof outputContract === "string" ? outputContract : JSON.stringify(outputContract, null, 2);
@@ -11376,6 +11569,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               config.loopType = loopType;
               const iterations = getMetronomePythonCallKeyword(nodeCall, "iterations", undefined);
               const maxIterations = getMetronomePythonCallKeyword(nodeCall, "max_iterations", undefined);
+              const inputBinding = getMetronomePythonCallKeyword(nodeCall, "input_binding", undefined);
               const contextContains = getMetronomePythonCallKeyword(nodeCall, "context_contains", undefined);
               const projectId = getMetronomePythonCallKeyword(nodeCall, "project_id", undefined);
               const projectName = getMetronomePythonCallKeyword(nodeCall, "project_name", undefined);
@@ -11389,6 +11583,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               const databaseLimit = getMetronomePythonCallKeyword(nodeCall, "database_limit", undefined);
               if (iterations !== undefined) config.iterations = iterations;
               if (maxIterations !== undefined) config.maxIterations = maxIterations;
+              if (inputBinding !== undefined) config.inputBinding = inputBinding;
               if (contextContains !== undefined) config.contextContainsText = contextContains;
               if (projectId !== undefined) config.projectId = projectId;
               if (projectName !== undefined) config.projectName = projectName;
@@ -17195,11 +17390,13 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                     ? "Runs the enclosed steps a fixed number of times."
                     : selectedLoopType === "workflow_context_contains"
                       ? "Runs enclosed steps until the accumulated workflow summaries contain the target text."
-                      : selectedLoopType === "project_tickets"
-                        ? "Runs enclosed steps while matching project tickets still exist."
-                        : selectedLoopType === "database_documents"
-                          ? "Prepares matching documents from a database collection for downstream steps."
-                          : "Runs enclosed steps while matching database documents still exist."
+                      : selectedLoopType === "input_items"
+                        ? "Runs enclosed steps for each item or batch from a previous node output."
+                        : selectedLoopType === "project_tickets"
+                          ? "Runs enclosed steps while matching project tickets still exist."
+                          : selectedLoopType === "database_documents"
+                            ? "Prepares matching documents from a database collection for downstream steps."
+                            : "Runs enclosed steps while matching database documents still exist."
                 ),
                 selectedLoopType === "fixed_count"
                   ? React.createElement("div", { className: "playground-metronome-field" },
@@ -17231,6 +17428,23 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                         })
                       ),
                       renderMaxIterationsField()
+                    )
+                  : null,
+                selectedLoopType === "input_items"
+                  ? React.createElement(React.Fragment, null,
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        renderMetronomeFieldTitle("Input binding", "Use previous.batches for table batches, previous.records for rows, or loop.records inside nested loops."),
+                        React.createElement("input", {
+                          type: "text",
+                          className: "playground-metronome-input",
+                          value: loopConfig.inputBinding,
+                          placeholder: "previous.batches",
+                          onKeyDown: stopMetronomeInputKeyPropagation,
+                          onKeyUp: stopMetronomeInputKeyPropagation,
+                          onChange: (event) => updateSelectedNodeConfig("inputBinding", event.target.value),
+                        })
+                      ),
+                      renderMaxIterationsField("Item limit", "Maximum number of input items or batches to expose to enclosed steps.")
                     )
                   : null,
                 selectedLoopType === "project_tickets"
@@ -17965,6 +18179,15 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   React.createElement("option", { value: "text" }, "Narrative text"),
                   React.createElement("option", { value: "structured" }, "Structured JSON")
                 )
+              ),
+              React.createElement("div", { className: "playground-metronome-field" },
+                renderMetronomeFieldTitle("Output key", "Name this thread output so downstream nodes can bind to it, for example previous.menu_detection.records."),
+                React.createElement("input", {
+                  className: "playground-metronome-input",
+                  value: config.outputKey || config.output_key || "thread",
+                  onChange: (event) => updateSelectedNodeConfig("outputKey", event.target.value),
+                  placeholder: "thread",
+                })
               ),
               React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
                 React.createElement("div", { className: "playground-metronome-switch-copy" },

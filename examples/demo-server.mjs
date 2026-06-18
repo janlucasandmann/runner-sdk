@@ -20629,8 +20629,8 @@ const html = `<!doctype html>
       }
 
       .playground-files-image-thread-shell {
-        --playground-files-preview-composer-bottom: 15px;
-        --playground-files-preview-composer-reserved-bottom: 154px;
+        --playground-files-preview-composer-bottom: 8px;
+        --playground-files-preview-composer-reserved-bottom: 136px;
         min-width: 0;
         min-height: 0;
         flex: 1;
@@ -37756,11 +37756,26 @@ const html = `<!doctype html>
         background: rgba(0, 0, 0, 0);
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
-        transition: background-color 150ms linear !important;
+        transition: background-color 75ms linear !important;
       }
 
-      .playground-tasks-project-modal-backdrop.playground-tasks-project-initial-setup-backdrop.is-visible {
+      .playground-tasks-project-modal-backdrop.playground-tasks-project-initial-setup-backdrop.is-visible,
+      .playground-tasks-project-modal-backdrop.playground-tasks-project-issue-backdrop.is-visible,
+      .playground-tasks-project-modal-backdrop.playground-mission-control-modal-backdrop.is-visible {
         background: rgba(0, 0, 0, 0.5);
+      }
+
+      .playground-tasks-project-modal-backdrop.playground-tasks-project-issue-backdrop,
+      .playground-tasks-project-modal-backdrop.playground-mission-control-modal-backdrop {
+        z-index: 10020;
+        background: rgba(0, 0, 0, 0);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        transition: background-color 75ms linear !important;
+      }
+
+      .playground-tasks-project-modal-backdrop.playground-project-overview-outcome-editor-backdrop {
+        z-index: 10040;
       }
 
       .playground-agent-runtime-thread-modal-backdrop {
@@ -37994,6 +38009,38 @@ const html = `<!doctype html>
         padding-right: 4px;
       }
 
+      .playground-tasks-project-modal.playground-tasks-project-issue-modal .playground-tasks-project-modal-top {
+        align-items: center;
+      }
+
+      .playground-tasks-project-modal.playground-tasks-project-issue-modal .playground-tasks-project-modal-icon-trigger,
+      .playground-tasks-project-modal.playground-tasks-project-issue-modal .playground-tasks-project-modal-icon-trigger:hover,
+      .playground-tasks-project-modal.playground-tasks-project-issue-modal .playground-tasks-project-modal-icon-trigger.is-active,
+      .playground-tasks-project-modal.playground-tasks-project-issue-modal .playground-tasks-project-modal-icon-trigger:focus-visible {
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
+      .playground-tasks-project-modal.playground-tasks-project-issue-modal .playground-tasks-issue-details-section {
+        overflow: visible;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .playground-tasks-issue-modal-title-input {
+        min-width: 80px;
+      }
+
+      .playground-tasks-issue-modal-computer-picker {
+        flex: 0 1 280px;
+        min-width: 180px;
+      }
+
       .playground-tasks-issue-modal-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -38053,6 +38100,15 @@ const html = `<!doctype html>
       }
 
       @media (max-width: 720px) {
+        .playground-tasks-project-modal.playground-tasks-project-issue-modal .playground-tasks-project-modal-top {
+          flex-wrap: wrap;
+        }
+
+        .playground-tasks-issue-modal-computer-picker {
+          flex: 1 1 100%;
+          justify-content: flex-start;
+        }
+
         .playground-tasks-issue-modal-grid {
           grid-template-columns: 1fr;
         }
@@ -38488,13 +38544,65 @@ const html = `<!doctype html>
         transform-origin: center;
         opacity: 0.5;
         transform: scale(0.5);
-        transition: opacity 150ms linear, transform 150ms linear !important;
+        transition: opacity 75ms linear, transform 75ms linear !important;
         will-change: opacity, transform;
       }
 
-      .playground-tasks-project-composer-modal.playground-tasks-project-initial-setup-modal.is-visible {
+      .playground-tasks-project-composer-modal.playground-tasks-project-initial-setup-modal.is-visible,
+      .playground-tasks-project-modal.playground-tasks-project-issue-modal.is-visible,
+      .playground-tasks-project-modal.playground-mission-control-modal.is-visible {
         opacity: 1;
         transform: scale(1);
+      }
+
+      .playground-tasks-project-modal.playground-tasks-project-issue-modal,
+      .playground-tasks-project-modal.playground-mission-control-modal {
+        --tb-runner-input-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        overflow: visible;
+        border: 0 !important;
+        border-radius: 25px;
+        background: rgba(30, 30, 30, 0.5) !important;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        transform-origin: center;
+        opacity: 0.5;
+        transform: scale(0.5);
+        transition: opacity 75ms linear, transform 75ms linear !important;
+        will-change: opacity, transform;
+      }
+
+      .playground-tasks-project-modal.playground-tasks-project-issue-modal::before,
+      .playground-tasks-project-modal.playground-mission-control-modal::before {
+        content: "" !important;
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: block !important;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--tb-task-input-border, var(--tb-runner-input-border));
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-tasks-project-modal.playground-tasks-project-issue-modal::after,
+      .playground-tasks-project-modal.playground-mission-control-modal::after {
+        content: none !important;
+        display: none !important;
       }
 
       .playground-tasks-project-composer-modal.playground-tasks-project-initial-setup-modal::before {
@@ -38583,6 +38691,166 @@ const html = `<!doctype html>
 
       .playground-tasks-project-initial-setup-modal .playground-tasks-project-modal-actions {
         margin-top: 16px;
+      }
+
+      .playground-tasks-project-modal.playground-mission-control-modal {
+        width: min(720px, calc(100vw - 48px));
+        height: 700px;
+        max-height: calc(100vh - 48px);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        background: linear-gradient(to bottom, black, rgba(30,30,30,0.5), rgba(30,30,30,0.5)) !important;
+      }
+
+      .playground-mission-control-modal .playground-tasks-project-modal-top {
+        align-items: center;
+        justify-content: flex-end;
+        margin-bottom: 4px;
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .playground-mission-control-modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        overflow: visible;
+      }
+
+      .playground-mission-control-modal-context {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        overflow: auto;
+        padding-right: 4px;
+        scrollbar-width: none;
+      }
+
+      .playground-mission-control-modal-context::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-mission-control-modal-context-editor {
+        margin-top: 0;
+        padding-top: 0;
+      }
+
+      .playground-mission-control-modal-outcomes-editor {
+        margin-bottom: 84px;
+      }
+
+      .playground-mission-control-modal-outcomes-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-mission-control-modal-outcome-row {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 6px 8px 6px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        overflow: visible;
+      }
+
+      .playground-mission-control-modal-outcome-copy {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-mission-control-modal-outcome-input {
+        min-width: 0;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.86);
+        font: inherit;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .playground-mission-control-modal-outcome-input::placeholder {
+        color: rgba(255, 255, 255, 0.36);
+      }
+
+      .playground-mission-control-modal-outcome-add,
+      .playground-mission-control-modal-outcome-menu-trigger {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.68);
+        cursor: pointer;
+        transition: background-color 150ms ease, color 150ms ease;
+      }
+
+      .playground-mission-control-modal-outcome-add:hover,
+      .playground-mission-control-modal-outcome-menu-trigger:hover,
+      .playground-mission-control-modal-outcome-menu-shell.is-open .playground-mission-control-modal-outcome-menu-trigger {
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+      }
+
+      .playground-mission-control-modal-outcome-menu-shell {
+        flex: 0 0 auto;
+        z-index: 65;
+      }
+
+      .playground-mission-control-modal-outcome-menu {
+        width: 210px;
+        min-width: 210px;
+        z-index: 66;
+      }
+
+      .playground-mission-control-modal-outcomes-empty {
+        width: 100%;
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.5);
+        font: inherit;
+        font-size: 12px;
+        line-height: 1.4;
+        cursor: pointer;
+        transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+      }
+
+      .playground-mission-control-modal-outcomes-empty:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .playground-mission-control-modal-composer {
+        flex: 0 0 auto;
+        min-width: 0;
+        margin-top: auto;
+        overflow: visible;
+        position: relative;
+        z-index: 20;
       }
 
       .playground-mission-control-studio-body {
@@ -41978,16 +42246,50 @@ ${METRONOME_PAGE_CSS}
       }
 
       .tb-runner-chat.playground-mission-control-setup-runner .task-input-box {
+        --tb-task-input-overlay: transparent;
         --tb-task-input-outline: rgba(255, 255, 255, 0.1);
         --tb-task-input-border: rgba(255, 255, 255, 0.1);
-        background: transparent;
-        backdrop-filter: blur(50px);
-        -webkit-backdrop-filter: blur(50px);
+        --tb-task-input-base-bg: rgba(30, 30, 30, 0.9);
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
       }
 
       .tb-runner-chat.playground-mission-control-setup-runner .task-input-box:has(.sidebar-textarea:focus) {
-        --tb-task-input-outline: rgba(77, 163, 255, 0.42);
-        --tb-task-input-border: linear-gradient(-10deg, rgba(77, 163, 255, 0.24), rgba(141, 197, 255, 0.58), rgba(77, 163, 255, 0.3), rgba(77, 163, 255, 0.66));
+        --tb-task-input-outline: rgba(255, 255, 255, 0.1);
+        --tb-task-input-border: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-mission-control-modal .playground-mission-control-setup-pane,
+      .playground-mission-control-modal .tb-runner-chat.playground-mission-control-setup-runner {
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        min-height: 0;
+        flex: 0 0 auto;
+        display: block;
+        overflow: visible;
+      }
+
+      .playground-mission-control-modal .tb-runner-chat.playground-mission-control-setup-runner .workinglogsbox {
+        display: none !important;
+      }
+
+      .playground-mission-control-modal .tb-runner-chat.playground-mission-control-setup-runner .tb-input-shell {
+        position: static;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        padding: 0;
+        background: transparent;
+        pointer-events: auto;
+      }
+
+      .playground-mission-control-modal .tb-runner-chat.playground-mission-control-setup-runner .tb-input-width,
+      .playground-mission-control-modal .tb-runner-chat.playground-mission-control-setup-runner .embedded-runner-input,
+      .playground-mission-control-modal .tb-runner-chat.playground-mission-control-setup-runner .tb-composer-textarea-shell {
+        width: 100%;
+        max-width: none;
+        background: transparent !important;
       }
 
       .playground-mission-control-setup-form {
@@ -43952,6 +44254,10 @@ ${METRONOME_PAGE_CSS}
         border: 1px dashed rgba(255, 255, 255, 0.08);
         border-radius: 24px;
         background: rgba(255, 255, 255, 0.02);
+      }
+
+      .playground-tasks-empty-mission-control-button {
+        font-weight: 500;
       }
 
       .playground-tasks-backlog-feedback {
@@ -71911,7 +72217,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               showPreviewCodeToggle: singleSelectedEntryFileKind === "spreadsheet",
               imagePreviewInteractive: !isPreviewMaximized && !isImageSelectionMode && !isImageCropMode,
               enableImageWheelZoom: singleSelectedEntryFileKind === "image" && !isImageSelectionMode && !isImageCropMode,
-              imagePreviewReservedBottom: 132,
+              imagePreviewReservedBottom: singleSelectedEntryFileKind === "image" ? 132 : 0,
               imagePreviewFullscreen: singleSelectedEntryFileKind === "image" && isPreviewMaximized,
               imagePreviewOverlay: singleSelectedEntryFileKind === "image" && isImageSelectionMode
                 ? React.createElement(PlaygroundImageSelectionMaskOverlay, {
@@ -108040,7 +108346,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const [projectInitialSetupModalClosing, setProjectInitialSetupModalClosing] = useState(false);
         const projectInitialSetupModalCloseTimerRef = useRef(null);
         const projectInitialSetupModalFrameRef = useRef(null);
-        const projectInitialSetupModalAnimationMs = 150;
+        const projectInitialSetupModalAnimationMs = 75;
         const [projectIconPickerOpen, setProjectIconPickerOpen] = useState(false);
         const [projectBlueprintPickerOpen, setProjectBlueprintPickerOpen] = useState(false);
         const [projectSidebarPopover, setProjectSidebarPopover] = useState("");
@@ -108254,6 +108560,18 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const [draftTask, setDraftTask] = useState(null);
         const [projectTaskDetailScreenOpen, setProjectTaskDetailScreenOpen] = useState(false);
         const [issueComposerOpen, setIssueComposerOpen] = useState(false);
+        const [issueComposerVisible, setIssueComposerVisible] = useState(false);
+        const [issueComposerClosing, setIssueComposerClosing] = useState(false);
+        const issueComposerCloseTimerRef = useRef(null);
+        const issueComposerFrameRef = useRef(null);
+        const issueComposerAnimationMs = 75;
+        const issueComposerDescriptionTextareaRef = useRef(null);
+        const [isIssueComposerDescriptionEditing, setIsIssueComposerDescriptionEditing] = useState(false);
+        const [issueComposerEnvironmentPopoverOpen, setIssueComposerEnvironmentPopoverOpen] = useState(false);
+        const issueComposerEnvironmentPopoverRef = useRef(null);
+        const [issueComposerDetailSelectPopover, setIssueComposerDetailSelectPopover] = useState("");
+        const issueComposerDetailSelectPopoverRef = useRef(null);
+        const [issueComposerDetailsCollapsed, setIssueComposerDetailsCollapsed] = useState(false);
         const [issueComposerDraft, setIssueComposerDraft] = useState(buildPlaygroundDefaultTaskDraft());
         const [issueComposerSaveState, setIssueComposerSaveState] = useState({
           isSaving: false,
@@ -108291,6 +108609,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	        const missionControlStrategyDraftRef = useRef(buildEmptyPlaygroundProjectStrategyBrief());
 	        const missionControlStrategyDraftProjectIdRef = useRef("");
 	        const selectedProjectMissionControlRef = useRef(buildEmptyPlaygroundProjectMissionControl());
+        const [missionControlSetupOutcomesDraft, setMissionControlSetupOutcomesDraft] = useState("");
+        const [missionControlSetupOutcomeTitleDrafts, setMissionControlSetupOutcomeTitleDrafts] = useState({});
+        const [isMissionControlSetupOutcomesEditing, setIsMissionControlSetupOutcomesEditing] = useState(false);
+        const [missionControlSetupOutcomeMenuIndex, setMissionControlSetupOutcomeMenuIndex] = useState(-1);
+        const missionControlSetupOutcomeMenuRef = useRef(null);
 	        const [projectRulesDraft, setProjectRulesDraft] = useState("");
 	        const [projectRuleInputValue, setProjectRuleInputValue] = useState("");
 	        const [projectRuleComposerOpen, setProjectRuleComposerOpen] = useState(false);
@@ -108317,6 +108640,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         });
         const missionControlAgentSavePromiseRef = useRef(null);
         const [missionControlSetupOpen, setMissionControlSetupOpen] = useState(false);
+        const [missionControlSetupVisible, setMissionControlSetupVisible] = useState(false);
+        const [missionControlSetupClosing, setMissionControlSetupClosing] = useState(false);
+        const missionControlSetupCloseTimerRef = useRef(null);
+        const missionControlSetupFrameRef = useRef(null);
+        const missionControlSetupCommitInFlightRef = useRef(false);
+        const missionControlSetupAnimationMs = 75;
         const [missionControlSetupResetToken, setMissionControlSetupResetToken] = useState(0);
         const [missionControlAgent, setMissionControlAgent] = useState(null);
         const [missionControlAgentPreparing, setMissionControlAgentPreparing] = useState(false);
@@ -108784,29 +109113,82 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           if (!selectedProjectId && !selectedProject?.id) {
             return false;
           }
+          if (issueComposerCloseTimerRef.current) {
+            window.clearTimeout(issueComposerCloseTimerRef.current);
+            issueComposerCloseTimerRef.current = null;
+          }
+          if (issueComposerFrameRef.current) {
+            window.cancelAnimationFrame(issueComposerFrameRef.current);
+            issueComposerFrameRef.current = null;
+          }
+          setIssueComposerVisible(false);
+          setIssueComposerClosing(false);
           setProjectSidebarPopover("");
           setTaskDetailPopover("");
           setTaskDetailSelectPopover("");
           setTaskSkillsPopoverOpen(false);
+          setIsIssueComposerDescriptionEditing(false);
+          setIssueComposerEnvironmentPopoverOpen(false);
+          setIssueComposerDetailSelectPopover("");
+          setIssueComposerDetailsCollapsed(false);
           setIssueComposerDraft(buildProjectIssueComposerDraft());
           setIssueComposerSaveState({
             isSaving: false,
             error: "",
           });
           setIssueComposerOpen(true);
+          issueComposerFrameRef.current = window.requestAnimationFrame(() => {
+            issueComposerFrameRef.current = window.requestAnimationFrame(() => {
+              issueComposerFrameRef.current = null;
+              setIssueComposerVisible(true);
+            });
+          });
           return true;
         }
 
-        function closeProjectIssueComposer() {
-          if (issueComposerSaveState.isSaving) {
-            return;
+        function finishCloseProjectIssueComposer() {
+          if (issueComposerCloseTimerRef.current) {
+            window.clearTimeout(issueComposerCloseTimerRef.current);
+            issueComposerCloseTimerRef.current = null;
           }
+          if (issueComposerFrameRef.current) {
+            window.cancelAnimationFrame(issueComposerFrameRef.current);
+            issueComposerFrameRef.current = null;
+          }
+          setIssueComposerVisible(false);
+          setIssueComposerClosing(false);
           setIssueComposerOpen(false);
+          setIsIssueComposerDescriptionEditing(false);
+          setIssueComposerEnvironmentPopoverOpen(false);
+          setIssueComposerDetailSelectPopover("");
+          setIssueComposerDetailsCollapsed(false);
           setIssueComposerDraft(buildPlaygroundDefaultTaskDraft());
           setIssueComposerSaveState({
             isSaving: false,
             error: "",
           });
+        }
+
+        function closeProjectIssueComposer(options = {}) {
+          if (issueComposerSaveState.isSaving) {
+            return;
+          }
+          if (options?.animate === false) {
+            finishCloseProjectIssueComposer();
+            return;
+          }
+          if (issueComposerClosing) {
+            return;
+          }
+          setIssueComposerVisible(false);
+          setIssueComposerClosing(true);
+          if (issueComposerCloseTimerRef.current) {
+            window.clearTimeout(issueComposerCloseTimerRef.current);
+          }
+          issueComposerCloseTimerRef.current = window.setTimeout(() => {
+            issueComposerCloseTimerRef.current = null;
+            finishCloseProjectIssueComposer();
+          }, issueComposerAnimationMs);
         }
 
         function updateIssueComposerDraft(updater) {
@@ -108824,6 +109206,49 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             ...current,
             [field]: value,
           }));
+        }
+
+        function applyIssueComposerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateIssueComposerField("description", nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = issueComposerDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeTaskDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleIssueComposerDescriptionFormat(formatType) {
+          const textarea = issueComposerDescriptionTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(issueComposerDraft?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyIssueComposerDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
         useEffect(() => {
@@ -115190,6 +115615,172 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           finishCloseProjectComposer();
         }
 
+        function finishCloseMissionControlSetupModal() {
+          if (missionControlSetupCloseTimerRef.current) {
+            window.clearTimeout(missionControlSetupCloseTimerRef.current);
+            missionControlSetupCloseTimerRef.current = null;
+          }
+          if (missionControlSetupFrameRef.current) {
+            window.cancelAnimationFrame(missionControlSetupFrameRef.current);
+            missionControlSetupFrameRef.current = null;
+          }
+          setMissionControlSetupVisible(false);
+          setMissionControlSetupClosing(false);
+          setMissionControlSetupOutcomeMenuIndex(-1);
+          setMissionControlSetupOutcomeTitleDrafts({});
+          setProjectOverviewOutcomeEditorState(null);
+          closeProjectComposer({ animate: false });
+        }
+
+        function getMissionControlSetupProjectGoalDraft() {
+          return String(
+            projectDescriptionTextareaRef.current
+              ? projectDescriptionTextareaRef.current.value || ""
+              : projectDraft.description || ""
+          );
+        }
+
+        function getMissionControlSetupProjectSnapshot() {
+          const normalizedProjectId = String(projectDraft?.id || selectedProjectId || "").trim();
+          if (!normalizedProjectId) {
+            return null;
+          }
+          return normalizePlaygroundProjectRecord(
+            (selectedProject?.id === normalizedProjectId ? selectedProject : null)
+            || projectsById[normalizedProjectId]
+            || projectDraft
+          );
+        }
+
+        async function commitMissionControlSetupDraftBeforeClose() {
+          const normalizedProjectId = String(projectDraft?.id || selectedProjectId || "").trim();
+          if (!normalizedProjectId) {
+            return true;
+          }
+          if (missionControlSetupCommitInFlightRef.current) {
+            return false;
+          }
+
+          missionControlSetupCommitInFlightRef.current = true;
+          try {
+            const nextProjectGoal = getMissionControlSetupProjectGoalDraft();
+            const sourceProject = getMissionControlSetupProjectSnapshot();
+            const shouldSaveProjectGoal = Boolean(
+              sourceProject?.id
+              && String(nextProjectGoal) !== String(sourceProject.description || "")
+            );
+            const nextStrategyBrief = buildMissionControlSetupStrategyBriefFromDraft();
+            updateMissionControlStrategyDraft(nextStrategyBrief);
+
+            if (shouldSaveProjectGoal && String(projectDraft?.name || sourceProject.name || "").trim()) {
+              await persistProjectComposerDraft({
+                mode: projectDraft?.id ? "edit" : projectComposerMode,
+                closeAfterSave: false,
+                selectAfterSave: false,
+              });
+            }
+
+            await saveMissionControlStrategyBrief(nextStrategyBrief, { throwOnError: true });
+            setProjectSaveState((current) => current.error
+              ? { isSaving: false, error: "" }
+              : current
+            );
+            setMissionControlSaveState((current) => current.error
+              ? { isSaving: false, error: "", message: "" }
+              : current
+            );
+            return true;
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to save Mission Control changes.";
+            setProjectSaveState({
+              isSaving: false,
+              error: message,
+            });
+            setMissionControlSaveState({
+              isSaving: false,
+              error: message,
+              message: "",
+            });
+            return false;
+          } finally {
+            missionControlSetupCommitInFlightRef.current = false;
+          }
+        }
+
+        function closeMissionControlSetupModal(options = {}) {
+          if (!missionControlSetupOpen) {
+            return;
+          }
+          if (options?.persist !== false) {
+            if (missionControlSetupCommitInFlightRef.current) {
+              return;
+            }
+            void (async () => {
+              const committed = await commitMissionControlSetupDraftBeforeClose();
+              if (committed) {
+                closeMissionControlSetupModal({
+                  ...options,
+                  persist: false,
+                });
+              }
+            })();
+            return;
+          }
+          if (options?.animate === false) {
+            finishCloseMissionControlSetupModal();
+            return;
+          }
+          if (missionControlSetupClosing) {
+            return;
+          }
+          setProjectIconPickerOpen(false);
+          setProjectBlueprintPickerOpen(false);
+          setProjectComposerEnvironmentPopoverOpen(false);
+          setMissionControlSetupOutcomeMenuIndex(-1);
+          setMissionControlSetupOutcomeTitleDrafts({});
+          setProjectOverviewOutcomeEditorState(null);
+          setMissionControlSetupVisible(false);
+          setMissionControlSetupClosing(true);
+          if (missionControlSetupCloseTimerRef.current) {
+            window.clearTimeout(missionControlSetupCloseTimerRef.current);
+          }
+          missionControlSetupCloseTimerRef.current = window.setTimeout(() => {
+            missionControlSetupCloseTimerRef.current = null;
+            finishCloseMissionControlSetupModal();
+          }, missionControlSetupAnimationMs);
+        }
+
+        useEffect(() => {
+          if (!missionControlSetupOpen) {
+            setMissionControlSetupVisible(false);
+            setMissionControlSetupClosing(false);
+            return undefined;
+          }
+          if (missionControlSetupCloseTimerRef.current) {
+            window.clearTimeout(missionControlSetupCloseTimerRef.current);
+            missionControlSetupCloseTimerRef.current = null;
+          }
+          if (missionControlSetupFrameRef.current) {
+            window.cancelAnimationFrame(missionControlSetupFrameRef.current);
+            missionControlSetupFrameRef.current = null;
+          }
+          setMissionControlSetupVisible(false);
+          setMissionControlSetupClosing(false);
+          missionControlSetupFrameRef.current = window.requestAnimationFrame(() => {
+            missionControlSetupFrameRef.current = window.requestAnimationFrame(() => {
+              missionControlSetupFrameRef.current = null;
+              setMissionControlSetupVisible(true);
+            });
+          });
+          return undefined;
+        }, [missionControlSetupOpen]);
+
+        useEffect(() => {
+          if (!missionControlSetupOpen && projectOverviewOutcomeEditorState?.source === "mission-control-setup") {
+            setProjectOverviewOutcomeEditorState(null);
+          }
+        }, [missionControlSetupOpen, projectOverviewOutcomeEditorState?.source]);
+
         useEffect(() => {
           if (typeof onTasksHeaderChange !== "function") {
             return undefined;
@@ -116338,6 +116929,22 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               window.cancelAnimationFrame(projectInitialSetupModalFrameRef.current);
               projectInitialSetupModalFrameRef.current = null;
             }
+            if (missionControlSetupCloseTimerRef.current) {
+              window.clearTimeout(missionControlSetupCloseTimerRef.current);
+              missionControlSetupCloseTimerRef.current = null;
+            }
+            if (missionControlSetupFrameRef.current) {
+              window.cancelAnimationFrame(missionControlSetupFrameRef.current);
+              missionControlSetupFrameRef.current = null;
+            }
+            if (issueComposerCloseTimerRef.current) {
+              window.clearTimeout(issueComposerCloseTimerRef.current);
+              issueComposerCloseTimerRef.current = null;
+            }
+            if (issueComposerFrameRef.current) {
+              window.cancelAnimationFrame(issueComposerFrameRef.current);
+              issueComposerFrameRef.current = null;
+            }
           };
         }, []);
 
@@ -116346,6 +116953,18 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
           function handleProjectComposerEscape(event) {
             if (event.key !== "Escape") return;
+            if (projectOverviewOutcomeEditorState) {
+              setProjectOverviewOutcomeEditorState(null);
+              return;
+            }
+            if (missionControlSetupOutcomeMenuIndex >= 0) {
+              setMissionControlSetupOutcomeMenuIndex(-1);
+              return;
+            }
+            if (missionControlSetupOpen) {
+              closeMissionControlSetupModal();
+              return;
+            }
             if (projectEnvironmentFilePickerOpen) {
               setProjectEnvironmentFilePickerOpen(false);
               return;
@@ -116367,7 +116986,27 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
           window.addEventListener("keydown", handleProjectComposerEscape);
           return () => window.removeEventListener("keydown", handleProjectComposerEscape);
-        }, [projectBlueprintPickerOpen, projectComposerEnvironmentPopoverOpen, projectComposerOpen, projectEnvironmentFilePickerOpen, projectIconPickerOpen]);
+        }, [missionControlSetupClosing, missionControlSetupOpen, missionControlSetupOutcomeMenuIndex, projectBlueprintPickerOpen, projectComposerEnvironmentPopoverOpen, projectComposerOpen, projectEnvironmentFilePickerOpen, projectIconPickerOpen, projectOverviewOutcomeEditorState]);
+
+        useEffect(() => {
+          if (!issueComposerOpen) return undefined;
+
+          function handleIssueComposerEscape(event) {
+            if (event.key !== "Escape") return;
+            if (issueComposerDetailSelectPopover) {
+              setIssueComposerDetailSelectPopover("");
+              return;
+            }
+            if (issueComposerEnvironmentPopoverOpen) {
+              setIssueComposerEnvironmentPopoverOpen(false);
+              return;
+            }
+            closeProjectIssueComposer();
+          }
+
+          window.addEventListener("keydown", handleIssueComposerEscape);
+          return () => window.removeEventListener("keydown", handleIssueComposerEscape);
+        }, [issueComposerClosing, issueComposerDetailSelectPopover, issueComposerEnvironmentPopoverOpen, issueComposerOpen, issueComposerSaveState.isSaving]);
 
         useEffect(() => {
           if (!releaseComposerOpen) return undefined;
@@ -116461,6 +117100,57 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           document.addEventListener("mousedown", handleProjectComposerEnvironmentPopoverPointerDown);
           return () => document.removeEventListener("mousedown", handleProjectComposerEnvironmentPopoverPointerDown);
         }, [projectComposerEnvironmentPopoverOpen]);
+
+        useEffect(() => {
+          if (!issueComposerEnvironmentPopoverOpen) {
+            return undefined;
+          }
+
+          function handleIssueComposerEnvironmentPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !issueComposerEnvironmentPopoverRef.current || issueComposerEnvironmentPopoverRef.current.contains(target)) {
+              return;
+            }
+            setIssueComposerEnvironmentPopoverOpen(false);
+          }
+
+          document.addEventListener("mousedown", handleIssueComposerEnvironmentPopoverPointerDown);
+          return () => document.removeEventListener("mousedown", handleIssueComposerEnvironmentPopoverPointerDown);
+        }, [issueComposerEnvironmentPopoverOpen]);
+
+        useEffect(() => {
+          if (!issueComposerDetailSelectPopover) {
+            return undefined;
+          }
+
+          function handleIssueComposerDetailSelectPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !issueComposerDetailSelectPopoverRef.current || issueComposerDetailSelectPopoverRef.current.contains(target)) {
+              return;
+            }
+            setIssueComposerDetailSelectPopover("");
+          }
+
+          document.addEventListener("mousedown", handleIssueComposerDetailSelectPopoverPointerDown);
+          return () => document.removeEventListener("mousedown", handleIssueComposerDetailSelectPopoverPointerDown);
+        }, [issueComposerDetailSelectPopover]);
+
+        useEffect(() => {
+          if (missionControlSetupOutcomeMenuIndex < 0) {
+            return undefined;
+          }
+
+          function handleMissionControlOutcomeMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !missionControlSetupOutcomeMenuRef.current || missionControlSetupOutcomeMenuRef.current.contains(target)) {
+              return;
+            }
+            setMissionControlSetupOutcomeMenuIndex(-1);
+          }
+
+          document.addEventListener("mousedown", handleMissionControlOutcomeMenuPointerDown);
+          return () => document.removeEventListener("mousedown", handleMissionControlOutcomeMenuPointerDown);
+        }, [missionControlSetupOutcomeMenuIndex]);
 
         useEffect(() => {
           if (!projectBlueprintPickerOpen) {
@@ -118055,6 +118745,32 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          selectedProjectStrategyBrief,
 	          selectedProjectMissionControl.updatedAt,
 	        ]);
+
+        useEffect(() => {
+          if (isMissionControlSetupOutcomesEditing) {
+            return;
+          }
+          const nextStrategyBrief = normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraft);
+          setMissionControlSetupOutcomesDraft(serializeMissionControlSetupOutcomesForInput(nextStrategyBrief.outcomes));
+        }, [
+          isMissionControlSetupOutcomesEditing,
+          missionControlStrategyDraft,
+          selectedProjectId,
+        ]);
+
+        useEffect(() => {
+          if (!missionControlSetupOpen) {
+            return undefined;
+          }
+          const frame = window.requestAnimationFrame(() => {
+            resizeTaskDescriptionTextarea(projectDescriptionTextareaRef.current);
+          });
+          return () => window.cancelAnimationFrame(frame);
+        }, [
+          missionControlSetupOpen,
+          missionControlSetupOutcomesDraft,
+          projectDraft.description,
+        ]);
 
 	        useLayoutEffect(() => {
 	          if (!missionControlStrategyOpen && projectOverviewHomeTab !== "strategy" && projectOverviewHomeTab !== "rules") {
@@ -119845,12 +120561,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             });
             setTaskView("backlog");
             setProjectTaskDetailScreenOpen(true);
-            setIssueComposerOpen(false);
-            setIssueComposerDraft(buildPlaygroundDefaultTaskDraft());
-            setIssueComposerSaveState({
-              isSaving: false,
-              error: "",
-            });
+            finishCloseProjectIssueComposer();
           } catch (error) {
             setIssueComposerSaveState({
               isSaving: false,
@@ -121645,6 +122356,68 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           return normalizePlaygroundStrategyTextList(values).join(String.fromCharCode(10));
         }
 
+        function serializeMissionControlSetupOutcomesForInput(outcomes) {
+          return (Array.isArray(outcomes) ? outcomes : [])
+            .map((outcome) => {
+              const normalizedOutcome = normalizePlaygroundStrategyOutcomeRecord(outcome);
+              const title = String(normalizedOutcome.title || "").trim();
+              const description = String(normalizedOutcome.description || "").trim();
+              return title || description
+                ? title + (description ? " - " + description : "")
+                : "";
+            })
+            .filter(Boolean)
+            .join(String.fromCharCode(10));
+        }
+
+        function getMissionControlSetupOutcomeDraftLines(value) {
+          const normalizedValue = String(value || "").replaceAll(String.fromCharCode(13), "");
+          return normalizedValue ? normalizedValue.split(String.fromCharCode(10)) : [];
+        }
+
+        function serializeMissionControlSetupOutcomeDraftLines(lines) {
+          return (Array.isArray(lines) ? lines : [])
+            .map((line) => String(line || "").replaceAll(String.fromCharCode(13), ""))
+            .join(String.fromCharCode(10));
+        }
+
+        function parseMissionControlSetupOutcomesInput(value, previousOutcomes = []) {
+          const lines = getMissionControlSetupOutcomeDraftLines(value)
+            .map((line) => line.trim().replace(/^[-*]\\s+/, "").replace(/^\\d+[.)]\\s+/, ""))
+            .filter(Boolean);
+          return lines.map((line, index) => {
+            const previousOutcome = normalizePlaygroundStrategyOutcomeRecord(previousOutcomes[index] || {}, index);
+            const parts = line.split(/\\s+-\\s+/);
+            const title = String(parts.shift() || "").trim();
+            const description = parts.join(" - ").trim();
+            return normalizePlaygroundStrategyOutcomeRecord({
+              ...previousOutcome,
+              title: title || previousOutcome.title || ("Outcome " + String(index + 1)),
+              description,
+            }, index);
+          });
+        }
+
+        function buildMissionControlSetupStrategyBriefFromDraft(outcomesDraftOverride) {
+          const currentStrategyBrief = normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraftRef.current || missionControlStrategyDraft);
+          const projectGoal = String(
+            projectDescriptionTextareaRef.current
+              ? projectDescriptionTextareaRef.current.value
+              : projectDraft.description || ""
+          ).replaceAll(String.fromCharCode(13), "").trim();
+          const outcomesDraft = typeof outcomesDraftOverride === "string"
+            ? outcomesDraftOverride
+            : missionControlSetupOutcomesDraft;
+          return normalizePlaygroundProjectStrategyBrief({
+            ...currentStrategyBrief,
+            mission: projectGoal,
+            outcomes: parseMissionControlSetupOutcomesInput(
+              outcomesDraft,
+              currentStrategyBrief.outcomes
+            ),
+          });
+        }
+
         async function saveMissionControlStrategyBrief(nextStrategyBrief, options = {}) {
           const normalizedProjectId = String(selectedProjectId || "").trim();
           if (!normalizedProjectId) {
@@ -121733,6 +122506,248 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           });
           setMissionControlStrategyDraft(nextStrategyBrief);
           void saveMissionControlStrategyBrief(nextStrategyBrief);
+        }
+
+        function syncMissionControlSetupOutcomesDraft(nextStrategyBrief) {
+          const normalizedStrategyBrief = normalizePlaygroundProjectStrategyBrief(nextStrategyBrief);
+          setMissionControlSetupOutcomesDraft(serializeMissionControlSetupOutcomesForInput(normalizedStrategyBrief.outcomes));
+        }
+
+        function applyMissionControlStrategyBriefFromOutcomeEditor(nextStrategyBrief) {
+          const normalizedStrategyBrief = normalizePlaygroundProjectStrategyBrief(nextStrategyBrief);
+          setMissionControlStrategyDraft(normalizedStrategyBrief);
+          if (missionControlSetupOpen) {
+            syncMissionControlSetupOutcomesDraft(normalizedStrategyBrief);
+            setIsMissionControlSetupOutcomesEditing(false);
+          }
+        }
+
+        function buildProjectOverviewOutcomeEditorDraft(outcome, index = 0) {
+          const normalizedDraft = normalizePlaygroundStrategyOutcomeRecord(outcome, index);
+          return {
+            ...normalizedDraft,
+            successCriteriaInput: serializePlaygroundStrategyListForInput(normalizedDraft.successCriteria),
+          };
+        }
+
+        function updateProjectOverviewOutcomeEditorDraft(updates) {
+          if (typeof setProjectOverviewOutcomeEditorState !== "function") return;
+          setProjectOverviewOutcomeEditorState((current) => current
+            ? {
+                ...current,
+                draft: {
+                  ...(current.draft || {}),
+                  ...(updates || {}),
+                },
+              }
+            : current
+          );
+        }
+
+        function getProjectOverviewOutcomeEditorDraft(index = 0) {
+          const rawDraft = projectOverviewOutcomeEditorState?.draft || {};
+          const normalizedDraft = normalizePlaygroundStrategyOutcomeRecord(rawDraft, index);
+          return {
+            ...normalizedDraft,
+            title: typeof rawDraft.title === "string" ? rawDraft.title : normalizedDraft.title,
+            description: typeof rawDraft.description === "string" ? rawDraft.description : normalizedDraft.description,
+            successCriteriaInput: typeof rawDraft.successCriteriaInput === "string"
+              ? rawDraft.successCriteriaInput
+              : serializePlaygroundStrategyListForInput(normalizedDraft.successCriteria),
+          };
+        }
+
+        function normalizeProjectOverviewOutcomeEditorDraftForSave(rawDraft, index = 0) {
+          return normalizePlaygroundStrategyOutcomeRecord({
+            ...(rawDraft || {}),
+            successCriteria: typeof rawDraft?.successCriteriaInput === "string"
+              ? normalizePlaygroundStrategyTextList(rawDraft.successCriteriaInput)
+              : rawDraft?.successCriteria,
+          }, index);
+        }
+
+        async function saveProjectOverviewOutcomeEditor(options = {}) {
+          const sourceStrategyBrief = normalizePlaygroundProjectStrategyBrief(options?.strategyBrief || missionControlStrategyDraft);
+          const index = Number(projectOverviewOutcomeEditorState?.index);
+          const draft = normalizeProjectOverviewOutcomeEditorDraftForSave(projectOverviewOutcomeEditorState?.draft, index);
+          if (!Number.isInteger(index) || index < 0 || index > sourceStrategyBrief.outcomes.length) {
+            setProjectOverviewOutcomeEditorState(null);
+            return;
+          }
+          const isNewOutcome = projectOverviewOutcomeEditorState?.isNew === true || index >= sourceStrategyBrief.outcomes.length;
+          const nextStrategyBrief = normalizePlaygroundProjectStrategyBrief({
+            ...missionControlStrategyDraft,
+            ...sourceStrategyBrief,
+            outcomes: isNewOutcome
+              ? sourceStrategyBrief.outcomes.concat(draft)
+              : sourceStrategyBrief.outcomes.map((outcome, outcomeIndex) => outcomeIndex === index ? draft : outcome),
+          });
+          applyMissionControlStrategyBriefFromOutcomeEditor(nextStrategyBrief);
+          if (String(selectedProjectId || "").trim()) {
+            try {
+              await saveMissionControlStrategyBrief(nextStrategyBrief, { throwOnError: true });
+            } catch (error) {
+              setMissionControlSaveState({
+                isSaving: false,
+                error: error instanceof Error ? error.message : "Failed to save outcome.",
+                message: "",
+              });
+              return;
+            }
+          }
+          setProjectOverviewOutcomeEditorState(null);
+        }
+
+        function deleteProjectOverviewOutcomeEditor(options = {}) {
+          const sourceStrategyBrief = normalizePlaygroundProjectStrategyBrief(options?.strategyBrief || missionControlStrategyDraft);
+          const index = Number(projectOverviewOutcomeEditorState?.index);
+          if (projectOverviewOutcomeEditorState?.isNew !== true && Number.isInteger(index) && index >= 0) {
+            const nextStrategyBrief = normalizePlaygroundProjectStrategyBrief({
+              ...missionControlStrategyDraft,
+              ...sourceStrategyBrief,
+              outcomes: sourceStrategyBrief.outcomes.filter((_, outcomeIndex) => outcomeIndex !== index),
+            });
+            applyMissionControlStrategyBriefFromOutcomeEditor(nextStrategyBrief);
+            if (String(selectedProjectId || "").trim()) {
+              void saveMissionControlStrategyBrief(nextStrategyBrief);
+            }
+          }
+          setProjectOverviewOutcomeEditorState(null);
+        }
+
+        function toggleProjectOverviewOutcomeEditorTask(taskId) {
+          const normalizedTaskId = String(taskId || "").trim();
+          if (!normalizedTaskId) return;
+          const currentTaskIds = normalizePlaygroundIdList(projectOverviewOutcomeEditorState?.draft?.taskIds);
+          const nextTaskIds = currentTaskIds.includes(normalizedTaskId)
+            ? currentTaskIds.filter((id) => id !== normalizedTaskId)
+            : currentTaskIds.concat(normalizedTaskId);
+          updateProjectOverviewOutcomeEditorDraft({ taskIds: nextTaskIds });
+        }
+
+        function renderSharedProjectOverviewOutcomeEditorModal(options = {}) {
+          const sourceStrategyBrief = normalizePlaygroundProjectStrategyBrief(options?.strategyBrief || missionControlStrategyDraft);
+          const normalizedOverviewTasks = Array.isArray(options?.normalizedOverviewTasks)
+            ? options.normalizedOverviewTasks
+            : (Array.isArray(tasks) ? tasks.map((task) => normalizePlaygroundTaskRecord(task)) : []);
+          const index = Number(projectOverviewOutcomeEditorState?.index);
+          const draft = getProjectOverviewOutcomeEditorDraft(index);
+          if (!projectOverviewOutcomeEditorState || !Number.isInteger(index) || index < 0) {
+            return null;
+          }
+          const selectedTaskIds = new Set(normalizePlaygroundIdList(draft.taskIds));
+          const content = React.createElement("div", {
+              className: "playground-tasks-project-modal-backdrop playground-project-overview-outcome-editor-backdrop",
+              onClick: () => setProjectOverviewOutcomeEditorState(null),
+            },
+            React.createElement("form", {
+                className: "playground-tasks-project-modal playground-project-overview-outcome-editor-modal",
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => {
+                  event.preventDefault();
+                  void saveProjectOverviewOutcomeEditor({ strategyBrief: sourceStrategyBrief });
+                },
+              },
+              React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                    React.createElement(Award, { width: 18, height: 18, strokeWidth: 1.9 })
+                  ),
+                  React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "Edit Outcome")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                  onClick: () => setProjectOverviewOutcomeEditorState(null),
+                  title: "Close",
+                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+              ),
+              React.createElement("div", { className: "playground-project-overview-outcome-editor-body" },
+                React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Title"),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-environments-input",
+                    value: draft.title,
+                    placeholder: "Outcome title",
+                    onChange: (event) => updateProjectOverviewOutcomeEditorDraft({ title: event.target.value }),
+                  })
+                ),
+                React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Description"),
+                  React.createElement("textarea", {
+                    className: "playground-environments-textarea",
+                    rows: 4,
+                    value: draft.description,
+                    placeholder: "What this outcome should achieve",
+                    onChange: (event) => updateProjectOverviewOutcomeEditorDraft({ description: event.target.value }),
+                  })
+                ),
+                React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Success Criteria"),
+                  React.createElement("textarea", {
+                    className: "playground-environments-textarea",
+                    rows: 3,
+                    value: draft.successCriteriaInput,
+                    placeholder: "One success criterion per line",
+                    onChange: (event) => updateProjectOverviewOutcomeEditorDraft({ successCriteriaInput: event.target.value }),
+                  })
+                ),
+                React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Linked Tickets"),
+                  React.createElement("div", { className: "playground-project-overview-outcome-ticket-list" },
+                    normalizedOverviewTasks.length > 0
+                      ? normalizedOverviewTasks.map((task) => {
+                          const taskId = String(task?.id || "").trim();
+                          const selected = taskId && selectedTaskIds.has(taskId);
+                          const ticketNumber = taskTicketNumbersById[taskId] || task?.ticketNumber || "000";
+                          return React.createElement("button", {
+                              key: taskId || ticketNumber,
+                              type: "button",
+                              className: "playground-project-overview-outcome-ticket-row" + (selected ? " is-selected" : ""),
+                              onClick: () => toggleProjectOverviewOutcomeEditorTask(taskId),
+                            },
+                            React.createElement("span", { className: "playground-project-overview-outcome-ticket-check" },
+                              selected ? React.createElement(Check, { width: 11, height: 11, strokeWidth: 2.1 }) : null
+                            ),
+                            React.createElement("span", { className: "playground-project-overview-outcome-ticket-title" },
+                              ticketNumber + " " + (task?.title || "Untitled Task")
+                            ),
+                            React.createElement("span", { className: "playground-project-overview-outcome-ticket-status" },
+                              getPlaygroundTaskStatusLabel(getTaskBoardStatus(task))
+                            )
+                          );
+                        })
+                      : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No tickets in this project yet.")
+                  )
+                )
+              ),
+              missionControlSaveState?.error
+                ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, missionControlSaveState.error)
+                : null,
+              React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button playground-project-overview-outcome-delete-button",
+                  onClick: () => deleteProjectOverviewOutcomeEditor({ strategyBrief: sourceStrategyBrief }),
+                }, "Delete"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button",
+                  onClick: () => setProjectOverviewOutcomeEditorState(null),
+                }, "Cancel"),
+                React.createElement("button", {
+                  type: "submit",
+                  className: "playground-environments-action-button is-primary",
+                  disabled: missionControlSaveState.isSaving || !String(draft.title || "").trim(),
+                }, "Save Outcome")
+              )
+            )
+          );
+          if (typeof document !== "undefined" && document.body) {
+            return createPortal(content, document.body);
+          }
+          return content;
         }
 
         async function handleMissionControlEnvironmentSelectionChange(nextEnvironmentId) {
@@ -122237,11 +123252,30 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                     selectAfterSave: false,
                   })
                 : normalizedInitialProject;
-              const normalizedProject = normalizePlaygroundProjectRecord(savedProject || normalizedInitialProject);
+              let normalizedProject = normalizePlaygroundProjectRecord(savedProject || normalizedInitialProject);
+              const setupStrategyBrief = buildMissionControlSetupStrategyBriefFromDraft();
               const runProjectId = String(normalizedProject.id || selectedProjectId || "").trim();
               if (!runProjectId) {
                 throw new Error("Project is unavailable.");
               }
+              const updatedProjectWithMissionContext = await persistProjectMissionControlRecord(runProjectId, buildMissionControlRecordForSave({
+                strategyBrief: setupStrategyBrief,
+                updatedAt: new Date().toISOString(),
+              }), {
+                quiet: true,
+                refreshBaseProject: false,
+              }).catch(() => null);
+              normalizedProject = normalizePlaygroundProjectRecord(
+                updatedProjectWithMissionContext
+                || {
+                  ...normalizedProject,
+                  missionControl: {
+                    ...getPlaygroundProjectMissionControlRecord(normalizedProject),
+                    strategyBrief: setupStrategyBrief,
+                    updatedAt: new Date().toISOString(),
+                  },
+                }
+              );
               const launchEnvironmentId = String(
                 runRequest?.environmentId
                 || normalizedProject.defaultEnvironmentId
@@ -122297,9 +123331,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               setSelectedTaskId("");
               setDraftTask(null);
               setBacklogComposerMissionControlCommandRequest(null);
-              setMissionControlSetupOpen(false);
-              setProjectComposerOpen(false);
-              setProjectComposerMode("create");
+              closeMissionControlSetupModal({ persist: false });
               setMissionControlRunState({
                 threadId: normalizedThreadId,
                 projectId: runProjectId,
@@ -126305,266 +127337,620 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             ? (issueComposerDraft.scheduleType === "recurring" ? "recurring" : "one-time")
             : "none";
           const recurrencePresetId = getPlaygroundTaskSchedulePresetId(issueComposerDraft.cronExpression) || "daily";
-          const modalElement = React.createElement("div", {
-              className: "playground-tasks-project-modal-backdrop",
-              onClick: () => closeProjectIssueComposer(),
-            },
-            React.createElement("form", {
-                className: "playground-tasks-project-modal playground-tasks-issue-modal",
-                role: "dialog",
+          const selectedIssueEnvironment = issueComposerDraft.environmentId
+            ? availableBacklogEnvironments.find((environment) => environment?.id === issueComposerDraft.environmentId) || null
+            : null;
+          const issueEnvironmentLabel = selectedIssueEnvironment
+            ? ((selectedIssueEnvironment.name || selectedIssueEnvironment.id) + (selectedIssueEnvironment.isDefault ? " (Default)" : ""))
+            : (availableBacklogEnvironments.length > 0 ? "Select environment" : "No environments");
+
+          function renderIssueComposerEnvironmentOptionRow(environment) {
+            const isSelected = selectedIssueEnvironment?.id === environment.id;
+            return React.createElement("button", {
+                key: environment.id,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
+                onClick: () => {
+                  updateIssueComposerField("environmentId", environment.id);
+                  setIssueComposerEnvironmentPopoverOpen(false);
+                },
+              },
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                isSelected
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, (environment.name || environment.id) + (environment.isDefault ? " (Default)" : "")),
+                React.createElement("span", null, "Use this computer for this issue.")
+              )
+            );
+          }
+
+          function renderIssueComposerComputerSelector() {
+            return React.createElement("div", { className: "playground-tasks-project-modal-environment-picker playground-tasks-issue-modal-computer-picker" },
+              React.createElement("div", {
+                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (issueComposerEnvironmentPopoverOpen ? " is-open" : ""),
+                ref: issueComposerEnvironmentPopoverRef,
+              },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger playground-tasks-project-modal-environment-button" + (selectedIssueEnvironment ? "" : " is-empty") + (issueComposerEnvironmentPopoverOpen ? " is-active" : ""),
+                  onClick: () => {
+                    setIssueComposerDetailSelectPopover("");
+                    setIssueComposerEnvironmentPopoverOpen((current) => !current);
+                  },
+                  title: issueEnvironmentLabel,
+                  "aria-expanded": issueComposerEnvironmentPopoverOpen ? "true" : "false",
+                  disabled: availableBacklogEnvironments.length === 0,
+                },
+                  React.createElement(Monitor, { className: "playground-tasks-project-modal-environment-icon", strokeWidth: 1.8 }),
+                  React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, issueEnvironmentLabel),
+                  React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+                ),
+                issueComposerEnvironmentPopoverOpen
+                  ? React.createElement("div", {
+                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-toolbar-popup-menu-environment",
+                    },
+                      availableBacklogEnvironments.length > 0
+                        ? availableBacklogEnvironments.map((environment) => renderIssueComposerEnvironmentOptionRow(environment))
+                        : React.createElement("div", { className: "tb-popup-empty-state" }, "No environments available.")
+                    )
+                  : null
+              )
+            );
+          }
+
+          function renderIssueComposerDescriptionField() {
+            return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-tasks-issue-description-editor" },
+              React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                  [
+                    { id: "bold", label: "Bold", icon: Bold },
+                    { id: "italic", label: "Italic", icon: Italic },
+                    { id: "underline", label: "Underline", icon: Underline },
+                    { id: "list", label: "List", icon: List },
+                  ].map((action) =>
+                    React.createElement("button", {
+                      key: action.id,
+                      type: "button",
+                      className: "playground-tasks-detail-format-button",
+                      title: action.label,
+                      "aria-label": action.label,
+                      onMouseDown: (event) => event.preventDefault(),
+                      onClick: () => handleIssueComposerDescriptionFormat(action.id),
+                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isIssueComposerDescriptionEditing ? " is-editing" : " is-preview") },
+                !isIssueComposerDescriptionEditing
+                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                      String(issueComposerDraft.description || "").trim()
+                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                            content: issueComposerDraft.description,
+                            className: "playground-tasks-detail-description-preview tb-message-markdown",
+                          })
+                        : React.createElement("div", {
+                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                          }, "Describe the expected outcome, context, constraints, and acceptance criteria.")
+                    )
+                  : null,
+                React.createElement("textarea", {
+                  ref: issueComposerDescriptionTextareaRef,
+                  className: "playground-tasks-detail-description-input " + (isIssueComposerDescriptionEditing ? "is-editing" : "is-preview"),
+                  rows: 1,
+                  placeholder: isIssueComposerDescriptionEditing ? "Describe the expected outcome, context, constraints, and acceptance criteria." : "",
+                  value: issueComposerDraft.description || "",
+                  onFocus: (event) => {
+                    setIsIssueComposerDescriptionEditing(true);
+                    resizeTaskDescriptionTextarea(event.currentTarget);
+                  },
+                  onChange: (event) => {
+                    updateIssueComposerField("description", event.target.value);
+                    resizeTaskDescriptionTextarea(event.currentTarget);
+                  },
+                  onBlur: () => setIsIssueComposerDescriptionEditing(false),
+                })
+              )
+            );
+          }
+
+          function toggleIssueComposerDetailSelectPopover(nextPopoverId) {
+            setIssueComposerEnvironmentPopoverOpen(false);
+            setIssueComposerDetailSelectPopover((current) => current === nextPopoverId ? "" : nextPopoverId);
+          }
+
+          function renderIssueComposerDetailSelectOptionRow({ key, label, description, selected, onClick, disabled = false }) {
+            return React.createElement("button", {
+                key,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
+                onClick,
+                disabled,
+              },
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                selected
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, label),
+                description
+                  ? React.createElement("span", null, description)
+                  : null
+              )
+            );
+          }
+
+          function renderIssueComposerDetailSelectControl({
+            popoverId,
+            valueLabel,
+            disabled = false,
+            isEmpty = false,
+            buttonContent = null,
+            menuClassName = "",
+            children,
+          }) {
+            const isOpen = issueComposerDetailSelectPopover === popoverId;
+            return React.createElement("div", {
+                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (isOpen ? " is-open" : ""),
+                ref: isOpen ? issueComposerDetailSelectPopoverRef : null,
+              },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (isEmpty ? " is-empty" : "") + (isOpen ? " is-active" : ""),
+                disabled,
+                onClick: () => {
+                  if (disabled) return;
+                  toggleIssueComposerDetailSelectPopover(popoverId);
+                },
+                title: valueLabel,
+                "aria-expanded": isOpen ? "true" : "false",
+              },
+                buttonContent || React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, valueLabel),
+                React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+              ),
+              isOpen
+                ? React.createElement("div", {
+                    className: ("tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in " + menuClassName).trim(),
+                  }, children)
+                : null
+            );
+          }
+
+          function renderIssueComposerDetailFact(label, control) {
+            return React.createElement("div", { className: "playground-tasks-detail-fact" },
+              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
+              React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
+            );
+          }
+
+          function renderIssueComposerPersonValue(actorId, label) {
+            const normalizedActorId = String(actorId || "").trim();
+            return React.createElement("span", { className: "playground-tasks-detail-person-value" },
+              normalizedActorId ? renderTaskActorAvatar(normalizedActorId, "playground-tasks-detail-person-avatar") : null,
+              React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, label)
+            );
+          }
+
+          function renderIssueComposerAgentRow(actor, options = {}) {
+            const mode = getPlaygroundTaskAssigneePopupMode(actor);
+            const actorLabel = getTaskAssigneeName(actor.id, actor.name || "Unknown");
+            const actorDescription = options.reviewer
+              ? (mode === "humans" ? "Human reviewer" : (mode === "teams" ? "Agent team reviewer" : "Agent reviewer"))
+              : (mode === "humans" ? "Human" : (mode === "teams" ? "Agent team" : "Agent"));
+            const isSelected = options.reviewer
+              ? (issueComposerDraft.reviewRequired && issueComposerDraft.reviewerAgentId === actor.id)
+              : issueComposerDraft.assigneeAgentId === actor.id;
+            return React.createElement("button", {
+                key: actor.id,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (isSelected ? " selected" : ""),
+                onClick: () => {
+                  if (options.reviewer) {
+                    updateIssueComposerDraft((current) => ({
+                      ...current,
+                      reviewRequired: true,
+                      reviewerAgentId: actor.id,
+                    }));
+                  } else {
+                    updateIssueComposerField("assigneeAgentId", actor.id);
+                  }
+                  setIssueComposerDetailSelectPopover("");
+                },
+              },
+              renderTaskActorAvatar(actor.id, "playground-tasks-detail-person-menu-avatar"),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, actorLabel),
+                React.createElement("span", null, actorDescription)
+              ),
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                isSelected
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              )
+            );
+          }
+
+          function renderIssueComposerReviewerNoneRow() {
+            return React.createElement("button", {
+                key: "__none__",
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (!issueComposerDraft.reviewRequired ? " selected" : ""),
+                onClick: () => {
+                  updateIssueComposerDraft((current) => ({
+                    ...current,
+                    reviewRequired: false,
+                    reviewerAgentId: null,
+                  }));
+                  setIssueComposerDetailSelectPopover("");
+                },
+              },
+              React.createElement("span", { className: "playground-tasks-detail-person-menu-avatar", "aria-hidden": "true" },
+                React.createElement("span", { className: "playground-tasks-detail-person-menu-avatar-fallback" }, "No")
+              ),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, "No review"),
+                React.createElement("span", null, "Move directly to Finished when work is done.")
+              ),
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                !issueComposerDraft.reviewRequired
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              )
+            );
+          }
+
+          function renderIssueComposerDetailsSection() {
+            const issueType = normalizePlaygroundTaskType(issueComposerDraft.taskType);
+            const IssueTypeIcon = issueType === "subtask" ? Check : (issueType === "loop" ? RefreshCw : Bookmark);
+            const issueTypeLabel = PLAYGROUND_TASK_TYPE_OPTIONS.find((option) => option.id === issueType)?.label || "Task";
+            const issueStatusLabel = PLAYGROUND_TASK_STATUS_OPTIONS.find((option) => option.id === issueComposerDraft.status)?.label || "To do";
+            const issuePriorityPresentation = getPlaygroundTaskPriorityPresentation(issueComposerDraft.priority);
+            const issueColorPresentation = getPlaygroundTaskColorPresentation(issueComposerDraft.taskColor);
+            const selectedRelease = issueComposerDraft.releaseId ? releases.find((release) => release.id === issueComposerDraft.releaseId) || null : null;
+            const selectedSprint = issueComposerDraft.sprintId ? sprints.find((sprint) => sprint.id === issueComposerDraft.sprintId) || null : null;
+            const selectedAssignee = issueComposerDraft.assigneeAgentId ? assignableActors.find((actor) => actor.id === issueComposerDraft.assigneeAgentId) || null : null;
+            const assigneeLabel = selectedAssignee ? getTaskAssigneeOptionLabel(selectedAssignee) : "Unassigned";
+            const selectedReviewer = issueComposerDraft.reviewRequired && issueComposerDraft.reviewerAgentId
+              ? assignableActors.find((actor) => actor.id === issueComposerDraft.reviewerAgentId) || null
+              : null;
+            const reviewerLabel = issueComposerDraft.reviewRequired
+              ? (selectedReviewer ? getTaskAssigneeOptionLabel(selectedReviewer) : "Reviewer")
+              : "No review";
+            const selectedDependencyTask = selectedDependencyId ? tasks.find((task) => task.id === selectedDependencyId) || null : null;
+            const dependencyLabel = selectedDependencyTask
+              ? ((taskTicketNumbersById[selectedDependencyTask.id] || selectedDependencyTask.ticketNumber || "000") + " - " + (selectedDependencyTask.title || "Untitled Task"))
+              : "None";
+            const scheduleLabel = scheduleMode === "recurring" ? "Recurring" : (scheduleMode === "one-time" ? "One-time" : "None");
+
+            return React.createElement("div", {
+                className: "playground-tasks-detail-facts playground-tasks-issue-details-section" + (issueComposerDetailSelectPopover ? " is-popover-open" : ""),
+              },
+              React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-tasks-detail-facts-toggle" + (issueComposerDetailsCollapsed ? " is-collapsed" : ""),
+                  onClick: () => setIssueComposerDetailsCollapsed((current) => !current),
+                  title: issueComposerDetailsCollapsed ? "Expand details" : "Collapse details",
+                  "aria-label": issueComposerDetailsCollapsed ? "Expand details" : "Collapse details",
+                  "aria-expanded": issueComposerDetailsCollapsed ? "false" : "true",
+                }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 }))
+              ),
+              !issueComposerDetailsCollapsed
+                ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                    renderIssueComposerDetailFact("Type",
+                      React.createElement("div", { className: "playground-tasks-type-control" },
+                        renderIssueComposerDetailSelectControl({
+                          popoverId: "type",
+                          valueLabel: issueTypeLabel,
+                          buttonContent: React.createElement("span", { className: "playground-tasks-detail-type-value" },
+                            React.createElement(IssueTypeIcon, { className: "playground-tasks-detail-type-icon", strokeWidth: 1.9 }),
+                            React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, issueTypeLabel)
+                          ),
+                          children: PLAYGROUND_TASK_TYPE_OPTIONS.map((option) =>
+                            renderIssueComposerDetailSelectOptionRow({
+                              key: option.id,
+                              label: option.label,
+                              selected: issueType === option.id,
+                              onClick: () => {
+                                const nextType = normalizePlaygroundTaskType(option.id);
+                                updateIssueComposerDraft((current) => ({
+                                  ...current,
+                                  taskType: nextType,
+                                  parentTaskId: nextType === "subtask" ? current.parentTaskId : null,
+                                }));
+                                setIssueComposerDetailSelectPopover("");
+                              },
+                            })
+                          ),
+                        })
+                      )
+                    ),
+                    renderIssueComposerDetailFact("Status",
+                      renderIssueComposerDetailSelectControl({
+                        popoverId: "status",
+                        valueLabel: issueStatusLabel,
+                        children: PLAYGROUND_TASK_STATUS_OPTIONS.map((option) =>
+                          renderIssueComposerDetailSelectOptionRow({
+                            key: option.id,
+                            label: option.label,
+                            selected: issueComposerDraft.status === option.id,
+                            onClick: () => {
+                              updateIssueComposerDraft((current) => ({
+                                ...current,
+                                status: option.id,
+                                dependencyIds: option.id === "blocked" ? normalizePlaygroundIdList(current.dependencyIds) : [],
+                                completedAt: option.id === "done" ? (current.completedAt || new Date().toISOString()) : null,
+                              }));
+                              setIssueComposerDetailSelectPopover("");
+                            },
+                          })
+                        ),
+                      })
+                    ),
+                    renderIssueComposerDetailFact("Priority",
+                      renderIssueComposerDetailSelectControl({
+                        popoverId: "priority",
+                        valueLabel: issuePriorityPresentation.label,
+                        buttonContent: React.createElement("span", {
+                            className: "playground-tasks-priority-value playground-tasks-detail-priority-value " + issuePriorityPresentation.toneClassName,
+                          },
+                          renderPlaygroundTaskPriorityGlyph(issueComposerDraft.priority),
+                          React.createElement("span", { className: "playground-tasks-priority-value-text playground-tasks-detail-select-trigger-label" }, issuePriorityPresentation.label)
+                        ),
+                        children: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) =>
+                          renderIssueComposerDetailSelectOptionRow({
+                            key: option.id,
+                            label: getPlaygroundTaskPriorityPresentation(option.id).label,
+                            selected: issueComposerDraft.priority === option.id,
+                            onClick: () => {
+                              updateIssueComposerField("priority", option.id);
+                              setIssueComposerDetailSelectPopover("");
+                            },
+                          })
+                        ),
+                      })
+                    ),
+                    renderIssueComposerDetailFact("Color",
+                      renderIssueComposerDetailSelectControl({
+                        popoverId: "color",
+                        valueLabel: issueColorPresentation.label,
+                        buttonContent: React.createElement("span", {
+                            className: "playground-tasks-detail-color-value",
+                            style: getPlaygroundTaskColorStyle(issueComposerDraft.taskColor),
+                          },
+                          React.createElement("span", { className: "playground-tasks-detail-color-swatch", "aria-hidden": "true" }),
+                          React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, issueColorPresentation.label)
+                        ),
+                        children: PLAYGROUND_TASK_COLOR_OPTIONS.map((option) =>
+                          renderIssueComposerDetailSelectOptionRow({
+                            key: option.id,
+                            label: React.createElement("span", {
+                                className: "playground-tasks-detail-select-popup-label-slot",
+                                style: getPlaygroundTaskColorStyle(option.id),
+                              },
+                              React.createElement("span", { className: "playground-tasks-detail-color-swatch", "aria-hidden": "true" }),
+                              React.createElement("span", null, option.label)
+                            ),
+                            selected: getPlaygroundTaskColorId(issueComposerDraft.taskColor) === option.id,
+                            onClick: () => {
+                              updateIssueComposerField("taskColor", option.id);
+                              setIssueComposerDetailSelectPopover("");
+                            },
+                          })
+                        ),
+                      })
+                    ),
+                    renderIssueComposerDetailFact("Milestone",
+                      renderIssueComposerDetailSelectControl({
+                        popoverId: "release",
+                        valueLabel: selectedRelease ? (selectedRelease.name || "Untitled Milestone") : "None",
+                        isEmpty: !selectedRelease,
+                        children: [
+                          renderIssueComposerDetailSelectOptionRow({
+                            key: "__none__",
+                            label: "None",
+                            selected: !selectedRelease,
+                            onClick: () => {
+                              updateIssueComposerField("releaseId", null);
+                              setIssueComposerDetailSelectPopover("");
+                            },
+                          }),
+                          ...releases
+                            .slice()
+                            .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
+                            .map((release) =>
+                              renderIssueComposerDetailSelectOptionRow({
+                                key: release.id,
+                                label: release.name || "Untitled Milestone",
+                                description: release.description || formatPlaygroundTaskReleaseDateRange(release),
+                                selected: issueComposerDraft.releaseId === release.id,
+                                onClick: () => {
+                                  updateIssueComposerField("releaseId", release.id);
+                                  setIssueComposerDetailSelectPopover("");
+                                },
+                              })
+                            ),
+                        ],
+                      })
+                    ),
+                    renderIssueComposerDetailFact("Sprint",
+                      renderIssueComposerDetailSelectControl({
+                        popoverId: "sprint",
+                        valueLabel: selectedSprint ? (selectedSprint.name || "Untitled Sprint") : "None",
+                        isEmpty: !selectedSprint,
+                        children: [
+                          renderIssueComposerDetailSelectOptionRow({
+                            key: "__none__",
+                            label: "None",
+                            selected: !selectedSprint,
+                            onClick: () => {
+                              updateIssueComposerField("sprintId", null);
+                              setIssueComposerDetailSelectPopover("");
+                            },
+                          }),
+                          ...sprints
+                            .slice()
+                            .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
+                            .map((sprint) =>
+                              renderIssueComposerDetailSelectOptionRow({
+                                key: sprint.id,
+                                label: sprint.name || "Untitled Sprint",
+                                selected: issueComposerDraft.sprintId === sprint.id,
+                                onClick: () => {
+                                  updateIssueComposerField("sprintId", sprint.id);
+                                  setIssueComposerDetailSelectPopover("");
+                                },
+                              })
+                            ),
+                        ],
+                      })
+                    ),
+                    renderIssueComposerDetailFact("Assignee",
+                      renderIssueComposerDetailSelectControl({
+                        popoverId: "assignee",
+                        valueLabel: assigneeLabel,
+                        isEmpty: !selectedAssignee,
+                        buttonContent: renderIssueComposerPersonValue(issueComposerDraft.assigneeAgentId, assigneeLabel),
+                        menuClassName: "tb-popup-menu-inline-agent",
+                        children: assignableActors.length > 0
+                          ? assignableActors.map((actor) => renderIssueComposerAgentRow(actor))
+                          : React.createElement("div", { className: "tb-popup-empty-state" }, "No assignees yet."),
+                      })
+                    ),
+                    renderIssueComposerDetailFact("Reviewer",
+                      renderIssueComposerDetailSelectControl({
+                        popoverId: "reviewer",
+                        valueLabel: reviewerLabel,
+                        isEmpty: !issueComposerDraft.reviewRequired,
+                        buttonContent: renderIssueComposerPersonValue(issueComposerDraft.reviewRequired ? issueComposerDraft.reviewerAgentId : "", reviewerLabel),
+                        menuClassName: "tb-popup-menu-inline-agent",
+                        children: [
+                          renderIssueComposerReviewerNoneRow(),
+                          ...assignableActors.map((actor) => renderIssueComposerAgentRow(actor, { reviewer: true })),
+                        ],
+                      })
+                    ),
+                    renderIssueComposerDetailFact("Blocked by",
+                      renderIssueComposerDetailSelectControl({
+                        popoverId: "blocked-by",
+                        valueLabel: dependencyLabel,
+                        isEmpty: !selectedDependencyId,
+                        menuClassName: "playground-tasks-toolbar-popup-menu-wide",
+                        children: [
+                          renderIssueComposerDetailSelectOptionRow({
+                            key: "__none__",
+                            label: "None",
+                            selected: !selectedDependencyId,
+                            onClick: () => {
+                              updateIssueComposerDraft((current) => ({
+                                ...current,
+                                dependencyIds: [],
+                                status: current.status === "blocked" ? "todo" : current.status,
+                              }));
+                              setIssueComposerDetailSelectPopover("");
+                            },
+                          }),
+                          ...dependencyCandidates.map((task) =>
+                            renderIssueComposerDetailSelectOptionRow({
+                              key: task.id,
+                              label: (taskTicketNumbersById[task.id] || task.ticketNumber || "000") + " - " + (task.title || "Untitled Task"),
+                              selected: selectedDependencyId === task.id,
+                              onClick: () => {
+                                updateIssueComposerDraft((current) => ({
+                                  ...current,
+                                  dependencyIds: [task.id],
+                                  status: "blocked",
+                                }));
+                                setIssueComposerDetailSelectPopover("");
+                              },
+                            })
+                          ),
+                        ],
+                      })
+                    ),
+                    renderIssueComposerDetailFact("Schedule",
+                      renderIssueComposerDetailSelectControl({
+                        popoverId: "schedule",
+                        valueLabel: scheduleLabel,
+                        isEmpty: scheduleMode === "none",
+                        children: [
+                          { id: "none", label: "None" },
+                          { id: "one-time", label: "One-time" },
+                          { id: "recurring", label: "Recurring" },
+                        ].map((option) =>
+                          renderIssueComposerDetailSelectOptionRow({
+                            key: option.id,
+                            label: option.label,
+                            selected: scheduleMode === option.id,
+                            onClick: () => {
+                              updateIssueComposerDraft((current) => ({
+                                ...current,
+                                scheduledStartAt: option.id === "none" ? null : current.scheduledStartAt,
+                                scheduledEndAt: option.id === "none" ? null : current.scheduledEndAt,
+                                scheduleType: option.id === "recurring" ? "recurring" : "one-time",
+                                cronExpression: option.id === "recurring"
+                                  ? (current.cronExpression || buildPlaygroundCronExpressionForPreset("daily", current.scheduledStartAt || Date.now()))
+                                  : null,
+                              }));
+                              setIssueComposerDetailSelectPopover("");
+                            },
+                          })
+                        ),
+                      })
+                    )
+                  )
+                : null
+            );
+          }
+
+			          const modalElement = React.createElement("div", {
+		              className: "playground-tasks-project-modal-backdrop playground-tasks-project-issue-backdrop"
+	                  + (issueComposerVisible ? " is-visible" : "")
+                  + (issueComposerClosing ? " is-closing" : ""),
+	              onClick: () => closeProjectIssueComposer(),
+	            },
+	            React.createElement("form", {
+	                className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal"
+                    + (issueComposerVisible ? " is-visible" : "")
+                    + (issueComposerClosing ? " is-closing" : ""),
+	                role: "dialog",
                 "aria-modal": "true",
                 "aria-label": "New issue",
                 onClick: (event) => event.stopPropagation(),
                 onSubmit: (event) => void handleSaveProjectIssue(event),
               },
-              React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                    React.createElement(Bookmark, { width: 18, height: 18, strokeWidth: 1.9 })
-                  ),
-                  React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "New Issue")
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-settings-icon-button playground-tasks-project-modal-close",
+	              React.createElement("div", { className: "playground-tasks-project-modal-top" },
+	                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+	                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+	                    React.createElement(Bookmark, { width: 18, height: 18, strokeWidth: 1.9 })
+	                  ),
+	                  React.createElement("input", {
+	                    type: "text",
+	                    className: "playground-tasks-project-modal-name-input playground-tasks-issue-modal-title-input",
+	                    value: issueComposerDraft.title || "",
+	                    placeholder: "Issue title",
+	                    autoFocus: true,
+	                    onChange: (event) => updateIssueComposerField("title", event.target.value),
+	                  })
+	                ),
+	                renderIssueComposerComputerSelector(),
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-settings-icon-button playground-tasks-project-modal-close",
                   onClick: () => closeProjectIssueComposer(),
                   title: "Close",
                   disabled: issueComposerSaveState.isSaving,
-                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-              ),
-              React.createElement("div", { className: "playground-tasks-issue-modal-body" },
-                renderIssueComposerField("Title", React.createElement("input", {
-                  type: "text",
-                  className: "playground-tasks-issue-modal-input",
-                  value: issueComposerDraft.title || "",
-                  placeholder: "Issue title",
-                  autoFocus: true,
-                  onChange: (event) => updateIssueComposerField("title", event.target.value),
-                }), { full: true }),
-                renderIssueComposerField("Description", React.createElement("textarea", {
-                  className: "playground-tasks-project-modal-textarea playground-tasks-issue-modal-textarea",
-                  value: issueComposerDraft.description || "",
-                  placeholder: "Describe the expected outcome, context, constraints, and acceptance criteria.",
-                  onChange: (event) => updateIssueComposerField("description", event.target.value),
-                }), { full: true }),
-                React.createElement("div", { className: "playground-tasks-issue-modal-grid" },
-                  renderIssueComposerField("Ticket number", React.createElement("input", {
-                    type: "text",
-                    className: "playground-tasks-issue-modal-input",
-                    value: issueComposerDraft.ticketNumber || "",
-                    placeholder: "Auto",
-                    onChange: (event) => updateIssueComposerField("ticketNumber", event.target.value),
-                  })),
-                  renderIssueComposerField("Type", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: normalizedIssueType,
-                    onChange: (event) => {
-                      const nextType = normalizePlaygroundTaskType(event.target.value);
-                      updateIssueComposerDraft((current) => ({
-                        ...current,
-                        taskType: nextType,
-                        parentTaskId: nextType === "subtask" ? current.parentTaskId : null,
-                      }));
-                    },
-                  },
-                    PLAYGROUND_TASK_TYPE_OPTIONS.map((option) =>
-                      React.createElement("option", { key: option.id, value: option.id }, option.label)
-                    )
-                  )),
-                  normalizedIssueType === "subtask"
-                    ? renderIssueComposerField("Parent ticket", React.createElement("select", {
-                        className: "playground-tasks-issue-modal-select",
-                        value: issueComposerDraft.parentTaskId || "",
-                        onChange: (event) => updateIssueComposerField("parentTaskId", event.target.value || null),
-                      },
-                        React.createElement("option", { value: "" }, "Choose parent"),
-                        parentTicketCandidates.map((task) =>
-                          React.createElement("option", { key: task.id, value: task.id },
-                            (taskTicketNumbersById[task.id] || task.ticketNumber || "000") + " - " + (task.title || "Untitled Task")
-                          )
-                        )
-                      ))
-                    : null,
-                  renderIssueComposerField("Status", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: issueComposerDraft.status || "todo",
-                    onChange: (event) => {
-                      const nextStatus = event.target.value;
-                      updateIssueComposerDraft((current) => ({
-                        ...current,
-                        status: nextStatus,
-                        dependencyIds: nextStatus === "blocked" ? normalizePlaygroundIdList(current.dependencyIds) : [],
-                        completedAt: nextStatus === "done" ? (current.completedAt || new Date().toISOString()) : null,
-                      }));
-                    },
-                  },
-                    PLAYGROUND_TASK_STATUS_OPTIONS.map((option) =>
-                      React.createElement("option", { key: option.id, value: option.id }, option.label)
-                    )
-                  )),
-                  renderIssueComposerField("Priority", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: issueComposerDraft.priority || "medium",
-                    onChange: (event) => updateIssueComposerField("priority", event.target.value),
-                  },
-                    PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) =>
-                      React.createElement("option", { key: option.id, value: option.id }, option.label)
-                    )
-                  )),
-                  renderIssueComposerField("Color", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: getPlaygroundTaskColorId(issueComposerDraft.taskColor),
-                    onChange: (event) => updateIssueComposerField("taskColor", event.target.value),
-                  },
-                    PLAYGROUND_TASK_COLOR_OPTIONS.map((option) =>
-                      React.createElement("option", { key: option.id, value: option.id }, option.label)
-                    )
-                  )),
-                  renderIssueComposerField("Milestone", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: issueComposerDraft.releaseId || "",
-                    onChange: (event) => updateIssueComposerField("releaseId", event.target.value || null),
-                  },
-                    React.createElement("option", { value: "" }, "None"),
-                    releases
-                      .slice()
-                      .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
-                      .map((release) =>
-                        React.createElement("option", { key: release.id, value: release.id }, release.name || "Untitled Milestone")
-                      )
-                  )),
-                  renderIssueComposerField("Sprint", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: issueComposerDraft.sprintId || "",
-                    onChange: (event) => updateIssueComposerField("sprintId", event.target.value || null),
-                  },
-                    React.createElement("option", { value: "" }, "None"),
-                    sprints
-                      .slice()
-                      .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
-                      .map((sprint) =>
-                        React.createElement("option", { key: sprint.id, value: sprint.id }, sprint.name || "Untitled Sprint")
-                      )
-                  )),
-                  renderIssueComposerField("Assignee", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: issueComposerDraft.assigneeAgentId || "",
-                    onChange: (event) => updateIssueComposerField("assigneeAgentId", event.target.value || null),
-                  },
-                    React.createElement("option", { value: "" }, "Unassigned"),
-                    assignableActors.map((actor) =>
-                      React.createElement("option", { key: actor.id, value: actor.id }, getTaskAssigneeOptionLabel(actor))
-                    )
-                  )),
-                  renderIssueComposerField("Reviewer", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: issueComposerDraft.reviewRequired ? (issueComposerDraft.reviewerAgentId || "") : "",
-                    disabled: issueComposerDraft.reviewRequired !== true,
-                    onChange: (event) => updateIssueComposerField("reviewerAgentId", event.target.value || null),
-                  },
-                    React.createElement("option", { value: "" }, "No specific reviewer"),
-                    assignableActors.map((actor) =>
-                      React.createElement("option", { key: actor.id, value: actor.id }, getTaskAssigneeOptionLabel(actor))
-                    )
-                  )),
-                  renderIssueComposerField("Review", React.createElement("span", { className: "playground-tasks-issue-modal-check-row" },
-                    React.createElement("input", {
-                      type: "checkbox",
-                      checked: issueComposerDraft.reviewRequired === true,
-                      onChange: (event) => updateIssueComposerDraft((current) => ({
-                        ...current,
-                        reviewRequired: event.target.checked,
-                        reviewerAgentId: event.target.checked ? current.reviewerAgentId : null,
-                      })),
-                    }),
-                    React.createElement("span", null, "Require review")
-                  )),
-                  renderIssueComposerField("Environment", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: issueComposerDraft.environmentId || "",
-                    onChange: (event) => updateIssueComposerField("environmentId", event.target.value || null),
-                  },
-                    React.createElement("option", { value: "" }, "Project Default"),
-                    availableBacklogEnvironments.map((environment) =>
-                      React.createElement("option", { key: environment.id, value: environment.id }, environment.name + (environment.isDefault ? " (Default)" : ""))
-                    )
-                  )),
-                  renderIssueComposerField("Blocked by", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: selectedDependencyId,
-                    onChange: (event) => {
-                      const nextDependencyId = event.target.value || "";
-                      updateIssueComposerDraft((current) => ({
-                        ...current,
-                        dependencyIds: nextDependencyId ? [nextDependencyId] : [],
-                        status: nextDependencyId ? "blocked" : (current.status === "blocked" ? "todo" : current.status),
-                      }));
-                    },
-                  },
-                    React.createElement("option", { value: "" }, "None"),
-                    dependencyCandidates.map((task) =>
-                      React.createElement("option", { key: task.id, value: task.id },
-                        (taskTicketNumbersById[task.id] || task.ticketNumber || "000") + " - " + (task.title || "Untitled Task")
-                      )
-                    )
-                  )),
-                  renderIssueComposerField("Schedule", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: scheduleMode,
-                    onChange: (event) => {
-                      const nextMode = event.target.value;
-                      updateIssueComposerDraft((current) => ({
-                        ...current,
-                        scheduledStartAt: nextMode === "none" ? null : current.scheduledStartAt,
-                        scheduledEndAt: nextMode === "none" ? null : current.scheduledEndAt,
-                        scheduleType: nextMode === "recurring" ? "recurring" : "one-time",
-                        cronExpression: nextMode === "recurring"
-                          ? (current.cronExpression || buildPlaygroundCronExpressionForPreset("daily", current.scheduledStartAt || Date.now()))
-                          : null,
-                      }));
-                    },
-                  },
-                    React.createElement("option", { value: "none" }, "None"),
-                    React.createElement("option", { value: "one-time" }, "One-time"),
-                    React.createElement("option", { value: "recurring" }, "Recurring")
-                  )),
-                  renderIssueComposerField("Start", React.createElement("input", {
-                    type: "datetime-local",
-                    className: "playground-tasks-issue-modal-input",
-                    value: toPlaygroundDatetimeLocalValue(issueComposerDraft.scheduledStartAt),
-                    onChange: (event) => {
-                      const nextStart = fromPlaygroundDatetimeLocalValue(event.target.value);
-                      updateIssueComposerDraft((current) => ({
-                        ...current,
-                        scheduledStartAt: nextStart,
-                        scheduleType: current.scheduleType === "recurring" ? "recurring" : "one-time",
-                        cronExpression: current.scheduleType === "recurring"
-                          ? buildPlaygroundCronExpressionForPreset(getPlaygroundTaskSchedulePresetId(current.cronExpression) || "daily", nextStart || Date.now())
-                          : null,
-                      }));
-                    },
-                  })),
-                  renderIssueComposerField("Recurrence", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: recurrencePresetId,
-                    disabled: scheduleMode !== "recurring",
-                    onChange: (event) => updateIssueComposerField(
-                      "cronExpression",
-                      buildPlaygroundCronExpressionForPreset(event.target.value, issueComposerDraft.scheduledStartAt || Date.now())
-                    ),
-                  },
-                    PLAYGROUND_TASK_SCHEDULE_PRESETS.map((preset) =>
-                      React.createElement("option", { key: preset.id, value: preset.id }, preset.label)
-                    )
-                  )),
-                  renderIssueComposerField("Due", React.createElement("input", {
-                    type: "datetime-local",
-                    className: "playground-tasks-issue-modal-input",
-                    value: toPlaygroundDatetimeLocalValue(issueComposerDraft.dueAt),
-                    onChange: (event) => updateIssueComposerField("dueAt", fromPlaygroundDatetimeLocalValue(event.target.value)),
-                  }))
-                ),
-                issueComposerSaveState.error
+	                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+		              ),
+		              React.createElement("div", { className: "playground-tasks-issue-modal-body" },
+		                renderIssueComposerDescriptionField(),
+		                renderIssueComposerDetailsSection(),
+	                issueComposerSaveState.error
                   ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, issueComposerSaveState.error)
                   : null
               ),
@@ -128638,7 +130024,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               ? React.createElement("div", { className: "playground-tasks-empty-actions" },
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-tasks-empty-primary-button",
+                    className: "playground-tasks-empty-primary-button playground-tasks-empty-mission-control-button",
                     onClick: () => openMissionControlComposer({ keepStrategyOpen: true }),
                   },
                     React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 2 }),
@@ -128955,7 +130341,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                     ? React.createElement("div", { className: "playground-tasks-empty-actions" },
                         React.createElement("button", {
                           type: "button",
-                          className: "playground-tasks-empty-primary-button",
+                          className: "playground-tasks-empty-primary-button playground-tasks-empty-mission-control-button",
                           onClick: () => openMissionControlComposer({ keepStrategyOpen: true }),
                         },
                           React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 2 }),
@@ -130354,9 +131740,10 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             || initialEnvironmentId
             || ""
           ).trim();
-          const missionControlEnvironment = defaultEnvironmentId
-            ? availableBacklogEnvironments.find((environment) => environment.id === defaultEnvironmentId) || null
-            : null;
+          const missionControlRunnerEnvironments = availableBacklogEnvironments.map((environment) => ({
+            ...environment,
+            ...(defaultEnvironmentId && environment.id === defaultEnvironmentId ? { isDefault: true } : {}),
+          }));
           const missionControlAgentId = String(missionControlAgent?.id || "").trim();
           const normalizedProjectId = String(normalizedProject.id || selectedProjectId || "").trim();
           const runnerProjectId = normalizedProjectId || "draft-project";
@@ -130387,7 +131774,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           return React.createElement("div", { className: "playground-mission-control-setup-pane" },
             React.createElement(RunnerChat, {
               key: "mission-control-setup:" + (normalizedProject.id || selectedProjectId || "project") + ":" + missionControlSetupResetToken,
-              className: "playground-mission-control-setup-runner",
+              className: "playground-mission-control-setup-runner playground-mission-control-modal-runner",
               backendUrl,
               apiKey,
               fetchCustomSkills: fetchProjectCustomSkills,
@@ -130399,14 +131786,10 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               projectId: normalizedProjectId || undefined,
               inputMode: "computer-agents",
               computerAgents: lockedProjectConfig,
-              environments: missionControlEnvironment
-                ? [{ ...missionControlEnvironment, isDefault: true }]
-                : [],
+              environments: missionControlRunnerEnvironments,
               agents: missionControlAgentId
                 ? [buildPlaygroundRunnerAgentOption(missionControlAgent, { isDefault: true })]
                 : [],
-              hideAgentSelector: true,
-              hideEnvironmentSelector: true,
               skills: skills,
               skillDefaults: getDemoImageGenerationSkillDefaults(),
               environmentId: defaultEnvironmentId || undefined,
@@ -130426,36 +131809,266 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           if (!missionControlSetupOpen || !projectComposerOpen) {
             return null;
           }
-          const studioElement = React.createElement("div", {
-              className: "playground-mission-control-studio-backdrop",
-              onClick: (event) => event.stopPropagation(),
-            },
-            React.createElement("div", { className: "playground-mission-control-studio" },
-              React.createElement("div", { className: "playground-mission-control-studio-body" },
-                React.createElement("section", { className: "playground-mission-control-studio-settings" },
-                  React.createElement("div", { className: "playground-mission-control-studio-section-header" },
-                    React.createElement("div", { className: "playground-mission-control-studio-section-nav" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-mission-control-studio-back-link",
-                        onClick: () => closeProjectComposer(),
-                        title: "Back",
-                        "aria-label": "Back",
-                      },
-                        React.createElement(ChevronLeft, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Back")
+          const normalizedProject = normalizePlaygroundProjectRecord(projectDraft || selectedProject || buildPlaygroundDefaultProjectDraft());
+          const projectGoalDraft = String(normalizedProject.description || "");
+          const hasProjectGoal = Boolean(projectGoalDraft.trim());
+
+          function renderMissionControlGoalEditor() {
+            return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-mission-control-modal-context-editor" },
+              React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Project goal"),
+                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                  [
+                    { id: "bold", label: "Bold", icon: Bold },
+                    { id: "italic", label: "Italic", icon: Italic },
+                    { id: "underline", label: "Underline", icon: Underline },
+                    { id: "list", label: "List", icon: List },
+                  ].map((action) =>
+                    React.createElement("button", {
+                      key: action.id,
+                      type: "button",
+                      className: "playground-tasks-detail-format-button",
+                      title: action.label,
+                      "aria-label": action.label,
+                      onMouseDown: (event) => event.preventDefault(),
+                      onClick: () => handleProjectDescriptionFormat(action.id),
+                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isProjectDescriptionEditing ? " is-editing" : " is-preview") },
+                !isProjectDescriptionEditing
+                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                      hasProjectGoal
+                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                            content: projectGoalDraft,
+                            className: "playground-tasks-detail-description-preview tb-message-markdown",
+                          })
+                        : React.createElement("div", {
+                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                          }, "Define the project goal, scope, working style, and constraints.")
+                    )
+                  : null,
+                React.createElement("textarea", {
+                  ref: projectDescriptionTextareaRef,
+                  className: "playground-tasks-detail-description-input " + (isProjectDescriptionEditing ? "is-editing" : "is-preview"),
+                  rows: 1,
+                  placeholder: isProjectDescriptionEditing ? "Define the project goal, scope, working style, and constraints." : "",
+                  value: projectGoalDraft,
+                  onFocus: () => setProjectDescriptionEditing(true),
+                  onChange: (event) => {
+                    setProjectDraft((current) => ({ ...current, description: event.target.value }));
+                    resizeTaskDescriptionTextarea(event.currentTarget);
+                  },
+                  onBlur: () => {
+                    setProjectDescriptionEditing(false);
+                  },
+                })
+              )
+            );
+          }
+
+          function handleMissionControlOutcomesBlur() {
+            setIsMissionControlSetupOutcomesEditing(false);
+            updateMissionControlStrategyDraft(buildMissionControlSetupStrategyBriefFromDraft());
+          }
+
+          function renderMissionControlOutcomesEditor() {
+            const currentStrategyBrief = normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraftRef.current || missionControlStrategyDraft);
+            const outcomeRecords = parseMissionControlSetupOutcomesInput(missionControlSetupOutcomesDraft, currentStrategyBrief.outcomes);
+            const hasOutcomeRecords = outcomeRecords.length > 0;
+
+            function applyMissionControlSetupOutcomeRecords(nextOutcomes) {
+              const nextStrategyBrief = normalizePlaygroundProjectStrategyBrief({
+                ...currentStrategyBrief,
+                mission: String(projectDraft.description || "").replaceAll(String.fromCharCode(13), "").trim(),
+                outcomes: nextOutcomes.map((outcome, index) => normalizePlaygroundStrategyOutcomeRecord(outcome, index)),
+              });
+              updateMissionControlStrategyDraft(nextStrategyBrief);
+              syncMissionControlSetupOutcomesDraft(nextStrategyBrief);
+            }
+
+            function updateMissionControlSetupOutcomeTitle(indexToUpdate, nextValue) {
+              setMissionControlSetupOutcomeTitleDrafts((current) => ({
+                ...(current && typeof current === "object" ? current : {}),
+                [indexToUpdate]: String(nextValue || ""),
+              }));
+              const nextOutcomes = outcomeRecords.map((outcome, index) => index === indexToUpdate
+                ? normalizePlaygroundStrategyOutcomeRecord({ ...outcome, title: nextValue }, index)
+                : outcome
+              );
+              applyMissionControlSetupOutcomeRecords(nextOutcomes);
+            }
+
+            function getMissionControlSetupOutcomeTitleValue(outcome, index) {
+              if (
+                missionControlSetupOutcomeTitleDrafts
+                && typeof missionControlSetupOutcomeTitleDrafts === "object"
+                && Object.prototype.hasOwnProperty.call(missionControlSetupOutcomeTitleDrafts, index)
+              ) {
+                return missionControlSetupOutcomeTitleDrafts[index];
+              }
+              return outcome.title || "";
+            }
+
+            function commitMissionControlSetupOutcomeTitle(indexToCommit) {
+              setMissionControlSetupOutcomeTitleDrafts((current) => {
+                if (!current || typeof current !== "object" || !Object.prototype.hasOwnProperty.call(current, indexToCommit)) {
+                  return current;
+                }
+                const nextDrafts = { ...current };
+                delete nextDrafts[indexToCommit];
+                return nextDrafts;
+              });
+              handleMissionControlOutcomesBlur();
+            }
+
+            function addMissionControlSetupOutcome() {
+              setIsMissionControlSetupOutcomesEditing(true);
+              setMissionControlSetupOutcomeMenuIndex(-1);
+              applyMissionControlSetupOutcomeRecords(outcomeRecords.concat(normalizePlaygroundStrategyOutcomeRecord({
+                id: "outcome-" + String(outcomeRecords.length + 1).padStart(2, "0"),
+                title: "New outcome",
+                description: "",
+                successCriteria: [],
+              }, outcomeRecords.length)));
+            }
+
+            function deleteMissionControlSetupOutcome(indexToDelete) {
+              setMissionControlSetupOutcomeMenuIndex(-1);
+              setMissionControlSetupOutcomeTitleDrafts({});
+              applyMissionControlSetupOutcomeRecords(outcomeRecords.filter((_, index) => index !== indexToDelete));
+            }
+
+            function openMissionControlSetupOutcomeDetails(indexToOpen) {
+              const outcome = outcomeRecords[indexToOpen];
+              if (!outcome) {
+                return;
+              }
+              const nextStrategyBrief = normalizePlaygroundProjectStrategyBrief({
+                ...currentStrategyBrief,
+                outcomes: outcomeRecords,
+              });
+              updateMissionControlStrategyDraft(nextStrategyBrief);
+              syncMissionControlSetupOutcomesDraft(nextStrategyBrief);
+              setMissionControlSetupOutcomeMenuIndex(-1);
+              setProjectOverviewOutcomeEditorState({
+                index: indexToOpen,
+                draft: buildProjectOverviewOutcomeEditorDraft(outcome, indexToOpen),
+                source: "mission-control-setup",
+              });
+            }
+
+            return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-mission-control-modal-context-editor playground-mission-control-modal-outcomes-editor" },
+              React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Outcomes"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-mission-control-modal-outcome-add",
+                  onClick: addMissionControlSetupOutcome,
+                  title: "Add outcome",
+                  "aria-label": "Add outcome",
+                }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
+              ),
+              React.createElement("div", { className: "playground-mission-control-modal-outcomes-list" },
+                hasOutcomeRecords
+                  ? outcomeRecords.map((outcome, index) =>
+                      React.createElement("div", {
+                          key: outcome.id || ("mission-control-outcome-" + index),
+                          className: "playground-mission-control-modal-outcome-row",
+                        },
+                        React.createElement("div", { className: "playground-mission-control-modal-outcome-copy" },
+                          React.createElement("input", {
+                            type: "text",
+                            className: "playground-mission-control-modal-outcome-input",
+                            value: getMissionControlSetupOutcomeTitleValue(outcome, index),
+                            placeholder: "Outcome",
+                            onFocus: () => setIsMissionControlSetupOutcomesEditing(true),
+                            onChange: (event) => updateMissionControlSetupOutcomeTitle(index, event.target.value),
+                            onBlur: () => commitMissionControlSetupOutcomeTitle(index),
+                          })
+                        ),
+                        React.createElement("div", {
+                            className: "playground-mission-control-modal-outcome-menu-shell playground-tasks-toolbar-popup-shell" + (missionControlSetupOutcomeMenuIndex === index ? " is-open" : ""),
+                            ref: missionControlSetupOutcomeMenuIndex === index ? missionControlSetupOutcomeMenuRef : null,
+                          },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-mission-control-modal-outcome-menu-trigger",
+                            onClick: () => setMissionControlSetupOutcomeMenuIndex((current) => current === index ? -1 : index),
+                            title: "Outcome options",
+                            "aria-label": "Outcome options",
+                            "aria-expanded": missionControlSetupOutcomeMenuIndex === index ? "true" : "false",
+                          }, React.createElement(EllipsisVertical, { width: 14, height: 14, strokeWidth: 1.8 })),
+                          missionControlSetupOutcomeMenuIndex === index
+                            ? React.createElement("div", {
+                                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-mission-control-modal-outcome-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                              },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "tb-popup-row",
+                                  onClick: () => openMissionControlSetupOutcomeDetails(index),
+                                },
+                                  React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                    React.createElement("span", null, "Details")
+                                  )
+                                ),
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+                                  onClick: () => deleteMissionControlSetupOutcome(index),
+                                },
+                                  React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                    React.createElement("span", null, "Delete outcome")
+                                  )
+                                )
+                              )
+                            : null
+                        )
                       )
                     )
-                  ),
-                  React.createElement("div", { className: "playground-mission-control-studio-settings-scroll" },
-                    renderProjectComposerDialog({ embedded: true })
-                  )
+                  : React.createElement("button", {
+                      type: "button",
+                      className: "playground-mission-control-modal-outcomes-empty",
+                      onClick: addMissionControlSetupOutcome,
+                    }, "Add the first outcome")
+              )
+            );
+          }
+
+          const studioElement = React.createElement("div", {
+              className: "playground-tasks-project-modal-backdrop playground-mission-control-modal-backdrop"
+                + (missionControlSetupVisible ? " is-visible" : "")
+                + (missionControlSetupClosing ? " is-closing" : ""),
+              onClick: () => closeMissionControlSetupModal(),
+            },
+            React.createElement("div", {
+                className: "playground-tasks-project-modal playground-mission-control-modal"
+                  + (missionControlSetupVisible ? " is-visible" : "")
+                  + (missionControlSetupClosing ? " is-closing" : ""),
+                role: "dialog",
+                "aria-modal": "true",
+                "aria-label": "Mission Control",
+                onClick: (event) => event.stopPropagation(),
+              },
+              React.createElement("div", { className: "playground-mission-control-modal-body" },
+                React.createElement("div", { className: "playground-mission-control-modal-context" },
+                  renderMissionControlGoalEditor(),
+                  renderMissionControlOutcomesEditor(),
+                  missionControlAgentError
+                    ? React.createElement("div", { className: "playground-mission-control-setup-error playground-environments-error" }, missionControlAgentError)
+                    : null
                 ),
-                React.createElement("section", { className: "playground-mission-control-studio-chat" },
+                React.createElement("div", { className: "playground-mission-control-modal-composer" },
                   renderMissionControlSetupView()
                 )
               )
-            )
+            ),
+            renderSharedProjectOverviewOutcomeEditorModal({
+              strategyBrief: normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraft),
+            })
           );
           return typeof document !== "undefined" && document.body
             ? createPortal(studioElement, document.body)
@@ -135099,6 +136712,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [tasksProjectSettingsRequestToken, setTasksProjectSettingsRequestToken] = useState(0);
         const [tasksProjectIssueRequest, setTasksProjectIssueRequest] = useState(null);
         const [topNavIssueComposerOpen, setTopNavIssueComposerOpen] = useState(false);
+        const [topNavIssueComposerVisible, setTopNavIssueComposerVisible] = useState(false);
+        const [topNavIssueComposerClosing, setTopNavIssueComposerClosing] = useState(false);
+        const topNavIssueComposerCloseTimerRef = useRef(null);
+        const topNavIssueComposerFrameRef = useRef(null);
+        const topNavIssueComposerAnimationMs = 75;
+        const topNavIssueDescriptionTextareaRef = useRef(null);
+        const [isTopNavIssueDescriptionEditing, setIsTopNavIssueDescriptionEditing] = useState(false);
+        const [topNavIssueEnvironmentPopoverOpen, setTopNavIssueEnvironmentPopoverOpen] = useState(false);
+        const topNavIssueEnvironmentPopoverRef = useRef(null);
+        const [topNavIssueDetailSelectPopover, setTopNavIssueDetailSelectPopover] = useState("");
+        const topNavIssueDetailSelectPopoverRef = useRef(null);
+        const [topNavIssueDetailsCollapsed, setTopNavIssueDetailsCollapsed] = useState(false);
         const [topNavIssueDraft, setTopNavIssueDraft] = useState(buildPlaygroundDefaultTaskDraft());
         const [topNavIssueSaveState, setTopNavIssueSaveState] = useState({
           isSaving: false,
@@ -158310,25 +159935,145 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         function openTopNavIssueComposer() {
+          if (topNavIssueComposerCloseTimerRef.current) {
+            window.clearTimeout(topNavIssueComposerCloseTimerRef.current);
+            topNavIssueComposerCloseTimerRef.current = null;
+          }
+          if (topNavIssueComposerFrameRef.current) {
+            window.cancelAnimationFrame(topNavIssueComposerFrameRef.current);
+            topNavIssueComposerFrameRef.current = null;
+          }
+          setTopNavIssueComposerVisible(false);
+          setTopNavIssueComposerClosing(false);
+          setIsTopNavIssueDescriptionEditing(false);
+          setTopNavIssueEnvironmentPopoverOpen(false);
+          setTopNavIssueDetailSelectPopover("");
+          setTopNavIssueDetailsCollapsed(false);
           setTopNavIssueDraft(buildTopNavIssueDraft());
           setTopNavIssueSaveState({
             isSaving: false,
             error: "",
           });
           setTopNavIssueComposerOpen(true);
+          topNavIssueComposerFrameRef.current = window.requestAnimationFrame(() => {
+            topNavIssueComposerFrameRef.current = window.requestAnimationFrame(() => {
+              topNavIssueComposerFrameRef.current = null;
+              setTopNavIssueComposerVisible(true);
+            });
+          });
         }
 
-        function closeTopNavIssueComposer() {
-          if (topNavIssueSaveState.isSaving) {
-            return;
+        function finishCloseTopNavIssueComposer() {
+          if (topNavIssueComposerCloseTimerRef.current) {
+            window.clearTimeout(topNavIssueComposerCloseTimerRef.current);
+            topNavIssueComposerCloseTimerRef.current = null;
           }
+          if (topNavIssueComposerFrameRef.current) {
+            window.cancelAnimationFrame(topNavIssueComposerFrameRef.current);
+            topNavIssueComposerFrameRef.current = null;
+          }
+          setTopNavIssueComposerVisible(false);
+          setTopNavIssueComposerClosing(false);
           setTopNavIssueComposerOpen(false);
+          setIsTopNavIssueDescriptionEditing(false);
+          setTopNavIssueEnvironmentPopoverOpen(false);
+          setTopNavIssueDetailSelectPopover("");
+          setTopNavIssueDetailsCollapsed(false);
           setTopNavIssueDraft(buildPlaygroundDefaultTaskDraft());
           setTopNavIssueSaveState({
             isSaving: false,
             error: "",
           });
         }
+
+        function closeTopNavIssueComposer(options = {}) {
+          if (topNavIssueSaveState.isSaving) {
+            return;
+          }
+          if (options?.animate === false) {
+            finishCloseTopNavIssueComposer();
+            return;
+          }
+          if (topNavIssueComposerClosing) {
+            return;
+          }
+          setTopNavIssueComposerVisible(false);
+          setTopNavIssueComposerClosing(true);
+          if (topNavIssueComposerCloseTimerRef.current) {
+            window.clearTimeout(topNavIssueComposerCloseTimerRef.current);
+          }
+          topNavIssueComposerCloseTimerRef.current = window.setTimeout(() => {
+            topNavIssueComposerCloseTimerRef.current = null;
+            finishCloseTopNavIssueComposer();
+          }, topNavIssueComposerAnimationMs);
+        }
+
+        useEffect(() => {
+          return () => {
+            if (topNavIssueComposerCloseTimerRef.current) {
+              window.clearTimeout(topNavIssueComposerCloseTimerRef.current);
+              topNavIssueComposerCloseTimerRef.current = null;
+            }
+            if (topNavIssueComposerFrameRef.current) {
+              window.cancelAnimationFrame(topNavIssueComposerFrameRef.current);
+              topNavIssueComposerFrameRef.current = null;
+            }
+          };
+        }, []);
+
+        useEffect(() => {
+          if (!topNavIssueComposerOpen) return undefined;
+
+          function handleTopNavIssueComposerEscape(event) {
+            if (event.key !== "Escape") return;
+            if (topNavIssueDetailSelectPopover) {
+              setTopNavIssueDetailSelectPopover("");
+              return;
+            }
+            if (topNavIssueEnvironmentPopoverOpen) {
+              setTopNavIssueEnvironmentPopoverOpen(false);
+              return;
+            }
+            closeTopNavIssueComposer();
+          }
+
+          window.addEventListener("keydown", handleTopNavIssueComposerEscape);
+          return () => window.removeEventListener("keydown", handleTopNavIssueComposerEscape);
+        }, [topNavIssueComposerClosing, topNavIssueComposerOpen, topNavIssueDetailSelectPopover, topNavIssueEnvironmentPopoverOpen, topNavIssueSaveState.isSaving]);
+
+        useEffect(() => {
+          if (!topNavIssueEnvironmentPopoverOpen) {
+            return undefined;
+          }
+
+          function handleTopNavIssueEnvironmentPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !topNavIssueEnvironmentPopoverRef.current || topNavIssueEnvironmentPopoverRef.current.contains(target)) {
+              return;
+            }
+            setTopNavIssueEnvironmentPopoverOpen(false);
+          }
+
+          document.addEventListener("mousedown", handleTopNavIssueEnvironmentPopoverPointerDown);
+          return () => document.removeEventListener("mousedown", handleTopNavIssueEnvironmentPopoverPointerDown);
+        }, [topNavIssueEnvironmentPopoverOpen]);
+
+        useEffect(() => {
+          if (!topNavIssueDetailSelectPopover) {
+            return undefined;
+          }
+
+          function handleTopNavIssueDetailSelectPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !topNavIssueDetailSelectPopoverRef.current || topNavIssueDetailSelectPopoverRef.current.contains(target)) {
+              return;
+            }
+            setTopNavIssueDetailSelectPopover("");
+          }
+
+          document.addEventListener("mousedown", handleTopNavIssueDetailSelectPopoverPointerDown);
+          return () => document.removeEventListener("mousedown", handleTopNavIssueDetailSelectPopoverPointerDown);
+        }, [topNavIssueDetailSelectPopover]);
 
         function updateTopNavIssueDraft(updater) {
           setTopNavIssueDraft((current) => normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata(
@@ -158345,6 +160090,131 @@ ${PROJECT_OVERVIEW_SCRIPT}
             ...current,
             [field]: value,
           }));
+        }
+
+        function resizeTopNavIssueDescriptionTextarea(textarea) {
+          if (!textarea) return;
+          const computedStyles = window.getComputedStyle(textarea);
+          const lineHeight = Number.parseFloat(computedStyles.lineHeight) || 21;
+          const paddingTop = Number.parseFloat(computedStyles.paddingTop) || 0;
+          const paddingBottom = Number.parseFloat(computedStyles.paddingBottom) || 0;
+          const borderTopWidth = Number.parseFloat(computedStyles.borderTopWidth) || 0;
+          const borderBottomWidth = Number.parseFloat(computedStyles.borderBottomWidth) || 0;
+          const singleLineHeight = Math.ceil(lineHeight + paddingTop + paddingBottom + borderTopWidth + borderBottomWidth);
+          textarea.style.height = "auto";
+          const nextHeight = String(textarea.value || "").trim()
+            ? Math.max(singleLineHeight, textarea.scrollHeight)
+            : singleLineHeight;
+          textarea.style.height = nextHeight + "px";
+        }
+
+        function buildTopNavIssueWrappedDescriptionEdit(value, selectionStart, selectionEnd, prefix, suffix = prefix) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          if (safeStart !== safeEnd) {
+            if (
+              selectedText.startsWith(prefix)
+              && selectedText.endsWith(suffix)
+              && selectedText.length >= prefix.length + suffix.length
+            ) {
+              const unwrappedText = selectedText.slice(prefix.length, selectedText.length - suffix.length);
+              return {
+                value: value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd),
+                selectionStart: safeStart,
+                selectionEnd: safeStart + unwrappedText.length,
+              };
+            }
+
+            const surroundingPrefix = value.slice(Math.max(0, safeStart - prefix.length), safeStart);
+            const surroundingSuffix = value.slice(safeEnd, safeEnd + suffix.length);
+            if (surroundingPrefix === prefix && surroundingSuffix === suffix) {
+              return {
+                value: value.slice(0, safeStart - prefix.length) + selectedText + value.slice(safeEnd + suffix.length),
+                selectionStart: safeStart - prefix.length,
+                selectionEnd: safeStart - prefix.length + selectedText.length,
+              };
+            }
+
+            const wrappedText = prefix + selectedText + suffix;
+            return {
+              value: value.slice(0, safeStart) + wrappedText + value.slice(safeEnd),
+              selectionStart: safeStart + prefix.length,
+              selectionEnd: safeStart + prefix.length + selectedText.length,
+            };
+          }
+
+          return {
+            value: value.slice(0, safeStart) + prefix + suffix + value.slice(safeEnd),
+            selectionStart: safeStart + prefix.length,
+            selectionEnd: safeStart + prefix.length,
+          };
+        }
+
+        function buildTopNavIssueDescriptionListEdit(value, selectionStart, selectionEnd) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const lineStart = value.lastIndexOf("\\n", Math.max(0, safeStart - 1)) + 1;
+          let lineEnd = value.indexOf("\\n", safeEnd);
+          if (lineEnd === -1) {
+            lineEnd = value.length;
+          }
+          const block = value.slice(lineStart, lineEnd);
+          const lines = block.split("\\n");
+          const allListItems = lines.every((line) => !line.trim() || /^\\s*-\\s/.test(line));
+          const nextLines = allListItems
+            ? lines.map((line) => line.replace(/^(\\s*)-\\s?/, "$1"))
+            : lines.map((line) => line.trim() ? (line.match(/^\\s*$/) ? line : "- " + line.replace(/^\\s*-\\s?/, "")) : line);
+          const nextBlock = nextLines.join("\\n");
+          const nextValue = value.slice(0, lineStart) + nextBlock + value.slice(lineEnd);
+          return {
+            value: nextValue,
+            selectionStart: lineStart,
+            selectionEnd: lineStart + nextBlock.length,
+          };
+        }
+
+        function applyTopNavIssueDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateTopNavIssueField("description", nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = topNavIssueDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeTopNavIssueDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleTopNavIssueDescriptionFormat(formatType) {
+          const textarea = topNavIssueDescriptionTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(topNavIssueDraft?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildTopNavIssueWrappedDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildTopNavIssueWrappedDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildTopNavIssueWrappedDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTopNavIssueDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyTopNavIssueDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
         function buildTopNavIssuePayload(taskRecord, projectIdForIssue) {
@@ -158444,14 +160314,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
               body: JSON.stringify(buildTopNavIssuePayload(taskDraft, projectIdForIssue)),
             });
             const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to create issue.");
-            }
-            const createdTask = getPlaygroundTaskResponseRecord(data);
-            setTopNavIssueComposerOpen(false);
-            setTopNavIssueDraft(buildPlaygroundDefaultTaskDraft());
-            setTopNavIssueSaveState({ isSaving: false, error: "" });
-            setLatestInteractedProjectId(projectIdForIssue);
+	            if (!response.ok) {
+	              throw new Error(data?.message || data?.error || "Failed to create issue.");
+	            }
+	            const createdTask = getPlaygroundTaskResponseRecord(data);
+	            finishCloseTopNavIssueComposer();
+	            setLatestInteractedProjectId(projectIdForIssue);
             setTasksPageNavigationRequest({
               token: Date.now().toString(36) + Math.random().toString(36).slice(2),
               projectId: projectIdForIssue,
@@ -158480,124 +160348,470 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (!topNavIssueComposerOpen) {
             return null;
           }
-          const assignableActors = runtimeAgents.concat(buildPlaygroundHumanAssigneeOption());
-          const modalElement = React.createElement("div", {
-              className: "playground-tasks-project-modal-backdrop",
-              onClick: () => closeTopNavIssueComposer(),
-            },
-            React.createElement("form", {
-                className: "playground-tasks-project-modal playground-tasks-issue-modal",
-                role: "dialog",
+		          const assignableActors = runtimeAgents.concat(buildPlaygroundHumanAssigneeOption());
+          const selectedTopNavIssueEnvironment = topNavIssueDraft.environmentId
+            ? runtimeEnvironments.find((environment) => environment?.id === topNavIssueDraft.environmentId) || null
+            : null;
+          const topNavIssueEnvironmentLabel = selectedTopNavIssueEnvironment
+            ? ((selectedTopNavIssueEnvironment.name || selectedTopNavIssueEnvironment.id) + (selectedTopNavIssueEnvironment.isDefault ? " (Default)" : ""))
+            : (runtimeEnvironments.length > 0 ? "Select environment" : "No environments");
+
+          function renderTopNavIssueEnvironmentOptionRow(environment) {
+            const isSelected = selectedTopNavIssueEnvironment?.id === environment.id;
+            return React.createElement("button", {
+                key: environment.id,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
+                onClick: () => {
+                  updateTopNavIssueField("environmentId", environment.id);
+                  setTopNavIssueEnvironmentPopoverOpen(false);
+                },
+              },
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                isSelected
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, (environment.name || environment.id) + (environment.isDefault ? " (Default)" : "")),
+                React.createElement("span", null, "Use this computer for this issue.")
+              )
+            );
+          }
+
+          function renderTopNavIssueComputerSelector() {
+            return React.createElement("div", { className: "playground-tasks-project-modal-environment-picker playground-tasks-issue-modal-computer-picker" },
+              React.createElement("div", {
+                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (topNavIssueEnvironmentPopoverOpen ? " is-open" : ""),
+                ref: topNavIssueEnvironmentPopoverRef,
+              },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger playground-tasks-project-modal-environment-button" + (selectedTopNavIssueEnvironment ? "" : " is-empty") + (topNavIssueEnvironmentPopoverOpen ? " is-active" : ""),
+                  onClick: () => {
+                    setTopNavIssueDetailSelectPopover("");
+                    setTopNavIssueEnvironmentPopoverOpen((current) => !current);
+                  },
+                  title: topNavIssueEnvironmentLabel,
+                  "aria-expanded": topNavIssueEnvironmentPopoverOpen ? "true" : "false",
+                  disabled: runtimeEnvironments.length === 0,
+                },
+                  React.createElement(Monitor, { className: "playground-tasks-project-modal-environment-icon", strokeWidth: 1.8 }),
+                  React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, topNavIssueEnvironmentLabel),
+                  React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+                ),
+                topNavIssueEnvironmentPopoverOpen
+                  ? React.createElement("div", {
+                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-toolbar-popup-menu-environment",
+                    },
+                      runtimeEnvironments.length > 0
+                        ? runtimeEnvironments.map((environment) => renderTopNavIssueEnvironmentOptionRow(environment))
+                        : React.createElement("div", { className: "tb-popup-empty-state" }, "No environments available.")
+                    )
+                  : null
+              )
+            );
+          }
+
+          function renderTopNavIssueDescriptionField() {
+            return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-tasks-issue-description-editor" },
+              React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                  [
+                    { id: "bold", label: "Bold", icon: Bold },
+                    { id: "italic", label: "Italic", icon: Italic },
+                    { id: "underline", label: "Underline", icon: Underline },
+                    { id: "list", label: "List", icon: List },
+                  ].map((action) =>
+                    React.createElement("button", {
+                      key: action.id,
+                      type: "button",
+                      className: "playground-tasks-detail-format-button",
+                      title: action.label,
+                      "aria-label": action.label,
+                      onMouseDown: (event) => event.preventDefault(),
+                      onClick: () => handleTopNavIssueDescriptionFormat(action.id),
+                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isTopNavIssueDescriptionEditing ? " is-editing" : " is-preview") },
+                !isTopNavIssueDescriptionEditing
+                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                      String(topNavIssueDraft.description || "").trim()
+                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                            content: topNavIssueDraft.description,
+                            className: "playground-tasks-detail-description-preview tb-message-markdown",
+                          })
+                        : React.createElement("div", {
+                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                          }, "Describe the expected outcome, context, constraints, and acceptance criteria.")
+                    )
+                  : null,
+                React.createElement("textarea", {
+                  ref: topNavIssueDescriptionTextareaRef,
+                  className: "playground-tasks-detail-description-input " + (isTopNavIssueDescriptionEditing ? "is-editing" : "is-preview"),
+                  rows: 1,
+                  placeholder: isTopNavIssueDescriptionEditing ? "Describe the expected outcome, context, constraints, and acceptance criteria." : "",
+                  value: topNavIssueDraft.description || "",
+                  onFocus: (event) => {
+                    setIsTopNavIssueDescriptionEditing(true);
+                    resizeTopNavIssueDescriptionTextarea(event.currentTarget);
+                  },
+                  onChange: (event) => {
+                    updateTopNavIssueField("description", event.target.value);
+                    resizeTopNavIssueDescriptionTextarea(event.currentTarget);
+                  },
+                  onBlur: () => setIsTopNavIssueDescriptionEditing(false),
+                })
+              )
+            );
+          }
+
+          function toggleTopNavIssueDetailSelectPopover(nextPopoverId) {
+            setTopNavIssueEnvironmentPopoverOpen(false);
+            setTopNavIssueDetailSelectPopover((current) => current === nextPopoverId ? "" : nextPopoverId);
+          }
+
+          function renderTopNavIssueDetailSelectOptionRow({ key, label, description, selected, onClick, disabled = false }) {
+            return React.createElement("button", {
+                key,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
+                onClick,
+                disabled,
+              },
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                selected
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, label),
+                description
+                  ? React.createElement("span", null, description)
+                  : null
+              )
+            );
+          }
+
+          function renderTopNavIssueDetailSelectControl({
+            popoverId,
+            valueLabel,
+            disabled = false,
+            isEmpty = false,
+            buttonContent = null,
+            menuClassName = "",
+            children,
+          }) {
+            const isOpen = topNavIssueDetailSelectPopover === popoverId;
+            return React.createElement("div", {
+                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (isOpen ? " is-open" : ""),
+                ref: isOpen ? topNavIssueDetailSelectPopoverRef : null,
+              },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (isEmpty ? " is-empty" : "") + (isOpen ? " is-active" : ""),
+                disabled,
+                onClick: () => {
+                  if (disabled) return;
+                  toggleTopNavIssueDetailSelectPopover(popoverId);
+                },
+                title: valueLabel,
+                "aria-expanded": isOpen ? "true" : "false",
+              },
+                buttonContent || React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, valueLabel),
+                React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+              ),
+              isOpen
+                ? React.createElement("div", {
+                    className: ("tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in " + menuClassName).trim(),
+                  }, children)
+                : null
+            );
+          }
+
+          function renderTopNavIssueDetailFact(label, control) {
+            return React.createElement("div", { className: "playground-tasks-detail-fact" },
+              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
+              React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
+            );
+          }
+
+          function getTopNavIssueActorLabel(actorId, fallback = "Unassigned") {
+            const normalizedActorId = String(actorId || "").trim();
+            if (!normalizedActorId) return fallback;
+            const actor = assignableActors.find((item) => item.id === normalizedActorId) || null;
+            if (isPlaygroundHumanAssigneeId(normalizedActorId)) {
+              return actor?.name || "Me";
+            }
+            return actor?.name || normalizedActorId || fallback;
+          }
+
+          function renderTopNavIssueActorAvatar(actorId, className, fallbackLabel = "") {
+            const normalizedActorId = String(actorId || "").trim();
+            const actor = normalizedActorId ? assignableActors.find((item) => item.id === normalizedActorId) || null : null;
+            const actorLabel = getTopNavIssueActorLabel(normalizedActorId, fallbackLabel || "User");
+            const avatarLabel = (getAccountInitials(actorLabel).charAt(0) || "U").toUpperCase();
+            const avatarUrl = isPlaygroundHumanAssigneeId(normalizedActorId)
+              ? normalizeSessionPhotoUrl(sessionState.photoURL || "")
+              : normalizeSessionPhotoUrl(actor ? getPlaygroundAgentProfilePhotoUrl(actor) : "");
+            return React.createElement("span", { className, "aria-hidden": "true" },
+              canRenderAvatarImage(avatarUrl)
+                ? React.createElement("img", {
+                    className: className + "-image",
+                    src: avatarUrl,
+                    alt: avatarLabel,
+                  })
+                : React.createElement("span", { className: className + "-fallback" }, avatarLabel)
+            );
+          }
+
+          function renderTopNavIssuePersonValue(actorId, label) {
+            const normalizedActorId = String(actorId || "").trim();
+            return React.createElement("span", { className: "playground-tasks-detail-person-value" },
+              normalizedActorId ? renderTopNavIssueActorAvatar(normalizedActorId, "playground-tasks-detail-person-avatar", label) : null,
+              React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, label)
+            );
+          }
+
+          function renderTopNavIssueAgentRow(actor, options = {}) {
+            const actorLabel = getTopNavIssueActorLabel(actor.id, "Unknown");
+            const actorDescription = options.reviewer
+              ? (isPlaygroundHumanAssigneeId(actor.id) ? "Human reviewer" : "Agent reviewer")
+              : (isPlaygroundHumanAssigneeId(actor.id) ? "Human" : "Agent");
+            const isSelected = options.reviewer
+              ? (topNavIssueDraft.reviewRequired && topNavIssueDraft.reviewerAgentId === actor.id)
+              : topNavIssueDraft.assigneeAgentId === actor.id;
+            return React.createElement("button", {
+                key: actor.id,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (isSelected ? " selected" : ""),
+                onClick: () => {
+                  if (options.reviewer) {
+                    updateTopNavIssueDraft((current) => ({
+                      ...current,
+                      reviewRequired: true,
+                      reviewerAgentId: actor.id,
+                    }));
+                  } else {
+                    updateTopNavIssueField("assigneeAgentId", actor.id);
+                  }
+                  setTopNavIssueDetailSelectPopover("");
+                },
+              },
+              renderTopNavIssueActorAvatar(actor.id, "playground-tasks-detail-person-menu-avatar", actorLabel),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, actorLabel),
+                React.createElement("span", null, actorDescription)
+              ),
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                isSelected
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              )
+            );
+          }
+
+          function renderTopNavIssueReviewerNoneRow() {
+            return React.createElement("button", {
+                key: "__none__",
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (!topNavIssueDraft.reviewRequired ? " selected" : ""),
+                onClick: () => {
+                  updateTopNavIssueDraft((current) => ({
+                    ...current,
+                    reviewRequired: false,
+                    reviewerAgentId: null,
+                  }));
+                  setTopNavIssueDetailSelectPopover("");
+                },
+              },
+              React.createElement("span", { className: "playground-tasks-detail-person-menu-avatar", "aria-hidden": "true" },
+                React.createElement("span", { className: "playground-tasks-detail-person-menu-avatar-fallback" }, "No")
+              ),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, "No review"),
+                React.createElement("span", null, "Move directly to Finished when work is done.")
+              ),
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                !topNavIssueDraft.reviewRequired
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              )
+            );
+          }
+
+          function renderTopNavIssueDetailsSection() {
+            const issueType = normalizePlaygroundTaskType(topNavIssueDraft.taskType) === "loop" ? "loop" : "task";
+            const IssueTypeIcon = issueType === "loop" ? RefreshCw : Bookmark;
+            const issueTypeLabel = PLAYGROUND_TASK_TYPE_OPTIONS.find((option) => option.id === issueType)?.label || "Task";
+            const issueStatusLabel = PLAYGROUND_TASK_STATUS_OPTIONS.find((option) => option.id === topNavIssueDraft.status)?.label || "To do";
+            const issuePriorityPresentation = getPlaygroundTaskPriorityPresentation(topNavIssueDraft.priority);
+            const selectedAssignee = topNavIssueDraft.assigneeAgentId ? assignableActors.find((actor) => actor.id === topNavIssueDraft.assigneeAgentId) || null : null;
+            const assigneeLabel = selectedAssignee ? getTopNavIssueActorLabel(selectedAssignee.id, "Unassigned") : "Unassigned";
+            const selectedReviewer = topNavIssueDraft.reviewRequired && topNavIssueDraft.reviewerAgentId
+              ? assignableActors.find((actor) => actor.id === topNavIssueDraft.reviewerAgentId) || null
+              : null;
+            const reviewerLabel = topNavIssueDraft.reviewRequired
+              ? (selectedReviewer ? getTopNavIssueActorLabel(selectedReviewer.id, "Reviewer") : "Reviewer")
+              : "No review";
+
+            return React.createElement("div", {
+                className: "playground-tasks-detail-facts playground-tasks-issue-details-section" + (topNavIssueDetailSelectPopover ? " is-popover-open" : ""),
+              },
+              React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-tasks-detail-facts-toggle" + (topNavIssueDetailsCollapsed ? " is-collapsed" : ""),
+                  onClick: () => setTopNavIssueDetailsCollapsed((current) => !current),
+                  title: topNavIssueDetailsCollapsed ? "Expand details" : "Collapse details",
+                  "aria-label": topNavIssueDetailsCollapsed ? "Expand details" : "Collapse details",
+                  "aria-expanded": topNavIssueDetailsCollapsed ? "false" : "true",
+                }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 }))
+              ),
+              !topNavIssueDetailsCollapsed
+                ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                    renderTopNavIssueDetailFact("Type",
+                      React.createElement("div", { className: "playground-tasks-type-control" },
+                        renderTopNavIssueDetailSelectControl({
+                          popoverId: "type",
+                          valueLabel: issueTypeLabel,
+                          buttonContent: React.createElement("span", { className: "playground-tasks-detail-type-value" },
+                            React.createElement(IssueTypeIcon, { className: "playground-tasks-detail-type-icon", strokeWidth: 1.9 }),
+                            React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, issueTypeLabel)
+                          ),
+                          children: PLAYGROUND_TASK_TYPE_OPTIONS
+                            .filter((option) => option.id !== "subtask")
+                            .map((option) =>
+                              renderTopNavIssueDetailSelectOptionRow({
+                                key: option.id,
+                                label: option.label,
+                                selected: issueType === option.id,
+                                onClick: () => {
+                                  updateTopNavIssueField("taskType", option.id);
+                                  setTopNavIssueDetailSelectPopover("");
+                                },
+                              })
+                            ),
+                        })
+                      )
+                    ),
+                    renderTopNavIssueDetailFact("Status",
+                      renderTopNavIssueDetailSelectControl({
+                        popoverId: "status",
+                        valueLabel: issueStatusLabel,
+                        children: PLAYGROUND_TASK_STATUS_OPTIONS.map((option) =>
+                          renderTopNavIssueDetailSelectOptionRow({
+                            key: option.id,
+                            label: option.label,
+                            selected: topNavIssueDraft.status === option.id,
+                            onClick: () => {
+                              updateTopNavIssueField("status", option.id);
+                              setTopNavIssueDetailSelectPopover("");
+                            },
+                          })
+                        ),
+                      })
+                    ),
+                    renderTopNavIssueDetailFact("Priority",
+                      renderTopNavIssueDetailSelectControl({
+                        popoverId: "priority",
+                        valueLabel: issuePriorityPresentation.label,
+                        buttonContent: React.createElement("span", {
+                            className: "playground-tasks-priority-value playground-tasks-detail-priority-value " + issuePriorityPresentation.toneClassName,
+                          },
+                          renderPlaygroundTaskPriorityGlyph(topNavIssueDraft.priority),
+                          React.createElement("span", { className: "playground-tasks-priority-value-text playground-tasks-detail-select-trigger-label" }, issuePriorityPresentation.label)
+                        ),
+                        children: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) =>
+                          renderTopNavIssueDetailSelectOptionRow({
+                            key: option.id,
+                            label: getPlaygroundTaskPriorityPresentation(option.id).label,
+                            selected: topNavIssueDraft.priority === option.id,
+                            onClick: () => {
+                              updateTopNavIssueField("priority", option.id);
+                              setTopNavIssueDetailSelectPopover("");
+                            },
+                          })
+                        ),
+                      })
+                    ),
+                    renderTopNavIssueDetailFact("Assignee",
+                      renderTopNavIssueDetailSelectControl({
+                        popoverId: "assignee",
+                        valueLabel: assigneeLabel,
+                        isEmpty: !selectedAssignee,
+                        buttonContent: renderTopNavIssuePersonValue(topNavIssueDraft.assigneeAgentId, assigneeLabel),
+                        menuClassName: "tb-popup-menu-inline-agent",
+                        children: assignableActors.length > 0
+                          ? assignableActors.map((actor) => renderTopNavIssueAgentRow(actor))
+                          : React.createElement("div", { className: "tb-popup-empty-state" }, "No assignees yet."),
+                      })
+                    ),
+                    renderTopNavIssueDetailFact("Reviewer",
+                      renderTopNavIssueDetailSelectControl({
+                        popoverId: "reviewer",
+                        valueLabel: reviewerLabel,
+                        isEmpty: !topNavIssueDraft.reviewRequired,
+                        buttonContent: renderTopNavIssuePersonValue(topNavIssueDraft.reviewRequired ? topNavIssueDraft.reviewerAgentId : "", reviewerLabel),
+                        menuClassName: "tb-popup-menu-inline-agent",
+                        children: [
+                          renderTopNavIssueReviewerNoneRow(),
+                          ...assignableActors.map((actor) => renderTopNavIssueAgentRow(actor, { reviewer: true })),
+                        ],
+                      })
+                    )
+                  )
+                : null
+            );
+          }
+
+		          const modalElement = React.createElement("div", {
+		              className: "playground-tasks-project-modal-backdrop playground-tasks-project-issue-backdrop"
+	                  + (topNavIssueComposerVisible ? " is-visible" : "")
+                  + (topNavIssueComposerClosing ? " is-closing" : ""),
+	              onClick: () => closeTopNavIssueComposer(),
+	            },
+	            React.createElement("form", {
+	                className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal"
+                    + (topNavIssueComposerVisible ? " is-visible" : "")
+                    + (topNavIssueComposerClosing ? " is-closing" : ""),
+	                role: "dialog",
                 "aria-modal": "true",
                 "aria-label": "New issue",
                 onClick: (event) => event.stopPropagation(),
                 onSubmit: (event) => void handleSaveTopNavIssue(event),
               },
-              React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                    React.createElement(Bookmark, { width: 18, height: 18, strokeWidth: 1.9 })
-                  ),
-                  React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "New Issue")
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-settings-icon-button playground-tasks-project-modal-close",
+	              React.createElement("div", { className: "playground-tasks-project-modal-top" },
+	                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+	                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+	                    React.createElement(Bookmark, { width: 18, height: 18, strokeWidth: 1.9 })
+	                  ),
+	                  React.createElement("input", {
+	                    type: "text",
+	                    className: "playground-tasks-project-modal-name-input playground-tasks-issue-modal-title-input",
+	                    value: topNavIssueDraft.title || "",
+	                    placeholder: "Issue title",
+	                    autoFocus: true,
+	                    onChange: (event) => updateTopNavIssueField("title", event.target.value),
+	                  })
+	                ),
+	                renderTopNavIssueComputerSelector(),
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-settings-icon-button playground-tasks-project-modal-close",
                   onClick: () => closeTopNavIssueComposer(),
                   title: "Close",
                   disabled: topNavIssueSaveState.isSaving,
-                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-              ),
-              React.createElement("div", { className: "playground-tasks-issue-modal-body" },
-                renderTopNavIssueField("Title", React.createElement("input", {
-                  type: "text",
-                  className: "playground-tasks-issue-modal-input",
-                  value: topNavIssueDraft.title || "",
-                  placeholder: "Issue title",
-                  autoFocus: true,
-                  onChange: (event) => updateTopNavIssueField("title", event.target.value),
-                }), { full: true }),
-                renderTopNavIssueField("Description", React.createElement("textarea", {
-                  className: "playground-tasks-project-modal-textarea playground-tasks-issue-modal-textarea",
-                  value: topNavIssueDraft.description || "",
-                  placeholder: "Describe the expected outcome, context, constraints, and acceptance criteria.",
-                  onChange: (event) => updateTopNavIssueField("description", event.target.value),
-                }), { full: true }),
-                React.createElement("div", { className: "playground-tasks-issue-modal-grid" },
-                  renderTopNavIssueField("Type", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: normalizePlaygroundTaskType(topNavIssueDraft.taskType) === "loop" ? "loop" : "task",
-                    onChange: (event) => updateTopNavIssueField("taskType", event.target.value),
-                  },
-                    PLAYGROUND_TASK_TYPE_OPTIONS
-                      .filter((option) => option.id !== "subtask")
-                      .map((option) => React.createElement("option", { key: option.id, value: option.id }, option.label))
-                  )),
-                  renderTopNavIssueField("Status", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: topNavIssueDraft.status || "todo",
-                    onChange: (event) => updateTopNavIssueField("status", event.target.value),
-                  },
-                    PLAYGROUND_TASK_STATUS_OPTIONS.map((option) => React.createElement("option", { key: option.id, value: option.id }, option.label))
-                  )),
-                  renderTopNavIssueField("Priority", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: topNavIssueDraft.priority || "medium",
-                    onChange: (event) => updateTopNavIssueField("priority", event.target.value),
-                  },
-                    PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) => React.createElement("option", { key: option.id, value: option.id }, option.label))
-                  )),
-                  renderTopNavIssueField("Assignee", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: topNavIssueDraft.assigneeAgentId || "",
-                    onChange: (event) => updateTopNavIssueField("assigneeAgentId", event.target.value || null),
-                  },
-                    React.createElement("option", { value: "" }, "Unassigned"),
-                    assignableActors.map((actor) => React.createElement("option", { key: actor.id, value: actor.id },
-                      isPlaygroundHumanAssigneeId(actor.id) ? "Me" : (actor.name || actor.id)
-                    ))
-                  )),
-                  renderTopNavIssueField("Review", React.createElement("span", { className: "playground-tasks-issue-modal-check-row" },
-                    React.createElement("input", {
-                      type: "checkbox",
-                      checked: topNavIssueDraft.reviewRequired === true,
-                      onChange: (event) => updateTopNavIssueDraft((current) => ({
-                        ...current,
-                        reviewRequired: event.target.checked,
-                        reviewerAgentId: event.target.checked ? current.reviewerAgentId : null,
-                      })),
-                    }),
-                    React.createElement("span", null, "Require review")
-                  )),
-                  renderTopNavIssueField("Reviewer", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: topNavIssueDraft.reviewRequired ? (topNavIssueDraft.reviewerAgentId || "") : "",
-                    disabled: topNavIssueDraft.reviewRequired !== true,
-                    onChange: (event) => updateTopNavIssueField("reviewerAgentId", event.target.value || null),
-                  },
-                    React.createElement("option", { value: "" }, "No specific reviewer"),
-                    assignableActors.map((actor) => React.createElement("option", { key: actor.id, value: actor.id },
-                      isPlaygroundHumanAssigneeId(actor.id) ? "Me" : (actor.name || actor.id)
-                    ))
-                  )),
-                  renderTopNavIssueField("Computer", React.createElement("select", {
-                    className: "playground-tasks-issue-modal-select",
-                    value: topNavIssueDraft.environmentId || "",
-                    onChange: (event) => updateTopNavIssueField("environmentId", event.target.value || null),
-                  },
-                    React.createElement("option", { value: "" }, "Project default"),
-                    runtimeEnvironments.map((environment) => React.createElement("option", { key: environment.id, value: environment.id },
-                      environment.name || environment.id
-                    ))
-                  )),
-                  renderTopNavIssueField("Due", React.createElement("input", {
-                    type: "datetime-local",
-                    className: "playground-tasks-issue-modal-input",
-                    value: toPlaygroundDatetimeLocalValue(topNavIssueDraft.dueAt),
-                    onChange: (event) => updateTopNavIssueField("dueAt", fromPlaygroundDatetimeLocalValue(event.target.value)),
-                  }))
-                ),
-                topNavIssueSaveState.error
+	                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+		              ),
+		              React.createElement("div", { className: "playground-tasks-issue-modal-body" },
+		                renderTopNavIssueDescriptionField(),
+		                renderTopNavIssueDetailsSection(),
+	                topNavIssueSaveState.error
                   ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, topNavIssueSaveState.error)
                   : null
               ),

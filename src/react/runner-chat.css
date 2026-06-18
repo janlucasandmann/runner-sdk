@@ -9174,6 +9174,35 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   flex: 1 1 auto;
 }
 
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-log-card-code-editor-fallback {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  resize: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  font: inherit;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-code-save-message {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-code-save-message.is-error {
+  color: rgba(255, 127, 127, 0.9);
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-code-save-message.is-saved {
+  color: rgba(138, 255, 202, 0.82);
+}
+
 .tb-runner-document-preview-host-inline .tb-attachment-preview-drawer-body,
 .tb-runner-document-preview-host-inline .tb-attachment-preview-pdf,
 .tb-runner-document-preview-host-inline .tb-attachment-preview-markdown-shell,
@@ -10651,7 +10680,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-composer-popup-portal-root {
   position: fixed;
-  z-index: 10000;
+  z-index: 2147483000;
   pointer-events: none;
 }
 
