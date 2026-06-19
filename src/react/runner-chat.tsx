@@ -2225,6 +2225,27 @@ export interface RunnerChatSkillDefaults {
   };
 }
 
+export interface RunnerChatMetronomeWorkflowRunPayload {
+  threadId: string;
+  workflowId: string;
+  runId: string;
+  workflowName: string;
+  status: string;
+  triggerCommand?: string;
+  triggerEventId?: string;
+  originThreadId?: string;
+  sourceThreadId?: string;
+  triggerThreadId?: string;
+  nodeId?: string;
+  isOriginThread?: boolean;
+  userMessage?: string;
+  activeNodeId?: string;
+  activeEdgeId?: string;
+  workflowMap?: unknown;
+  attachments?: RunnerAttachment[];
+  log: RunnerLog;
+}
+
 export interface RunnerChatProps {
   backendUrl: string;
   apiKey: string;
@@ -2274,6 +2295,7 @@ export interface RunnerChatProps {
   onRunFinish?: (result: RunnerExecuteResult, threadId: string) => void;
   onRunCancel?: (threadId: string) => void;
   onRunError?: (error: Error, threadId?: string) => void;
+  onMetronomeWorkflowRun?: (payload: RunnerChatMetronomeWorkflowRunPayload) => void;
   onAgentChange?: (agentId: string) => void;
   onEnvironmentChange?: (environmentId: string) => void;
   onSkillsChange?: (skillIds: string[]) => void;
@@ -7860,6 +7882,68 @@ function runnerLogHasMetronomeWorkflowPromptReplacement(log: RunnerLog): boolean
   return status === "running" && !triggerCommand && !triggerEventId && !definitionSource;
 }
 
+function buildRunnerMetronomeWorkflowRunPayload(
+  log: RunnerLog,
+  threadId: string,
+  context?: {
+    userMessage?: string;
+    attachments?: RunnerAttachment[] | null;
+  }
+): RunnerChatMetronomeWorkflowRunPayload | null {
+  if (log.eventType !== "metronome_workflow" && !log.metadata?.metronomeWorkflow) {
+    return null;
+  }
+  const workflow = log.metadata?.metronomeWorkflow && typeof log.metadata.metronomeWorkflow === "object"
+    ? log.metadata.metronomeWorkflow as Record<string, unknown>
+    : null;
+  if (!workflow) {
+    return null;
+  }
+  const workflowId = String(workflow.metronomeId || workflow.workflowId || workflow.id || "").trim();
+  const runId = String(workflow.runId || workflow.workflowRunId || "").trim();
+  if (!workflowId || !runId) {
+    return null;
+  }
+  const nodeId = String(workflow.nodeId || workflow.node_id || "").trim();
+  const triggerCommand = String(workflow.triggerCommand || "").trim();
+  const triggerEventId = String(workflow.triggerEventId || "").trim();
+  const definitionSource = String(workflow.definitionSource || "").trim().toLowerCase();
+  const source = String(workflow.source || "").trim().toLowerCase();
+  const isOriginThread = workflow.isOriginThread === true || workflow.is_origin_thread === true;
+  const isExplicitNodeThread = Boolean(nodeId) || workflow.isOriginThread === false || workflow.is_origin_thread === false;
+  const hasThreadTriggerMarker = Boolean(
+    triggerCommand ||
+    triggerEventId ||
+    definitionSource === "thread" ||
+    definitionSource === "thread_event" ||
+    source === "thread_event" ||
+    isOriginThread
+  );
+  if (isExplicitNodeThread || !hasThreadTriggerMarker) {
+    return null;
+  }
+  return {
+    threadId: String(threadId || "").trim(),
+    workflowId,
+    runId,
+    workflowName: String(workflow.metronomeName || workflow.workflowName || workflow.name || "Metronome").trim() || "Metronome",
+    status: String(workflow.status || log.metadata?.status || "running").trim() || "running",
+    triggerCommand: triggerCommand || undefined,
+    triggerEventId: triggerEventId || undefined,
+    originThreadId: String(workflow.originThreadId || "").trim() || undefined,
+    sourceThreadId: String(workflow.sourceThreadId || "").trim() || undefined,
+    triggerThreadId: String(workflow.triggerThreadId || "").trim() || undefined,
+    nodeId: nodeId || undefined,
+    isOriginThread: isOriginThread || undefined,
+    userMessage: String(workflow.userMessage || workflow.displayMessage || workflow.inputPrompt || context?.userMessage || "").trim() || undefined,
+    activeNodeId: String(workflow.activeNodeId || "").trim() || undefined,
+    activeEdgeId: String(workflow.activeEdgeId || "").trim() || undefined,
+    workflowMap: workflow.workflowMap,
+    attachments: Array.isArray(context?.attachments) ? context.attachments : undefined,
+    log,
+  };
+}
+
 function turnHasMetronomeWorkflowPromptReplacement(turn: RunnerTurn): boolean {
   return turn.logs.some(runnerLogHasMetronomeWorkflowPromptReplacement);
 }
@@ -9812,6 +9896,7 @@ export function RunnerChat({
   onRunFinish,
   onRunCancel,
   onRunError,
+  onMetronomeWorkflowRun,
   onAgentChange,
   onEnvironmentChange,
   onSkillsChange,
@@ -13173,6 +13258,17 @@ export function RunnerChat({
             }
           }
           appendTurnLog(turnId, log);
+          const metronomeWorkflowRunPayload = buildRunnerMetronomeWorkflowRunPayload(log, threadId, {
+            userMessage: visibleTaskText || taskText,
+            attachments: resolvedAttachments || null,
+          });
+          if (metronomeWorkflowRunPayload) {
+            try {
+              onMetronomeWorkflowRun?.(metronomeWorkflowRunPayload);
+            } catch (error) {
+              reportRunnerLifecycleCallbackError("onMetronomeWorkflowRun", error);
+            }
+          }
         },
 	      });
 
@@ -14389,6 +14485,16 @@ export function RunnerChat({
     }
     const resolvedScrollElement = scrollElement;
 
+    function stopProgrammaticLogsAutoScroll() {
+      shouldAutoScrollLogsRef.current = false;
+      isProgrammaticLogsAutoScrollRef.current = false;
+      autoScrollSettleFramesRef.current = 0;
+      if (autoScrollAnimationFrameRef.current !== null) {
+        window.cancelAnimationFrame(autoScrollAnimationFrameRef.current);
+        autoScrollAnimationFrameRef.current = null;
+      }
+    }
+
     function handleLogViewportScroll() {
       const isPinnedToBottom = isLogViewportPinnedToBottom(resolvedScrollElement);
       if (isProgrammaticLogsAutoScrollRef.current) {
@@ -14401,9 +14507,10 @@ export function RunnerChat({
       shouldAutoScrollLogsRef.current = isPinnedToBottom;
     }
 
-    function handleLogViewportUserIntent() {
-      if (!isLogViewportPinnedToBottom(resolvedScrollElement)) {
-        isProgrammaticLogsAutoScrollRef.current = false;
+    function handleLogViewportUserIntent(event: WheelEvent | TouchEvent) {
+      const wheelDeltaY = "deltaY" in event ? Number(event.deltaY || 0) : 0;
+      if (wheelDeltaY < 0 || !isLogViewportPinnedToBottom(resolvedScrollElement)) {
+        stopProgrammaticLogsAutoScroll();
       }
     }
 
@@ -20725,7 +20832,7 @@ export function RunnerChat({
               const responseStyle = turn.animateOnRender
                 ? getRunnerChatEnterAnimationStyle(baseDelay + 150 + displayedTimelineItems.length * 45)
                 : undefined;
-              const shouldAnimateTimelineRows = turn.animateOnRender || isTurnRunning;
+              const shouldAnimateTimelineRows = turn.animateOnRender;
               const turnAgentLabel = isMissionControlThreadTurn
                 ? getRunnerMissionControlAgentName(threadMissionControlPreview)
                 : turn.agentName || displayedAgentLabel || "Agent";

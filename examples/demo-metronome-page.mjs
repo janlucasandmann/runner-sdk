@@ -4862,6 +4862,78 @@ export const METRONOME_PAGE_CSS = String.raw`
         gap: 8px;
       }
 
+      .playground-metronome-run-thread-list.is-work-log-surface {
+        width: 100%;
+        min-height: auto;
+        height: auto;
+        box-sizing: border-box;
+        gap: 0;
+        background: transparent;
+        flex: 0 0 auto;
+        overflow: visible;
+      }
+
+      .playground-metronome-run-thread-list.is-work-log-surface .playground-metronome-run-thread-turn {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-metronome-run-thread-list.is-work-log-surface .playground-metronome-run-thread-user-shell {
+        align-self: flex-end;
+        max-width: min(760px, 72%);
+      }
+
+      .playground-metronome-run-thread-list.is-work-log-surface .playground-metronome-run-thread-work-header {
+        margin-top: 34px;
+      }
+
+      .playground-metronome-run-thread-list.is-work-log-surface .playground-metronome-run-thread-work {
+        margin-top: 8px;
+      }
+
+      .playground-metronome-run-thread-list.is-work-log-surface .playground-metronome-run-thread-work .agent-steps-container {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+
+      .playground-metronome-run-thread-list.is-work-log-surface .playground-metronome-run-thread-log-step {
+        width: 100%;
+        max-width: 980px;
+      }
+
+      .playground-metronome-run-thread-list.is-work-log-surface .playground-metronome-run-thread-summary {
+        margin-top: 36px;
+      }
+
+      .playground-metronome-run-thread-list.is-work-log-surface .playground-metronome-run-output-markdown {
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .playground-metronome-run-thread-list.is-work-log-surface .playground-metronome-run-thread-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .playground-metronome-run-thread-list.is-work-log-surface .playground-metronome-run-thread-title-line .playground-metronome-run-thread-meta-row {
+        margin-top: 0;
+      }
+
+      .playground-metronome-run-thread-list.is-work-log-surface .playground-metronome-run-thread-title-line {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .playground-metronome-run-thread-list.is-work-log-surface .playground-metronome-run-thread-title-text {
+        flex: 1 1 auto;
+      }
+
       .playground-metronome-run-thread,
       .playground-metronome-run-log {
         border-radius: 12px;
@@ -12348,6 +12420,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const [isMetronomeRunSidebarMenuOpen, setIsMetronomeRunSidebarMenuOpen] = useState(false);
           const [metronomeRunPrompt, setMetronomeRunPrompt] = useState("");
           const [metronomeRunState, setMetronomeRunState] = useState({ status: "idle", message: "" });
+          const [metronomeRunTraceWorkExpanded, setMetronomeRunTraceWorkExpanded] = useState(true);
           const [isMetronomePublishMenuOpen, setIsMetronomePublishMenuOpen] = useState(false);
           const [metronomePublishState, setMetronomePublishState] = useState({ status: "idle", message: "" });
           const [isMetronomeDeploymentHistoryModalOpen, setIsMetronomeDeploymentHistoryModalOpen] = useState(false);
@@ -13110,6 +13183,27 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               cancelled = true;
             };
           }, [activeWorkflowId, isActiveWorkflowBuiltIn]);
+
+          useEffect(() => {
+            if (!activeWorkflowId) {
+              return undefined;
+            }
+
+            function handleExternalRunDeleted(event) {
+              const detail = event?.detail && typeof event.detail === "object" ? event.detail : {};
+              const workflowId = String(detail.metronomeId || detail.workflowId || "").trim();
+              const runId = String(detail.runId || "").trim();
+              if (!runId || workflowId !== activeWorkflowId) {
+                return;
+              }
+              setMetronomeRuns((current) => current.filter((run) => run.id !== runId));
+              setSelectedMetronomeRunId((current) => current === runId ? "" : current);
+              setMetronomeRunInlineDetailId((current) => current === runId ? "" : current);
+            }
+
+            window.addEventListener("playground:metronome-run-deleted", handleExternalRunDeleted);
+            return () => window.removeEventListener("playground:metronome-run-deleted", handleExternalRunDeleted);
+          }, [activeWorkflowId]);
 
           useEffect(() => {
             let cancelled = false;
@@ -20632,7 +20726,13 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                       ? ""
                     : step.summary || step.status || "Completed"
                 ).trim();
-                const shouldRenderOutputText = Boolean(readableOutputText && (isThreadStep || readableOutputText !== summary));
+                const shouldRenderOutputText = Boolean(
+                  readableOutputText
+                  && (
+                    isThreadStep
+                    || normalizeMetronomeMarkdownText(readableOutputText).replace(/\s+/g, " ") !== normalizeMetronomeMarkdownText(summary).replace(/\s+/g, " ")
+                  )
+                );
                 traceItems.push(React.createElement("div", { key: step.id || step.nodeId || index, className: "playground-metronome-run-trace-step" },
                   React.createElement("div", { className: "playground-metronome-run-trace-heading" },
                     React.createElement("span", { className: "playground-metronome-run-trace-icon" },
@@ -20714,7 +20814,69 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   : "No run trace has been recorded yet."
               ));
             }
-            return React.createElement("div", { className: "playground-metronome-run-trace" }, traceItems);
+            const triggerMessage = includeComposerPrompt ? renderMetronomeRunTriggerMessage(run) : null;
+            const workTraceItems = traceItems.filter((item) => {
+              const itemKey = item && item.key != null ? String(item.key) : "";
+              return itemKey !== "prompt" && itemKey !== "run-summary";
+            });
+            const displayedWorkTraceItems = workTraceItems.length
+              ? workTraceItems
+              : [
+                  React.createElement("div", { key: "empty-work", className: "playground-metronome-run-sidebar-copy" },
+                    metronomeRunState.status === "loading"
+                      ? "Loading workflow trace..."
+                      : "No workflow steps were recorded."
+                  ),
+                ];
+            const summaryText = getMetronomeRunSummaryText(run);
+            const isExpanded = metronomeRunTraceWorkExpanded;
+            return React.createElement("div", { className: "tb-runner-chat playground-metronome-run-thread-list is-work-log-surface" },
+              React.createElement("div", { className: "tb-turn tb-turn-user playground-metronome-run-thread-turn" },
+                triggerMessage
+                  ? React.createElement("div", { className: "tb-user-turn-shell tb-thread-history-anchor playground-metronome-run-thread-user-shell" },
+                      triggerMessage
+                    )
+                  : null,
+                React.createElement("button", {
+                  type: "button",
+                  className: "tb-work-header playground-metronome-run-thread-work-header",
+                  "aria-expanded": isExpanded ? "true" : "false",
+                  onClick: () => setMetronomeRunTraceWorkExpanded((current) => !current),
+                },
+                  React.createElement("span", { className: "tb-work-label" },
+                    React.createElement("span", null, metronomeRunState.status === "loading" ? "Loading Metronome run" : "Metronome Working Logs"),
+                    isExpanded
+                      ? React.createElement(ChevronUp, { className: "tb-chevron", strokeWidth: 1.8 })
+                      : React.createElement(ChevronDown, { className: "tb-chevron", strokeWidth: 1.8 })
+                  ),
+                  React.createElement("div", { className: "tb-turn-environment-pill" },
+                    React.createElement(Metronome, { className: "tb-turn-environment-icon", strokeWidth: 1.6 }),
+                    React.createElement("span", { className: "tb-turn-environment-label" }, activeWorkflow?.name || "Metronome")
+                  )
+                ),
+                React.createElement("div", {
+                  className: ("tb-work-collapse playground-metronome-run-thread-work " + (isExpanded ? "is-expanded" : "collapsed")).trim(),
+                },
+                  React.createElement("div", { className: "tb-work-collapse-inner" },
+                    React.createElement("div", { className: "agent-steps-container" },
+                      displayedWorkTraceItems.map((item, index) => React.createElement("div", {
+                        key: (item && item.key != null ? String(item.key) : "trace") + ":" + index,
+                        className: "agent-step-item",
+                      },
+                        React.createElement("div", { className: "agent-step-content" }, item)
+                      ))
+                    )
+                  )
+                ),
+                summaryText
+                  ? React.createElement("div", { className: "tb-turn-summary tb-thread-history-anchor is-latest-summary playground-metronome-run-thread-summary" },
+                      React.createElement("div", { className: "tb-turn-response" },
+                        renderMetronomeRunOutputMarkdown(summaryText)
+                      )
+                    )
+                  : null
+              )
+            );
           };
 
           const renderMetronomeInlineRunDetail = (run) => {

@@ -40,7 +40,7 @@ export type ComputerAgentsListLogDetails = {
 
 export type ComputerAgentsListAvailableAgent = unknown;
 
-const DEFAULT_AGENT_MODEL_ID = "claude-haiku-4-5";
+const DEFAULT_AGENT_MODEL_ID = "deepseek-v4-flash";
 const DEFAULT_AGENT_PHOTO_URL = "/img/agent-profile-pics/spark.webp";
 const AGENTS_LIST_PAGE_SIZE = 5;
 

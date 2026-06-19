@@ -16,12 +16,17 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         width: 100%;
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-        gap: 42px;
+        column-gap: 42px;
+        row-gap: 42px;
         align-items: start;
+        transition:
+          grid-template-columns 260ms cubic-bezier(0.16, 1, 0.3, 1),
+          column-gap 260ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
       .playground-project-overview-layout.is-sidebar-collapsed {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 0px);
+        column-gap: 0;
       }
 
       .playground-project-overview-main {
@@ -38,10 +43,23 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         display: flex;
         flex-direction: column;
         gap: 12px;
+        overflow: hidden;
+        opacity: 1;
+        transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+        transition:
+          opacity 180ms ease,
+          transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+          visibility 0s linear 0s;
       }
 
       .playground-project-overview-layout.is-sidebar-collapsed .playground-project-overview-sidebar {
-        display: none;
+        opacity: 0;
+        transform: translateX(18px);
+        visibility: hidden;
+        pointer-events: none;
+        transition-delay: 0s, 0s, 180ms;
       }
 
       .playground-project-overview-sidebar-card {
@@ -1468,6 +1486,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       @media (max-width: 1180px) {
         .playground-project-overview-layout {
           grid-template-columns: minmax(0, 1fr);
+        }
+
+        .playground-project-overview-layout.is-sidebar-collapsed .playground-project-overview-sidebar {
+          max-height: 0;
         }
 
         .playground-project-overview-sidebar {
@@ -3199,6 +3221,21 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         z-index: 3;
       }
 
+      .playground-project-overview-threads-section .playground-plugins-search-shell {
+        box-sizing: border-box;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #000;
+      }
+
+      .playground-project-overview-threads-section .playground-plugins-search-shell::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-project-overview-threads-section .playground-plugins-search {
+        background: #000 !important;
+      }
+
       .playground-project-overview-current-tasks-section .playground-files-control-button,
       .playground-project-overview-threads-section .playground-files-control-button,
       .playground-project-overview-files-section .playground-files-control-button {
@@ -4261,6 +4298,17 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-resources-toolbar .playground-files-library-search {
         flex: 1 1 360px;
         max-width: 360px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #000;
+      }
+
+      .playground-project-resources-toolbar .playground-files-library-search::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-project-resources-toolbar .playground-files-library-search-input {
+        background: #000;
       }
 
       .playground-project-resources-toolbar .playground-files-library-new-button {
@@ -4841,10 +4889,6 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.42);
       }
 
-      .playground-project-overview-strategy-progress-card.playground-project-overview-chart-card {
-        gap: 14px;
-      }
-
       .playground-project-overview-outcome-preview-progress-track {
         height: 2px;
         overflow: hidden;
@@ -4917,10 +4961,22 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         font-weight: 400;
       }
 
+      .playground-project-overview-strategy-progress-card.playground-project-overview-progress-combo-card {
+        min-height: 0;
+      }
+
+      .playground-project-overview-strategy-progress-card .playground-project-overview-progress-combo-chart {
+        flex: 0 0 auto;
+      }
+
       .playground-project-overview-outcome-list {
         display: flex;
         flex-direction: column;
         gap: 8px;
+        max-height: calc((64px * 4) + (8px * 3));
+        overflow-y: auto;
+        padding-right: 4px;
+        scrollbar-width: thin;
       }
 
       .playground-project-overview-outcome-preview {
@@ -5193,6 +5249,14 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-strategy-tab .playground-tasks-detail-description,
       .playground-project-overview-strategy-tab .playground-tasks-comments {
         margin-top: 0;
+      }
+
+      .playground-project-overview-strategy-tab .playground-tasks-empty {
+        border-radius: 10px;
+      }
+
+      .playground-project-overview-strategy-tab .playground-project-overview-progress-combo-card {
+        padding: 18px;
       }
 
       .playground-project-overview-rules-list {
@@ -11913,16 +11977,11 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
 
             function getOutcomeTasks(outcome) {
-              const taskIds = new Set(normalizePlaygroundIdList(outcome?.taskIds));
               const releaseId = normalizePlaygroundStrategyText(outcome?.releaseId);
-              if (!taskIds.size && !releaseId) {
+              if (!releaseId) {
                 return [];
               }
-              return normalizedOverviewTasks.filter((task) => {
-                const taskId = String(task?.id || "").trim();
-                return (taskId && taskIds.has(taskId))
-                  || (releaseId && String(task?.releaseId || "").trim() === releaseId);
-              });
+              return normalizedOverviewTasks.filter((task) => String(task?.releaseId || "").trim() === releaseId);
             }
 
             function getOutcomeTaskProgressValue(task) {
@@ -11967,7 +12026,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     title: "",
                     description: "",
                     successCriteria: [],
-                    taskIds: [],
+                    releaseId: "",
                   }, nextIndex),
                 });
               }
@@ -12011,6 +12070,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             function normalizeProjectOverviewOutcomeEditorDraftForSave(rawDraft, index = 0) {
               return normalizePlaygroundStrategyOutcomeRecord({
                 ...(rawDraft || {}),
+                taskIds: [],
                 successCriteria: typeof rawDraft?.successCriteriaInput === "string"
                   ? normalizePlaygroundStrategyTextList(rawDraft.successCriteriaInput)
                   : rawDraft?.successCriteria,
@@ -12063,22 +12123,21 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               }
             }
 
-            function toggleProjectOverviewOutcomeTask(taskId) {
-              const normalizedTaskId = String(taskId || "").trim();
-              if (!normalizedTaskId) return;
-              const currentTaskIds = normalizePlaygroundIdList(projectOverviewOutcomeEditorState?.draft?.taskIds);
-              const nextTaskIds = currentTaskIds.includes(normalizedTaskId)
-                ? currentTaskIds.filter((id) => id !== normalizedTaskId)
-                : currentTaskIds.concat(normalizedTaskId);
-              updateProjectOverviewOutcomeEditorDraft({ taskIds: nextTaskIds });
+            function updateProjectOverviewOutcomeMilestone(releaseId) {
+              updateProjectOverviewOutcomeEditorDraft({
+                releaseId: String(releaseId || "").trim(),
+                taskIds: [],
+              });
             }
 
             function renderOutcomePreviewRow(outcome, index) {
               const progressInfo = getOutcomeProgressInfo(outcome);
               const outcomeNumber = String(index + 1).padStart(3, "0");
-              const linkedLabel = progressInfo.tasks.length
-                ? progressInfo.doneTasks.length + "/" + progressInfo.tasks.length + " tickets done"
-                : "No tickets linked";
+              const outcomeReleaseId = String(outcome?.releaseId || "").trim();
+              const linkedMilestone = outcomeReleaseId ? releasesById[outcomeReleaseId] || null : null;
+              const linkedLabel = linkedMilestone
+                ? ((linkedMilestone.name || "Milestone") + (progressInfo.tasks.length ? " · " + progressInfo.doneTasks.length + "/" + progressInfo.tasks.length + " tickets done" : ""))
+                : "No milestone linked";
               return React.createElement("div", {
                   key: outcome.id || index,
                   className: "playground-tasks-backlog-item playground-project-overview-outcome-preview",
@@ -12130,7 +12189,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               if (!projectOverviewOutcomeEditorState || !Number.isInteger(index) || index < 0) {
                 return null;
               }
-              const selectedTaskIds = new Set(normalizePlaygroundIdList(draft.taskIds));
+              const selectedReleaseId = String(draft.releaseId || "").trim();
+              const selectedRelease = selectedReleaseId ? releasesById[selectedReleaseId] || null : null;
+              const selectedReleaseTasks = selectedReleaseId
+                ? normalizedOverviewTasks.filter((task) => String(task?.releaseId || "").trim() === selectedReleaseId)
+                : [];
+              const selectedReleaseDoneTasks = selectedReleaseTasks.filter((task) => getTaskBoardStatus(task) === "done");
               const content = React.createElement("div", {
                   className: "playground-tasks-project-modal-backdrop",
                   onClick: () => setProjectOverviewOutcomeEditorState(null),
@@ -12189,32 +12253,44 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                       })
                     ),
                     React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Linked Tickets"),
-                      React.createElement("div", { className: "playground-project-overview-outcome-ticket-list" },
-                        normalizedOverviewTasks.length > 0
-                          ? normalizedOverviewTasks.map((task) => {
-                              const taskId = String(task?.id || "").trim();
-                              const selected = taskId && selectedTaskIds.has(taskId);
-                              const ticketNumber = taskTicketNumbersById[taskId] || task?.ticketNumber || "000";
-                              return React.createElement("button", {
-                                  key: taskId || ticketNumber,
-                                  type: "button",
-                                  className: "playground-project-overview-outcome-ticket-row" + (selected ? " is-selected" : ""),
-                                  onClick: () => toggleProjectOverviewOutcomeTask(taskId),
-                                },
-                                React.createElement("span", { className: "playground-project-overview-outcome-ticket-check" },
-                                  selected ? React.createElement(Check, { width: 11, height: 11, strokeWidth: 2.1 }) : null
-                                ),
-                                React.createElement("span", { className: "playground-project-overview-outcome-ticket-title" },
-                                  ticketNumber + " " + (task?.title || "Untitled Task")
-                                ),
-                                React.createElement("span", { className: "playground-project-overview-outcome-ticket-status" },
-                                  getPlaygroundTaskStatusLabel(getTaskBoardStatus(task))
+                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Linked Milestone"),
+                      selectedRelease
+                        ? React.createElement("div", { className: "playground-project-overview-outcome-ticket-list" },
+                            React.createElement("div", { className: "playground-project-overview-outcome-ticket-row is-selected" },
+                              React.createElement("span", { className: "playground-project-overview-outcome-ticket-check" },
+                                React.createElement(Check, { width: 11, height: 11, strokeWidth: 2.1 })
+                              ),
+                              React.createElement("span", { className: "playground-project-overview-outcome-ticket-title" },
+                                selectedRelease.name || "Untitled Milestone"
+                              ),
+                              React.createElement("span", { className: "playground-project-overview-outcome-ticket-status" },
+                                selectedReleaseTasks.length
+                                  ? selectedReleaseDoneTasks.length + "/" + selectedReleaseTasks.length + " tickets done"
+                                  : "No tickets"
+                              )
+                            ),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-project-overview-outcome-ticket-row",
+                              onClick: () => updateProjectOverviewOutcomeMilestone(""),
+                            }, "Unlink milestone")
+                          )
+                        : React.createElement("div", { className: "playground-project-overview-outcome-ticket-list" },
+                            releases.length > 0
+                              ? releases.map((release) =>
+                                  React.createElement("button", {
+                                      key: release.id,
+                                      type: "button",
+                                      className: "playground-project-overview-outcome-ticket-row",
+                                      onClick: () => updateProjectOverviewOutcomeMilestone(release.id),
+                                    },
+                                    React.createElement("span", { className: "playground-project-overview-outcome-ticket-title" },
+                                      release.name || "Untitled Milestone"
+                                    )
+                                  )
                                 )
-                              );
-                            })
-                          : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No tickets in this project yet.")
-                      )
+                              : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No milestones in this project yet.")
+                          )
                     )
                   ),
                   missionControlSaveState?.error
@@ -12253,25 +12329,19 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             const allOutcomesCount = outcomeProgressItems.length;
             const achievedOutcomesCount = outcomeProgressItems.filter((item) => item.isAchieved).length;
             const notAchievedOutcomesCount = Math.max(0, allOutcomesCount - achievedOutcomesCount);
-            const mappedTicketIds = new Set();
+            const linkedMilestoneIds = new Set();
             outcomeProgressItems.forEach((item) => {
-              item.tasks.forEach((task) => {
-                const taskId = String(task?.id || "").trim();
-                if (taskId) mappedTicketIds.add(taskId);
-              });
+              const releaseId = String(item.outcome?.releaseId || "").trim();
+              if (releaseId) linkedMilestoneIds.add(releaseId);
             });
-            const averageOutcomeProgress = allOutcomesCount > 0
-              ? Math.round(outcomeProgressItems.reduce((sum, item) => sum + Number(item.progress || 0), 0) / allOutcomesCount)
-              : 0;
             const projectReadinessPercent = allOutcomesCount > 0
               ? Math.round((achievedOutcomesCount / allOutcomesCount) * 100)
               : 0;
             const strategyKpis = [
-              { id: "all", value: String(allOutcomesCount), label: "All Outcomes" },
-              { id: "open", value: String(notAchievedOutcomesCount), label: "Not Achieved Yet" },
-              { id: "readiness", value: String(projectReadinessPercent) + "%", label: "Project Readiness" },
-              { id: "mapped", value: String(mappedTicketIds.size), label: "Mapped Tickets" },
-              { id: "average", value: String(averageOutcomeProgress) + "%", label: "Avg Outcome Progress" },
+              { id: "all", value: String(allOutcomesCount), label: "All Outcomes", dotClassName: "is-scope" },
+              { id: "open", value: String(notAchievedOutcomesCount), label: "Not Achieved Yet", dotClassName: "is-started" },
+              { id: "readiness", value: String(projectReadinessPercent) + "%", label: "Project Readiness", dotClassName: "is-completed" },
+              { id: "mapped", value: String(linkedMilestoneIds.size), label: "Linked Milestones", dotClassName: "is-cost" },
             ];
 
             return React.createElement("section", {
@@ -12280,44 +12350,109 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               },
               React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-project-overview-strategy-scroll" },
                 React.createElement("div", { className: "playground-project-overview-strategy-brief" },
-                  React.createElement("div", { className: "playground-project-overview-strategy-goal" },
-                    React.createElement("h2", { className: "playground-project-overview-strategy-card-title" }, "Project Goal"),
-                    React.createElement("p", {
-                      className: "playground-project-overview-strategy-goal-text" + (String(projectOverviewGoal || "").trim() ? "" : " is-empty"),
-                    }, String(projectOverviewGoal || "").trim() || "No project goal set yet.")
-                  ),
-                  React.createElement("div", { className: "playground-project-overview-chart-card playground-project-overview-strategy-progress-card" },
-                    React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
-                      strategyKpis.map((item) =>
-                        React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
-                          React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                            React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                        )
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-strategy-add-row" },
-                      React.createElement("h2", { className: "playground-project-overview-strategy-add-title" }, "Outcomes"),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button playground-project-overview-add-outcome-button",
-                        onClick: openProjectOverviewNewOutcomeEditor,
-                      },
-                        React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Add Outcome")
-                      )
-                    ),
-                    strategyBrief.outcomes.length > 0
-                      ? React.createElement("div", { className: "playground-project-overview-outcome-list" },
-                          strategyBrief.outcomes.map((outcome, index) => renderOutcomePreviewRow(outcome, index))
-                        )
-                      : React.createElement("div", { className: "playground-tasks-empty playground-project-overview-rules-empty" },
-                          React.createElement("div", { className: "playground-tasks-empty-title" }, "No outcomes yet"),
-                          React.createElement("div", { className: "playground-tasks-empty-copy" },
-                            "Add outcomes manually or run Mission Control to turn the strategy into measurable project outcomes."
+                  React.createElement("div", { className: "playground-project-overview-strategy-card is-notes" },
+                    React.createElement("div", { className: "playground-tasks-detail-description playground-project-overview-strategy-notes" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Project Goal"),
+                        React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                          [
+                            { id: "bold", label: "Bold", icon: Bold },
+                            { id: "italic", label: "Italic", icon: Italic },
+                            { id: "underline", label: "Underline", icon: Underline },
+                            { id: "list", label: "List", icon: List },
+                          ].map((action) =>
+                            React.createElement("button", {
+                              key: action.id,
+                              type: "button",
+                              className: "playground-tasks-detail-format-button",
+                              title: action.label,
+                              "aria-label": action.label,
+                              onMouseDown: (event) => event.preventDefault(),
+                              onClick: () => handleProjectDescriptionFormat(action.id),
+                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
                           )
                         )
+                      ),
+                      React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isProjectDescriptionEditing ? " is-editing" : " is-preview") },
+                        !isProjectDescriptionEditing
+                          ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                              String(projectOverviewGoal || "").trim()
+                                ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                    content: projectOverviewGoal,
+                                    className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                  })
+                                : React.createElement("div", {
+                                    className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                  }, "No project goal set yet.")
+                            )
+                          : null,
+                        React.createElement("textarea", {
+                          ref: projectDescriptionTextareaRef,
+                          className: "playground-tasks-detail-description-input " + (isProjectDescriptionEditing ? "is-editing" : "is-preview"),
+                          rows: 1,
+                          placeholder: isProjectDescriptionEditing ? "Add project goal here" : "",
+                          value: projectOverviewGoal,
+                          onFocus: () => {
+                            setProjectDraft((current) => current?.id === normalizedSelectedProjectId
+                              ? current
+                              : normalizePlaygroundProjectRecord(projectOverviewDraft || selectedProject)
+                            );
+                            setProjectDescriptionEditing(true);
+                          },
+                          onChange: (event) => {
+                            const nextDescription = event.target.value;
+                            setProjectDraft((current) => ({
+                              ...(current && typeof current === "object" ? current : normalizePlaygroundProjectRecord(projectOverviewDraft || selectedProject)),
+                              description: nextDescription,
+                            }));
+                            resizeTaskDescriptionTextarea(event.currentTarget);
+                          },
+                          onBlur: (event) => {
+                            setProjectDescriptionEditing(false);
+                            void saveProjectOverviewDescription(event.currentTarget.value);
+                          },
+                        })
+                      )
+                    )
+                  ),
+                  React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-project-overview-strategy-progress-card" },
+                    React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
+                      React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Outcomes"),
+                      React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-project-overview-progress-combo-download playground-project-overview-add-outcome-button",
+                          title: "Add Outcome",
+                          "aria-label": "Add Outcome",
+                          onClick: openProjectOverviewNewOutcomeEditor,
+                        },
+                          React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 })
+                        )
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
+                      strategyKpis.map((item) =>
+                        React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+                          React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+                            React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot " + item.dotClassName, "aria-hidden": "true" }),
+                            React.createElement("span", null, item.label)
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
+                        )
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
+                      strategyBrief.outcomes.length > 0
+                        ? React.createElement("div", { className: "playground-project-overview-outcome-list" },
+                            strategyBrief.outcomes.map((outcome, index) => renderOutcomePreviewRow(outcome, index))
+                          )
+                        : React.createElement("div", { className: "playground-tasks-empty playground-project-overview-rules-empty" },
+                            React.createElement("div", { className: "playground-tasks-empty-title" }, "No outcomes yet"),
+                            React.createElement("div", { className: "playground-tasks-empty-copy" },
+                              "Add outcomes manually or run Mission Control to turn the strategy into measurable project outcomes."
+                            )
+                          )
+                    )
                   ),
                   React.createElement("div", { className: "playground-project-overview-strategy-card is-notes" },
                     React.createElement("div", { className: "playground-tasks-detail-description playground-project-overview-strategy-notes" },
@@ -12913,12 +13048,15 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         React.createElement("button", {
                           type: "button",
                           className: "playground-project-overview-sidebar-toggle",
-                          onClick: () => setProjectOverviewSidebarCollapsed((current) => !current),
+                          onClick: () => {
+                            projectOverviewSidebarAutoCollapsedForTaskRef.current = false;
+                            setProjectOverviewSidebarCollapsed((current) => !current);
+                          },
                           title: projectOverviewSidebarCollapsed ? "Show project sidebar" : "Hide project sidebar",
                           "aria-label": projectOverviewSidebarCollapsed ? "Show project sidebar" : "Hide project sidebar",
                           "aria-pressed": projectOverviewSidebarCollapsed ? "true" : "false",
                         },
-                          React.createElement(projectOverviewSidebarCollapsed ? PanelLeftOpen : PanelLeftClose, {
+                          React.createElement(PanelRight, {
                             width: 15,
                             height: 15,
                             strokeWidth: 1.8,
@@ -12934,7 +13072,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   renderProjectOverviewHomeTabs(),
                   projectOverviewActivePanel
                 ),
-                projectOverviewSidebarCollapsed ? null : renderProjectOverviewSidebar()
+                renderProjectOverviewSidebar()
               )
             )
           );
