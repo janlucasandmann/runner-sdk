@@ -9623,6 +9623,26 @@ const html = `<!doctype html>
         font-weight: 500;
       }
 
+      .playground-team-resource-source-badge {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-team-resource-access-label,
+      .playground-team-resource-source-label,
+      .playground-team-resource-owner-label {
+        min-height: 0;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        max-width: none;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: nowrap;
+      }
+
       .playground-team-icon-button {
         width: 32px;
         height: 32px;
@@ -9743,6 +9763,183 @@ const html = `<!doctype html>
         padding: 0;
       }
 
+      .playground-team-roles-panel {
+        overflow: visible;
+      }
+
+      .playground-team-role-pages {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        align-items: start;
+        gap: 24px;
+        min-width: 0;
+      }
+
+      .playground-team-role-list {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-team-role-card {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 13px 14px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.9);
+        font-family: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-team-role-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+      }
+
+      .playground-team-role-card.is-active {
+        border-color: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+      }
+
+      .playground-team-role-card-title {
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.25;
+      }
+
+      .playground-team-role-card-description {
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .playground-team-role-card-meta {
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 11px;
+        line-height: 1.25;
+      }
+
+      .playground-team-role-permission-page {
+        min-width: 0;
+        overflow: visible;
+      }
+
+      .playground-team-role-permission-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .playground-team-role-permission-kicker {
+        margin-bottom: 6px;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .playground-team-role-permission-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.15;
+      }
+
+      .playground-team-role-permission-copy {
+        margin: 6px 0 0;
+        max-width: 620px;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-team-role-assigned-shell {
+        position: relative;
+        flex: 0 0 auto;
+      }
+
+      .playground-team-role-assigned-button {
+        border: 0;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      .playground-team-role-assigned-button:hover,
+      .playground-team-role-assigned-button.is-open {
+        background: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-team-role-assigned-popup {
+        position: absolute;
+        z-index: 80;
+        top: calc(100% + 8px);
+        right: 0;
+        width: min(320px, 72vw);
+        padding: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        background: rgba(18, 18, 19, 0.98);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.36);
+        -webkit-backdrop-filter: blur(18px);
+        backdrop-filter: blur(18px);
+      }
+
+      .playground-team-role-assigned-popup-title {
+        padding: 4px 6px 8px;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .playground-team-role-assigned-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-team-role-assigned-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-width: 0;
+        padding: 8px 6px;
+        border-radius: 8px;
+      }
+
+      .playground-team-role-assigned-row:hover {
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .playground-team-role-assigned-status {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .playground-team-role-assigned-empty {
+        padding: 12px 8px;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
       .playground-team-inline-editor {
         display: grid;
         grid-template-columns: minmax(220px, 1fr) 160px auto;
@@ -9825,6 +10022,76 @@ const html = `<!doctype html>
         line-height: 1.35;
       }
 
+      .playground-team-member-cell {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-team-member-avatar {
+        --playground-team-member-avatar-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        width: 28px;
+        height: 28px;
+        flex: 0 0 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .playground-team-member-avatar:has(> .playground-team-member-avatar-fallback)::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-team-member-avatar-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-team-member-avatar-image {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      .playground-team-member-avatar-fallback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        line-height: 1;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        position: relative;
+      }
+
+      .playground-team-member-copy {
+        min-width: 0;
+      }
+
       .playground-team-table-meta {
         margin-top: 2px;
         color: rgba(255, 255, 255, 0.46);
@@ -9851,7 +10118,7 @@ const html = `<!doctype html>
 
       .playground-team-back-button {
         align-self: flex-start;
-        margin-bottom: 24px;
+        margin-bottom: 0;
       }
 
       .playground-team-action-button {
@@ -9951,6 +10218,70 @@ const html = `<!doctype html>
       .playground-team-modal > * {
         position: relative;
         z-index: 1;
+      }
+
+      .playground-team-modal-backdrop.playground-team-mission-modal-backdrop {
+        z-index: 10020;
+        background: rgba(0, 0, 0, 0);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        transition: background-color 75ms linear !important;
+      }
+
+      .playground-team-modal-backdrop.playground-team-mission-modal-backdrop.is-visible {
+        background: rgba(0, 0, 0, 0.5);
+      }
+
+      .playground-team-modal.playground-team-mission-modal {
+        --tb-runner-input-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        width: min(520px, calc(100vw - 48px));
+        position: relative;
+        overflow: visible;
+        border: 0 !important;
+        border-radius: 25px;
+        background: linear-gradient(to bottom, black, rgba(30,30,30,0.5), rgba(30,30,30,0.5)) !important;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        backdrop-filter: blur(20px) !important;
+        transform-origin: center;
+        opacity: 0.5;
+        transform: scale(0.5);
+        transition: opacity 75ms linear, transform 75ms linear !important;
+        will-change: opacity, transform;
+      }
+
+      .playground-team-modal.playground-team-mission-modal.is-visible {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .playground-team-modal.playground-team-mission-modal::before {
+        content: "" !important;
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: block !important;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--tb-task-input-border, var(--tb-runner-input-border));
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-team-modal.playground-team-mission-modal > * {
+        position: relative;
+        z-index: 6;
       }
 
       .playground-team-modal-header {
@@ -10182,6 +10513,26 @@ const html = `<!doctype html>
         .playground-team-row {
           grid-template-columns: minmax(0, 1fr);
           align-items: stretch;
+        }
+
+        .playground-team-role-pages {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .playground-team-role-list {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        .playground-team-role-list {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .playground-team-role-permission-header {
+          flex-direction: column;
+          align-items: flex-start;
         }
       }
 
@@ -26539,7 +26890,7 @@ const html = `<!doctype html>
 	        align-items: center;
 	        gap: 6px;
 	        width: auto;
-	        margin: 0 0 24px;
+	        margin: 0;
 	        padding: 0;
 	        border: 0;
 	        background: transparent;
@@ -46427,11 +46778,18 @@ ${METRONOME_PAGE_CSS}
       .playground-metronome-run-thread-surface .playground-metronome-run-json-mode-switch {
         position: static;
         margin-top: 0;
+        min-width: 136px;
         flex: 0 0 auto;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-mode-switch .content-mode-button {
+        white-space: nowrap;
       }
 
       .playground-metronome-run-thread-surface .playground-metronome-run-json-body {
         padding: 14px 16px 16px;
+        max-height: 500px;
+        overflow: auto;
       }
 
       .playground-metronome-run-thread-surface .playground-metronome-run-json-body .playground-database-browser-field-row {
@@ -46451,8 +46809,8 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-metronome-run-thread-surface .playground-metronome-run-json-editor-shell {
-        min-height: 360px;
-        height: 360px;
+        min-height: min(360px, calc(500px - 30px));
+        height: min(500px, calc(500px - 30px));
         border-radius: 0;
         overflow: hidden;
         background: transparent;
@@ -47291,6 +47649,393 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         getDay,
         locales: PLAYGROUND_CALENDAR_LOCALES,
       });
+
+      function PlaygroundSharedResourcesTab({
+        rows = [],
+        allRows = rows,
+        searchQuery = "",
+        onSearchQueryChange,
+        toolbarPopover = "",
+        onToolbarPopoverChange,
+        filter = "all",
+        onFilterChange,
+        typeFilters = [],
+        viewMode = "list",
+        onViewModeChange,
+        menuId = "",
+        onMenuIdChange,
+        getTypeMeta,
+        getRowMenuId,
+        renderIcon,
+        renderCreator,
+        renderSource,
+        renderOwner,
+        renderRowMenu,
+        renderNewMenu,
+        renderEmptyContent,
+        onNewButtonClick,
+        onRowOpen,
+        searchPlaceholder = "Search resources",
+        searchAriaLabel = "Search resources",
+        newButtonLabel = "New",
+        primaryHeader = "Resource",
+        secondaryHeader = "Creator",
+        sourceHeader = "Shared Through",
+        tertiaryHeader = "Updated",
+        ownerHeader = "Owner",
+        emptyLabel = "No resources yet.",
+        noMatchesLabel = "No resources match this view yet.",
+        showNewButton = true,
+        showFilterButton = true,
+        showViewToggle = true,
+        showListSubtitle = false,
+      }) {
+        const visibleRows = Array.isArray(rows) ? rows : [];
+        const availableRows = Array.isArray(allRows) ? allRows : visibleRows;
+        const activeViewMode = viewMode === "grid" ? "grid" : "list";
+        const activeToolbarPopover = String(toolbarPopover || "");
+        const activeFilter = String(filter || "all").trim() || "all";
+        const resourceTypeFilters = Array.isArray(typeFilters) && typeFilters.length
+          ? typeFilters
+          : [{ id: "all", label: "All" }];
+        const defaultTypeMeta = { label: "Resource", Icon: Layers };
+        const hasSourceColumn = typeof renderSource === "function";
+        const hasOwnerColumn = typeof renderOwner === "function";
+        const resourceRowColumnClassName = (hasSourceColumn ? " has-source-column" : "") + (hasOwnerColumn ? " has-owner-column" : "");
+
+        const setToolbarPopover = (nextValue) => {
+          if (typeof onToolbarPopoverChange === "function") {
+            onToolbarPopoverChange(nextValue);
+          }
+        };
+        const closeRowMenu = () => {
+          if (typeof onMenuIdChange === "function") {
+            onMenuIdChange("");
+          }
+        };
+        const getMeta = (row) => {
+          if (typeof getTypeMeta === "function") {
+            return getTypeMeta(row?.type || row?.resourceType || "");
+          }
+          return defaultTypeMeta;
+        };
+        const getMenuId = (row) => {
+          if (typeof getRowMenuId === "function") {
+            return getRowMenuId(row);
+          }
+          return "resource:" + String(row?.key || row?.id || row?.title || "").trim();
+        };
+        const openRow = (row) => {
+          if (typeof onRowOpen === "function") {
+            onRowOpen(row);
+          }
+        };
+        const renderSharedIcon = (row, meta) => {
+          if (typeof renderIcon === "function") {
+            return renderIcon(row, meta);
+          }
+          const ResourceIcon = meta?.Icon || Layers;
+          return React.createElement("span", { className: "playground-project-resource-title-icon" },
+            React.createElement(ResourceIcon, { width: 16, height: 16, strokeWidth: 1.8 })
+          );
+        };
+        const renderSecondaryCell = (row) => {
+          if (typeof renderCreator === "function") {
+            return renderCreator(row);
+          }
+          return React.createElement("span", null, row?.secondaryLabel || "-");
+        };
+        const renderSourceCell = (row) => {
+          if (typeof renderSource === "function") {
+            return renderSource(row);
+          }
+          return React.createElement("span", null, row?.sourceLabel || "-");
+        };
+        const renderOwnerCell = (row) => {
+          if (typeof renderOwner === "function") {
+            return renderOwner(row);
+          }
+          return React.createElement("span", null, row?.ownerLabel || "-");
+        };
+        const renderFilterOption = (type) => {
+          const typeId = String(type?.id || "all").trim() || "all";
+          const active = activeFilter === typeId;
+          return React.createElement("button", {
+              key: typeId,
+              type: "button",
+              className: "tb-popup-row tb-popup-row-select" + (active ? " selected" : ""),
+              onClick: () => {
+                closeRowMenu();
+                if (typeof onFilterChange === "function") {
+                  onFilterChange(typeId);
+                }
+                setToolbarPopover("");
+              },
+            },
+            React.createElement("span", { className: "tb-popup-check-slot" },
+              active
+                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                : null
+            ),
+            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+              React.createElement("span", null, type?.label || typeId),
+              type?.description
+                ? React.createElement("span", null, type.description)
+                : null
+            )
+          );
+        };
+        const renderSharedFilterMenu = () => {
+          if (activeToolbarPopover !== "filter") {
+            return null;
+          }
+          return React.createElement("div", {
+              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-resources-filter-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+              onClick: (event) => event.stopPropagation(),
+            },
+            resourceTypeFilters.map(renderFilterOption)
+          );
+        };
+        const renderSharedNewMenu = () => {
+          if (activeToolbarPopover !== "new") {
+            return null;
+          }
+          if (typeof renderNewMenu === "function") {
+            return renderNewMenu();
+          }
+          if (typeof onNewButtonClick !== "function") {
+            return null;
+          }
+          return React.createElement("div", {
+              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-resources-new-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+              onClick: (event) => event.stopPropagation(),
+            },
+            React.createElement("button", {
+                type: "button",
+                className: "tb-popup-row playground-project-team-menu-item",
+                onClick: () => {
+                  setToolbarPopover("");
+                  onNewButtonClick();
+                },
+              },
+              React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+              React.createElement("span", null, "Add resource")
+            )
+          );
+        };
+        const renderEmptyRows = () => {
+          if (availableRows.length === 0 && typeof renderEmptyContent === "function") {
+            return renderEmptyContent();
+          }
+          return React.createElement("div", { className: "playground-project-resources-empty" },
+            availableRows.length === 0 ? emptyLabel : noMatchesLabel
+          );
+        };
+        const renderRows = () => {
+          if (!availableRows.length || !visibleRows.length) {
+            return renderEmptyRows();
+          }
+          if (activeViewMode === "grid") {
+            return React.createElement("div", { className: "playground-project-resources-grid" },
+              visibleRows.map((row) => {
+                const meta = getMeta(row) || defaultTypeMeta;
+                return React.createElement("button", {
+                    key: row?.key || row?.id || row?.title,
+                    type: "button",
+                    className: "playground-project-resources-grid-card",
+                    onClick: () => openRow(row),
+                  },
+                  React.createElement("div", { className: "playground-project-resources-grid-card-top" },
+                    renderSharedIcon(row, meta),
+                    React.createElement("span", { className: "playground-project-resource-title-copy" },
+                      React.createElement("span", { className: "playground-project-resource-title-main" }, row?.title || "Untitled resource"),
+                      row?.subtitle
+                        ? React.createElement("span", { className: "playground-project-resource-title-sub" }, row.subtitle)
+                        : null
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-project-resources-grid-card-meta" },
+                    React.createElement("span", { className: "playground-project-resources-cell" }, meta?.label || "Resource"),
+                    React.createElement("span", { className: "playground-project-resources-cell" }, row?.updatedLabel || "-")
+                  )
+                );
+              })
+            );
+          }
+          return React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "playground-project-resources-row is-header" + resourceRowColumnClassName },
+              React.createElement("div", null, primaryHeader),
+              React.createElement("div", null, secondaryHeader),
+              hasSourceColumn
+                ? React.createElement("div", null, sourceHeader)
+                : null,
+              React.createElement("div", null, tertiaryHeader),
+              hasOwnerColumn
+                ? React.createElement("div", null, ownerHeader)
+                : null,
+              React.createElement("div", null, "")
+            ),
+            visibleRows.map((row) => {
+              const meta = getMeta(row) || defaultTypeMeta;
+              const rowMenuId = getMenuId(row);
+              const rowMenuOpen = Boolean(rowMenuId && menuId === rowMenuId);
+              return React.createElement("div", {
+                  key: row?.key || row?.id || row?.title,
+                  role: "button",
+                  tabIndex: 0,
+                  className: "playground-project-resources-row" + resourceRowColumnClassName + (rowMenuOpen ? " is-menu-open" : ""),
+                  onClick: () => openRow(row),
+                  onKeyDown: (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openRow(row);
+                    }
+                  },
+                },
+                React.createElement("div", { className: "playground-project-resource-title-cell" },
+                  renderSharedIcon(row, meta),
+                  React.createElement("span", { className: "playground-project-resource-title-copy" },
+                    React.createElement("span", { className: "playground-project-resource-title-main" }, row?.title || "Untitled resource"),
+                    showListSubtitle && row?.subtitle
+                      ? React.createElement("span", { className: "playground-project-resource-title-sub" }, row.subtitle)
+                      : null
+                  )
+                ),
+                React.createElement("div", {
+                    className: "playground-project-resources-cell",
+                    onClick: (event) => event.stopPropagation(),
+                    onKeyDown: (event) => event.stopPropagation(),
+                  },
+                  renderSecondaryCell(row)
+                ),
+                hasSourceColumn
+                  ? React.createElement("div", {
+                      className: "playground-project-resources-cell",
+                      onClick: (event) => event.stopPropagation(),
+                      onKeyDown: (event) => event.stopPropagation(),
+                    },
+                    renderSourceCell(row)
+                  )
+                  : null,
+                React.createElement("div", { className: "playground-project-resources-cell" }, row?.updatedLabel || "-"),
+                hasOwnerColumn
+                  ? React.createElement("div", {
+                      className: "playground-project-resources-cell",
+                      onClick: (event) => event.stopPropagation(),
+                      onKeyDown: (event) => event.stopPropagation(),
+                    },
+                    renderOwnerCell(row)
+                  )
+                  : null,
+                React.createElement("div", { className: "playground-project-resources-row-action" },
+                  typeof renderRowMenu === "function"
+                    ? React.createElement("div", {
+                        className: "playground-tasks-toolbar-popup-shell playground-project-resources-action-shell" + (rowMenuOpen ? " is-open" : ""),
+                      },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-project-resources-action-button",
+                        onClick: (event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          setToolbarPopover("");
+                          if (typeof onMenuIdChange === "function") {
+                            onMenuIdChange((current) => current === rowMenuId ? "" : rowMenuId);
+                          }
+                        },
+                        "aria-label": "Resource actions for " + (row?.title || "resource"),
+                        "aria-expanded": rowMenuOpen ? "true" : "false",
+                      }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
+                      renderRowMenu(row)
+                    )
+                    : null
+                )
+              );
+            })
+          );
+        };
+
+        return React.createElement("div", { className: "playground-project-overview-resources-home" },
+          React.createElement("section", { className: "playground-project-resources-table-card" },
+            React.createElement("div", { className: "playground-project-resources-table-inner" },
+              React.createElement("div", { className: "playground-project-resources-toolbar playground-files-library-title-row" },
+                React.createElement("label", { className: "playground-files-library-search" },
+                  React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
+                  React.createElement("input", {
+                    type: "search",
+                    value: searchQuery,
+                    onChange: (event) => typeof onSearchQueryChange === "function" && onSearchQueryChange(event.target.value),
+                    className: "playground-files-library-search-input",
+                    placeholder: searchPlaceholder,
+                    "aria-label": searchAriaLabel,
+                  })
+                ),
+                React.createElement("div", { className: "playground-files-library-actions playground-project-resources-toolbar-actions" },
+                  showNewButton
+                    ? React.createElement("div", { className: "playground-project-resources-new-shell playground-files-library-new-anchor playground-tasks-toolbar-popup-shell" + (activeToolbarPopover === "new" ? " is-open" : "") },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-library-new-button" + (activeToolbarPopover === "new" ? " is-active" : ""),
+                          onClick: (event) => {
+                            event.stopPropagation();
+                            closeRowMenu();
+                            setToolbarPopover((current) => current === "new" ? "" : "new");
+                          },
+                        },
+                          React.createElement("span", null, newButtonLabel),
+                          React.createElement(ChevronDown, { width: 18, height: 18, strokeWidth: 1.8 })
+                        ),
+                        renderSharedNewMenu()
+                      )
+                    : null,
+                  showFilterButton
+                    ? React.createElement("div", { className: "playground-project-resources-filter-shell playground-files-library-control-anchor playground-tasks-toolbar-popup-shell" + (activeToolbarPopover === "filter" ? " is-open" : "") },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-library-icon-button" + (activeToolbarPopover === "filter" || activeFilter !== "all" ? " is-active" : ""),
+                          onClick: (event) => {
+                            event.stopPropagation();
+                            closeRowMenu();
+                            setToolbarPopover((current) => current === "filter" ? "" : "filter");
+                          },
+                          title: "Filter resources",
+                          "aria-label": "Filter resources",
+                        }, React.createElement(SlidersHorizontal, { width: 19, height: 19, strokeWidth: 1.8 })),
+                        renderSharedFilterMenu()
+                      )
+                    : null,
+                  showViewToggle
+                    ? React.createElement(React.Fragment, null,
+                        React.createElement("span", { className: "playground-files-library-divider", "aria-hidden": "true" }),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-library-icon-button" + (activeViewMode === "grid" ? " is-active" : ""),
+                          onClick: () => {
+                            closeRowMenu();
+                            typeof onViewModeChange === "function" && onViewModeChange("grid");
+                          },
+                          title: "Grid view",
+                          "aria-label": "Grid view",
+                        }, React.createElement(Grid3x3, { width: 20, height: 20, strokeWidth: 1.8 })),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-library-icon-button" + (activeViewMode === "list" ? " is-active" : ""),
+                          onClick: () => {
+                            closeRowMenu();
+                            typeof onViewModeChange === "function" && onViewModeChange("list");
+                          },
+                          title: "List view",
+                          "aria-label": "List view",
+                        }, React.createElement(List, { width: 21, height: 21, strokeWidth: 1.8 }))
+                      )
+                    : null
+                )
+              ),
+              renderRows()
+            )
+          )
+        );
+      }
 
       function remarkPlaygroundSoftbreaksToBreaks() {
         return (tree) => {
@@ -52810,6 +53555,60 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         { id: "no_access", label: "No access" },
       ];
 
+      const PLAYGROUND_TEAM_ROLE_DEFINITIONS = [
+        {
+          id: "member",
+          label: "Member",
+          description: "Can participate in shared team work, with elevated team operations routed through approval.",
+        },
+        {
+          id: "contributor",
+          label: "Contributor",
+          description: "Can contribute to shared resources and projects, while administrative team changes remain protected.",
+        },
+        {
+          id: "admin",
+          label: "Admin",
+          description: "Can manage team membership, shared resources, role permissions, and team settings.",
+        },
+      ];
+
+      const PLAYGROUND_TEAM_ROLE_IDS = PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id);
+      const PLAYGROUND_TEAM_LEGACY_ROLE_MAP = {
+        create: "member",
+        member: "member",
+        viewer: "member",
+        configure: "contributor",
+        develop: "contributor",
+        contributor: "contributor",
+        editor: "contributor",
+        admin: "admin",
+        owner: "admin",
+        manage: "admin",
+      };
+      const PLAYGROUND_TEAM_ROLE_API_VALUE_MAP = {
+        member: "create",
+        contributor: "develop",
+        admin: "admin",
+      };
+
+      function normalizePlaygroundTeamRoleId(value, fallback = "member") {
+        const normalized = String(value || "").trim().toLowerCase();
+        const mapped = PLAYGROUND_TEAM_LEGACY_ROLE_MAP[normalized] || normalized;
+        return PLAYGROUND_TEAM_ROLE_IDS.includes(mapped) ? mapped : fallback;
+      }
+
+      function getPlaygroundTeamRoleDefinition(roleId) {
+        const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+        return PLAYGROUND_TEAM_ROLE_DEFINITIONS.find((role) => role.id === normalizedRoleId)
+          || PLAYGROUND_TEAM_ROLE_DEFINITIONS[0];
+      }
+
+      function getPlaygroundTeamRoleApiValue(roleId) {
+        const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+        return PLAYGROUND_TEAM_ROLE_API_VALUE_MAP[normalizedRoleId] || normalizedRoleId;
+      }
+
       const PLAYGROUND_PERMISSION_RING_DEFINITIONS = [
         {
           id: "ring_1",
@@ -52890,6 +53689,55 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           ringId: "ring_2",
           label: "Delegate to agents",
           description: "Create, invoke, or coordinate other agents and team agents.",
+        },
+        {
+          id: "team_workspace_view",
+          ringId: "ring_1",
+          label: "View team workspace",
+          description: "View team members, invitations, shared resources, team activity, and role configuration.",
+          subjectTypes: ["team", "team_role"],
+        },
+        {
+          id: "team_member_invite",
+          ringId: "ring_2",
+          label: "Invite team members",
+          description: "Invite humans or agents into the team and assign an initial role.",
+          subjectTypes: ["team", "team_role"],
+        },
+        {
+          id: "team_member_remove",
+          ringId: "ring_2",
+          label: "Remove team members",
+          description: "Remove humans or agents from the team membership roster.",
+          subjectTypes: ["team", "team_role"],
+        },
+        {
+          id: "team_role_update",
+          ringId: "ring_2",
+          label: "Change member roles",
+          description: "Promote, demote, or otherwise change the role assigned to a team member.",
+          subjectTypes: ["team", "team_role"],
+        },
+        {
+          id: "team_shared_resource_manage",
+          ringId: "ring_2",
+          label: "Manage shared resources",
+          description: "Add, remove, or edit projects, computers, agents, templates, and other resources shared with the team.",
+          subjectTypes: ["team", "team_role"],
+        },
+        {
+          id: "team_permission_request_review",
+          ringId: "ring_2",
+          label: "Review permission requests",
+          description: "Approve or deny team-scoped permission requests from humans and agents.",
+          subjectTypes: ["team", "team_role"],
+        },
+        {
+          id: "team_settings_update",
+          ringId: "ring_3",
+          label: "Edit team settings",
+          description: "Rename the team, change governance settings, delete the team, or alter role permission pages.",
+          subjectTypes: ["team", "team_role"],
         },
         {
           id: "managed_resource_mutation",
@@ -53090,7 +53938,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const normalized = String(value || "").trim();
         return normalized === "agent"
           || normalized === "project"
+          || normalized === "project_team_role"
           || normalized === "team"
+          || normalized === "team_role"
           || normalized === "human_user"
           ? normalized
           : fallback;
@@ -53149,6 +53999,108 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           actions,
           resources,
         };
+      }
+
+      function createPlaygroundTeamRolePermissionSet(roleId) {
+        const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+        const permissionSet = createPlaygroundDefaultPermissionSet("team_role");
+        const applyRingAccess = (ringId, access) => {
+          permissionSet.rings[ringId] = {
+            ...(permissionSet.rings[ringId] || {}),
+            defaultAccess: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
+          };
+        };
+        const applyActionAccess = (actionId, ringId, access) => {
+          permissionSet.actions[actionId] = {
+            ...(permissionSet.actions[actionId] || {}),
+            ringId: normalizePlaygroundPermissionRingId(ringId, "ring_1"),
+            access: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
+          };
+        };
+
+        if (normalizedRoleId === "admin") {
+          PLAYGROUND_PERMISSION_RING_IDS.forEach((ringId) => applyRingAccess(ringId, "full_access"));
+          [
+            "team_member_invite",
+            "team_member_remove",
+            "team_role_update",
+            "team_shared_resource_manage",
+            "team_permission_request_review",
+            "team_settings_update",
+            "team_workspace_view",
+          ].forEach((actionId) => {
+            const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+            applyActionAccess(actionId, actionDefinition?.ringId || "ring_2", "full_access");
+          });
+          return permissionSet;
+        }
+
+        if (normalizedRoleId === "contributor") {
+          applyRingAccess("ring_1", "full_access");
+          applyRingAccess("ring_2", "ask_for_permission");
+          applyRingAccess("ring_3", "ask_for_permission");
+          applyActionAccess("team_workspace_view", "ring_1", "full_access");
+          applyActionAccess("shared_resource_write", "ring_2", "ask_for_permission");
+          applyActionAccess("team_shared_resource_manage", "ring_2", "ask_for_permission");
+          applyActionAccess("team_member_invite", "ring_2", "no_access");
+          applyActionAccess("team_member_remove", "ring_2", "no_access");
+          applyActionAccess("team_role_update", "ring_2", "no_access");
+          applyActionAccess("team_permission_request_review", "ring_2", "no_access");
+          applyActionAccess("team_settings_update", "ring_3", "no_access");
+          return permissionSet;
+        }
+
+        applyRingAccess("ring_1", "read_only");
+        applyRingAccess("ring_2", "ask_for_permission");
+        applyRingAccess("ring_3", "no_access");
+        applyActionAccess("team_workspace_view", "ring_1", "read_only");
+        applyActionAccess("shared_resource_write", "ring_2", "ask_for_permission");
+        applyActionAccess("team_shared_resource_manage", "ring_2", "ask_for_permission");
+        applyActionAccess("team_member_invite", "ring_2", "no_access");
+        applyActionAccess("team_member_remove", "ring_2", "no_access");
+        applyActionAccess("team_role_update", "ring_2", "no_access");
+        applyActionAccess("team_permission_request_review", "ring_2", "no_access");
+        applyActionAccess("team_settings_update", "ring_3", "no_access");
+        return permissionSet;
+      }
+
+      function createPlaygroundProjectTeamRolePermissionSet(roleId) {
+        const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+        const permissionSet = createPlaygroundDefaultPermissionSet("project_team_role");
+        const applyRingAccess = (ringId, access) => {
+          permissionSet.rings[ringId] = {
+            ...(permissionSet.rings[ringId] || {}),
+            defaultAccess: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
+          };
+        };
+
+        if (normalizedRoleId === "admin") {
+          PLAYGROUND_PERMISSION_RING_IDS.forEach((ringId) => applyRingAccess(ringId, "full_access"));
+          return permissionSet;
+        }
+
+        if (normalizedRoleId === "contributor") {
+          applyRingAccess("ring_1", "full_access");
+          applyRingAccess("ring_2", "full_access");
+          applyRingAccess("ring_3", "ask_for_permission");
+          return permissionSet;
+        }
+
+        applyRingAccess("ring_1", "read_only");
+        applyRingAccess("ring_2", "ask_for_permission");
+        applyRingAccess("ring_3", "no_access");
+        return permissionSet;
+      }
+
+      function normalizePlaygroundTeamRolePermissionSets(value) {
+        const inputSets = isPlaygroundPermissionRecord(value) ? value : {};
+        return PLAYGROUND_TEAM_ROLE_DEFINITIONS.reduce((rolePermissionSets, role) => {
+          rolePermissionSets[role.id] = normalizePlaygroundPermissionSet(
+            inputSets[role.id] || createPlaygroundTeamRolePermissionSet(role.id),
+            "team_role"
+          );
+          return rolePermissionSets;
+        }, {});
       }
 
       function getPlaygroundPermissionRingDefinition(ringId) {
@@ -53777,11 +54729,17 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const onActionAccessChange = !isDisabled && typeof handlers.onActionAccessChange === "function"
           ? handlers.onActionAccessChange
           : null;
+        const visiblePermissionActions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter((action) => {
+          if (subjectType === "team" || subjectType === "team_role") {
+            return Array.isArray(action.subjectTypes) && action.subjectTypes.includes(subjectType);
+          }
+          return !Array.isArray(action.subjectTypes) || action.subjectTypes.includes(subjectType);
+        });
 
         return React.createElement("div", { className: "playground-agents-permissions-list" + (isDetailsOnly ? " is-details-only" : "") },
           PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
             const ringAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
-            const ringActions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter((action) =>
+            const ringActions = visiblePermissionActions.filter((action) =>
               getPlaygroundPermissionActionRingId(normalizedPermissionSet, action) === ring.id
             );
             return React.createElement("section", { className: "playground-agents-permission-ring-card" + (isDetailsOnly ? " is-details-only" : ""), key: ring.id },
@@ -109273,8 +110231,10 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const [projectOverviewHomeTab, setProjectOverviewHomeTab] = useState("general");
         const [projectOverviewSidebarCollapsed, setProjectOverviewSidebarCollapsed] = useState(false);
         const projectOverviewSidebarAutoCollapsedForTaskRef = useRef(false);
+        const projectOverviewSidebarAutoCollapsedForPermissionRef = useRef(false);
         const [ticketDetailSidebarCollapsed, setTicketDetailSidebarCollapsed] = useState(false);
         const [projectOverviewPermissionTeamId, setProjectOverviewPermissionTeamId] = useState("");
+        const [projectOverviewPermissionRoleId, setProjectOverviewPermissionRoleId] = useState("member");
         const [projectPermissionChartAnimationKey, setProjectPermissionChartAnimationKey] = useState(0);
         const [projectOverviewTeamMenuId, setProjectOverviewTeamMenuId] = useState("");
         const [projectOverviewMilestoneMenuId, setProjectOverviewMilestoneMenuId] = useState("");
@@ -109316,7 +110276,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             setProjectPermissionChartAnimationKey((current) => current + 1);
           });
           return () => window.cancelAnimationFrame(frameId);
-        }, [projectOverviewHomeTab, projectOverviewPermissionTeamId, selectedProjectId]);
+        }, [projectOverviewHomeTab, projectOverviewPermissionTeamId, projectOverviewPermissionRoleId, selectedProjectId]);
         const [projectOverviewFilesSubview, setProjectOverviewFilesSubview] = useState("overview");
         const [projectOverviewListMode, setProjectOverviewListMode] = useState("tasks");
         const [projectOverviewTaskSearchQuery, setProjectOverviewTaskSearchQuery] = useState("");
@@ -118938,6 +119898,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
         useEffect(() => {
           setProjectOverviewHomeTab("general");
+          setProjectOverviewPermissionTeamId("");
+          setProjectOverviewPermissionRoleId("member");
+          projectOverviewSidebarAutoCollapsedForPermissionRef.current = false;
         }, [selectedProjectId]);
 
         useEffect(() => {
@@ -122829,6 +123792,68 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          );
 	        }
 
+	        function getProjectTeamRolePermissionSetsMap(project) {
+	          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+	            ? project.metadata
+	            : {};
+	          const source = metadata.teamRolePermissionSets && typeof metadata.teamRolePermissionSets === "object" && !Array.isArray(metadata.teamRolePermissionSets)
+	            ? metadata.teamRolePermissionSets
+	            : {};
+	          return Object.entries(source).reduce((result, [teamId, rolePermissionSets]) => {
+	            const normalizedTeamId = String(teamId || "").trim();
+	            if (!normalizedTeamId || !rolePermissionSets || typeof rolePermissionSets !== "object" || Array.isArray(rolePermissionSets)) {
+	              return result;
+	            }
+	            result[normalizedTeamId] = PLAYGROUND_TEAM_ROLE_DEFINITIONS.reduce((sets, role) => {
+	              if (rolePermissionSets[role.id]) {
+	                sets[role.id] = normalizePlaygroundPermissionSet(rolePermissionSets[role.id], "project_team_role");
+	              }
+	              return sets;
+	            }, {});
+	            return result;
+	          }, {});
+	        }
+
+	        function getProjectTeamLegacyPermissionSet(project, teamId) {
+	          const normalizedTeamId = String(teamId || "").trim();
+	          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+	            ? project.metadata
+	            : {};
+	          const source = metadata.teamPermissionSets && typeof metadata.teamPermissionSets === "object" && !Array.isArray(metadata.teamPermissionSets)
+	            ? metadata.teamPermissionSets
+	            : {};
+	          return normalizedTeamId && source[normalizedTeamId]
+	            ? normalizePlaygroundPermissionSet(source[normalizedTeamId], "project_team_role")
+	            : null;
+	        }
+
+	        function getProjectTeamRolePermissionSets(project, teamId) {
+	          const normalizedTeamId = String(teamId || "").trim();
+	          const allRolePermissionSets = getProjectTeamRolePermissionSetsMap(project);
+	          const currentRolePermissionSets = normalizedTeamId && allRolePermissionSets[normalizedTeamId]
+	            ? allRolePermissionSets[normalizedTeamId]
+	            : {};
+	          const legacyPermissionSet = getProjectTeamLegacyPermissionSet(project, normalizedTeamId);
+	          return PLAYGROUND_TEAM_ROLE_DEFINITIONS.reduce((rolePermissionSets, role) => {
+	            rolePermissionSets[role.id] = normalizePlaygroundPermissionSet(
+	              currentRolePermissionSets[role.id]
+	                || legacyPermissionSet
+	                || createPlaygroundProjectTeamRolePermissionSet(role.id),
+	              "project_team_role"
+	            );
+	            return rolePermissionSets;
+	          }, {});
+	        }
+
+	        function getProjectTeamRolePermissionSet(project, teamId, roleId) {
+	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+	          const rolePermissionSets = getProjectTeamRolePermissionSets(project, teamId);
+	          return normalizePlaygroundPermissionSet(
+	            rolePermissionSets[normalizedRoleId] || createPlaygroundProjectTeamRolePermissionSet(normalizedRoleId),
+	            "project_team_role"
+	          );
+	        }
+
 	        function getProjectRemovedTeamIds(project) {
 	          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
 	            ? project.metadata
@@ -122897,9 +123922,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	              : {};
 	            const currentTeamPermissionSets = getProjectTeamPermissionSets(project);
 	            const nextTeamPermissionSets = { ...currentTeamPermissionSets };
+	            const currentTeamRolePermissionSets = getProjectTeamRolePermissionSetsMap(project);
+	            const nextTeamRolePermissionSets = { ...currentTeamRolePermissionSets };
 	            const removedTeamIds = new Set(getProjectRemovedTeamIds(project));
 	            if (normalizedAction === "remove") {
 	              delete nextTeamPermissionSets[normalizedTeamId];
+	              delete nextTeamRolePermissionSets[normalizedTeamId];
 	              removedTeamIds.add(normalizedTeamId);
 	            } else {
 	              removedTeamIds.delete(normalizedTeamId);
@@ -122909,6 +123937,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	              metadata: {
 	                ...metadata,
 	                teamPermissionSets: nextTeamPermissionSets,
+	                teamRolePermissionSets: nextTeamRolePermissionSets,
 	                teamAccessRemovedIds: Array.from(removedTeamIds),
 	              },
 	            });
@@ -122941,9 +123970,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          }
 	          const currentTeamPermissionSets = getProjectTeamPermissionSets(normalizedProject);
 	          const nextTeamPermissionSets = { ...currentTeamPermissionSets };
+	          const currentTeamRolePermissionSets = getProjectTeamRolePermissionSetsMap(normalizedProject);
+	          const nextTeamRolePermissionSets = { ...currentTeamRolePermissionSets };
 	          const removedTeamIds = new Set(getProjectRemovedTeamIds(normalizedProject));
 	          if (normalizedAction === "remove") {
 	            delete nextTeamPermissionSets[normalizedTeamId];
+	            delete nextTeamRolePermissionSets[normalizedTeamId];
 	            removedTeamIds.add(normalizedTeamId);
 	          } else {
 	            removedTeamIds.delete(normalizedTeamId);
@@ -122954,11 +123986,13 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	            metadata: {
 	              ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),
 	              teamPermissionSets: nextTeamPermissionSets,
+	              teamRolePermissionSets: nextTeamRolePermissionSets,
 	              teamAccessRemovedIds: nextRemovedTeamIds,
 	            },
 	          });
 	          const savePayload = buildPlaygroundProjectSavePayload(nextProjectRecord, {
 	            teamPermissionSets: nextTeamPermissionSets,
+	            teamRolePermissionSets: nextTeamRolePermissionSets,
 	            teamAccessRemovedIds: nextRemovedTeamIds,
 	          });
 
@@ -122996,6 +124030,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	            return;
 	          }
 	          const previousTeamPermissionSets = getProjectTeamPermissionSets(normalizedProject);
+	          const previousTeamRolePermissionSets = getProjectTeamRolePermissionSetsMap(normalizedProject);
 	          const previousRemovedTeamIds = getProjectRemovedTeamIds(normalizedProject);
 	          applyProjectTeamWorkspaceMembershipLocally(normalizedProjectId, normalizedTeamId, normalizedAction);
 	          void persistProjectTeamWorkspaceMembership(normalizedTeamId, normalizedAction).catch((error) => {
@@ -123005,6 +124040,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	              metadata: {
 	                ...(project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata) ? project.metadata : {}),
 	                teamPermissionSets: previousTeamPermissionSets,
+	                teamRolePermissionSets: previousTeamRolePermissionSets,
 	                teamAccessRemovedIds: previousRemovedTeamIds,
 	              },
 	            });
@@ -123181,6 +124217,214 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	              ...currentPermissionSet,
 	              version: 1,
 	              subjectType: "team",
+	              actions: {
+	                ...currentActions,
+	                [actionDefinition.id]: nextPolicy,
+	              },
+	            };
+	          });
+	        }
+
+	        function applyProjectTeamRolePermissionSetLocally(projectId, teamId, roleId, permissionSet) {
+	          const normalizedProjectId = String(projectId || "").trim();
+	          const normalizedTeamId = String(teamId || "").trim();
+	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+	          if (!normalizedProjectId || !normalizedTeamId) {
+	            return;
+	          }
+	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "project_team_role");
+	          const mergeTeamRolePermissionSet = (project) => {
+	            const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+	              ? project.metadata
+	              : {};
+	            const currentTeamRolePermissionSets = getProjectTeamRolePermissionSetsMap(project);
+	            const currentRolePermissionSets = getProjectTeamRolePermissionSets(project, normalizedTeamId);
+	            return normalizePlaygroundProjectRecord({
+	              ...(project && typeof project === "object" ? project : {}),
+	              metadata: {
+	                ...metadata,
+	                teamRolePermissionSets: {
+	                  ...currentTeamRolePermissionSets,
+	                  [normalizedTeamId]: {
+	                    ...currentRolePermissionSets,
+	                    [normalizedRoleId]: normalizedPermissionSet,
+	                  },
+	                },
+	              },
+	            });
+	          };
+
+	          setProjects((current) => current.map((project) =>
+	            project.id === normalizedProjectId ? mergeTeamRolePermissionSet(project) : project
+	          ));
+	          setProjectDraft((current) =>
+	            current?.id === normalizedProjectId ? mergeTeamRolePermissionSet(current) : current
+	          );
+	          setSelectedProjectDetail((current) => {
+	            if (current?.project?.id !== normalizedProjectId) {
+	              return current;
+	            }
+	            return {
+	              ...current,
+	              project: mergeTeamRolePermissionSet(current.project),
+	            };
+	          });
+	        }
+
+	        async function persistProjectTeamRolePermissionSet(teamId, roleId, nextPermissionSet) {
+	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+	          const normalizedProjectId = String(normalizedProject.id || "").trim();
+	          const normalizedTeamId = String(teamId || "").trim();
+	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+	          if (!normalizedProjectId || !normalizedTeamId) {
+	            return null;
+	          }
+	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(nextPermissionSet, "project_team_role");
+	          const currentTeamRolePermissionSets = getProjectTeamRolePermissionSetsMap(normalizedProject);
+	          const currentRolePermissionSets = getProjectTeamRolePermissionSets(normalizedProject, normalizedTeamId);
+	          const nextTeamRolePermissionSets = {
+	            ...currentTeamRolePermissionSets,
+	            [normalizedTeamId]: {
+	              ...currentRolePermissionSets,
+	              [normalizedRoleId]: normalizedPermissionSet,
+	            },
+	          };
+	          const nextProjectRecord = normalizePlaygroundProjectRecord({
+	            ...normalizedProject,
+	            metadata: {
+	              ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),
+	              teamRolePermissionSets: nextTeamRolePermissionSets,
+	            },
+	          });
+	          const savePayload = buildPlaygroundProjectSavePayload(nextProjectRecord, {
+	            teamRolePermissionSets: nextTeamRolePermissionSets,
+	          });
+
+	          const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
+	            method: "PATCH",
+	            headers: {
+	              ...requestHeaders,
+	              "Content-Type": "application/json",
+	            },
+	            body: JSON.stringify(savePayload),
+	          });
+	          const data = await response.json().catch(() => ({}));
+	          if (!response.ok) {
+	            throw new Error(data?.message || data?.error || "Failed to update project team role permissions.");
+	          }
+	          const updatedProject = getPlaygroundProjectResponseRecord(data, nextProjectRecord);
+	          if (updatedProject?.id) {
+	            commitLocalProjectRecord(updatedProject, {
+	              summary: updatedProject.summary || selectedProjectSummary,
+	              environments: selectedProjectEnvironments,
+	              recentThreads: selectedProjectRecentThreads,
+	              threads: selectedProjectRecentThreads,
+	              selectImmediately: true,
+	            });
+	          }
+	          return updatedProject;
+	        }
+
+	        function updateProjectTeamRolePermissionSet(teamId, roleId, updater) {
+	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+	          const normalizedProjectId = String(normalizedProject.id || "").trim();
+	          const normalizedTeamId = String(teamId || "").trim();
+	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+	          if (!normalizedProjectId || !normalizedTeamId) {
+	            return;
+	          }
+	          const currentPermissionSet = getProjectTeamRolePermissionSet(normalizedProject, normalizedTeamId, normalizedRoleId);
+	          const nextPermissionSet = normalizePlaygroundPermissionSet(
+	            typeof updater === "function" ? updater(currentPermissionSet) : updater,
+	            "project_team_role"
+	          );
+	          applyProjectTeamRolePermissionSetLocally(normalizedProjectId, normalizedTeamId, normalizedRoleId, nextPermissionSet);
+	          void persistProjectTeamRolePermissionSet(normalizedTeamId, normalizedRoleId, nextPermissionSet).catch((error) => {
+	            console.warn("Failed to save project team role permissions", error);
+	            applyProjectTeamRolePermissionSetLocally(normalizedProjectId, normalizedTeamId, normalizedRoleId, currentPermissionSet);
+	            setProjectSaveState({
+	              isSaving: false,
+	              error: error?.message || "Failed to save project team role permissions.",
+	            });
+	          });
+	        }
+
+	        function updateProjectTeamRolePermissionRingAccess(teamId, roleId, ringId, nextAccess) {
+	          const ringDefinition = getPlaygroundPermissionRingDefinition(ringId);
+	          updateProjectTeamRolePermissionSet(teamId, roleId, (currentPermissionSet) => {
+	            const currentRings = currentPermissionSet.rings && typeof currentPermissionSet.rings === "object"
+	              ? currentPermissionSet.rings
+	              : {};
+	            const currentRingPolicy = currentRings[ringDefinition.id] || {
+	              defaultAccess: ringDefinition.defaultAccess,
+	            };
+	            return {
+	              ...currentPermissionSet,
+	              version: 1,
+	              subjectType: "project_team_role",
+	              rings: {
+	                ...currentRings,
+	                [ringDefinition.id]: {
+	                  ...currentRingPolicy,
+	                  defaultAccess: normalizePlaygroundPermissionAccess(nextAccess, ringDefinition.defaultAccess),
+	                },
+	              },
+	            };
+	          });
+	        }
+
+	        function updateProjectTeamRolePermissionActionRing(teamId, roleId, actionId, nextRingId) {
+	          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+	          if (!actionDefinition) {
+	            return;
+	          }
+	          updateProjectTeamRolePermissionSet(teamId, roleId, (currentPermissionSet) => {
+	            const currentActions = currentPermissionSet.actions && typeof currentPermissionSet.actions === "object"
+	              ? currentPermissionSet.actions
+	              : {};
+	            const currentActionPolicy = currentActions[actionDefinition.id] || {
+	              ringId: actionDefinition.ringId,
+	            };
+	            return {
+	              ...currentPermissionSet,
+	              version: 1,
+	              subjectType: "project_team_role",
+	              actions: {
+	                ...currentActions,
+	                [actionDefinition.id]: {
+	                  ...currentActionPolicy,
+	                  ringId: normalizePlaygroundPermissionRingId(nextRingId, actionDefinition.ringId),
+	                },
+	              },
+	            };
+	          });
+	        }
+
+	        function updateProjectTeamRolePermissionActionAccess(teamId, roleId, actionId, nextAccess) {
+	          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+	          if (!actionDefinition) {
+	            return;
+	          }
+	          updateProjectTeamRolePermissionSet(teamId, roleId, (currentPermissionSet) => {
+	            const currentActions = currentPermissionSet.actions && typeof currentPermissionSet.actions === "object"
+	              ? currentPermissionSet.actions
+	              : {};
+	            const currentActionPolicy = currentActions[actionDefinition.id] || {
+	              ringId: actionDefinition.ringId,
+	            };
+	            const nextPolicy = {
+	              ...currentActionPolicy,
+	              ringId: normalizePlaygroundPermissionRingId(currentActionPolicy.ringId, actionDefinition.ringId),
+	            };
+	            if (!nextAccess) {
+	              delete nextPolicy.access;
+	            } else {
+	              nextPolicy.access = normalizePlaygroundPermissionAccess(nextAccess);
+	            }
+	            return {
+	              ...currentPermissionSet,
+	              version: 1,
+	              subjectType: "project_team_role",
 	              actions: {
 	                ...currentActions,
 	                [actionDefinition.id]: nextPolicy,
@@ -137459,6 +138703,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         "sectionId",
         "teamId",
         "teamTab",
+        "teamRoleId",
         "modelsTab",
         "templateType",
         "templateId",
@@ -138012,26 +139257,41 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [teamPageTeams, setTeamPageTeams] = useState([]);
         const [teamPageSelectedTeamId, setTeamPageSelectedTeamId] = useState("");
         const [teamPageActiveTab, setTeamPageActiveTab] = useState("members");
+        const [teamPageSelectedRoleId, setTeamPageSelectedRoleId] = useState("member");
+        const [teamPageRoleMembersPopover, setTeamPageRoleMembersPopover] = useState("");
         const [teamPermissionChartAnimationKey, setTeamPermissionChartAnimationKey] = useState(0);
+        const [teamPageResourceFilter, setTeamPageResourceFilter] = useState("all");
+        const [teamPageResourceSearchQuery, setTeamPageResourceSearchQuery] = useState("");
+        const [teamPageResourceViewMode, setTeamPageResourceViewMode] = useState("list");
+        const [teamPageResourceToolbarPopover, setTeamPageResourceToolbarPopover] = useState("");
+        const [teamPageResourceMenuId, setTeamPageResourceMenuId] = useState("");
         const [teamPageMembers, setTeamPageMembers] = useState([]);
         const [teamPageInvitations, setTeamPageInvitations] = useState([]);
         const [teamPageShares, setTeamPageShares] = useState([]);
+        const [teamPageProjectResourceIndexes, setTeamPageProjectResourceIndexes] = useState({});
         const [teamPageCreateName, setTeamPageCreateName] = useState("");
         const [teamPageCreateModalOpen, setTeamPageCreateModalOpen] = useState(false);
         const [teamPageCreateInviteEmails, setTeamPageCreateInviteEmails] = useState("");
-        const [teamPageCreateInviteRole, setTeamPageCreateInviteRole] = useState("create");
+        const [teamPageCreateInviteRole, setTeamPageCreateInviteRole] = useState("member");
         const [teamPageRenameModalOpen, setTeamPageRenameModalOpen] = useState(false);
+        const [teamPageRenameModalVisible, setTeamPageRenameModalVisible] = useState(false);
+        const [teamPageRenameModalClosing, setTeamPageRenameModalClosing] = useState(false);
         const [teamPageRenameName, setTeamPageRenameName] = useState("");
         const [teamPageInviteModalOpen, setTeamPageInviteModalOpen] = useState(false);
+        const [teamPageInviteModalVisible, setTeamPageInviteModalVisible] = useState(false);
+        const [teamPageInviteModalClosing, setTeamPageInviteModalClosing] = useState(false);
         const [teamPageInviteEmail, setTeamPageInviteEmail] = useState("");
-        const [teamPageInviteRole, setTeamPageInviteRole] = useState("create");
+        const [teamPageInviteRole, setTeamPageInviteRole] = useState("member");
         const [teamPageShareModalOpen, setTeamPageShareModalOpen] = useState(false);
         const [teamPageShareResourceType, setTeamPageShareResourceType] = useState("project");
         const [teamPageShareResourceId, setTeamPageShareResourceId] = useState("");
         const [teamPageShareAccessLevel, setTeamPageShareAccessLevel] = useState("use");
         const [teamPageActionId, setTeamPageActionId] = useState("");
+        const teamPageRenameModalCloseTimerRef = useRef(null);
+        const teamPageInviteModalCloseTimerRef = useRef(null);
+        const teamPageProjectResourceIndexLoadKeyRef = useRef("");
         useEffect(() => {
-          if (teamPageActiveTab !== "permissions") {
+          if (teamPageActiveTab !== "roles" && teamPageActiveTab !== "permissions") {
             return undefined;
           }
           const frameId = window.requestAnimationFrame(() => {
@@ -138042,7 +139302,126 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setTeamPermissionChartAnimationKey((current) => current + 1);
           });
           return () => window.cancelAnimationFrame(frameId);
-        }, [teamPageActiveTab, teamPageSelectedTeamId]);
+        }, [teamPageActiveTab, teamPageSelectedRoleId, teamPageSelectedTeamId]);
+        useEffect(() => {
+          if (!teamPageRoleMembersPopover || typeof document === "undefined") {
+            return undefined;
+          }
+          const handlePointerDown = (event) => {
+            const target = event.target;
+            if (target && typeof target.closest === "function" && target.closest(".playground-team-role-assigned-shell")) {
+              return;
+            }
+            setTeamPageRoleMembersPopover("");
+          };
+          document.addEventListener("mousedown", handlePointerDown);
+          return () => document.removeEventListener("mousedown", handlePointerDown);
+        }, [teamPageRoleMembersPopover]);
+        useEffect(() => {
+          if (teamPageActiveTab === "resources") {
+            return;
+          }
+          setTeamPageResourceToolbarPopover("");
+          setTeamPageResourceMenuId("");
+        }, [teamPageActiveTab]);
+        useEffect(() => {
+          if ((!teamPageResourceToolbarPopover && !teamPageResourceMenuId) || typeof document === "undefined") {
+            return undefined;
+          }
+          const handlePointerDown = (event) => {
+            const target = event.target;
+            if (
+              target
+              && typeof target.closest === "function"
+              && target.closest(".playground-project-resources-new-shell, .playground-project-resources-filter-shell, .playground-project-resources-action-shell")
+            ) {
+              return;
+            }
+            setTeamPageResourceToolbarPopover("");
+            setTeamPageResourceMenuId("");
+          };
+          document.addEventListener("mousedown", handlePointerDown);
+          return () => document.removeEventListener("mousedown", handlePointerDown);
+        }, [teamPageResourceMenuId, teamPageResourceToolbarPopover]);
+        useEffect(() => {
+          if (!teamPageRenameModalOpen) {
+            return undefined;
+          }
+          if (teamPageRenameModalCloseTimerRef.current && typeof window !== "undefined") {
+            window.clearTimeout(teamPageRenameModalCloseTimerRef.current);
+            teamPageRenameModalCloseTimerRef.current = null;
+          }
+          setTeamPageRenameModalClosing(false);
+          setTeamPageRenameModalVisible(false);
+          const frameId = window.requestAnimationFrame(() => setTeamPageRenameModalVisible(true));
+          return () => window.cancelAnimationFrame(frameId);
+        }, [teamPageRenameModalOpen]);
+        useEffect(() => {
+          if (!teamPageInviteModalOpen) {
+            return undefined;
+          }
+          if (teamPageInviteModalCloseTimerRef.current && typeof window !== "undefined") {
+            window.clearTimeout(teamPageInviteModalCloseTimerRef.current);
+            teamPageInviteModalCloseTimerRef.current = null;
+          }
+          setTeamPageInviteModalClosing(false);
+          setTeamPageInviteModalVisible(false);
+          const frameId = window.requestAnimationFrame(() => setTeamPageInviteModalVisible(true));
+          return () => window.cancelAnimationFrame(frameId);
+        }, [teamPageInviteModalOpen]);
+        useEffect(() => () => {
+          if (typeof window === "undefined") {
+            return;
+          }
+          if (teamPageRenameModalCloseTimerRef.current) {
+            window.clearTimeout(teamPageRenameModalCloseTimerRef.current);
+          }
+          if (teamPageInviteModalCloseTimerRef.current) {
+            window.clearTimeout(teamPageInviteModalCloseTimerRef.current);
+          }
+        }, []);
+
+        function closeTeamPageRenameModal(options = {}) {
+          if (!options.force && (teamPageActionId === "rename-team" || teamPageActionId === "delete-team")) {
+            return;
+          }
+          if (teamPageRenameModalCloseTimerRef.current && typeof window !== "undefined") {
+            window.clearTimeout(teamPageRenameModalCloseTimerRef.current);
+          }
+          setTeamPageRenameModalVisible(false);
+          setTeamPageRenameModalClosing(true);
+          if (typeof window === "undefined") {
+            setTeamPageRenameModalOpen(false);
+            setTeamPageRenameModalClosing(false);
+            return;
+          }
+          teamPageRenameModalCloseTimerRef.current = window.setTimeout(() => {
+            setTeamPageRenameModalOpen(false);
+            setTeamPageRenameModalClosing(false);
+            teamPageRenameModalCloseTimerRef.current = null;
+          }, 75);
+        }
+
+        function closeTeamPageInviteModal(options = {}) {
+          if (!options.force && teamPageActionId === "invite") {
+            return;
+          }
+          if (teamPageInviteModalCloseTimerRef.current && typeof window !== "undefined") {
+            window.clearTimeout(teamPageInviteModalCloseTimerRef.current);
+          }
+          setTeamPageInviteModalVisible(false);
+          setTeamPageInviteModalClosing(true);
+          if (typeof window === "undefined") {
+            setTeamPageInviteModalOpen(false);
+            setTeamPageInviteModalClosing(false);
+            return;
+          }
+          teamPageInviteModalCloseTimerRef.current = window.setTimeout(() => {
+            setTeamPageInviteModalOpen(false);
+            setTeamPageInviteModalClosing(false);
+            teamPageInviteModalCloseTimerRef.current = null;
+          }, 75);
+        }
         const [sidebarWorkspaceMode, setSidebarWorkspaceMode] = useState(initialSidebarWorkspaceMode);
         const [sidebarWorkspaceMenuOpen, setSidebarWorkspaceMenuOpen] = useState(false);
         const [agentsOverviewTabRequest, setAgentsOverviewTabRequest] = useState(null);
@@ -138304,6 +139683,132 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const requestHeaders = useMemo(() => {
           return authRequestHeaders;
         }, [authRequestHeaders]);
+        useEffect(() => {
+          const canLoadTeamProjectResourceIndexes = !isDemoMode && hasSessionAuth;
+          if (!canLoadTeamProjectResourceIndexes || teamPageActiveTab !== "resources") {
+            teamPageProjectResourceIndexLoadKeyRef.current = "";
+            return undefined;
+          }
+
+          const normalizedTeamId = String(teamPageSelectedTeamId || "").trim();
+          if (!normalizedTeamId) {
+            teamPageProjectResourceIndexLoadKeyRef.current = "";
+            setTeamPageProjectResourceIndexes({});
+            return undefined;
+          }
+
+          const directProjectShareIds = new Set(
+            (Array.isArray(teamPageShares) ? teamPageShares : [])
+              .filter((share) => String(share?.resourceType || "").trim() === "project")
+              .map((share) => String(share?.resourceId || "").trim())
+              .filter(Boolean)
+          );
+          const isKnownTeam = (Array.isArray(teamPageTeams) ? teamPageTeams : [])
+            .some((team) => String(team?.id || "").trim() === normalizedTeamId);
+          const hasTeamAccessToProject = (project) => {
+            const normalizedProjectId = String(project?.id || "").trim();
+            if (!normalizedProjectId) {
+              return false;
+            }
+            if (directProjectShareIds.has(normalizedProjectId)) {
+              return true;
+            }
+            const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+              ? project.metadata
+              : {};
+            const removedTeamIds = new Set(
+              (Array.isArray(metadata.teamAccessRemovedIds) ? metadata.teamAccessRemovedIds : [])
+                .map((value) => String(value || "").trim())
+                .filter(Boolean)
+            );
+            if (removedTeamIds.has(normalizedTeamId)) {
+              return false;
+            }
+            const rolePermissionSets = metadata.teamRolePermissionSets && typeof metadata.teamRolePermissionSets === "object" && !Array.isArray(metadata.teamRolePermissionSets)
+              ? metadata.teamRolePermissionSets
+              : {};
+            const teamPermissionSets = metadata.teamPermissionSets && typeof metadata.teamPermissionSets === "object" && !Array.isArray(metadata.teamPermissionSets)
+              ? metadata.teamPermissionSets
+              : {};
+            return Boolean(rolePermissionSets[normalizedTeamId] || teamPermissionSets[normalizedTeamId] || isKnownTeam);
+          };
+          const accessibleProjectIds = (Array.isArray(realProjects) ? realProjects : [])
+            .filter(hasTeamAccessToProject)
+            .map((project) => String(project?.id || "").trim())
+            .filter(Boolean)
+            .sort();
+
+          if (!accessibleProjectIds.length) {
+            teamPageProjectResourceIndexLoadKeyRef.current = "";
+            setTeamPageProjectResourceIndexes({});
+            return undefined;
+          }
+
+          const requestHeadersKey = [
+            String(requestHeaders?.["X-API-Key"] || ""),
+            String(requestHeaders?.["X-Runner-Upstream-Url"] || ""),
+          ].join("|");
+          const loadKey = [
+            normalizedTeamId,
+            accessibleProjectIds.join(","),
+            String(proxyBackendBase || ""),
+            requestHeadersKey,
+          ].join("|");
+          if (teamPageProjectResourceIndexLoadKeyRef.current === loadKey) {
+            return undefined;
+          }
+          teamPageProjectResourceIndexLoadKeyRef.current = loadKey;
+
+          let cancelled = false;
+          setTeamPageProjectResourceIndexes((current) => {
+            const next = {};
+            accessibleProjectIds.forEach((projectId) => {
+              if (current && Object.prototype.hasOwnProperty.call(current, projectId)) {
+                next[projectId] = current[projectId];
+              } else {
+                next[projectId] = { status: "loading", data: null, error: "" };
+              }
+            });
+            return next;
+          });
+
+          void Promise.allSettled(accessibleProjectIds.map(async (projectId) => {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/projects/" + encodeURIComponent(projectId) + "/resource-index", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders,
+            }, 8000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load project resources.");
+            }
+            return { projectId, data };
+          })).then((results) => {
+            if (cancelled) {
+              return;
+            }
+            setTeamPageProjectResourceIndexes((current) => {
+              const next = {};
+              accessibleProjectIds.forEach((projectId, index) => {
+                const result = results[index];
+                if (result && result.status === "fulfilled") {
+                  next[projectId] = { status: "ready", data: result.value.data, error: "" };
+                  return;
+                }
+                next[projectId] = {
+                  status: "error",
+                  data: current?.[projectId]?.data || null,
+                  error: result?.reason instanceof Error ? result.reason.message : "Failed to load project resources.",
+                };
+              });
+              return next;
+            });
+          });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [hasSessionAuth, isDemoMode, proxyBackendBase, realProjects, requestHeaders, teamPageActiveTab, teamPageSelectedTeamId, teamPageShares, teamPageTeams]);
         const loadThreadSearchFileInventory = useCallback(async (targetEnvironmentId) => {
           const normalizedEnvironmentId = String(targetEnvironmentId || "").trim();
           if (!normalizedEnvironmentId) {
@@ -139677,6 +141182,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return {
             ...source,
             permissionSet: normalizePlaygroundPermissionSet(source.permissionSet, "team"),
+            rolePermissionSets: normalizePlaygroundTeamRolePermissionSets(source.rolePermissionSets || source.rolePermissions || source.permissionSets),
           };
         }
 
@@ -139780,7 +141286,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }
             setTeamPageCreateName("");
             setTeamPageCreateInviteEmails("");
-            setTeamPageCreateInviteRole("create");
+            setTeamPageCreateInviteRole("member");
             setTeamPageCreateModalOpen(false);
             const team = data?.data || data?.team || null;
             const teamId = String(team?.id || "").trim();
@@ -139795,7 +141301,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     ...requestHeaders,
                     "Content-Type": "application/json",
                   },
-                  body: JSON.stringify({ email, role: teamPageCreateInviteRole }),
+                  body: JSON.stringify({ email, role: getPlaygroundTeamRoleApiValue(teamPageCreateInviteRole) }),
                 }, 8000)
               ));
               const failedInvitation = invitationResults.find((result) =>
@@ -139836,13 +141342,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ...requestHeaders,
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ email, role: teamPageInviteRole }),
+              body: JSON.stringify({ email, role: getPlaygroundTeamRoleApiValue(teamPageInviteRole) }),
             }, 8000);
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to invite team member.");
             }
             setTeamPageInviteEmail("");
-            setTeamPageInviteModalOpen(false);
+            closeTeamPageInviteModal({ force: true });
             await loadTeamPageData();
           } catch (error) {
             setTeamPageError(error instanceof Error ? error.message : "Failed to invite team member.");
@@ -139884,7 +141390,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         async function handleUpdateTeamMemberRole(memberId, role) {
           const teamId = String(teamPageSelectedTeamId || "").trim();
           const normalizedMemberId = String(memberId || "").trim();
-          const normalizedRole = String(role || "").trim();
+          const normalizedRole = normalizePlaygroundTeamRoleId(role, "");
           if (!teamId || !normalizedMemberId || !normalizedRole) {
             return;
           }
@@ -139899,7 +141405,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ...requestHeaders,
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ role: normalizedRole }),
+              body: JSON.stringify({ role: getPlaygroundTeamRoleApiValue(normalizedRole) }),
             }, 8000);
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to update team member.");
@@ -139985,7 +141491,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to rename team.");
             }
-            setTeamPageRenameModalOpen(false);
+            closeTeamPageRenameModal({ force: true });
             setTeamPageRenameName("");
             await loadTeamPageData({ selectedTeamId: teamId });
           } catch (error) {
@@ -140125,6 +141631,163 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
+        function applyTeamRolePermissionSetLocally(teamId, roleId, permissionSet) {
+          const normalizedTeamId = String(teamId || "").trim();
+          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "");
+          if (!normalizedTeamId || !normalizedRoleId) {
+            return;
+          }
+          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "team_role");
+          setTeamPageTeams((current) => (Array.isArray(current) ? current : []).map((team) => {
+            if (String(team?.id || "") !== normalizedTeamId) {
+              return normalizeTeamPageTeamRecord(team);
+            }
+            const rolePermissionSets = normalizePlaygroundTeamRolePermissionSets(team.rolePermissionSets);
+            return normalizeTeamPageTeamRecord({
+              ...team,
+              rolePermissionSets: {
+                ...rolePermissionSets,
+                [normalizedRoleId]: normalizedPermissionSet,
+              },
+            });
+          }));
+        }
+
+        async function persistTeamRolePermissionSet(teamId, roleId, permissionSet) {
+          const normalizedTeamId = String(teamId || "").trim();
+          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "");
+          if (!normalizedTeamId || !normalizedRoleId) {
+            return null;
+          }
+          const selectedTeam = teamPageTeams.find((team) => String(team?.id || "") === normalizedTeamId) || null;
+          const currentRolePermissionSets = normalizePlaygroundTeamRolePermissionSets(selectedTeam?.rolePermissionSets);
+          const nextRolePermissionSets = {
+            ...currentRolePermissionSets,
+            [normalizedRoleId]: normalizePlaygroundPermissionSet(permissionSet, "team_role"),
+          };
+          const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(normalizedTeamId), {
+            method: "PATCH",
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+              ...requestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ rolePermissionSets: nextRolePermissionSets }),
+          }, 8000);
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to update role permissions.");
+          }
+          const updatedTeamSource = data?.data || data?.team || data;
+          const updatedTeam = normalizeTeamPageTeamRecord({
+            ...(selectedTeam || {}),
+            ...(updatedTeamSource && typeof updatedTeamSource === "object" && !Array.isArray(updatedTeamSource) ? updatedTeamSource : {}),
+            rolePermissionSets: updatedTeamSource?.rolePermissionSets || nextRolePermissionSets,
+          });
+          if (updatedTeam?.id) {
+            setTeamPageTeams((current) => (Array.isArray(current) ? current : []).map((team) =>
+              String(team?.id || "") === String(updatedTeam.id || "") ? updatedTeam : normalizeTeamPageTeamRecord(team)
+            ));
+          }
+          return updatedTeam;
+        }
+
+        function updateTeamRolePermissionSet(roleId, updater) {
+          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "");
+          const teamId = String(teamPageSelectedTeamId || "").trim();
+          const selectedTeam = teamPageTeams.find((team) => String(team?.id || "") === teamId) || null;
+          if (!teamId || !selectedTeam || !normalizedRoleId) {
+            return;
+          }
+          const currentRolePermissionSets = normalizePlaygroundTeamRolePermissionSets(selectedTeam.rolePermissionSets);
+          const currentPermissionSet = normalizePlaygroundPermissionSet(currentRolePermissionSets[normalizedRoleId], "team_role");
+          const nextPermissionSet = normalizePlaygroundPermissionSet(
+            typeof updater === "function" ? updater(currentPermissionSet) : updater,
+            "team_role"
+          );
+          applyTeamRolePermissionSetLocally(teamId, normalizedRoleId, nextPermissionSet);
+          setTeamPageActionId("team-role-permissions:" + normalizedRoleId);
+          setTeamPageError("");
+          void persistTeamRolePermissionSet(teamId, normalizedRoleId, nextPermissionSet)
+            .catch((error) => {
+              applyTeamRolePermissionSetLocally(teamId, normalizedRoleId, currentPermissionSet);
+              setTeamPageError(error instanceof Error ? error.message : "Failed to update role permissions.");
+            })
+            .finally(() => {
+              setTeamPageActionId((current) => current === "team-role-permissions:" + normalizedRoleId ? "" : current);
+            });
+        }
+
+        function updateTeamRolePermissionRingAccess(roleId, ringId, nextAccess) {
+          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "");
+          const normalizedRingId = String(ringId || "").trim();
+          const normalizedAccess = normalizePlaygroundPermissionAccess(nextAccess);
+          if (!normalizedRoleId || !normalizedRingId) {
+            return;
+          }
+          updateTeamRolePermissionSet(normalizedRoleId, (currentPermissionSet) => ({
+            ...currentPermissionSet,
+            rings: {
+              ...(currentPermissionSet.rings || {}),
+              [normalizedRingId]: {
+                ...((currentPermissionSet.rings || {})[normalizedRingId] || {}),
+                defaultAccess: normalizedAccess,
+              },
+            },
+          }));
+        }
+
+        function updateTeamRolePermissionActionRing(roleId, actionId, nextRingId) {
+          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "");
+          const normalizedActionId = String(actionId || "").trim();
+          const normalizedRingId = String(nextRingId || "").trim();
+          if (!normalizedRoleId || !normalizedActionId || !normalizedRingId) {
+            return;
+          }
+          updateTeamRolePermissionSet(normalizedRoleId, (currentPermissionSet) => {
+            const existingAction = (currentPermissionSet.actions || {})[normalizedActionId] || {};
+            return {
+              ...currentPermissionSet,
+              actions: {
+                ...(currentPermissionSet.actions || {}),
+                [normalizedActionId]: {
+                  ...existingAction,
+                  ringId: normalizedRingId,
+                  access: existingAction.access || getPlaygroundPermissionRingAccess(currentPermissionSet, normalizedRingId),
+                },
+              },
+            };
+          });
+        }
+
+        function updateTeamRolePermissionActionAccess(roleId, actionId, nextAccess) {
+          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "");
+          const normalizedActionId = String(actionId || "").trim();
+          const normalizedAccess = normalizePlaygroundPermissionAccess(nextAccess, "");
+          if (!normalizedRoleId || !normalizedActionId) {
+            return;
+          }
+          updateTeamRolePermissionSet(normalizedRoleId, (currentPermissionSet) => {
+            const existingAction = (currentPermissionSet.actions || {})[normalizedActionId] || {};
+            const nextAction = {
+              ...existingAction,
+              ringId: existingAction.ringId || getPlaygroundPermissionActionRingId(currentPermissionSet, normalizedActionId),
+            };
+            if (normalizedAccess) {
+              nextAction.access = normalizedAccess;
+            } else {
+              delete nextAction.access;
+            }
+            return {
+              ...currentPermissionSet,
+              actions: {
+                ...(currentPermissionSet.actions || {}),
+                [normalizedActionId]: nextAction,
+              },
+            };
+          });
+        }
+
         async function handleDeleteTeam() {
           const teamId = String(teamPageSelectedTeamId || "").trim();
           if (!teamId) {
@@ -140148,7 +141811,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to delete team.");
             }
-            setTeamPageRenameModalOpen(false);
+            closeTeamPageRenameModal({ force: true });
             setTeamPageRenameName("");
             setTeamPageSelectedTeamId("");
             setTeamPageMembers([]);
@@ -156110,15 +157773,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	              normalizeSettingsDetailNodes(detailContent)
 	            )
 	          );
-	        }
+        }
 
         function renderTeamPage() {
-          const roleOptions = [
-            { value: "create", label: "Create", description: "Create-mode pages and personal work." },
-            { value: "configure", label: "Configure", description: "Create plus agents, computers, projects, and skills." },
-            { value: "develop", label: "Develop", description: "Configure plus servers, functions, databases, and API keys." },
-            { value: "admin", label: "Admin", description: "Full team management and sharing controls." },
-          ];
           const accessOptions = [
             { value: "use", label: "Use" },
             { value: "edit", label: "Edit" },
@@ -156135,10 +157792,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
             label: String(template.title || template.name || "Untitled template"),
           })).filter((item) => item.id);
           const selectedTeam = teamPageTeams.find((team) => team.id === teamPageSelectedTeamId) || null;
-          const selectedTeamId = selectedTeam?.id || "";
           const currentMember = teamPageMembers.find((member) => member.userId === sessionState.userId) || null;
-          const canManageTeam = selectedTeam?.role === "admin" || currentMember?.role === "admin";
-          const currentRoleLabel = roleOptions.find((option) => option.value === (currentMember?.role || selectedTeam?.role))?.label || "Member";
+          const currentMemberRoleId = normalizePlaygroundTeamRoleId(currentMember?.role || selectedTeam?.role, "member");
+          const selectedTeamRoleId = normalizePlaygroundTeamRoleId(teamPageSelectedRoleId, "member");
+          const canManageTeam = currentMemberRoleId === "admin" || normalizePlaygroundTeamRoleId(selectedTeam?.role, "member") === "admin" || selectedTeam?.ownerUserId === sessionState.userId;
           const resourceOptionsByType = {
             project: realProjects.map((project) => ({
               id: project.id,
@@ -156161,7 +157818,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               resourceNameByKey.set(typeOption.value + ":" + resource.id, resource.label);
             });
           });
-          const formatRole = (role) => roleOptions.find((option) => option.value === role)?.label || String(role || "Create");
+          const formatRole = (role) => getPlaygroundTeamRoleDefinition(role).label;
           const formatAccess = (accessLevel) => accessOptions.find((option) => option.value === accessLevel)?.label || String(accessLevel || "Use");
           const formatResourceType = (resourceType) => resourceTypeOptions.find((option) => option.value === resourceType)?.label || String(resourceType || "Resource");
           const formatDate = (value) => {
@@ -156176,8 +157833,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const renderRoleSelect = (props) => React.createElement("select", {
             className: "playground-team-select",
             ...props,
-          }, roleOptions.map((option) =>
-            React.createElement("option", { key: option.value, value: option.value }, option.label)
+            value: normalizePlaygroundTeamRoleId(props?.value, "member"),
+          }, PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((option) =>
+            React.createElement("option", { key: option.id, value: option.id }, option.label)
           ));
 
           const renderEmpty = (text) => React.createElement("div", { className: "playground-team-empty" }, text);
@@ -156210,10 +157868,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return;
             }
             setTeamPageActiveTab("members");
+            setTeamPageSelectedRoleId("member");
             setTeamPageSelectedTeamId(normalizedTeamId);
             setTeamPageMembers([]);
             setTeamPageInvitations([]);
             setTeamPageShares([]);
+            setTeamPageResourceFilter("all");
+            setTeamPageResourceSearchQuery("");
+            setTeamPageResourceToolbarPopover("");
+            setTeamPageResourceMenuId("");
           };
 
           const renderTeamActionButton = (label, onClick, options = {}) => React.createElement("button", {
@@ -156281,7 +157944,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       })
                     ),
                     React.createElement("div", { className: "playground-team-modal-field" },
-                      React.createElement("label", { className: "playground-team-modal-label" }, "Initial permission"),
+                      React.createElement("label", { className: "playground-team-modal-label" }, "Initial role"),
                       renderRoleSelect({
                         value: teamPageCreateInviteRole,
                         onChange: (event) => setTeamPageCreateInviteRole(event.target.value),
@@ -156308,26 +157971,27 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : null;
 
           const closeRenameTeamModal = () => {
-            if (teamPageActionId === "rename-team" || teamPageActionId === "delete-team") {
-              return;
-            }
-            setTeamPageRenameModalOpen(false);
+            closeTeamPageRenameModal();
           };
 
-          const renderRenameTeamModal = () => teamPageRenameModalOpen
-            ? React.createElement("div", {
-                className: "playground-team-modal-backdrop",
-                onMouseDown: (event) => {
-                  if (event.target === event.currentTarget) {
-                    closeRenameTeamModal();
-                  }
-                },
+          const renderRenameTeamModal = () => {
+            if (!teamPageRenameModalOpen && !teamPageRenameModalClosing) {
+              return null;
+            }
+            const modalElement = React.createElement("div", {
+                className: "playground-team-modal-backdrop playground-team-mission-modal-backdrop"
+                  + (teamPageRenameModalVisible ? " is-visible" : "")
+                  + (teamPageRenameModalClosing ? " is-closing" : ""),
+                onClick: closeRenameTeamModal,
               },
                 React.createElement("div", {
-                  className: "playground-team-modal",
+                  className: "playground-team-modal playground-team-mission-modal"
+                    + (teamPageRenameModalVisible ? " is-visible" : "")
+                    + (teamPageRenameModalClosing ? " is-closing" : ""),
                   role: "dialog",
                   "aria-modal": "true",
                   "aria-labelledby": "team-rename-modal-title",
+                  onClick: (event) => event.stopPropagation(),
                 },
                   React.createElement("div", { className: "playground-team-modal-header" },
                     React.createElement("div", null,
@@ -156378,35 +158042,39 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     )
                   )
                 )
-              )
-            : null;
-
-          const closeInviteTeamModal = () => {
-            if (teamPageActionId === "invite") {
-              return;
-            }
-            setTeamPageInviteModalOpen(false);
+              );
+            return typeof document !== "undefined" && document.body
+              ? createPortal(modalElement, document.body)
+              : modalElement;
           };
 
-          const renderInviteTeamModal = () => teamPageInviteModalOpen
-            ? React.createElement("div", {
-                className: "playground-team-modal-backdrop",
-                onMouseDown: (event) => {
-                  if (event.target === event.currentTarget) {
-                    closeInviteTeamModal();
-                  }
-                },
+          const closeInviteTeamModal = () => {
+            closeTeamPageInviteModal();
+          };
+
+          const renderInviteTeamModal = () => {
+            if (!teamPageInviteModalOpen && !teamPageInviteModalClosing) {
+              return null;
+            }
+            const modalElement = React.createElement("div", {
+                className: "playground-team-modal-backdrop playground-team-mission-modal-backdrop"
+                  + (teamPageInviteModalVisible ? " is-visible" : "")
+                  + (teamPageInviteModalClosing ? " is-closing" : ""),
+                onClick: closeInviteTeamModal,
               },
                 React.createElement("div", {
-                  className: "playground-team-modal",
+                  className: "playground-team-modal playground-team-mission-modal"
+                    + (teamPageInviteModalVisible ? " is-visible" : "")
+                    + (teamPageInviteModalClosing ? " is-closing" : ""),
                   role: "dialog",
                   "aria-modal": "true",
                   "aria-labelledby": "team-invite-modal-title",
+                  onClick: (event) => event.stopPropagation(),
                 },
                   React.createElement("div", { className: "playground-team-modal-header" },
                     React.createElement("div", null,
                       React.createElement("h2", { id: "team-invite-modal-title", className: "playground-team-modal-title" }, "Invite member"),
-                      React.createElement("p", { className: "playground-team-modal-subtitle" }, "Send an invitation and choose the permission level for this person.")
+                      React.createElement("p", { className: "playground-team-modal-subtitle" }, "Send an invitation and choose the team role for this person.")
                     ),
                     React.createElement("button", {
                       type: "button",
@@ -156429,7 +158097,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       })
                     ),
                     React.createElement("div", { className: "playground-team-modal-field" },
-                      React.createElement("label", { className: "playground-team-modal-label" }, "Permission"),
+                      React.createElement("label", { className: "playground-team-modal-label" }, "Role"),
                       renderRoleSelect({
                         value: teamPageInviteRole,
                         onChange: (event) => setTeamPageInviteRole(event.target.value),
@@ -156452,8 +158120,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     )
                   )
                 )
-              )
-            : null;
+              );
+            return typeof document !== "undefined" && document.body
+              ? createPortal(modalElement, document.body)
+              : modalElement;
+          };
 
           const closeShareTeamModal = () => {
             if (teamPageActionId === "share") {
@@ -156579,7 +158250,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         React.createElement("thead", null,
                           React.createElement("tr", null,
                             React.createElement("th", null, "Team"),
-                            React.createElement("th", null, "Permission"),
+                            React.createElement("th", null, "Role"),
                             React.createElement("th", null, "Created"),
                             React.createElement("th", { className: "is-actions" }, "")
                           )
@@ -156618,10 +158289,142 @@ ${PROJECT_OVERVIEW_SCRIPT}
             renderCreateTeamModal()
           );
 
+          const getTeamMemberUserId = (item) => {
+            const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+            return String(
+              source.userId
+              || source.uid
+              || source.user?.id
+              || source.user?.uid
+              || source.account?.id
+              || source.member?.userId
+              || source.member?.id
+              || ""
+            ).trim();
+          };
+          const getTeamMemberEmail = (item) => {
+            const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+            return String(
+              source.email
+              || source.user?.email
+              || source.profile?.email
+              || source.account?.email
+              || source.member?.email
+              || ""
+            ).trim().toLowerCase();
+          };
+          const selectedTeamOwnerUserId = String(
+            selectedTeam?.ownerUserId
+            || selectedTeam?.ownerId
+            || selectedTeam?.createdByUserId
+            || selectedTeam?.owner?.userId
+            || selectedTeam?.owner?.id
+            || ""
+          ).trim();
+          const selectedTeamOwnerEmail = String(
+            selectedTeam?.ownerEmail
+            || selectedTeam?.owner?.email
+            || ""
+          ).trim().toLowerCase();
+          const currentAccountEmail = String(accountEmail || sessionState.email || "").trim().toLowerCase();
+          const isTeamInvitationAccepted = (invitation) => {
+            const status = String(invitation?.status || "").trim().toLowerCase();
+            return status === "accepted" || status === "joined" || status === "completed";
+          };
+          const isTeamOwnerMember = (item, isInvitation = false) => {
+            if (isInvitation) {
+              return false;
+            }
+            const memberUserId = getTeamMemberUserId(item);
+            const memberEmail = getTeamMemberEmail(item);
+            if (selectedTeamOwnerUserId && memberUserId && memberUserId === selectedTeamOwnerUserId) {
+              return true;
+            }
+            if (selectedTeamOwnerEmail && memberEmail && memberEmail === selectedTeamOwnerEmail) {
+              return true;
+            }
+            return !selectedTeamOwnerUserId
+              && !selectedTeamOwnerEmail
+              && memberUserId
+              && memberUserId === String(sessionState.userId || "").trim()
+              && normalizePlaygroundTeamRoleId(selectedTeam?.role, "member") === "admin";
+          };
+          const isCurrentTeamMemberRow = (item, isInvitation = false) => {
+            if (isInvitation) {
+              return false;
+            }
+            const memberUserId = getTeamMemberUserId(item);
+            const memberEmail = getTeamMemberEmail(item);
+            return Boolean(
+              (memberUserId && memberUserId === String(sessionState.userId || "").trim())
+              || (memberEmail && currentAccountEmail && memberEmail === currentAccountEmail)
+            );
+          };
+          const visibleTeamInvitations = teamPageInvitations.filter((invitation) => !isTeamInvitationAccepted(invitation));
           const memberRows = [
             ...teamPageMembers.map((member) => ({ kind: "member", id: member.id, item: member })),
-            ...teamPageInvitations.map((invitation) => ({ kind: "invitation", id: invitation.id, item: invitation })),
+            ...visibleTeamInvitations.map((invitation) => ({ kind: "invitation", id: invitation.id, item: invitation })),
           ];
+          const getTeamMemberRowDisplayName = (row) => {
+            const item = row?.item || {};
+            return row?.kind === "invitation"
+              ? (item.email || "Invitation")
+              : (item.name || item.email || item.userId || "Team member");
+          };
+          const getTeamMemberRowDetail = (row) => {
+            const item = row?.item || {};
+            const isInvitation = row?.kind === "invitation";
+            const isOwner = isTeamOwnerMember(item, isInvitation);
+            return isInvitation
+              ? [formatRole(item.role), item.expiresAt ? ("Expires " + formatDate(item.expiresAt)) : ""].filter(Boolean).join(" · ")
+              : [isOwner ? "Owner" : "", item.email && item.name ? item.email : "", item.joinedAt ? ("Joined " + formatDate(item.joinedAt)) : ""].filter(Boolean).join(" · ");
+          };
+          const getTeamMemberAvatarUrl = (item, isInvitation = false) => {
+            if (isInvitation) {
+              return "";
+            }
+            const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+            const nestedSources = [
+              source,
+              source.user,
+              source.profile,
+              source.authProfile,
+              source.account,
+              source.member,
+            ].filter((value) => value && typeof value === "object" && !Array.isArray(value));
+            const rawAvatarUrl = nestedSources
+              .map((value) => (
+                value.photoURL
+                || value.photoUrl
+                || value.photo_url
+                || value.avatarUrl
+                || value.avatarURL
+                || value.avatar
+                || value.picture
+                || value.imageUrl
+                || value.profileImageUrl
+                || value.profile_image_url
+              ))
+              .find((value) => String(value || "").trim());
+            const fallbackAvatarUrl = String(source.userId || source.uid || source.id || "") === String(sessionState.userId || "")
+              ? accountAvatarUrl
+              : "";
+            const normalizedAvatarUrl = normalizeSessionPhotoUrl(rawAvatarUrl || fallbackAvatarUrl || "");
+            return canRenderAvatarImage(normalizedAvatarUrl) ? normalizedAvatarUrl : "";
+          };
+          const renderTeamMemberIdentityCell = (item, displayName, detail, isInvitation) =>
+            React.createElement("div", { className: "playground-team-member-cell" },
+              renderAccountAvatar(
+                "playground-team-member-avatar",
+                "playground-team-member-avatar-image",
+                getAccountInitials(displayName),
+                getTeamMemberAvatarUrl(item, isInvitation)
+              ),
+              React.createElement("div", { className: "playground-team-member-copy" },
+                React.createElement("div", { className: "playground-team-table-title" }, displayName),
+                detail ? React.createElement("div", { className: "playground-team-table-meta" }, detail) : null
+              )
+            );
 
           const renderMembersTab = () => React.createElement("div", { className: "playground-team-detail-panel" },
             memberRows.length > 0
@@ -156636,7 +158439,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     React.createElement("thead", null,
                       React.createElement("tr", null,
                         React.createElement("th", null, "User"),
-                        React.createElement("th", null, "Permission"),
+                        React.createElement("th", null, "Role"),
                         React.createElement("th", null, "Status"),
                         React.createElement("th", { className: "is-actions" }, "")
                       )
@@ -156645,19 +158448,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       memberRows.map((row) => {
                         const item = row.item || {};
                         const isInvitation = row.kind === "invitation";
-                        const displayName = isInvitation
-                          ? (item.email || "Invitation")
-                          : (item.name || item.email || item.userId || "Team member");
-                        const detail = isInvitation
-                          ? [formatRole(item.role), item.expiresAt ? ("Expires " + formatDate(item.expiresAt)) : ""].filter(Boolean).join(" · ")
-                          : [item.email && item.name ? item.email : "", item.joinedAt ? ("Joined " + formatDate(item.joinedAt)) : ""].filter(Boolean).join(" · ");
+                        const displayName = getTeamMemberRowDisplayName(row);
+                        const detail = getTeamMemberRowDetail(row);
+                        const isOwner = isTeamOwnerMember(item, isInvitation);
+                        const isProtectedMember = isOwner || isCurrentTeamMemberRow(item, isInvitation);
                         return React.createElement("tr", { key: row.kind + ":" + row.id },
                           React.createElement("td", null,
-                            React.createElement("div", { className: "playground-team-table-title" }, displayName),
-                            detail ? React.createElement("div", { className: "playground-team-table-meta" }, detail) : null
+                            renderTeamMemberIdentityCell(item, displayName, detail, isInvitation)
                           ),
                           React.createElement("td", null,
-                            !isInvitation && canManageTeam
+                            isOwner
+                              ? React.createElement("span", { className: "playground-team-badge" }, "Owner")
+                              : !isInvitation && canManageTeam && !isProtectedMember
                               ? renderRoleSelect({
                                   value: item.role || "create",
                                   onChange: (event) => handleUpdateTeamMemberRole(item.id, event.target.value),
@@ -156675,7 +158477,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                   disabled: teamPageActionId === "revoke:" + item.id,
                                   "aria-label": "Revoke invitation",
                                 }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
-                              : !isInvitation && canManageTeam
+                              : !isInvitation && canManageTeam && !isProtectedMember
                                 ? React.createElement("button", {
                                     type: "button",
                                     className: "playground-team-icon-button",
@@ -156693,74 +158495,813 @@ ${PROJECT_OVERVIEW_SCRIPT}
               : renderEmpty(teamPageLoading ? "Loading members..." : "No members yet.")
           );
 
-          const renderResourcesTab = () => React.createElement("div", { className: "playground-team-detail-panel" },
-            teamPageShares.length > 0
-              ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
-                  React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table" },
-                    React.createElement("colgroup", null,
-                      React.createElement("col", { className: "playground-team-table-col-main" }),
-                      React.createElement("col", { className: "playground-team-table-col-role" }),
-                      React.createElement("col", { className: "playground-team-table-col-meta" }),
-                      React.createElement("col", { className: "playground-team-table-col-actions" })
-                    ),
-                    React.createElement("thead", null,
-                      React.createElement("tr", null,
-                        React.createElement("th", null, "Resource"),
-                        React.createElement("th", null, "Access"),
-                        React.createElement("th", null, "Type"),
-                        React.createElement("th", { className: "is-actions" }, "")
+          const getTeamResourceTypeMeta = (resourceType) => {
+            const normalizedType = String(resourceType || "").trim();
+            const metaByType = {
+              project: { label: "Project", Icon: Rocket },
+              environment: { label: "Computer", Icon: Monitor },
+              agent: { label: "Agent", Icon: Bot },
+              file: { label: "File", Icon: FileText },
+              metronome: { label: "Metronome", Icon: Metronome },
+              web_app: { label: "Web App", Icon: Monitor },
+              function: { label: "Function", Icon: FunctionSquare },
+              database: { label: "Database", Icon: Database },
+              imagine: { label: "Imagine", Icon: Clapperboard },
+              imagine_template: { label: "Imagine template", Icon: Clapperboard },
+            };
+            return metaByType[normalizedType] || { label: "Resource", Icon: Layers };
+          };
+
+          function getTeamResourceSourceLabel(row) {
+            const sources = Array.isArray(row?.sources) ? row.sources : [];
+            const hasDirect = sources.some((source) => source.kind === "direct");
+            const projectSources = sources.filter((source) => source.kind === "project");
+            const projectAccessSources = sources.filter((source) => source.kind === "project_access");
+            if (hasDirect && projectSources.length > 0) {
+              return "Direct + " + String(projectSources.length) + " project" + (projectSources.length === 1 ? "" : "s");
+            }
+            if (hasDirect) {
+              return "Direct team share";
+            }
+            if (projectSources.length === 1) {
+              return "Project: " + (projectSources[0].projectName || "Untitled project");
+            }
+            if (projectSources.length > 1) {
+              return String(projectSources.length) + " projects";
+            }
+            if (projectAccessSources.length > 0) {
+              return "Project settings";
+            }
+            return "Unknown";
+          }
+
+          function getTeamResourceSourceTooltip(row) {
+            const sources = Array.isArray(row?.sources) ? row.sources : [];
+            return sources
+              .map((source) => source.label || (source.kind === "project" ? ("Project: " + (source.projectName || "Untitled project")) : "Direct team share"))
+              .filter(Boolean)
+              .join("\\n");
+          }
+
+          function getTeamResourceOwnerLabelFromPerson(person) {
+            if (!person || typeof person !== "object" || Array.isArray(person)) {
+              return "";
+            }
+            const name = String(
+              person.displayName
+              || person.name
+              || person.fullName
+              || person.username
+              || person.userName
+              || ""
+            ).trim();
+            const email = String(person.email || person.emailAddress || person.mail || "").trim();
+            if (!name && !email) {
+              return "";
+            }
+            return formatAccountDisplayName(name, email, name || email);
+          }
+
+          function getTeamResourceOwnerLabelFromRecord(record) {
+            const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
+            const name = String(
+              source.ownerName
+              || source.createdByName
+              || source.creatorName
+              || source.authorName
+              || source.leadName
+              || source.userDisplayName
+              || source.userName
+              || ""
+            ).trim();
+            const email = String(
+              source.ownerEmail
+              || source.createdByEmail
+              || source.creatorEmail
+              || source.authorEmail
+              || source.leadEmail
+              || source.userEmail
+              || ""
+            ).trim();
+            if (name || email) {
+              return formatAccountDisplayName(name, email, name || email);
+            }
+            const nestedOwnerLabel = [
+              source.owner,
+              source.creator,
+              source.createdBy,
+              source.created_by,
+              source.author,
+              source.lead,
+              source.user,
+              source.account,
+              source.profile,
+              source.member,
+            ].map(getTeamResourceOwnerLabelFromPerson).find(Boolean);
+            return nestedOwnerLabel || "";
+          }
+
+          function getTeamProjectOwnerLabel(project) {
+            const normalizedProject = normalizePlaygroundProjectRecord(project);
+            return getTeamResourceOwnerLabelFromRecord({
+              ownerName: normalizedProject.leadName,
+              ownerEmail: normalizedProject.leadEmail,
+              owner: normalizedProject.lead || normalizedProject.metadata?.lead,
+            });
+          }
+
+          function getSelectedTeamOwnerLabel() {
+            const ownerRow = memberRows.find((row) => row.kind === "member" && isTeamOwnerMember(row.item, false));
+            if (ownerRow) {
+              return getTeamMemberRowDisplayName(ownerRow);
+            }
+            if (selectedTeamOwnerUserId && selectedTeamOwnerUserId === String(sessionState.userId || "").trim()) {
+              return formatAccountDisplayName(currentUserName, currentAccountEmail, "You");
+            }
+            if (selectedTeamOwnerEmail && selectedTeamOwnerEmail === currentAccountEmail) {
+              return formatAccountDisplayName(currentUserName, currentAccountEmail, "You");
+            }
+            return getTeamResourceOwnerLabelFromRecord(selectedTeam);
+          }
+
+          function classifyTeamProjectFileResource(item) {
+            return "file";
+          }
+
+          function getTeamProjectResourceIndexArray(resourceIndex, keys = []) {
+            if (Array.isArray(resourceIndex)) {
+              return resourceIndex;
+            }
+            if (!resourceIndex || typeof resourceIndex !== "object") {
+              return [];
+            }
+            for (const key of keys) {
+              if (Array.isArray(resourceIndex[key])) {
+                return resourceIndex[key];
+              }
+            }
+            if (Array.isArray(resourceIndex.data)) {
+              return resourceIndex.data;
+            }
+            if (Array.isArray(resourceIndex.items)) {
+              return resourceIndex.items;
+            }
+            if (Array.isArray(resourceIndex.results)) {
+              return resourceIndex.results;
+            }
+            return [];
+          }
+
+          function classifyTeamProjectRuntimeResource(item) {
+            const normalizedKind = canonicalizePlaygroundServerKind(
+              item?.kind
+              || item?.serverKind
+              || item?.resourceKind
+              || item?.type
+              || item?.resourceType
+              || ""
+            );
+            if (normalizedKind === "function") return "function";
+            if (normalizedKind === "database") return "database";
+            return "web_app";
+          }
+
+          function getTeamProjectMetadata(project) {
+            return project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+              ? project.metadata
+              : {};
+          }
+
+          function projectHasTeamAccess(project, teamId, directProjectShareIds) {
+            const normalizedProjectId = String(project?.id || "").trim();
+            const normalizedTeamId = String(teamId || "").trim();
+            if (!normalizedProjectId || !normalizedTeamId) {
+              return false;
+            }
+            if (directProjectShareIds.has(normalizedProjectId)) {
+              return true;
+            }
+            const metadata = getTeamProjectMetadata(project);
+            const removedTeamIds = new Set(
+              (Array.isArray(metadata.teamAccessRemovedIds) ? metadata.teamAccessRemovedIds : [])
+                .map((value) => String(value || "").trim())
+                .filter(Boolean)
+            );
+            if (removedTeamIds.has(normalizedTeamId)) {
+              return false;
+            }
+            const rolePermissionSets = metadata.teamRolePermissionSets && typeof metadata.teamRolePermissionSets === "object" && !Array.isArray(metadata.teamRolePermissionSets)
+              ? metadata.teamRolePermissionSets
+              : {};
+            const teamPermissionSets = metadata.teamPermissionSets && typeof metadata.teamPermissionSets === "object" && !Array.isArray(metadata.teamPermissionSets)
+              ? metadata.teamPermissionSets
+              : {};
+            return Boolean(rolePermissionSets[normalizedTeamId] || teamPermissionSets[normalizedTeamId] || selectedTeam?.id === normalizedTeamId);
+          }
+
+          function buildTeamProjectResourceRows(project, source, resourceIndex = null) {
+            const normalizedProject = normalizePlaygroundProjectRecord(project);
+            const metadata = getTeamProjectMetadata(normalizedProject);
+            const projectName = String(normalizedProject.name || "Untitled project").trim();
+            const projectOwnerLabel = getTeamProjectOwnerLabel(normalizedProject);
+            const resourceRows = [];
+            const resourceRowKeys = new Set();
+            const pushResourceRow = (row) => {
+              const normalizedType = String(row?.type || "resource").trim() || "resource";
+              const normalizedKey = String(row?.key || row?.id || row?.title || "").trim();
+              if (!normalizedKey) {
+                return;
+              }
+              const finalKey = normalizedType + ":" + normalizedKey;
+              if (resourceRowKeys.has(finalKey)) {
+                return;
+              }
+              resourceRowKeys.add(finalKey);
+              resourceRows.push(row);
+            };
+            const projectAttachmentCandidates = [
+              ...normalizePlaygroundTaskAttachmentList(normalizedProject.attachments || metadata.attachments),
+              ...normalizePlaygroundTaskAttachmentList(getTeamProjectResourceIndexArray(resourceIndex, ["files", "attachments"])),
+            ];
+            projectAttachmentCandidates.forEach((attachment, index) => {
+              const path = normalizeHistoryPath(attachment?.sourcePath || attachment?.workspacePath || attachment?.path || "");
+              const environmentId = String(attachment?.environmentId || normalizedProject.defaultEnvironmentId || "").trim();
+              const title = String(attachment?.filename || getHistoryPathName(path) || attachment?.title || "Untitled file").trim();
+              const type = classifyTeamProjectFileResource(attachment);
+              pushResourceRow({
+                key: type + ":" + (environmentId || "project") + ":" + (path || attachment?.id || index),
+                type,
+                title,
+                subtitle: path || "Project attachment",
+                status: "Project role based",
+                accessLevel: "project_role_based",
+                accessLabel: "Project role based",
+                updatedLabel: attachment?.updatedAt || attachment?.createdAt ? formatDate(attachment.updatedAt || attachment.createdAt) : "-",
+                ownerLabel: projectOwnerLabel,
+                record: attachment,
+                environmentId,
+                path,
+                projectId: normalizedProject.id,
+                projectName,
+                sources: [source],
+              });
+            });
+            getTeamProjectResourceIndexArray(resourceIndex, ["serverResources", "servers", "resources"]).forEach((item, index) => {
+              const type = classifyTeamProjectRuntimeResource(item);
+              const normalizedKind = canonicalizePlaygroundServerKind(item?.kind || item?.serverKind || item?.resourceKind || item?.type || item?.resourceType || "");
+              const endpoint = String(item?.endpoint || item?.url || item?.serviceUrl || item?.customDomain || item?.cloudRunServiceName || "").trim();
+              const title = String(item?.title || item?.name || item?.label || item?.id || formatPlaygroundServerKindLabel(normalizedKind)).trim();
+              pushResourceRow({
+                key: (item?.id || normalizedKind + ":" + title + ":" + index),
+                type,
+                title,
+                subtitle: endpoint || formatPlaygroundServerKindLabel(normalizedKind),
+                status: String(item?.status || item?.state || "Linked").trim() || "Linked",
+                accessLevel: "project_role_based",
+                accessLabel: "Project role based",
+                updatedLabel: item?.updatedAt || item?.createdAt ? formatDate(item.updatedAt || item.createdAt) : "-",
+                ownerLabel: getTeamResourceOwnerLabelFromRecord(item) || projectOwnerLabel,
+                record: item,
+                resourceId: item?.id || "",
+                projectId: normalizedProject.id,
+                projectName,
+                sources: [source],
+              });
+            });
+            getTeamProjectResourceIndexArray(resourceIndex, ["metronomes", "workflows", "schedules"]).forEach((item, index) => {
+              const title = String(item?.title || item?.name || item?.label || item?.id || "Metronome").trim();
+              pushResourceRow({
+                key: (item?.id || title + ":" + index),
+                type: "metronome",
+                title,
+                subtitle: String(item?.description || item?.schedule || item?.cron || "Project metronome").trim(),
+                status: String(item?.status || item?.state || "Linked").trim() || "Linked",
+                accessLevel: "project_role_based",
+                accessLabel: "Project role based",
+                updatedLabel: item?.updatedAt || item?.createdAt ? formatDate(item.updatedAt || item.createdAt) : "-",
+                ownerLabel: getTeamResourceOwnerLabelFromRecord(item) || projectOwnerLabel,
+                record: item,
+                resourceId: item?.id || "",
+                projectId: normalizedProject.id,
+                projectName,
+                sources: [source],
+              });
+            });
+            const publishedTemplates = Array.isArray(metadata.resourceTemplates) ? metadata.resourceTemplates : [];
+            publishedTemplates.forEach((item, index) => {
+              const templateId = String(item?.templateId || item?.id || "").trim();
+              const catalogTemplate = Array.isArray(PLAYGROUND_RESOURCE_TEMPLATE_DATA)
+                ? PLAYGROUND_RESOURCE_TEMPLATE_DATA.find((template) => String(template?.id || "").trim() === templateId)
+                : null;
+              const template = {
+                ...(catalogTemplate && typeof catalogTemplate === "object" ? catalogTemplate : {}),
+                ...(item && typeof item === "object" ? item : {}),
+              };
+              const type = String(template.type || "file").trim() || "file";
+              pushResourceRow({
+                key: type + ":" + (templateId || String(template.title || type) + ":" + index),
+                type,
+                title: String(template.title || "Published template").trim() || "Published template",
+                subtitle: String(template.summary || template.description || "Project resource template").trim(),
+                status: "Project role based",
+                accessLevel: "project_role_based",
+                accessLabel: "Project role based",
+                updatedLabel: template.publishedAt ? formatDate(template.publishedAt) : "-",
+                ownerLabel: getTeamResourceOwnerLabelFromRecord(template) || projectOwnerLabel,
+                record: template,
+                projectId: normalizedProject.id,
+                projectName,
+                sources: [source],
+              });
+            });
+            return resourceRows;
+          }
+
+          const directProjectShareIds = new Set(
+            teamPageShares
+              .filter((share) => String(share?.resourceType || "").trim() === "project")
+              .map((share) => String(share?.resourceId || "").trim())
+              .filter(Boolean)
+          );
+          const accessibleTeamProjects = realProjects.filter((project) =>
+            projectHasTeamAccess(project, selectedTeam?.id || teamPageSelectedTeamId, directProjectShareIds)
+          );
+          const teamResourceRowsByKey = new Map();
+          const selectedTeamOwnerLabel = getSelectedTeamOwnerLabel();
+          const upsertTeamResourceRow = (row) => {
+            const normalizedType = String(row?.type || row?.resourceType || "resource").trim() || "resource";
+            const dedupeKey = normalizedType + ":" + String(row?.key || row?.id || row?.resourceId || row?.title || "").trim();
+            if (!dedupeKey || dedupeKey === normalizedType + ":") {
+              return;
+            }
+            const nextRow = {
+              ...row,
+              key: dedupeKey,
+              type: normalizedType,
+              sources: Array.isArray(row?.sources) ? row.sources : [],
+            };
+            const existing = teamResourceRowsByKey.get(dedupeKey);
+            if (!existing) {
+              teamResourceRowsByKey.set(dedupeKey, nextRow);
+              return;
+            }
+            const sourcesByKey = new Map();
+            [...(Array.isArray(existing.sources) ? existing.sources : []), ...nextRow.sources].forEach((source) => {
+              const sourceKey = String(source?.kind || "source") + ":" + String(source?.projectId || source?.shareId || source?.label || "");
+              sourcesByKey.set(sourceKey, source);
+            });
+            teamResourceRowsByKey.set(dedupeKey, {
+              ...existing,
+              ...(!existing.directShare && nextRow.directShare ? nextRow : {}),
+              title: existing.title || nextRow.title,
+              subtitle: existing.subtitle || nextRow.subtitle,
+              updatedLabel: existing.updatedLabel && existing.updatedLabel !== "-" ? existing.updatedLabel : nextRow.updatedLabel,
+              ownerLabel: existing.ownerLabel || nextRow.ownerLabel,
+              sources: Array.from(sourcesByKey.values()),
+            });
+          };
+
+          teamPageShares.forEach((share, index) => {
+            const resourceType = String(share?.resourceType || "resource").trim();
+            const resourceId = String(share?.resourceId || "").trim();
+            const resourceTitle = String(resourceNameByKey.get(resourceType + ":" + resourceId) || resourceId || "Untitled resource").trim();
+            upsertTeamResourceRow({
+              key: resourceId || String(share?.id || index),
+              type: resourceType,
+              title: resourceTitle,
+              subtitle: formatResourceType(resourceType),
+              status: formatAccess(share?.accessLevel),
+              accessLevel: share?.accessLevel || "use",
+              accessLabel: formatAccess(share?.accessLevel),
+              updatedLabel: share?.updatedAt ? formatDate(share.updatedAt) : "-",
+              ownerLabel: getTeamResourceOwnerLabelFromRecord(share) || selectedTeamOwnerLabel,
+              record: share,
+              directShare: share,
+              resourceId,
+              sources: [{
+                kind: "direct",
+                label: "Direct team share",
+                shareId: String(share?.id || resourceType + ":" + resourceId),
+              }],
+            });
+          });
+
+          accessibleTeamProjects.forEach((project) => {
+            const normalizedProject = normalizePlaygroundProjectRecord(project);
+            const projectName = String(normalizedProject.name || "Untitled project").trim();
+            const hasDirectProjectShare = directProjectShareIds.has(String(normalizedProject.id || "").trim());
+            if (!hasDirectProjectShare) {
+              upsertTeamResourceRow({
+                key: normalizedProject.id,
+                type: "project",
+                title: projectName,
+                subtitle: "Project",
+                status: "Project role based",
+                accessLevel: "project_role_based",
+                accessLabel: "Project role based",
+                updatedLabel: normalizedProject.updatedAt ? formatDate(normalizedProject.updatedAt) : "-",
+                ownerLabel: getTeamProjectOwnerLabel(normalizedProject),
+                record: normalizedProject,
+                resourceId: normalizedProject.id,
+                projectId: normalizedProject.id,
+                projectName,
+                sources: [{
+                  kind: "project_access",
+                  label: "Project settings",
+                  projectId: normalizedProject.id,
+                  projectName,
+                }],
+              });
+            }
+            const projectSource = {
+              kind: "project",
+              label: "Project: " + projectName,
+              projectId: normalizedProject.id,
+              projectName,
+            };
+            const projectResourceIndex = teamPageProjectResourceIndexes[String(normalizedProject.id || "").trim()]?.data || null;
+            buildTeamProjectResourceRows(normalizedProject, projectSource, projectResourceIndex).forEach(upsertTeamResourceRow);
+          });
+
+          function getTeamResourceTypeSortRank(row) {
+            const normalizedType = String(row?.type || row?.resourceType || "").trim();
+            if (normalizedType === "project") return 0;
+            if (["web_app", "function", "database", "metronome", "environment", "agent"].includes(normalizedType)) return 1;
+            if (normalizedType === "imagine" || normalizedType === "imagine_template") return 2;
+            if (normalizedType === "file") return 3;
+            return 4;
+          }
+
+          const teamResourceRowsAll = Array.from(teamResourceRowsByKey.values())
+            .map((row) => ({
+              ...row,
+              sourceLabel: getTeamResourceSourceLabel(row),
+              sourceTooltip: getTeamResourceSourceTooltip(row),
+            }))
+            .sort((left, right) => {
+              const rankDelta = getTeamResourceTypeSortRank(left) - getTeamResourceTypeSortRank(right);
+              if (rankDelta !== 0) {
+                return rankDelta;
+              }
+              const typeDelta = String(left.type || "").localeCompare(String(right.type || ""));
+              if (typeDelta !== 0) {
+                return typeDelta;
+              }
+              return String(left.title || "").localeCompare(String(right.title || ""));
+            });
+          const teamResourceTypeFilters = [
+            { id: "all", label: "All" },
+            { id: "project", label: "Projects" },
+            { id: "environment", label: "Computers" },
+            { id: "agent", label: "Agents" },
+            { id: "file", label: "Files" },
+            { id: "metronome", label: "Metronomes" },
+            { id: "web_app", label: "Web Apps" },
+            { id: "function", label: "Functions" },
+            { id: "database", label: "Databases" },
+            { id: "imagine", label: "Imagine" },
+            { id: "imagine_template", label: "Imagine templates" },
+          ].filter((filterOption) => (
+            filterOption.id === "all" || teamResourceRowsAll.some((row) => row.type === filterOption.id)
+          ));
+          const teamResourceRows = teamResourceRowsAll
+            .filter((row) => String(teamPageResourceFilter || "all") === "all" || row.type === teamPageResourceFilter)
+            .filter((row) => {
+              const query = String(teamPageResourceSearchQuery || "").trim().toLowerCase();
+              if (!query) {
+                return true;
+              }
+              return [
+                row.title,
+                row.subtitle,
+                row.status,
+                row.sourceLabel,
+                row.ownerLabel,
+                row.record?.resourceId || "",
+              ].join(" ").toLowerCase().includes(query);
+            });
+          const getTeamResourceRowMenuId = (row) => "team-resource:" + String(row?.key || "").trim();
+          const openTeamShareResourceModal = (resourceType = "") => {
+            const normalizedType = String(resourceType || "").trim();
+            if (normalizedType) {
+              setTeamPageShareResourceType(normalizedType);
+              setTeamPageShareResourceId("");
+            }
+            setTeamPageResourceToolbarPopover("");
+            setTeamPageResourceMenuId("");
+            setTeamPageShareModalOpen(true);
+          };
+          const openTeamProjectResourceSource = (projectId) => {
+            const normalizedProjectId = String(projectId || "").trim();
+            if (!normalizedProjectId) {
+              return;
+            }
+            setLatestInteractedProjectId(normalizedProjectId);
+            setTasksPageNavigationRequest({
+              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              projectId: normalizedProjectId,
+              view: "overview",
+              missionControlAction: "",
+              projectComposerAction: "",
+            });
+            setActivePage("tasks");
+          };
+          const getTeamResourcePrimaryProjectSource = (row) => {
+            const sources = Array.isArray(row?.sources) ? row.sources : [];
+            return sources.find((source) => source.kind === "project")
+              || sources.find((source) => source.kind === "project_access")
+              || null;
+          };
+          const openTeamResourceRow = (row) => {
+            if (row?.type === "project") {
+              openTeamProjectResourceSource(row.projectId || row.resourceId || row.record?.resourceId || row.record?.id);
+              return;
+            }
+            const projectSource = getTeamResourcePrimaryProjectSource(row);
+            if (projectSource?.projectId) {
+              openTeamProjectResourceSource(projectSource.projectId);
+            }
+          };
+          const buildTeamResourceFileIconEntry = (row) => {
+            const record = row?.record && typeof row.record === "object" && !Array.isArray(row.record) ? row.record : {};
+            const path = normalizeHistoryPath(
+              row?.path
+              || record.path
+              || record.sourcePath
+              || record.workspacePath
+              || ""
+            );
+            const name = String(
+              record.name
+              || record.filename
+              || row?.title
+              || getHistoryPathName(path)
+              || "File"
+            ).trim() || "File";
+            return {
+              ...record,
+              name,
+              path,
+              mimeType: String(record.mimeType || record.contentType || record.type || "").trim(),
+              isFolder: Boolean(record.isFolder || record.kind === "folder" || record.mimeType === "inode/directory"),
+            };
+          };
+          const renderTeamResourceIcon = (row, meta) => {
+            if (row?.type === "file") {
+              const entry = buildTeamResourceFileIconEntry(row);
+              const environmentId = String(row?.environmentId || row?.record?.environmentId || row?.record?.sourceEnvironmentId || "").trim();
+              return React.createElement("span", { className: "playground-project-resource-title-icon playground-team-resource-file-icon" },
+                React.createElement(PlaygroundFileIcon, {
+                  entry,
+                  environmentId,
+                  backendUrl: proxyBackendBase,
+                  useThumbnail: true,
+                })
+              );
+            }
+            const ResourceIcon = meta?.Icon || Layers;
+            return React.createElement("span", { className: "playground-project-resource-title-icon" },
+              React.createElement(ResourceIcon, { width: 16, height: 16, strokeWidth: 1.8 })
+            );
+          };
+          const renderTeamResourceAccess = (row) =>
+            React.createElement("span", { className: "playground-team-badge playground-team-resource-access-label" }, row?.accessLabel || formatAccess(row?.accessLevel));
+          const renderTeamResourceSource = (row) =>
+            React.createElement("span", {
+              className: "playground-team-badge playground-team-resource-source-badge playground-team-resource-source-label",
+              title: row?.sourceTooltip || row?.sourceLabel || "",
+            }, row?.sourceLabel || "Unknown");
+          const renderTeamResourceOwner = (row) => {
+            const ownerLabel = String(row?.ownerLabel || "").trim();
+            return React.createElement("span", {
+              className: "playground-team-badge playground-team-resource-owner-label",
+              title: ownerLabel || "",
+            }, ownerLabel || "-");
+          };
+          const renderTeamResourceNewMenu = () => {
+            if (teamPageResourceToolbarPopover !== "new") {
+              return null;
+            }
+            return React.createElement("div", {
+                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-resources-new-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                onClick: (event) => event.stopPropagation(),
+              },
+              resourceTypeOptions.map((typeOption) => {
+                const meta = getTeamResourceTypeMeta(typeOption.value);
+                const Icon = meta.Icon || Layers;
+                return React.createElement("button", {
+                    key: typeOption.value,
+                    type: "button",
+                    className: "tb-popup-row playground-project-team-menu-item",
+                    onClick: () => openTeamShareResourceModal(typeOption.value),
+                  },
+                  React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, typeOption.label)
+                );
+              })
+            );
+          };
+          const renderTeamResourceRowMenu = (row) => {
+            const share = row?.directShare || row?.record || {};
+            const menuId = getTeamResourceRowMenuId(row);
+            if (!menuId || teamPageResourceMenuId !== menuId) {
+              return null;
+            }
+            const directShare = row?.directShare || null;
+            const projectSources = (Array.isArray(row?.sources) ? row.sources : [])
+              .filter((source) => source.kind === "project" || source.kind === "project_access");
+            const isAccessUpdating = teamPageActionId === "share-access:" + share.id;
+            const isDeleting = teamPageActionId === "share-delete:" + share.id;
+            return React.createElement("div", {
+                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-resources-action-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                onClick: (event) => event.stopPropagation(),
+              },
+              directShare && canManageTeam
+                ? accessOptions.map((option) => {
+                    const isActive = String(row?.accessLevel || "use") === option.value;
+                    return React.createElement("button", {
+                        key: option.value,
+                        type: "button",
+                        className: "tb-popup-row tb-popup-row-select" + (isActive ? " selected" : ""),
+                        disabled: isAccessUpdating || isDeleting,
+                        onClick: () => {
+                          setTeamPageResourceMenuId("");
+                          handleUpdateTeamResourceShareAccess(share, option.value);
+                        },
+                      },
+                      React.createElement("span", { className: "tb-popup-check-slot" },
+                        isActive
+                          ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                          : null
+                      ),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, option.label)
                       )
-                    ),
-                    React.createElement("tbody", null,
-                      teamPageShares.map((share) =>
-                        React.createElement("tr", { key: share.id },
-                          React.createElement("td", null,
-                            React.createElement("div", { className: "playground-team-table-title" }, resourceNameByKey.get(share.resourceType + ":" + share.resourceId) || share.resourceId),
-                            React.createElement("div", { className: "playground-team-table-meta" }, share.updatedAt ? ("Updated " + formatDate(share.updatedAt)) : "")
-                          ),
-                          React.createElement("td", null,
-                            canManageTeam
-                              ? React.createElement("select", {
-                                  className: "playground-team-select",
-                                  value: share.accessLevel || "use",
-                                  onChange: (event) => handleUpdateTeamResourceShareAccess(share, event.target.value),
-                                  disabled: teamPageActionId === "share-access:" + share.id,
-                                }, accessOptions.map((option) =>
-                                  React.createElement("option", { key: option.value, value: option.value }, option.label)
-                                ))
-                              : React.createElement("span", { className: "playground-team-badge" }, formatAccess(share.accessLevel))
-                          ),
-                          React.createElement("td", { className: "playground-auth-users-cell" }, formatResourceType(share.resourceType)),
-                          React.createElement("td", { className: "is-actions" },
-                            canManageTeam
-                              ? React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-team-icon-button",
-                                  onClick: () => handleDeleteTeamResourceShare(share.id),
-                                  disabled: teamPageActionId === "share-delete:" + share.id,
-                                  "aria-label": "Remove shared resource",
-                                }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
-                              : null
-                          )
+                    );
+                  })
+                : null,
+              directShare && canManageTeam
+                ? React.createElement("div", { className: "playground-project-resources-menu-divider" })
+                : null,
+              projectSources.length > 0
+                ? projectSources.slice(0, 4).map((source) =>
+                    React.createElement("button", {
+                        key: "source:" + String(source.projectId || source.label || ""),
+                        type: "button",
+                        className: "tb-popup-row playground-project-team-menu-item",
+                        onClick: () => {
+                          setTeamPageResourceMenuId("");
+                          openTeamProjectResourceSource(source.projectId);
+                        },
+                      },
+                      React.createElement(LayoutDashboard, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, source.kind === "project_access" ? "Open project" : "Open " + (source.projectName || "project"))
+                    )
+                  )
+                : null,
+              directShare && canManageTeam
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "tb-popup-row playground-project-team-menu-item is-danger",
+                    disabled: isAccessUpdating || isDeleting,
+                    onClick: () => {
+                      setTeamPageResourceMenuId("");
+                      handleDeleteTeamResourceShare(share.id);
+                    },
+                  },
+                  React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, isDeleting ? "Removing..." : "Remove from team")
+                )
+                : projectSources.length === 0
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "tb-popup-row playground-project-team-menu-item",
+                      disabled: true,
+                    }, "No resource actions")
+                  : null
+            );
+          };
+          const renderResourcesTab = () => React.createElement("div", { className: "playground-team-detail-panel playground-team-resources-panel" },
+            React.createElement(PlaygroundSharedResourcesTab, {
+              rows: teamResourceRows,
+              allRows: teamResourceRowsAll,
+              searchQuery: teamPageResourceSearchQuery,
+              onSearchQueryChange: setTeamPageResourceSearchQuery,
+              toolbarPopover: teamPageResourceToolbarPopover,
+              onToolbarPopoverChange: setTeamPageResourceToolbarPopover,
+              filter: teamPageResourceFilter,
+              onFilterChange: setTeamPageResourceFilter,
+              typeFilters: teamResourceTypeFilters,
+              viewMode: teamPageResourceViewMode,
+              onViewModeChange: setTeamPageResourceViewMode,
+              menuId: teamPageResourceMenuId,
+              onMenuIdChange: setTeamPageResourceMenuId,
+              getTypeMeta: getTeamResourceTypeMeta,
+              getRowMenuId: getTeamResourceRowMenuId,
+              renderIcon: renderTeamResourceIcon,
+              renderCreator: renderTeamResourceAccess,
+              renderSource: renderTeamResourceSource,
+              renderOwner: renderTeamResourceOwner,
+              renderRowMenu: renderTeamResourceRowMenu,
+              renderNewMenu: renderTeamResourceNewMenu,
+              onNewButtonClick: () => openTeamShareResourceModal(),
+              onRowOpen: openTeamResourceRow,
+              searchAriaLabel: "Search team resources",
+              primaryHeader: "Resource",
+              secondaryHeader: "Access",
+              sourceHeader: "Shared Through",
+              tertiaryHeader: "Updated",
+              ownerHeader: "Owner",
+              emptyLabel: teamPageLoading ? "Loading resources..." : "No resources shared yet.",
+              noMatchesLabel: "No shared resources match this view yet.",
+              showNewButton: canManageTeam,
+            })
+          );
+
+          const renderRolesTab = () => {
+            const rolePermissionSets = normalizePlaygroundTeamRolePermissionSets(selectedTeam?.rolePermissionSets);
+            const selectedRoleDefinition = getPlaygroundTeamRoleDefinition(selectedTeamRoleId);
+            const selectedRolePermissionSet = normalizePlaygroundPermissionSet(rolePermissionSets[selectedRoleDefinition.id], "team_role");
+            const selectedRoleActionId = "team-role-permissions:" + selectedRoleDefinition.id;
+            const getAssignedRowsForRole = (roleId) => memberRows.filter((row) =>
+              row.kind === "member"
+              && !isTeamOwnerMember(row.item, false)
+              && normalizePlaygroundTeamRoleId(row.item?.role, "member") === roleId
+            );
+            const getRoleRowCount = (roleId) => getAssignedRowsForRole(roleId).length;
+            const renderAssignedUsersPopup = (role) => {
+              const assignedRows = getAssignedRowsForRole(role.id);
+              return React.createElement("div", {
+                  className: "playground-team-role-assigned-popup",
+                  onMouseDown: (event) => event.stopPropagation(),
+                },
+                React.createElement("div", { className: "playground-team-role-assigned-popup-title" }, role.label + " users"),
+                assignedRows.length > 0
+                  ? React.createElement("div", { className: "playground-team-role-assigned-list" },
+                      assignedRows.map((row) =>
+                        React.createElement("div", { key: row.kind + ":" + row.id, className: "playground-team-role-assigned-row" },
+                          renderTeamMemberIdentityCell(row.item, getTeamMemberRowDisplayName(row), getTeamMemberRowDetail(row), false),
+                          React.createElement("span", { className: "playground-team-role-assigned-status" }, row.item?.status || "active")
                         )
                       )
                     )
+                  : React.createElement("div", { className: "playground-team-role-assigned-empty" }, "No users assigned to this role.")
+              );
+            };
+            const renderAssignedUsersButton = (role) => {
+              const assignedCount = getRoleRowCount(role.id);
+              const isOpen = teamPageRoleMembersPopover === role.id;
+              return React.createElement("div", { className: "playground-team-role-assigned-shell" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-team-badge playground-team-role-assigned-button" + (isOpen ? " is-open" : ""),
+                  onClick: () => setTeamPageRoleMembersPopover((current) => current === role.id ? "" : role.id),
+                  "aria-haspopup": "dialog",
+                  "aria-expanded": isOpen ? "true" : "false",
+                }, assignedCount + " assigned"),
+                isOpen ? renderAssignedUsersPopup(role) : null
+              );
+            };
+            return React.createElement("div", { className: "playground-team-detail-panel playground-team-roles-panel" },
+              React.createElement("div", { className: "playground-team-role-pages" },
+                React.createElement("div", { className: "playground-team-role-list", role: "tablist", "aria-label": "Team roles" },
+                  PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) =>
+                    React.createElement("button", {
+                      key: role.id,
+                      type: "button",
+                      role: "tab",
+                      className: "playground-team-role-card" + (selectedRoleDefinition.id === role.id ? " is-active" : ""),
+                      "aria-selected": selectedRoleDefinition.id === role.id ? "true" : "false",
+                      onClick: () => {
+                        setTeamPageSelectedRoleId(role.id);
+                        setTeamPageRoleMembersPopover("");
+                      },
+                    },
+                      React.createElement("span", { className: "playground-team-role-card-title" }, role.label),
+                      React.createElement("span", { className: "playground-team-role-card-description" }, role.description),
+                      React.createElement("span", { className: "playground-team-role-card-meta" }, getRoleRowCount(role.id) + " assigned")
+                    )
                   )
+                ),
+                React.createElement("div", { className: "playground-team-role-permission-page" },
+                  React.createElement("div", { className: "playground-team-role-permission-header" },
+                    React.createElement("div", null,
+                      React.createElement("div", { className: "playground-team-role-permission-kicker" }, "Role"),
+                      React.createElement("h2", { className: "playground-team-role-permission-title" }, selectedRoleDefinition.label),
+                      React.createElement("p", { className: "playground-team-role-permission-copy" }, selectedRoleDefinition.description)
+                    ),
+                    renderAssignedUsersButton(selectedRoleDefinition)
+                  ),
+                  renderPlaygroundPermissionPanel(selectedRolePermissionSet, {
+                    subjectType: "team_role",
+                    animationKey: teamPermissionChartAnimationKey,
+                    disabled: !canManageTeam || teamPageActionId === selectedRoleActionId,
+                    onRingAccessChange: (ringId, access) => updateTeamRolePermissionRingAccess(selectedRoleDefinition.id, ringId, access),
+                    onActionRingChange: (actionId, ringId) => updateTeamRolePermissionActionRing(selectedRoleDefinition.id, actionId, ringId),
+                    onActionAccessChange: (actionId, access) => updateTeamRolePermissionActionAccess(selectedRoleDefinition.id, actionId, access),
+                  })
                 )
-              : renderEmpty("No resources shared yet.")
-          );
-
-          const renderPermissionsTab = () => {
-            const teamPermissionSet = normalizePlaygroundPermissionSet(selectedTeam?.permissionSet, "team");
-            return React.createElement("div", { className: "playground-team-detail-panel playground-team-permissions-panel" },
-              renderPlaygroundPermissionPanel(teamPermissionSet, {
-                subjectType: "team",
-                animationKey: teamPermissionChartAnimationKey,
-                disabled: !canManageTeam || teamPageActionId === "team-permissions",
-                onRingAccessChange: updateTeamPermissionRingAccess,
-                onActionRingChange: updateTeamPermissionActionRing,
-                onActionAccessChange: updateTeamPermissionActionAccess,
-              })
+              )
             );
           };
 
@@ -156776,6 +159317,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         setTeamPageMembers([]);
                         setTeamPageInvitations([]);
                         setTeamPageShares([]);
+                        setTeamPageResourceFilter("all");
+                        setTeamPageResourceSearchQuery("");
+                        setTeamPageResourceToolbarPopover("");
+                        setTeamPageResourceMenuId("");
                       },
                     }, React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }), "Teams"),
                     React.createElement("div", { className: "playground-team-detail-header" },
@@ -156791,11 +159336,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           ? renderTeamActionButton("Invite member", () => setTeamPageInviteModalOpen(true), {
                               icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
                             })
-                          : null,
-                        canManageTeam && teamPageActiveTab === "resources"
-                          ? renderTeamActionButton("Share resource", () => setTeamPageShareModalOpen(true), {
-                              icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            })
                           : null
                       )
                     ),
@@ -156804,7 +159344,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         [
                           { id: "members", label: "Team members" },
                           { id: "resources", label: "Resources" },
-                          { id: "permissions", label: "Permissions" },
+                          { id: "roles", label: "Roles" },
                         ].map((tab) =>
                           React.createElement("button", {
                             key: tab.id,
@@ -156821,8 +159361,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       : null,
                     teamPageActiveTab === "resources"
                       ? renderResourcesTab()
-                      : teamPageActiveTab === "permissions"
-                        ? renderPermissionsTab()
+                      : teamPageActiveTab === "roles" || teamPageActiveTab === "permissions"
+                        ? renderRolesTab()
                         : renderMembersTab()
                     ,
                     renderRenameTeamModal(),
@@ -157820,6 +160360,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               page: "team",
               teamId: teamPageSelectedTeamId,
               teamTab: teamPageActiveTab,
+              teamRoleId: teamPageSelectedRoleId,
             };
           }
 
@@ -157900,6 +160441,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           tasksHeaderState.taskId,
           tasksHeaderState.view,
           teamPageActiveTab,
+          teamPageSelectedRoleId,
           teamPageSelectedTeamId,
           toolsSkillsHeaderState.mode,
           toolsSkillsHeaderState.skillId,
@@ -158058,7 +160600,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (entry.page === "team") {
             openTeamPage();
             setTeamPageSelectedTeamId(entry.teamId || "");
-            setTeamPageActiveTab(entry.teamTab === "shares" || entry.teamTab === "invitations" || entry.teamTab === "permissions" ? entry.teamTab : "members");
+            setTeamPageActiveTab(entry.teamTab === "resources" || entry.teamTab === "roles" || entry.teamTab === "permissions" ? (entry.teamTab === "permissions" ? "roles" : entry.teamTab) : "members");
+            setTeamPageSelectedRoleId(normalizePlaygroundTeamRoleId(entry.teamRoleId, "member"));
             return;
           }
 

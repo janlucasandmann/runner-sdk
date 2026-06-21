@@ -2600,7 +2600,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-width: 120px;
+  min-width: 136px;
   height: 30px;
   padding: 2px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -2625,6 +2625,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   font-size: 10px;
   font-weight: 400;
   line-height: 1rem;
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
 }
@@ -2636,6 +2637,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .tb-run-summary-json-body {
   padding: 14px 16px 16px;
+  max-height: 500px;
+  overflow: auto;
 }
 
 .tb-runner-chat .tb-run-summary-json-field-tree,
@@ -2719,8 +2722,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-run-summary-json-editor-shell {
-  min-height: 320px;
-  height: 320px;
+  min-height: min(320px, calc(500px - 30px));
+  height: min(500px, calc(500px - 30px));
   display: flex;
   border-radius: 0;
   overflow: hidden;

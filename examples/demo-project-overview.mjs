@@ -4462,6 +4462,35 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         box-sizing: border-box;
       }
 
+      .playground-project-resources-row.has-source-column {
+        grid-template-columns: minmax(220px, 1fr) minmax(76px, 112px) minmax(142px, 220px) minmax(64px, 96px) 28px;
+      }
+
+      .playground-project-resources-row.has-source-column.has-owner-column {
+        grid-template-columns: minmax(220px, 1fr) minmax(76px, 112px) minmax(142px, 220px) minmax(64px, 96px) minmax(92px, 128px) 28px;
+      }
+
+      .playground-team-resources-panel .playground-project-resources-row.has-source-column {
+        grid-template-columns: minmax(220px, 1fr) 160px 220px 92px 28px;
+        column-gap: 20px;
+      }
+
+      .playground-team-resources-panel .playground-project-resources-row.has-source-column.has-owner-column {
+        grid-template-columns: minmax(220px, 1fr) 170px 232px 96px 148px 28px;
+        column-gap: 18px;
+      }
+
+      .playground-project-resources-row.has-source-column > * {
+        min-width: 0;
+      }
+
+      .playground-team-resources-panel .playground-project-resources-row.has-source-column > :nth-child(2),
+      .playground-team-resources-panel .playground-project-resources-row.has-source-column > :nth-child(3),
+      .playground-team-resources-panel .playground-project-resources-row.has-source-column.has-owner-column > :nth-child(5) {
+        overflow: visible;
+        text-overflow: clip;
+      }
+
       button.playground-project-resources-row,
       .playground-project-resources-row[role="button"] {
         border-left: 0;
@@ -4726,8 +4755,39 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
           grid-template-columns: minmax(0, 1fr) minmax(156px, 0.54fr) 28px;
         }
 
+        .playground-project-resources-row.has-source-column {
+          grid-template-columns: minmax(0, 1fr) minmax(150px, 0.54fr) 28px;
+        }
+
+        .playground-project-resources-row.has-source-column.has-owner-column {
+          grid-template-columns: minmax(0, 1fr) minmax(150px, 0.54fr) minmax(116px, 0.42fr) 28px;
+        }
+
+        .playground-team-resources-panel .playground-project-resources-row.has-source-column {
+          grid-template-columns: minmax(0, 1fr) 196px 28px;
+          column-gap: 18px;
+        }
+
+        .playground-team-resources-panel .playground-project-resources-row.has-source-column.has-owner-column {
+          grid-template-columns: minmax(0, 1fr) 196px 132px 28px;
+          column-gap: 16px;
+        }
+
         .playground-project-resources-row > :nth-child(3) {
           display: none;
+        }
+
+        .playground-project-resources-row.has-source-column > :nth-child(2),
+        .playground-project-resources-row.has-source-column > :nth-child(4) {
+          display: none;
+        }
+
+        .playground-project-resources-row.has-source-column > :nth-child(3) {
+          display: block;
+        }
+
+        .playground-project-resources-row.has-source-column.has-owner-column > :nth-child(5) {
+          display: block;
         }
       }
 
@@ -4747,6 +4807,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         .playground-project-resources-row > :nth-child(2),
         .playground-project-resources-row > :nth-child(3),
         .playground-project-resources-row > :nth-child(4) {
+          display: none;
+        }
+
+        .playground-project-resources-row.has-owner-column > :nth-child(5) {
           display: none;
         }
       }
@@ -6171,6 +6235,43 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	          const activeProjectOverviewHomeTab = normalizedProjectOverviewHomeTab === "resources" || normalizedProjectOverviewHomeTab === "strategy" || normalizedProjectOverviewHomeTab === "permissions"
 	            ? normalizedProjectOverviewHomeTab
 	            : "general";
+          function restoreProjectOverviewSidebarAfterPermissionClose() {
+            if (!projectOverviewSidebarAutoCollapsedForPermissionRef.current) {
+              return;
+            }
+            projectOverviewSidebarAutoCollapsedForPermissionRef.current = false;
+            setProjectOverviewSidebarCollapsed(false);
+          }
+          function closeProjectOverviewPermissionDetail(options = {}) {
+            if (typeof setProjectOverviewPermissionTeamId === "function") {
+              setProjectOverviewPermissionTeamId("");
+            }
+            if (typeof setProjectOverviewPermissionRoleId === "function") {
+              setProjectOverviewPermissionRoleId("member");
+            }
+            if (options.restoreSidebar !== false) {
+              restoreProjectOverviewSidebarAfterPermissionClose();
+            }
+          }
+          function openProjectOverviewPermissionDetail(team, roleId = "member") {
+            const teamId = String(team?.id || "").trim();
+            if (!teamId) {
+              return;
+            }
+            if (typeof setProjectOverviewPermissionRoleId === "function") {
+              setProjectOverviewPermissionRoleId(normalizePlaygroundTeamRoleId(roleId, "member"));
+            }
+            if (typeof setProjectOverviewPermissionTeamId === "function") {
+              setProjectOverviewPermissionTeamId(teamId);
+            }
+            const shouldAutoCollapseSidebar = teamId !== "all_agents" && !projectOverviewSidebarCollapsed;
+            if (shouldAutoCollapseSidebar) {
+              projectOverviewSidebarAutoCollapsedForPermissionRef.current = true;
+              setProjectOverviewSidebarCollapsed(true);
+            } else if (teamId !== "all_agents") {
+              projectOverviewSidebarAutoCollapsedForPermissionRef.current = false;
+            }
+          }
           function renderProjectOverviewHomeTabs() {
             const tabs = [
 	              { id: "general", label: "General" },
@@ -6204,9 +6305,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                       if (typeof setProjectOverviewFilesSubview === "function") {
                         setProjectOverviewFilesSubview("overview");
                       }
-                      if (typeof setProjectOverviewPermissionTeamId === "function") {
-                        setProjectOverviewPermissionTeamId("");
-                      }
+                      closeProjectOverviewPermissionDetail();
                       if (tab.id === "permissions" && typeof requestProjectOverviewWorkspaceTeams === "function") {
                         requestProjectOverviewWorkspaceTeams();
                       }
@@ -11028,78 +11127,32 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           }
 
           function renderProjectOverviewResourcesHome() {
-            return React.createElement("div", { className: "playground-project-overview-resources-home" },
-              React.createElement("section", { className: "playground-project-resources-table-card" },
-                React.createElement("div", { className: "playground-project-resources-table-inner" },
-                  React.createElement("div", { className: "playground-project-resources-toolbar playground-files-library-title-row" },
-                    React.createElement("label", { className: "playground-files-library-search" },
-                      React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
-                      React.createElement("input", {
-                        type: "search",
-                        value: projectOverviewResourceSearchQuery,
-                        onChange: (event) => setProjectOverviewResourceSearchQuery(event.target.value),
-                        className: "playground-files-library-search-input",
-                        placeholder: "Search resources",
-                        "aria-label": "Search project resources",
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-files-library-actions playground-project-resources-toolbar-actions" },
-                      React.createElement("div", { className: "playground-project-resources-new-shell playground-files-library-new-anchor playground-tasks-toolbar-popup-shell" + (projectOverviewResourceToolbarPopover === "new" ? " is-open" : "") },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-library-new-button" + (projectOverviewResourceToolbarPopover === "new" ? " is-active" : ""),
-                          onClick: (event) => {
-                            event.stopPropagation();
-                            closeProjectOverviewResourceMenu();
-                            setProjectOverviewResourceToolbarPopover((current) => current === "new" ? "" : "new");
-                          },
-                        },
-                          React.createElement("span", null, "New"),
-                          React.createElement(ChevronDown, { width: 18, height: 18, strokeWidth: 1.8 })
-                        ),
-                        renderProjectOverviewResourceNewMenu()
-                      ),
-                      React.createElement("div", { className: "playground-project-resources-filter-shell playground-files-library-control-anchor playground-tasks-toolbar-popup-shell" + (projectOverviewResourceToolbarPopover === "filter" ? " is-open" : "") },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-library-icon-button" + (projectOverviewResourceToolbarPopover === "filter" || String(projectOverviewResourceFilter || "all") !== "all" ? " is-active" : ""),
-                          onClick: (event) => {
-                            event.stopPropagation();
-                            closeProjectOverviewResourceMenu();
-                            setProjectOverviewResourceToolbarPopover((current) => current === "filter" ? "" : "filter");
-                          },
-                          title: "Filter resources",
-                          "aria-label": "Filter resources",
-                        }, React.createElement(SlidersHorizontal, { width: 19, height: 19, strokeWidth: 1.8 })),
-                        renderProjectOverviewResourceFilterMenu()
-                      ),
-                      React.createElement("span", { className: "playground-files-library-divider", "aria-hidden": "true" }),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-library-icon-button" + (projectOverviewResourceViewMode === "grid" ? " is-active" : ""),
-                        onClick: () => {
-                          closeProjectOverviewResourceMenu();
-                          setProjectOverviewResourceViewMode("grid");
-                        },
-                        title: "Grid view",
-                        "aria-label": "Grid view",
-                      }, React.createElement(Grid3x3, { width: 20, height: 20, strokeWidth: 1.8 })),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-library-icon-button" + (projectOverviewResourceViewMode === "list" ? " is-active" : ""),
-                        onClick: () => {
-                          closeProjectOverviewResourceMenu();
-                          setProjectOverviewResourceViewMode("list");
-                        },
-                        title: "List view",
-                        "aria-label": "List view",
-                      }, React.createElement(List, { width: 21, height: 21, strokeWidth: 1.8 }))
-                    )
-                  ),
-                  renderProjectOverviewResourceTableRows()
-                )
-              )
-            );
+            return React.createElement(PlaygroundSharedResourcesTab, {
+              rows: projectOverviewResourceRows,
+              allRows: projectOverviewAllResourceRows,
+              searchQuery: projectOverviewResourceSearchQuery,
+              onSearchQueryChange: setProjectOverviewResourceSearchQuery,
+              toolbarPopover: projectOverviewResourceToolbarPopover,
+              onToolbarPopoverChange: setProjectOverviewResourceToolbarPopover,
+              filter: projectOverviewResourceFilter,
+              onFilterChange: setProjectOverviewResourceFilter,
+              typeFilters: projectOverviewResourceTypeFilters,
+              viewMode: projectOverviewResourceViewMode,
+              onViewModeChange: setProjectOverviewResourceViewMode,
+              menuId: projectOverviewResourceMenuId,
+              onMenuIdChange: setProjectOverviewResourceMenuId,
+              getTypeMeta: getProjectOverviewResourceTypeMeta,
+              getRowMenuId: getProjectOverviewResourceRowMenuId,
+              renderIcon: (row, meta) => renderProjectOverviewResourceIcon(row, meta?.Icon || Layers),
+              renderCreator: renderProjectOverviewResourceCreator,
+              renderRowMenu: renderProjectOverviewResourceRowMenu,
+              renderNewMenu: renderProjectOverviewResourceNewMenu,
+              renderEmptyContent: renderProjectOverviewRecommendedTemplatesEmptyState,
+              onRowOpen: openProjectOverviewResourceRow,
+              searchAriaLabel: "Search project resources",
+              emptyLabel: "No resources yet.",
+              noMatchesLabel: "No resources match this view yet.",
+            });
           }
 
           function shouldShowProjectOverviewGeneralEmptyState() {
@@ -12870,6 +12923,11 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	              && !Array.isArray(projectMetadata.teamPermissionSets)
 	                ? projectMetadata.teamPermissionSets
 	                : {};
+	            const projectTeamRolePermissionSets = projectMetadata.teamRolePermissionSets
+	              && typeof projectMetadata.teamRolePermissionSets === "object"
+	              && !Array.isArray(projectMetadata.teamRolePermissionSets)
+	                ? projectMetadata.teamRolePermissionSets
+	                : {};
 	            const availableWorkspaceTeams = Array.isArray(workspaceTeams)
 	              ? workspaceTeams
 	              : [];
@@ -12903,10 +12961,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                  id: teamId,
 	                  name: team?.name || "Untitled team",
 	                  meta: team?.memberCount ? String(team.memberCount) + " members" : "Team workspace",
-	                  permission: projectTeamPermissionSets[teamId] ? "Project override" : "Team policy",
+	                  permission: projectTeamRolePermissionSets[teamId]
+	                    ? "Project role override"
+	                    : projectTeamPermissionSets[teamId]
+	                      ? "Migrated role policy"
+	                      : "Role policies",
 	                  createdAt: team?.createdAt || "",
 	                  locked: false,
-	                  permissionSet: normalizePlaygroundPermissionSet(projectTeamPermissionSets[teamId] || team?.permissionSet, "team"),
+	                  rolePermissionSets: getProjectTeamRolePermissionSets(projectOverviewDraft || selectedProject, teamId),
 	                };
 	              }).filter(Boolean),
 	            ];
@@ -12937,7 +12999,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	              }
 	              closeProjectTeamMenu();
 	              if (String(projectOverviewPermissionTeamId || "") === String(team.id || "")) {
-	                setProjectOverviewPermissionTeamId?.("");
+	                closeProjectOverviewPermissionDetail();
 	              }
 	              updateProjectTeamWorkspaceMembership?.(team.id, "remove");
 	            };
@@ -13049,7 +13111,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                    React.createElement("thead", null,
 	                      React.createElement("tr", null,
 	                        React.createElement("th", null, "Team"),
-	                        React.createElement("th", null, "Permission"),
+	                        React.createElement("th", null, "Policy"),
 	                        React.createElement("th", null, "Created"),
 	                        React.createElement("th", { className: "is-actions" }, "")
 	                      )
@@ -13060,11 +13122,11 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                          key: team.id,
 	                          className: "is-clickable" + (projectOverviewTeamMenuId === "team:" + String(team.id || "") ? " is-menu-open" : ""),
 	                          tabIndex: 0,
-	                          onClick: () => setProjectOverviewPermissionTeamId?.(team.id),
+	                          onClick: () => openProjectOverviewPermissionDetail(team),
 	                          onKeyDown: (event) => {
 	                            if (event.key === "Enter" || event.key === " ") {
 	                              event.preventDefault();
-	                              setProjectOverviewPermissionTeamId?.(team.id);
+	                              openProjectOverviewPermissionDetail(team);
 	                            }
 	                          },
 	                        },
@@ -13102,6 +13164,55 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 
 	            if (selectedPermissionTeam) {
 	              const isAllAgentsTeam = selectedPermissionTeam.id === "all_agents";
+	              const selectedRoleDefinition = getPlaygroundTeamRoleDefinition(projectOverviewPermissionRoleId);
+	              const selectedRolePermissionSet = selectedPermissionTeam.rolePermissionSets
+	                ? normalizePlaygroundPermissionSet(
+	                    selectedPermissionTeam.rolePermissionSets[selectedRoleDefinition.id],
+	                    "project_team_role"
+	                  )
+	                : null;
+	              const renderProjectTeamRolePages = () =>
+	                React.createElement("div", { className: "playground-team-role-pages playground-project-team-role-pages" },
+	                  React.createElement("div", { className: "playground-team-role-list playground-project-team-role-list", role: "tablist", "aria-label": "Project team roles" },
+	                    PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) =>
+	                      React.createElement("button", {
+	                        key: role.id,
+	                        type: "button",
+	                        role: "tab",
+	                        className: "playground-team-role-card" + (selectedRoleDefinition.id === role.id ? " is-active" : ""),
+	                        "aria-selected": selectedRoleDefinition.id === role.id ? "true" : "false",
+	                        onClick: () => {
+	                          if (typeof setProjectOverviewPermissionRoleId === "function") {
+	                            setProjectOverviewPermissionRoleId(role.id);
+	                          }
+	                        },
+	                      },
+	                        React.createElement("span", { className: "playground-team-role-card-title" }, role.label),
+	                        React.createElement("span", { className: "playground-team-role-card-description" }, role.description),
+	                        React.createElement("span", { className: "playground-team-role-card-meta" }, "Project access")
+	                      )
+	                    )
+	                  ),
+	                  React.createElement("div", { className: "playground-team-role-permission-page playground-project-team-role-permission-page" },
+	                    React.createElement("div", { className: "playground-team-role-permission-header playground-project-team-role-permission-header" },
+	                      React.createElement("div", null,
+	                        React.createElement("div", { className: "playground-team-role-permission-kicker" }, "Project role"),
+	                        React.createElement("h2", { className: "playground-team-role-permission-title" }, selectedRoleDefinition.label),
+	                        React.createElement("p", { className: "playground-team-role-permission-copy" },
+	                          "Project-scoped permissions for " + selectedRoleDefinition.label.toLowerCase() + "s in " + (selectedPermissionTeam.name || "this team") + "."
+	                        )
+	                      )
+	                    ),
+	                    renderPlaygroundPermissionPanel(selectedRolePermissionSet, {
+	                      subjectType: "project_team_role",
+	                      animationKey: projectPermissionChartAnimationKey,
+	                      disabled: !hasRealAccess,
+	                      onRingAccessChange: (ringId, nextAccess) => updateProjectTeamRolePermissionRingAccess?.(selectedPermissionTeam.id, selectedRoleDefinition.id, ringId, nextAccess),
+	                      onActionRingChange: (actionId, nextRingId) => updateProjectTeamRolePermissionActionRing?.(selectedPermissionTeam.id, selectedRoleDefinition.id, actionId, nextRingId),
+	                      onActionAccessChange: (actionId, nextAccess) => updateProjectTeamRolePermissionActionAccess?.(selectedPermissionTeam.id, selectedRoleDefinition.id, actionId, nextAccess),
+	                    })
+	                  )
+	                );
 	              return React.createElement("section", {
 	                  className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-permissions-section playground-project-teams-section",
 	                },
@@ -13109,33 +13220,26 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                  React.createElement("button", {
 	                    type: "button",
 	                    className: "playground-project-team-permissions-back",
-	                    onClick: () => setProjectOverviewPermissionTeamId?.(""),
+	                    onClick: () => closeProjectOverviewPermissionDetail(),
 	                  },
 	                    React.createElement(ArrowLeft, { width: 13, height: 13, strokeWidth: 1.9 }),
 	                    React.createElement("span", null, "Settings")
 	                  ),
 	                  React.createElement("div", { className: "playground-project-team-permissions-title" },
-	                    (selectedPermissionTeam.name || "Team") + " Permissions"
+	                    isAllAgentsTeam
+	                      ? (selectedPermissionTeam.name || "All Agents") + " Permissions"
+	                      : (selectedPermissionTeam.name || "Team") + " Project Access"
 	                  )
 	                ),
-	                renderPlaygroundPermissionPanel(
-	                  isAllAgentsTeam ? projectPermissionSet : selectedPermissionTeam.permissionSet,
-	                  isAllAgentsTeam
-	                    ? {
-	                        subjectType: "project",
-	                        animationKey: projectPermissionChartAnimationKey,
-	                        onRingAccessChange: updateProjectPermissionRingAccess,
-	                        onActionRingChange: updateProjectPermissionActionRing,
-	                        onActionAccessChange: updateProjectPermissionActionAccess,
-	                      }
-	                    : {
-	                        subjectType: "team",
-	                        animationKey: projectPermissionChartAnimationKey,
-	                        onRingAccessChange: (ringId, nextAccess) => updateProjectTeamPermissionRingAccess?.(selectedPermissionTeam.id, ringId, nextAccess),
-	                        onActionRingChange: (actionId, nextRingId) => updateProjectTeamPermissionActionRing?.(selectedPermissionTeam.id, actionId, nextRingId),
-	                        onActionAccessChange: (actionId, nextAccess) => updateProjectTeamPermissionActionAccess?.(selectedPermissionTeam.id, actionId, nextAccess),
-	                      }
-	                )
+	                isAllAgentsTeam
+	                  ? renderPlaygroundPermissionPanel(projectPermissionSet, {
+	                      subjectType: "project",
+	                      animationKey: projectPermissionChartAnimationKey,
+	                      onRingAccessChange: updateProjectPermissionRingAccess,
+	                      onActionRingChange: updateProjectPermissionActionRing,
+	                      onActionAccessChange: updateProjectPermissionActionAccess,
+	                    })
+	                  : renderProjectTeamRolePages()
 	              );
 	            }
 
@@ -13175,11 +13279,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         ),
                         React.createElement("button", {
                           type: "button",
-                          className: "playground-project-overview-sidebar-toggle",
-                          onClick: () => {
-                            projectOverviewSidebarAutoCollapsedForTaskRef.current = false;
-                            setProjectOverviewSidebarCollapsed((current) => !current);
-                          },
+	                          className: "playground-project-overview-sidebar-toggle",
+	                          onClick: () => {
+	                            projectOverviewSidebarAutoCollapsedForTaskRef.current = false;
+	                            projectOverviewSidebarAutoCollapsedForPermissionRef.current = false;
+	                            setProjectOverviewSidebarCollapsed((current) => !current);
+	                          },
                           title: projectOverviewSidebarCollapsed ? "Show project sidebar" : "Hide project sidebar",
                           "aria-label": projectOverviewSidebarCollapsed ? "Show project sidebar" : "Hide project sidebar",
                           "aria-pressed": projectOverviewSidebarCollapsed ? "true" : "false",
