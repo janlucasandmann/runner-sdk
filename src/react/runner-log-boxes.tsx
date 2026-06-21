@@ -6,6 +6,7 @@ import {
   Bookmark,
   Bot,
   Brain,
+  Braces,
   Calendar,
   Check,
   CheckCircle2,
@@ -197,6 +198,381 @@ function renderTextWithWorkspacePathLinks(
   }
 
   return nodes.length > 0 ? nodes : text;
+}
+
+type RunnerWorkingLogJsonValue = Record<string, unknown> | unknown[];
+
+function isRunnerWorkingLogPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isRunnerWorkingLogJsonValue(value: unknown): value is RunnerWorkingLogJsonValue {
+  return Array.isArray(value) || isRunnerWorkingLogPlainObject(value);
+}
+
+function stripRunnerWorkingLogJsonFence(value: string): string {
+  const trimmed = value.trim();
+  const match = trimmed.match(/^```(?:json|jsonc)?\s*\n([\s\S]*?)\n```$/i);
+  return match?.[1]?.trim() || trimmed;
+}
+
+function parseRunnerWorkingLogJsonValue(value: string): RunnerWorkingLogJsonValue | null {
+  const candidate = stripRunnerWorkingLogJsonFence(value);
+  if (!candidate.startsWith("{") && !candidate.startsWith("[")) return null;
+  try {
+    const parsed = JSON.parse(candidate);
+    return isRunnerWorkingLogJsonValue(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function findRunnerWorkingLogBalancedJsonEnd(value: string, startIndex: number): number | null {
+  const opener = value.charAt(startIndex);
+  if (opener !== "{" && opener !== "[") return null;
+
+  const stack: string[] = [opener === "{" ? "}" : "]"];
+  let inString = false;
+  let escaped = false;
+
+  for (let index = startIndex + 1; index < value.length; index += 1) {
+    const char = value.charAt(index);
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === "\"") {
+      inString = true;
+      continue;
+    }
+
+    if (char === "{" || char === "[") {
+      stack.push(char === "{" ? "}" : "]");
+      continue;
+    }
+
+    if (char === "}" || char === "]") {
+      if (stack[stack.length - 1] !== char) {
+        return null;
+      }
+      stack.pop();
+      if (!stack.length) {
+        return index + 1;
+      }
+    }
+  }
+
+  return null;
+}
+
+function formatRunnerWorkingLogJsonTitleLabel(value: string): string {
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function inferRunnerWorkingLogInlineJsonTitle(prefix: string, fallbackTitle: string): string {
+  const tail = prefix.slice(-96);
+  const match = tail.match(/([A-Za-z][A-Za-z0-9 _/-]{0,40})\s*:\s*$/);
+  const label = match?.[1]?.trim();
+  if (!label) return fallbackTitle;
+  const normalizedLabel = formatRunnerWorkingLogJsonTitleLabel(label);
+  return normalizedLabel || fallbackTitle;
+}
+
+function splitRunnerWorkingLogInlineJsonContent(content: string, title = "JSON"): RunnerWorkingLogJsonSegment[] {
+  const normalizedContent = stripRunnerSystemTags(content || "").trim();
+  if (!normalizedContent) return [];
+
+  const segments: RunnerWorkingLogJsonSegment[] = [];
+  let cursor = 0;
+  let jsonIndex = 0;
+
+  for (let index = 0; index < normalizedContent.length; index += 1) {
+    const char = normalizedContent.charAt(index);
+    if (char !== "{" && char !== "[") continue;
+
+    const endIndex = findRunnerWorkingLogBalancedJsonEnd(normalizedContent, index);
+    if (!endIndex) continue;
+
+    const candidate = normalizedContent.slice(index, endIndex);
+    const jsonValue = parseRunnerWorkingLogJsonValue(candidate);
+    if (!jsonValue) continue;
+
+    const before = normalizedContent.slice(cursor, index).trim();
+    if (before) {
+      segments.push({ kind: "markdown", content: before, id: `markdown-${segments.length}` });
+    }
+
+    segments.push({
+      kind: "json",
+      value: jsonValue,
+      id: `json-${jsonIndex}`,
+      title: inferRunnerWorkingLogInlineJsonTitle(normalizedContent.slice(cursor, index), title),
+    });
+    jsonIndex += 1;
+    cursor = endIndex;
+    index = endIndex - 1;
+  }
+
+  if (!segments.length) return [];
+
+  const after = normalizedContent.slice(cursor).trim();
+  if (after) {
+    segments.push({ kind: "markdown", content: after, id: `markdown-${segments.length}` });
+  }
+
+  return segments;
+}
+
+function formatRunnerWorkingLogJsonRaw(value: RunnerWorkingLogJsonValue): string {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return "{}";
+  }
+}
+
+function getRunnerWorkingLogJsonType(value: unknown): "array" | "object" | "null" | "boolean" | "number" | "string" {
+  if (Array.isArray(value)) return "array";
+  if (isRunnerWorkingLogPlainObject(value)) return "object";
+  if (value === null) return "null";
+  if (typeof value === "boolean") return "boolean";
+  if (typeof value === "number") return "number";
+  return "string";
+}
+
+function formatRunnerWorkingLogJsonPreview(value: unknown): string {
+  const type = getRunnerWorkingLogJsonType(value);
+  if (type === "object") {
+    const count = Object.keys(value as Record<string, unknown>).length;
+    return `${count} ${count === 1 ? "field" : "fields"}`;
+  }
+  if (type === "array") {
+    const count = Array.isArray(value) ? value.length : 0;
+    return `${count} ${count === 1 ? "item" : "items"}`;
+  }
+  if (type === "null") return "null";
+  if (type === "boolean" || type === "number") return String(value);
+  return JSON.stringify(String(value || ""));
+}
+
+type RunnerWorkingLogJsonSegment =
+  | { kind: "markdown"; content: string; id: string }
+  | { kind: "json"; value: RunnerWorkingLogJsonValue; id: string; title: string };
+
+function splitRunnerWorkingLogJsonContent(content: string, title = "JSON"): RunnerWorkingLogJsonSegment[] {
+  const normalizedContent = stripRunnerSystemTags(content || "").trim();
+  if (!normalizedContent) return [];
+
+  const pureJson = parseRunnerWorkingLogJsonValue(normalizedContent);
+  if (pureJson) {
+    return [{ kind: "json", value: pureJson, id: "json-0", title }];
+  }
+
+  const segments: RunnerWorkingLogJsonSegment[] = [];
+  const fenceRegex = /```([^\n`]*)\n([\s\S]*?)```/g;
+  let cursor = 0;
+  let jsonIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = fenceRegex.exec(normalizedContent))) {
+    const fullMatch = match[0] || "";
+    const language = String(match[1] || "").trim().toLowerCase();
+    const body = String(match[2] || "").trim();
+    const startsAt = match.index;
+    const jsonValue = (!language || language === "json" || language === "jsonc") ? parseRunnerWorkingLogJsonValue(body) : null;
+
+    if (!jsonValue) {
+      continue;
+    }
+
+    const before = normalizedContent.slice(cursor, startsAt).trim();
+    if (before) {
+      segments.push({ kind: "markdown", content: before, id: `markdown-${segments.length}` });
+    }
+    segments.push({ kind: "json", value: jsonValue, id: `json-${jsonIndex}`, title });
+    jsonIndex += 1;
+    cursor = startsAt + fullMatch.length;
+  }
+
+  if (!segments.length) {
+    const inlineJsonSegments = splitRunnerWorkingLogInlineJsonContent(normalizedContent, title);
+    return inlineJsonSegments.length > 0
+      ? inlineJsonSegments
+      : [{ kind: "markdown", content: normalizedContent, id: "markdown-0" }];
+  }
+
+  const after = normalizedContent.slice(cursor).trim();
+  if (after) {
+    segments.push({ kind: "markdown", content: after, id: `markdown-${segments.length}` });
+  }
+
+  return segments;
+}
+
+function hasRunnerWorkingLogJsonSegments(segments: RunnerWorkingLogJsonSegment[]): boolean {
+  return segments.some((segment) => segment.kind === "json");
+}
+
+function findRunnerWorkingLogJsonSegments(values: Array<string | null | undefined>, title = "JSON"): RunnerWorkingLogJsonSegment[] {
+  for (const value of values) {
+    const candidate = String(value || "").trim();
+    if (!candidate) continue;
+    const segments = splitRunnerWorkingLogJsonContent(candidate, title);
+    if (hasRunnerWorkingLogJsonSegments(segments)) {
+      return segments;
+    }
+  }
+  return [];
+}
+
+function RunnerWorkingLogJsonRows({ value, depth = 0 }: { value: RunnerWorkingLogJsonValue | unknown; depth?: number }) {
+  const entries = Array.isArray(value)
+    ? value.map((item, index) => [String(index), item] as const)
+    : Object.entries(isRunnerWorkingLogPlainObject(value) ? value : {});
+
+  if (!entries.length) {
+    return (
+      <div className="tb-run-summary-json-empty" style={depth > 0 ? { marginLeft: depth * 18 } : undefined}>
+        No fields.
+      </div>
+    );
+  }
+
+  return (
+    <div className="tb-run-summary-json-field-tree">
+      {entries.map(([fieldKey, fieldValue]) => {
+        const fieldType = getRunnerWorkingLogJsonType(fieldValue);
+        const expandable = fieldType === "object" || fieldType === "array";
+        return (
+          <div key={`${depth}:${fieldKey}`} className="tb-run-summary-json-field-node">
+            <div className="tb-run-summary-json-field-row" style={{ paddingLeft: depth * 18 }}>
+              <div className="tb-run-summary-json-field-main">
+                <span className="tb-run-summary-json-field-toggle-placeholder" />
+                <span className="tb-run-summary-json-field-key">{fieldKey}</span>
+                <span className="tb-run-summary-json-field-separator">:</span>
+                {expandable ? (
+                  <span className="tb-run-summary-json-field-group">
+                    <span className="tb-run-summary-json-field-type-pill">{fieldType === "object" ? "Object" : "Array"}</span>
+                    <span className="tb-run-summary-json-field-preview">{formatRunnerWorkingLogJsonPreview(fieldValue)}</span>
+                  </span>
+                ) : (
+                  <span className="tb-run-summary-json-field-value">{formatRunnerWorkingLogJsonPreview(fieldValue)}</span>
+                )}
+              </div>
+            </div>
+            {expandable ? (
+              <div className="tb-run-summary-json-field-children">
+                <RunnerWorkingLogJsonRows value={fieldValue} depth={depth + 1} />
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RunnerWorkingLogJsonDocument({
+  value,
+  title = "JSON",
+  documentId,
+}: {
+  value: RunnerWorkingLogJsonValue;
+  title?: string;
+  documentId: string;
+}) {
+  const [viewMode, setViewMode] = useState<"preview" | "json">("preview");
+  const rawJson = useMemo(() => formatRunnerWorkingLogJsonRaw(value), [value]);
+
+  return (
+    <div className="tb-run-summary-json-document tb-working-log-json-document">
+      <div className="tb-run-summary-json-header">
+        <div className="tb-run-summary-json-title">
+          <Braces className="tb-run-summary-json-title-icon" strokeWidth={1.9} />
+          <span>{title}</span>
+        </div>
+        <div className="tb-run-summary-json-mode-switch" role="tablist" aria-label="JSON display mode">
+          <button
+            type="button"
+            className={`tb-run-summary-json-mode-button ${viewMode === "preview" ? "is-active" : ""}`.trim()}
+            onClick={() => setViewMode("preview")}
+          >
+            Preview
+          </button>
+          <button
+            type="button"
+            className={`tb-run-summary-json-mode-button ${viewMode === "json" ? "is-active" : ""}`.trim()}
+            onClick={() => setViewMode("json")}
+          >
+            JSON
+          </button>
+        </div>
+      </div>
+      <div className="tb-run-summary-json-body">
+        {viewMode === "json" ? (
+          <div className="tb-run-summary-json-editor-shell">
+            <RunnerCodeViewer
+              content={rawJson}
+              filePath={`working-log-${documentId}.json`}
+              language="json"
+              showLineNumbers
+              fillHeight
+              className="tb-run-summary-json-editor"
+            />
+          </div>
+        ) : (
+          <RunnerWorkingLogJsonRows value={value} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function RunnerWorkingLogJsonContent({
+  segments,
+  documentIdPrefix,
+  onWorkspacePathClick,
+}: {
+  segments: RunnerWorkingLogJsonSegment[];
+  documentIdPrefix: string;
+  onWorkspacePathClick?: (path: string) => void;
+}) {
+  return (
+    <div className="tb-run-summary-content tb-working-log-json-content">
+      {segments.map((segment, index) => (
+        segment.kind === "json" ? (
+          <RunnerWorkingLogJsonDocument
+            key={segment.id}
+            value={segment.value}
+            title={segment.title}
+            documentId={`${documentIdPrefix}-${index}`}
+          />
+        ) : (
+          <RunnerMarkdown
+            key={segment.id}
+            content={segment.content}
+            className="tb-message-markdown tb-message-markdown-summary"
+            onWorkspacePathClick={onWorkspacePathClick}
+          />
+        )
+      ))}
+    </div>
+  );
 }
 
 function CompactActionLogLine({
@@ -4090,6 +4466,7 @@ function GenericTextLogBox({
   label,
   title,
   icon,
+  onWorkspacePathClick,
 }: {
   log: RunnerLog;
   timeLabel?: string;
@@ -4099,6 +4476,19 @@ function GenericTextLogBox({
   onWorkspacePathClick?: (path: string) => void;
 }) {
   const content = stripRunnerSystemTags(log.message || log.metadata?.output || "");
+  const jsonSegments = useMemo(
+    () => findRunnerWorkingLogJsonSegments([content], title || label || "JSON"),
+    [content, label, title]
+  );
+  if (jsonSegments.length > 0) {
+    return (
+      <RunnerWorkingLogJsonContent
+        segments={jsonSegments}
+        documentIdPrefix={`generic-${String(title || label || "log").replace(/[^a-z0-9_-]+/gi, "-").toLowerCase()}`}
+        onWorkspacePathClick={onWorkspacePathClick}
+      />
+    );
+  }
   const detail = content.replace(/\s+/g, " ").trim();
   return (
     <CompactActionLogLine
@@ -11786,6 +12176,13 @@ function GenericCommandLogBox({
     parsedOutput,
   }), [command, exitCode, output, parsedOutput, statusNotice, stderr, stdout]);
   const bashPreviewAttachment = useMemo(() => buildBashCommandPreviewAttachment(bashPreviewText), [bashPreviewText]);
+  const jsonOutputSegments = useMemo(
+    () => findRunnerWorkingLogJsonSegments(
+      parsedOutput ? [stdout, output, rawOutput] : [output, rawOutput],
+      "Command Output"
+    ),
+    [output, parsedOutput, rawOutput, stdout]
+  );
 
   if (computerAgentsListDetails) {
     return renderComputerAgentsListCompactLog(computerAgentsListDetails, (agent) => onAgentClick?.({
@@ -11813,6 +12210,16 @@ function GenericCommandLogBox({
     );
   }
 
+  if (jsonOutputSegments.length > 0) {
+    return (
+      <RunnerWorkingLogJsonContent
+        segments={jsonOutputSegments}
+        documentIdPrefix={`command-${String(command || rawOutput || "output").replace(/[^a-z0-9_-]+/gi, "-").slice(0, 80).toLowerCase()}`}
+        onWorkspacePathClick={onWorkspacePathClick}
+      />
+    );
+  }
+
   return (
     <button
       type="button"
@@ -11827,11 +12234,24 @@ function GenericCommandLogBox({
 }
 
 function GenericMcpToolLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+  void timeLabel;
   const serverName = log.metadata?.serverName || "MCP";
   const toolName = log.metadata?.toolName || "tool";
   const result = log.metadata?.result;
   const error = log.metadata?.error;
   const content = typeof result === "string" ? stripRunnerSystemTags(result) : result ? JSON.stringify(result, null, 2) : error ? String(error) : "";
+  const jsonSegments = useMemo(
+    () => findRunnerWorkingLogJsonSegments([content], "MCP Result"),
+    [content]
+  );
+  if (jsonSegments.length > 0) {
+    return (
+      <RunnerWorkingLogJsonContent
+        segments={jsonSegments}
+        documentIdPrefix={`mcp-${String(serverName || "server").replace(/[^a-z0-9_-]+/gi, "-").toLowerCase()}-${String(toolName || "tool").replace(/[^a-z0-9_-]+/gi, "-").toLowerCase()}`}
+      />
+    );
+  }
   return (
     <CompactActionLogLine
       icon={<Globe className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}

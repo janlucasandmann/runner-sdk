@@ -868,8 +868,8 @@ const html = `<!doctype html>
       }
 
       .sidebar-workspace-trigger-chevron {
-        width: 13px;
-        height: 13px;
+        width: 11px;
+        height: 11px;
         flex: 0 0 auto;
         color: rgba(255, 255, 255, 0.62);
       }
@@ -1464,8 +1464,8 @@ const html = `<!doctype html>
       }
 
       .sidebar-metronome-run-toggle svg {
-        width: 13px;
-        height: 13px;
+        width: 11px;
+        height: 11px;
         transition: transform 160ms ease;
       }
 
@@ -25254,42 +25254,36 @@ const html = `<!doctype html>
         justify-self: center;
       }
 
-      .playground-permission-ring-orbit {
+      .playground-permission-rings-chart {
+        position: relative;
+        width: 148px;
+        height: 148px;
+      }
+
+      .playground-permission-rings-canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      .playground-permission-rings-icon {
         position: absolute;
         left: 50%;
-        top: 50%;
-        box-sizing: border-box;
-        border-radius: 999px;
-        padding: 8px;
-        border: 0;
-        background: rgba(255, 255, 255, 0.1);
-        opacity: var(--permission-ring-opacity, 0.1);
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor;
-        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        mask-composite: exclude;
+        top: var(--permission-ring-icon-top, 50%);
+        z-index: 2;
+        width: 11px;
+        height: 11px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(0, 0, 0, 0.78);
+        pointer-events: none;
         transform: translate(-50%, -50%);
       }
 
-      .playground-permission-ring-orbit.is-ring-3 {
-        width: 148px;
-        height: 148px;
-        --permission-ring-opacity: var(--permission-ring-3-opacity, 0.1);
-        background: linear-gradient(rgb(247, 71, 107) 0%, rgb(226, 28, 81) 100%);
-      }
-
-      .playground-permission-ring-orbit.is-ring-2 {
-        width: 98px;
-        height: 98px;
-        --permission-ring-opacity: var(--permission-ring-2-opacity, 0.1);
-        background: linear-gradient(rgb(18, 95, 251) 0%, rgb(13, 72, 251) 100%);
-      }
-
-      .playground-permission-ring-orbit.is-ring-1 {
-        width: 48px;
-        height: 48px;
-        --permission-ring-opacity: var(--permission-ring-1-opacity, 0.1);
-        background: linear-gradient(rgb(57, 184, 119) 0%, rgb(43, 139, 89) 100%);
+      .playground-permission-rings-icon svg {
+        width: 100%;
+        height: 100%;
       }
 
       .playground-permission-rings-copy {
@@ -25497,49 +25491,33 @@ const html = `<!doctype html>
       .playground-permission-mini-ring-icon {
         position: relative;
         display: inline-flex;
-        width: 20px;
-        height: 20px;
+        width: 24px;
+        height: 24px;
+        align-items: center;
+        justify-content: center;
         flex: 0 0 auto;
-      }
-
-      .playground-permission-mini-ring-orbit {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: var(--permission-mini-ring-icon-color, rgba(255, 255, 255, 0.72));
+        border: 0;
         border-radius: 999px;
-        transform: translate(-50%, -50%);
+        background: transparent;
+        overflow: visible;
       }
 
-      .playground-permission-mini-ring-orbit.is-ring-3 {
-        width: 18px;
-        height: 18px;
+      .playground-permission-mini-ring-canvas {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+        pointer-events: none;
       }
 
-      .playground-permission-mini-ring-orbit.is-ring-2 {
-        width: 12px;
-        height: 12px;
-      }
-
-      .playground-permission-mini-ring-orbit.is-ring-1 {
-        width: 6px;
-        height: 6px;
-      }
-
-      .playground-permission-mini-ring-orbit.is-active {
-        border-color: rgba(255, 255, 255, 1);
-      }
-
-      .playground-permission-mini-ring-orbit.is-ring-3.is-active {
-        border-color: rgb(247, 71, 107);
-      }
-
-      .playground-permission-mini-ring-orbit.is-ring-2.is-active {
-        border-color: rgb(18, 95, 251);
-      }
-
-      .playground-permission-mini-ring-orbit.is-ring-1.is-active {
-        border-color: rgb(57, 184, 119);
+      .playground-permission-mini-ring-icon svg {
+        position: relative;
+        z-index: 2;
+        width: 10px;
+        height: 10px;
       }
 
       .playground-agents-permission-ring-card::before {
@@ -25616,7 +25594,6 @@ const html = `<!doctype html>
         gap: 16px;
         min-width: 0;
         padding: 12px 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .playground-agents-permission-action-badge {
@@ -46366,6 +46343,130 @@ ${METRONOME_PAGE_CSS}
         color: rgba(255, 255, 255, 0.78);
       }
 
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 8px;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-content .playground-metronome-run-output-markdown,
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-content .playground-metronome-run-json-document {
+        margin-top: 0;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-document {
+        --tb-task-input-overlay: transparent;
+        --tb-task-input-outline: transparent;
+        --tb-task-input-border: var(--tb-runner-input-border);
+        width: 100%;
+        max-width: 980px;
+        margin-top: 8px;
+        position: relative;
+        z-index: 0;
+        border-radius: 10px;
+        overflow: hidden;
+        background: transparent;
+        box-shadow: 0 0 0 1px var(--tb-task-input-outline);
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-document::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        border-radius: 10px;
+        padding: 1px;
+        background: var(--tb-task-input-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-document > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-metronome-run-thread-summary .playground-metronome-run-json-document {
+        margin-top: 0;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 54px;
+        padding: 0 14px 0 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-title {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-title span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-mode-switch {
+        position: static;
+        margin-top: 0;
+        flex: 0 0 auto;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-body {
+        padding: 14px 16px 16px;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-body .playground-database-browser-field-row {
+        min-height: 28px;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-raw {
+        margin: 0;
+        overflow: auto;
+        max-height: 520px;
+        color: rgba(255, 255, 255, 0.86);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-editor-shell {
+        min-height: 360px;
+        height: 360px;
+        border-radius: 0;
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-editor-shell.playground-code-preview-editor-shell,
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-editor-shell.playground-code-preview-editor-shell .monaco-editor,
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-editor-shell.playground-code-preview-editor-shell .monaco-editor-background,
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-editor-shell.playground-code-preview-editor-shell .monaco-scrollable-element,
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-editor-shell.playground-code-preview-editor-shell .margin,
+      .playground-metronome-run-thread-surface .playground-metronome-run-json-editor-shell.playground-code-preview-editor-shell .overflow-guard {
+        background: transparent !important;
+      }
+
       .playground-metronome-run-thread-surface .playground-metronome-run-thread-meta-row {
         display: flex;
         align-items: center;
@@ -47172,7 +47273,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Telescope, Terminal, Trash2, Underline, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -50260,7 +50361,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       }
 
       function isGenericMetronomeRunPromptText(value) {
-        const normalized = String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+        const normalized = String(value || "").replace(/\\s+/g, " ").trim().toLowerCase();
         return !normalized
           || normalized === "manual workflow run"
           || normalized === "manual trigger received.";
@@ -50405,13 +50506,13 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       function isGenericMetronomeRunSummaryText(value) {
         const normalized = String(value || "")
           .replace(/[\u200B-\u200D\uFEFF]/g, "")
-          .replace(/\\r\\n/g, "\n")
-          .replace(/\\n/g, "\n")
-          .replace(/\s+/g, " ")
+          .replace(/\\r\\n/g, "\\n")
+          .replace(/\\n/g, "\\n")
+          .replace(/\\s+/g, " ")
           .trim()
           .toLowerCase();
         const canonical = normalized
-          .replace(/^(result|summary|message|status)\s*:\s*/i, "")
+          .replace(/^(result|summary|message|status)\\s*:\\s*/i, "")
           .replace(/[^a-z0-9]+/g, "");
         return !normalized
           || normalized === "metronome run started."
@@ -53107,18 +53208,442 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         }
       }
 
-      function getPlaygroundPermissionAccessOpacity(access) {
+      function getPlaygroundPermissionAccessProgress(access) {
         switch (normalizePlaygroundPermissionAccess(access, "no_access")) {
           case "full_access":
-            return "1";
+            return 100;
           case "ask_for_permission":
-            return "0.66";
+            return 66;
           case "read_only":
-            return "0.33";
+            return 33;
           case "no_access":
           default:
-            return "0.1";
+            return 0;
         }
+      }
+
+      const PLAYGROUND_PERMISSION_RING_CHART_ORDER = ["ring_3", "ring_2", "ring_1"];
+      const PLAYGROUND_PERMISSION_RING_CHART_GRADIENTS = {
+        ring_1: [[82, 188, 67], [29, 225, 163]],
+        ring_2: [[17, 95, 251], [78, 162, 255]],
+        ring_3: [[180, 8, 55], [226, 30, 82]],
+      };
+      const PLAYGROUND_PERMISSION_MINI_RING_ICON_GRADIENTS = {
+        ring_1: [[31, 130, 72], [29, 225, 163]],
+        ring_2: [[7, 61, 188], [78, 162, 255]],
+        ring_3: [[126, 4, 39], [226, 30, 82]],
+      };
+      const PLAYGROUND_PERMISSION_RING_CHART_SIZE = 148;
+      const PLAYGROUND_PERMISSION_RING_CHART_LINE_WIDTH = 17;
+      const PLAYGROUND_PERMISSION_RING_CHART_GAP = 1;
+      const PLAYGROUND_PERMISSION_RING_CHART_OUTER_PADDING = 3;
+      const PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE = -Math.PI / 2 - 0.18;
+      const PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_START_OFFSET = -0.18;
+      const PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_END_OFFSET = 0.32;
+      const PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_CLIP_OFFSET = 0.14;
+      const PLAYGROUND_PERMISSION_RING_CHART_ICONS = {
+        ring_1: ArrowDownToLine,
+        ring_2: UserRound,
+        ring_3: ArrowUpFromLine,
+      };
+      const PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE = 24;
+      const PLAYGROUND_PERMISSION_MINI_RING_ICON_LINE_WIDTH = 1;
+      const PLAYGROUND_PERMISSION_MINI_RING_ICON_PADDING = 2.9;
+
+      function getPlaygroundPermissionRingChartRadius(size, index) {
+        return size / 2
+          - PLAYGROUND_PERMISSION_RING_CHART_LINE_WIDTH / 2
+          - PLAYGROUND_PERMISSION_RING_CHART_OUTER_PADDING
+          - index * (PLAYGROUND_PERMISSION_RING_CHART_LINE_WIDTH + PLAYGROUND_PERMISSION_RING_CHART_GAP);
+      }
+
+      function getPlaygroundPermissionRingChartIconTop(index) {
+        const radius = getPlaygroundPermissionRingChartRadius(PLAYGROUND_PERMISSION_RING_CHART_SIZE, index);
+        return PLAYGROUND_PERMISSION_RING_CHART_SIZE / 2 - radius;
+      }
+
+      function getPlaygroundPermissionRingRgba(color, alpha) {
+        return "rgba(" + color[0] + ", " + color[1] + ", " + color[2] + ", " + alpha + ")";
+      }
+
+      function getPlaygroundPermissionRingGradientColors(ringId, gradientMap = PLAYGROUND_PERMISSION_RING_CHART_GRADIENTS) {
+        return gradientMap[ringId] || PLAYGROUND_PERMISSION_RING_CHART_GRADIENTS[ringId] || [[255, 255, 255], [255, 255, 255]];
+      }
+
+      function getPlaygroundPermissionRingStartColor(ringId, alpha = 1) {
+        const colors = getPlaygroundPermissionRingGradientColors(ringId);
+        return getPlaygroundPermissionRingRgba(colors[0], alpha);
+      }
+
+      function getPlaygroundPermissionRingEndColor(ringId, alpha = 1) {
+        const colors = getPlaygroundPermissionRingGradientColors(ringId);
+        return getPlaygroundPermissionRingRgba(colors[1], alpha);
+      }
+
+      function getPlaygroundPermissionRingIconColor(ringId, alpha = 1) {
+        return getPlaygroundPermissionRingEndColor(ringId, alpha);
+      }
+
+      function getPlaygroundPermissionRingIconComponent(ringId) {
+        return PLAYGROUND_PERMISSION_RING_CHART_ICONS[ringId] || Shield;
+      }
+
+      function createPlaygroundPermissionRingGradient(ctx, width, height, ringId, alpha = 1, progress = 0.72, gradientMap = PLAYGROUND_PERMISSION_RING_CHART_GRADIENTS) {
+        const colors = getPlaygroundPermissionRingGradientColors(ringId, gradientMap);
+        if (typeof ctx.createConicGradient === "function") {
+          const gradient = ctx.createConicGradient(PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE, width / 2, height / 2);
+          const endStop = Math.max(0.001, Math.min(0.94, Number(progress) || 0.72));
+          const holdStop = Math.min(0.965, Math.max(endStop + 0.03, endStop));
+          gradient.addColorStop(0, getPlaygroundPermissionRingRgba(colors[0], alpha));
+          gradient.addColorStop(endStop, getPlaygroundPermissionRingRgba(colors[1], alpha));
+          gradient.addColorStop(holdStop, getPlaygroundPermissionRingRgba(colors[1], alpha));
+          gradient.addColorStop(0.985, getPlaygroundPermissionRingRgba(colors[0], alpha));
+          gradient.addColorStop(1, getPlaygroundPermissionRingRgba(colors[0], alpha));
+          return gradient;
+        }
+
+        const gradient = ctx.createLinearGradient(width / 2, 0, width / 2, height);
+        gradient.addColorStop(0, getPlaygroundPermissionRingRgba(colors[0], alpha));
+        gradient.addColorStop(1, getPlaygroundPermissionRingRgba(colors[1], alpha));
+        return gradient;
+      }
+
+      function easeOutPlaygroundPermissionRingChart(value) {
+        return 1 - Math.pow(1 - value, 4);
+      }
+
+      function getPlaygroundPermissionRingChartProgressById(ringAccessById = {}) {
+        return PLAYGROUND_PERMISSION_RING_CHART_ORDER.reduce((result, ringId) => {
+          result[ringId] = getPlaygroundPermissionAccessProgress(ringAccessById[ringId]);
+          return result;
+        }, {});
+      }
+
+      function drawPlaygroundPermissionRingChart(canvas, progressById = {}) {
+        if (!canvas) {
+          return;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        const width = Math.max(1, Math.round(rect.width || PLAYGROUND_PERMISSION_RING_CHART_SIZE));
+        const height = Math.max(1, Math.round(rect.height || PLAYGROUND_PERMISSION_RING_CHART_SIZE));
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        const targetWidth = Math.round(width * dpr);
+        const targetHeight = Math.round(height * dpr);
+        if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+        }
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+
+        const size = Math.min(width, height);
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const lineWidth = PLAYGROUND_PERMISSION_RING_CHART_LINE_WIDTH;
+
+        PLAYGROUND_PERMISSION_RING_CHART_ORDER.forEach((ringId, index) => {
+          const radius = getPlaygroundPermissionRingChartRadius(size, index);
+          const progress = Math.max(0, Math.min(100, Number(progressById[ringId]) || 0)) / 100;
+          const activeGradient = createPlaygroundPermissionRingGradient(ctx, width, height, ringId, 1, progress);
+          const trackGradient = createPlaygroundPermissionRingGradient(ctx, width, height, ringId, 0.1);
+
+          ctx.save();
+          ctx.lineWidth = lineWidth;
+          ctx.lineCap = "round";
+          ctx.strokeStyle = trackGradient;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+
+          if (progress <= 0) {
+            return;
+          }
+
+          const endAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + Math.PI * 2 * Math.min(progress, 1);
+
+          ctx.save();
+          ctx.lineWidth = lineWidth;
+          ctx.strokeStyle = activeGradient;
+          ctx.lineCap = "butt";
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE, endAngle);
+          ctx.stroke();
+          ctx.restore();
+
+          if (progress < 0.999) {
+            const startCapX = centerX + Math.cos(PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE) * radius;
+            const startCapY = centerY + Math.sin(PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE) * radius;
+            const endCapX = centerX + Math.cos(endAngle) * radius;
+            const endCapY = centerY + Math.sin(endAngle) * radius;
+
+            ctx.save();
+            ctx.fillStyle = getPlaygroundPermissionRingStartColor(ringId, 1);
+            ctx.beginPath();
+            ctx.arc(startCapX, startCapY, lineWidth / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            ctx.save();
+            ctx.fillStyle = getPlaygroundPermissionRingEndColor(ringId, 1);
+            ctx.beginPath();
+            ctx.arc(endCapX, endCapY, lineWidth / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+
+          if (progress < 0.999) {
+            return;
+          }
+
+          const fullCapStartAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_START_OFFSET;
+          const fullCapEndAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_END_OFFSET;
+          const capClipAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_CLIP_OFFSET;
+          const capClipX = centerX + Math.cos(capClipAngle) * radius;
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(capClipX + lineWidth * 0.08, 0, width - capClipX, height);
+          ctx.clip();
+          ctx.lineWidth = lineWidth;
+          ctx.lineCap = "round";
+          ctx.strokeStyle = getPlaygroundPermissionRingEndColor(ringId, 1);
+          ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+          ctx.shadowBlur = Math.max(5, lineWidth * 0.55);
+          ctx.shadowOffsetX = Math.max(2, lineWidth * 0.24);
+          ctx.shadowOffsetY = Math.max(1, lineWidth * 0.14);
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, fullCapStartAngle, fullCapEndAngle);
+          ctx.stroke();
+          ctx.restore();
+
+          ctx.save();
+          ctx.lineWidth = lineWidth;
+          ctx.lineCap = "round";
+          ctx.strokeStyle = getPlaygroundPermissionRingEndColor(ringId, 1);
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, fullCapStartAngle, fullCapEndAngle);
+          ctx.stroke();
+          ctx.restore();
+        });
+      }
+
+      function drawPlaygroundPermissionMiniRingIcon(canvas, ringId) {
+        if (!canvas) {
+          return;
+        }
+
+        const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "ring_1");
+        const rect = canvas.getBoundingClientRect();
+        const width = Math.max(1, Math.round(rect.width || PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE));
+        const height = Math.max(1, Math.round(rect.height || PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE));
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        const targetWidth = Math.round(width * dpr);
+        const targetHeight = Math.round(height * dpr);
+        if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+        }
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+
+        const size = Math.min(width, height);
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const lineWidth = Math.max(1, size * (PLAYGROUND_PERMISSION_MINI_RING_ICON_LINE_WIDTH / PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE));
+        const padding = Math.max(2, size * (PLAYGROUND_PERMISSION_MINI_RING_ICON_PADDING / PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE));
+        const radius = Math.max(1, size / 2 - lineWidth / 2 - padding);
+        const activeGradient = createPlaygroundPermissionRingGradient(ctx, width, height, normalizedRingId, 1, 1, PLAYGROUND_PERMISSION_MINI_RING_ICON_GRADIENTS);
+
+        ctx.save();
+        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = activeGradient;
+        ctx.lineCap = "butt";
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE, PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        const fullCapStartAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_START_OFFSET;
+        const fullCapEndAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_END_OFFSET;
+        const capClipAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_CLIP_OFFSET;
+        const capClipX = centerX + Math.cos(capClipAngle) * radius;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(capClipX + lineWidth * 0.08, 0, width - capClipX, height);
+        ctx.clip();
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = getPlaygroundPermissionRingEndColor(normalizedRingId, 1);
+        ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+        ctx.shadowBlur = Math.max(3, lineWidth * 0.8);
+        ctx.shadowOffsetX = Math.max(1, lineWidth * 0.24);
+        ctx.shadowOffsetY = Math.max(0.5, lineWidth * 0.14);
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, fullCapStartAngle, fullCapEndAngle);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = getPlaygroundPermissionRingEndColor(normalizedRingId, 1);
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, fullCapStartAngle, fullCapEndAngle);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function PlaygroundPermissionMiniRingIcon({ ringId } = {}) {
+        const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "ring_1");
+        const canvasRef = useRef(null);
+        const RingIcon = getPlaygroundPermissionRingIconComponent(normalizedRingId);
+
+        useEffect(() => {
+          const redraw = () => drawPlaygroundPermissionMiniRingIcon(canvasRef.current, normalizedRingId);
+          redraw();
+          window.addEventListener("resize", redraw);
+          return () => window.removeEventListener("resize", redraw);
+        }, [normalizedRingId]);
+
+        return React.createElement("span", {
+            className: "playground-permission-mini-ring-icon is-" + normalizedRingId.replace("_", "-"),
+            "aria-hidden": "true",
+            style: {
+              "--permission-mini-ring-icon-color": getPlaygroundPermissionRingIconColor(normalizedRingId, 1),
+            },
+          },
+          React.createElement("canvas", {
+            ref: canvasRef,
+            className: "playground-permission-mini-ring-canvas",
+          }),
+          React.createElement(RingIcon, { strokeWidth: 2.4 })
+        );
+      }
+
+      function PlaygroundPermissionRingsChart({ ringAccessById, animationKey = 0 } = {}) {
+        const canvasRef = useRef(null);
+        const animationFrameRef = useRef(null);
+        const displayProgressRef = useRef({});
+        const previousProgressRef = useRef(null);
+        const previousAnimationKeyRef = useRef(animationKey);
+        const ringAccessSignature = JSON.stringify(ringAccessById || {});
+
+        useEffect(() => {
+          const redraw = () => drawPlaygroundPermissionRingChart(canvasRef.current, displayProgressRef.current);
+          window.addEventListener("resize", redraw);
+          return () => {
+            window.removeEventListener("resize", redraw);
+            if (animationFrameRef.current) {
+              window.cancelAnimationFrame(animationFrameRef.current);
+              animationFrameRef.current = null;
+            }
+          };
+        }, []);
+
+        useEffect(() => {
+          const canvas = canvasRef.current;
+          if (!canvas) {
+            return;
+          }
+
+          const nextProgress = getPlaygroundPermissionRingChartProgressById(ringAccessById || {});
+          const shouldResetAnimation = previousAnimationKeyRef.current !== animationKey;
+          const previousProgress = shouldResetAnimation ? null : previousProgressRef.current;
+          const changedRingIds = previousProgress
+            ? PLAYGROUND_PERMISSION_RING_CHART_ORDER.filter((ringId) => previousProgress[ringId] !== nextProgress[ringId])
+            : PLAYGROUND_PERMISSION_RING_CHART_ORDER;
+
+          if (!previousProgress) {
+            displayProgressRef.current = PLAYGROUND_PERMISSION_RING_CHART_ORDER.reduce((result, ringId) => {
+              result[ringId] = 0;
+              return result;
+            }, {});
+          }
+
+          previousProgressRef.current = nextProgress;
+          previousAnimationKeyRef.current = animationKey;
+          if (changedRingIds.length === 0) {
+            drawPlaygroundPermissionRingChart(canvas, displayProgressRef.current);
+            return;
+          }
+
+          if (animationFrameRef.current) {
+            window.cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
+          }
+
+          const fromProgress = changedRingIds.reduce((result, ringId) => {
+            result[ringId] = displayProgressRef.current[ringId] ?? 0;
+            return result;
+          }, {});
+          const animationStartedAt = performance.now();
+          const animationDuration = 260;
+
+          const animate = (timestamp) => {
+            const elapsed = timestamp - animationStartedAt;
+            const progress = Math.min(1, Math.max(0, elapsed / animationDuration));
+            const easedProgress = easeOutPlaygroundPermissionRingChart(progress);
+
+            PLAYGROUND_PERMISSION_RING_CHART_ORDER.forEach((ringId) => {
+              if (!changedRingIds.includes(ringId)) {
+                displayProgressRef.current[ringId] = nextProgress[ringId];
+                return;
+              }
+
+              const from = fromProgress[ringId] ?? 0;
+              const to = nextProgress[ringId] ?? 0;
+              displayProgressRef.current[ringId] = from + (to - from) * easedProgress;
+            });
+
+            drawPlaygroundPermissionRingChart(canvas, displayProgressRef.current);
+
+            if (progress < 1) {
+              animationFrameRef.current = window.requestAnimationFrame(animate);
+            } else {
+              displayProgressRef.current = { ...nextProgress };
+              drawPlaygroundPermissionRingChart(canvas, displayProgressRef.current);
+              animationFrameRef.current = null;
+            }
+          };
+
+          animationFrameRef.current = window.requestAnimationFrame(animate);
+        }, [ringAccessSignature, animationKey]);
+
+        return React.createElement("div", { className: "playground-permission-rings-chart" },
+          React.createElement("canvas", {
+            ref: canvasRef,
+            className: "playground-permission-rings-canvas",
+            role: "img",
+            "aria-label": "Permission ring access levels",
+          }),
+          PLAYGROUND_PERMISSION_RING_CHART_ORDER.map((ringId, index) => {
+            const RingIcon = getPlaygroundPermissionRingIconComponent(ringId);
+            return React.createElement("span", {
+                key: ringId,
+                className: "playground-permission-rings-icon is-" + ringId,
+                style: {
+                  "--permission-ring-icon-top": getPlaygroundPermissionRingChartIconTop(index) + "px",
+                },
+              },
+              React.createElement(RingIcon, { strokeWidth: 2.6 })
+            );
+          })
+        );
       }
 
       function renderPlaygroundPermissionAccessSelect({ value, onChange, ariaLabel, includeInherit = false, inheritedAccess = "", disabled = false }) {
@@ -53183,16 +53708,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 
         return React.createElement("section", {
             className: "playground-permission-rings-overview",
-            style: {
-              "--permission-ring-1-opacity": getPlaygroundPermissionAccessOpacity(ringAccessById.ring_1),
-              "--permission-ring-2-opacity": getPlaygroundPermissionAccessOpacity(ringAccessById.ring_2),
-              "--permission-ring-3-opacity": getPlaygroundPermissionAccessOpacity(ringAccessById.ring_3),
-            },
           },
           React.createElement("div", { className: "playground-permission-rings-visual", "aria-hidden": "true" },
-            React.createElement("div", { className: "playground-permission-ring-orbit is-ring-3" }),
-            React.createElement("div", { className: "playground-permission-ring-orbit is-ring-2" }),
-            React.createElement("div", { className: "playground-permission-ring-orbit is-ring-1" })
+            React.createElement(PlaygroundPermissionRingsChart, { ringAccessById, animationKey: handlers.animationKey || 0 })
           ),
           React.createElement("div", { className: "playground-permission-rings-copy" },
             PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
@@ -53241,14 +53759,8 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       }
 
       function renderPlaygroundPermissionMiniRingIcon(activeRingId) {
-        return React.createElement("span", { className: "playground-permission-mini-ring-icon", "aria-hidden": "true" },
-          ["ring_3", "ring_2", "ring_1"].map((ringId) =>
-            React.createElement("span", {
-              key: ringId,
-              className: "playground-permission-mini-ring-orbit is-" + ringId.replace("_", "-") + (ringId === activeRingId ? " is-active" : ""),
-            })
-          )
-        );
+        const normalizedRingId = normalizePlaygroundPermissionRingId(activeRingId, "ring_1");
+        return React.createElement(PlaygroundPermissionMiniRingIcon, { ringId: normalizedRingId });
       }
 
       function renderAgentPermissionsList(permissionSet, handlers = {}) {
@@ -57296,7 +57808,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const directProjectName = typeof project.name === "string" ? project.name.trim() : "";
         const metadataProjectName = typeof metadata?.name === "string" ? metadata.name.trim() : "";
         const isPlaceholderProjectName = (value) => {
-          const normalized = String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+          const normalized = String(value || "").trim().replace(/\\s+/g, " ").toLowerCase();
           return !normalized || normalized === "project" || normalized === "untitled project";
         };
         const resolvedProjectName = directProjectName && (!isPlaceholderProjectName(directProjectName) || !metadataProjectName || isPlaceholderProjectName(metadataProjectName))
@@ -57659,7 +58171,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           summary.activeSprintCount,
         ].some((value) => Number(value) > 0);
         const isPlaceholderProjectName = (value) => {
-          const normalized = String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+          const normalized = String(value || "").trim().replace(/\\s+/g, " ").toLowerCase();
           return !normalized || normalized === "project" || normalized === "untitled project" || normalized === "new project";
         };
         const projectName = String(project.name || metadata?.name || "").trim();
@@ -57704,7 +58216,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       function mergePlaygroundProjectRecords(primaryProject, fallbackProject) {
         const hasOwnProjectField = (project, field) =>
           Boolean(project && typeof project === "object" && Object.prototype.hasOwnProperty.call(project, field));
-        const normalizeProjectNameForMerge = (value) => String(value || "").trim().replace(/\s+/g, " ");
+        const normalizeProjectNameForMerge = (value) => String(value || "").trim().replace(/\\s+/g, " ");
         const isPlaceholderProjectNameForMerge = (value) => {
           const normalized = normalizeProjectNameForMerge(value).toLowerCase();
           return !normalized || normalized === "project" || normalized === "untitled project";
@@ -64215,7 +64727,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       }
 
       function readTraceText(value, maxLength = 260) {
-        const normalize = (text) => String(text || "").replace(/\s+/g, " ").trim();
+        const normalize = (text) => String(text || "").replace(/\\s+/g, " ").trim();
         let text = "";
 
         if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
@@ -96709,6 +97221,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
         const [agentsOverviewHomeTab, setAgentsOverviewHomeTab] = useState("general");
         const [agentDetailTab, setAgentDetailTab] = useState("general");
+        const [agentPermissionChartAnimationKey, setAgentPermissionChartAnimationKey] = useState(0);
         const [agentsOverviewToolbarPopover, setAgentsOverviewToolbarPopover] = useState("");
         const [agentsOverviewFilter, setAgentsOverviewFilter] = useState("all");
         const [agentsOverviewSort, setAgentsOverviewSort] = useState("name");
@@ -99032,6 +99545,20 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         useEffect(() => {
           setAgentDetailTab("general");
         }, [selectedAgentId]);
+
+        useEffect(() => {
+          if (agentDetailTab !== "permissions" || !selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
+            return undefined;
+          }
+          const frameId = window.requestAnimationFrame(() => {
+            const scrollNode = agentDetailMainRef.current?.querySelector(".playground-environments-detail-scroll");
+            if (scrollNode && typeof scrollNode.scrollTop === "number") {
+              scrollNode.scrollTop = 0;
+            }
+            setAgentPermissionChartAnimationKey((current) => current + 1);
+          });
+          return () => window.cancelAnimationFrame(frameId);
+        }, [agentDetailTab, selectedAgentId]);
 
         useEffect(() => {
           if (isHomeViewActive || !selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
@@ -103131,6 +103658,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
           const agentPermissionsContent = renderPlaygroundPermissionPanel(draftAgent.permissionSet, {
             subjectType: "agent",
+            animationKey: agentPermissionChartAnimationKey,
             onRingAccessChange: updateAgentPermissionRingAccess,
             onActionRingChange: updateAgentPermissionActionRing,
             onActionAccessChange: updateAgentPermissionActionAccess,
@@ -106448,7 +106976,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             return;
           }
 
-          const nextName = String(skillEditTitleValue || "").trim().replace(/\s+/g, " ");
+          const nextName = String(skillEditTitleValue || "").trim().replace(/\\s+/g, " ");
           const nextDescription = String(skillEditDescriptionValue || "");
           if (!nextName) {
             setSkillEditError("Skill title cannot be empty.");
@@ -108747,6 +109275,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const projectOverviewSidebarAutoCollapsedForTaskRef = useRef(false);
         const [ticketDetailSidebarCollapsed, setTicketDetailSidebarCollapsed] = useState(false);
         const [projectOverviewPermissionTeamId, setProjectOverviewPermissionTeamId] = useState("");
+        const [projectPermissionChartAnimationKey, setProjectPermissionChartAnimationKey] = useState(0);
         const [projectOverviewTeamMenuId, setProjectOverviewTeamMenuId] = useState("");
         const [projectOverviewMilestoneMenuId, setProjectOverviewMilestoneMenuId] = useState("");
         const workspaceTeamsCount = Array.isArray(workspaceTeams) ? workspaceTeams.length : 0;
@@ -108775,6 +109304,19 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           workspaceTeamsCount,
           onWorkspaceTeamsRequest,
         ]);
+        useEffect(() => {
+          if (projectOverviewHomeTab !== "permissions") {
+            return undefined;
+          }
+          const frameId = window.requestAnimationFrame(() => {
+            const scrollNode = taskDetailMainRef.current?.querySelector(".playground-environments-detail-scroll");
+            if (scrollNode && typeof scrollNode.scrollTop === "number") {
+              scrollNode.scrollTop = 0;
+            }
+            setProjectPermissionChartAnimationKey((current) => current + 1);
+          });
+          return () => window.cancelAnimationFrame(frameId);
+        }, [projectOverviewHomeTab, projectOverviewPermissionTeamId, selectedProjectId]);
         const [projectOverviewFilesSubview, setProjectOverviewFilesSubview] = useState("overview");
         const [projectOverviewListMode, setProjectOverviewListMode] = useState("tasks");
         const [projectOverviewTaskSearchQuery, setProjectOverviewTaskSearchQuery] = useState("");
@@ -110074,7 +110616,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }, [projectDraft.useCardBackgroundAsWallpaper, projectDraft.wallpaperId]);
 
         function normalizeProjectDisplayName(value) {
-          return String(value || "").trim().replace(/\s+/g, " ");
+          return String(value || "").trim().replace(/\\s+/g, " ");
         }
 
         function isPlaceholderProjectDisplayName(value) {
@@ -116356,7 +116898,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           if (projectSaveState.isSaving) {
             return;
           }
-          const nextName = String(projectDraft?.name || "").trim().replace(/\s+/g, " ");
+          const nextName = String(projectDraft?.name || "").trim().replace(/\\s+/g, " ");
           if (!nextName) {
             focusMissionControlSetupTaskInput();
             return;
@@ -116379,7 +116921,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           if (projectSaveState.isSaving) {
             return;
           }
-          const nextName = String(projectDraft?.name || "").trim().replace(/\s+/g, " ");
+          const nextName = String(projectDraft?.name || "").trim().replace(/\\s+/g, " ");
           if (!nextName) {
             return;
           }
@@ -137015,6 +137557,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           error: "",
         });
         const [metronomeRunTraceWorkExpanded, setMetronomeRunTraceWorkExpanded] = useState(true);
+        const [metronomeRunJsonViewModeByKey, setMetronomeRunJsonViewModeByKey] = useState({});
+        const [metronomeRunJsonEditorModule, setMetronomeRunJsonEditorModule] = useState(null);
+        const [metronomeRunJsonEditorModuleError, setMetronomeRunJsonEditorModuleError] = useState("");
         const [optimisticMetronomeRunEntries, setOptimisticMetronomeRunEntries] = useState({});
         const [absorbedMetronomeTriggerThreadIds, setAbsorbedMetronomeTriggerThreadIds] = useState({});
         const [metronomeRunStatusByKey, setMetronomeRunStatusByKey] = useState({});
@@ -137042,6 +137587,42 @@ ${PROJECT_OVERVIEW_SCRIPT}
           goOverview: null,
           setMode: null,
         });
+        const shouldLoadMetronomeRunJsonEditor = useMemo(() => (
+          Object.values(metronomeRunJsonViewModeByKey || {}).some((mode) => mode === "json")
+        ), [metronomeRunJsonViewModeByKey]);
+        useEffect(() => {
+          if (!shouldLoadMetronomeRunJsonEditor || metronomeRunJsonEditorModule || metronomeRunJsonEditorModuleError) {
+            return;
+          }
+
+          let cancelled = false;
+
+          void loadPlaygroundCodeEditorModule()
+            .then((module) => {
+              if (cancelled || !module) {
+                return;
+              }
+              setMetronomeRunJsonEditorModule(module);
+              setMetronomeRunJsonEditorModuleError("");
+              void module.loader?.init?.()
+                .then((monaco) => {
+                  if (!cancelled) {
+                    ensurePlaygroundCodeEditorTheme(monaco);
+                  }
+                })
+                .catch(() => {});
+            })
+            .catch((error) => {
+              if (cancelled) {
+                return;
+              }
+              setMetronomeRunJsonEditorModuleError(error instanceof Error ? error.message : "Failed to load editor.");
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [shouldLoadMetronomeRunJsonEditor, metronomeRunJsonEditorModule, metronomeRunJsonEditorModuleError]);
         const [environmentsOpenToken, setEnvironmentsOpenToken] = useState(0);
         const [environmentsNavigationTargetId, setEnvironmentsNavigationTargetId] = useState("");
         const [resourcesNavigationTarget, setResourcesNavigationTarget] = useState({
@@ -137424,12 +138005,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [developServerOperationalMetrics, setDevelopServerOperationalMetrics] = useState(null);
         const [developServerOperationalMetricsLoading, setDevelopServerOperationalMetricsLoading] = useState(false);
         const [developServerOperationalMetricsError, setDevelopServerOperationalMetricsError] = useState("");
+        const teamPageRef = useRef(null);
         const [teamPageLoading, setTeamPageLoading] = useState(false);
         const [teamPageError, setTeamPageError] = useState("");
         const [teamPageRequiresPlan, setTeamPageRequiresPlan] = useState(false);
         const [teamPageTeams, setTeamPageTeams] = useState([]);
         const [teamPageSelectedTeamId, setTeamPageSelectedTeamId] = useState("");
         const [teamPageActiveTab, setTeamPageActiveTab] = useState("members");
+        const [teamPermissionChartAnimationKey, setTeamPermissionChartAnimationKey] = useState(0);
         const [teamPageMembers, setTeamPageMembers] = useState([]);
         const [teamPageInvitations, setTeamPageInvitations] = useState([]);
         const [teamPageShares, setTeamPageShares] = useState([]);
@@ -137447,6 +138030,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [teamPageShareResourceId, setTeamPageShareResourceId] = useState("");
         const [teamPageShareAccessLevel, setTeamPageShareAccessLevel] = useState("use");
         const [teamPageActionId, setTeamPageActionId] = useState("");
+        useEffect(() => {
+          if (teamPageActiveTab !== "permissions") {
+            return undefined;
+          }
+          const frameId = window.requestAnimationFrame(() => {
+            const scrollNode = teamPageRef.current;
+            if (scrollNode && typeof scrollNode.scrollTop === "number") {
+              scrollNode.scrollTop = 0;
+            }
+            setTeamPermissionChartAnimationKey((current) => current + 1);
+          });
+          return () => window.cancelAnimationFrame(frameId);
+        }, [teamPageActiveTab, teamPageSelectedTeamId]);
         const [sidebarWorkspaceMode, setSidebarWorkspaceMode] = useState(initialSidebarWorkspaceMode);
         const [sidebarWorkspaceMenuOpen, setSidebarWorkspaceMenuOpen] = useState(false);
         const [agentsOverviewTabRequest, setAgentsOverviewTabRequest] = useState(null);
@@ -156159,6 +156755,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return React.createElement("div", { className: "playground-team-detail-panel playground-team-permissions-panel" },
               renderPlaygroundPermissionPanel(teamPermissionSet, {
                 subjectType: "team",
+                animationKey: teamPermissionChartAnimationKey,
                 disabled: !canManageTeam || teamPageActionId === "team-permissions",
                 onRingAccessChange: updateTeamPermissionRingAccess,
                 onActionRingChange: updateTeamPermissionActionRing,
@@ -156167,7 +156764,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             );
           };
 
-          return React.createElement("div", { className: "playground-team-page" },
+          return React.createElement("div", { className: "playground-team-page", ref: teamPageRef },
             React.createElement("div", { className: "playground-team-shell" },
               selectedTeam
                 ? React.createElement(React.Fragment, null,
@@ -160536,7 +161133,305 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
+        function parseMetronomeRunJsonDocumentValue(value) {
+          if (value === null || typeof value === "undefined") return null;
+          if (typeof value === "object") {
+            return Array.isArray(value) || isPlaygroundDatabasePlainObject(value) ? value : null;
+          }
+          if (typeof value !== "string") return null;
+          const trimmed = value.trim();
+          if (!trimmed) return null;
+          let candidate = trimmed;
+          if (trimmed.startsWith("\\x60\\x60\\x60")) {
+            const lines = trimmed.split(/\\n/);
+            const firstLine = String(lines[0] || "").trim().toLowerCase();
+            const lastLine = String(lines[lines.length - 1] || "").trim();
+            if ((firstLine === "\\x60\\x60\\x60" || firstLine === "\\x60\\x60\\x60json") && lastLine === "\\x60\\x60\\x60") {
+              candidate = lines.slice(1, -1).join("\\n").trim();
+            }
+          }
+          if (!candidate.startsWith("{") && !candidate.startsWith("[")) return null;
+          try {
+            const parsed = JSON.parse(candidate);
+            return Array.isArray(parsed) || isPlaygroundDatabasePlainObject(parsed) ? parsed : null;
+          } catch {
+            return null;
+          }
+        }
+
+        function findMetronomeRunBalancedJsonEnd(value, startIndex) {
+          const opener = String(value || "").charAt(startIndex);
+          if (opener !== "{" && opener !== "[") return null;
+          const stack = [opener === "{" ? "}" : "]"];
+          let inString = false;
+          let escaped = false;
+
+          for (let index = startIndex + 1; index < value.length; index += 1) {
+            const char = value.charAt(index);
+            if (inString) {
+              if (escaped) {
+                escaped = false;
+              } else if (char === "\\\\") {
+                escaped = true;
+              } else if (char === "\\\"") {
+                inString = false;
+              }
+              continue;
+            }
+
+            if (char === "\\\"") {
+              inString = true;
+              continue;
+            }
+
+            if (char === "{" || char === "[") {
+              stack.push(char === "{" ? "}" : "]");
+              continue;
+            }
+
+            if (char === "}" || char === "]") {
+              if (stack[stack.length - 1] !== char) return null;
+              stack.pop();
+              if (!stack.length) return index + 1;
+            }
+          }
+
+          return null;
+        }
+
+        function formatMetronomeRunInlineJsonTitleLabel(value) {
+          return String(value || "")
+            .replace(/[_-]+/g, " ")
+            .replace(/\\s+/g, " ")
+            .trim()
+            .split(" ")
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(" ");
+        }
+
+        function inferMetronomeRunInlineJsonTitle(prefix, fallbackTitle) {
+          const tail = String(prefix || "").slice(-96);
+          const match = tail.match(/([A-Za-z][A-Za-z0-9 _/-]{0,40})\\s*:\\s*$/);
+          const label = match?.[1]?.trim();
+          if (!label) return fallbackTitle;
+          return formatMetronomeRunInlineJsonTitleLabel(label) || fallbackTitle;
+        }
+
+        function splitMetronomeRunInlineJsonContent(value, title = "JSON") {
+          const normalizedContent = normalizeMetronomeRunMarkdownText(extractMetronomeReadableOutputText(value) || value);
+          const text = String(normalizedContent || "").trim();
+          if (!text) return [];
+          const segments = [];
+          let cursor = 0;
+          let jsonIndex = 0;
+
+          for (let index = 0; index < text.length; index += 1) {
+            const char = text.charAt(index);
+            if (char !== "{" && char !== "[") continue;
+            const endIndex = findMetronomeRunBalancedJsonEnd(text, index);
+            if (!endIndex) continue;
+            const candidate = text.slice(index, endIndex);
+            const parsed = parseMetronomeRunJsonDocumentValue(candidate);
+            if (!parsed) continue;
+
+            const before = text.slice(cursor, index).trim();
+            if (before) {
+              segments.push({
+                kind: "markdown",
+                content: before,
+                id: "markdown-" + segments.length,
+              });
+            }
+            segments.push({
+              kind: "json",
+              value: parsed,
+              title: inferMetronomeRunInlineJsonTitle(text.slice(cursor, index), title),
+              id: "json-" + jsonIndex,
+            });
+            jsonIndex += 1;
+            cursor = endIndex;
+            index = endIndex - 1;
+          }
+
+          if (!segments.length) return [];
+          const after = text.slice(cursor).trim();
+          if (after) {
+            segments.push({
+              kind: "markdown",
+              content: after,
+              id: "markdown-" + segments.length,
+            });
+          }
+          return segments;
+        }
+
+        function formatMetronomeRunJsonDocumentRaw(value) {
+          try {
+            return JSON.stringify(value, null, 2);
+          } catch {
+            return String(value || "");
+          }
+        }
+
+        function formatMetronomeRunJsonPreviewValue(value) {
+          if (value === null) return "null";
+          if (typeof value === "boolean" || typeof value === "number") return String(value);
+          if (typeof value === "string") return value;
+          return formatPlaygroundDatabaseFieldPreview(value);
+        }
+
+        function renderMetronomeRunJsonPreviewRows(containerValue, parentPath = [], depth = 0) {
+          const entries = Array.isArray(containerValue)
+            ? containerValue.map((item, index) => [String(index), item])
+            : Object.entries(isPlaygroundDatabasePlainObject(containerValue) ? containerValue : {});
+
+          if (!entries.length) {
+            return React.createElement("div", {
+              className: "playground-database-browser-empty-fields",
+              style: { marginLeft: depth > 0 ? String(depth * 18) + "px" : undefined },
+            }, "No fields.");
+          }
+
+          return React.createElement("div", { className: "playground-database-browser-field-tree" },
+            entries.map(([fieldKey, fieldValue]) => {
+              const fieldPath = [...parentPath, fieldKey];
+              const fieldType = getPlaygroundDatabaseFieldType(fieldValue);
+              const expandable = fieldType === "map" || fieldType === "array";
+              const pathKey = getPlaygroundDatabasePathKey(fieldPath);
+              return React.createElement("div", { key: pathKey, className: "playground-database-browser-field-node" },
+                React.createElement("div", {
+                    className: "playground-database-browser-field-row",
+                    style: { paddingLeft: String(depth * 18) + "px" },
+                  },
+                  React.createElement("div", { className: "playground-database-browser-field-main" },
+                    React.createElement("span", { className: "playground-database-browser-field-toggle-placeholder" }),
+                    React.createElement("span", { className: "playground-database-browser-field-key" }, fieldKey),
+                    React.createElement("span", { className: "playground-database-browser-field-separator" }, ":"),
+                    expandable
+                      ? React.createElement("div", { className: "playground-database-browser-field-group" },
+                          React.createElement("span", { className: "playground-database-browser-field-type-pill" }, fieldType === "map" ? "Object" : "Array"),
+                          React.createElement("span", { className: "playground-database-browser-field-preview" }, formatPlaygroundDatabaseFieldPreview(fieldValue))
+                        )
+                      : React.createElement("div", { className: "playground-database-browser-field-value-shell" },
+                          React.createElement("span", { className: "playground-database-browser-value-static" }, formatMetronomeRunJsonPreviewValue(fieldValue))
+                        )
+                  )
+                ),
+                expandable
+                  ? React.createElement("div", { className: "playground-database-browser-field-children" },
+                      renderMetronomeRunJsonPreviewRows(fieldValue, fieldPath, depth + 1)
+                    )
+                  : null
+              );
+            })
+          );
+        }
+
+        function renderMetronomeRunJsonDocument(value, options = {}) {
+          const parsed = parseMetronomeRunJsonDocumentValue(value);
+          if (!parsed) return null;
+          const documentKey = String(options.key || "metronome-json").trim() || "metronome-json";
+          const title = String(options.title || "JSON").trim() || "JSON";
+          const viewMode = metronomeRunJsonViewModeByKey[documentKey] === "json" ? "json" : "preview";
+          const rawJson = formatMetronomeRunJsonDocumentRaw(parsed);
+          const MetronomeRunJsonEditorComponent = metronomeRunJsonEditorModule?.default || null;
+          const switchViewMode = (nextMode) => {
+            const normalizedMode = nextMode === "json" ? "json" : "preview";
+            setMetronomeRunJsonViewModeByKey((current) => ({
+              ...current,
+              [documentKey]: normalizedMode,
+            }));
+          };
+          return React.createElement("div", { className: "playground-metronome-run-json-document" },
+            React.createElement("div", { className: "playground-metronome-run-json-header" },
+              React.createElement("div", { className: "playground-metronome-run-json-title" },
+                React.createElement(Braces, { width: 14, height: 14, strokeWidth: 1.9 }),
+                React.createElement("span", null, title)
+              ),
+              React.createElement("div", { className: "content-mode-switch playground-agents-list-switch playground-database-browser-mode-switch playground-metronome-run-json-mode-switch" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "content-mode-button" + (viewMode === "preview" ? " is-active" : ""),
+                  onClick: () => switchViewMode("preview"),
+                }, "Preview"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "content-mode-button" + (viewMode === "json" ? " is-active" : ""),
+                  onClick: () => switchViewMode("json"),
+                }, "JSON")
+              )
+            ),
+            React.createElement("div", { className: "playground-metronome-run-json-body" },
+              viewMode === "json"
+                ? React.createElement("div", { className: "playground-metronome-run-json-editor-shell playground-code-preview-editor-shell" },
+                    MetronomeRunJsonEditorComponent
+                      ? React.createElement(MetronomeRunJsonEditorComponent, {
+                          path: "metronome-run:" + documentKey.replace(/[^a-z0-9_.:-]+/gi, "_") + ".json",
+                          height: "100%",
+                          language: "json",
+                          theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+                          value: rawJson,
+                          beforeMount: ensurePlaygroundCodeEditorTheme,
+                          options: {
+                            automaticLayout: true,
+                            readOnly: true,
+                            minimap: { enabled: false },
+                            scrollBeyondLastLine: false,
+                            smoothScrolling: true,
+                            fontSize: 12,
+                            lineHeight: 20,
+                            tabSize: 2,
+                            insertSpaces: true,
+                            renderLineHighlight: "none",
+                            lineNumbersMinChars: 3,
+                            overviewRulerBorder: false,
+                            hideCursorInOverviewRuler: true,
+                            wordWrap: "on",
+                            padding: {
+                              top: 12,
+                              bottom: 12,
+                            },
+                            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                          },
+                        })
+                      : !metronomeRunJsonEditorModuleError
+                        ? React.createElement("div", { className: "playground-code-preview-state" },
+                            React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                            React.createElement("span", null, "Loading editor...")
+                          )
+                        : React.createElement("pre", { className: "playground-metronome-run-json-raw" }, rawJson)
+                  )
+                : renderMetronomeRunJsonPreviewRows(parsed, [], 0)
+            )
+          );
+        }
+
         function renderMetronomeRunTraceThreadValue(value) {
+          const jsonDocument = renderMetronomeRunJsonDocument(value, {
+            key: "metronome-output:" + String(metronomeRunTraceSelection?.key || "") + ":" + String(formatMetronomeRunValue(value)).slice(0, 80),
+            title: "JSON",
+          });
+          if (jsonDocument) return jsonDocument;
+          const inlineJsonSegments = splitMetronomeRunInlineJsonContent(value, "JSON");
+          if (inlineJsonSegments.some((segment) => segment.kind === "json")) {
+            return React.createElement("div", { className: "playground-metronome-run-json-content" },
+              inlineJsonSegments.map((segment, index) => (
+                segment.kind === "json"
+                  ? React.createElement(React.Fragment, { key: segment.id },
+                      renderMetronomeRunJsonDocument(segment.value, {
+                        key: "metronome-output:" + String(metronomeRunTraceSelection?.key || "") + ":" + segment.id + ":" + index,
+                        title: segment.title || "JSON",
+                      })
+                    )
+                  : React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                      key: segment.id,
+                      content: segment.content,
+                      className: "playground-metronome-run-output-markdown tb-message-markdown",
+                    })
+              ))
+            );
+          }
           const markdown = renderMetronomeRunTraceThreadMarkdown(value, "playground-metronome-run-output-markdown tb-message-markdown");
           if (markdown) return markdown;
           const formatted = formatMetronomeRunValue(value);
@@ -160790,7 +161685,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
               )
             ),
             summary
-              ? React.createElement("div", { className: "playground-metronome-run-trace-summary" }, summary)
+              ? React.createElement("div", { className: "playground-metronome-run-trace-summary" },
+                  renderMetronomeRunTraceThreadValue(summary) || summary
+                )
               : null,
             kind === "condition" && conditionInputText
               ? React.createElement("div", { className: "playground-metronome-run-trace-field" },
@@ -160808,7 +161705,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 )
               : null,
             shouldRenderOutputText
-              ? renderMetronomeRunTraceThreadMarkdown(readableOutputText, "playground-metronome-run-output-markdown tb-message-markdown")
+              ? renderMetronomeRunTraceThreadValue(readableOutputText)
               : null
           );
         }
@@ -160922,7 +161819,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 summaryText
                   ? React.createElement("div", { className: "tb-turn-summary tb-thread-history-anchor is-latest-summary playground-metronome-run-thread-summary" },
                       React.createElement("div", { className: "tb-turn-response" },
-                        renderMetronomeRunTraceThreadMarkdown(summaryText, "tb-message-markdown tb-message-markdown-summary")
+                        renderMetronomeRunJsonDocument(summaryText, {
+                          key: "metronome-summary:" + String(selection?.key || run?.id || ""),
+                          title: "JSON",
+                        }) || renderMetronomeRunTraceThreadMarkdown(summaryText, "tb-message-markdown tb-message-markdown-summary")
                       )
                     )
                   : null,

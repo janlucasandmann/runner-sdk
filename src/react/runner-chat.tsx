@@ -5,6 +5,7 @@ import {
   Bookmark as LucideBookmark,
   Bot as LucideBot,
   Brain as LucideBrain,
+  Braces as LucideBraces,
   Calendar as LucideCalendar,
   Check as LucideCheck,
   ChevronDown as LucideChevronDown,
@@ -92,7 +93,7 @@ import {
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
 import { LazyMediaPreviewMount, RunnerLazyMediaPreviewLoader } from "./runner-lazy-media-preview.js";
 import type { RunnerImageMaskStroke, RunnerImageNaturalSize } from "./runner-image-edit-overlays.js";
-import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, collectRunnerLogFileChangePreviews, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand, shouldRenderRunnerReasoningLog } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerCodeViewer, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, collectRunnerLogFileChangePreviews, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand, shouldRenderRunnerReasoningLog } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 import { DotLoader } from "./dot-loader.js";
 
@@ -200,6 +201,211 @@ function getRunnerEmailPromptDisplay(prompt: string): RunnerEmailPromptDisplay {
     emailFrom,
     isEmailPrompt: true,
   };
+}
+
+type RunnerSummaryJsonValue = Record<string, unknown> | unknown[];
+
+function isRunnerSummaryPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isRunnerSummaryJsonValue(value: unknown): value is RunnerSummaryJsonValue {
+  return Array.isArray(value) || isRunnerSummaryPlainObject(value);
+}
+
+function stripRunnerSummaryJsonFence(value: string): string {
+  const trimmed = value.trim();
+  const match = trimmed.match(/^```(?:json|jsonc)?\s*\n([\s\S]*?)\n```$/i);
+  return match?.[1]?.trim() || trimmed;
+}
+
+function parseRunnerSummaryJsonValue(value: string): RunnerSummaryJsonValue | null {
+  const candidate = stripRunnerSummaryJsonFence(value);
+  if (!candidate.startsWith("{") && !candidate.startsWith("[")) return null;
+  try {
+    const parsed = JSON.parse(candidate);
+    return isRunnerSummaryJsonValue(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function formatRunnerSummaryJsonRaw(value: RunnerSummaryJsonValue): string {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return "{}";
+  }
+}
+
+function getRunnerSummaryJsonType(value: unknown): "array" | "object" | "null" | "boolean" | "number" | "string" {
+  if (Array.isArray(value)) return "array";
+  if (isRunnerSummaryPlainObject(value)) return "object";
+  if (value === null) return "null";
+  if (typeof value === "boolean") return "boolean";
+  if (typeof value === "number") return "number";
+  return "string";
+}
+
+function formatRunnerSummaryJsonPreview(value: unknown): string {
+  const type = getRunnerSummaryJsonType(value);
+  if (type === "object") {
+    const count = Object.keys(value as Record<string, unknown>).length;
+    return `${count} ${count === 1 ? "field" : "fields"}`;
+  }
+  if (type === "array") {
+    const count = Array.isArray(value) ? value.length : 0;
+    return `${count} ${count === 1 ? "item" : "items"}`;
+  }
+  if (type === "null") return "null";
+  if (type === "boolean" || type === "number") return String(value);
+  return JSON.stringify(String(value || ""));
+}
+
+type RunnerRunSummarySegment =
+  | { kind: "markdown"; content: string; id: string }
+  | { kind: "json"; value: RunnerSummaryJsonValue; id: string; title: string };
+
+function splitRunnerRunSummaryContent(content: string): RunnerRunSummarySegment[] {
+  const normalizedContent = stripSystemTags(content || "").trim();
+  if (!normalizedContent) return [];
+
+  const pureJson = parseRunnerSummaryJsonValue(normalizedContent);
+  if (pureJson) {
+    return [{ kind: "json", value: pureJson, id: "json-0", title: "JSON" }];
+  }
+
+  const segments: RunnerRunSummarySegment[] = [];
+  const fenceRegex = /```([^\n`]*)\n([\s\S]*?)```/g;
+  let cursor = 0;
+  let jsonIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = fenceRegex.exec(normalizedContent))) {
+    const fullMatch = match[0] || "";
+    const language = String(match[1] || "").trim().toLowerCase();
+    const body = String(match[2] || "").trim();
+    const startsAt = match.index;
+    const jsonValue = (!language || language === "json" || language === "jsonc") ? parseRunnerSummaryJsonValue(body) : null;
+
+    if (!jsonValue) {
+      continue;
+    }
+
+    const before = normalizedContent.slice(cursor, startsAt).trim();
+    if (before) {
+      segments.push({ kind: "markdown", content: before, id: `markdown-${segments.length}` });
+    }
+    segments.push({ kind: "json", value: jsonValue, id: `json-${jsonIndex}`, title: "JSON" });
+    jsonIndex += 1;
+    cursor = startsAt + fullMatch.length;
+  }
+
+  if (!segments.length) {
+    return [{ kind: "markdown", content: normalizedContent, id: "markdown-0" }];
+  }
+
+  const after = normalizedContent.slice(cursor).trim();
+  if (after) {
+    segments.push({ kind: "markdown", content: after, id: `markdown-${segments.length}` });
+  }
+
+  return segments;
+}
+
+function RunnerRunSummaryJsonRows({ value, depth = 0 }: { value: RunnerSummaryJsonValue | unknown; depth?: number }) {
+  const entries = Array.isArray(value)
+    ? value.map((item, index) => [String(index), item] as const)
+    : Object.entries(isRunnerSummaryPlainObject(value) ? value : {});
+
+  if (!entries.length) {
+    return (
+      <div className="tb-run-summary-json-empty" style={depth > 0 ? { marginLeft: depth * 18 } : undefined}>
+        No fields.
+      </div>
+    );
+  }
+
+  return (
+    <div className="tb-run-summary-json-field-tree">
+      {entries.map(([fieldKey, fieldValue]) => {
+        const fieldType = getRunnerSummaryJsonType(fieldValue);
+        const expandable = fieldType === "object" || fieldType === "array";
+        return (
+          <div key={`${depth}:${fieldKey}`} className="tb-run-summary-json-field-node">
+            <div className="tb-run-summary-json-field-row" style={{ paddingLeft: depth * 18 }}>
+              <div className="tb-run-summary-json-field-main">
+                <span className="tb-run-summary-json-field-toggle-placeholder" />
+                <span className="tb-run-summary-json-field-key">{fieldKey}</span>
+                <span className="tb-run-summary-json-field-separator">:</span>
+                {expandable ? (
+                  <span className="tb-run-summary-json-field-group">
+                    <span className="tb-run-summary-json-field-type-pill">{fieldType === "object" ? "Object" : "Array"}</span>
+                    <span className="tb-run-summary-json-field-preview">{formatRunnerSummaryJsonPreview(fieldValue)}</span>
+                  </span>
+                ) : (
+                  <span className="tb-run-summary-json-field-value">{formatRunnerSummaryJsonPreview(fieldValue)}</span>
+                )}
+              </div>
+            </div>
+            {expandable ? (
+              <div className="tb-run-summary-json-field-children">
+                <RunnerRunSummaryJsonRows value={fieldValue} depth={depth + 1} />
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RunnerRunSummaryJsonDocument({ value, title = "JSON", documentId }: { value: RunnerSummaryJsonValue; title?: string; documentId: string }) {
+  const [viewMode, setViewMode] = useState<"preview" | "json">("preview");
+  const rawJson = useMemo(() => formatRunnerSummaryJsonRaw(value), [value]);
+
+  return (
+    <div className="tb-run-summary-json-document">
+      <div className="tb-run-summary-json-header">
+        <div className="tb-run-summary-json-title">
+          <LucideBraces className="tb-run-summary-json-title-icon" strokeWidth={1.9} />
+          <span>{title}</span>
+        </div>
+        <div className="tb-run-summary-json-mode-switch" role="tablist" aria-label="JSON display mode">
+          <button
+            type="button"
+            className={`tb-run-summary-json-mode-button ${viewMode === "preview" ? "is-active" : ""}`.trim()}
+            onClick={() => setViewMode("preview")}
+          >
+            Preview
+          </button>
+          <button
+            type="button"
+            className={`tb-run-summary-json-mode-button ${viewMode === "json" ? "is-active" : ""}`.trim()}
+            onClick={() => setViewMode("json")}
+          >
+            JSON
+          </button>
+        </div>
+      </div>
+      <div className="tb-run-summary-json-body">
+        {viewMode === "json" ? (
+          <div className="tb-run-summary-json-editor-shell">
+            <RunnerCodeViewer
+              content={rawJson}
+              filePath={`run-summary-${documentId}.json`}
+              language="json"
+              showLineNumbers
+              fillHeight
+              className="tb-run-summary-json-editor"
+            />
+          </div>
+        ) : (
+          <RunnerRunSummaryJsonRows value={value} />
+        )}
+      </div>
+    </div>
+  );
 }
 
 function CollapsibleRunnerUserPrompt({
@@ -12280,9 +12486,38 @@ export function RunnerChat({
     if (isComputeTokenBudgetErrorLog(agentMessage)) {
       return renderComputeTokenUpgradeLogBox(agentMessage.message);
     }
+    const summaryContent = stripSystemTags(agentMessage.message);
+    const summarySegments = splitRunnerRunSummaryContent(summaryContent);
+    if (summarySegments.some((segment) => segment.kind === "json")) {
+      return (
+        <div className="tb-run-summary-content">
+          {summarySegments.map((segment) => {
+            if (segment.kind === "json") {
+              return (
+                <RunnerRunSummaryJsonDocument
+                  key={segment.id}
+                  value={segment.value}
+                  title={segment.title}
+                  documentId={`${turn.id}-${segment.id}`}
+                />
+              );
+            }
+            return (
+              <RunnerMarkdown
+                key={segment.id}
+                content={segment.content}
+                className={options.className}
+                softBreaks={options.softBreaks}
+                onWorkspacePathClick={options.canPreviewSummaryWorkspacePaths ? (path) => handleSummaryWorkspacePathClick(turn, path, "run_summary") : undefined}
+              />
+            );
+          })}
+        </div>
+      );
+    }
     return (
       <RunnerMarkdown
-        content={stripSystemTags(agentMessage.message)}
+        content={summaryContent}
         className={options.className}
         softBreaks={options.softBreaks}
         onWorkspacePathClick={options.canPreviewSummaryWorkspacePaths ? (path) => handleSummaryWorkspacePathClick(turn, path, "run_summary") : undefined}

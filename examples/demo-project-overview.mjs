@@ -2185,7 +2185,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-activity-card.is-main .playground-project-overview-activity-row {
-        grid-template-columns: 28px minmax(0, 1fr);
+        grid-template-columns: 28px minmax(0, 1fr) auto;
         align-items: center;
         gap: 12px;
         min-height: 50px;
@@ -2460,8 +2460,9 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-activity-row {
         display: grid;
-        grid-template-columns: 34px minmax(0, 1fr);
+        grid-template-columns: 34px minmax(0, 1fr) auto;
         gap: 14px;
+        align-items: center;
         position: relative;
         min-height: 54px;
       }
@@ -2547,6 +2548,64 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-activity-time {
         color: rgba(255, 255, 255, 0.44);
+      }
+
+      .playground-project-overview-activity-permission {
+        position: relative;
+        z-index: 4;
+        justify-self: end;
+        align-self: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        margin-left: 8px;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .playground-project-overview-activity-permission-tooltip {
+        pointer-events: none;
+        position: absolute;
+        z-index: 140;
+        right: 0;
+        bottom: calc(100% + 8px);
+        width: min(280px, 72vw);
+        padding: 9px 10px;
+        border-radius: 8px;
+        background: rgba(32, 32, 34, 0.98);
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.34);
+        color: rgba(255, 255, 255, 0.78);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(4px);
+        transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+      }
+
+      .playground-project-overview-activity-permission:hover .playground-project-overview-activity-permission-tooltip,
+      .playground-project-overview-activity-permission:focus-visible .playground-project-overview-activity-permission-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+      }
+
+      .playground-project-overview-activity-permission-tooltip-title {
+        display: block;
+        margin-bottom: 4px;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1.25;
+        white-space: normal;
+      }
+
+      .playground-project-overview-activity-permission-tooltip-copy {
+        display: block;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.4;
+        white-space: normal;
       }
 
       .playground-project-overview-activity-empty {
@@ -8369,6 +8428,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 verb: "worked on",
                 object: displayThreadTitle || "Untitled thread",
                 taskId: threadTaskId,
+                permissionActionId: "local_skill_run",
                 time: Number.isFinite(timestamp) ? timestamp : 0,
                 timeLabel: formatProjectOverviewActivityTimeLabel(safeThread?.updatedAt || safeThread?.createdAt),
               });
@@ -8388,6 +8448,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 verb: String(row?.operation || "").trim().toLowerCase() || "updated",
                 object: String(row?.title || row?.path || "file").trim(),
                 taskId: fileTaskId,
+                permissionActionId: String(row?.operationKind || row?.operation || "").toLowerCase().match(/read|view|open|list/)
+                  ? "workspace_read"
+                  : "workspace_write",
                 time: Number.isFinite(timestamp) ? timestamp : 0,
                 timeLabel: formatProjectOverviewActivityTimeLabel(timestamp, row?.dateLabel),
               });
@@ -8408,6 +8471,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 verb: String(task?.createdAt || "") === String(task?.updatedAt || "") ? "created" : "updated",
                 object: task?.title || "Untitled task",
                 taskId: String(task?.id || "").trim(),
+                permissionActionId: "shared_resource_write",
                 time: Number.isFinite(timestamp) ? timestamp : 0,
                 timeLabel: formatProjectOverviewActivityTimeLabel(task?.updatedAt || task?.createdAt),
               });
@@ -8475,6 +8539,67 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
+          function getProjectOverviewActivityPermissionSet() {
+            if (typeof normalizePlaygroundPermissionSet !== "function") {
+              return null;
+            }
+            return normalizePlaygroundPermissionSet(
+              projectOverviewDraft?.permissionSet
+                || projectOverviewDraft?.metadata?.permissionSet
+                || selectedProject?.permissionSet
+                || selectedProject?.metadata?.permissionSet,
+              "project"
+            );
+          }
+
+          function renderProjectOverviewActivityPermissionRing(item) {
+            if (
+              !item?.permissionActionId
+              || typeof renderPlaygroundPermissionMiniRingIcon !== "function"
+              || typeof getPlaygroundPermissionActionDefinition !== "function"
+              || typeof getPlaygroundPermissionActionRingId !== "function"
+            ) {
+              return null;
+            }
+            const actionDefinition = getPlaygroundPermissionActionDefinition(item.permissionActionId);
+            if (!actionDefinition) {
+              return null;
+            }
+            const permissionSet = getProjectOverviewActivityPermissionSet();
+            const actionRingId = getPlaygroundPermissionActionRingId(permissionSet, actionDefinition);
+            const ringDefinition = typeof getPlaygroundPermissionRingDefinition === "function"
+              ? getPlaygroundPermissionRingDefinition(actionRingId)
+              : null;
+            const actionAccess = typeof getPlaygroundPermissionActionAccess === "function"
+              ? getPlaygroundPermissionActionAccess(permissionSet, actionDefinition)
+              : "";
+            const accessLabel = typeof getPlaygroundPermissionAccessLabel === "function" && actionAccess
+              ? getPlaygroundPermissionAccessLabel(actionAccess)
+              : "";
+            const label = [
+              actionDefinition.label,
+              ringDefinition?.label || "",
+              accessLabel,
+            ].filter(Boolean).join(" · ");
+            const ringTitle = ringDefinition
+              ? [ringDefinition.label, ringDefinition.title].filter(Boolean).join(" · ")
+              : (actionRingId || "Permission ring");
+            const ringDescription = ringDefinition?.description || "";
+            return React.createElement("span", {
+                className: "playground-project-overview-activity-permission",
+                "aria-label": label,
+                tabIndex: 0,
+              },
+              renderPlaygroundPermissionMiniRingIcon(actionRingId),
+              React.createElement("span", { className: "playground-project-overview-activity-permission-tooltip", role: "tooltip" },
+                React.createElement("span", { className: "playground-project-overview-activity-permission-tooltip-title" }, ringTitle),
+                ringDescription
+                  ? React.createElement("span", { className: "playground-project-overview-activity-permission-tooltip-copy" }, ringDescription)
+                  : null
+              )
+            );
+          }
+
           function renderProjectOverviewActivitySection() {
             const allActivityItems = buildProjectOverviewActivityItems();
             const visibleActivityCount = Math.max(5, Number(projectOverviewVisibleActivityCount) || 5);
@@ -8508,7 +8633,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                             item.timeLabel
                               ? React.createElement("span", { className: "playground-project-overview-activity-time" }, " · " + item.timeLabel)
                               : null
-                          )
+                          ),
+                          renderProjectOverviewActivityPermissionRing(item)
                         )
                       )
                     ),
@@ -12997,12 +13123,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                  isAllAgentsTeam
 	                    ? {
 	                        subjectType: "project",
+	                        animationKey: projectPermissionChartAnimationKey,
 	                        onRingAccessChange: updateProjectPermissionRingAccess,
 	                        onActionRingChange: updateProjectPermissionActionRing,
 	                        onActionAccessChange: updateProjectPermissionActionAccess,
 	                      }
 	                    : {
 	                        subjectType: "team",
+	                        animationKey: projectPermissionChartAnimationKey,
 	                        onRingAccessChange: (ringId, nextAccess) => updateProjectTeamPermissionRingAccess?.(selectedPermissionTeam.id, ringId, nextAccess),
 	                        onActionRingChange: (actionId, nextRingId) => updateProjectTeamPermissionActionRing?.(selectedPermissionTeam.id, actionId, nextRingId),
 	                        onActionAccessChange: (actionId, nextAccess) => updateProjectTeamPermissionActionAccess?.(selectedPermissionTeam.id, actionId, nextAccess),
