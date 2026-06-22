@@ -1698,6 +1698,8 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           mediaMode,
           filterMode: externalFilterMode,
           sortMode: externalSortMode,
+          focusedTemplateId = "",
+          focusedTemplateSelectionToken = "",
           onActiveViewChange,
           onMediaModeChange,
           isAgentSelectionBlocked,
@@ -1708,6 +1710,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           const [selectedTemplateId, setSelectedTemplateId] = useState("");
           const [templateAssetIndexes, setTemplateAssetIndexes] = useState({});
           const [templateAssetDirections, setTemplateAssetDirections] = useState({});
+          const lastAppliedFocusedTemplateSelectionTokenRef = useRef("");
           const customTemplateStorageKey = "runner_demo_imagine_custom_templates_v1";
           const favouriteTemplateStorageKey = "runner_demo_imagine_favourite_template_ids_v1";
           const [customTemplates, setCustomTemplates] = useState(() => {
@@ -2787,6 +2790,27 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
             () => allTemplates.find((template) => template.id === selectedTemplateId) || null,
             [allTemplates, selectedTemplateId]
           );
+
+          useEffect(() => {
+            const normalizedToken = String(focusedTemplateSelectionToken || "").trim();
+            const normalizedTemplateId = String(focusedTemplateId || "").trim();
+            if (!normalizedToken || !normalizedTemplateId) {
+              return;
+            }
+            if (lastAppliedFocusedTemplateSelectionTokenRef.current === normalizedToken) {
+              return;
+            }
+            const focusedTemplate = allTemplates.find((template) => String(template?.id || "").trim() === normalizedTemplateId) || null;
+            if (!focusedTemplate) {
+              return;
+            }
+            lastAppliedFocusedTemplateSelectionTokenRef.current = normalizedToken;
+            setActiveImagineTab(focusedTemplate.isCustom || focusedTemplate.isShared ? "my-templates" : "explore");
+            window.setTimeout(() => {
+              setSelectedTemplateId(normalizedTemplateId);
+            }, 0);
+          }, [allTemplates, focusedTemplateId, focusedTemplateSelectionToken, setActiveImagineTab]);
+
           const getTemplateAssetIndex = useCallback((template) => {
             const templateId = String(template?.id || "").trim();
             const assets = normalizePlaygroundImagineTemplateAssets(template);

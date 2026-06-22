@@ -2736,8 +2736,100 @@ const html = `<!doctype html>
       }
 
       .playground-configure-home-inner.playground-develop-home-inner .playground-configure-usage-metrics,
+      .playground-configure-home-inner.playground-develop-home-inner .playground-configure-overview-cards,
       .playground-configure-home-inner.playground-develop-home-inner .playground-configure-sections {
         margin-top: 12px;
+      }
+
+      .playground-configure-overview-cards {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .playground-configure-overview-card {
+        min-width: 0;
+        min-height: 132px;
+        padding: 18px;
+        border: 0;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.94);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 18px;
+        text-align: left;
+        cursor: pointer;
+        box-sizing: border-box;
+        transition: background-color 160ms ease, transform 160ms ease;
+      }
+
+      .playground-configure-overview-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-1px);
+      }
+
+      .playground-configure-overview-card-top {
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-configure-overview-card-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.88);
+        flex: 0 0 auto;
+      }
+
+      .playground-configure-overview-card-icon svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      .playground-configure-overview-card-arrow {
+        width: 14px;
+        height: 14px;
+        color: rgba(255, 255, 255, 0.42);
+        flex: 0 0 auto;
+      }
+
+      .playground-configure-overview-card-value {
+        margin-top: 2px;
+        color: #fff;
+        font-size: 28px;
+        line-height: 1;
+        font-weight: 500;
+      }
+
+      .playground-configure-overview-card-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .playground-configure-overview-card-title {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        line-height: 1.2;
+        font-weight: 500;
+      }
+
+      .playground-configure-overview-card-description {
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
       }
 
       .playground-develop-webhooks-page {
@@ -9098,6 +9190,9 @@ const html = `<!doctype html>
 
       .notification-menu-header,
       .notification-menu-footer {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         padding: 12px 14px;
       }
 
@@ -9250,6 +9345,11 @@ const html = `<!doctype html>
         cursor: pointer;
       }
 
+      .notification-menu-footer .notification-menu-mark-read {
+        width: auto;
+        flex: 1 1 0;
+      }
+
       .notification-menu,
       .notification-menu * {
         font-size: 12px;
@@ -9263,6 +9363,242 @@ const html = `<!doctype html>
       .notification-menu-mark-read:disabled {
         opacity: 0.45;
         cursor: default;
+      }
+
+      .playground-configure-notifications-section {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-top: 42px;
+      }
+
+      .playground-configure-notifications-section .playground-files-control-row .playground-files-control-button {
+        --playground-files-control-button-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+        border: 0;
+        background: transparent;
+      }
+
+      .playground-configure-notifications-section .playground-files-control-row .playground-files-control-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-files-control-button-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-configure-notifications-section .playground-files-control-row .playground-files-control-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-configure-notifications-section .playground-files-control-button.is-backlog-filter {
+        padding-right: 14px;
+      }
+
+      .playground-notifications-header {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-notifications-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .playground-notifications-subtitle {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      .playground-notifications-library-header .playground-files-library-title-row {
+        align-items: center;
+      }
+
+      .playground-notifications-nav-row {
+        overflow: visible;
+      }
+
+      .playground-notifications-context-row {
+        flex: 1 1 auto;
+      }
+
+      .playground-configure-notifications-section .playground-files-library-new-button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      .playground-notifications-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .playground-notifications-search-anchor {
+        flex: 1 1 420px;
+        min-width: 220px;
+      }
+
+      .playground-notifications-search.playground-files-library-search {
+        width: 100%;
+      }
+
+      .playground-notifications-toolbar-anchor {
+        flex: 0 0 auto;
+      }
+
+      .playground-notifications-toolbar-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        min-width: 210px;
+        z-index: 10100;
+      }
+
+      .playground-notifications-mark-read-button {
+        flex: 0 0 auto;
+      }
+
+      .playground-notifications-table-shell.playground-team-table-shell {
+        border-radius: 10px;
+        overflow: visible;
+      }
+
+      .playground-auth-users-table.is-secrets-table.playground-notifications-table .playground-notifications-table-col-notification {
+        width: 46%;
+      }
+
+      .playground-auth-users-table.is-secrets-table.playground-notifications-table .playground-notifications-table-col-type {
+        width: 16%;
+      }
+
+      .playground-auth-users-table.is-secrets-table.playground-notifications-table .playground-notifications-table-col-status {
+        width: 16%;
+      }
+
+      .playground-auth-users-table.is-secrets-table.playground-notifications-table .playground-notifications-table-col-time {
+        width: 15%;
+      }
+
+      .playground-auth-users-table.is-secrets-table.playground-notifications-table .playground-notifications-table-col-actions {
+        width: 70px;
+      }
+
+      .playground-notifications-table-main {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-notifications-table-icon-shell {
+        width: 28px;
+        height: 28px;
+        flex: 0 0 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .playground-notifications-table-icon {
+        width: 14px;
+        height: 14px;
+      }
+
+      .playground-notifications-table-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-notifications-table-title,
+      .playground-notifications-table-meta {
+        max-width: 100%;
+      }
+
+      .playground-notifications-status-pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .playground-notifications-status-pill.is-unread {
+        background: rgba(102, 166, 255, 0.14);
+        color: #9ec5ff;
+      }
+
+      .playground-notifications-row-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      .playground-notifications-row-actions .notification-menu-action-button {
+        min-height: 26px;
+        padding: 0 8px;
+        font-size: 11px;
+      }
+
+      .playground-notifications-empty {
+        min-height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-top: 0;
+      }
+
+      @media (max-width: 760px) {
+        .playground-notifications-header,
+        .playground-notifications-toolbar {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .playground-notifications-search-anchor,
+        .playground-notifications-mark-read-button {
+          width: 100%;
+        }
       }
 
       .playground-team-page {
@@ -9643,6 +9979,79 @@ const html = `<!doctype html>
         white-space: nowrap;
       }
 
+      .playground-team-resource-owner-cell {
+        min-width: 0;
+        max-width: 100%;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-team-resources-panel .playground-project-resources-row.has-source-column.has-owner-column > :nth-child(5) {
+        min-height: 100%;
+        display: flex;
+        align-items: center;
+      }
+
+      .playground-team-resource-owner-avatar {
+        --playground-team-resource-owner-avatar-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        width: 20px;
+        height: 20px;
+        flex: 0 0 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        font-size: 8px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .playground-team-resource-owner-avatar:has(> .playground-team-resource-owner-avatar-fallback)::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-team-resource-owner-avatar-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-team-resource-owner-avatar-image {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      .playground-team-resource-owner-avatar-fallback {
+        width: 100%;
+        height: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        position: relative;
+      }
+
       .playground-team-icon-button {
         width: 32px;
         height: 32px;
@@ -9657,7 +10066,6 @@ const html = `<!doctype html>
         display: flex;
         align-items: center;
         justify-content: center;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
         color: rgba(255, 255, 255, 0.46);
         font-size: 13px;
       }
@@ -10005,6 +10413,22 @@ const html = `<!doctype html>
         width: 56px;
       }
 
+      .playground-auth-users-table.is-secrets-table.playground-team-members-table .playground-team-table-col-main {
+        width: 39%;
+      }
+
+      .playground-auth-users-table.is-secrets-table.playground-team-members-table .playground-team-table-col-role {
+        width: 18%;
+      }
+
+      .playground-auth-users-table.is-secrets-table.playground-team-members-table .playground-team-table-col-meta {
+        width: 14%;
+      }
+
+      .playground-auth-users-table.is-secrets-table.playground-team-members-table .playground-team-table-col-joined {
+        width: 19%;
+      }
+
       .playground-team-table-title,
       .playground-team-table-meta {
         display: block;
@@ -10114,6 +10538,35 @@ const html = `<!doctype html>
 
       .playground-team-table .playground-team-select:focus {
         border-color: transparent;
+      }
+
+      .playground-team-member-action-shell {
+        justify-content: flex-end;
+      }
+
+      .playground-team-member-action-button {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-team-member-action-button:hover:not(:disabled),
+      .playground-team-member-action-shell.is-open .playground-team-member-action-button {
+        border-color: transparent;
+        background: transparent;
+        color: #fff;
+      }
+
+      .playground-team-member-action-menu {
+        min-width: 150px;
+      }
+
+      .playground-team-role-label {
+        min-height: 0;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
       }
 
       .playground-team-back-button {
@@ -10385,74 +10838,246 @@ const html = `<!doctype html>
       }
 
       .playground-team-modal.is-share-resource {
-        width: min(540px, 100%);
-        background: rgba(12, 12, 13, 0.96);
+        width: min(620px, calc(100vw - 48px));
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
       }
 
       .playground-team-modal.is-share-resource .playground-team-modal-header {
-        margin-bottom: 18px;
+        flex: 0 0 auto;
+        margin-bottom: 14px;
       }
 
       .playground-team-modal.is-share-resource .playground-team-modal-subtitle {
         color: rgba(255, 255, 255, 0.48);
       }
 
-      .playground-team-modal.is-share-resource .playground-team-modal-form,
-      .playground-team-modal.is-share-resource .playground-team-modal-form-grid {
+      .playground-team-share-picker {
+        flex: 1 1 auto;
+        min-height: 0;
         display: flex;
         flex-direction: column;
-        gap: 0;
+        gap: 14px;
       }
 
-      .playground-team-modal.is-share-resource .playground-team-modal-form {
+      .playground-team-share-picker-bar {
+        display: flex;
+        justify-content: stretch;
+        align-items: center;
         gap: 12px;
       }
 
-      .playground-team-share-row {
-        display: grid;
-        grid-template-columns: minmax(0, 140px) minmax(0, 1fr);
-        align-items: center;
-        gap: 18px;
-        min-height: 42px;
-        padding: 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-team-share-row .playground-team-modal-label {
-        color: rgba(255, 255, 255, 0.52);
-        font-size: 12px;
-        font-weight: 400;
-      }
-
-      .playground-team-share-row .playground-team-modal-help {
-        grid-column: 2;
-        margin: -2px 0 10px;
-        color: rgba(255, 255, 255, 0.42);
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1.45;
-      }
-
-      .playground-team-share-select.playground-team-select {
+      .playground-team-share-access-row {
         width: 100%;
-        height: auto;
-        min-height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .playground-team-share-access-label {
+        color: #fff;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 400;
+      }
+
+      .playground-team-share-picker-type {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        line-height: 1.2;
+        font-weight: 500;
+      }
+
+      .playground-team-share-picker-type-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.82);
+        flex: 0 0 auto;
+      }
+
+      .playground-team-share-access-select.playground-team-select {
+        height: 34px;
+        min-height: 34px;
+        padding: 0 30px 0 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background-color: rgba(0, 0, 0, 0.45);
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .playground-team-share-access-shell.playground-tasks-detail-select-shell.playground-environments-runtime-popup-shell {
+        width: auto;
+        flex: 0 0 auto;
+      }
+
+      .playground-team-share-access-shell .playground-tasks-detail-select-trigger {
+        min-height: 34px;
+      }
+
+      .playground-team-share-access-shell .playground-tasks-toolbar-popup-menu {
+        width: 180px;
+        min-width: 180px;
+      }
+
+      .playground-team-share-resource-selector.playground-tasks-project-blueprint-section {
+        margin: 0;
+        gap: 0;
+      }
+
+      .playground-team-share-resource-selector .playground-tasks-project-blueprint-trigger {
+        min-height: 54px;
+      }
+
+      .playground-team-share-resource-selector .playground-tasks-project-blueprint-popover {
+        z-index: 160;
+      }
+
+      .playground-team-share-resource-list {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: 310px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow: auto;
+        padding-right: 4px;
+        scrollbar-width: none;
+      }
+
+      .playground-team-share-resource-list::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-team-share-resource-option {
+        width: 100%;
+        min-height: 52px;
+        display: grid;
+        grid-template-columns: 32px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border: 0;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.86);
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 150ms ease, color 150ms ease;
+      }
+
+      .playground-team-share-resource-option:hover,
+      .playground-team-share-resource-option.is-selected {
+        background: rgba(255, 255, 255, 0.09);
+        color: #ffffff;
+      }
+
+      .playground-team-share-resource-option-icon {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.76);
+      }
+
+      .playground-team-share-resource-option-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-team-share-resource-option-title {
+        min-width: 0;
+        color: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-team-share-resource-option-meta {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 11px;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-team-share-resource-option-check {
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+      }
+
+      .playground-team-share-resource-option.is-selected .playground-team-share-resource-option-check {
+        border-color: rgba(255, 255, 255, 0.72);
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      .playground-team-share-empty {
+        min-height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 12px;
+        line-height: 1.45;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .playground-team-share-create-new {
+        width: 100%;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
         padding: 0;
         border: 0;
-        border-radius: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
         background: transparent;
-        color: rgba(255, 255, 255, 0.86);
+        color: rgba(255, 255, 255, 0.84);
         font-size: 12px;
-        font-weight: 400;
-        line-height: 1.45;
+        font-weight: 500;
+        cursor: pointer;
       }
 
-      .playground-team-share-select.playground-team-select:focus {
-        border-color: transparent;
+      .playground-team-share-create-new:hover {
+        color: #ffffff;
       }
 
       .playground-team-modal.is-share-resource .playground-team-modal-actions {
-        padding-top: 2px;
+        flex: 0 0 auto;
+        padding-top: 0;
       }
 
       .playground-team-modal.is-share-resource .playground-team-button {
@@ -13721,6 +14346,20 @@ const html = `<!doctype html>
         margin-right: 0;
       }
 
+      .playground-settings-page.is-embedded {
+        min-height: auto;
+        height: auto;
+        padding: 0;
+        overflow: visible;
+      }
+
+      .playground-settings-page.is-embedded .playground-settings-detail-scroll {
+        width: 100%;
+        max-width: none;
+        gap: 0;
+        margin: 0;
+      }
+
       .playground-settings-detail-scroll.is-usage {
         scrollbar-width: none;
       }
@@ -15783,6 +16422,447 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.82);
         line-height: 1.4;
         text-align: right;
+      }
+
+      .playground-settings-runtime-card {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .playground-settings-runtime-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .playground-settings-runtime-target {
+        position: relative;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      .playground-settings-runtime-target-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-settings-runtime-target-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-settings-runtime-target-icon {
+        width: 15px;
+        height: 15px;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-settings-runtime-status {
+        flex: 0 0 auto;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        line-height: 1;
+      }
+
+      .playground-settings-runtime-status.is-active {
+        background: rgba(255, 255, 255, 0.92);
+        color: rgba(0, 0, 0, 0.9);
+      }
+
+      .playground-settings-runtime-status.is-foundation {
+        background: rgba(126, 255, 255, 0.12);
+        color: #7effff;
+      }
+
+      .playground-settings-runtime-target-copy {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .playground-settings-runtime-capabilities {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .playground-settings-runtime-capability {
+        min-width: 0;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .playground-settings-runtime-capability-label {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        line-height: 1.2;
+        text-transform: uppercase;
+      }
+
+      .playground-settings-runtime-capability-value {
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.35;
+      }
+
+      .playground-settings-runtime-note {
+        padding-top: 2px;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .playground-settings-local-runners-card {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .playground-settings-local-runners-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .playground-settings-local-runners-actions {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .playground-settings-local-runners-refresh {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 30px;
+        padding: 6px 12px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .playground-settings-local-runners-refresh.is-primary {
+        background: rgba(255, 255, 255, 0.92);
+        color: rgba(0, 0, 0, 0.92);
+      }
+
+      .playground-settings-local-runners-refresh:disabled {
+        cursor: default;
+        opacity: 0.55;
+      }
+
+      .playground-settings-local-runner-onboarding {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        gap: 14px;
+        padding: 14px;
+        border: 1px solid rgba(126, 255, 255, 0.12);
+        border-radius: 18px;
+        background: rgba(126, 255, 255, 0.045);
+      }
+
+      .playground-settings-local-runner-onboarding > .playground-settings-local-runner-command-stack,
+      .playground-settings-local-runner-onboarding > .playground-settings-muted-copy,
+      .playground-settings-local-runner-onboarding > .playground-settings-inline-status {
+        grid-column: 1 / -1;
+      }
+
+      .playground-settings-local-runner-onboarding > .playground-settings-local-binding-form-actions {
+        align-self: start;
+        justify-content: flex-end;
+      }
+
+      .playground-settings-local-runner-onboarding-title {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      .playground-settings-local-runner-onboarding-copy {
+        margin-top: 6px;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .playground-settings-local-runner-command-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .playground-settings-local-runner-command {
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.24);
+        color: rgba(255, 255, 255, 0.78);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-size: 11px;
+        line-height: 1.55;
+        overflow-x: auto;
+        white-space: pre;
+      }
+
+      .playground-settings-local-binding-form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .playground-settings-local-binding-form-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .playground-settings-local-binding-form-title {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      .playground-settings-local-binding-form-copy {
+        margin-top: 5px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .playground-settings-local-binding-form-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .playground-settings-local-runners-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-settings-local-runner-card {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .playground-settings-local-runner-main {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-settings-local-runner-identity {
+        min-width: 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+      }
+
+      .playground-settings-local-runner-icon {
+        flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: rgba(126, 255, 255, 0.09);
+        color: #7effff;
+      }
+
+      .playground-settings-local-runner-name {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.25;
+      }
+
+      .playground-settings-local-runner-meta {
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.45;
+        word-break: break-word;
+      }
+
+      .playground-settings-local-runner-status {
+        flex: 0 0 auto;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1;
+      }
+
+      .playground-settings-local-runner-status.is-online {
+        background: rgba(126, 255, 255, 0.12);
+        color: #7effff;
+      }
+
+      .playground-settings-local-runner-facts {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .playground-settings-local-runner-fact {
+        min-width: 0;
+        padding: 10px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.18);
+      }
+
+      .playground-settings-local-runner-fact-label {
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        line-height: 1.2;
+        text-transform: uppercase;
+      }
+
+      .playground-settings-local-runner-fact-value {
+        margin-top: 7px;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.35;
+        word-break: break-word;
+      }
+
+      .playground-settings-local-runner-bindings {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .playground-settings-local-runner-binding {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 10px;
+        align-items: center;
+        padding: 9px 10px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.045);
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .playground-settings-local-runner-binding-path {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-settings-local-runner-binding-pill {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      .playground-settings-local-runners-empty {
+        padding: 18px;
+        border: 1px dashed rgba(255, 255, 255, 0.11);
+        border-radius: 18px;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      @media (max-width: 980px) {
+        .playground-settings-runtime-grid,
+        .playground-settings-runtime-capabilities,
+        .playground-settings-local-runner-facts {
+          grid-template-columns: 1fr;
+        }
+
+        .playground-settings-local-runners-header,
+        .playground-settings-local-runner-main {
+          flex-direction: column;
+        }
+
+        .playground-settings-local-runners-actions {
+          width: 100%;
+          justify-content: flex-start;
+          flex-wrap: wrap;
+        }
+
+        .playground-settings-local-runner-onboarding {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .playground-settings-local-binding-form-top {
+          flex-direction: column;
+        }
+
+        .playground-settings-local-binding-form-actions {
+          justify-content: flex-start;
+        }
+
+        .playground-settings-local-runner-binding {
+          grid-template-columns: minmax(0, 1fr);
+        }
       }
 
       .playground-settings-plan-heading {
@@ -25138,6 +26218,18 @@ const html = `<!doctype html>
       .playground-project-overview-chart-shell {
         width: 100%;
         overflow: hidden;
+      }
+
+      .playground-agents-home-chartjs-frame {
+        width: 100%;
+        height: 270px;
+        overflow: hidden;
+      }
+
+      .playground-agents-home-chartjs-canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
       }
 
       .playground-project-overview-chart-header {
@@ -40852,9 +41944,24 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-thread-observability-card .playground-agents-observability-node {
-        grid-template-columns: 24px minmax(0, 1fr) 94px minmax(160px, 240px);
-        padding: 10px 12px;
+        grid-template-columns: 24px minmax(0, 1fr) auto;
+        padding: 12px 12px;
         border-bottom-color: rgba(255, 255, 255, 0.11);
+      }
+
+      .playground-thread-observability-card .playground-agents-observability-node-icon {
+        background: transparent;
+      }
+
+      .playground-thread-observability-card .playground-agents-observability-node-icon .playground-permission-mini-ring-icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      .playground-thread-observability-card .playground-agents-observability-node-icon .playground-permission-mini-ring-icon svg,
+      .playground-thread-observability-action-icon .playground-permission-mini-ring-icon svg {
+        width: 10px;
+        height: 10px;
       }
 
       .playground-thread-observability-card .playground-agents-observability-node.is-selected {
@@ -40896,7 +42003,11 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-thread-observability-card .playground-agents-observability-node-meta {
-        display: none;
+        display: block;
+        margin-top: 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .playground-agents-observability-node-badges {
@@ -40933,11 +42044,15 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-thread-observability-card .playground-agents-observability-node-duration {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
         color: rgba(255, 255, 255, 0.68);
       }
 
       .playground-thread-observability-card .playground-agents-observability-node-bar {
-        background: rgba(255, 255, 255, 0.10);
+        display: none;
       }
 
       .playground-thread-observability-expanded {
@@ -41082,6 +42197,140 @@ ${METRONOME_PAGE_CSS}
         font-size: 12px;
         font-weight: 500;
         line-height: 1.35;
+      }
+
+      .playground-thread-observability-expanded-section-count {
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.35;
+        white-space: nowrap;
+      }
+
+      .playground-thread-observability-action-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        border-radius: 10px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.18);
+      }
+
+      .playground-thread-observability-action-item {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 22px minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 12px;
+        padding: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-thread-observability-action-item:last-child {
+        border-bottom: 0;
+      }
+
+      .playground-thread-observability-action-icon {
+        width: 22px;
+        height: 22px;
+        min-width: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .playground-thread-observability-action-item.is-ring-2 .playground-thread-observability-action-icon {
+        background: transparent;
+        color: rgba(168, 205, 255, 0.95);
+      }
+
+      .playground-thread-observability-action-item.is-ring-3 .playground-thread-observability-action-icon {
+        background: transparent;
+        color: rgba(255, 180, 195, 0.95);
+      }
+
+      .playground-thread-observability-action-icon .playground-permission-mini-ring-icon {
+        width: 22px;
+        height: 22px;
+      }
+
+      .playground-thread-observability-action-copy {
+        min-width: 0;
+      }
+
+      .playground-thread-observability-action-title {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.35;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-thread-observability-action-summary {
+        margin-top: 5px;
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+      }
+
+      .playground-thread-observability-action-resources {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .playground-thread-observability-action-resources span {
+        min-width: 0;
+        max-width: 220px;
+        display: inline-block;
+        padding: 0;
+        color: rgba(102, 166, 255, 0.9);
+        font-size: 11px;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-thread-observability-action-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 7px;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 11px;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+
+      .playground-thread-observability-action-ring {
+        min-height: 20px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 7px;
+        border-radius: 999px;
+        background: rgba(57, 184, 119, 0.14);
+        color: rgba(151, 241, 194, 0.92);
+      }
+
+      .playground-thread-observability-action-ring.is-ring-2 {
+        background: rgba(18, 95, 251, 0.16);
+        color: rgba(168, 205, 255, 0.95);
+      }
+
+      .playground-thread-observability-action-ring.is-ring-3 {
+        background: rgba(247, 71, 107, 0.16);
+        color: rgba(255, 180, 195, 0.95);
       }
 
       .playground-thread-observability-expanded-properties {
@@ -44080,6 +45329,10 @@ ${METRONOME_PAGE_CSS}
         font-size: 11px;
         line-height: 1.45;
         color: rgba(255, 255, 255, 0.48);
+      }
+
+      .playground-tasks-toolbar-popup-item-copy .playground-team-access-option-description {
+        color: rgba(255, 255, 255, 0.5);
       }
 
       .playground-tasks-backlog-list {
@@ -47689,6 +48942,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         showFilterButton = true,
         showViewToggle = true,
         showListSubtitle = false,
+        metaCellsStopRowOpen = true,
       }) {
         const visibleRows = Array.isArray(rows) ? rows : [];
         const availableRows = Array.isArray(allRows) ? allRows : visibleRows;
@@ -47757,6 +49011,13 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           }
           return React.createElement("span", null, row?.ownerLabel || "-");
         };
+        const getMetaCellProps = (className) => metaCellsStopRowOpen
+          ? {
+              className,
+              onClick: (event) => event.stopPropagation(),
+              onKeyDown: (event) => event.stopPropagation(),
+            }
+          : { className };
         const renderFilterOption = (type) => {
           const typeId = String(type?.id || "all").trim() || "all";
           const active = activeFilter === typeId;
@@ -47901,29 +49162,17 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
                       : null
                   )
                 ),
-                React.createElement("div", {
-                    className: "playground-project-resources-cell",
-                    onClick: (event) => event.stopPropagation(),
-                    onKeyDown: (event) => event.stopPropagation(),
-                  },
+                React.createElement("div", getMetaCellProps("playground-project-resources-cell"),
                   renderSecondaryCell(row)
                 ),
                 hasSourceColumn
-                  ? React.createElement("div", {
-                      className: "playground-project-resources-cell",
-                      onClick: (event) => event.stopPropagation(),
-                      onKeyDown: (event) => event.stopPropagation(),
-                    },
+                  ? React.createElement("div", getMetaCellProps("playground-project-resources-cell"),
                     renderSourceCell(row)
                   )
                   : null,
                 React.createElement("div", { className: "playground-project-resources-cell" }, row?.updatedLabel || "-"),
                 hasOwnerColumn
-                  ? React.createElement("div", {
-                      className: "playground-project-resources-cell",
-                      onClick: (event) => event.stopPropagation(),
-                      onKeyDown: (event) => event.stopPropagation(),
-                    },
+                  ? React.createElement("div", getMetaCellProps("playground-project-resources-cell"),
                     renderOwnerCell(row)
                   )
                   : null,
@@ -49275,6 +50524,11 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           return "";
         }
 
+        const normalizedEmail = String(email || "").trim().toLowerCase();
+        if (normalizedEmail && normalizedDisplayName.toLowerCase() === normalizedEmail) {
+          return "";
+        }
+
         const derivedEmailName = formatEmailPrefixDisplayName(email);
         if (
           derivedEmailName
@@ -49425,7 +50679,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         if (normalized === "free" || normalized === "individual" || normalized === "team" || normalized === "enterprise") {
           return normalized;
         }
-        const normalizedAlias = normalized.replace(/[\s-]+/g, "_");
+        const normalizedAlias = normalized.replace(/[\\s-]+/g, "_");
         return SETTINGS_TIER_ALIAS_MAP[normalized] || SETTINGS_TIER_ALIAS_MAP[normalizedAlias] || "";
       }
 
@@ -49810,6 +51064,152 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           hour: "numeric",
           minute: "2-digit",
         });
+      }
+
+      function normalizeSettingsLocalRunnerListPayload(data, key) {
+        if (Array.isArray(data?.data)) {
+          return data.data;
+        }
+        if (Array.isArray(data?.[key])) {
+          return data[key];
+        }
+        return Array.isArray(data) ? data : [];
+      }
+
+      function normalizeSettingsRuntimeTarget(target) {
+        const source = target && typeof target === "object" && !Array.isArray(target) ? target : {};
+        const kind = ["cloud", "local_runner", "fully_local"].includes(source.kind) ? source.kind : "";
+        if (!kind) {
+          return null;
+        }
+        const status = ["available", "disabled", "planned", "unavailable"].includes(source.status)
+          ? source.status
+          : "unavailable";
+        return {
+          kind,
+          label: normalizeSettingsLocalRunnerText(source.label, kind === "cloud" ? "Cloud Runtime" : kind === "local_runner" ? "Local Runner" : "Fully Local"),
+          status,
+          default: Boolean(source.default),
+          description: normalizeSettingsLocalRunnerText(source.description),
+          deviceCount: Number.isFinite(Number(source.deviceCount)) ? Number(source.deviceCount) : 0,
+          onlineDeviceCount: Number.isFinite(Number(source.onlineDeviceCount)) ? Number(source.onlineDeviceCount) : 0,
+          bindingCount: Number.isFinite(Number(source.bindingCount)) ? Number(source.bindingCount) : 0,
+          bridgeLocalBindingCount: Number.isFinite(Number(source.bridgeLocalBindingCount)) ? Number(source.bridgeLocalBindingCount) : 0,
+        };
+      }
+
+      function normalizeSettingsRuntimeTargetsPayload(data) {
+        return normalizeSettingsLocalRunnerListPayload(data, "runtimeTargets")
+          .map(normalizeSettingsRuntimeTarget)
+          .filter(Boolean);
+      }
+
+      function normalizeSettingsLocalRunnerText(value, fallback = "") {
+        return typeof value === "string" && value.trim() ? value.trim() : fallback;
+      }
+
+      function normalizeSettingsLocalRunnerDevice(device) {
+        const source = device && typeof device === "object" && !Array.isArray(device) ? device : {};
+        const id = normalizeSettingsLocalRunnerText(source.id || source.deviceId);
+        if (!id) {
+          return null;
+        }
+
+        const capabilities = source.capabilities && typeof source.capabilities === "object" && !Array.isArray(source.capabilities)
+          ? source.capabilities
+          : {};
+        return {
+          id,
+          name: normalizeSettingsLocalRunnerText(source.name, normalizeSettingsLocalRunnerText(source.hostname, "Local runner")),
+          platform: normalizeSettingsLocalRunnerText(source.platform, "Unknown platform"),
+          hostname: normalizeSettingsLocalRunnerText(source.hostname),
+          appVersion: normalizeSettingsLocalRunnerText(source.appVersion),
+          daemonVersion: normalizeSettingsLocalRunnerText(source.daemonVersion),
+          status: source.status === "online" ? "online" : "offline",
+          lastSeenAt: normalizeSettingsLocalRunnerText(source.lastSeenAt),
+          capabilities,
+        };
+      }
+
+      function normalizeSettingsWorkspaceBinding(binding) {
+        const source = binding && typeof binding === "object" && !Array.isArray(binding) ? binding : {};
+        const id = normalizeSettingsLocalRunnerText(source.id || source.workspaceBindingId);
+        const deviceId = normalizeSettingsLocalRunnerText(source.deviceId);
+        if (!id || !deviceId) {
+          return null;
+        }
+        return {
+          id,
+          deviceId,
+          environmentId: normalizeSettingsLocalRunnerText(source.environmentId),
+          projectId: normalizeSettingsLocalRunnerText(source.projectId),
+          name: normalizeSettingsLocalRunnerText(source.name),
+          localPath: normalizeSettingsLocalRunnerText(source.localPath),
+          syncRoot: normalizeSettingsLocalRunnerText(source.syncRoot),
+          syncMode: normalizeSettingsLocalRunnerText(source.syncMode, "manual"),
+          executionMode: normalizeSettingsLocalRunnerText(source.executionMode, "legacy_remote"),
+        };
+      }
+
+      function getSettingsLocalRuntimeCapabilities(device) {
+        const capabilities = device?.capabilities && typeof device.capabilities === "object" && !Array.isArray(device.capabilities)
+          ? device.capabilities
+          : {};
+        return capabilities.localRuntime && typeof capabilities.localRuntime === "object" && !Array.isArray(capabilities.localRuntime)
+          ? capabilities.localRuntime
+          : {};
+      }
+
+      function formatSettingsLocalRunnerRuntimeStatus(value) {
+        switch (String(value || "").trim()) {
+          case "available":
+            return "Available";
+          case "planned":
+            return "Planned";
+          case "disabled":
+            return "Disabled";
+          case "unavailable":
+            return "Unavailable";
+          default:
+            return "Unknown";
+        }
+      }
+
+      function formatSettingsLocalRunnerNumber(value, suffix = "") {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) {
+          return "Unknown";
+        }
+        const rounded = Math.round(numericValue * 10) / 10;
+        return String(rounded).replace(/\.0$/, "") + suffix;
+      }
+
+      function formatSettingsLocalRunnerDateTime(value) {
+        const normalizedValue = normalizeSettingsLocalRunnerText(value);
+        if (!normalizedValue) {
+          return "Never";
+        }
+        const date = new Date(normalizedValue);
+        if (Number.isNaN(date.getTime())) {
+          return "Never";
+        }
+        return date.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        });
+      }
+
+      function formatSettingsLocalRunnerToolchain(toolchain) {
+        const source = toolchain && typeof toolchain === "object" && !Array.isArray(toolchain) ? toolchain : {};
+        const activeTools = [
+          source.docker ? "Docker" : "",
+          source.podman ? "Podman" : "",
+          source.ollama ? "Ollama" : "",
+          source.git ? "Git" : "",
+        ].filter(Boolean);
+        return activeTools.length > 0 ? activeTools.join(", ") : "No local tools detected";
       }
 
       function getSettingsApiKeyScopeLabel(permissions) {
@@ -51014,7 +52414,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const previewTicketNumber = typeof taskPreview?.ticketNumber === "string" && taskPreview.ticketNumber.trim()
           ? taskPreview.ticketNumber.trim()
           : "";
-        const prefixedTicketMatch = safeThreadTitle.match(/^((?:[A-Z]{1,10}-)?\d{1,6})\s+(.+)$/);
+        const prefixedTicketMatch = safeThreadTitle.match(/^((?:[A-Z]{1,10}-)?\\d{1,6})\\s+(.+)$/);
         const ticketNumber = previewTicketNumber || (prefixedTicketMatch ? prefixedTicketMatch[1].trim() : "");
         const displayThreadTitle = ticketNumber && safeThreadTitle.startsWith(ticketNumber)
           ? (safeThreadTitle.slice(ticketNumber.length).trimStart() || safeThreadTitle)
@@ -51053,7 +52453,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           return null;
         }
         const title = String(safeThread.title || "").trim();
-        const titleParts = title.match(/^([^:]{1,120}):\s*(.+)$/);
+        const titleParts = title.match(/^([^:]{1,120}):\\s*(.+)$/);
         const workflowName = String(
           metronome.metronomeName
           || metronome.workflowName
@@ -56381,10 +57781,10 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 		        if (!text) {
 		          return false;
 		        }
-		        return /\b(just|only)\s+(say|respond|reply|answer)\b/.test(text)
-		          || /\bnothing more\b/.test(text)
-		          || /\bno tools?\b/.test(text)
-		          || /\bsay\s+hi\b/.test(text);
+		        return /\\b(just|only)\\s+(say|respond|reply|answer)\\b/.test(text)
+		          || /\\bnothing more\\b/.test(text)
+		          || /\\bno tools?\\b/.test(text)
+		          || /\\bsay\\s+hi\\b/.test(text);
 		      }
 
 		      function isPlaygroundHumanAttentionTask(task) {
@@ -59510,7 +60910,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         if (cronWrapperMatch) {
           return String(cronWrapperMatch[1] || "").trim();
         }
-        const timezonePrefixMatch = normalized.match(/^(?:CRON_TZ|TZ)=\S+\s+(.+)$/i);
+        const timezonePrefixMatch = normalized.match(/^(?:CRON_TZ|TZ)=\\S+\\s+(.+)$/i);
         if (timezonePrefixMatch) {
           return String(timezonePrefixMatch[1] || "").trim();
         }
@@ -59536,7 +60936,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           return { step: 1, unit: "year" };
         }
 
-        const rateMatch = normalized.match(/^rate\(\s*(\d+)\s+(minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)\s*\)$/i);
+        const rateMatch = normalized.match(/^rate\(\\s*(\\d+)\\s+(minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)\\s*\)$/i);
         if (!rateMatch) {
           return null;
         }
@@ -59681,7 +61081,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 
       function parsePlaygroundCalendarCronExpression(expression) {
         const normalizedExpression = normalizePlaygroundRecurringExpression(expression);
-        const parts = normalizedExpression.split(/\s+/).filter(Boolean);
+        const parts = normalizedExpression.split(/\\s+/).filter(Boolean);
         let normalizedParts = parts;
         if (parts.length === 6) {
           normalizedParts = parts.slice(1);
@@ -59904,7 +61304,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 
       function normalizePlaygroundTaskScheduleCronParts(expression) {
         const normalizedExpression = normalizePlaygroundRecurringExpression(expression);
-        const parts = normalizedExpression.split(/\s+/).filter(Boolean);
+        const parts = normalizedExpression.split(/\\s+/).filter(Boolean);
         if (parts.length === 6) {
           return parts.slice(1);
         }
@@ -60064,6 +61464,17 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const source = workflow && typeof workflow === "object" ? workflow : {};
         const definition = source.definition && typeof source.definition === "object" ? source.definition : {};
         const metadataDefinition = source.metadata?.definition && typeof source.metadata.definition === "object" ? source.metadata.definition : {};
+        const metadataWorkflow = source.metadata?.workflow && typeof source.metadata.workflow === "object" ? source.metadata.workflow : {};
+        const metadataWorkflowDefinition = metadataWorkflow.definition && typeof metadataWorkflow.definition === "object" ? metadataWorkflow.definition : {};
+        const graphSnapshot = source.graphSnapshot && typeof source.graphSnapshot === "object"
+          ? source.graphSnapshot
+          : source.workflowGraphSnapshot && typeof source.workflowGraphSnapshot === "object"
+            ? source.workflowGraphSnapshot
+            : source.metadata?.graphSnapshot && typeof source.metadata.graphSnapshot === "object"
+              ? source.metadata.graphSnapshot
+              : source.metadata?.workflowGraphSnapshot && typeof source.metadata.workflowGraphSnapshot === "object"
+                ? source.metadata.workflowGraphSnapshot
+                : {};
         return {
           nodes: Array.isArray(source.nodes)
             ? source.nodes
@@ -60071,14 +61482,26 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
               ? definition.nodes
               : Array.isArray(metadataDefinition.nodes)
                 ? metadataDefinition.nodes
-                : [],
+                : Array.isArray(metadataWorkflow.nodes)
+                  ? metadataWorkflow.nodes
+                  : Array.isArray(metadataWorkflowDefinition.nodes)
+                    ? metadataWorkflowDefinition.nodes
+                    : Array.isArray(graphSnapshot.nodes)
+                      ? graphSnapshot.nodes
+                      : [],
           edges: Array.isArray(source.edges)
             ? source.edges
             : Array.isArray(definition.edges)
               ? definition.edges
               : Array.isArray(metadataDefinition.edges)
                 ? metadataDefinition.edges
-                : [],
+                : Array.isArray(metadataWorkflow.edges)
+                  ? metadataWorkflow.edges
+                  : Array.isArray(metadataWorkflowDefinition.edges)
+                    ? metadataWorkflowDefinition.edges
+                    : Array.isArray(graphSnapshot.edges)
+                      ? graphSnapshot.edges
+                      : [],
         };
       }
 
@@ -61660,7 +63083,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         if (normalized === "password" || normalized === "email") return "Email";
         if (normalized === "phone" || normalized === "phone.com") return "Phone";
         if (normalized === "github.com" || normalized === "github") return "GitHub";
-        return normalized.replace(/\.com$/g, "").replace(/[_-]+/g, " ").replace(/\b\w/g, (value) => value.toUpperCase());
+        return normalized.replace(/\\.com$/g, "").replace(/[_-]+/g, " ").replace(/\\b\\w/g, (value) => value.toUpperCase());
       }
 
       function getPlaygroundAuthProviderTone(providerId) {
@@ -62886,7 +64309,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       }
 
       function isReadOnlyHistorySyntheticFileCommand(command) {
-        const normalized = String(command || "").trim().replace(/^\$\s*/, "");
+        const normalized = String(command || "").trim().replace(/^\\$\\s*/, "");
         if (!normalized) {
           return false;
         }
@@ -62935,13 +64358,13 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           "wget",
         ]);
 
-        const segments = normalized.split(/\s*(?:&&|\|\||;)\s*/).map((segment) => segment.trim()).filter(Boolean);
+        const segments = normalized.split(/\\s*(?:&&|\\|\\||;)\\s*/).map((segment) => segment.trim()).filter(Boolean);
         if (segments.length === 0) {
           return false;
         }
 
         function resolveCommandName(segment) {
-          const tokens = String(segment || "").split(/\s+/).filter(Boolean);
+          const tokens = String(segment || "").split(/\\s+/).filter(Boolean);
           let index = 0;
           while (index < tokens.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(tokens[index])) {
             index += 1;
@@ -63217,8 +64640,8 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         }
 
         const pathMatch =
-          combinedOutput.match(/cannot access ['"]([^'"]+)['"]:\s+No such file or directory/i)
-          || combinedOutput.match(/cannot remove ['"]([^'"]+)['"]:\s+No such file or directory/i);
+          combinedOutput.match(/cannot access ['"]([^'"]+)['"]:\\s+No such file or directory/i)
+          || combinedOutput.match(/cannot remove ['"]([^'"]+)['"]:\\s+No such file or directory/i);
         return pathMatch?.[1] ? normalizeHistoryPath(pathMatch[1]) : "";
       }
 
@@ -63389,17 +64812,17 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           }
           return value.trim();
         }
-        const unquoted = rest.match(/^(\S+)/);
+        const unquoted = rest.match(/^(\\S+)/);
         return unquoted ? unquoted[1].trim() : null;
       }
 
       function inferComputerAgentsResourceTypeFromCommand(command) {
         const normalized = String(command || "").trim();
         if (!normalized) return "";
-        if (/computer-agents\.py[\s\S]*\bagents\s+create\b/i.test(normalized)) return "agent";
-        if (/computer-agents\.py[\s\S]*\bskills\s+create\b/i.test(normalized)) return "skill";
-        if (/computer-agents\.py[\s\S]*\benvironments\s+create\b/i.test(normalized)) return "environment";
-        if (/computer-agents\.py[\s\S]*\benvironments\s+clone\b/i.test(normalized)) return "environment";
+        if (/computer-agents\\.py[\\s\\S]*\\bagents\\s+create\\b/i.test(normalized)) return "agent";
+        if (/computer-agents\\.py[\\s\\S]*\\bskills\\s+create\\b/i.test(normalized)) return "skill";
+        if (/computer-agents\\.py[\\s\\S]*\\benvironments\\s+create\\b/i.test(normalized)) return "environment";
+        if (/computer-agents\\.py[\\s\\S]*\\benvironments\\s+clone\\b/i.test(normalized)) return "environment";
         return "";
       }
 
@@ -63625,9 +65048,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 
         const fallbackTypeLabel = normalizeHistoryResourceType(fallbackType);
         const creationPatterns = [
-          { type: "agent", pattern: /\bagent created\b[:\s-]*(.+?)\s*\((agent_[A-Za-z0-9_-]+)\)/ig },
-          { type: "skill", pattern: /\bskill created\b[:\s-]*(.+?)\s*\((skill_[A-Za-z0-9_-]+)\)/ig },
-          { type: "environment", pattern: /\benvironment created\b[:\s-]*(.+?)\s*\(((?:env|environment)_[A-Za-z0-9_-]+)\)/ig },
+          { type: "agent", pattern: /\\bagent created\\b[:\\s-]*(.+?)\\s*\\((agent_[A-Za-z0-9_-]+)\\)/ig },
+          { type: "skill", pattern: /\\bskill created\\b[:\\s-]*(.+?)\\s*\\((skill_[A-Za-z0-9_-]+)\\)/ig },
+          { type: "environment", pattern: /\\benvironment created\\b[:\\s-]*(.+?)\\s*\\(((?:env|environment)_[A-Za-z0-9_-]+)\\)/ig },
         ];
         for (const { type, pattern } of creationPatterns) {
           for (const match of normalizedOutput.matchAll(pattern)) {
@@ -63714,7 +65137,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       }
 
       function isTaskManagementCreateCommand(command) {
-        return /manage-tasks\.py[\s\S]*\btasks\s+create\b/i.test(String(command || ""));
+        return /manage-tasks\\.py[\\s\\S]*\\btasks\\s+create\\b/i.test(String(command || ""));
       }
 
       function isTaskManagementCreateToolInvocation(log) {
@@ -63954,7 +65377,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       }
 
       function isTaskManagementReleaseCreateCommand(command) {
-        return /manage-tasks\.py[\s\S]*\breleases\s+create\b/i.test(String(command || ""));
+        return /manage-tasks\\.py[\\s\\S]*\\breleases\\s+create\\b/i.test(String(command || ""));
       }
 
       function isTaskManagementReleaseCreateToolInvocation(log) {
@@ -64406,8 +65829,8 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       function inferHistoryChangeKindFromDiffText(diffText) {
         const normalizedDiff = typeof diffText === "string" ? diffText.trim() : "";
         if (!normalizedDiff) return null;
-        if (/^new file mode\b/m.test(normalizedDiff)) return "created";
-        if (/^deleted file mode\b/m.test(normalizedDiff)) return "deleted";
+        if (/^new file mode\\b/m.test(normalizedDiff)) return "created";
+        if (/^deleted file mode\\b/m.test(normalizedDiff)) return "deleted";
         return "modified";
       }
 
@@ -65530,11 +66953,12 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         };
 
         const encodedThreadId = encodeURIComponent(normalizedThreadId);
-        const [threadResult, logsResult, messagesResult, stepsResult] = await Promise.allSettled([
+        const [threadResult, logsResult, messagesResult, stepsResult, traceClustersResult] = await Promise.allSettled([
           fetchJson("/threads/" + encodedThreadId),
           fetchJson("/threads/" + encodedThreadId + "/logs?compact=1&includeConversation=0"),
           fetchJson("/threads/" + encodedThreadId + "/messages?limit=" + encodeURIComponent(String(messageLimit)) + "&compact=1"),
           fetchJson("/threads/" + encodedThreadId + "/steps?limit=" + encodeURIComponent(String(stepLimit)) + "&compact=1"),
+          fetchJson("/threads/" + encodedThreadId + "/trace-clusters?limit=" + encodeURIComponent(String(stepLimit))),
         ]);
 
         const firstRejected = [threadResult, logsResult, messagesResult, stepsResult].find((result) => result.status === "rejected");
@@ -65542,6 +66966,14 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const logsData = logsResult.status === "fulfilled" ? logsResult.value : {};
         const messagesData = messagesResult.status === "fulfilled" ? messagesResult.value : {};
         const stepsData = stepsResult.status === "fulfilled" ? stepsResult.value : {};
+        const traceClustersData = traceClustersResult.status === "fulfilled" ? traceClustersResult.value : {};
+        const traceClusters = traceClustersData?.traceClusters || traceClustersData?.data?.traceClusters || null;
+        const traceClusterSequences = Array.isArray(traceClusters?.sequences)
+          ? traceClusters.sequences
+          : normalizeTraceItems(traceClustersData, "sequences");
+        const traceClusterActions = Array.isArray(traceClusters?.actions)
+          ? traceClusters.actions
+          : normalizeTraceItems(traceClustersData, "actions");
         const nextDetails = {
           status: "loaded",
           error: firstRejected?.reason instanceof Error ? firstRejected.reason.message : "",
@@ -65549,7 +66981,18 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           logs: normalizeTraceItems(logsData, "logs"),
           messages: normalizeTraceItems(messagesData, "messages"),
           steps: normalizeTraceItems(stepsData, "steps"),
+          traceClusters: traceClusters
+            ? {
+                ...traceClusters,
+                sequences: traceClusterSequences,
+                actions: traceClusterActions,
+              }
+            : null,
+          traceClusterError: traceClustersResult.status === "rejected"
+            ? traceClustersResult.reason instanceof Error ? traceClustersResult.reason.message : "Failed to load trace clusters."
+            : "",
           decisions: [
+            ...traceClusterSequences,
             ...normalizeTraceItems(threadData, "decisions"),
             ...normalizeTraceItems(stepsData, "decisions"),
           ].filter((decision, index, decisions) => {
@@ -65953,7 +67396,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
       }
 
       function isTraceDecisionEntry(entry) {
-        return entry?.source === "step" || entry?.source === "decision";
+        return entry?.source === "step" || entry?.source === "decision" || entry?.source === "trace_sequence";
       }
 
       function collectTraceTouchedResources(record) {
@@ -65977,6 +67420,8 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         };
 
         [
+          record?.touchedResources,
+          record?.touched_resources,
           record?.environmentId,
           record?.environment_id,
           record?.sourceMessageId,
@@ -66008,6 +67453,14 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const eventType = getTraceEventType(record);
         const type = String(stepType && stepType !== "step" ? stepType : (eventType || stepType)).toLowerCase();
         const metadata = getTraceRecordMetadata(record);
+        const directRing = Number(record?.ring ?? record?.permissionRing ?? record?.permission_ring ?? metadata?.ring ?? metadata?.permissionRing ?? metadata?.permission_ring);
+        if (directRing === 1 || directRing === 2 || directRing === 3) {
+          return directRing;
+        }
+        const directRingId = String(record?.ringId || record?.ring_id || record?.permissionRingId || record?.permission_ring_id || metadata?.ringId || metadata?.ring_id || metadata?.permissionRingId || metadata?.permission_ring_id || "").trim().toLowerCase();
+        if (directRingId === "ring_3" || directRingId === "ring-3" || directRingId === "ring3") return 3;
+        if (directRingId === "ring_2" || directRingId === "ring-2" || directRingId === "ring2") return 2;
+        if (directRingId === "ring_1" || directRingId === "ring-1" || directRingId === "ring1") return 1;
         const searchableText = [
           type,
           record?.title,
@@ -66054,6 +67507,17 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         if (numericRing === 3) return "Ring 3";
         if (numericRing === 2) return "Ring 2";
         return "Ring 1";
+      }
+
+      function getTracePermissionRingId(ring) {
+        const numericRing = Number(ring);
+        if (numericRing === 3) return "ring_3";
+        if (numericRing === 2) return "ring_2";
+        return "ring_1";
+      }
+
+      function renderTracePermissionRingIcon(ring) {
+        return renderPlaygroundPermissionMiniRingIcon(getTracePermissionRingId(ring));
       }
 
       function getTraceRingDescription(ring) {
@@ -66395,7 +67859,8 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const logs = Array.isArray(details?.logs) ? details.logs : [];
         const messages = Array.isArray(details?.messages) ? details.messages : [];
         const steps = Array.isArray(details?.steps) ? details.steps : [];
-        const decisions = Array.isArray(details?.decisions) ? details.decisions : [];
+        const traceSequences = Array.isArray(details?.traceClusters?.sequences) ? details.traceClusters.sequences : [];
+        const decisions = traceSequences.length > 0 ? traceSequences : Array.isArray(details?.decisions) ? details.decisions : [];
         const timeline = [];
         const startedAt = normalizedThread.startedAt || normalizedThread.createdAt || details?.thread?.startedAt || details?.thread?.createdAt || "";
         const completedAt = normalizedThread.completedAt || normalizedThread.finishedAt || normalizedThread.endedAt || details?.thread?.completedAt || details?.thread?.finishedAt || details?.thread?.endedAt || "";
@@ -66447,11 +67912,12 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const decisionEvents = decisions.map((decision, index) => {
           const type = getTraceStepType(decision);
           const ring = getTraceRingNumber(decision);
+          const source = String(decision?.source || "").trim() === "trace_sequence" ? "trace_sequence" : "decision";
           return {
-            source: "decision",
+            source,
             record: decision,
             index,
-            idPrefix: "decision",
+            idPrefix: source === "trace_sequence" ? "trace-sequence" : "decision",
             type,
             title: getTraceDecisionTitle(decision),
             copy: getTraceDecisionCopy(decision),
@@ -66510,6 +67976,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
             durationMs: getTraceEventDurationMs(event.record),
             raw: event.raw,
             tokenCount: getTraceEventTokens(event.record),
+            actionCount: Number.isFinite(Number(event.record?.actionCount || event.record?.action_count))
+              ? Number(event.record?.actionCount || event.record?.action_count)
+              : null,
             stepId: event.stepId || "",
             stepSequence: event.stepSequence,
             snapshotBeforeId: event.snapshotBeforeId || "",
@@ -66535,6 +68004,103 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           });
 
         return timeline;
+      }
+
+      function getTraceClusterActionCandidates(record, actionById = new Map()) {
+        const safeRecord = record && typeof record === "object" && !Array.isArray(record) ? record : {};
+        const metadata = getTraceRecordMetadata(safeRecord);
+        const raw = safeRecord.raw && typeof safeRecord.raw === "object" && !Array.isArray(safeRecord.raw) ? safeRecord.raw : {};
+        const candidates = [];
+        const appendActionList = (value) => {
+          if (!Array.isArray(value)) return;
+          value.forEach((entry) => {
+            if (entry && typeof entry === "object" && !Array.isArray(entry)) {
+              candidates.push(entry);
+            } else if (typeof entry === "string" && entry.trim()) {
+              candidates.push({ id: entry, message: entry, title: entry });
+            }
+          });
+        };
+        appendActionList(safeRecord.actions);
+        appendActionList(safeRecord.traceActions);
+        appendActionList(safeRecord.trace_actions);
+        appendActionList(metadata.actions);
+        appendActionList(metadata.traceActions);
+        appendActionList(metadata.trace_actions);
+        appendActionList(raw.actions);
+        appendActionList(raw.traceActions);
+        appendActionList(raw.trace_actions);
+
+        const actionIds = [];
+        const appendIds = (value) => {
+          if (Array.isArray(value)) {
+            value.forEach(appendIds);
+            return;
+          }
+          const text = String(value || "").trim();
+          if (text) actionIds.push(text);
+        };
+        appendIds(safeRecord.actionIds);
+        appendIds(safeRecord.action_ids);
+        appendIds(metadata.actionIds);
+        appendIds(metadata.action_ids);
+        appendIds(raw.actionIds);
+        appendIds(raw.action_ids);
+        actionIds.forEach((actionId) => {
+          const action = actionById.get(actionId);
+          if (action) candidates.push(action);
+        });
+
+        const seen = new Set();
+        return candidates.filter((action, index) => {
+          const id = String(action?.id || action?.sourceId || action?.source_id || action?.stepId || action?.step_id || index).trim();
+          if (seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        });
+      }
+
+      function getTraceClusterActionEntries(record, actionById = new Map()) {
+        return getTraceClusterActionCandidates(record, actionById).map((action, index) => {
+          const metadata = getTraceRecordMetadata(action);
+          const type = getTraceStepType(action) || getTraceEventType(action) || String(action?.type || action?.source || "action").trim().toLowerCase();
+          const ring = getTraceRingNumber(action);
+          const createdAt = getTraceEventCreatedAt(action);
+          return {
+            id: String(action?.id || action?.sourceId || action?.source_id || action?.stepId || action?.step_id || "action:" + index).trim(),
+            type,
+            title: getTraceDecisionTitle(action) || getTraceStepTitle(action) || getTraceEventTitle(action) || "Trace action",
+            copy: getTraceDecisionCopy(action) || getTraceStepCopy(action) || getTraceEventCopy(action) || "",
+            createdAt,
+            timestamp: readTraceTimestamp(action),
+            durationMs: getTraceEventDurationMs(action),
+            tokenCount: getTraceEventTokens(action),
+            ring,
+            ringLabel: action?.ringLabel || action?.ring_label || getTraceRingLabel(ring),
+            ringDescription: action?.ringDescription || action?.ring_description || getTraceRingDescription(ring),
+            stepId: String(action?.stepId || action?.step_id || (action?.source === "step" ? action?.id : "") || "").trim(),
+            stepSequence: Number.isFinite(Number(action?.stepSequence || action?.step_sequence || action?.sequence))
+              ? Number(action?.stepSequence || action?.step_sequence || action?.sequence)
+              : null,
+            touchedResources: collectTraceTouchedResources(action),
+            raw: action,
+            category: String(metadata?.category || action?.category || "").trim(),
+          };
+        });
+      }
+
+      function getTraceClusterSearchText(record, actionById = new Map()) {
+        const actionText = getTraceClusterActionEntries(record, actionById)
+          .map((action) => [
+            action.id,
+            action.title,
+            action.copy,
+            action.type,
+            action.ringLabel,
+            action.touchedResources.join(" "),
+          ].join(" "))
+          .join(" ");
+        return actionText.toLowerCase();
       }
 
       function renderThreadTraceDetailView({
@@ -66631,6 +68197,28 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const messages = Array.isArray(details.messages) ? details.messages : [];
         const steps = Array.isArray(details.steps) ? details.steps : [];
         const logs = Array.isArray(details.logs) ? details.logs : [];
+        const traceClusterActions = Array.isArray(details?.traceClusters?.actions) ? details.traceClusters.actions : [];
+        const traceClusterActionById = useMemo(() => {
+          const next = new Map();
+          traceClusterActions.forEach((action, index) => {
+            [
+              action?.id,
+              action?.sourceId,
+              action?.source_id,
+              action?.stepId,
+              action?.step_id,
+              action?.logId,
+              action?.log_id,
+              index,
+            ].forEach((candidate) => {
+              const key = String(candidate || "").trim();
+              if (key && !next.has(key)) {
+                next.set(key, action);
+              }
+            });
+          });
+          return next;
+        }, [traceClusterActions]);
         const [traceForkState, setTraceForkState] = useState({
           itemId: "",
           status: "",
@@ -66678,6 +68266,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
               entry.ringLabel,
               entry.decisionStatus,
               getTraceEvidenceLabel(entry),
+              entry.source === "trace_sequence" ? getTraceClusterSearchText(entry.raw || entry, traceClusterActionById) : "",
             ].join(" ").toLowerCase();
             return haystack.includes(normalizedSearchQuery);
           };
@@ -66701,7 +68290,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
             }
             return String(left.id || "").localeCompare(String(right.id || ""));
           });
-        }, [timeline, traceEventFilter, traceEventSort, traceSearchQuery]);
+        }, [timeline, traceClusterActionById, traceEventFilter, traceEventSort, traceSearchQuery]);
         const [selectedTraceItemId, setSelectedTraceItemId] = useState("");
         useEffect(() => {
           if (visibleTimeline.length === 0) {
@@ -66713,6 +68302,10 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           ));
         }, [visibleTimeline]);
         const selectedTraceItem = visibleTimeline.find((entry) => entry.id === selectedTraceItemId) || null;
+        const selectedTraceClusterActions = useMemo(
+          () => getTraceClusterActionEntries(selectedTraceItem?.raw || selectedTraceItem, traceClusterActionById),
+          [selectedTraceItem, traceClusterActionById]
+        );
         const handleForkFromSelectedTraceItem = useCallback(async () => {
           const normalizedThreadId = String(normalizedThread.id || fallbackThreadId || "").trim();
           const normalizedStepId = String(selectedTraceItem?.stepId || "").trim();
@@ -66816,7 +68409,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const traceNeedsReviewCount = timeline.filter((entry) => entry.decisionStatus === "needs-review").length;
         const traceForkPointCount = timeline.filter((entry) => entry.stepId && entry.snapshotBeforeId).length;
         const traceSummaryItems = [
-          { label: "Grounded decisions", value: String(traceDecisionCount || 0) },
+          { label: "Trace clusters", value: String(traceDecisionCount || 0) },
           { label: "Ring 2+", value: String(traceRingTwoPlusCount || 0) },
           { label: "Needs review", value: String(traceNeedsReviewCount || 0) },
           { label: "Fork points", value: String(traceForkPointCount || 0) },
@@ -66825,8 +68418,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           { label: "Created", value: formatTraceDateTime(selectedTraceItem?.createdAt || selectedRaw?.createdAt || selectedRaw?.timestamp || "") },
           { label: "ID", value: selectedTraceItem?.id || "-" },
           { label: "Type", value: getTraceStatusLabel(selectedTraceItem?.type || selectedTraceItem?.kind || "") },
-          { label: "Source", value: isTraceDecisionEntry(selectedTraceItem) ? "Decision record" : getTraceStatusLabel(selectedTraceItem?.source || "event") },
+          { label: "Source", value: selectedTraceItem?.source === "trace_sequence" ? "Trace sequence" : isTraceDecisionEntry(selectedTraceItem) ? "Decision record" : getTraceStatusLabel(selectedTraceItem?.source || "event") },
           selectedTraceItem?.stepSequence != null ? { label: "Step", value: "#" + selectedTraceItem.stepSequence } : null,
+          selectedTraceItem?.actionCount ? { label: "Actions", value: String(selectedTraceItem.actionCount) } : null,
           isTraceDecisionEntry(selectedTraceItem) ? { label: "Decision status", value: getTraceDecisionStatusLabel(selectedDecisionStatus) } : null,
           { label: "Evidence", value: getTraceEvidenceLabel(selectedTraceItem) },
           selectedTraceItem?.snapshotBeforeId ? { label: "Snapshot before", value: selectedTraceItem.snapshotBeforeId } : null,
@@ -66849,8 +68443,10 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           React.createElement("div", { className: "playground-agents-observability-tree" },
             visibleTimeline.length > 0
               ? visibleTimeline.map((entry) => {
-                  const Icon = entry.Icon || Clock;
                   const isSelected = selectedTraceItem?.id === entry.id;
+                  const isTraceCluster = entry.source === "trace_sequence";
+                  const entryActions = isTraceCluster ? getTraceClusterActionEntries(entry.raw || entry, traceClusterActionById) : [];
+                  const entryActionCount = Number(entry.actionCount || entryActions.length || 0);
                   const hasTiming = Number.isFinite(entry.timestamp) && entry.timestamp > 0;
                   const leftPercent = hasTiming
                     ? Math.max(0, Math.min(100, ((entry.timestamp - timelineStartMs) / timelineRangeMs) * 100))
@@ -66868,7 +68464,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
                         onClick: () => setSelectedTraceItemId((current) => current === entry.id ? "" : entry.id),
                       },
                       React.createElement("span", { className: "playground-agents-observability-node-icon", "aria-hidden": "true" },
-                        React.createElement(Icon, { strokeWidth: 1.8 })
+                        renderTracePermissionRingIcon(entry.ring || 1)
                       ),
                       React.createElement("div", { className: "playground-agents-observability-node-copy" },
                         React.createElement("div", {
@@ -66877,7 +68473,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
                         }, entry.title),
                         isTraceDecisionEntry(entry)
                           ? React.createElement("div", { className: "playground-agents-observability-node-badges" },
-                              React.createElement("span", { className: "playground-agents-observability-node-badge" }, getTraceDecisionStatusLabel(entry.decisionStatus)),
+                              isTraceCluster && entryActionCount
+                                ? React.createElement("span", { className: "playground-agents-observability-node-badge" }, entryActionCount + " " + (entryActionCount === 1 ? "action" : "actions"))
+                                : React.createElement("span", { className: "playground-agents-observability-node-badge" }, getTraceDecisionStatusLabel(entry.decisionStatus)),
                               React.createElement("span", {
                                 className: "playground-agents-observability-node-badge is-ring is-ring-" + (entry.ring || 1),
                                 title: entry.ringDescription || "",
@@ -66892,7 +68490,10 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
                           : null
                       ),
                       React.createElement("div", { className: "playground-agents-observability-node-duration" },
-                        formatTraceRowTimeLabel(entry)
+                        React.createElement("span", null, isTraceCluster && entryActionCount ? entryActionCount + "x" : formatTraceRowTimeLabel(entry)),
+                        isSelected
+                          ? React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                          : React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 })
                       ),
                       React.createElement("div", { className: "playground-agents-observability-node-bar", "aria-hidden": "true" },
                         React.createElement("span", {
@@ -66967,6 +68568,54 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
                           isTraceDecisionEntry(selectedTraceItem) && Number(selectedTraceItem?.ring || 1) >= 2
                             ? React.createElement("div", { className: "playground-thread-observability-expanded-warning" },
                                 "Forking from this point restores the local thread and computer state only. Externally visible actions after this decision are not undone."
+                              )
+                            : null,
+                          selectedTraceClusterActions.length > 0
+                            ? React.createElement("div", { className: "playground-thread-observability-expanded-section" },
+                                React.createElement("div", { className: "playground-thread-observability-expanded-section-header" },
+                                  React.createElement("span", null, "Concrete steps"),
+                                  React.createElement("span", { className: "playground-thread-observability-expanded-section-count" },
+                                    selectedTraceClusterActions.length + " " + (selectedTraceClusterActions.length === 1 ? "action" : "actions")
+                                  )
+                                ),
+                                React.createElement("div", { className: "playground-thread-observability-action-list" },
+                                  selectedTraceClusterActions.map((action, actionIndex) => {
+                                    return React.createElement("div", {
+                                        key: action.id || actionIndex,
+                                        className: "playground-thread-observability-action-item is-ring-" + (action.ring || 1),
+                                      },
+                                      React.createElement("span", { className: "playground-thread-observability-action-icon", "aria-hidden": "true" },
+                                        renderTracePermissionRingIcon(action.ring || 1)
+                                      ),
+                                      React.createElement("div", { className: "playground-thread-observability-action-copy" },
+                                        React.createElement("div", { className: "playground-thread-observability-action-title", title: action.title },
+                                          action.title || "Trace action"
+                                        ),
+                                        action.copy
+                                          ? React.createElement("div", { className: "playground-thread-observability-action-summary", title: action.copy }, action.copy)
+                                          : null,
+                                        action.touchedResources.length > 0
+                                          ? React.createElement("div", { className: "playground-thread-observability-action-resources" },
+                                              action.touchedResources.slice(0, 4).map((resource) =>
+                                                React.createElement("span", { key: resource, title: resource }, resource)
+                                              )
+                                            )
+                                          : null
+                                      ),
+                                      React.createElement("div", { className: "playground-thread-observability-action-meta" },
+                                        React.createElement("span", {
+                                          className: "playground-thread-observability-action-ring is-ring-" + (action.ring || 1),
+                                          title: action.ringDescription || "",
+                                        }, action.ringLabel || getTraceRingLabel(action.ring)),
+                                        action.stepSequence != null
+                                          ? React.createElement("span", null, "#" + action.stepSequence)
+                                          : action.createdAt
+                                            ? React.createElement("span", null, formatTraceTimestampLabel(action.createdAt))
+                                            : null
+                                      )
+                                    );
+                                  })
+                                )
                               )
                             : null,
                           React.createElement("div", { className: "playground-thread-observability-expanded-section" },
@@ -67057,6 +68706,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 
         useEffect(() => {
           let cancelled = false;
+          let refreshTimer = null;
           const normalizedThreadId = String(threadId || "").trim();
           setTraceDetails(null);
 
@@ -67080,28 +68730,59 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
             };
           }
 
-          setTraceDetails({ status: "loading", error: "" });
-          fetchThreadTraceDetails({
-            backendUrl,
-            threadId: normalizedThreadId,
-            headers: requestHeaders,
-            messageLimit: 160,
-            stepLimit: 160,
-          }).then((details) => {
-            if (!cancelled) {
-              setTraceDetails(details);
+          const scheduleRefreshIfRunning = (details) => {
+            if (cancelled) return;
+            const status = String(details?.thread?.status || "").trim().toLowerCase();
+            if (status !== "running" && status !== "queued" && status !== "requires_action" && status !== "waiting") {
+              return;
             }
-          }).catch((error) => {
-            if (!cancelled) {
-              setTraceDetails({
-                status: "error",
-                error: error instanceof Error ? error.message : "Failed to load trace data.",
+            refreshTimer = window.setTimeout(() => {
+              void loadTraceDetails(false);
+            }, 8000);
+          };
+
+          const loadTraceDetails = async (showLoading) => {
+            if (refreshTimer) {
+              window.clearTimeout(refreshTimer);
+              refreshTimer = null;
+            }
+            if (showLoading) {
+              setTraceDetails({ status: "loading", error: "" });
+            }
+            try {
+              const details = await fetchThreadTraceDetails({
+                backendUrl,
+                threadId: normalizedThreadId,
+                headers: requestHeaders,
+                messageLimit: 160,
+                stepLimit: 160,
               });
+              if (!cancelled) {
+                setTraceDetails(details);
+                scheduleRefreshIfRunning(details);
+              }
+            } catch (error) {
+              if (!cancelled) {
+                setTraceDetails((current) => (
+                  current && current.status === "loaded"
+                    ? { ...current, error: error instanceof Error ? error.message : "Failed to refresh trace data." }
+                    : {
+                        status: "error",
+                        error: error instanceof Error ? error.message : "Failed to load trace data.",
+                      }
+                ));
+              }
             }
-          });
+          };
+
+          void loadTraceDetails(true);
 
           return () => {
             cancelled = true;
+            if (refreshTimer) {
+              window.clearTimeout(refreshTimer);
+              refreshTimer = null;
+            }
           };
         }, [backendUrl, hasRealAccess, requestHeaders, threadId]);
 
@@ -67113,7 +68794,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           { id: "tokens", label: "Most tokens" },
         ];
         const filterOptions = [
-          { id: "decisions", label: "Decisions" },
+          { id: "decisions", label: "Clusters" },
           { id: "needs-review", label: "Needs review" },
           { id: "ring-2-plus", label: "Ring 2+" },
           { id: "ring-3", label: "Ring 3" },
@@ -67127,16 +68808,6 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         const activeTraceFilterLabel = filterOptions.find((option) => option.id === traceEventFilter)?.label || "All events";
         return React.createElement("div", { className: "playground-thread-observability-view" },
           React.createElement("div", { className: "playground-thread-observability-card" },
-            React.createElement("div", { className: "playground-plugins-section-header" },
-              React.createElement("div", { className: "playground-plugins-section-copy" },
-                React.createElement("h3", { className: "playground-plugins-section-title" }, "Decision Timeline"),
-                React.createElement("p", { className: "playground-plugins-section-description" },
-                  threadTitle || normalizedThreadId
-                    ? (threadTitle || normalizedThreadId) + " · grounded in thread steps and raw trace evidence"
-                    : "Grounded in thread steps and raw trace evidence"
-                )
-              )
-            ),
             React.createElement("div", { className: "playground-plugins-search-row playground-agents-overview-search-row playground-thread-observability-toolbar", ref: traceToolbarRef },
               React.createElement("div", { className: "playground-plugins-search-shell" },
                 React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
@@ -91294,7 +92965,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             function buildAgentRuntimeSkillFallbackName(skillId) {
               return String(skillId || "")
                 .replace(/[_-]+/g, " ")
-                .replace(/\b\w/g, (character) => character.toUpperCase());
+                .replace(/\\b\\w/g, (character) => character.toUpperCase());
             }
             const agentRuntimeSkillOptionsById = {};
             PLAYGROUND_AGENT_SKILL_OPTIONS.forEach((skill) => {
@@ -102680,6 +104351,23 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             const threadAgentId = readThreadAgentId(thread);
             return threadAgentId && teamAgentIds.has(threadAgentId) ? sum + 1 : sum;
           }, 0));
+          const singleAgentCostActivity = activityBuckets.map((bucket) => relevantThreads.reduce((sum, thread) => {
+            const createdAtMs = readThreadCreatedAtMs(thread);
+            if (!Number.isFinite(createdAtMs) || createdAtMs < bucket.startMs || createdAtMs >= bucket.endMs) {
+              return sum;
+            }
+            const threadAgentId = readThreadAgentId(thread);
+            return threadAgentId && teamAgentIds.has(threadAgentId) ? sum : sum + readThreadTotalCT(thread);
+          }, 0));
+          const teamAgentCostActivity = activityBuckets.map((bucket) => relevantThreads.reduce((sum, thread) => {
+            const createdAtMs = readThreadCreatedAtMs(thread);
+            if (!Number.isFinite(createdAtMs) || createdAtMs < bucket.startMs || createdAtMs >= bucket.endMs) {
+              return sum;
+            }
+            const threadAgentId = readThreadAgentId(thread);
+            return threadAgentId && teamAgentIds.has(threadAgentId) ? sum + readThreadTotalCT(thread) : sum;
+          }, 0));
+          const agentsHomeHasCostActivity = singleAgentCostActivity.concat(teamAgentCostActivity).some((value) => Math.max(0, Number(value || 0)) > 0);
 
           const renderAgentsHomeComparisonBarChart = ({ ariaLabel, labels, countValues, costValues, emptyText }) => {
             const normalizedLabels = Array.isArray(labels) ? labels : [];
@@ -102811,8 +104499,253 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             );
           };
 
-          const renderAgentsHomeUsageChart = ({ ariaLabel, labels, singleValues, teamValues, emptyText, emptyContent }) => (
-            renderHomeStackedUsageChartShared({
+          function PlaygroundAgentsHomeStackedUsageChart({
+            ariaLabel,
+            labels,
+            series,
+            countSeries,
+            emptyText,
+            emptyContent,
+            title,
+            timescaleControl,
+            isLoading,
+            usesComputeTokenValues,
+          }) {
+            const canvasRef = useRef(null);
+            const chartRef = useRef(null);
+            const normalizedLabels = Array.isArray(labels) ? labels : [];
+            const normalizedSeries = Array.isArray(series)
+              ? series.filter((entry) => entry && Array.isArray(entry.values))
+              : [];
+            const normalizedCountSeries = Array.isArray(countSeries)
+              ? countSeries.filter((entry) => entry && Array.isArray(entry.values))
+              : [];
+            const totals = normalizedLabels.map((_, index) =>
+              normalizedSeries.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
+            );
+            const hasUsageData = normalizedLabels.length > 0
+              && normalizedSeries.length > 0
+              && totals.some((value) => Math.max(0, Number(value || 0)) > 0);
+            const chartSignature = JSON.stringify({
+              labels: normalizedLabels,
+              series: normalizedSeries.map((entry) => ({
+                id: entry.id,
+                label: entry.label,
+                color: entry.color,
+                values: entry.values,
+              })),
+              countSeries: normalizedCountSeries.map((entry) => ({
+                id: entry.id,
+                values: entry.values,
+              })),
+              usesComputeTokenValues: Boolean(usesComputeTokenValues),
+            });
+
+            useEffect(() => () => {
+              if (chartRef.current) {
+                chartRef.current.destroy();
+                chartRef.current = null;
+              }
+            }, []);
+
+            useEffect(() => {
+              const canvas = canvasRef.current;
+              if (!canvas || typeof Chart !== "function" || !hasUsageData) {
+                if (chartRef.current) {
+                  chartRef.current.destroy();
+                  chartRef.current = null;
+                }
+                return undefined;
+              }
+
+              const countValuesById = normalizedCountSeries.reduce((map, entry) => {
+                map[entry.id] = Array.isArray(entry.values) ? entry.values : [];
+                return map;
+              }, {});
+              const maxLabelCount = Math.max(2, Math.floor(normalizedLabels.length <= 7 ? 7 : 7));
+              const labelStep = Math.max(1, Math.ceil(normalizedLabels.length / maxLabelCount));
+              const visibleLabelIndexes = (() => {
+                const next = new Set();
+                for (let index = 0; index < normalizedLabels.length; index += labelStep) {
+                  next.add(index);
+                }
+                const lastIndex = normalizedLabels.length - 1;
+                if (lastIndex >= 0) {
+                  next.add(lastIndex);
+                }
+                return next;
+              })();
+              const chartData = {
+                labels: normalizedLabels,
+                datasets: normalizedSeries.map((entry) => ({
+                  id: entry.id,
+                  label: entry.label,
+                  data: entry.values.map((value) => Math.max(0, Number(value || 0))),
+                  backgroundColor: entry.color || "rgba(255,255,255,0.8)",
+                  borderColor: entry.color || "rgba(255,255,255,0.8)",
+                  borderWidth: 0,
+                  borderRadius: 3,
+                  borderSkipped: false,
+                  barPercentage: 0.92,
+                  categoryPercentage: 0.58,
+                  maxBarThickness: 24,
+                  stack: "agent-usage",
+                })),
+              };
+              const chartOptions = {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                normalized: true,
+                interaction: {
+                  intersect: true,
+                  mode: "nearest",
+                },
+                layout: {
+                  padding: {
+                    top: 12,
+                    right: 14,
+                    bottom: 0,
+                    left: 0,
+                  },
+                },
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    enabled: true,
+                    backgroundColor: "rgba(8, 8, 8, 0.96)",
+                    borderColor: "rgba(255, 255, 255, 0.14)",
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    titleColor: "rgba(255, 255, 255, 0.94)",
+                    bodyColor: "rgba(255, 255, 255, 0.78)",
+                    padding: 10,
+                    callbacks: {
+                      label: (context) => {
+                        const datasetId = String(context.dataset?.id || "");
+                        const label = String(context.dataset?.label || "Usage");
+                        const value = Math.max(0, Number(context.parsed?.y || 0));
+                        const runCount = Math.max(0, Number(countValuesById[datasetId]?.[context.dataIndex] || 0));
+                        const runSuffix = runCount === 1 ? "1 run" : runCount + " runs";
+                        if (usesComputeTokenValues) {
+                          return label + ": " + formatSettingsComputeTokens(value) + " · " + runSuffix;
+                        }
+                        return label + ": " + Math.round(value).toLocaleString("en-US") + " " + (Math.round(value) === 1 ? "run" : "runs");
+                      },
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    stacked: true,
+                    grid: { display: false, drawBorder: false },
+                    border: { display: false },
+                    ticks: {
+                      color: "rgba(255, 255, 255, 0.4)",
+                      font: {
+                        size: 10,
+                        weight: "400",
+                        family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+                      },
+                      maxRotation: 0,
+                      minRotation: 0,
+                      padding: 10,
+                      callback: (_value, index) => visibleLabelIndexes.has(index) ? String(normalizedLabels[index] || "") : "",
+                    },
+                  },
+                  y: {
+                    stacked: true,
+                    min: 0,
+                    grid: {
+                      color: "rgba(255,255,255,0.10)",
+                      drawTicks: false,
+                    },
+                    border: { display: false },
+                    ticks: {
+                      color: "rgba(255, 255, 255, 0.4)",
+                      padding: 8,
+                      maxTicksLimit: 5,
+                      font: {
+                        size: 10,
+                        weight: "400",
+                        family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+                      },
+                      callback: (value) => usesComputeTokenValues
+                        ? formatSettingsComputeTokens(value)
+                        : Math.round(Number(value || 0)).toLocaleString("en-US"),
+                    },
+                  },
+                },
+              };
+
+              if (chartRef.current) {
+                chartRef.current.data = chartData;
+                chartRef.current.options = chartOptions;
+                chartRef.current.update("none");
+                return undefined;
+              }
+
+              chartRef.current = new Chart(canvas, {
+                type: "bar",
+                data: chartData,
+                options: chartOptions,
+              });
+              return undefined;
+            }, [chartSignature, hasUsageData]);
+
+            return React.createElement("div", { className: "playground-settings-usage-chart-card" },
+              React.createElement("div", { className: "playground-project-overview-chart-header" },
+                React.createElement("div", { className: "playground-project-overview-chart-header-main" },
+                  React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Daily CT by Agent Type"),
+                  timescaleControl || null
+                )
+              ),
+              isLoading
+                ? React.createElement("div", {
+                    className: "playground-project-overview-chart-shell playground-agents-home-chartjs-frame",
+                  },
+                    React.createElement("div", {
+                        className: "playground-overview-chart-loading",
+                        style: { position: "static", inset: "auto", height: "100%" },
+                        "aria-label": "Loading chart data",
+                      },
+                      React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
+                    )
+                  )
+                : (!normalizedLabels.length || !normalizedSeries.length || !hasUsageData)
+                  ? (emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet"))
+                  : React.createElement(React.Fragment, null,
+                      React.createElement("div", {
+                          className: "playground-project-overview-chart-shell playground-agents-home-chartjs-frame",
+                          role: "img",
+                          "aria-label": ariaLabel || "Agent and team activity over time",
+                        },
+                        React.createElement("canvas", {
+                          ref: canvasRef,
+                          className: "playground-agents-home-chartjs-canvas",
+                        })
+                      ),
+                      React.createElement("div", {
+                          className: "playground-settings-usage-inline-legend",
+                          style: { justifyContent: "flex-start" },
+                        },
+                        normalizedSeries.map((entry) =>
+                          React.createElement("div", { key: entry.id || entry.label, className: "playground-settings-usage-legend-item" },
+                            React.createElement("span", {
+                              className: "playground-settings-usage-legend-swatch",
+                              style: { background: entry.color },
+                            }),
+                            React.createElement("span", null, entry.label)
+                          )
+                        )
+                      )
+                    )
+            );
+          }
+
+          const renderAgentsHomeUsageChart = ({ ariaLabel, labels, singleValues, teamValues, singleCountValues, teamCountValues, emptyText, emptyContent, usesComputeTokenValues }) =>
+            React.createElement(PlaygroundAgentsHomeStackedUsageChart, {
               ariaLabel: ariaLabel || "Overall agent activity",
               labels,
               series: [
@@ -102829,10 +104762,21 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   values: teamValues,
                 },
               ],
+              countSeries: [
+                {
+                  id: "agents",
+                  values: singleCountValues,
+                },
+                {
+                  id: "teams",
+                  values: teamCountValues,
+                },
+              ],
               emptyText: emptyText || "No activity data yet",
               emptyContent,
               title: "Daily CT by Agent Type",
               isLoading: agentsHomeThreadsLoading,
+              usesComputeTokenValues,
               timescaleControl: React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
                 React.createElement("select", {
                   className: "playground-environments-home-comparison-timescale-select",
@@ -102844,8 +104788,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   React.createElement("option", { value: "month" }, "Monthly")
                 )
               ),
-            })
-          );
+            });
 
           const isDevelopConfigureAgentsHome = embeddedInResources;
           const agentsHomeAnalyticsTitleRow = isDevelopConfigureAgentsHome
@@ -102926,14 +104869,17 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                                 )
                               )
                             ),
-                            renderAgentsHomeUsageChart({
-                              ariaLabel: "Agent and team activity over time",
-                              labels: activityBuckets.map((bucket) => String(bucket?.label || "")),
-                              singleValues: singleAgentActivity,
-                              teamValues: teamActivity,
-                              emptyText: agentsHomeThreadsLoading ? "Loading activity..." : (agentsHomeThreadsError || "No activity data yet"),
-                              emptyContent: isDevelopConfigureAgentsHome
-                                ? renderAgentsConfigureUsageEmptyState(
+	                              renderAgentsHomeUsageChart({
+	                              ariaLabel: "Agent and team activity over time",
+	                              labels: activityBuckets.map((bucket) => String(bucket?.label || "")),
+	                              singleValues: agentsHomeHasCostActivity ? singleAgentCostActivity : singleAgentActivity,
+	                              teamValues: agentsHomeHasCostActivity ? teamAgentCostActivity : teamActivity,
+                                singleCountValues: singleAgentActivity,
+                                teamCountValues: teamActivity,
+                                usesComputeTokenValues: agentsHomeHasCostActivity,
+	                              emptyText: agentsHomeThreadsLoading ? "Loading activity..." : (agentsHomeThreadsError || "No activity data yet"),
+	                              emptyContent: isDevelopConfigureAgentsHome
+	                                ? renderAgentsConfigureUsageEmptyState(
                                     "no-agent-usage.avif",
                                     "No Agent Usage yet",
                                     "Agent usage appears here once agents start running and consuming compute tokens."
@@ -112560,7 +114506,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         function buildTaskSkillFallbackName(skillId) {
           return String(skillId || "")
             .replace(/[_-]+/g, " ")
-            .replace(/\b\w/g, (character) => character.toUpperCase());
+            .replace(/\\b\\w/g, (character) => character.toUpperCase());
         }
 
         function resolveTaskSkillItem(skillId) {
@@ -114399,7 +116345,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           if (/strategic breakdown/i.test(rawContent)) {
             score += 60;
           }
-          if (/risks?\s*(?:&|and)\s*opportunit/i.test(rawContent)) {
+          if (/risks?\\s*(?:&|and)\\s*opportunit/i.test(rawContent)) {
             score += 60;
           }
           if (/recommended next moves/i.test(rawContent)) {
@@ -135442,7 +137388,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }
             return {
               label: normalizedStatus
-                ? normalizedStatus.replace(/[_-]+/g, " ").replace(/\b\w/g, (character) => character.toUpperCase())
+                ? normalizedStatus.replace(/[_-]+/g, " ").replace(/\\b\\w/g, (character) => character.toUpperCase())
                 : "Thread",
               className: "is-running",
               icon: Loader2,
@@ -139019,6 +140965,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const threadSearchFileInventoryByEnvironmentIdRef = useRef({});
         const threadSearchFileInventoryLoadingIdsRef = useRef(new Set());
         const [imagineActiveView, setImagineActiveView] = useState("explore");
+        const [imagineTemplateSelectionRequest, setImagineTemplateSelectionRequest] = useState(null);
         const [imagineToolbarPopover, setImagineToolbarPopover] = useState("");
         const [imagineMediaModePopover, setImagineMediaModePopover] = useState(false);
         const [imagineMediaMode, setImagineMediaMode] = useState("image");
@@ -139165,6 +141112,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          readStoredNotificationIds(PLAYGROUND_HUMAN_TASK_NOTIFICATION_READ_STORAGE_KEY)
 	        ));
 	        const [emailVerificationNotificationDismissed, setEmailVerificationNotificationDismissed] = useState(false);
+        const [notificationsPageSearchQuery, setNotificationsPageSearchQuery] = useState("");
+        const [notificationsPageFilter, setNotificationsPageFilter] = useState("all");
+        const [notificationsPageSort, setNotificationsPageSort] = useState("newest");
+        const [notificationsPageToolbarPopover, setNotificationsPageToolbarPopover] = useState("");
         const [taskRunStates, setTaskRunStates] = useState({});
         const [threadFollowUpActionState, setThreadFollowUpActionState] = useState({
           action: "",
@@ -139207,6 +141158,38 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [settingsInferenceApiKeyInput, setSettingsInferenceApiKeyInput] = useState("");
         const [settingsClearInferenceApiKey, setSettingsClearInferenceApiKey] = useState(false);
         const [settingsInferenceApiKeyEditing, setSettingsInferenceApiKeyEditing] = useState(false);
+        const [settingsLocalRunnersReloadToken, setSettingsLocalRunnersReloadToken] = useState(0);
+        const [settingsLocalRunnerOnboardingOpen, setSettingsLocalRunnerOnboardingOpen] = useState(false);
+        const [settingsLocalRunnerPairingState, setSettingsLocalRunnerPairingState] = useState({
+          status: "idle",
+          token: "",
+          pairingToken: null,
+          error: "",
+          success: "",
+        });
+        const [settingsLocalBindingFormOpen, setSettingsLocalBindingFormOpen] = useState(false);
+        const [settingsLocalBindingSubmitting, setSettingsLocalBindingSubmitting] = useState(false);
+        const [settingsLocalBindingError, setSettingsLocalBindingError] = useState("");
+        const [settingsLocalBindingSuccess, setSettingsLocalBindingSuccess] = useState("");
+        const [settingsLocalBindingForm, setSettingsLocalBindingForm] = useState({
+          deviceId: "",
+          environmentId: "",
+          projectId: "",
+          name: "",
+          localPath: "",
+          syncRoot: "",
+          syncMode: "manual",
+          executionMode: "bridge_local",
+        });
+        const [settingsLocalRunnersState, setSettingsLocalRunnersState] = useState({
+          status: "idle",
+          error: "",
+          bridgeEnabled: null,
+          runtimeTargets: [],
+          devices: [],
+          bindings: [],
+          loadedAt: "",
+        });
         const [pluginsSearchQuery, setPluginsSearchQuery] = useState("");
         const [pluginsOverviewCategory, setPluginsOverviewCategory] = useState("all");
         const [pluginsOverviewFilter, setPluginsOverviewFilter] = useState("all");
@@ -139240,6 +141223,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             ? modelsPageAgentModelOptions
             : PLAYGROUND_AGENT_MODEL_OPTIONS
         ), [modelsPageAgentModelOptions]);
+        const [configureHomeTab, setConfigureHomeTab] = useState("overview");
         const [configureUsageChartTab, setConfigureUsageChartTab] = useState("agents");
         const [configureAnalyticsMenuOpen, setConfigureAnalyticsMenuOpen] = useState(false);
         const [developHomeSection, setDevelopHomeSection] = useState("overview");
@@ -139265,10 +141249,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [teamPageResourceViewMode, setTeamPageResourceViewMode] = useState("list");
         const [teamPageResourceToolbarPopover, setTeamPageResourceToolbarPopover] = useState("");
         const [teamPageResourceMenuId, setTeamPageResourceMenuId] = useState("");
+        const [teamPageMemberMenuId, setTeamPageMemberMenuId] = useState("");
         const [teamPageMembers, setTeamPageMembers] = useState([]);
         const [teamPageInvitations, setTeamPageInvitations] = useState([]);
         const [teamPageShares, setTeamPageShares] = useState([]);
         const [teamPageProjectResourceIndexes, setTeamPageProjectResourceIndexes] = useState({});
+        const [teamPageMetronomeWorkflows, setTeamPageMetronomeWorkflows] = useState([]);
         const [teamPageCreateName, setTeamPageCreateName] = useState("");
         const [teamPageCreateModalOpen, setTeamPageCreateModalOpen] = useState(false);
         const [teamPageCreateInviteEmails, setTeamPageCreateInviteEmails] = useState("");
@@ -139283,12 +141269,17 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [teamPageInviteEmail, setTeamPageInviteEmail] = useState("");
         const [teamPageInviteRole, setTeamPageInviteRole] = useState("member");
         const [teamPageShareModalOpen, setTeamPageShareModalOpen] = useState(false);
+        const [teamPageShareModalVisible, setTeamPageShareModalVisible] = useState(false);
+        const [teamPageShareModalClosing, setTeamPageShareModalClosing] = useState(false);
         const [teamPageShareResourceType, setTeamPageShareResourceType] = useState("project");
         const [teamPageShareResourceId, setTeamPageShareResourceId] = useState("");
         const [teamPageShareAccessLevel, setTeamPageShareAccessLevel] = useState("use");
+        const [teamPageShareResourcePickerOpen, setTeamPageShareResourcePickerOpen] = useState(false);
+        const [teamPageShareAccessPickerOpen, setTeamPageShareAccessPickerOpen] = useState(false);
         const [teamPageActionId, setTeamPageActionId] = useState("");
         const teamPageRenameModalCloseTimerRef = useRef(null);
         const teamPageInviteModalCloseTimerRef = useRef(null);
+        const teamPageShareModalCloseTimerRef = useRef(null);
         const teamPageProjectResourceIndexLoadKeyRef = useRef("");
         useEffect(() => {
           if (teamPageActiveTab !== "roles" && teamPageActiveTab !== "permissions") {
@@ -139318,11 +141309,27 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return () => document.removeEventListener("mousedown", handlePointerDown);
         }, [teamPageRoleMembersPopover]);
         useEffect(() => {
-          if (teamPageActiveTab === "resources") {
-            return;
+          if (!teamPageMemberMenuId || typeof document === "undefined") {
+            return undefined;
           }
-          setTeamPageResourceToolbarPopover("");
-          setTeamPageResourceMenuId("");
+          const handlePointerDown = (event) => {
+            const target = event.target;
+            if (target && typeof target.closest === "function" && target.closest(".playground-team-member-action-shell")) {
+              return;
+            }
+            setTeamPageMemberMenuId("");
+          };
+          document.addEventListener("mousedown", handlePointerDown);
+          return () => document.removeEventListener("mousedown", handlePointerDown);
+        }, [teamPageMemberMenuId]);
+        useEffect(() => {
+          if (teamPageActiveTab !== "resources") {
+            setTeamPageResourceToolbarPopover("");
+            setTeamPageResourceMenuId("");
+          }
+          if (teamPageActiveTab !== "members") {
+            setTeamPageMemberMenuId("");
+          }
         }, [teamPageActiveTab]);
         useEffect(() => {
           if ((!teamPageResourceToolbarPopover && !teamPageResourceMenuId) || typeof document === "undefined") {
@@ -139369,6 +141376,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const frameId = window.requestAnimationFrame(() => setTeamPageInviteModalVisible(true));
           return () => window.cancelAnimationFrame(frameId);
         }, [teamPageInviteModalOpen]);
+        useEffect(() => {
+          if (!teamPageShareModalOpen) {
+            return undefined;
+          }
+          if (teamPageShareModalCloseTimerRef.current && typeof window !== "undefined") {
+            window.clearTimeout(teamPageShareModalCloseTimerRef.current);
+            teamPageShareModalCloseTimerRef.current = null;
+          }
+          setTeamPageShareModalClosing(false);
+          setTeamPageShareModalVisible(false);
+          const frameId = window.requestAnimationFrame(() => setTeamPageShareModalVisible(true));
+          return () => window.cancelAnimationFrame(frameId);
+        }, [teamPageShareModalOpen]);
         useEffect(() => () => {
           if (typeof window === "undefined") {
             return;
@@ -139378,6 +141398,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
           if (teamPageInviteModalCloseTimerRef.current) {
             window.clearTimeout(teamPageInviteModalCloseTimerRef.current);
+          }
+          if (teamPageShareModalCloseTimerRef.current) {
+            window.clearTimeout(teamPageShareModalCloseTimerRef.current);
           }
         }, []);
 
@@ -139420,6 +141443,29 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setTeamPageInviteModalOpen(false);
             setTeamPageInviteModalClosing(false);
             teamPageInviteModalCloseTimerRef.current = null;
+          }, 75);
+        }
+
+        function closeTeamPageShareModal(options = {}) {
+          if (!options.force && teamPageActionId === "share") {
+            return;
+          }
+          setTeamPageShareResourcePickerOpen(false);
+          setTeamPageShareAccessPickerOpen(false);
+          if (teamPageShareModalCloseTimerRef.current && typeof window !== "undefined") {
+            window.clearTimeout(teamPageShareModalCloseTimerRef.current);
+          }
+          setTeamPageShareModalVisible(false);
+          setTeamPageShareModalClosing(true);
+          if (typeof window === "undefined") {
+            setTeamPageShareModalOpen(false);
+            setTeamPageShareModalClosing(false);
+            return;
+          }
+          teamPageShareModalCloseTimerRef.current = window.setTimeout(() => {
+            setTeamPageShareModalOpen(false);
+            setTeamPageShareModalClosing(false);
+            teamPageShareModalCloseTimerRef.current = null;
           }, 75);
         }
         const [sidebarWorkspaceMode, setSidebarWorkspaceMode] = useState(initialSidebarWorkspaceMode);
@@ -139684,6 +141730,39 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return authRequestHeaders;
         }, [authRequestHeaders]);
         useEffect(() => {
+          const canLoadTeamMetronomeWorkflows = !isDemoMode && hasSessionAuth;
+          if (!canLoadTeamMetronomeWorkflows || teamPageActiveTab !== "resources") {
+            setTeamPageMetronomeWorkflows([]);
+            return undefined;
+          }
+          let cancelled = false;
+          void fetchJsonWithTimeout(proxyBackendBase + "/metronomes", {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+            headers: requestHeaders,
+          }, 8000).then(({ response, data }) => {
+            if (cancelled) {
+              return;
+            }
+            if (!response.ok) {
+              setTeamPageMetronomeWorkflows([]);
+              return;
+            }
+            const workflows = getPlaygroundMetronomeListArray(data)
+              .map(normalizePlaygroundCalendarMetronomeWorkflow)
+              .filter((workflow) => workflow.id);
+            setTeamPageMetronomeWorkflows(workflows);
+          }).catch(() => {
+            if (!cancelled) {
+              setTeamPageMetronomeWorkflows([]);
+            }
+          });
+          return () => {
+            cancelled = true;
+          };
+        }, [hasSessionAuth, isDemoMode, proxyBackendBase, requestHeaders, teamPageActiveTab]);
+        useEffect(() => {
           const canLoadTeamProjectResourceIndexes = !isDemoMode && hasSessionAuth;
           if (!canLoadTeamProjectResourceIndexes || teamPageActiveTab !== "resources") {
             teamPageProjectResourceIndexLoadKeyRef.current = "";
@@ -139862,6 +141941,364 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }, [authRequestHeaders, proxyBackendBase]);
         const hasRealAccess = !isDemoMode && hasSessionAuth;
         const hasShellAccess = hasRealAccess || hasDemoAccess;
+        useEffect(() => {
+          if (activePage !== "settings" || settingsSection !== "inference") {
+            return undefined;
+          }
+
+          let cancelled = false;
+
+          if (!hasRealAccess) {
+            setSettingsLocalRunnersState({
+              status: "ready",
+              error: "",
+              bridgeEnabled: null,
+              runtimeTargets: [],
+              devices: [],
+              bindings: [],
+              loadedAt: new Date().toISOString(),
+            });
+            return () => {
+              cancelled = true;
+            };
+          }
+
+          setSettingsLocalRunnersState((current) => ({
+            ...current,
+            status: "loading",
+            error: "",
+          }));
+
+          void Promise.all([
+            fetchJsonWithTimeout(proxyBackendBase + "/runtime-targets", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders,
+            }, 8000),
+            fetchJsonWithTimeout(proxyBackendBase + "/devices?limit=100", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders,
+            }, 8000),
+            fetchJsonWithTimeout(proxyBackendBase + "/workspace-bindings?limit=250", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders,
+            }, 8000),
+          ]).then(([runtimeTargetsResult, devicesResult, bindingsResult]) => {
+            if (cancelled) {
+              return;
+            }
+
+            if (!runtimeTargetsResult.response.ok) {
+              throw new Error(runtimeTargetsResult.data?.message || runtimeTargetsResult.data?.error || "Failed to load runtime targets.");
+            }
+
+            const runtimeTargets = normalizeSettingsRuntimeTargetsPayload(runtimeTargetsResult.data);
+            const bridgeEnabled = runtimeTargetsResult.data?.localBridgeEnabled === true;
+
+            if (devicesResult.response.status === 404 || bindingsResult.response.status === 404) {
+              setSettingsLocalRunnersState({
+                status: "ready",
+                error: "Local bridge is not enabled for this workspace yet.",
+                bridgeEnabled,
+                runtimeTargets,
+                devices: [],
+                bindings: [],
+                loadedAt: new Date().toISOString(),
+              });
+              return;
+            }
+
+            if (!devicesResult.response.ok) {
+              throw new Error(devicesResult.data?.message || devicesResult.data?.error || "Failed to load local runners.");
+            }
+            if (!bindingsResult.response.ok) {
+              throw new Error(bindingsResult.data?.message || bindingsResult.data?.error || "Failed to load workspace bindings.");
+            }
+
+            const devices = normalizeSettingsLocalRunnerListPayload(devicesResult.data, "devices")
+              .map(normalizeSettingsLocalRunnerDevice)
+              .filter(Boolean);
+            const bindings = normalizeSettingsLocalRunnerListPayload(bindingsResult.data, "bindings")
+              .map(normalizeSettingsWorkspaceBinding)
+              .filter(Boolean);
+
+            setSettingsLocalRunnersState({
+              status: "ready",
+              error: "",
+              bridgeEnabled,
+              runtimeTargets,
+              devices,
+              bindings,
+              loadedAt: new Date().toISOString(),
+            });
+          }).catch((error) => {
+            if (cancelled) {
+              return;
+            }
+            setSettingsLocalRunnersState((current) => ({
+              ...current,
+              status: "error",
+              error: error instanceof Error ? error.message : "Failed to load local runners.",
+              bridgeEnabled: current.bridgeEnabled,
+              loadedAt: current.loadedAt || new Date().toISOString(),
+            }));
+          });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [activePage, hasRealAccess, proxyBackendBase, requestHeaders, settingsLocalRunnersReloadToken, settingsSection]);
+        useEffect(() => {
+          if (!settingsLocalRunnerOnboardingOpen || !hasRealAccess) {
+            return undefined;
+          }
+          const pairingToken = settingsLocalRunnerPairingState.pairingToken;
+          const pairingTokenId = pairingToken && typeof pairingToken.id === "string" ? pairingToken.id : "";
+          const pairingStatus = pairingToken && typeof pairingToken.status === "string" ? pairingToken.status : "";
+          if (!pairingTokenId || pairingStatus !== "pending") {
+            return undefined;
+          }
+
+          let cancelled = false;
+          const pollPairingToken = async () => {
+            try {
+              const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/local-runner-pairing-tokens/" + encodeURIComponent(pairingTokenId), {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              }, 8000);
+              if (cancelled) {
+                return;
+              }
+              if (!response.ok) {
+                setSettingsLocalRunnerPairingState((current) => ({
+                  ...current,
+                  status: "error",
+                  error: data?.message || data?.error || "Failed to check pairing status.",
+                  success: "",
+                }));
+                return;
+              }
+
+              const nextPairingToken = data?.pairingToken && typeof data.pairingToken === "object" && !Array.isArray(data.pairingToken)
+                ? data.pairingToken
+                : null;
+              if (!nextPairingToken) {
+                return;
+              }
+
+              setSettingsLocalRunnerPairingState((current) => {
+                if (nextPairingToken.status === "completed") {
+                  return {
+                    ...current,
+                    status: "completed",
+                    pairingToken: nextPairingToken,
+                    error: "",
+                    success: "Local runner connected.",
+                  };
+                }
+                if (nextPairingToken.status === "expired" || nextPairingToken.status === "revoked") {
+                  return {
+                    ...current,
+                    status: nextPairingToken.status,
+                    pairingToken: nextPairingToken,
+                    error: "Pairing token expired. Generate a new token and restart the daemon command.",
+                    success: "",
+                  };
+                }
+                return {
+                  ...current,
+                  status: "waiting",
+                  pairingToken: nextPairingToken,
+                };
+              });
+
+              if (nextPairingToken.status === "completed") {
+                setSettingsLocalRunnersReloadToken((current) => current + 1);
+              }
+            } catch (error) {
+              if (!cancelled) {
+                setSettingsLocalRunnerPairingState((current) => ({
+                  ...current,
+                  status: "error",
+                  error: error instanceof Error ? error.message : "Failed to check pairing status.",
+                  success: "",
+                }));
+              }
+            }
+          };
+
+          const intervalId = window.setInterval(() => {
+            void pollPairingToken();
+          }, 2500);
+          void pollPairingToken();
+
+          return () => {
+            cancelled = true;
+            window.clearInterval(intervalId);
+          };
+        }, [
+          hasRealAccess,
+          proxyBackendBase,
+          requestHeaders,
+          settingsLocalRunnerOnboardingOpen,
+          settingsLocalRunnerPairingState.pairingToken?.id,
+          settingsLocalRunnerPairingState.pairingToken?.status,
+        ]);
+        useEffect(() => {
+          if (!settingsLocalBindingFormOpen) {
+            return;
+          }
+          setSettingsLocalBindingForm((current) => {
+            const nextDeviceId = current.deviceId || settingsLocalRunnersState.devices[0]?.id || "";
+            const nextEnvironmentId = current.environmentId || realEnvironments.find((environment) => environment?.isDefault)?.id || realEnvironments[0]?.id || "";
+            if (nextDeviceId === current.deviceId && nextEnvironmentId === current.environmentId) {
+              return current;
+            }
+            return {
+              ...current,
+              deviceId: nextDeviceId,
+              environmentId: nextEnvironmentId,
+            };
+          });
+        }, [realEnvironments, settingsLocalBindingFormOpen, settingsLocalRunnersState.devices]);
+        const handleSettingsCreateLocalRunnerPairingToken = useCallback(async () => {
+          if (!hasRealAccess) {
+            setSettingsLocalRunnerPairingState((current) => ({
+              ...current,
+              status: "error",
+              error: "Sign in to connect a local runner.",
+              success: "",
+            }));
+            return;
+          }
+
+          setSettingsLocalRunnerPairingState({
+            status: "creating",
+            token: "",
+            pairingToken: null,
+            error: "",
+            success: "",
+          });
+
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/local-runner-pairing-tokens", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name: "Local runner",
+                ttlSeconds: 600,
+              }),
+            }, 10000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create pairing token.");
+            }
+            const token = typeof data?.token === "string" ? data.token.trim() : "";
+            const pairingToken = data?.pairingToken && typeof data.pairingToken === "object" && !Array.isArray(data.pairingToken)
+              ? data.pairingToken
+              : null;
+            if (!token || !pairingToken?.id) {
+              throw new Error("Pairing token response was incomplete.");
+            }
+            setSettingsLocalRunnerPairingState({
+              status: "waiting",
+              token,
+              pairingToken,
+              error: "",
+              success: "Pairing token created. Start the daemon with the command below.",
+            });
+          } catch (error) {
+            setSettingsLocalRunnerPairingState({
+              status: "error",
+              token: "",
+              pairingToken: null,
+              error: error instanceof Error ? error.message : "Failed to create pairing token.",
+              success: "",
+            });
+          }
+        }, [hasRealAccess, proxyBackendBase, requestHeaders]);
+        const handleSettingsCreateWorkspaceBinding = useCallback(async () => {
+          if (!hasRealAccess) {
+            setSettingsLocalBindingError("Sign in to create a workspace binding.");
+            setSettingsLocalBindingSuccess("");
+            return;
+          }
+
+          const deviceId = String(settingsLocalBindingForm.deviceId || "").trim();
+          const environmentId = String(settingsLocalBindingForm.environmentId || "").trim();
+          const localPath = String(settingsLocalBindingForm.localPath || "").trim();
+          const syncRoot = String(settingsLocalBindingForm.syncRoot || "").trim();
+          if (!deviceId) {
+            setSettingsLocalBindingError("Select a local runner device.");
+            setSettingsLocalBindingSuccess("");
+            return;
+          }
+          if (!environmentId) {
+            setSettingsLocalBindingError("Select an environment to bind.");
+            setSettingsLocalBindingSuccess("");
+            return;
+          }
+          if (!localPath) {
+            setSettingsLocalBindingError("Enter the local workspace path.");
+            setSettingsLocalBindingSuccess("");
+            return;
+          }
+
+          setSettingsLocalBindingSubmitting(true);
+          setSettingsLocalBindingError("");
+          setSettingsLocalBindingSuccess("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/workspace-bindings", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                deviceId,
+                environmentId,
+                projectId: String(settingsLocalBindingForm.projectId || "").trim() || null,
+                name: String(settingsLocalBindingForm.name || "").trim() || undefined,
+                localPath,
+                syncRoot: syncRoot || localPath,
+                syncMode: settingsLocalBindingForm.syncMode === "off" || settingsLocalBindingForm.syncMode === "watch"
+                  ? settingsLocalBindingForm.syncMode
+                  : "manual",
+                executionMode: settingsLocalBindingForm.executionMode === "legacy_remote"
+                  ? "legacy_remote"
+                  : "bridge_local",
+              }),
+            }, 10000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create workspace binding.");
+            }
+            setSettingsLocalBindingSuccess("Workspace binding created.");
+            setSettingsLocalBindingForm((current) => ({
+              ...current,
+              name: "",
+              localPath: "",
+              syncRoot: "",
+            }));
+            setSettingsLocalRunnersReloadToken((current) => current + 1);
+          } catch (error) {
+            setSettingsLocalBindingError(error instanceof Error ? error.message : "Failed to create workspace binding.");
+          } finally {
+            setSettingsLocalBindingSubmitting(false);
+          }
+        }, [hasRealAccess, proxyBackendBase, requestHeaders, settingsLocalBindingForm]);
         const loadModelsPageAgentModelCatalog = useCallback(async () => {
           await loadPlaygroundManagedAgentModelCatalog(proxyBackendBase, requestHeaders, setModelsPageAgentModelOptions);
         }, [proxyBackendBase, requestHeaders]);
@@ -140115,6 +142552,209 @@ ${PROJECT_OVERVIEW_SCRIPT}
           teamInvitationNotifications,
         ]);
         const hasVisibleNotifications = notificationItems.length > 0;
+        function getNotificationPlainText(notification) {
+          const source = notification && typeof notification === "object" && !Array.isArray(notification) ? notification : {};
+          const directText = String(
+            source.title
+            || source.label
+            || source.text
+            || source.message
+            || source.body
+            || source.summary
+            || ""
+          ).trim();
+          if (directText) {
+            return directText;
+          }
+          const html = String(source.html || source.content || "").trim();
+          if (!html) {
+            return "";
+          }
+          try {
+            if (typeof document !== "undefined" && document.createElement) {
+              const element = document.createElement("div");
+              element.innerHTML = DOMPurify.sanitize(html, {
+                USE_PROFILES: { html: true },
+                FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form", "input"],
+              });
+              return String(element.textContent || element.innerText || "").trim();
+            }
+          } catch {}
+          return html.split("<").join(" ").split(">").join(" ").trim();
+        }
+
+        function buildNotificationSearchText(item) {
+          return [
+            item?.kindLabel,
+            item?.label,
+            item?.text,
+            item?.meta,
+            item?.statusLabel,
+            item?.threadTitle,
+            item?.toolName,
+            item?.reason,
+            item?.teamName,
+          ].map((value) => String(value || "").toLowerCase()).join(" ");
+        }
+
+        const allNotificationPageItems = useMemo(() => {
+          const readProducts = new Set(readProductNotificationIds);
+          const readPermissions = new Set(readPermissionNotificationIds);
+          const readHumanTasks = new Set(readHumanTaskNotificationIds);
+          const readTeamInvitations = new Set(readTeamInvitationNotificationIds);
+          const items = [];
+
+          permissionNotificationItems.forEach((notification) => {
+            const readIds = getPermissionNotificationReadIds(notification);
+            const isRead = Boolean(readIds.length > 0 && readIds.every((id) => readPermissions.has(id)));
+            const metaText = [
+              notification.toolName || "Tool access",
+              notification.createdAt ? formatThreadSearchTimestamp(notification.createdAt) : "",
+            ].filter(Boolean).join(" · ");
+            items.push({
+              ...notification,
+              id: notification.id || ("permission:" + String(notification.threadId || "")),
+              kind: "permission",
+              kindLabel: "Permission request",
+              label: isRead ? "Permission request seen" : "Permission needed",
+              text: notification.threadTitle || "Untitled thread",
+              meta: metaText,
+              statusLabel: isRead ? "Seen" : "Needs decision",
+              unread: !isRead,
+              createdAt: notification.createdAt || "",
+            });
+          });
+
+          if (hasSessionAuth && accountEmail && !sessionState.emailVerified && !emailVerificationNotificationDismissed) {
+            items.push({
+              id: "email-verification:" + accountEmail,
+              kind: "email_verification",
+              kindLabel: "Account",
+              label: "Verify your email address",
+              text: "Your account email is not verified yet.",
+              meta: "Profile settings",
+              statusLabel: "Needs action",
+              unread: true,
+              createdAt: "",
+            });
+          }
+
+          humanTaskNotificationItems.forEach((notification) => {
+            items.push({
+              ...notification,
+              kindLabel: "Task",
+              statusLabel: readHumanTasks.has(notification.id) ? "Seen" : "Needs action",
+              unread: !readHumanTasks.has(notification.id),
+              meta: [
+                notification.ticketNumber ? ("Ticket " + notification.ticketNumber) : "",
+                notification.createdAt ? formatThreadSearchTimestamp(notification.createdAt) : "",
+              ].filter(Boolean).join(" · "),
+            });
+          });
+
+          teamInvitationNotifications.forEach((invitation) => {
+            const id = String(invitation?.id || "").trim();
+            if (!id) {
+              return;
+            }
+            items.push({
+              ...invitation,
+              id,
+              kind: "team_invitation",
+              kindLabel: "Team",
+              label: "Team invitation",
+              text: invitation.teamName || "Team",
+              meta: [
+                invitation.role ? ("Role: " + invitation.role) : "",
+                invitation.invitedByEmail ? ("From " + invitation.invitedByEmail) : "",
+                invitation.createdAt ? formatThreadSearchTimestamp(invitation.createdAt) : "",
+              ].filter(Boolean).join(" · "),
+              statusLabel: readTeamInvitations.has(id) ? "Seen" : "Needs decision",
+              unread: !readTeamInvitations.has(id),
+              createdAt: invitation.createdAt || "",
+            });
+          });
+
+          productNotifications.forEach((notification) => {
+            const id = typeof notification?.id === "string" ? notification.id.trim() : "";
+            if (!id) {
+              return;
+            }
+            const text = getNotificationPlainText(notification) || "Product update";
+            items.push({
+              ...notification,
+              id,
+              kind: "product",
+              kindLabel: "Product",
+              label: "Product update",
+              text,
+              meta: notification.createdAt ? formatThreadSearchTimestamp(notification.createdAt) : "",
+              statusLabel: readProducts.has(id) ? "Read" : "Unread",
+              unread: !readProducts.has(id),
+              createdAt: notification.createdAt || "",
+            });
+          });
+
+          return items.sort((left, right) => {
+            const leftMs = Date.parse(left.createdAt || "");
+            const rightMs = Date.parse(right.createdAt || "");
+            return (Number.isFinite(rightMs) ? rightMs : 0) - (Number.isFinite(leftMs) ? leftMs : 0);
+          });
+        }, [
+          accountEmail,
+          emailVerificationNotificationDismissed,
+          hasSessionAuth,
+          humanTaskNotificationItems,
+          permissionNotificationItems,
+          productNotifications,
+          readHumanTaskNotificationIds,
+          readPermissionNotificationIds,
+          readProductNotificationIds,
+          readTeamInvitationNotificationIds,
+          sessionState.emailVerified,
+          teamInvitationNotifications,
+        ]);
+
+        const visibleNotificationPageItems = useMemo(() => {
+          const query = String(notificationsPageSearchQuery || "").trim().toLowerCase();
+          const filteredItems = allNotificationPageItems.filter((item) => {
+            if (notificationsPageFilter === "unread" && !item.unread) {
+              return false;
+            }
+            if (notificationsPageFilter === "read" && item.unread) {
+              return false;
+            }
+            if (notificationsPageFilter === "permission" && item.kind !== "permission") {
+              return false;
+            }
+            if (notificationsPageFilter === "tasks" && item.kind !== "human_task") {
+              return false;
+            }
+            if (notificationsPageFilter === "team" && item.kind !== "team_invitation") {
+              return false;
+            }
+            if (notificationsPageFilter === "product" && item.kind !== "product" && item.kind !== "email_verification") {
+              return false;
+            }
+            if (query && !buildNotificationSearchText(item).includes(query)) {
+              return false;
+            }
+            return true;
+          });
+          return filteredItems.slice().sort((left, right) => {
+            if (notificationsPageSort === "oldest") {
+              const leftMs = Date.parse(left.createdAt || "");
+              const rightMs = Date.parse(right.createdAt || "");
+              return (Number.isFinite(leftMs) ? leftMs : 0) - (Number.isFinite(rightMs) ? rightMs : 0);
+            }
+            if (notificationsPageSort === "type") {
+              return String(left.kindLabel || left.kind || "").localeCompare(String(right.kindLabel || right.kind || ""));
+            }
+            const leftMs = Date.parse(left.createdAt || "");
+            const rightMs = Date.parse(right.createdAt || "");
+            return (Number.isFinite(rightMs) ? rightMs : 0) - (Number.isFinite(leftMs) ? leftMs : 0);
+          });
+        }, [allNotificationPageItems, notificationsPageFilter, notificationsPageSearchQuery, notificationsPageSort]);
         const permissionAttentionThreadIds = useMemo(() => {
           const threadIds = new Set();
           pendingPermissionDecisionThreads.forEach((thread) => {
@@ -141140,6 +143780,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
             openInferencePage();
             return;
           }
+          if (normalizedSectionId === "costs-overview") {
+            openConfigureHome({ tab: "usage" });
+            return;
+          }
           setAccountMenuOpen(false);
           setNotificationsOpen(false);
           setSidebarWorkspaceMode("configure");
@@ -141163,6 +143807,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setActivePage("team");
         }
 
+        function openNotificationsPage() {
+          setAccountMenuOpen(false);
+          setNotificationsOpen(false);
+          setProfileEditorOpen(false);
+          setSidebarWorkspaceMode("configure");
+          setActivePage("configure");
+        }
+
         function getTeamPageApiErrorMessage(data, fallback = "Failed to load teams.") {
           const rawMessage = String(data?.message || data?.error || fallback || "").trim();
           const normalizedMessage = rawMessage.toLowerCase();
@@ -141184,6 +143836,311 @@ ${PROJECT_OVERVIEW_SCRIPT}
             permissionSet: normalizePlaygroundPermissionSet(source.permissionSet, "team"),
             rolePermissionSets: normalizePlaygroundTeamRolePermissionSets(source.rolePermissionSets || source.rolePermissions || source.permissionSets),
           };
+        }
+
+        function getTeamPageIdentitySources(record) {
+          const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
+          const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : {};
+          const sources = [
+            source,
+            source.user,
+            source.profile,
+            source.authProfile,
+            source.account,
+            source.member,
+            source.identity,
+            source.userProfile,
+            source.accountProfile,
+            source.publicProfile,
+            source.firebaseUser,
+            source.authUser,
+            metadata,
+            metadata.user,
+            metadata.profile,
+            metadata.authProfile,
+            metadata.account,
+            metadata.member,
+            metadata.identity,
+            metadata.userProfile,
+            metadata.accountProfile,
+            metadata.publicProfile,
+            metadata.firebaseUser,
+            metadata.authUser,
+          ].filter((value) => value && typeof value === "object" && !Array.isArray(value));
+          sources.slice().forEach((value) => {
+            [value.providerUserInfo, value.providerData].forEach((providerProfiles) => {
+              if (!Array.isArray(providerProfiles)) {
+                return;
+              }
+              providerProfiles.forEach((providerProfile) => {
+                if (providerProfile && typeof providerProfile === "object" && !Array.isArray(providerProfile)) {
+                  sources.push(providerProfile);
+                }
+              });
+            });
+          });
+          return sources;
+        }
+
+        function readTeamPageIdentityString(record, keys = []) {
+          for (const source of getTeamPageIdentitySources(record)) {
+            for (const key of keys) {
+              const value = String(source?.[key] || "").replace(/\\s+/g, " ").trim();
+              if (value) {
+                return value;
+              }
+            }
+          }
+          return "";
+        }
+
+        function readTeamPageIdentityDisplayName(record) {
+          const directName = readTeamPageIdentityString(record, [
+            "displayName",
+            "display_name",
+            "name",
+            "fullName",
+            "full_name",
+            "accountDisplayName",
+            "accountName",
+            "memberDisplayName",
+            "memberName",
+            "firebaseDisplayName",
+            "providerDisplayName",
+            "publicName",
+            "username",
+            "userName",
+          ]);
+          if (directName) {
+            return directName;
+          }
+          for (const source of getTeamPageIdentitySources(record)) {
+            const firstName = String(source.firstName || source.first_name || source.givenName || source.given_name || "").trim();
+            const lastName = String(source.lastName || source.last_name || source.familyName || source.family_name || "").trim();
+            const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+            if (fullName) {
+              return fullName;
+            }
+          }
+          return "";
+        }
+
+        function readTeamPageIdentityEmail(record) {
+          return readTeamPageIdentityString(record, [
+            "email",
+            "emailAddress",
+            "email_address",
+            "mail",
+            "primaryEmail",
+            "primary_email",
+          ]).toLowerCase();
+        }
+
+        function readTeamPageIdentityAvatarUrl(record) {
+          return readTeamPageIdentityString(record, [
+            "photoURL",
+            "photoUrl",
+            "photo_url",
+            "avatarUrl",
+            "avatarURL",
+            "avatar",
+            "picture",
+            "imageUrl",
+            "profileImageUrl",
+            "profile_image_url",
+          ]);
+        }
+
+        function getTeamPageMemberProfileKeyCandidates(record) {
+          const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
+          const values = [
+            source.userId,
+            source.user_id,
+            source.uid,
+            source.id,
+            source.localId,
+            source.local_id,
+            source.memberId,
+            source.member_id,
+          ];
+          getTeamPageIdentitySources(source).forEach((identitySource) => {
+            values.push(
+              identitySource.id,
+              identitySource.uid,
+              identitySource.userId,
+              identitySource.user_id,
+              identitySource.localId,
+              identitySource.local_id,
+              identitySource.memberId,
+              identitySource.member_id,
+              identitySource.email,
+              identitySource.emailAddress,
+              identitySource.email_address,
+              identitySource.mail,
+            );
+          });
+          return values.map((value) => String(value || "").trim()).filter(Boolean);
+        }
+
+        function buildTeamPageMemberProfileMap(payload) {
+          const profileMap = new Map();
+          const addProfile = (profile, explicitKey = "") => {
+            if (!profile || typeof profile !== "object" || Array.isArray(profile)) {
+              return;
+            }
+            const normalizedProfile = explicitKey
+              ? { id: explicitKey, ...profile }
+              : profile;
+            const keys = getTeamPageMemberProfileKeyCandidates(normalizedProfile);
+            keys.forEach((key) => profileMap.set(key.toLowerCase(), normalizedProfile));
+          };
+          const addProfiles = (value) => {
+            if (Array.isArray(value)) {
+              value.forEach((profile) => addProfile(profile));
+              return;
+            }
+            if (!value || typeof value !== "object") {
+              return;
+            }
+            if (
+              readTeamPageIdentityDisplayName(value)
+              || readTeamPageIdentityEmail(value)
+              || getTeamPageMemberProfileKeyCandidates(value).length > 0
+            ) {
+              addProfile(value);
+            }
+            if (Array.isArray(value.data)) {
+              value.data.forEach((profile) => addProfile(profile));
+              return;
+            }
+            Object.entries(value).forEach(([key, profile]) => addProfile(profile, key));
+          };
+          [
+            payload,
+            payload?.profile,
+            payload?.user,
+            payload?.account,
+            payload?.member,
+            payload?.profiles,
+            payload?.memberProfiles,
+            payload?.member_profiles,
+            payload?.users,
+            payload?.accounts,
+            payload?.items,
+            payload?.results,
+            payload?.data,
+            payload?.data?.profile,
+            payload?.data?.user,
+            payload?.data?.account,
+            payload?.data?.member,
+            payload?.included?.profiles,
+            payload?.included?.users,
+            payload?.included?.accounts,
+            payload?.data?.profiles,
+            payload?.data?.memberProfiles,
+            payload?.data?.users,
+            payload?.data?.accounts,
+            payload?.data?.items,
+            payload?.data?.results,
+          ].forEach(addProfiles);
+          return profileMap;
+        }
+
+        function mergeTeamPageMemberProfiles(members, ...profilePayloads) {
+          const profileMap = new Map();
+          profilePayloads.forEach((payload) => {
+            buildTeamPageMemberProfileMap(payload).forEach((profile, key) => {
+              profileMap.set(key, profile);
+            });
+          });
+          return (Array.isArray(members) ? members : []).map((member) => {
+            const matchingProfile = getTeamPageMemberProfileKeyCandidates(member)
+              .map((key) => profileMap.get(key.toLowerCase()))
+              .find(Boolean);
+            if (!matchingProfile) {
+              return member;
+            }
+            const memberEmail = readTeamPageIdentityEmail(member);
+            const profileEmail = readTeamPageIdentityEmail(matchingProfile);
+            const email = memberEmail || profileEmail;
+            const memberDisplayName = readTeamPageIdentityDisplayName(member);
+            const profileDisplayName = readTeamPageIdentityDisplayName(matchingProfile);
+            const displayName = getTrustedDisplayName(profileDisplayName, email)
+              || getTrustedDisplayName(memberDisplayName, email);
+            const avatarUrl = readTeamPageIdentityAvatarUrl(matchingProfile)
+              || readTeamPageIdentityAvatarUrl(member);
+            return {
+              ...member,
+              ...(displayName ? { displayName, name: displayName } : {}),
+              ...(email ? { email } : {}),
+              ...(avatarUrl ? { photoURL: avatarUrl, photoUrl: avatarUrl } : {}),
+              profile: {
+                ...(member.profile && typeof member.profile === "object" && !Array.isArray(member.profile) ? member.profile : {}),
+                ...(matchingProfile && typeof matchingProfile === "object" ? matchingProfile : {}),
+                ...(displayName ? { displayName, name: displayName } : {}),
+                ...(email ? { email } : {}),
+                ...(avatarUrl ? { photoURL: avatarUrl, photoUrl: avatarUrl } : {}),
+              },
+              user: {
+                ...(member.user && typeof member.user === "object" && !Array.isArray(member.user) ? member.user : {}),
+                ...(matchingProfile && typeof matchingProfile === "object" ? matchingProfile : {}),
+                ...(displayName ? { displayName, name: displayName } : {}),
+                ...(email ? { email } : {}),
+                ...(avatarUrl ? { photoURL: avatarUrl, photoUrl: avatarUrl } : {}),
+              },
+            };
+          });
+        }
+
+        async function fetchTeamPageMemberProfilePayload(teamId, members = []) {
+          const normalizedTeamId = String(teamId || "").trim();
+          if (!normalizedTeamId) {
+            return null;
+          }
+          const memberPayload = Array.isArray(members) ? members : [];
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/team-member-profiles/lookup", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                teamId: normalizedTeamId,
+                members: memberPayload,
+              }),
+            }, 8000);
+            if (response.ok) {
+              const profiles = Array.isArray(data?.profiles)
+                ? data.profiles
+                : Array.isArray(data?.data)
+                  ? data.data
+                  : [];
+              if (profiles.length > 0) {
+                return data;
+              }
+            }
+          } catch {}
+          const profilePaths = [
+            "/teams/" + encodeURIComponent(normalizedTeamId) + "/member-profiles",
+            "/teams/" + encodeURIComponent(normalizedTeamId) + "/members/profiles",
+          ];
+          for (const path of profilePaths) {
+            try {
+              const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + path, {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              }, 5000);
+              if (response.ok) {
+                return data;
+              }
+            } catch {}
+          }
+          return null;
         }
 
         async function loadTeamPageData(options = {}) {
@@ -141230,7 +144187,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return;
             }
             const [membersResult, invitationsResult, sharesResult] = await Promise.all([
-              fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(selectedTeamId) + "/members", {
+              fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(selectedTeamId) + "/members?includeProfiles=1&includeUsers=1&include=profile,user,account&expand=profile,user,account", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
@@ -141249,7 +144206,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 headers: requestHeaders,
               }, 8000),
             ]);
-            setTeamPageMembers(Array.isArray(membersResult.data?.data) ? membersResult.data.data : []);
+            const rawMembers = Array.isArray(membersResult.data?.data) ? membersResult.data.data : [];
+            const memberProfilesPayload = await fetchTeamPageMemberProfilePayload(selectedTeamId, rawMembers);
+            setTeamPageMembers(mergeTeamPageMemberProfiles(rawMembers, membersResult.data, memberProfilesPayload));
             setTeamPageInvitations(Array.isArray(invitationsResult.data?.data) ? invitationsResult.data.data : []);
             setTeamPageShares(Array.isArray(sharesResult.data?.data) ? sharesResult.data.data : []);
           } catch (error) {
@@ -141265,7 +144224,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return;
           }
           const inviteEmails = String(teamPageCreateInviteEmails || "")
-            .split(/[\s,;]+/)
+            .split(/[\\s,;]+/)
             .map((email) => email.trim())
             .filter(Boolean);
           setTeamPageActionId("create-team");
@@ -141825,45 +144784,514 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
         }
 
+        function parseTeamResourceShareMetadata(share) {
+          const metadata = share?.metadata;
+          if (!metadata) {
+            return {};
+          }
+          if (typeof metadata === "string") {
+            try {
+              const parsed = JSON.parse(metadata);
+              return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+            } catch {
+              return {};
+            }
+          }
+          return metadata && typeof metadata === "object" && !Array.isArray(metadata) ? metadata : {};
+        }
+
+        function getTeamResourceUiShareType(resourceTypeOrShare) {
+          const share = resourceTypeOrShare && typeof resourceTypeOrShare === "object" && !Array.isArray(resourceTypeOrShare)
+            ? resourceTypeOrShare
+            : null;
+          const normalizedType = String(share ? share.resourceType : resourceTypeOrShare || "").trim();
+          const metadata = share ? parseTeamResourceShareMetadata(share) : {};
+          const metadataType = String(
+            metadata.resourceType
+            || metadata.resource_type
+            || metadata.resourceKind
+            || metadata.resource_kind
+            || metadata.kind
+            || metadata.type
+            || ""
+          ).trim();
+          if (normalizedType === "metronome_workflow" || metadataType === "metronome_workflow" || metadataType === "metronome") {
+            return "metronome";
+          }
+          return normalizedType;
+        }
+
+        function getTeamResourceBackendShareType(resourceType) {
+          const normalizedType = String(resourceType || "").trim();
+          if (normalizedType === "metronome") {
+            return "metronome_workflow";
+          }
+          return normalizedType;
+        }
+
+        function getTeamPageMetronomeWorkflowId(workflow) {
+          const source = workflow && typeof workflow === "object" && !Array.isArray(workflow) ? workflow : {};
+          return String(
+            source.id
+            || source.workflowId
+            || source.workflow_id
+            || source.metronomeId
+            || source.metronome_id
+            || source.resourceId
+            || source.resource_id
+            || ""
+          ).trim();
+        }
+
+        function findTeamPageMetronomeWorkflowRecord(workflowId) {
+          const normalizedWorkflowId = String(workflowId || "").trim();
+          if (!normalizedWorkflowId) {
+            return null;
+          }
+          const candidates = [];
+          (Array.isArray(teamPageMetronomeWorkflows) ? teamPageMetronomeWorkflows : []).forEach((workflow) => {
+            candidates.push(workflow);
+          });
+          Object.values(teamPageProjectResourceIndexes || {}).forEach((entry) => {
+            const data = entry?.data && typeof entry.data === "object" && !Array.isArray(entry.data) ? entry.data : null;
+            if (!data) {
+              return;
+            }
+            ["metronomes", "workflows", "schedules"].forEach((key) => {
+              if (Array.isArray(data[key])) {
+                data[key].forEach((workflow) => candidates.push(workflow));
+              }
+            });
+          });
+          return candidates.find((workflow) => getTeamPageMetronomeWorkflowId(workflow) === normalizedWorkflowId) || null;
+        }
+
+        function getTeamPageMetronomeApiWorkflowRecord(data) {
+          const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+          const candidate = source.data && typeof source.data === "object" && !Array.isArray(source.data)
+            ? source.data
+            : source.metronome && typeof source.metronome === "object" && !Array.isArray(source.metronome)
+              ? source.metronome
+              : source.workflow && typeof source.workflow === "object" && !Array.isArray(source.workflow)
+                ? source.workflow
+                : source;
+          return candidate && typeof candidate === "object" && !Array.isArray(candidate) ? candidate : null;
+        }
+
+        function getTeamPageMetronomeVersionArray(data) {
+          const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+          if (Array.isArray(source.data)) return source.data;
+          if (Array.isArray(source.versions)) return source.versions;
+          if (Array.isArray(source.deployments)) return source.deployments;
+          if (Array.isArray(source.items)) return source.items;
+          if (Array.isArray(data)) return data;
+          return [];
+        }
+
+        function getTeamPageMetronomeGraphVersionSortValue(version, fallbackIndex = 0) {
+          const parsedVersion = Number(version?.version || version?.versionNumber || version?.version_number || 0) || 0;
+          if (parsedVersion) return parsedVersion * 1000000000000;
+          const parsedTime = new Date(version?.updatedAt || version?.updated_at || version?.publishedAt || version?.published_at || version?.createdAt || version?.created_at || "").getTime();
+          return Number.isFinite(parsedTime) ? parsedTime : fallbackIndex;
+        }
+
+        function selectTeamPageMetronomeGraphVersion(versions, workflow) {
+          const metadata = workflow?.metadata && typeof workflow.metadata === "object" && !Array.isArray(workflow.metadata) ? workflow.metadata : {};
+          const preferredDeploymentId = String(
+            workflow?.restoredFromDeploymentId
+            || workflow?.restored_from_deployment_id
+            || workflow?.activeDeploymentId
+            || workflow?.active_deployment_id
+            || metadata.restoredFromDeploymentId
+            || metadata.restored_from_deployment_id
+            || metadata.activeDeploymentId
+            || metadata.active_deployment_id
+            || ""
+          ).trim();
+          const candidates = (Array.isArray(versions) ? versions : [])
+            .map((version, index) => ({ version, index, definition: getPlaygroundMetronomeWorkflowDefinition(version) }))
+            .filter((entry) => entry.version && Array.isArray(entry.definition.nodes) && entry.definition.nodes.length);
+          if (!candidates.length) return null;
+          return (preferredDeploymentId
+            ? candidates.find((entry) => String(entry.version?.id || entry.version?.deploymentId || entry.version?.deployment_id || "").trim() === preferredDeploymentId)
+            : null)
+            || candidates.find((entry) => String(entry.version?.status || "").trim().toLowerCase() === "active")
+            || candidates.sort((left, right) => getTeamPageMetronomeGraphVersionSortValue(right.version, right.index) - getTeamPageMetronomeGraphVersionSortValue(left.version, left.index))[0]
+            || null;
+        }
+
+        function mergeTeamPageMetronomeWorkflowGraphSnapshot(workflow, graphSource, versions = []) {
+          const base = workflow && typeof workflow === "object" && !Array.isArray(workflow) ? workflow : {};
+          const source = graphSource && typeof graphSource === "object" && !Array.isArray(graphSource) ? graphSource : {};
+          const graph = getPlaygroundMetronomeWorkflowDefinition(source);
+          if (!Array.isArray(graph.nodes) || !graph.nodes.length) {
+            return base;
+          }
+          const baseDefinition = base.definition && typeof base.definition === "object" && !Array.isArray(base.definition) ? base.definition : {};
+          const sourceDefinition = source.definition && typeof source.definition === "object" && !Array.isArray(source.definition) ? source.definition : {};
+          const baseMetadata = base.metadata && typeof base.metadata === "object" && !Array.isArray(base.metadata) ? base.metadata : {};
+          const sourceMetadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : {};
+          const deploymentId = String(source.id || source.deploymentId || source.deployment_id || sourceMetadata.activeDeploymentId || sourceMetadata.active_deployment_id || "").trim();
+          return {
+            ...base,
+            ...source,
+            id: getTeamPageMetronomeWorkflowId(base) || getTeamPageMetronomeWorkflowId(source),
+            name: source.name || source.title || base.name || base.title,
+            projectId: source.projectId || source.project_id || base.projectId || base.project_id || sourceMetadata.projectId || baseMetadata.projectId || "",
+            projectName: source.projectName || source.project_name || base.projectName || base.project_name || sourceMetadata.projectName || baseMetadata.projectName || "",
+            metadata: {
+              ...baseMetadata,
+              ...sourceMetadata,
+              ...(Array.isArray(versions) && versions.length ? { deployments: versions, metronomeDeployments: versions } : {}),
+              ...(deploymentId ? { activeDeploymentId: deploymentId, active_deployment_id: deploymentId } : {}),
+            },
+            definition: {
+              ...baseDefinition,
+              ...sourceDefinition,
+              nodes: graph.nodes,
+              edges: Array.isArray(graph.edges) ? graph.edges : [],
+            },
+            nodes: graph.nodes,
+            edges: Array.isArray(graph.edges) ? graph.edges : [],
+          };
+        }
+
+        function buildTeamPageMetronomeWorkflowRecordFromShare(share) {
+          const safeShare = share && typeof share === "object" && !Array.isArray(share) ? share : {};
+          const metadata = parseTeamResourceShareMetadata(safeShare);
+          const workflow = metadata.workflow && typeof metadata.workflow === "object" && !Array.isArray(metadata.workflow)
+            ? metadata.workflow
+            : metadata.metronomeWorkflow && typeof metadata.metronomeWorkflow === "object" && !Array.isArray(metadata.metronomeWorkflow)
+              ? metadata.metronomeWorkflow
+              : metadata.metronome && typeof metadata.metronome === "object" && !Array.isArray(metadata.metronome)
+                ? metadata.metronome
+                : {};
+          const definition = workflow.definition && typeof workflow.definition === "object" && !Array.isArray(workflow.definition)
+            ? workflow.definition
+            : metadata.definition && typeof metadata.definition === "object" && !Array.isArray(metadata.definition)
+              ? metadata.definition
+              : metadata.workflowGraphSnapshot?.definition && typeof metadata.workflowGraphSnapshot.definition === "object" && !Array.isArray(metadata.workflowGraphSnapshot.definition)
+                ? metadata.workflowGraphSnapshot.definition
+                : metadata.graphSnapshot?.definition && typeof metadata.graphSnapshot.definition === "object" && !Array.isArray(metadata.graphSnapshot.definition)
+                  ? metadata.graphSnapshot.definition
+                  : {};
+          const graphSnapshot = metadata.workflowGraphSnapshot && typeof metadata.workflowGraphSnapshot === "object" && !Array.isArray(metadata.workflowGraphSnapshot)
+            ? metadata.workflowGraphSnapshot
+            : metadata.graphSnapshot && typeof metadata.graphSnapshot === "object" && !Array.isArray(metadata.graphSnapshot)
+              ? metadata.graphSnapshot
+              : {};
+          const nodes = Array.isArray(workflow.nodes)
+            ? workflow.nodes
+            : Array.isArray(definition.nodes)
+              ? definition.nodes
+              : Array.isArray(metadata.nodes)
+                ? metadata.nodes
+                : Array.isArray(graphSnapshot.nodes)
+                  ? graphSnapshot.nodes
+                  : [];
+          const edges = Array.isArray(workflow.edges)
+            ? workflow.edges
+            : Array.isArray(definition.edges)
+              ? definition.edges
+              : Array.isArray(metadata.edges)
+                ? metadata.edges
+                : Array.isArray(graphSnapshot.edges)
+                  ? graphSnapshot.edges
+                  : [];
+          return {
+            ...workflow,
+            id: String(workflow.id || safeShare.resourceId || safeShare.resource_id || "").trim(),
+            name: String(workflow.name || workflow.title || getTeamResourceShareMetadataTitle(safeShare) || safeShare.resourceId || "Metronome Workflow").trim(),
+            description: String(workflow.description || metadata.description || "").trim(),
+            status: String(workflow.status || metadata.status || "draft").trim() || "draft",
+            triggerSummary: String(workflow.triggerSummary || workflow.trigger_summary || metadata.triggerSummary || metadata.trigger_summary || "Manual").trim() || "Manual",
+            projectId: String(workflow.projectId || workflow.project_id || metadata.projectId || metadata.project_id || "").trim(),
+            projectName: String(workflow.projectName || workflow.project_name || metadata.projectName || metadata.project_name || "").trim(),
+            updatedAt: String(workflow.updatedAt || workflow.updated_at || safeShare.updatedAt || safeShare.updated_at || "").trim(),
+            metadata,
+            definition: {
+              ...definition,
+              nodes,
+              edges,
+            },
+            nodes,
+            edges,
+          };
+        }
+
+        async function loadTeamPageMetronomeWorkflowForShare(workflowId) {
+          const normalizedWorkflowId = String(workflowId || "").trim();
+          if (!normalizedWorkflowId) return null;
+          let workflow = findTeamPageMetronomeWorkflowRecord(normalizedWorkflowId) || { id: normalizedWorkflowId };
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/metronomes/" + encodeURIComponent(normalizedWorkflowId), {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders,
+            }, 8000);
+            if (response.ok) {
+              const detail = getTeamPageMetronomeApiWorkflowRecord(data);
+              if (detail) {
+                workflow = {
+                  ...workflow,
+                  ...detail,
+                  id: getTeamPageMetronomeWorkflowId(detail) || normalizedWorkflowId,
+                };
+              }
+            }
+          } catch (error) {
+            console.warn("[teams] Failed to load Metronome workflow detail before sharing", error);
+          }
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/metronomes/" + encodeURIComponent(normalizedWorkflowId) + "/versions", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders,
+            }, 8000);
+            if (response.ok) {
+              const versions = getTeamPageMetronomeVersionArray(data);
+              const selectedVersion = selectTeamPageMetronomeGraphVersion(versions, workflow);
+              if (selectedVersion?.version) {
+                workflow = mergeTeamPageMetronomeWorkflowGraphSnapshot(workflow, selectedVersion.version, versions);
+              } else if (versions.length) {
+                const workflowMetadata = workflow?.metadata && typeof workflow.metadata === "object" && !Array.isArray(workflow.metadata) ? workflow.metadata : {};
+                workflow = {
+                  ...workflow,
+                  deployments: versions,
+                  metronomeDeployments: versions,
+                  versions,
+                  metadata: {
+                    ...workflowMetadata,
+                    deployments: versions,
+                    metronomeDeployments: versions,
+                    versions,
+                  },
+                };
+              }
+            }
+          } catch (error) {
+            console.warn("[teams] Failed to load Metronome workflow versions before sharing", error);
+          }
+          return workflow;
+        }
+
+        function buildTeamPageMetronomeWorkflowShareMetadata(workflowId, workflowOverride = null) {
+          const workflow = workflowOverride || findTeamPageMetronomeWorkflowRecord(workflowId);
+          if (!workflow) {
+            return {
+              resourceType: "metronome_workflow",
+              resourceKind: "metronome_workflow",
+              workflow: {
+                id: String(workflowId || "").trim(),
+                name: "Metronome Workflow",
+              },
+            };
+          }
+          const normalizedWorkflow = normalizePlaygroundCalendarMetronomeWorkflow(workflow);
+          const source = workflow && typeof workflow === "object" && !Array.isArray(workflow) ? workflow : {};
+          const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+            ? source.metadata
+            : {};
+          const sourceCreator = source.creator && typeof source.creator === "object" && !Array.isArray(source.creator)
+            ? source.creator
+            : metadata.creator && typeof metadata.creator === "object" && !Array.isArray(metadata.creator)
+              ? metadata.creator
+              : {};
+          const creatorUserId = String(
+            sourceCreator.userId
+            || sourceCreator.user_id
+            || source.creatorUserId
+            || source.creator_user_id
+            || metadata.creatorUserId
+            || metadata.creator_user_id
+            || sessionState.userId
+            || ""
+          ).trim();
+          const creatorName = String(
+            sourceCreator.name
+            || sourceCreator.displayName
+            || sourceCreator.display_name
+            || source.creatorName
+            || source.creator_name
+            || metadata.creatorName
+            || metadata.creator_name
+            || accountName
+            || accountEmail
+            || ""
+          ).trim();
+          const creatorAvatarUrl = String(
+            sourceCreator.avatarUrl
+            || sourceCreator.avatarURL
+            || sourceCreator.photoUrl
+            || sourceCreator.photoURL
+            || source.creatorAvatarUrl
+            || source.creator_avatar_url
+            || metadata.creatorAvatarUrl
+            || metadata.creator_avatar_url
+            || accountAvatarUrl
+            || ""
+          ).trim();
+          const creator = {
+            type: String(sourceCreator.type || sourceCreator.kind || "user").trim() || "user",
+            id: String(sourceCreator.id || creatorUserId || accountEmail || accountName || "").trim(),
+            userId: creatorUserId,
+            name: creatorName,
+            email: String(sourceCreator.email || source.creatorEmail || source.creator_email || metadata.creatorEmail || metadata.creator_email || accountEmail || "").trim(),
+            avatarUrl: creatorAvatarUrl,
+            photoUrl: creatorAvatarUrl,
+          };
+          const description = String(
+            source.description
+            || source.summary
+            || metadata.description
+            || metadata.summary
+            || ""
+          ).trim();
+          const triggerSummary = String(
+            source.triggerSummary
+            || source.trigger_summary
+            || metadata.triggerSummary
+            || metadata.trigger_summary
+            || source.schedule
+            || source.cron
+            || source.cronExpression
+            || source.cron_expression
+            || "Manual"
+          ).trim() || "Manual";
+          const workflowDefinition = {
+            version: 1,
+            name: normalizedWorkflow.name || String(source.name || source.title || "Untitled Metronome").trim() || "Untitled Metronome",
+            metadata: {
+              ...(metadata && typeof metadata === "object" && !Array.isArray(metadata) ? metadata : {}),
+              ...(normalizedWorkflow.projectId ? { projectId: normalizedWorkflow.projectId, project_id: normalizedWorkflow.projectId } : {}),
+              ...(normalizedWorkflow.projectName ? { projectName: normalizedWorkflow.projectName, project_name: normalizedWorkflow.projectName } : {}),
+            },
+            nodes: Array.isArray(normalizedWorkflow.nodes) ? normalizedWorkflow.nodes : [],
+            edges: Array.isArray(normalizedWorkflow.edges) ? normalizedWorkflow.edges : [],
+          };
+          const workflowGraphSnapshot = {
+            definition: workflowDefinition,
+            nodes: workflowDefinition.nodes,
+            edges: workflowDefinition.edges,
+          };
+          const workflowVersions = getTeamPageMetronomeVersionArray(source);
+          return {
+            resourceType: "metronome_workflow",
+            resourceKind: "metronome_workflow",
+            definition: workflowDefinition,
+            nodes: workflowDefinition.nodes,
+            edges: workflowDefinition.edges,
+            workflowGraphSnapshot,
+            graphSnapshot: workflowGraphSnapshot,
+            deployments: workflowVersions,
+            metronomeDeployments: workflowVersions,
+            versions: workflowVersions,
+            creator,
+            creatorType: creator.type,
+            creator_type: creator.type,
+            ...(creator.id ? { creatorId: creator.id, creator_id: creator.id } : {}),
+            ...(creator.userId ? { creatorUserId: creator.userId, creator_user_id: creator.userId } : {}),
+            ...(creator.name ? { creatorName: creator.name, creator_name: creator.name } : {}),
+            ...(creator.email ? { creatorEmail: creator.email, creator_email: creator.email } : {}),
+            ...(creator.avatarUrl ? { creatorAvatarUrl: creator.avatarUrl, creator_avatar_url: creator.avatarUrl } : {}),
+            workflow: {
+              id: normalizedWorkflow.id || String(workflowId || "").trim(),
+              name: normalizedWorkflow.name || String(source.name || source.title || "Untitled Metronome").trim() || "Untitled Metronome",
+              description,
+              status: normalizedWorkflow.status || String(source.status || source.state || "draft").trim() || "draft",
+              triggerSummary,
+              projectId: normalizedWorkflow.projectId || String(source.projectId || source.project_id || metadata.projectId || metadata.project_id || "").trim(),
+              projectName: normalizedWorkflow.projectName || String(source.projectName || source.project_name || metadata.projectName || metadata.project_name || "").trim(),
+              updatedAt: normalizedWorkflow.updatedAt || String(source.updatedAt || source.updated_at || metadata.updatedAt || metadata.updated_at || "").trim(),
+              nodeCount: workflowDefinition.nodes.length,
+              edgeCount: workflowDefinition.edges.length,
+              definition: workflowDefinition,
+              nodes: workflowDefinition.nodes,
+              edges: workflowDefinition.edges,
+              workflowGraphSnapshot,
+              graphSnapshot: workflowGraphSnapshot,
+              deployments: workflowVersions,
+              metronomeDeployments: workflowVersions,
+              versions: workflowVersions,
+              creator,
+              creatorType: creator.type,
+              creator_type: creator.type,
+              ...(creator.id ? { creatorId: creator.id, creator_id: creator.id } : {}),
+              ...(creator.userId ? { creatorUserId: creator.userId, creator_user_id: creator.userId } : {}),
+              ...(creator.name ? { creatorName: creator.name, creator_name: creator.name } : {}),
+              ...(creator.email ? { creatorEmail: creator.email, creator_email: creator.email } : {}),
+              ...(creator.avatarUrl ? { creatorAvatarUrl: creator.avatarUrl, creator_avatar_url: creator.avatarUrl } : {}),
+            },
+          };
+        }
+
         async function handleCreateTeamResourceShare() {
           const teamId = String(teamPageSelectedTeamId || "").trim();
-          const resourceType = String(teamPageShareResourceType || "").trim();
+          const uiResourceType = getTeamResourceUiShareType(teamPageShareResourceType);
+          const resourceType = getTeamResourceBackendShareType(uiResourceType);
           const resourceId = String(teamPageShareResourceId || "").trim();
           const accessLevel = String(teamPageShareAccessLevel || "").trim() || "use";
           if (!teamId || !resourceType || !resourceId) {
             return;
           }
+          const postSharePayload = (payload) => fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/resource-shares", {
+            method: "POST",
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+              ...requestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }, 8000);
           setTeamPageActionId("share");
           setTeamPageError("");
           try {
-            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/resource-shares", {
-              method: "POST",
-              credentials: "include",
-              cache: "no-store",
-              headers: {
-                ...requestHeaders,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                resourceType,
-                resourceId,
-                accessLevel,
-                ...(resourceType === "imagine_template"
+            const metronomeWorkflowForShare = uiResourceType === "metronome"
+              ? await loadTeamPageMetronomeWorkflowForShare(resourceId)
+              : null;
+            const metronomeMetadata = uiResourceType === "metronome"
+              ? buildTeamPageMetronomeWorkflowShareMetadata(resourceId, metronomeWorkflowForShare)
+              : null;
+            if (uiResourceType === "metronome" && !getPlaygroundMetronomeWorkflowDefinition(metronomeMetadata).nodes.length) {
+              throw new Error("The selected Metronome workflow graph could not be loaded. Save the workflow and try sharing it again.");
+            }
+            const buildSharePayload = (payloadResourceType) => ({
+              resourceType: payloadResourceType,
+              resourceId,
+              accessLevel,
+              ...(uiResourceType === "imagine_template"
+                ? {
+                    metadata: {
+                      template: readTeamPageCustomImagineTemplates().find((template) =>
+                        String(template.id || "") === resourceId
+                      ) || null,
+                    },
+                  }
+                : uiResourceType === "metronome"
                   ? {
-                      metadata: {
-                        template: readTeamPageCustomImagineTemplates().find((template) =>
-                          String(template.id || "") === resourceId
-                        ) || null,
-                      },
+                      metadata: payloadResourceType === "imagine_template"
+                        ? {
+                            ...metronomeMetadata,
+                            backendCompatibilityResourceType: "imagine_template",
+                          }
+                        : metronomeMetadata,
                     }
                   : {}),
-              }),
-            }, 8000);
+            });
+            let { response, data } = await postSharePayload(buildSharePayload(resourceType));
+            if (!response.ok && uiResourceType === "metronome" && [400, 404, 409, 500].includes(response.status)) {
+              const fallback = await postSharePayload(buildSharePayload("imagine_template"));
+              response = fallback.response;
+              data = fallback.data;
+            }
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to share resource.");
             }
             setTeamPageShareResourceId("");
-            setTeamPageShareModalOpen(false);
+            closeTeamPageShareModal({ force: true });
             await loadTeamPageData();
           } catch (error) {
             setTeamPageError(error instanceof Error ? error.message : "Failed to share resource.");
@@ -141875,16 +145303,38 @@ ${PROJECT_OVERVIEW_SCRIPT}
         async function handleUpdateTeamResourceShareAccess(share, accessLevel) {
           const safeShare = share || {};
           const teamId = String(teamPageSelectedTeamId || "").trim();
-          const resourceType = String(safeShare.resourceType || "").trim();
-          const resourceId = String(safeShare.resourceId || "").trim();
+          const existingResourceType = String(safeShare.resourceType || safeShare.resource_type || "").trim();
+          const uiResourceType = getTeamResourceUiShareType(safeShare) || getTeamResourceUiShareType(existingResourceType);
+          const resourceId = String(safeShare.resourceId || safeShare.resource_id || "").trim();
+          const storageResourceType = uiResourceType === "metronome"
+            ? "imagine_template"
+            : existingResourceType || getTeamResourceBackendShareType(uiResourceType);
           const normalizedAccessLevel = String(accessLevel || "").trim() || "use";
-          if (!teamId || !resourceType || !resourceId) {
+          if (!teamId || !storageResourceType || !resourceId) {
             return;
           }
-          setTeamPageActionId("share-access:" + String(safeShare.id || resourceType + ":" + resourceId));
+          setTeamPageActionId("share-access:" + String(safeShare.id || storageResourceType + ":" + resourceId));
           setTeamPageError("");
           try {
-            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/resource-shares", {
+            const existingMetronomeWorkflowForShare = uiResourceType === "metronome"
+              ? buildTeamPageMetronomeWorkflowRecordFromShare(safeShare)
+              : null;
+            const loadedMetronomeWorkflowForShare = uiResourceType === "metronome"
+              ? await loadTeamPageMetronomeWorkflowForShare(resourceId)
+              : null;
+            const metronomeWorkflowForShare = uiResourceType === "metronome"
+              ? mergeTeamPageMetronomeWorkflowGraphSnapshot(
+                  existingMetronomeWorkflowForShare || { id: resourceId },
+                  loadedMetronomeWorkflowForShare || existingMetronomeWorkflowForShare || { id: resourceId }
+                )
+              : null;
+            const metronomeMetadata = uiResourceType === "metronome"
+              ? buildTeamPageMetronomeWorkflowShareMetadata(resourceId, metronomeWorkflowForShare)
+              : null;
+            if (uiResourceType === "metronome" && !getPlaygroundMetronomeWorkflowDefinition(metronomeMetadata).nodes.length) {
+              throw new Error("The selected Metronome workflow graph could not be loaded. Save the workflow and try sharing it again.");
+            }
+            const postSharePayload = (payload) => fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/resource-shares", {
               method: "POST",
               credentials: "include",
               cache: "no-store",
@@ -141892,12 +145342,102 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ...requestHeaders,
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ resourceType, resourceId, accessLevel: normalizedAccessLevel }),
+              body: JSON.stringify(payload),
             }, 8000);
+            const buildUpdatePayload = (payloadResourceType) => ({
+              resourceType: payloadResourceType,
+              resourceId,
+              accessLevel: normalizedAccessLevel,
+              ...(metronomeMetadata
+                ? {
+                    metadata: payloadResourceType === "imagine_template"
+                      ? {
+                          ...metronomeMetadata,
+                          backendCompatibilityResourceType: "imagine_template",
+                        }
+                      : metronomeMetadata,
+                  }
+                : {}),
+            });
+            const resourceTypeCandidates = uiResourceType === "metronome"
+              ? Array.from(new Set([
+                  "imagine_template",
+                  existingResourceType,
+                  getTeamResourceBackendShareType(uiResourceType),
+                ].map((value) => String(value || "").trim()).filter(Boolean)))
+              : [storageResourceType];
+            let response = null;
+            let data = {};
+            let savedResourceType = storageResourceType;
+            for (const candidateResourceType of resourceTypeCandidates) {
+              const result = await postSharePayload(buildUpdatePayload(candidateResourceType));
+              response = result.response;
+              data = result.data;
+              if (response.ok) {
+                savedResourceType = candidateResourceType;
+                break;
+              }
+              if (uiResourceType !== "metronome" || ![400, 404, 409, 500].includes(Number(response.status || 0))) {
+                break;
+              }
+            }
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to update shared resource.");
             }
+            const responseShare = data?.data && typeof data.data === "object" && !Array.isArray(data.data)
+              ? data.data
+              : data?.share && typeof data.share === "object" && !Array.isArray(data.share)
+                ? data.share
+                : {};
+            const responseShareMetadata = parseTeamResourceShareMetadata(responseShare);
+            const existingShareMetadata = parseTeamResourceShareMetadata(safeShare);
+            const updatedShareMetadata = metronomeMetadata
+              || (Object.keys(responseShareMetadata).length > 0 ? responseShareMetadata : existingShareMetadata);
+            const updatedShare = {
+              ...safeShare,
+              ...responseShare,
+              id: String(responseShare.id || safeShare.id || "").trim(),
+              teamId: String(responseShare.teamId || responseShare.team_id || safeShare.teamId || safeShare.team_id || teamId).trim(),
+              resourceType: String(responseShare.resourceType || responseShare.resource_type || savedResourceType).trim() || savedResourceType,
+              resourceId: String(responseShare.resourceId || responseShare.resource_id || resourceId).trim() || resourceId,
+              accessLevel: String(responseShare.accessLevel || responseShare.access_level || normalizedAccessLevel).trim() || normalizedAccessLevel,
+              metadata: updatedShareMetadata,
+              updatedAt: String(responseShare.updatedAt || responseShare.updated_at || new Date().toISOString()).trim(),
+            };
+            const applyUpdatedShareLocally = () => {
+              setTeamPageShares((current) => {
+                const currentShares = Array.isArray(current) ? current : [];
+                let replaced = false;
+                const nextShares = currentShares.map((item) => {
+                  const itemId = String(item?.id || "").trim();
+                  const safeShareId = String(safeShare?.id || "").trim();
+                  const updatedShareId = String(updatedShare.id || "").trim();
+                  const itemResourceId = String(item?.resourceId || item?.resource_id || "").trim();
+                  const itemResourceType = String(item?.resourceType || item?.resource_type || "").trim();
+                  const sameShareId = Boolean(
+                    updatedShareId && itemId === updatedShareId
+                    || safeShareId && itemId === safeShareId
+                  );
+                  const sameResource = itemResourceId === resourceId && (
+                    getTeamResourceUiShareType(item) === uiResourceType
+                    || itemResourceType === existingResourceType
+                    || itemResourceType === savedResourceType
+                  );
+                  if (!sameShareId && !sameResource) {
+                    return item;
+                  }
+                  replaced = true;
+                  return {
+                    ...item,
+                    ...updatedShare,
+                  };
+                });
+                return replaced ? nextShares : [updatedShare, ...currentShares];
+              });
+            };
+            applyUpdatedShareLocally();
             await loadTeamPageData();
+            applyUpdatedShareLocally();
           } catch (error) {
             setTeamPageError(error instanceof Error ? error.message : "Failed to update shared resource.");
           } finally {
@@ -143628,7 +147168,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return false;
           }
           const normalizedCasualPrompt = userPrompt
-            .replace(/[.!?\s]+$/g, "")
+            .replace(/[.!?\\s]+$/g, "")
             .trim()
             .toLowerCase();
           if (["hi", "hello", "hey", "hallo", "moin"].includes(normalizedCasualPrompt)) {
@@ -150877,6 +154417,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function openConfigureHome(options = {}) {
           setAccountMenuOpen(false);
           setProfileEditorOpen(false);
+          setConfigureHomeTab(options.tab === "usage" ? "usage" : "overview");
           if (!options.preserveSidebarMode) {
             setSidebarWorkspaceMode("configure");
           }
@@ -154583,23 +158124,26 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
         }
 
-        function renderSettingsPage() {
-          const normalizedSettingsSection = settingsSection === "password" || settingsSection === "delete"
+        function renderSettingsPage(options = {}) {
+          const isEmbeddedSettingsPage = options.embedded === true;
+          const requestedSettingsSection = options.section || settingsSection;
+          const normalizedSettingsSection = requestedSettingsSection === "password" || requestedSettingsSection === "delete"
             ? "profile"
-            : settingsSection;
+            : requestedSettingsSection;
           const effectiveSettingsSection = normalizedSettingsSection === "api"
             ? "costs-plans"
             : normalizedSettingsSection;
 	          const settingsTabs = [
 	            { id: "costs-plans", label: "Budget", title: "Budget" },
 	            { id: "costs-plan-options", label: "Plans", title: "Plans" },
-	            { id: "costs-overview", label: "Usage", title: "Usage Details" },
 	            { id: "costs-records", label: "Billing", title: "Billing" },
 	            { id: "profile", label: "Profile", title: "Profile" },
 	          ];
 
 	          const selectedSection = effectiveSettingsSection === "inference"
               ? { id: "inference", label: "Inference", title: "Inference" }
+              : effectiveSettingsSection === "costs-overview"
+                ? { id: "costs-overview", label: "Usage", title: "Usage Details" }
               : settingsTabs.find((item) => item.id === effectiveSettingsSection) || settingsTabs[0];
 
           const settingsDiscordAccountLabel = settingsDiscordStatus?.discordUsername || "";
@@ -155168,7 +158712,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                   React.createElement("button", {
                                     type: "button",
                                     className: "playground-settings-plans-budget-icon-button is-plain",
-                                    onClick: () => setSettingsSection("costs-overview"),
+                                    onClick: () => openConfigureHome({ tab: "usage" }),
                                     "aria-label": "View usage",
                                   }, React.createElement(ChartNoAxesColumnIncreasing, { width: 16, height: 16, strokeWidth: 1.8 }))
                                 ),
@@ -155388,6 +158932,452 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   || settingsInferenceSettings.availableModels.length > 0
                   || settingsInferenceSettings.apiKeyConfigured
                   || Boolean(settingsInferenceApiKeyInput.trim());
+                const fallbackSettingsRuntimeTargets = [
+                  {
+                    kind: "cloud",
+                    label: "Cloud Runtime",
+                    status: "available",
+                    default: true,
+                    description: "Hosted control plane, cloud execution, managed storage, and optional external inference.",
+                  },
+                  {
+                    kind: "local_runner",
+                    label: "Local Runner",
+                    status: "disabled",
+                    default: false,
+                    description: "Paired bridge device for local environments, file sync, session heartbeat, and future local execution.",
+                    deviceCount: 0,
+                    onlineDeviceCount: 0,
+                    bindingCount: 0,
+                    bridgeLocalBindingCount: 0,
+                  },
+                  {
+                    kind: "fully_local",
+                    label: "Fully Local",
+                    status: "planned",
+                    default: false,
+                    description: "Local UI, API, storage, execution, and inference packaged for offline or on-prem deployments.",
+                  },
+                ];
+                const runtimeTargetsSource = settingsLocalRunnersState.runtimeTargets.length > 0
+                  ? settingsLocalRunnersState.runtimeTargets
+                  : fallbackSettingsRuntimeTargets;
+                const localRunnerRuntimeTarget = runtimeTargetsSource.find((target) => target.kind === "local_runner") || fallbackSettingsRuntimeTargets[1];
+                const settingsRuntimeTargets = runtimeTargetsSource.map((target) => {
+                  const statusLabel = target.default && target.status === "available"
+                    ? "Active"
+                    : formatSettingsLocalRunnerRuntimeStatus(target.status);
+                  const statusClass = target.default && target.status === "available"
+                    ? " is-active"
+                    : target.kind === "local_runner" && target.status === "available"
+                      ? " is-foundation"
+                      : "";
+                  const Icon = target.kind === "cloud" ? Cloud : target.kind === "local_runner" ? Monitor : Server;
+                  return {
+                    id: target.kind,
+                    title: target.label,
+                    statusLabel,
+                    statusClass,
+                    Icon,
+                    copy: target.description,
+                  };
+                });
+                const settingsRuntimeCapabilities = [
+                  { label: "Control Plane", value: "Cloud default, local appliance planned" },
+                  {
+                    label: "Local Runners",
+                    value: settingsLocalRunnersState.bridgeEnabled === false
+                      ? "Bridge disabled"
+                      : String(localRunnerRuntimeTarget.onlineDeviceCount || 0) + " / " + String(localRunnerRuntimeTarget.deviceCount || 0) + " online",
+                  },
+                  { label: "Bindings", value: String(localRunnerRuntimeTarget.bindingCount || 0) + " workspace bindings" },
+                  { label: "Inference", value: "Managed, external, or local endpoint" },
+                ];
+                const settingsRuntimeSection = React.createElement("section", { className: "playground-settings-plans-budget-card playground-computer-details-card playground-settings-runtime-card" },
+                  React.createElement("div", { className: "playground-settings-inference-endpoint-copy" },
+                    React.createElement("div", { className: "playground-settings-card-title" }, "Execution Runtime"),
+                    React.createElement("div", { className: "playground-settings-card-copy" },
+                      "Choose where the platform executes work separately from where model inference happens. The current bridge keeps this modular without changing API or SDK contracts."
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-settings-runtime-grid" },
+                    settingsRuntimeTargets.map((target) =>
+                      React.createElement("div", { key: target.id, className: "playground-settings-runtime-target" },
+                        React.createElement("div", { className: "playground-settings-runtime-target-header" },
+                          React.createElement("div", { className: "playground-settings-runtime-target-title" },
+                            React.createElement(target.Icon, { className: "playground-settings-runtime-target-icon", strokeWidth: 1.8 }),
+                            React.createElement("span", null, target.title)
+                          ),
+                          React.createElement("span", { className: "playground-settings-runtime-status" + target.statusClass }, target.statusLabel)
+                        ),
+                        React.createElement("p", { className: "playground-settings-runtime-target-copy" }, target.copy)
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-settings-runtime-capabilities" },
+                    settingsRuntimeCapabilities.map((item) =>
+                      React.createElement("div", { key: item.label, className: "playground-settings-runtime-capability" },
+                        React.createElement("div", { className: "playground-settings-runtime-capability-label" }, item.label),
+                        React.createElement("div", { className: "playground-settings-runtime-capability-value" }, item.value)
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-settings-runtime-note" },
+                    "Local runner support builds on existing local computers, workspace bindings, local sessions, command polling, and structured event ingest. Actual local agent execution stays disabled until the runtime router is explicitly enabled."
+                  )
+                );
+                const settingsLocalRunnerBindingsByDeviceId = new Map();
+                settingsLocalRunnersState.bindings.forEach((binding) => {
+                  const entries = settingsLocalRunnerBindingsByDeviceId.get(binding.deviceId) || [];
+                  entries.push(binding);
+                  settingsLocalRunnerBindingsByDeviceId.set(binding.deviceId, entries);
+                });
+                const settingsLocalRunnersLoading = settingsLocalRunnersState.status === "loading";
+                const settingsLocalBindingDeviceOptions = settingsLocalRunnersState.devices;
+                const settingsLocalBindingEnvironmentOptions = Array.isArray(realEnvironments) ? realEnvironments : [];
+                const settingsLocalBindingProjectOptions = Array.isArray(realProjects) ? realProjects : [];
+                const settingsLocalBindingCanCreate = hasRealAccess
+                  && settingsLocalBindingDeviceOptions.length > 0
+                  && settingsLocalBindingEnvironmentOptions.length > 0
+                  && settingsLocalRunnersState.bridgeEnabled !== false;
+                const settingsLocalRunnerInstallCommand = "pnpm --filter @computer-agents/local-bridge-daemon build";
+                const settingsLocalRunnerPairingTokenValue = String(settingsLocalRunnerPairingState.token || "").trim();
+                const settingsLocalRunnerStartCommand = "ACP_LOCAL_PAIRING_TOKEN="
+                  + (settingsLocalRunnerPairingTokenValue || "<generate-pairing-token>")
+                  + " ACP_LOCAL_BRIDGE_ENABLED=1 ACP_LOCAL_RUNTIME_ENABLED=1 acp-local-daemon";
+                const settingsLocalRunnerPairingBusy = settingsLocalRunnerPairingState.status === "creating";
+                const settingsLocalRunnerPairingPending = settingsLocalRunnerPairingState.status === "waiting"
+                  || settingsLocalRunnerPairingState.pairingToken?.status === "pending";
+                const settingsLocalRunnersSection = React.createElement("section", { className: "playground-settings-plans-budget-card playground-computer-details-card playground-settings-local-runners-card" },
+                  React.createElement("div", { className: "playground-settings-local-runners-header" },
+                    React.createElement("div", { className: "playground-settings-inference-endpoint-copy" },
+                      React.createElement("div", { className: "playground-settings-card-title" }, "Local Runners"),
+                      React.createElement("div", { className: "playground-settings-card-copy" },
+                        "Registered bridge devices and workspace bindings for local environments. This is read-only until runtime routing is enabled."
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-settings-local-runners-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-settings-local-runners-refresh is-primary",
+                        onClick: () => setSettingsLocalRunnerOnboardingOpen((current) => !current),
+                      },
+                        React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.9 }),
+                        React.createElement("span", null, "Connect Runner")
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-settings-local-runners-refresh",
+                        onClick: () => {
+                          setSettingsLocalBindingError("");
+                          setSettingsLocalBindingSuccess("");
+                          setSettingsLocalBindingFormOpen((current) => !current);
+                        },
+                        disabled: !settingsLocalBindingCanCreate,
+                        title: settingsLocalBindingCanCreate
+                          ? "Bind a local path to an environment"
+                          : "Connect a local runner and create an environment first",
+                      },
+                        React.createElement(Link2, { width: 13, height: 13, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Bind Workspace")
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-settings-local-runners-refresh",
+                        onClick: () => setSettingsLocalRunnersReloadToken((current) => current + 1),
+                        disabled: settingsLocalRunnersLoading,
+                      },
+                        settingsLocalRunnersLoading
+                          ? React.createElement(Loader2, { width: 13, height: 13, strokeWidth: 1.8, className: "playground-spin" })
+                          : React.createElement(RefreshCw, { width: 13, height: 13, strokeWidth: 1.8 }),
+                        React.createElement("span", null, settingsLocalRunnersLoading ? "Loading" : "Refresh")
+                      )
+                    )
+                  ),
+                  settingsLocalRunnerOnboardingOpen
+                    ? React.createElement("div", { className: "playground-settings-local-runner-onboarding" },
+                        React.createElement("div", null,
+                          React.createElement("div", { className: "playground-settings-local-runner-onboarding-title" }, "Connect a local runner"),
+                          React.createElement("div", { className: "playground-settings-local-runner-onboarding-copy" },
+                            "Generate a one-time pairing token, build the bridge daemon, then start it with the command below. The daemon stores a scoped runner key after pairing."
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-settings-local-binding-form-actions" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-settings-app-primary-button",
+                            onClick: () => void handleSettingsCreateLocalRunnerPairingToken(),
+                            disabled: settingsLocalRunnerPairingBusy || !hasRealAccess || settingsLocalRunnersState.bridgeEnabled === false,
+                          },
+                            settingsLocalRunnerPairingBusy
+                              ? React.createElement(Loader2, { width: 13, height: 13, strokeWidth: 1.8, className: "playground-spin" })
+                              : React.createElement(Key, { width: 13, height: 13, strokeWidth: 1.8 }),
+                            React.createElement("span", null, settingsLocalRunnerPairingBusy ? "Creating..." : settingsLocalRunnerPairingTokenValue ? "Regenerate Token" : "Generate Token")
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-settings-local-runner-command-stack" },
+                          React.createElement("pre", { className: "playground-settings-local-runner-command" }, settingsLocalRunnerInstallCommand),
+                          React.createElement("pre", { className: "playground-settings-local-runner-command" }, settingsLocalRunnerStartCommand)
+                        ),
+                        settingsLocalRunnerPairingPending
+                          ? React.createElement("div", { className: "playground-settings-muted-copy" }, "Waiting for the daemon to exchange the token...")
+                          : null,
+                        renderSettingsInlineStatus("error", settingsLocalRunnerPairingState.error),
+                        renderSettingsInlineStatus("success", settingsLocalRunnerPairingState.success)
+                      )
+                    : null,
+                  settingsLocalBindingFormOpen
+                    ? React.createElement("form", {
+                        className: "playground-settings-local-binding-form",
+                        onSubmit: (event) => {
+                          event.preventDefault();
+                          void handleSettingsCreateWorkspaceBinding();
+                        },
+                      },
+                        React.createElement("div", { className: "playground-settings-local-binding-form-top" },
+                          React.createElement("div", null,
+                            React.createElement("div", { className: "playground-settings-local-binding-form-title" }, "Bind workspace"),
+                            React.createElement("div", { className: "playground-settings-local-binding-form-copy" },
+                              "Connect a local folder to a cloud environment. This prepares local runner placement and sync metadata; it does not route active work locally yet."
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-settings-local-binding-form-actions" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-settings-app-secondary-button",
+                              onClick: () => {
+                                setSettingsLocalBindingFormOpen(false);
+                                setSettingsLocalBindingError("");
+                                setSettingsLocalBindingSuccess("");
+                              },
+                              disabled: settingsLocalBindingSubmitting,
+                            }, "Cancel"),
+                            React.createElement("button", {
+                              type: "submit",
+                              className: "playground-settings-app-primary-button",
+                              disabled: settingsLocalBindingSubmitting,
+                            }, settingsLocalBindingSubmitting ? "Creating..." : "Create Binding")
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-settings-form-grid" },
+                          React.createElement("div", { className: "playground-settings-field" },
+                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-local-binding-device" }, "Runner"),
+                            React.createElement("select", {
+                              id: "settings-local-binding-device",
+                              className: "playground-settings-select",
+                              value: settingsLocalBindingForm.deviceId,
+                              onChange: (event) => setSettingsLocalBindingForm((current) => ({ ...current, deviceId: event.target.value })),
+                              disabled: settingsLocalBindingSubmitting,
+                            },
+                              settingsLocalBindingDeviceOptions.map((device) =>
+                                React.createElement("option", { key: device.id, value: device.id }, device.name + (device.status === "online" ? " · Online" : " · Offline"))
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-settings-field" },
+                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-local-binding-environment" }, "Environment"),
+                            React.createElement("select", {
+                              id: "settings-local-binding-environment",
+                              className: "playground-settings-select",
+                              value: settingsLocalBindingForm.environmentId,
+                              onChange: (event) => setSettingsLocalBindingForm((current) => ({ ...current, environmentId: event.target.value })),
+                              disabled: settingsLocalBindingSubmitting,
+                            },
+                              settingsLocalBindingEnvironmentOptions.map((environment) =>
+                                React.createElement("option", { key: environment.id, value: environment.id }, environment.name || environment.id)
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-settings-field" },
+                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-local-binding-project" }, "Project"),
+                            React.createElement("select", {
+                              id: "settings-local-binding-project",
+                              className: "playground-settings-select",
+                              value: settingsLocalBindingForm.projectId,
+                              onChange: (event) => setSettingsLocalBindingForm((current) => ({ ...current, projectId: event.target.value })),
+                              disabled: settingsLocalBindingSubmitting,
+                            },
+                              React.createElement("option", { value: "" }, "No project"),
+                              settingsLocalBindingProjectOptions.map((project) =>
+                                React.createElement("option", { key: project.id, value: project.id }, project.name || project.title || project.id)
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-settings-field" },
+                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-local-binding-name" }, "Name"),
+                            React.createElement("input", {
+                              id: "settings-local-binding-name",
+                              type: "text",
+                              className: "playground-settings-input",
+                              value: settingsLocalBindingForm.name,
+                              onChange: (event) => setSettingsLocalBindingForm((current) => ({ ...current, name: event.target.value })),
+                              placeholder: "Local project workspace",
+                              disabled: settingsLocalBindingSubmitting,
+                            })
+                          ),
+                          React.createElement("div", { className: "playground-settings-field playground-settings-field-span-2" },
+                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-local-binding-path" }, "Local Path"),
+                            React.createElement("input", {
+                              id: "settings-local-binding-path",
+                              type: "text",
+                              className: "playground-settings-input",
+                              value: settingsLocalBindingForm.localPath,
+                              onChange: (event) => setSettingsLocalBindingForm((current) => ({ ...current, localPath: event.target.value })),
+                              placeholder: "/Users/me/projects/app",
+                              disabled: settingsLocalBindingSubmitting,
+                            })
+                          ),
+                          React.createElement("div", { className: "playground-settings-field playground-settings-field-span-2" },
+                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-local-binding-sync-root" }, "Sync Root"),
+                            React.createElement("input", {
+                              id: "settings-local-binding-sync-root",
+                              type: "text",
+                              className: "playground-settings-input",
+                              value: settingsLocalBindingForm.syncRoot,
+                              onChange: (event) => setSettingsLocalBindingForm((current) => ({ ...current, syncRoot: event.target.value })),
+                              placeholder: "Leave empty to use local path",
+                              disabled: settingsLocalBindingSubmitting,
+                            })
+                          ),
+                          React.createElement("div", { className: "playground-settings-field" },
+                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-local-binding-sync-mode" }, "Sync Mode"),
+                            React.createElement("select", {
+                              id: "settings-local-binding-sync-mode",
+                              className: "playground-settings-select",
+                              value: settingsLocalBindingForm.syncMode,
+                              onChange: (event) => setSettingsLocalBindingForm((current) => ({ ...current, syncMode: event.target.value })),
+                              disabled: settingsLocalBindingSubmitting,
+                            },
+                              React.createElement("option", { value: "manual" }, "Manual"),
+                              React.createElement("option", { value: "watch" }, "Watch"),
+                              React.createElement("option", { value: "off" }, "Off")
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-settings-field" },
+                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-local-binding-execution-mode" }, "Execution Mode"),
+                            React.createElement("select", {
+                              id: "settings-local-binding-execution-mode",
+                              className: "playground-settings-select",
+                              value: settingsLocalBindingForm.executionMode,
+                              onChange: (event) => setSettingsLocalBindingForm((current) => ({ ...current, executionMode: event.target.value })),
+                              disabled: settingsLocalBindingSubmitting,
+                            },
+                              React.createElement("option", { value: "bridge_local" }, "Local Runner"),
+                              React.createElement("option", { value: "legacy_remote" }, "Cloud Runtime")
+                            )
+                          )
+                        ),
+                        renderSettingsInlineStatus("error", settingsLocalBindingError),
+                        renderSettingsInlineStatus("success", settingsLocalBindingSuccess)
+                      )
+                    : null,
+                  settingsLocalRunnersState.error && settingsLocalRunnersState.devices.length > 0
+                    ? React.createElement("div", { className: "playground-settings-muted-copy" }, settingsLocalRunnersState.error)
+                    : null,
+                  settingsLocalRunnersLoading && settingsLocalRunnersState.devices.length === 0
+                    ? React.createElement("div", { className: "playground-settings-local-runners-empty" }, "Loading local runners...")
+                    : settingsLocalRunnersState.devices.length === 0
+                      ? React.createElement("div", { className: "playground-settings-local-runners-empty" },
+                          settingsLocalRunnersState.error
+                            ? settingsLocalRunnersState.error
+                            : settingsLocalRunnersState.bridgeEnabled === false
+                            ? (settingsLocalRunnersState.error || "Local bridge is not enabled for this workspace yet.")
+                            : hasRealAccess
+                              ? "No local runners are registered for this workspace yet."
+                              : "Sign in to inspect local runner registrations for this workspace."
+                        )
+                      : React.createElement("div", { className: "playground-settings-local-runners-list" },
+                          settingsLocalRunnersState.devices.map((device) => {
+                            const localRuntime = getSettingsLocalRuntimeCapabilities(device);
+                            const resources = localRuntime.resources && typeof localRuntime.resources === "object" && !Array.isArray(localRuntime.resources)
+                              ? localRuntime.resources
+                              : {};
+                            const inference = localRuntime.inference && typeof localRuntime.inference === "object" && !Array.isArray(localRuntime.inference)
+                              ? localRuntime.inference
+                              : {};
+                            const backend = localRuntime.backend && typeof localRuntime.backend === "object" && !Array.isArray(localRuntime.backend)
+                              ? localRuntime.backend
+                              : {};
+                            const execution = localRuntime.execution && typeof localRuntime.execution === "object" && !Array.isArray(localRuntime.execution)
+                              ? localRuntime.execution
+                              : {};
+                            const bindings = settingsLocalRunnerBindingsByDeviceId.get(device.id) || [];
+                            const hostLabel = [device.platform, device.hostname].filter(Boolean).join(" · ") || "Unknown host";
+                            const memoryLabel = formatSettingsLocalRunnerNumber(resources.totalMemoryGiB, " GB RAM");
+                            const diskLabel = resources.freeDiskGiB === null || resources.freeDiskGiB === undefined
+                              ? "disk unknown"
+                              : formatSettingsLocalRunnerNumber(resources.freeDiskGiB, " GB free");
+                            const resourceLabel = [
+                              Number.isFinite(Number(resources.cpuCount)) ? String(resources.cpuCount) + " CPU" : "CPU unknown",
+                              memoryLabel,
+                              diskLabel,
+                            ].join(" · ");
+                            const inferenceStatus = inference.enabled
+                              ? [
+                                  formatSettingsLocalRunnerRuntimeStatus(inference.status),
+                                  inference.defaultProvider ? String(inference.defaultProvider).replace(/_/g, " ") : "",
+                                  inference.baseUrlHost ? String(inference.baseUrlHost) : "",
+                                ].filter(Boolean).join(" · ")
+                              : "Disabled";
+                            const runnerFacts = [
+                              { label: "Runtime", value: formatSettingsLocalRunnerRuntimeStatus(localRuntime.status) },
+                              { label: "Resources", value: resourceLabel },
+                              { label: "Toolchain", value: formatSettingsLocalRunnerToolchain(localRuntime.toolchain) },
+                              { label: "Inference", value: inferenceStatus },
+                              { label: "Backend", value: formatSettingsLocalRunnerRuntimeStatus(backend.status) },
+                              { label: "Execution", value: formatSettingsLocalRunnerRuntimeStatus(execution.status) },
+                              { label: "Bindings", value: bindings.length > 0 ? String(bindings.length) : "None" },
+                              { label: "Last Seen", value: formatSettingsLocalRunnerDateTime(device.lastSeenAt) },
+                            ];
+
+                            return React.createElement("div", { key: device.id, className: "playground-settings-local-runner-card" },
+                              React.createElement("div", { className: "playground-settings-local-runner-main" },
+                                React.createElement("div", { className: "playground-settings-local-runner-identity" },
+                                  React.createElement("div", { className: "playground-settings-local-runner-icon" },
+                                    React.createElement(Monitor, { width: 17, height: 17, strokeWidth: 1.8 })
+                                  ),
+                                  React.createElement("div", { style: { minWidth: 0 } },
+                                    React.createElement("div", { className: "playground-settings-local-runner-name" }, device.name),
+                                    React.createElement("div", { className: "playground-settings-local-runner-meta" },
+                                      hostLabel,
+                                      device.daemonVersion ? " · daemon " + device.daemonVersion : "",
+                                      device.appVersion ? " · app " + device.appVersion : ""
+                                    )
+                                  )
+                                ),
+                                React.createElement("span", {
+                                  className: "playground-settings-local-runner-status" + (device.status === "online" ? " is-online" : ""),
+                                }, device.status === "online" ? "Online" : "Offline")
+                              ),
+                              React.createElement("div", { className: "playground-settings-local-runner-facts" },
+                                runnerFacts.map((fact) =>
+                                  React.createElement("div", { key: fact.label, className: "playground-settings-local-runner-fact" },
+                                    React.createElement("div", { className: "playground-settings-local-runner-fact-label" }, fact.label),
+                                    React.createElement("div", { className: "playground-settings-local-runner-fact-value" }, fact.value)
+                                  )
+                                )
+                              ),
+                              bindings.length > 0
+                                ? React.createElement("div", { className: "playground-settings-local-runner-bindings" },
+                                    bindings.slice(0, 4).map((binding) =>
+                                      React.createElement("div", { key: binding.id, className: "playground-settings-local-runner-binding" },
+                                        React.createElement("div", {
+                                          className: "playground-settings-local-runner-binding-path",
+                                          title: binding.localPath || binding.syncRoot || binding.name || binding.id,
+                                        }, binding.name || binding.localPath || binding.syncRoot || binding.id),
+                                        React.createElement("div", { className: "playground-settings-local-runner-binding-pill" }, binding.syncMode),
+                                        React.createElement("div", { className: "playground-settings-local-runner-binding-pill" }, binding.executionMode)
+                                      )
+                                    ),
+                                    bindings.length > 4
+                                      ? React.createElement("div", { className: "playground-settings-muted-copy" }, "+" + String(bindings.length - 4) + " more bindings")
+                                      : null
+                                  )
+                                : null
+                            );
+                          })
+                        )
+                );
 
                 return React.createElement(React.Fragment, null,
                   React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-settings-plans-navbar" },
@@ -155430,7 +159420,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 disabled: settingsCheckoutLoading,
                               }, settingsCheckoutLoading ? "Loading..." : "Upgrade to Team")
                             )
-                          )
+                          ),
+                          settingsRuntimeSection,
+                          settingsLocalRunnersSection
                         )
                       : React.createElement("div", { className: "playground-settings-plan-app-shell" },
                           renderSettingsBanner("error", settingsPlatformConfigError),
@@ -155622,6 +159614,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 )
                               : null
                           ),
+                          settingsRuntimeSection,
+                          settingsLocalRunnersSection,
                           React.createElement("div", {
                             className: "playground-settings-detail-stack",
                             style: { marginTop: "4px" },
@@ -157767,9 +161761,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          const settingsScrollClassName = "playground-environments-detail-scroll playground-settings-detail-scroll"
 	            + (effectiveSettingsSection === "costs-overview" ? " is-usage" : "");
 
-	          return React.createElement("div", { className: "playground-settings-page" },
+	          return React.createElement("div", { className: "playground-settings-page" + (isEmbeddedSettingsPage ? " is-embedded" : "") },
 	            React.createElement("div", { className: settingsScrollClassName },
-	              settingsHeader,
+	              isEmbeddedSettingsPage ? null : settingsHeader,
 	              normalizeSettingsDetailNodes(detailContent)
 	            )
 	          );
@@ -157777,20 +161771,157 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function renderTeamPage() {
           const accessOptions = [
-            { value: "use", label: "Use" },
-            { value: "edit", label: "Edit" },
-            { value: "manage", label: "Manage" },
+            { value: "use", label: "Use", description: "Can use this resource." },
+            { value: "edit", label: "Edit", description: "Can edit this resource." },
+            { value: "manage", label: "Manage", description: "Can manage access." },
           ];
           const resourceTypeOptions = [
-            { value: "project", label: "Projects" },
-            { value: "environment", label: "Computers" },
-            { value: "agent", label: "Agents" },
-            { value: "imagine_template", label: "Imagine templates" },
+            { value: "project", label: "Projects", createLabel: "Create new project" },
+            { value: "metronome", label: "Metronome Workflow", createLabel: "Create new workflow" },
+            { value: "environment", label: "Computers", createLabel: "Create new computer" },
+            { value: "agent", label: "Agents", createLabel: "Create new agent" },
+            { value: "imagine_template", label: "Imagine templates", createLabel: "Create new template" },
           ];
+          const formatDate = (value) => {
+            if (!value) return "";
+            try {
+              return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value));
+            } catch {
+              return String(value || "");
+            }
+          };
           const teamPageImagineTemplateOptions = readTeamPageCustomImagineTemplates().map((template) => ({
             id: String(template.id || ""),
             label: String(template.title || template.name || "Untitled template"),
+            meta: template.updatedAt || template.createdAt ? "Updated " + formatDate(template.updatedAt || template.createdAt) : "Imagine template",
           })).filter((item) => item.id);
+          const teamPageMetronomeWorkflowOptions = (() => {
+            const optionsById = new Map();
+            const projectNameById = new Map((Array.isArray(realProjects) ? realProjects : [])
+              .map((project) => {
+                const normalizedProject = normalizePlaygroundProjectRecord(project);
+                return [
+                  String(normalizedProject.id || "").trim(),
+                  String(normalizedProject.name || normalizedProject.title || "Untitled project").trim(),
+                ];
+              })
+              .filter(([projectId]) => projectId));
+            const addWorkflowOption = (workflow, fallback = {}) => {
+              const source = workflow && typeof workflow === "object" && !Array.isArray(workflow) ? workflow : {};
+              const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+                ? source.metadata
+                : {};
+              const workflowId = String(
+                source.id
+                || source.workflowId
+                || source.workflow_id
+                || source.metronomeId
+                || source.metronome_id
+                || source.resourceId
+                || source.resource_id
+                || fallback.id
+                || ""
+              ).trim();
+              if (!workflowId) {
+                return;
+              }
+              const projectId = String(
+                source.projectId
+                || source.project_id
+                || metadata.projectId
+                || metadata.project_id
+                || fallback.projectId
+                || ""
+              ).trim();
+              const projectName = String(
+                source.projectName
+                || source.project_name
+                || metadata.projectName
+                || metadata.project_name
+                || fallback.projectName
+                || projectNameById.get(projectId)
+                || ""
+              ).trim();
+              const title = String(
+                source.name
+                || source.title
+                || source.label
+                || source.workflowName
+                || source.metronomeName
+                || metadata.name
+                || metadata.title
+                || metadata.workflowName
+                || workflowId
+              ).trim() || "Untitled workflow";
+              const updatedAt = String(
+                source.updatedAt
+                || source.updated_at
+                || metadata.updatedAt
+                || metadata.updated_at
+                || source.createdAt
+                || source.created_at
+                || ""
+              ).trim();
+              const schedule = String(
+                source.schedule
+                || source.cron
+                || source.cronExpression
+                || source.cron_expression
+                || metadata.schedule
+                || metadata.cron
+                || ""
+              ).trim();
+              const metaParts = [];
+              if (projectName) {
+                metaParts.push("Project: " + projectName);
+              }
+              if (updatedAt) {
+                metaParts.push("Updated " + formatDate(updatedAt));
+              } else if (schedule) {
+                metaParts.push(schedule);
+              }
+              optionsById.set(workflowId, {
+                id: workflowId,
+                label: title,
+                meta: metaParts.join(" · ") || "Metronome workflow",
+                projectId,
+                projectName,
+                record: source,
+              });
+            };
+            (Array.isArray(teamPageMetronomeWorkflows) ? teamPageMetronomeWorkflows : [])
+              .forEach((workflow) => addWorkflowOption(workflow));
+            (Array.isArray(realProjects) ? realProjects : []).forEach((project) => {
+              const normalizedProject = normalizePlaygroundProjectRecord(project);
+              const projectId = String(normalizedProject.id || "").trim();
+              const projectName = String(normalizedProject.name || normalizedProject.title || "Untitled project").trim();
+              const resourceIndex = projectId ? teamPageProjectResourceIndexes[projectId]?.data || null : null;
+              getTeamProjectResourceIndexArray(resourceIndex, ["metronomes", "workflows", "schedules"])
+                .forEach((workflow) => addWorkflowOption(workflow, { projectId, projectName }));
+            });
+            (Array.isArray(teamPageShares) ? teamPageShares : [])
+              .filter((share) => getTeamResourceUiShareType(share) === "metronome")
+              .forEach((share) => {
+                const metadata = share?.metadata && typeof share.metadata === "object" && !Array.isArray(share.metadata)
+                  ? share.metadata
+                  : {};
+                const workflowMetadata = metadata.workflow && typeof metadata.workflow === "object" && !Array.isArray(metadata.workflow)
+                  ? metadata.workflow
+                  : metadata.metronomeWorkflow && typeof metadata.metronomeWorkflow === "object" && !Array.isArray(metadata.metronomeWorkflow)
+                    ? metadata.metronomeWorkflow
+                    : metadata.metronome && typeof metadata.metronome === "object" && !Array.isArray(metadata.metronome)
+                      ? metadata.metronome
+                      : {};
+                addWorkflowOption({
+                  ...workflowMetadata,
+                  resourceId: String(share?.resourceId || workflowMetadata.id || "").trim(),
+                  id: String(workflowMetadata.id || share?.resourceId || "").trim(),
+                  updatedAt: share?.updatedAt || workflowMetadata.updatedAt,
+                });
+              });
+            return Array.from(optionsById.values())
+              .sort((left, right) => String(left.label || "").localeCompare(String(right.label || "")));
+          })();
           const selectedTeam = teamPageTeams.find((team) => team.id === teamPageSelectedTeamId) || null;
           const currentMember = teamPageMembers.find((member) => member.userId === sessionState.userId) || null;
           const currentMemberRoleId = normalizePlaygroundTeamRoleId(currentMember?.role || selectedTeam?.role, "member");
@@ -157800,18 +161931,26 @@ ${PROJECT_OVERVIEW_SCRIPT}
             project: realProjects.map((project) => ({
               id: project.id,
               label: project.name || project.title || "Untitled project",
+              meta: project.updatedAt || project.createdAt ? "Updated " + formatDate(project.updatedAt || project.createdAt) : "Project",
             })).filter((item) => item.id),
             environment: realEnvironments.map((environment) => ({
               id: environment.id,
               label: environment.name || environment.title || "Untitled computer",
+              meta: environment.id || "Computer",
             })).filter((item) => item.id),
             agent: runtimeAgents.map((agent) => ({
               id: agent.id,
               label: agent.name || agent.title || "Untitled agent",
+              meta: agent.description || agent.model || "Agent",
             })).filter((item) => item.id),
+            metronome: teamPageMetronomeWorkflowOptions,
             imagine_template: teamPageImagineTemplateOptions,
           };
-          const selectedResourceOptions = resourceOptionsByType[teamPageShareResourceType] || [];
+          const directlySharedResourceKeys = new Set((Array.isArray(teamPageShares) ? teamPageShares : [])
+            .map((share) => getTeamResourceUiShareType(share) + ":" + String(share?.resourceId || "").trim())
+            .filter((key) => !key.endsWith(":")));
+          const selectedResourceOptions = (resourceOptionsByType[teamPageShareResourceType] || [])
+            .filter((resource) => !directlySharedResourceKeys.has(String(teamPageShareResourceType || "").trim() + ":" + String(resource?.id || "").trim()));
           const resourceNameByKey = new Map();
           resourceTypeOptions.forEach((typeOption) => {
             (resourceOptionsByType[typeOption.value] || []).forEach((resource) => {
@@ -157821,13 +161960,29 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const formatRole = (role) => getPlaygroundTeamRoleDefinition(role).label;
           const formatAccess = (accessLevel) => accessOptions.find((option) => option.value === accessLevel)?.label || String(accessLevel || "Use");
           const formatResourceType = (resourceType) => resourceTypeOptions.find((option) => option.value === resourceType)?.label || String(resourceType || "Resource");
-          const formatDate = (value) => {
-            if (!value) return "";
-            try {
-              return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value));
-            } catch {
-              return String(value || "");
-            }
+          const getTeamResourceShareMetadataTitle = (share) => {
+            const metadata = parseTeamResourceShareMetadata(share);
+            const workflow = metadata.workflow && typeof metadata.workflow === "object" && !Array.isArray(metadata.workflow)
+              ? metadata.workflow
+              : metadata.metronomeWorkflow && typeof metadata.metronomeWorkflow === "object" && !Array.isArray(metadata.metronomeWorkflow)
+                ? metadata.metronomeWorkflow
+                : metadata.metronome && typeof metadata.metronome === "object" && !Array.isArray(metadata.metronome)
+                  ? metadata.metronome
+                  : {};
+            const template = metadata.template && typeof metadata.template === "object" && !Array.isArray(metadata.template)
+              ? metadata.template
+              : metadata.imagineTemplate && typeof metadata.imagineTemplate === "object" && !Array.isArray(metadata.imagineTemplate)
+                ? metadata.imagineTemplate
+                : {};
+            return String(
+              workflow.name
+              || workflow.title
+              || workflow.workflowName
+              || workflow.metronomeName
+              || template.title
+              || template.name
+              || ""
+            ).trim();
           };
 
           const renderRoleSelect = (props) => React.createElement("select", {
@@ -158127,83 +162282,245 @@ ${PROJECT_OVERVIEW_SCRIPT}
           };
 
           const closeShareTeamModal = () => {
-            if (teamPageActionId === "share") {
-              return;
-            }
-            setTeamPageShareModalOpen(false);
+            closeTeamPageShareModal();
           };
 
-          const renderShareResourceModal = () => teamPageShareModalOpen
-            ? React.createElement("div", {
-                className: "playground-team-modal-backdrop",
-                onMouseDown: (event) => {
-                  if (event.target === event.currentTarget) {
-                    closeShareTeamModal();
-                  }
-                },
-                },
+          const openTeamShareResourceCreation = (resourceType) => {
+            const normalizedType = String(resourceType || teamPageShareResourceType || "").trim();
+            closeTeamPageShareModal({ force: true });
+            setTeamPageResourceToolbarPopover("");
+            setTeamPageResourceMenuId("");
+            if (normalizedType === "project") {
+              setSidebarWorkspaceMode("work");
+              setTasksPageNavigationRequest({
+                token: createPlaygroundPlatformNavigationToken(),
+                projectId: "",
+                view: "overview",
+                missionControlAction: "",
+                projectComposerAction: "create",
+              });
+              setActivePage("tasks");
+              return;
+            }
+            if (normalizedType === "environment") {
+              setEnvironmentsNavigationTargetId(PLAYGROUND_ENVIRONMENT_DRAFT_ID);
+              setSidebarWorkspaceMode("configure");
+              setResourcesView("computers");
+              setResourcesHeaderState({
+                mode: "overview",
+                title: "",
+              });
+              setActivePage("resources");
+              setEnvironmentsOpenToken((current) => current + 1);
+              return;
+            }
+            if (normalizedType === "agent") {
+              setAgentPageSelectionRequest(null);
+              setSidebarWorkspaceMode("work");
+              setResourcesView("agents");
+              setResourcesHeaderState({
+                mode: "overview",
+                title: "",
+              });
+              setActivePage("resources");
+              setAgentCreationPageRequestToken((current) => current + 1);
+              return;
+            }
+            if (normalizedType === "metronome") {
+              openMetronomePage({
+                projectId: "",
+                workflowId: "",
+              });
+              return;
+            }
+            if (normalizedType === "imagine_template") {
+              setImagineActiveView("create-template");
+              openImaginePage();
+            }
+          };
+
+          const renderShareResourceModal = () => {
+            if (!teamPageShareModalOpen && !teamPageShareModalClosing) {
+              return null;
+            }
+            const selectedTypeOption = resourceTypeOptions.find((option) => option.value === teamPageShareResourceType) || resourceTypeOptions[0];
+            const selectedTypeMeta = getTeamResourceTypeMeta(selectedTypeOption?.value || teamPageShareResourceType);
+            const SelectedTypeIcon = selectedTypeMeta?.Icon || Layers;
+            const isProjectShareType = String(teamPageShareResourceType || "").trim() === "project";
+            const selectedResourceOption = selectedResourceOptions.find((resource) =>
+              String(resource?.id || "").trim() === String(teamPageShareResourceId || "").trim()
+            ) || null;
+            const resourceTypeLabel = String(selectedTypeOption?.label || selectedTypeMeta?.label || "resources").trim();
+            const resourceSingularLabel = String(selectedTypeMeta?.label || resourceTypeLabel || "Resource").trim();
+            const resourceAccentByType = {
+              project: "#ffffff",
+              environment: "#ffffff",
+              agent: "#ffffff",
+              metronome: "#ffffff",
+              imagine_template: "#ffffff",
+            };
+            const selectedResourceTriggerTitle = selectedResourceOption?.label || "Select " + resourceSingularLabel.toLowerCase();
+            const selectedResourceTriggerDescription = selectedResourceOption?.meta
+              || (selectedResourceOptions.length > 0
+                ? "Choose an existing " + resourceSingularLabel.toLowerCase()
+                : "No existing " + resourceTypeLabel.toLowerCase() + " available");
+            const resourceAccent = resourceAccentByType[String(teamPageShareResourceType || "").trim()] || "#ffffff";
+            const modalElement = React.createElement("div", {
+                className: "playground-team-modal-backdrop playground-team-mission-modal-backdrop"
+                  + (teamPageShareModalVisible ? " is-visible" : "")
+                  + (teamPageShareModalClosing ? " is-closing" : ""),
+                onClick: closeShareTeamModal,
+              },
                 React.createElement("div", {
-                  className: "playground-team-modal is-share-resource",
+                  className: "playground-team-modal playground-team-mission-modal is-share-resource"
+                    + (teamPageShareModalVisible ? " is-visible" : "")
+                    + (teamPageShareModalClosing ? " is-closing" : ""),
                   role: "dialog",
                   "aria-modal": "true",
                   "aria-labelledby": "team-share-modal-title",
+                  onClick: (event) => event.stopPropagation(),
                 },
                   React.createElement("div", { className: "playground-team-modal-header" },
                     React.createElement("div", null,
-                      React.createElement("h2", { id: "team-share-modal-title", className: "playground-team-modal-title" }, "Share resource"),
-                      React.createElement("p", { className: "playground-team-modal-subtitle" }, "Choose a resource and how this team can use it.")
+                      React.createElement("h2", { id: "team-share-modal-title", className: "playground-team-modal-title" }, "Add " + (selectedTypeOption?.label || "resources"))
                     ),
                     React.createElement("button", {
                       type: "button",
                       className: "playground-team-modal-close",
                       onClick: closeShareTeamModal,
-                      "aria-label": "Close share resource modal",
+                      disabled: teamPageActionId === "share",
+                      "aria-label": "Close add resource modal",
                     }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                   ),
-                  React.createElement("div", { className: "playground-team-modal-form" },
-                    React.createElement("div", { className: "playground-team-modal-form-grid" },
-                      React.createElement("div", { className: "playground-team-modal-field playground-team-share-row" },
-                        React.createElement("label", { className: "playground-team-modal-label" }, "Resource type"),
-                        React.createElement("select", {
-                          className: "playground-team-select playground-team-share-select",
-                          value: teamPageShareResourceType,
-                          onChange: (event) => {
-                            setTeamPageShareResourceType(event.target.value);
-                            setTeamPageShareResourceId("");
+                  React.createElement("div", { className: "playground-team-share-picker" },
+                    React.createElement("div", { className: "playground-team-share-picker-bar" },
+                      isProjectShareType
+                        ? null
+                        : React.createElement("div", {
+                            className: "playground-team-share-access-row",
                           },
-                          disabled: teamPageActionId === "share",
-                        }, resourceTypeOptions.map((option) =>
-                          React.createElement("option", { key: option.value, value: option.value }, option.label)
-                        ))
-                      ),
-                      React.createElement("div", { className: "playground-team-modal-field playground-team-share-row" },
-                        React.createElement("label", { className: "playground-team-modal-label" }, "Access"),
-                        React.createElement("select", {
-                          className: "playground-team-select playground-team-share-select",
-                          value: teamPageShareAccessLevel,
-                          onChange: (event) => setTeamPageShareAccessLevel(event.target.value),
-                          disabled: teamPageActionId === "share",
-                        }, accessOptions.map((option) =>
-                          React.createElement("option", { key: option.value, value: option.value }, option.label)
-                        ))
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-team-modal-field playground-team-share-row" },
-                      React.createElement("label", { className: "playground-team-modal-label" }, "Resource"),
-                      React.createElement("select", {
-                        className: "playground-team-select playground-team-share-select",
-                        value: teamPageShareResourceId,
-                        onChange: (event) => setTeamPageShareResourceId(event.target.value),
-                        disabled: teamPageActionId === "share" || selectedResourceOptions.length === 0,
-                      },
-                        React.createElement("option", { value: "" }, selectedResourceOptions.length === 0 ? "No resources available" : "Select resource"),
-                        selectedResourceOptions.map((resource) =>
-                          React.createElement("option", { key: resource.id, value: resource.id }, resource.label)
+                          React.createElement("span", { className: "playground-team-share-access-label" }, "Access"),
+                          React.createElement("div", {
+                            className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell playground-team-share-access-shell"
+                              + (teamPageShareAccessPickerOpen ? " is-open" : ""),
+                          },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (teamPageShareAccessPickerOpen ? " is-active" : ""),
+                              disabled: teamPageActionId === "share",
+                              onClick: () => {
+                                setTeamPageShareResourcePickerOpen(false);
+                                setTeamPageShareAccessPickerOpen((current) => !current);
+                              },
+                              title: formatAccess(teamPageShareAccessLevel),
+                              "aria-expanded": teamPageShareAccessPickerOpen ? "true" : "false",
+                            },
+                              React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, formatAccess(teamPageShareAccessLevel)),
+                              React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+                            ),
+                            teamPageShareAccessPickerOpen
+                              ? React.createElement("div", {
+                                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                                },
+                                  accessOptions.map((option) => {
+                                    const isSelected = String(teamPageShareAccessLevel || "use") === option.value;
+                                    return React.createElement("button", {
+                                        key: option.value,
+                                        type: "button",
+                                        className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
+                                        onClick: () => {
+                                          setTeamPageShareAccessLevel(option.value);
+                                          setTeamPageShareAccessPickerOpen(false);
+                                        },
+                                      },
+                                      React.createElement("span", { className: "tb-popup-check-slot" },
+                                        isSelected
+                                          ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                          : null
+                                      ),
+                                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                        React.createElement("span", null, option.label),
+                                        React.createElement("span", { className: "playground-team-access-option-description" }, option.description)
+                                      )
+                                    );
+                                  })
+                                )
+                              : null
+                          )
                         )
+                    ),
+                    React.createElement("div", {
+                        className: "playground-tasks-project-blueprint-section playground-tasks-toolbar-popup-shell playground-team-share-resource-selector"
+                          + (teamPageShareResourcePickerOpen ? " is-open" : ""),
+                      },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-tasks-project-blueprint-trigger",
+                        onClick: () => {
+                          setTeamPageShareAccessPickerOpen(false);
+                          setTeamPageShareResourcePickerOpen((current) => !current);
+                        },
+                        disabled: teamPageActionId === "share" || selectedResourceOptions.length === 0,
+                        "aria-haspopup": "listbox",
+                        "aria-expanded": teamPageShareResourcePickerOpen ? "true" : "false",
+                      },
+                        React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-main" },
+                          React.createElement("span", {
+                            className: "playground-tasks-project-blueprint-icon",
+                            style: { "--project-blueprint-accent": resourceAccent },
+                            "aria-hidden": "true",
+                          }, React.createElement(SelectedTypeIcon, { width: 15, height: 15, strokeWidth: 1.85 })),
+                          React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-copy" },
+                            React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-title" }, selectedResourceTriggerTitle),
+                            React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-description" }, selectedResourceTriggerDescription)
+                          )
+                        ),
+                        React.createElement(ChevronDown, { className: "playground-tasks-project-blueprint-chevron", strokeWidth: 1.8 })
                       ),
-                      teamPageShareResourceType === "imagine_template"
-                        ? React.createElement("p", { className: "playground-team-modal-help" }, "Only custom templates from Imagine My Templates can be shared.")
+                      teamPageShareResourcePickerOpen
+                        ? React.createElement("div", {
+                            className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-blueprint-popover playground-tasks-toolbar-popup-menu-animate-down-in",
+                            role: "listbox",
+                          },
+                            React.createElement("div", { className: "playground-tasks-project-blueprint-grid" },
+                              selectedResourceOptions.map((resource) => {
+                                const resourceId = String(resource?.id || "").trim();
+                                const isSelected = resourceId && teamPageShareResourceId === resourceId;
+                                return React.createElement("button", {
+                                    key: resourceId,
+                                    type: "button",
+                                    className: "playground-tasks-project-blueprint-option" + (isSelected ? " is-active" : ""),
+                                    onClick: () => {
+                                      setTeamPageShareResourceId(resourceId);
+                                      setTeamPageShareResourcePickerOpen(false);
+                                    },
+                                  },
+                                  React.createElement("span", {
+                                    className: "playground-tasks-project-blueprint-icon",
+                                    style: { "--project-blueprint-accent": resourceAccent },
+                                    "aria-hidden": "true",
+                                  }, React.createElement(SelectedTypeIcon, { width: 15, height: 15, strokeWidth: 1.85 })),
+                                  React.createElement("span", { className: "playground-tasks-project-blueprint-copy" },
+                                    React.createElement("span", { className: "playground-tasks-project-blueprint-title" }, resource?.label || "Untitled resource"),
+                                    React.createElement("span", { className: "playground-tasks-project-blueprint-description" }, resource?.meta || formatResourceType(teamPageShareResourceType))
+                                  )
+                                );
+                              })
+                            )
+                          )
                         : null
+                    ),
+                    teamPageShareResourceType === "imagine_template"
+                      ? React.createElement("p", { className: "playground-team-modal-help" }, "Only custom templates from Imagine My Templates can be shared.")
+                      : null,
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-team-share-create-new",
+                      onClick: () => openTeamShareResourceCreation(teamPageShareResourceType),
+                      disabled: teamPageActionId === "share",
+                    },
+                      React.createElement("span", null, selectedTypeOption?.createLabel || "Create new resource"),
+                      React.createElement(ArrowRight, { width: 14, height: 14, strokeWidth: 1.8 })
                     ),
                     React.createElement("div", { className: "playground-team-modal-actions" },
                       React.createElement("button", {
@@ -158217,12 +162534,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         className: "playground-team-button is-primary",
                         onClick: handleCreateTeamResourceShare,
                         disabled: teamPageActionId === "share" || !teamPageShareResourceId,
-                      }, teamPageActionId === "share" ? "Sharing..." : "Share resource")
+                      }, teamPageActionId === "share" ? "Adding..." : "Add to team")
                     )
                   )
                 )
-              )
-            : null;
+              );
+            return typeof document !== "undefined" && document.body
+              ? createPortal(modalElement, document.body)
+              : modalElement;
+          };
 
           const renderTeamOverview = () => React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-team-page-header" },
@@ -158304,14 +162624,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           };
           const getTeamMemberEmail = (item) => {
             const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
-            return String(
-              source.email
-              || source.user?.email
-              || source.profile?.email
-              || source.account?.email
-              || source.member?.email
-              || ""
-            ).trim().toLowerCase();
+            return readTeamPageIdentityEmail(source);
           };
           const selectedTeamOwnerUserId = String(
             selectedTeam?.ownerUserId
@@ -158360,39 +162673,64 @@ ${PROJECT_OVERVIEW_SCRIPT}
               || (memberEmail && currentAccountEmail && memberEmail === currentAccountEmail)
             );
           };
-          const visibleTeamInvitations = teamPageInvitations.filter((invitation) => !isTeamInvitationAccepted(invitation));
+          const isRevokedTeamRow = (item) => {
+            const status = String(item?.status || "").trim().toLowerCase();
+            return status === "revoked";
+          };
+          const visibleTeamMembers = teamPageMembers.filter((member) => !isRevokedTeamRow(member));
+          const visibleTeamInvitations = teamPageInvitations.filter((invitation) =>
+            !isTeamInvitationAccepted(invitation) && !isRevokedTeamRow(invitation)
+          );
           const memberRows = [
-            ...teamPageMembers.map((member) => ({ kind: "member", id: member.id, item: member })),
+            ...visibleTeamMembers.map((member) => ({ kind: "member", id: member.id, item: member })),
             ...visibleTeamInvitations.map((invitation) => ({ kind: "invitation", id: invitation.id, item: invitation })),
           ];
+          const getTeamMemberIdentitySources = (item) => {
+            return getTeamPageIdentitySources(item);
+          };
           const getTeamMemberRowDisplayName = (row) => {
             const item = row?.item || {};
-            return row?.kind === "invitation"
-              ? (item.email || "Invitation")
-              : (item.name || item.email || item.userId || "Team member");
+            const email = getTeamMemberEmail(item);
+            if (row?.kind !== "invitation" && isCurrentTeamMemberRow(item, false)) {
+              const currentAccountName = getTrustedDisplayName(accountName, currentAccountEmail);
+              if (currentAccountName) {
+                return currentAccountName;
+              }
+            }
+            const displayName = readTeamPageIdentityDisplayName(item);
+            return getTrustedDisplayName(displayName, email)
+              || email
+              || (row?.kind === "invitation" ? "Invitation" : (getTeamMemberUserId(item) || "Team member"));
           };
           const getTeamMemberRowDetail = (row) => {
             const item = row?.item || {};
-            const isInvitation = row?.kind === "invitation";
-            const isOwner = isTeamOwnerMember(item, isInvitation);
-            return isInvitation
-              ? [formatRole(item.role), item.expiresAt ? ("Expires " + formatDate(item.expiresAt)) : ""].filter(Boolean).join(" · ")
-              : [isOwner ? "Owner" : "", item.email && item.name ? item.email : "", item.joinedAt ? ("Joined " + formatDate(item.joinedAt)) : ""].filter(Boolean).join(" · ");
+            const email = getTeamMemberEmail(item);
+            const displayName = getTeamMemberRowDisplayName(row);
+            return email && displayName.toLowerCase() !== email.toLowerCase() ? email : "";
+          };
+          const getTeamMemberJoinedLabel = (row) => {
+            if (row?.kind === "invitation") {
+              return "-";
+            }
+            const item = row?.item || {};
+            const joinedAt = getTeamMemberIdentitySources(item)
+              .map((source) => (
+                source.joinedAt
+                || source.joined_at
+                || source.acceptedAt
+                || source.accepted_at
+                || source.createdAt
+                || source.created_at
+              ))
+              .find((value) => String(value || "").trim());
+            return formatDate(joinedAt) || "-";
           };
           const getTeamMemberAvatarUrl = (item, isInvitation = false) => {
             if (isInvitation) {
               return "";
             }
             const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
-            const nestedSources = [
-              source,
-              source.user,
-              source.profile,
-              source.authProfile,
-              source.account,
-              source.member,
-            ].filter((value) => value && typeof value === "object" && !Array.isArray(value));
-            const rawAvatarUrl = nestedSources
+            const rawAvatarUrl = getTeamMemberIdentitySources(item)
               .map((value) => (
                 value.photoURL
                 || value.photoUrl
@@ -158412,6 +162750,39 @@ ${PROJECT_OVERVIEW_SCRIPT}
             const normalizedAvatarUrl = normalizeSessionPhotoUrl(rawAvatarUrl || fallbackAvatarUrl || "");
             return canRenderAvatarImage(normalizedAvatarUrl) ? normalizedAvatarUrl : "";
           };
+          const getTeamMemberMenuId = (row) => "team-member:" + String(row?.kind || "member") + ":" + String(row?.id || row?.item?.id || "");
+          const renderTeamMemberActionMenu = (row) => {
+            const item = row?.item || {};
+            const rowId = String(item.id || row?.id || "").trim();
+            const menuId = getTeamMemberMenuId(row);
+            if (!menuId || teamPageMemberMenuId !== menuId) {
+              return null;
+            }
+            const isInvitation = row?.kind === "invitation";
+            const actionId = isInvitation ? "revoke:" + rowId : "member-remove:" + rowId;
+            const isRemoving = teamPageActionId === actionId;
+            return React.createElement("div", {
+                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-resources-action-menu playground-team-member-action-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                onClick: (event) => event.stopPropagation(),
+              },
+              React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row playground-project-team-menu-item is-danger",
+                  disabled: isRemoving,
+                  onClick: () => {
+                    setTeamPageMemberMenuId("");
+                    if (isInvitation) {
+                      handleRevokeTeamInvitation(rowId);
+                    } else {
+                      handleRemoveTeamMember(rowId);
+                    }
+                  },
+                },
+                React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, isRemoving ? "Removing..." : "Remove user")
+              )
+            );
+          };
           const renderTeamMemberIdentityCell = (item, displayName, detail, isInvitation) =>
             React.createElement("div", { className: "playground-team-member-cell" },
               renderAccountAvatar(
@@ -158429,11 +162800,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const renderMembersTab = () => React.createElement("div", { className: "playground-team-detail-panel" },
             memberRows.length > 0
               ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
-                  React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table" },
+                  React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table playground-team-members-table" },
                     React.createElement("colgroup", null,
                       React.createElement("col", { className: "playground-team-table-col-main" }),
                       React.createElement("col", { className: "playground-team-table-col-role" }),
                       React.createElement("col", { className: "playground-team-table-col-meta" }),
+                      React.createElement("col", { className: "playground-team-table-col-joined" }),
                       React.createElement("col", { className: "playground-team-table-col-actions" })
                     ),
                     React.createElement("thead", null,
@@ -158441,6 +162813,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         React.createElement("th", null, "User"),
                         React.createElement("th", null, "Role"),
                         React.createElement("th", null, "Status"),
+                        React.createElement("th", null, "Joined"),
                         React.createElement("th", { className: "is-actions" }, "")
                       )
                     ),
@@ -158450,42 +162823,51 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         const isInvitation = row.kind === "invitation";
                         const displayName = getTeamMemberRowDisplayName(row);
                         const detail = getTeamMemberRowDetail(row);
+                        const joinedLabel = getTeamMemberJoinedLabel(row);
                         const isOwner = isTeamOwnerMember(item, isInvitation);
                         const isProtectedMember = isOwner || isCurrentTeamMemberRow(item, isInvitation);
+                        const rowActionId = String(item.id || row.id || "").trim();
+                        const canRemoveRow = canManageTeam && rowActionId && (isInvitation || !isProtectedMember);
+                        const menuId = getTeamMemberMenuId(row);
+                        const menuOpen = teamPageMemberMenuId === menuId;
                         return React.createElement("tr", { key: row.kind + ":" + row.id },
                           React.createElement("td", null,
                             renderTeamMemberIdentityCell(item, displayName, detail, isInvitation)
                           ),
                           React.createElement("td", null,
                             isOwner
-                              ? React.createElement("span", { className: "playground-team-badge" }, "Owner")
+                              ? React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, "Owner")
                               : !isInvitation && canManageTeam && !isProtectedMember
                               ? renderRoleSelect({
                                   value: item.role || "create",
                                   onChange: (event) => handleUpdateTeamMemberRole(item.id, event.target.value),
                                   disabled: teamPageActionId === "member-role:" + item.id,
                                 })
-                              : React.createElement("span", { className: "playground-team-badge" }, formatRole(item.role))
+                              : React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, formatRole(item.role))
                           ),
                           React.createElement("td", { className: "playground-auth-users-cell" }, isInvitation ? (item.status || "pending") : (item.status || "active")),
+                          React.createElement("td", { className: "playground-auth-users-cell" }, joinedLabel),
                           React.createElement("td", { className: "is-actions" },
-                            isInvitation && item.status === "pending" && canManageTeam
-                              ? React.createElement("button", {
+                            canRemoveRow
+                              ? React.createElement("div", {
+                                  className: "playground-tasks-toolbar-popup-shell playground-project-resources-action-shell playground-team-member-action-shell" + (menuOpen ? " is-open" : ""),
+                                },
+                                React.createElement("button", {
                                   type: "button",
-                                  className: "playground-team-icon-button",
-                                  onClick: () => handleRevokeTeamInvitation(item.id),
-                                  disabled: teamPageActionId === "revoke:" + item.id,
-                                  "aria-label": "Revoke invitation",
-                                }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
-                              : !isInvitation && canManageTeam && !isProtectedMember
-                                ? React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-team-icon-button",
-                                    onClick: () => handleRemoveTeamMember(item.id),
-                                    disabled: teamPageActionId === "member-remove:" + item.id,
-                                    "aria-label": "Remove member",
-                                  }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
-                                : null
+                                  className: "playground-team-icon-button playground-team-member-action-button",
+                                  onClick: (event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    setTeamPageResourceMenuId("");
+                                    setTeamPageResourceToolbarPopover("");
+                                    setTeamPageMemberMenuId((current) => current === menuId ? "" : menuId);
+                                  },
+                                  "aria-label": "Team member actions for " + displayName,
+                                  "aria-expanded": menuOpen ? "true" : "false",
+                                }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
+                                renderTeamMemberActionMenu(row)
+                              )
+                              : null
                           )
                         );
                       })
@@ -158502,7 +162884,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               environment: { label: "Computer", Icon: Monitor },
               agent: { label: "Agent", Icon: Bot },
               file: { label: "File", Icon: FileText },
-              metronome: { label: "Metronome", Icon: Metronome },
+              metronome: { label: "Metronome Workflow", Icon: Metronome },
+              metronome_workflow: { label: "Metronome Workflow", Icon: Metronome },
               web_app: { label: "Web App", Icon: Monitor },
               function: { label: "Function", Icon: FunctionSquare },
               database: { label: "Database", Icon: Database },
@@ -158601,11 +162984,155 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return nestedOwnerLabel || "";
           }
 
+          function getTeamResourceOwnerIdentityRecords(record) {
+            const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
+            const ownerIdentity = {
+              userId: source.ownerUserId
+                || source.owner_user_id
+                || source.ownerId
+                || source.owner_id
+                || source.createdByUserId
+                || source.created_by_user_id
+                || source.createdById
+                || source.created_by_id
+                || source.creatorUserId
+                || source.creator_user_id
+                || source.creatorId
+                || source.creator_id
+                || source.authorUserId
+                || source.author_user_id
+                || source.authorId
+                || source.author_id
+                || source.leadUserId
+                || source.lead_user_id
+                || source.leadId
+                || source.lead_id
+                || "",
+              displayName: source.ownerName
+                || source.ownerDisplayName
+                || source.createdByName
+                || source.creatorName
+                || source.authorName
+                || source.leadName
+                || source.userDisplayName
+                || source.userName
+                || "",
+              email: source.ownerEmail
+                || source.createdByEmail
+                || source.creatorEmail
+                || source.authorEmail
+                || source.leadEmail
+                || source.userEmail
+                || "",
+              photoURL: source.ownerPhotoURL
+                || source.ownerPhotoUrl
+                || source.ownerAvatarUrl
+                || source.createdByPhotoURL
+                || source.createdByPhotoUrl
+                || source.createdByAvatarUrl
+                || source.creatorPhotoURL
+                || source.creatorPhotoUrl
+                || source.creatorAvatarUrl
+                || source.authorPhotoURL
+                || source.authorPhotoUrl
+                || source.authorAvatarUrl
+                || source.leadAvatarUrl
+                || source.userPhotoURL
+                || source.userPhotoUrl
+                || source.userAvatarUrl
+                || "",
+            };
+            return [
+              ownerIdentity,
+              source.owner,
+              source.creator,
+              source.createdBy,
+              source.created_by,
+              source.author,
+              source.lead,
+              source.user,
+              source.account,
+              source.profile,
+              source.member,
+            ].filter((value) => value && typeof value === "object" && !Array.isArray(value));
+          }
+
+          function findTeamResourceOwnerMemberRow(record) {
+            const ownerRecords = getTeamResourceOwnerIdentityRecords(record);
+            const ownerKeys = new Set();
+            const ownerEmails = new Set();
+            const ownerLabels = new Set();
+            ownerRecords.forEach((ownerRecord) => {
+              getTeamPageMemberProfileKeyCandidates(ownerRecord).forEach((key) => {
+                ownerKeys.add(String(key || "").trim().toLowerCase());
+              });
+              const email = readTeamPageIdentityEmail(ownerRecord);
+              if (email) {
+                ownerEmails.add(email);
+                ownerKeys.add(email);
+              }
+              const ownerLabel = getTeamResourceOwnerLabelFromPerson(ownerRecord);
+              if (ownerLabel) {
+                ownerLabels.add(ownerLabel.toLowerCase());
+              }
+            });
+            const recordOwnerLabel = getTeamResourceOwnerLabelFromRecord(record);
+            if (recordOwnerLabel) {
+              ownerLabels.add(recordOwnerLabel.toLowerCase());
+            }
+            if (ownerKeys.size === 0 && ownerLabels.size === 0) {
+              return null;
+            }
+            return memberRows.find((row) => {
+              if (row.kind !== "member") {
+                return false;
+              }
+              const item = row.item || {};
+              const itemKeys = getTeamPageMemberProfileKeyCandidates(item)
+                .map((key) => String(key || "").trim().toLowerCase())
+                .filter(Boolean);
+              if (itemKeys.some((key) => ownerKeys.has(key))) {
+                return true;
+              }
+              const itemEmail = getTeamMemberEmail(item);
+              if (itemEmail && ownerEmails.has(itemEmail)) {
+                return true;
+              }
+              const itemDisplayName = getTeamMemberRowDisplayName(row);
+              return Boolean(itemDisplayName && ownerLabels.has(itemDisplayName.toLowerCase()));
+            }) || null;
+          }
+
+          function getTeamResourceOwnerAvatarUrlFromRecord(record) {
+            const explicitAvatarUrl = getTeamResourceOwnerIdentityRecords(record)
+              .map((ownerRecord) => readTeamPageIdentityAvatarUrl(ownerRecord))
+              .map((value) => normalizeSessionPhotoUrl(value))
+              .find((value) => canRenderAvatarImage(value));
+            if (explicitAvatarUrl) {
+              return explicitAvatarUrl;
+            }
+            const ownerRow = findTeamResourceOwnerMemberRow(record);
+            return ownerRow ? getTeamMemberAvatarUrl(ownerRow.item, false) : "";
+          }
+
           function getTeamProjectOwnerLabel(project) {
             const normalizedProject = normalizePlaygroundProjectRecord(project);
             return getTeamResourceOwnerLabelFromRecord({
+              ownerUserId: normalizedProject.leadUserId,
               ownerName: normalizedProject.leadName,
               ownerEmail: normalizedProject.leadEmail,
+              ownerAvatarUrl: normalizedProject.leadAvatarUrl,
+              owner: normalizedProject.lead || normalizedProject.metadata?.lead,
+            });
+          }
+
+          function getTeamProjectOwnerAvatarUrl(project) {
+            const normalizedProject = normalizePlaygroundProjectRecord(project);
+            return getTeamResourceOwnerAvatarUrlFromRecord({
+              ownerUserId: normalizedProject.leadUserId,
+              ownerName: normalizedProject.leadName,
+              ownerEmail: normalizedProject.leadEmail,
+              ownerAvatarUrl: normalizedProject.leadAvatarUrl,
               owner: normalizedProject.lead || normalizedProject.metadata?.lead,
             });
           }
@@ -158616,12 +163143,26 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return getTeamMemberRowDisplayName(ownerRow);
             }
             if (selectedTeamOwnerUserId && selectedTeamOwnerUserId === String(sessionState.userId || "").trim()) {
-              return formatAccountDisplayName(currentUserName, currentAccountEmail, "You");
+              return formatAccountDisplayName(accountName, currentAccountEmail, "You");
             }
             if (selectedTeamOwnerEmail && selectedTeamOwnerEmail === currentAccountEmail) {
-              return formatAccountDisplayName(currentUserName, currentAccountEmail, "You");
+              return formatAccountDisplayName(accountName, currentAccountEmail, "You");
             }
             return getTeamResourceOwnerLabelFromRecord(selectedTeam);
+          }
+
+          function getSelectedTeamOwnerAvatarUrl() {
+            const ownerRow = memberRows.find((row) => row.kind === "member" && isTeamOwnerMember(row.item, false));
+            if (ownerRow) {
+              return getTeamMemberAvatarUrl(ownerRow.item, false);
+            }
+            if (selectedTeamOwnerUserId && selectedTeamOwnerUserId === String(sessionState.userId || "").trim()) {
+              return canRenderAvatarImage(accountAvatarUrl) ? accountAvatarUrl : "";
+            }
+            if (selectedTeamOwnerEmail && selectedTeamOwnerEmail === currentAccountEmail) {
+              return canRenderAvatarImage(accountAvatarUrl) ? accountAvatarUrl : "";
+            }
+            return getTeamResourceOwnerAvatarUrlFromRecord(selectedTeam);
           }
 
           function classifyTeamProjectFileResource(item) {
@@ -158704,6 +163245,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             const metadata = getTeamProjectMetadata(normalizedProject);
             const projectName = String(normalizedProject.name || "Untitled project").trim();
             const projectOwnerLabel = getTeamProjectOwnerLabel(normalizedProject);
+            const projectOwnerAvatarUrl = getTeamProjectOwnerAvatarUrl(normalizedProject);
             const resourceRows = [];
             const resourceRowKeys = new Set();
             const pushResourceRow = (row) => {
@@ -158738,6 +163280,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 accessLabel: "Project role based",
                 updatedLabel: attachment?.updatedAt || attachment?.createdAt ? formatDate(attachment.updatedAt || attachment.createdAt) : "-",
                 ownerLabel: projectOwnerLabel,
+                ownerAvatarUrl: getTeamResourceOwnerAvatarUrlFromRecord(attachment) || projectOwnerAvatarUrl,
                 record: attachment,
                 environmentId,
                 path,
@@ -158761,6 +163304,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 accessLabel: "Project role based",
                 updatedLabel: item?.updatedAt || item?.createdAt ? formatDate(item.updatedAt || item.createdAt) : "-",
                 ownerLabel: getTeamResourceOwnerLabelFromRecord(item) || projectOwnerLabel,
+                ownerAvatarUrl: getTeamResourceOwnerAvatarUrlFromRecord(item) || projectOwnerAvatarUrl,
                 record: item,
                 resourceId: item?.id || "",
                 projectId: normalizedProject.id,
@@ -158780,6 +163324,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 accessLabel: "Project role based",
                 updatedLabel: item?.updatedAt || item?.createdAt ? formatDate(item.updatedAt || item.createdAt) : "-",
                 ownerLabel: getTeamResourceOwnerLabelFromRecord(item) || projectOwnerLabel,
+                ownerAvatarUrl: getTeamResourceOwnerAvatarUrlFromRecord(item) || projectOwnerAvatarUrl,
                 record: item,
                 resourceId: item?.id || "",
                 projectId: normalizedProject.id,
@@ -158808,6 +163353,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 accessLabel: "Project role based",
                 updatedLabel: template.publishedAt ? formatDate(template.publishedAt) : "-",
                 ownerLabel: getTeamResourceOwnerLabelFromRecord(template) || projectOwnerLabel,
+                ownerAvatarUrl: getTeamResourceOwnerAvatarUrlFromRecord(template) || projectOwnerAvatarUrl,
                 record: template,
                 projectId: normalizedProject.id,
                 projectName,
@@ -158828,6 +163374,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
           const teamResourceRowsByKey = new Map();
           const selectedTeamOwnerLabel = getSelectedTeamOwnerLabel();
+          const selectedTeamOwnerAvatarUrl = getSelectedTeamOwnerAvatarUrl();
           const upsertTeamResourceRow = (row) => {
             const normalizedType = String(row?.type || row?.resourceType || "resource").trim() || "resource";
             const dedupeKey = normalizedType + ":" + String(row?.key || row?.id || row?.resourceId || row?.title || "").trim();
@@ -158857,24 +163404,27 @@ ${PROJECT_OVERVIEW_SCRIPT}
               subtitle: existing.subtitle || nextRow.subtitle,
               updatedLabel: existing.updatedLabel && existing.updatedLabel !== "-" ? existing.updatedLabel : nextRow.updatedLabel,
               ownerLabel: existing.ownerLabel || nextRow.ownerLabel,
+              ownerAvatarUrl: existing.ownerAvatarUrl || nextRow.ownerAvatarUrl,
               sources: Array.from(sourcesByKey.values()),
             });
           };
 
           teamPageShares.forEach((share, index) => {
-            const resourceType = String(share?.resourceType || "resource").trim();
+            const resourceType = getTeamResourceUiShareType(share) || "resource";
             const resourceId = String(share?.resourceId || "").trim();
-            const resourceTitle = String(resourceNameByKey.get(resourceType + ":" + resourceId) || resourceId || "Untitled resource").trim();
+            const isProjectResourceShare = resourceType === "project";
+            const resourceTitle = String(resourceNameByKey.get(resourceType + ":" + resourceId) || getTeamResourceShareMetadataTitle(share) || resourceId || "Untitled resource").trim();
             upsertTeamResourceRow({
               key: resourceId || String(share?.id || index),
               type: resourceType,
               title: resourceTitle,
               subtitle: formatResourceType(resourceType),
-              status: formatAccess(share?.accessLevel),
-              accessLevel: share?.accessLevel || "use",
-              accessLabel: formatAccess(share?.accessLevel),
+              status: isProjectResourceShare ? "Project role based" : formatAccess(share?.accessLevel),
+              accessLevel: isProjectResourceShare ? "project_role_based" : (share?.accessLevel || "use"),
+              accessLabel: isProjectResourceShare ? "Project role based" : formatAccess(share?.accessLevel),
               updatedLabel: share?.updatedAt ? formatDate(share.updatedAt) : "-",
               ownerLabel: getTeamResourceOwnerLabelFromRecord(share) || selectedTeamOwnerLabel,
+              ownerAvatarUrl: getTeamResourceOwnerAvatarUrlFromRecord(share) || selectedTeamOwnerAvatarUrl,
               record: share,
               directShare: share,
               resourceId,
@@ -158901,6 +163451,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 accessLabel: "Project role based",
                 updatedLabel: normalizedProject.updatedAt ? formatDate(normalizedProject.updatedAt) : "-",
                 ownerLabel: getTeamProjectOwnerLabel(normalizedProject),
+                ownerAvatarUrl: getTeamProjectOwnerAvatarUrl(normalizedProject),
                 record: normalizedProject,
                 resourceId: normalizedProject.id,
                 projectId: normalizedProject.id,
@@ -158924,7 +163475,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
 
           function getTeamResourceTypeSortRank(row) {
-            const normalizedType = String(row?.type || row?.resourceType || "").trim();
+            const normalizedType = getTeamResourceUiShareType(row?.type || row?.resourceType || "");
             if (normalizedType === "project") return 0;
             if (["web_app", "function", "database", "metronome", "environment", "agent"].includes(normalizedType)) return 1;
             if (normalizedType === "imagine" || normalizedType === "imagine_template") return 2;
@@ -158987,6 +163538,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               setTeamPageShareResourceType(normalizedType);
               setTeamPageShareResourceId("");
             }
+            setTeamPageShareResourcePickerOpen(false);
+            setTeamPageShareAccessPickerOpen(false);
             setTeamPageResourceToolbarPopover("");
             setTeamPageResourceMenuId("");
             setTeamPageShareModalOpen(true);
@@ -159012,15 +163565,238 @@ ${PROJECT_OVERVIEW_SCRIPT}
               || sources.find((source) => source.kind === "project_access")
               || null;
           };
-          const openTeamResourceRow = (row) => {
-            if (row?.type === "project") {
-              openTeamProjectResourceSource(row.projectId || row.resourceId || row.record?.resourceId || row.record?.id);
-              return;
+
+          function getTeamResourceRowRecord(row) {
+            return row?.record && typeof row.record === "object" && !Array.isArray(row.record)
+              ? row.record
+              : {};
+          }
+
+          function getTeamResourceRowResourceId(row) {
+            const record = getTeamResourceRowRecord(row);
+            const candidates = [
+              row?.resourceId,
+              row?.directShare?.resourceId,
+              record.resourceId,
+              record.resource_id,
+              record.serverId,
+              record.server_id,
+              record.webAppId,
+              record.web_app_id,
+              record.functionId,
+              record.function_id,
+              record.databaseId,
+              record.database_id,
+              record.environmentId,
+              record.environment_id,
+              record.agentId,
+              record.agent_id,
+              record.workflowId,
+              record.workflow_id,
+              record.metronomeId,
+              record.metronome_id,
+              record.id,
+            ];
+            const directId = candidates.map((value) => String(value || "").trim()).find(Boolean);
+            if (directId) {
+              return directId;
             }
+            const normalizedType = String(row?.type || row?.resourceType || "").trim();
+            const rowKey = String(row?.key || "").trim();
+            const typePrefix = normalizedType ? normalizedType + ":" : "";
+            return typePrefix && rowKey.startsWith(typePrefix)
+              ? rowKey.slice(typePrefix.length).trim()
+              : rowKey;
+          }
+
+          function getTeamResourceRowServerKind(row) {
+            const record = getTeamResourceRowRecord(row);
+            const normalizedType = normalizePlaygroundServerOverviewKind(row?.type || row?.resourceType || "");
+            if (normalizedType) {
+              return normalizedType;
+            }
+            return normalizePlaygroundServerOverviewKind(
+              row?.serverKind
+              || row?.resourceKind
+              || record.kind
+              || record.serverKind
+              || record.resourceKind
+              || record.resourceType
+              || record.type
+              || ""
+            );
+          }
+
+          function isTeamResourceTemplateOnlyRow(row) {
+            const record = getTeamResourceRowRecord(row);
+            const templateId = String(record.templateId || record.template_id || "").trim();
+            if (!templateId) {
+              return false;
+            }
+            return ![
+              row?.resourceId,
+              row?.directShare?.resourceId,
+              record.resourceId,
+              record.resource_id,
+              record.serverId,
+              record.server_id,
+              record.databaseId,
+              record.database_id,
+              record.workflowId,
+              record.workflow_id,
+              record.metronomeId,
+              record.metronome_id,
+            ].some((value) => String(value || "").trim());
+          }
+
+          function openTeamResourceProjectFallback(row) {
             const projectSource = getTeamResourcePrimaryProjectSource(row);
             if (projectSource?.projectId) {
               openTeamProjectResourceSource(projectSource.projectId);
+              return true;
             }
+            const projectId = String(row?.projectId || getTeamResourceRowRecord(row).projectId || "").trim();
+            if (projectId) {
+              openTeamProjectResourceSource(projectId);
+              return true;
+            }
+            return false;
+          }
+
+          function openTeamResourceFilesRow(row) {
+            const record = getTeamResourceRowRecord(row);
+            const path = normalizeHistoryPath(
+              row?.path
+              || record.path
+              || record.sourcePath
+              || record.workspacePath
+              || ""
+            );
+            const environmentId = String(
+              row?.environmentId
+              || record.environmentId
+              || record.environment_id
+              || record.sourceEnvironmentId
+              || record.source_environment_id
+              || ""
+            ).trim();
+            if (!path || !environmentId) {
+              return false;
+            }
+            const projectId = String(row?.projectId || record.projectId || "").trim();
+            const projectName = String(row?.projectName || record.projectName || "").trim();
+            setEnvironmentId(environmentId);
+            setFilesPageNavigationRequest({
+              token: createPlaygroundPlatformNavigationToken(),
+              projectId,
+              projectName,
+              environmentId,
+              path,
+              isFolder: Boolean(record.isFolder || record.kind === "folder" || record.mimeType === "inode/directory"),
+              contentMode: "files",
+            });
+            setSidebarWorkspaceMode("work");
+            setActivePage("files");
+            return true;
+          }
+
+          function openTeamResourceImagineTemplateRow(row) {
+            const templateId = getTeamResourceRowResourceId(row);
+            setImagineActiveView("my-templates");
+            setImagineTemplateSelectionRequest(templateId ? {
+              templateId,
+              token: createPlaygroundPlatformNavigationToken(),
+            } : null);
+            setSidebarWorkspaceMode("work");
+            setActivePage("imagine");
+            return true;
+          }
+
+          const openTeamResourceRow = (row) => {
+            const normalizedType = getTeamResourceUiShareType(row?.type || row?.resourceType || "");
+            const resourceId = getTeamResourceRowResourceId(row);
+            const record = getTeamResourceRowRecord(row);
+            if (normalizedType === "project") {
+              openTeamProjectResourceSource(row.projectId || row.resourceId || row.record?.resourceId || row.record?.id);
+              return;
+            }
+            if (normalizedType === "environment" || normalizedType === "computer") {
+              if (resourceId) {
+                setEnvironmentId(resourceId);
+                openResourcesView("computers");
+                setEnvironmentsNavigationTargetId(resourceId);
+                setEnvironmentsOpenToken((current) => current + 1);
+                return;
+              }
+              openTeamResourceProjectFallback(row);
+              return;
+            }
+            if (normalizedType === "agent") {
+              if (resourceId) {
+                openResourcesView("agents");
+                setAgentPageSelectionRequest({
+                  agentId: resourceId,
+                  token: createPlaygroundPlatformNavigationToken(),
+                });
+                return;
+              }
+              openTeamResourceProjectFallback(row);
+              return;
+            }
+            if (normalizedType === "file") {
+              if (openTeamResourceFilesRow(row)) {
+                return;
+              }
+              openTeamResourceProjectFallback(row);
+              return;
+            }
+            if (normalizedType === "metronome") {
+              if (isTeamResourceTemplateOnlyRow(row)) {
+                openResourceTemplatesPage({
+                  type: "metronome",
+                  templateId: String(record.templateId || record.template_id || "").trim(),
+                });
+                return;
+              }
+              const workflowId = String(
+                resourceId
+                || record.workflowId
+                || record.workflow_id
+                || record.metronomeId
+                || record.metronome_id
+                || ""
+              ).trim();
+              if (workflowId) {
+                openMetronomePage({
+                  projectId: String(row?.projectId || record.projectId || "").trim(),
+                  workflowId,
+                });
+                return;
+              }
+              openTeamResourceProjectFallback(row);
+              return;
+            }
+            if (normalizedType === "imagine" || normalizedType === "imagine_template") {
+              openTeamResourceImagineTemplateRow(row);
+              return;
+            }
+            const serverKind = getTeamResourceRowServerKind(row);
+            if (serverKind && resourceId && !isTeamResourceTemplateOnlyRow(row)) {
+              openResourcesView("servers", {
+                serverKind,
+                resourceType: serverKind === "database" ? "database" : "server",
+                resourceId,
+              });
+              return;
+            }
+            if (isTeamResourceTemplateOnlyRow(row) && normalizedType) {
+              openResourceTemplatesPage({
+                type: normalizedType,
+                templateId: String(record.templateId || record.template_id || "").trim(),
+              });
+              return;
+            }
+            openTeamResourceProjectFallback(row);
           };
           const buildTeamResourceFileIconEntry = (row) => {
             const record = row?.record && typeof row.record === "object" && !Array.isArray(row.record) ? row.record : {};
@@ -159073,10 +163849,23 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }, row?.sourceLabel || "Unknown");
           const renderTeamResourceOwner = (row) => {
             const ownerLabel = String(row?.ownerLabel || "").trim();
+            const ownerAvatarUrl = normalizeSessionPhotoUrl(row?.ownerAvatarUrl || "");
             return React.createElement("span", {
-              className: "playground-team-badge playground-team-resource-owner-label",
-              title: ownerLabel || "",
-            }, ownerLabel || "-");
+                className: "playground-team-resource-owner-cell",
+                title: ownerLabel || "",
+              },
+              ownerLabel
+                ? renderAccountAvatar(
+                    "playground-team-resource-owner-avatar",
+                    "playground-team-resource-owner-avatar-image",
+                    getAccountInitials(ownerLabel),
+                    ownerAvatarUrl
+                  )
+                : null,
+              React.createElement("span", {
+                className: "playground-team-badge playground-team-resource-owner-label",
+              }, ownerLabel || "-")
+            );
           };
           const renderTeamResourceNewMenu = () => {
             if (teamPageResourceToolbarPopover !== "new") {
@@ -159108,6 +163897,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return null;
             }
             const directShare = row?.directShare || null;
+            const canEditDirectShareAccess = Boolean(directShare && canManageTeam && String(row?.type || row?.resourceType || "").trim() !== "project");
             const projectSources = (Array.isArray(row?.sources) ? row.sources : [])
               .filter((source) => source.kind === "project" || source.kind === "project_access");
             const isAccessUpdating = teamPageActionId === "share-access:" + share.id;
@@ -159116,7 +163906,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-resources-action-menu playground-tasks-toolbar-popup-menu-animate-down-in",
                 onClick: (event) => event.stopPropagation(),
               },
-              directShare && canManageTeam
+              canEditDirectShareAccess
                 ? accessOptions.map((option) => {
                     const isActive = String(row?.accessLevel || "use") === option.value;
                     return React.createElement("button", {
@@ -159135,12 +163925,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           : null
                       ),
                       React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                        React.createElement("span", null, option.label)
+                        React.createElement("span", null, option.label),
+                        React.createElement("span", { className: "playground-team-access-option-description" }, option.description)
                       )
                     );
                   })
                 : null,
-              directShare && canManageTeam
+              canEditDirectShareAccess
                 ? React.createElement("div", { className: "playground-project-resources-menu-divider" })
                 : null,
               projectSources.length > 0
@@ -159206,6 +163997,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               renderNewMenu: renderTeamResourceNewMenu,
               onNewButtonClick: () => openTeamShareResourceModal(),
               onRowOpen: openTeamResourceRow,
+              metaCellsStopRowOpen: false,
+              newButtonLabel: "Add",
               searchAriaLabel: "Search team resources",
               primaryHeader: "Resource",
               secondaryHeader: "Access",
@@ -160851,7 +165644,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const inferredRunKind = String(basePreview.runKind || "").trim()
             || (
               String(basePreview.sourceThreadId || "").trim()
-              || /^review[:\s-]/i.test(String(selectedKnownThread?.title || "").trim())
+              || /^review[:\\s-]/i.test(String(selectedKnownThread?.title || "").trim())
                 ? "review"
                 : ""
             );
@@ -165494,6 +170287,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
               React.createElement("div", { className: "notification-menu-footer" },
                 React.createElement("button", {
                   type: "button",
+                  className: "notification-menu-mark-read notification-menu-view-all",
+                  onClick: openNotificationsPage,
+                }, "View all"),
+                React.createElement("button", {
+                  type: "button",
                   className: "notification-menu-mark-read",
                   onClick: handleMarkAllNotificationsRead,
                   disabled: notificationItems.length === 0,
@@ -165502,6 +170300,228 @@ ${PROJECT_OVERVIEW_SCRIPT}
             )
 	          );
 	        }
+
+        function getNotificationPageIcon(item) {
+          if (item.kind === "permission") return AlertCircle;
+          if (item.kind === "human_task") return ListTodo;
+          if (item.kind === "team_invitation") return UsersRound;
+          if (item.kind === "email_verification") return Mail;
+          return Bell;
+        }
+
+        function handleOpenNotificationPageItem(item) {
+          if (!item) {
+            return;
+          }
+          if (item.kind === "permission" && item.threadId) {
+            handleOpenPermissionNotification(item.threadId);
+            return;
+          }
+          if (item.kind === "human_task") {
+            handleOpenHumanTaskNotification(item);
+            return;
+          }
+          if (item.kind === "team_invitation") {
+            openTeamPage();
+            return;
+          }
+          if (item.kind === "email_verification") {
+            handleOpenEmailVerificationSettings();
+          }
+        }
+
+        function renderNotificationsPageToolbarMenu(kind) {
+          if (notificationsPageToolbarPopover !== kind) {
+            return null;
+          }
+          const filterOptions = [
+            { id: "all", label: "All notifications" },
+            { id: "unread", label: "Unread" },
+            { id: "read", label: "Read" },
+            { id: "permission", label: "Permission requests" },
+            { id: "tasks", label: "Tasks" },
+            { id: "team", label: "Teams" },
+            { id: "product", label: "Product" },
+          ];
+          const sortOptions = [
+            { id: "newest", label: "Newest first" },
+            { id: "oldest", label: "Oldest first" },
+            { id: "type", label: "Type" },
+          ];
+          const options = kind === "sort" ? sortOptions : filterOptions;
+          const currentValue = kind === "sort" ? notificationsPageSort : notificationsPageFilter;
+          return React.createElement("div", {
+              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-notifications-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+              onClick: (event) => event.stopPropagation(),
+            },
+            options.map((option) =>
+              React.createElement("button", {
+                  key: option.id,
+                  type: "button",
+                  className: "tb-popup-row" + (currentValue === option.id ? " is-active" : ""),
+                  onClick: () => {
+                    if (kind === "sort") {
+                      setNotificationsPageSort(option.id);
+                    } else {
+                      setNotificationsPageFilter(option.id);
+                    }
+                    setNotificationsPageToolbarPopover("");
+                  },
+                },
+                React.createElement("span", { className: "tb-popup-check-slot" },
+                  currentValue === option.id ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.9 }) : null
+                ),
+                React.createElement("span", null, option.label)
+              )
+            )
+          );
+        }
+
+        function renderConfigureNotificationsSection() {
+          const emptyCopy = allNotificationPageItems.length === 0
+            ? "No notifications yet."
+            : "No notifications match your filters.";
+
+          return React.createElement("section", { className: "playground-configure-notifications-section playground-notifications-scroll" },
+              React.createElement("div", { className: "playground-files-library-header playground-notifications-library-header" },
+                React.createElement("div", { className: "playground-files-library-title-row" },
+                  React.createElement("h1", { className: "playground-files-library-title" }, "Notifications"),
+                  React.createElement("div", { className: "playground-files-library-actions" },
+                    React.createElement("div", { className: "playground-files-library-search-anchor playground-notifications-search-anchor" },
+                      React.createElement("label", { className: "playground-files-library-search playground-notifications-search" },
+                        React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
+                        React.createElement("input", {
+                          className: "playground-files-library-search-input",
+                          value: notificationsPageSearchQuery,
+                          onChange: (event) => setNotificationsPageSearchQuery(event.target.value),
+                          placeholder: "Search notifications",
+                        })
+                      )
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-library-new-button playground-notifications-mark-read-button",
+                      onClick: handleMarkAllNotificationsRead,
+                      disabled: notificationItems.length === 0,
+                    },
+                      React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Mark all read")
+                    )
+                  )
+                ),
+                React.createElement("div", { className: "playground-files-library-nav-row playground-notifications-nav-row" },
+                  React.createElement("div", { className: "playground-files-library-path-row playground-notifications-context-row" },
+                    React.createElement("div", { className: "playground-notifications-subtitle" }, "Review product updates, human tasks, team invitations, and permission requests.")
+                  ),
+                  React.createElement("div", { className: "playground-files-library-controls playground-notifications-toolbar" },
+                    React.createElement("div", { className: "playground-files-library-control-anchor playground-notifications-toolbar-anchor playground-tasks-toolbar-popup-shell" + (notificationsPageToolbarPopover === "sort" ? " is-open" : "") },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-library-icon-button" + (notificationsPageToolbarPopover === "sort" || notificationsPageSort !== "newest" ? " is-active" : ""),
+                        onClick: () => setNotificationsPageToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                        title: "Sort notifications",
+                        "aria-label": "Sort notifications",
+                        "aria-expanded": notificationsPageToolbarPopover === "sort" ? "true" : "false",
+                      }, React.createElement(ArrowUpDown, { width: 19, height: 19, strokeWidth: 1.8 })),
+                      renderNotificationsPageToolbarMenu("sort")
+                    ),
+                    React.createElement("div", { className: "playground-files-library-control-anchor playground-notifications-toolbar-anchor playground-tasks-toolbar-popup-shell" + (notificationsPageToolbarPopover === "filter" ? " is-open" : "") },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-library-icon-button" + (notificationsPageToolbarPopover === "filter" || notificationsPageFilter !== "all" ? " is-active" : ""),
+                        onClick: () => setNotificationsPageToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                        title: "Filter notifications",
+                        "aria-label": "Filter notifications",
+                        "aria-expanded": notificationsPageToolbarPopover === "filter" ? "true" : "false",
+                      }, React.createElement(SlidersHorizontal, { width: 19, height: 19, strokeWidth: 1.8 })),
+                      renderNotificationsPageToolbarMenu("filter")
+                    )
+                  )
+                )
+              ),
+              visibleNotificationPageItems.length === 0
+                ? React.createElement("div", { className: "playground-team-empty playground-notifications-empty" }, emptyCopy)
+                : React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell playground-notifications-table-shell" },
+                    React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table playground-notifications-table" },
+                      React.createElement("colgroup", null,
+                        React.createElement("col", { className: "playground-notifications-table-col-notification" }),
+                        React.createElement("col", { className: "playground-notifications-table-col-type" }),
+                        React.createElement("col", { className: "playground-notifications-table-col-status" }),
+                        React.createElement("col", { className: "playground-notifications-table-col-time" }),
+                        React.createElement("col", { className: "playground-notifications-table-col-actions" })
+                      ),
+                      React.createElement("thead", null,
+                        React.createElement("tr", null,
+                          React.createElement("th", null, "Notification"),
+                          React.createElement("th", null, "Type"),
+                          React.createElement("th", null, "Status"),
+                          React.createElement("th", null, "Time"),
+                          React.createElement("th", { className: "is-actions" }, "")
+                        )
+                      ),
+                      React.createElement("tbody", null,
+                        visibleNotificationPageItems.map((item) => {
+                          const Icon = getNotificationPageIcon(item);
+                          const canOpen = item.kind === "permission" || item.kind === "human_task" || item.kind === "team_invitation" || item.kind === "email_verification";
+                          const timeLabel = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "—";
+                          return React.createElement("tr", {
+                              key: item.kind + ":" + item.id,
+                              className: canOpen ? "is-clickable" : "",
+                              tabIndex: canOpen ? 0 : undefined,
+                              onClick: canOpen ? () => handleOpenNotificationPageItem(item) : undefined,
+                              onKeyDown: canOpen ? (event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  handleOpenNotificationPageItem(item);
+                                }
+                              } : undefined,
+                            },
+                            React.createElement("td", null,
+                              React.createElement("div", { className: "playground-notifications-table-main" },
+                                React.createElement("span", { className: "playground-notifications-table-icon-shell" },
+                                  React.createElement(Icon, { className: "playground-notifications-table-icon", strokeWidth: 1.8 })
+                                ),
+                                React.createElement("span", { className: "playground-notifications-table-copy" },
+                                  React.createElement("span", { className: "playground-team-table-title playground-notifications-table-title" }, item.label || item.kindLabel || "Notification"),
+                                  React.createElement("span", { className: "playground-team-table-meta playground-notifications-table-meta" }, item.text || item.meta || "Open notification")
+                                )
+                              )
+                            ),
+                            React.createElement("td", { className: "playground-auth-users-cell" }, item.kindLabel || "Notification"),
+                            React.createElement("td", { className: "playground-auth-users-cell" },
+                              React.createElement("span", { className: "playground-notifications-status-pill" + (item.unread ? " is-unread" : "") }, item.statusLabel || (item.unread ? "Unread" : "Read"))
+                            ),
+                            React.createElement("td", { className: "playground-auth-users-cell" }, timeLabel),
+                            React.createElement("td", { className: "is-actions" },
+                              item.kind === "team_invitation"
+                                ? React.createElement("div", {
+                                    className: "playground-notifications-row-actions",
+                                    onClick: (event) => event.stopPropagation(),
+                                  },
+                                    React.createElement("button", {
+                                      type: "button",
+                                      className: "notification-menu-action-button is-primary",
+                                      onClick: () => handleTeamInvitationDecision(item, "accept"),
+                                      disabled: Boolean(teamPageActionId),
+                                    }, "Accept"),
+                                    React.createElement("button", {
+                                      type: "button",
+                                      className: "notification-menu-action-button",
+                                      onClick: () => handleTeamInvitationDecision(item, "decline"),
+                                      disabled: Boolean(teamPageActionId),
+                                    }, "Decline")
+                                  )
+                                : canOpen
+                                  ? React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 })
+                                  : null
+                            )
+                          );
+                        })
+                      )
+                    )
+                  )
+          );
+        }
 
 	        function renderSettingsPageNav() {
 	          return renderUnifiedTopNav({
@@ -165520,7 +170540,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function renderConfigureHomeNav() {
           return renderUnifiedTopNav({
             className: "playground-configure-navbar",
-            pathItems: [{ label: "Configure" }, { label: "Overview" }],
+            pathItems: [{ label: "Configure" }, { label: configureHomeTab === "usage" ? "Usage" : "Overview" }],
           });
         }
 
@@ -167465,13 +172485,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
               item?.name,
               item?.displayName,
             ].filter(Boolean).join(" ")).toLowerCase();
-            if (/(github|gh\b)/.test(haystack)) {
+            if (/(github|gh\\b)/.test(haystack)) {
               return { id: "github", label: "GitHub" };
             }
-            if (/(gmail|\bmail\b|\bemail\b)/.test(haystack)) {
+            if (/(gmail|\\bmail\\b|\\bemail\\b)/.test(haystack)) {
               return { id: "gmail", label: "Gmail" };
             }
-            if (/(google[_ -]?drive|gdrive|\bdrive\b)/.test(haystack)) {
+            if (/(google[_ -]?drive|gdrive|\\bdrive\\b)/.test(haystack)) {
               return { id: "google_drive", label: "Google Drive" };
             }
             if (/(one[_ -]?drive|onedrive)/.test(haystack)) {
@@ -167652,71 +172672,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
           ];
           const activeConfigureUsageChart = configureUsageTabs.find((tab) => tab.id === configureUsageChartTab)
             || configureUsageTabs[0];
-          const resourceRows = [
-            {
-              title: String(runtimeAgents.length) + " Agents",
-              subtitle: "Configure models, instructions, teams, and permissions.",
-              Icon: Bot,
-              meta: realAgents.length > 0 ? "Live" : "Empty",
-              onClick: () => openResourcesView("agents"),
-            },
-            {
-              title: String(runtimeEnvironments.length) + " Computers",
-              subtitle: "Manage compute profiles, runtimes, and connected workspaces.",
-              Icon: Monitor,
-              meta: realEnvironments.length > 0 ? "Ready" : "Setup",
-              onClick: () => openResourcesView("computers"),
-            },
-            {
-              title: String(connectedPluginsCount) + " Connected Plugins",
-              subtitle: "Connect apps like GitHub, Google Drive, Notion, and Gmail.",
-              Icon: Cable,
-              meta: connectedPluginsCount > 0 ? "Connected" : "Add",
-              onClick: handleOpenPluginsShortcut,
-            },
-          ];
-          const actionRows = [
-            {
-              title: "Create an Agent",
-              subtitle: "Start with a blank agent configuration.",
-              Icon: Bot,
-              onClick: () => {
-                setSidebarWorkspaceMode("configure");
-                openResourcesView("agents", { preserveSidebarMode: true });
-                setAgentCreationPageRequestToken((current) => current + 1);
-              },
-            },
-            {
-              title: "Create a Computer",
-              subtitle: "Provision a runtime profile for agent work.",
-              Icon: Monitor,
-              onClick: () => openResourcesView("computers"),
-            },
-            {
-              title: "Browse Skills",
-              subtitle: "Enable agent capabilities for specialized workflows.",
-              Icon: Layers,
-              onClick: handleOpenSkillsShortcut,
-            },
-          ];
-          const renderConfigureRow = (row, className) => {
-            const Icon = row.Icon;
-            return React.createElement("button", {
-              key: row.title,
-              type: "button",
-              className,
-              onClick: row.onClick,
-            },
-              React.createElement("span", { className: className.includes("action") ? "playground-configure-action-icon" : "playground-configure-resource-icon" },
-                React.createElement(Icon, { strokeWidth: 1.75 })
-              ),
-              React.createElement("span", { className: "playground-configure-row-copy" },
-                React.createElement("span", { className: "playground-configure-row-title" }, row.title),
-                React.createElement("span", { className: "playground-configure-row-subtitle" }, row.subtitle)
-              ),
-              row.meta ? React.createElement("span", { className: "playground-configure-row-meta" }, row.meta) : React.createElement(ChevronRight, { className: "playground-configure-row-meta", strokeWidth: 1.8 })
-            );
-          };
           const formatConfigureUsageValue = (value) => {
             const numericValue = Math.max(0, Math.round(Number.isFinite(Number(value)) ? Number(value) : 0));
             if (numericValue >= 1000000) {
@@ -167826,6 +172781,59 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 )
               )
             );
+          const formatConfigureOverviewCount = (value) => {
+            const numericValue = Math.max(0, Math.round(Number(value || 0)));
+            return numericValue.toLocaleString("en-US");
+          };
+          const configureOverviewCards = [
+            {
+              id: "agents",
+              title: "Agents",
+              description: "Agents available for workspace runs.",
+              value: formatConfigureOverviewCount(runtimeAgents.length),
+              Icon: Bot,
+              onClick: () => openResourcesView("agents"),
+            },
+            {
+              id: "computers",
+              title: "Computers",
+              description: "Persistent workspaces agents can use.",
+              value: formatConfigureOverviewCount(runtimeEnvironments.length),
+              Icon: Monitor,
+              onClick: () => openResourcesView("computers"),
+            },
+            {
+              id: "skills",
+              title: "Skills",
+              description: "Capabilities agents can call during work.",
+              value: formatConfigureOverviewCount(demoSkills.length),
+              Icon: Sparkles,
+              onClick: () => openToolsView("skills"),
+            },
+          ];
+          const renderConfigureOverviewCards = () =>
+            React.createElement("section", { className: "playground-configure-overview-cards", "aria-label": "Workspace resources" },
+              configureOverviewCards.map((card) =>
+                React.createElement("button", {
+                    key: card.id,
+                    type: "button",
+                    className: "playground-configure-overview-card",
+                    onClick: card.onClick,
+                  },
+                  React.createElement("div", { className: "playground-configure-overview-card-top" },
+                    React.createElement("span", { className: "playground-configure-overview-card-icon", "aria-hidden": "true" },
+                      React.createElement(card.Icon, { strokeWidth: 1.8 })
+                    ),
+                    React.createElement(ArrowUpRight, { className: "playground-configure-overview-card-arrow", strokeWidth: 1.8 })
+                  ),
+                  React.createElement("div", { className: "playground-configure-overview-card-copy" },
+                    React.createElement("div", { className: "playground-configure-overview-card-value" }, card.value),
+                    React.createElement("div", { className: "playground-configure-overview-card-title" }, card.title),
+                    React.createElement("div", { className: "playground-configure-overview-card-description" }, card.description)
+                  )
+                )
+              )
+            );
 
           return React.createElement("div", { className: "playground-configure-home playground-develop-home" },
             React.createElement("div", { className: "playground-configure-home-inner playground-develop-home-inner" },
@@ -167848,30 +172856,24 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 React.createElement("div", { className: "playground-project-overview-chart-tabs" },
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-project-overview-chart-tab playground-develop-tab is-active",
+                    className: "playground-project-overview-chart-tab playground-develop-tab" + (configureHomeTab === "overview" ? " is-active" : ""),
+                    onClick: () => setConfigureHomeTab("overview"),
+                    "aria-pressed": configureHomeTab === "overview" ? "true" : "false",
                   }, "Overview"),
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-project-overview-chart-tab playground-develop-tab",
-                    onClick: () => openSettingsPage("costs-overview"),
+                    className: "playground-project-overview-chart-tab playground-develop-tab" + (configureHomeTab === "usage" ? " is-active" : ""),
+                    onClick: () => setConfigureHomeTab("usage"),
+                    "aria-pressed": configureHomeTab === "usage" ? "true" : "false",
                   }, "Usage")
                 )
               ),
-              renderConfigureUsageChart(),
-              React.createElement("div", { className: "playground-configure-sections" },
-                React.createElement("section", { className: "playground-configure-section" },
-                  React.createElement("h2", { className: "playground-configure-section-title" }, "Workspace setup"),
-                  React.createElement("div", { className: "playground-configure-resource-list" },
-                    resourceRows.map((row) => renderConfigureRow(row, "playground-configure-resource-row"))
+              configureHomeTab === "usage"
+                ? renderSettingsPage({ section: "costs-overview", embedded: true })
+                : React.createElement(React.Fragment, null,
+                    renderConfigureOverviewCards(),
+                    renderConfigureNotificationsSection()
                   )
-                ),
-                React.createElement("section", { className: "playground-configure-section" },
-                  React.createElement("h2", { className: "playground-configure-section-title" }, "Create or configure"),
-                  React.createElement("div", { className: "playground-configure-action-list" },
-                    actionRows.map((row) => renderConfigureRow(row, "playground-configure-action-row"))
-                  )
-                )
-              )
             )
           );
         }
@@ -170045,6 +175047,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               mediaMode: imagineMediaMode,
                               filterMode: imagineFilterMode,
                               sortMode: imagineSortMode,
+                              focusedTemplateId: imagineTemplateSelectionRequest?.templateId || "",
+                              focusedTemplateSelectionToken: imagineTemplateSelectionRequest?.token || "",
                               onActiveViewChange: setImagineActiveView,
                               onMediaModeChange: setImagineMediaMode,
                               onOpenPlansBudget: () => {
@@ -172593,6 +177597,510 @@ async function proxyUpstreamGet(req, res, upstreamPath, options = {}) {
   }
 }
 
+const PROXY_TRACE_RING_DEFINITIONS = {
+  1: {
+    ring: "ring_1",
+    ringId: 1,
+    ringLabel: "Ring 1",
+    ringDescription: "Local workspace actions",
+  },
+  2: {
+    ring: "ring_2",
+    ringId: 2,
+    ringLabel: "Ring 2",
+    ringDescription: "Shared workspace or outbound communication actions",
+  },
+  3: {
+    ring: "ring_3",
+    ringId: 3,
+    ringLabel: "Ring 3",
+    ringDescription: "Public publishing or high-impact external actions",
+  },
+};
+
+function normalizeProxyTraceRingId(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.min(3, Math.max(1, Math.round(value)));
+  }
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) {
+    return 1;
+  }
+  if (normalized === "3" || normalized === "ring_3" || normalized === "ring-3" || normalized === "ring 3") {
+    return 3;
+  }
+  if (normalized === "2" || normalized === "ring_2" || normalized === "ring-2" || normalized === "ring 2") {
+    return 2;
+  }
+  return 1;
+}
+
+function getProxyTraceRingDefinition(value) {
+  return PROXY_TRACE_RING_DEFINITIONS[normalizeProxyTraceRingId(value)] || PROXY_TRACE_RING_DEFINITIONS[1];
+}
+
+function getProxyPlainObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function normalizeProxyTraceArray(data, keys = []) {
+  if (Array.isArray(data)) {
+    return data;
+  }
+  if (!data || typeof data !== "object") {
+    return [];
+  }
+  for (const key of keys) {
+    if (Array.isArray(data[key])) {
+      return data[key];
+    }
+  }
+  if (Array.isArray(data.data)) return data.data;
+  if (Array.isArray(data.items)) return data.items;
+  if (Array.isArray(data.results)) return data.results;
+  return [];
+}
+
+function readProxyTraceText(value, maxLength = 260) {
+  let text = "";
+  if (typeof value === "string") {
+    text = value;
+  } else if (value && typeof value === "object") {
+    const record = value;
+    const metadata = getProxyPlainObject(record.metadata);
+    const candidates = [
+      record.summary,
+      record.message,
+      record.text,
+      record.title,
+      record.eventType,
+      record.event_type,
+      metadata.summary,
+      metadata.message,
+      metadata.command,
+      metadata.output,
+      metadata.result,
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate === "string" && candidate.trim()) {
+        text = candidate;
+        break;
+      }
+      if (candidate && typeof candidate === "object") {
+        try {
+          text = JSON.stringify(candidate);
+          break;
+        } catch {}
+      }
+    }
+  }
+  const compact = String(text || "").replace(/\s+/g, " ").trim();
+  if (compact.length <= maxLength) {
+    return compact;
+  }
+  return `${compact.slice(0, Math.max(0, maxLength - 1)).trim()}...`;
+}
+
+function readProxyTraceTimestamp(record, fallback = "") {
+  const value = (
+    record?.createdAt
+    || record?.created_at
+    || record?.timestamp
+    || record?.updatedAt
+    || record?.updated_at
+    || fallback
+  );
+  const text = String(value || "").trim();
+  if (!text) {
+    return "";
+  }
+  const parsed = Date.parse(text);
+  return Number.isFinite(parsed) ? new Date(parsed).toISOString() : text;
+}
+
+function getProxyTraceActionType(record) {
+  const metadata = getProxyPlainObject(record?.metadata);
+  return String(
+    record?.type
+    || record?.eventType
+    || record?.event_type
+    || record?.tool
+    || record?.toolName
+    || record?.tool_name
+    || metadata.type
+    || metadata.eventType
+    || metadata.event_type
+    || metadata.tool
+    || metadata.toolName
+    || metadata.tool_name
+    || ""
+  ).trim().toLowerCase();
+}
+
+function classifyProxyTraceActionRing(record) {
+  const metadata = getProxyPlainObject(record?.metadata);
+  const directRing = (
+    record?.ringId
+    || record?.ring_id
+    || record?.ring
+    || record?.permissionRing
+    || record?.permission_ring
+    || metadata.ringId
+    || metadata.ring_id
+    || metadata.ring
+    || metadata.permissionRing
+    || metadata.permission_ring
+  );
+  if (directRing) {
+    return getProxyTraceRingDefinition(directRing);
+  }
+
+  const type = getProxyTraceActionType(record);
+  const text = [
+    type,
+    readProxyTraceText(record, 1200),
+    typeof metadata.command === "string" ? metadata.command : "",
+    typeof metadata.url === "string" ? metadata.url : "",
+    typeof metadata.endpoint === "string" ? metadata.endpoint : "",
+  ].join(" ").toLowerCase();
+
+  if (
+    /\b(git\s+push|gh\s+release|deploy|publish|production|stripe|payment|public\s+url)\b/.test(text)
+    || type.includes("deploy")
+    || type.includes("publish")
+    || type.includes("payment")
+  ) {
+    return PROXY_TRACE_RING_DEFINITIONS[3];
+  }
+
+  if (
+    /\b(send\s+email|email|gmail|slack|webhook|post\s+https?:|curl\s+-x\s+post|shared|team|database|project|task|ticket)\b/.test(text)
+    || type.includes("email")
+    || type.includes("message")
+    || type.includes("database")
+    || type.includes("project")
+    || type.includes("task")
+    || type.includes("permission")
+  ) {
+    return PROXY_TRACE_RING_DEFINITIONS[2];
+  }
+
+  return PROXY_TRACE_RING_DEFINITIONS[1];
+}
+
+function getProxyTraceActionCategory(action) {
+  const type = String(action?.type || "").toLowerCase();
+  if (type.includes("firecrawl") || type.includes("search") || type.includes("web")) return "web";
+  if (type.includes("file") || type.includes("read") || type.includes("write") || type.includes("list")) return "files";
+  if (type.includes("bash") || type.includes("command") || type.includes("tool")) return "commands";
+  if (type.includes("thread") || type.includes("message") || type.includes("llm")) return "reasoning";
+  if (type.includes("permission")) return "permission";
+  return type || "activity";
+}
+
+function getProxyTraceActionTitle(record, fallback = "Trace action") {
+  const metadata = getProxyPlainObject(record?.metadata);
+  const title = String(
+    record?.title
+    || record?.label
+    || record?.name
+    || metadata.title
+    || metadata.label
+    || metadata.name
+    || ""
+  ).trim();
+  if (title) {
+    return title;
+  }
+  const type = getProxyTraceActionType(record);
+  if (type.includes("firecrawl")) return "Firecrawl action";
+  if (type.includes("web_search") || type.includes("search")) return "Web search";
+  if (type.includes("file_change")) return "Updated files";
+  if (type.includes("read_file")) return "Read files";
+  if (type.includes("bash") || type.includes("command")) return "Ran command";
+  if (type.includes("permission")) return "Permission check";
+  return fallback;
+}
+
+function collectProxyTraceTouchedResources(record) {
+  const resources = [];
+  const metadata = getProxyPlainObject(record?.metadata);
+  const candidates = [
+    record?.path,
+    record?.filePath,
+    record?.file_path,
+    record?.resource,
+    record?.resourceId,
+    metadata.path,
+    metadata.filePath,
+    metadata.file_path,
+    metadata.url,
+    metadata.resource,
+    metadata.resourceId,
+  ];
+  for (const candidate of candidates) {
+    const text = String(candidate || "").trim();
+    if (text) resources.push(text);
+  }
+  for (const list of [record?.files, record?.filePaths, metadata.files, metadata.filePaths]) {
+    if (!Array.isArray(list)) continue;
+    for (const item of list) {
+      const text = typeof item === "string" ? item : String(item?.path || item?.filePath || item?.id || "").trim();
+      if (text) resources.push(text);
+    }
+  }
+  return Array.from(new Set(resources)).slice(0, 12);
+}
+
+function buildProxyTraceAction(record, options = {}) {
+  const source = options.source || "step";
+  const metadata = getProxyPlainObject(record?.metadata);
+  const sourceId = String(record?.id || record?.stepId || record?.step_id || record?.logId || record?.log_id || options.index || "").trim();
+  const timestamp = readProxyTraceTimestamp(record, options.fallbackTimestamp || "");
+  const ringDefinition = classifyProxyTraceActionRing(record);
+  const durationMs = Number(
+    record?.durationMs
+    || record?.duration_ms
+    || metadata.durationMs
+    || metadata.duration_ms
+    || 0
+  );
+  const tokenCount = Number(
+    record?.tokenCount
+    || record?.token_count
+    || record?.tokens
+    || metadata.tokenCount
+    || metadata.token_count
+    || metadata.tokens
+    || 0
+  );
+  return {
+    id: `${source}:${sourceId || options.index || Math.random().toString(36).slice(2)}`,
+    source,
+    sourceId,
+    threadId: options.threadId || record?.threadId || record?.thread_id || "",
+    stepId: String(record?.stepId || record?.step_id || (source === "step" ? record?.id : "") || "").trim(),
+    stepSequence: Number(record?.sequence || record?.stepSequence || record?.step_sequence || options.index || 0) || 0,
+    snapshotBeforeId: record?.snapshotBeforeId || record?.snapshot_before_id || metadata.snapshotBeforeId || metadata.snapshot_before_id || null,
+    snapshotAfterId: record?.snapshotAfterId || record?.snapshot_after_id || metadata.snapshotAfterId || metadata.snapshot_after_id || null,
+    createdAt: timestamp,
+    timestamp,
+    type: getProxyTraceActionType(record) || source,
+    title: getProxyTraceActionTitle(record, source === "log" ? "Trace log" : "Trace step"),
+    summary: readProxyTraceText(record, 320),
+    status: String(record?.status || metadata.status || "").trim() || "completed",
+    durationMs: Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0,
+    tokenCount: Number.isFinite(tokenCount) && tokenCount > 0 ? tokenCount : 0,
+    touchedResources: collectProxyTraceTouchedResources(record),
+    ...ringDefinition,
+    raw: record,
+  };
+}
+
+function shouldStartProxyTraceSequence(previous, action) {
+  if (!previous) return true;
+  const previousCategory = getProxyTraceActionCategory(previous);
+  const nextCategory = getProxyTraceActionCategory(action);
+  if (previousCategory !== nextCategory) return true;
+  if (previous.ringId !== action.ringId && Math.max(previous.ringId || 1, action.ringId || 1) >= 2) return true;
+  const previousTime = Date.parse(previous.timestamp || previous.createdAt || "");
+  const nextTime = Date.parse(action.timestamp || action.createdAt || "");
+  if (Number.isFinite(previousTime) && Number.isFinite(nextTime) && nextTime - previousTime > 12 * 60 * 1000) {
+    return true;
+  }
+  return false;
+}
+
+function buildProxyTraceSequences(actions) {
+  const orderedActions = [...actions].sort((left, right) => {
+    const leftTime = Date.parse(left.timestamp || left.createdAt || "");
+    const rightTime = Date.parse(right.timestamp || right.createdAt || "");
+    if (Number.isFinite(leftTime) && Number.isFinite(rightTime) && leftTime !== rightTime) {
+      return leftTime - rightTime;
+    }
+    return (left.stepSequence || 0) - (right.stepSequence || 0);
+  });
+  const groups = [];
+  let current = [];
+  for (const action of orderedActions) {
+    if (current.length === 0 || shouldStartProxyTraceSequence(current[current.length - 1], action) || current.length >= 10) {
+      if (current.length > 0) groups.push(current);
+      current = [action];
+    } else {
+      current.push(action);
+    }
+  }
+  if (current.length > 0) groups.push(current);
+
+  return groups.map((group, index) => {
+    const first = group[0];
+    const last = group[group.length - 1] || first;
+    const highestRingId = Math.max(...group.map((action) => action.ringId || 1));
+    const ringDefinition = getProxyTraceRingDefinition(highestRingId);
+    const resources = Array.from(new Set(group.flatMap((action) => Array.isArray(action.touchedResources) ? action.touchedResources : []))).slice(0, 16);
+    const durationMs = group.reduce((sum, action) => sum + Math.max(0, Number(action.durationMs || 0)), 0);
+    const tokenCount = group.reduce((sum, action) => sum + Math.max(0, Number(action.tokenCount || 0)), 0);
+    const category = getProxyTraceActionCategory(first);
+    const actionWord = group.length === 1 ? "action" : "actions";
+    const titleByCategory = {
+      web: "Investigated external information",
+      files: "Worked with local files",
+      commands: "Ran local commands",
+      reasoning: "Reasoned through the task",
+      permission: "Checked permissions",
+    };
+    return {
+      id: `trace_sequence:proxy:${index + 1}:${first.sourceId || first.id}`,
+      source: "trace_sequence",
+      type: "trace_sequence",
+      title: titleByCategory[category] || first.title || `Trace sequence ${index + 1}`,
+      summary: `${group.length} ${actionWord} grouped from ${ringDefinition.ringLabel.toLowerCase()} activity.`,
+      rationale: group.map((action) => action.summary || action.title).filter(Boolean).slice(0, 3).join(" "),
+      createdAt: first.createdAt || "",
+      timestamp: first.timestamp || first.createdAt || "",
+      updatedAt: last.timestamp || last.createdAt || first.createdAt || "",
+      actionCount: group.length,
+      actionIds: group.map((action) => action.id),
+      stepId: first.stepId || "",
+      startStepId: first.stepId || "",
+      endStepId: last.stepId || first.stepId || "",
+      stepSequence: first.stepSequence || 0,
+      durationMs,
+      tokenCount,
+      touchedResources: resources,
+      decisionStatus: highestRingId >= 3 ? "needs-review" : "grounded",
+      ...ringDefinition,
+      raw: {
+        source: "proxy-deterministic-fallback",
+        category,
+        actions: group,
+      },
+    };
+  });
+}
+
+function getProxyThreadRecord(data) {
+  return unwrapProxyDataRecord(data, ["thread"]);
+}
+
+async function proxyThreadTraceClustersGet(req, res, threadId) {
+  const normalizedThreadId = String(threadId || "").trim();
+  if (!normalizedThreadId) {
+    return sendJson(res, 400, {
+      error: "Thread id is required",
+      message: "A thread id is required to load trace clusters.",
+    });
+  }
+
+  const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
+  const limit = Math.max(20, Math.min(400, Number(requestUrl.searchParams.get("limit") || 160) || 160));
+  const encodedThreadId = encodeURIComponent(normalizedThreadId);
+  const upstreamPath = `/threads/${encodedThreadId}/trace-clusters${requestUrl.search || ""}`;
+
+  try {
+    const upstreamResponse = await fetchUpstreamJsonForProxyExactPath(req, upstreamPath, "GET");
+    if (upstreamResponse.status !== 404) {
+      return sendJson(res, upstreamResponse.status, upstreamResponse.data);
+    }
+
+    const [threadResponse, stepsResponse, logsResponse] = await Promise.all([
+      fetchUpstreamJsonForProxyExactPath(req, `/threads/${encodedThreadId}`, "GET").catch((error) => ({
+        status: 502,
+        data: { error: "Failed to load thread", message: error instanceof Error ? error.message : String(error) },
+      })),
+      fetchUpstreamJsonForProxyExactPath(req, `/threads/${encodedThreadId}/steps?limit=${encodeURIComponent(String(limit))}&compact=1`, "GET").catch((error) => ({
+        status: 502,
+        data: { error: "Failed to load thread steps", message: error instanceof Error ? error.message : String(error) },
+      })),
+      fetchUpstreamJsonForProxyExactPath(req, `/threads/${encodedThreadId}/logs?compact=1&includeConversation=0&limit=${encodeURIComponent(String(limit))}`, "GET").catch((error) => ({
+        status: 502,
+        data: { error: "Failed to load thread logs", message: error instanceof Error ? error.message : String(error) },
+      })),
+    ]);
+
+    if (threadResponse.status === 401 || threadResponse.status === 403 || stepsResponse.status === 401 || stepsResponse.status === 403 || logsResponse.status === 401 || logsResponse.status === 403) {
+      return sendJson(res, 401, {
+        error: "Unauthorized",
+        message: "Sign in with Computer Agents or provide an API key.",
+      });
+    }
+
+    const thread = threadResponse.status < 400 ? getProxyThreadRecord(threadResponse.data) : {};
+    const steps = stepsResponse.status < 400 ? normalizeProxyTraceArray(stepsResponse.data, ["steps"]) : [];
+    const logs = logsResponse.status < 400 ? normalizeProxyTraceArray(logsResponse.data, ["logs"]) : [];
+
+    if (steps.length === 0 && logs.length === 0 && stepsResponse.status >= 400 && logsResponse.status >= 400) {
+      return sendJson(res, stepsResponse.status || logsResponse.status || 502, {
+        error: "Failed to load trace clusters",
+        message: stepsResponse.data?.message || logsResponse.data?.message || "The trace endpoint is not deployed and fallback data could not be loaded.",
+        upstreamTraceStatus: upstreamResponse.status,
+      });
+    }
+
+    const stepActions = steps.map((step, index) => buildProxyTraceAction(step, {
+      source: "step",
+      index: index + 1,
+      threadId: normalizedThreadId,
+    }));
+    const stepSourceIds = new Set(stepActions.map((action) => action.sourceId).filter(Boolean));
+    const logActions = logs
+      .map((log, index) => buildProxyTraceAction(log, {
+        source: "log",
+        index: index + 1,
+        threadId: normalizedThreadId,
+      }))
+      .filter((action) => {
+        if (!action.sourceId || !stepSourceIds.has(action.sourceId)) {
+          return true;
+        }
+        return action.ringId >= 2;
+      });
+    const actions = [...stepActions, ...logActions].filter((action) => action.title || action.summary);
+    const sequences = buildProxyTraceSequences(actions);
+    const generatedAt = new Date().toISOString();
+
+    return sendJson(res, 200, {
+      object: "thread.trace_clusters",
+      threadId: normalizedThreadId,
+      thread: thread && typeof thread === "object" ? {
+        id: thread.id || normalizedThreadId,
+        title: thread.title || thread.name || "",
+        status: thread.status || "",
+      } : { id: normalizedThreadId },
+      generatedAt,
+      observerModel: null,
+      observerStatus: "proxy-fallback",
+      observerCached: false,
+      traceClusters: {
+        source: "proxy-deterministic-fallback",
+        generatedAt,
+        observerStatus: "proxy-fallback",
+        observerModel: null,
+        actions,
+        sequences,
+        decisions: sequences,
+        stats: {
+          actionCount: actions.length,
+          sequenceCount: sequences.length,
+          ring1Count: actions.filter((action) => action.ringId === 1).length,
+          ring2Count: actions.filter((action) => action.ringId === 2).length,
+          ring3Count: actions.filter((action) => action.ringId === 3).length,
+          fallback: true,
+          upstreamTraceStatus: upstreamResponse.status,
+        },
+      },
+      actions,
+      sequences,
+      decisions: sequences,
+    });
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to load trace clusters",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 async function proxyProjectResourceIndexGet(req, res, projectId) {
   const normalizedProjectId = String(projectId || "").trim();
   if (!normalizedProjectId) {
@@ -172712,6 +178220,289 @@ async function proxyProjectResourceIndexGet(req, res, projectId) {
       message: error instanceof Error ? error.message : String(error),
     });
   }
+}
+
+function normalizeTeamMemberProfileLookupString(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function collectTeamMemberProfileLookupIdentifiers(body) {
+  const emails = new Set();
+  const userIds = new Set();
+  const addRecord = (record) => {
+    if (!record || typeof record !== "object" || Array.isArray(record)) {
+      return;
+    }
+    const sources = [
+      record,
+      record.user,
+      record.profile,
+      record.account,
+      record.member,
+      record.identity,
+      record.metadata,
+      record.metadata?.user,
+      record.metadata?.profile,
+      record.metadata?.account,
+    ].filter((value) => value && typeof value === "object" && !Array.isArray(value));
+    sources.slice().forEach((source) => {
+      [source.providerUserInfo, source.providerData].forEach((providerProfiles) => {
+        if (!Array.isArray(providerProfiles)) {
+          return;
+        }
+        providerProfiles.forEach((providerProfile) => {
+          if (providerProfile && typeof providerProfile === "object" && !Array.isArray(providerProfile)) {
+            sources.push(providerProfile);
+          }
+        });
+      });
+    });
+    sources.forEach((source) => {
+      [
+        source.email,
+        source.emailAddress,
+        source.email_address,
+        source.mail,
+        source.primaryEmail,
+        source.primary_email,
+      ].forEach((value) => {
+        const email = normalizeTeamMemberProfileLookupString(value).toLowerCase();
+        if (email && email.includes("@")) {
+          emails.add(email);
+        }
+      });
+      [
+        source.userId,
+        source.user_id,
+        source.uid,
+        source.id,
+        source.localId,
+        source.local_id,
+      ].forEach((value) => {
+        const userId = normalizeTeamMemberProfileLookupString(value);
+        if (userId) {
+          userIds.add(userId);
+        }
+      });
+    });
+  };
+  (Array.isArray(body?.members) ? body.members : []).forEach(addRecord);
+  (Array.isArray(body?.emails) ? body.emails : []).forEach((value) => {
+    const email = normalizeTeamMemberProfileLookupString(value).toLowerCase();
+    if (email && email.includes("@")) {
+      emails.add(email);
+    }
+  });
+  (Array.isArray(body?.userIds) ? body.userIds : []).forEach((value) => {
+    const userId = normalizeTeamMemberProfileLookupString(value);
+    if (userId) {
+      userIds.add(userId);
+    }
+  });
+  return {
+    emails: Array.from(emails).slice(0, 100),
+    userIds: Array.from(userIds).slice(0, 100),
+  };
+}
+
+function normalizeTeamMemberLookupProfilesPayload(data) {
+  if (!data || typeof data !== "object") {
+    return [];
+  }
+  const candidates = [
+    data,
+    data.profile,
+    data.user,
+    data.account,
+    data.member,
+    data.profiles,
+    data.memberProfiles,
+    data.member_profiles,
+    data.users,
+    data.accounts,
+    data.items,
+    data.results,
+    data.data,
+    data.data?.profile,
+    data.data?.user,
+    data.data?.account,
+    data.data?.member,
+    data.data?.profiles,
+    data.data?.memberProfiles,
+    data.data?.users,
+    data.data?.accounts,
+    data.data?.items,
+    data.data?.results,
+    data.included?.profile,
+    data.included?.user,
+    data.included?.account,
+    data.included?.member,
+    data.included?.profiles,
+    data.included?.users,
+    data.included?.accounts,
+  ];
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      return candidate.filter((profile) => profile && typeof profile === "object" && !Array.isArray(profile));
+    }
+    if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) {
+      if (
+        candidate.displayName
+        || candidate.display_name
+        || candidate.name
+        || candidate.fullName
+        || candidate.full_name
+        || candidate.email
+        || candidate.emailAddress
+        || candidate.mail
+        || candidate.userId
+        || candidate.user_id
+        || candidate.uid
+        || candidate.localId
+        || candidate.local_id
+      ) {
+        return [candidate];
+      }
+      const values = Object.values(candidate).filter((profile) => profile && typeof profile === "object" && !Array.isArray(profile));
+      if (values.length > 0) {
+        return values;
+      }
+    }
+  }
+  return [];
+}
+
+async function lookupTeamMemberProfilesViaFirebase(req, identifiers) {
+  const idToken = extractFeedbackSummaryIdToken(req);
+  const apiKey = (
+    process.env.FIREBASE_REST_API_KEY
+    || process.env.NEXT_PUBLIC_FIREBASE_API_KEY
+    || "AIzaSyC_aSR8bjU02Kb1ROYUA7Yki_2Fogvs6-o"
+  ).trim();
+  if (!idToken || !apiKey || (!identifiers.emails.length && !identifiers.userIds.length)) {
+    return [];
+  }
+  try {
+    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(apiKey)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        idToken,
+        email: identifiers.emails,
+        localId: identifiers.userIds,
+      }),
+    });
+    if (!response.ok) {
+      return [];
+    }
+    const payload = await response.json().catch(() => ({}));
+    return (Array.isArray(payload?.users) ? payload.users : []).map((user) => {
+      const providerUserInfo = Array.isArray(user.providerUserInfo) ? user.providerUserInfo : [];
+      const providerDisplayName = providerUserInfo
+        .map((entry) => String(entry?.displayName || entry?.name || "").trim())
+        .find(Boolean) || "";
+      const providerPhotoUrl = providerUserInfo
+        .map((entry) => String(entry?.photoURL || entry?.photoUrl || entry?.picture || "").trim())
+        .find(Boolean) || "";
+      const displayName = String(user.displayName || providerDisplayName || "").trim();
+      const photoUrl = String(user.photoURL || user.photoUrl || user.picture || providerPhotoUrl || "").trim();
+      return {
+        id: user.localId || user.userId || user.id || "",
+        uid: user.localId || user.userId || user.id || "",
+        userId: user.localId || user.userId || user.id || "",
+        localId: user.localId || "",
+        email: user.email || "",
+        displayName,
+        name: displayName,
+        photoURL: photoUrl,
+        photoUrl,
+        providerUserInfo,
+        providerData: providerUserInfo,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function proxyTeamMemberProfileLookup(req, res) {
+  let body = {};
+  try {
+    body = await readRequestBody(req);
+  } catch (error) {
+    return sendJson(res, 400, {
+      error: "Invalid request body",
+      message: error instanceof Error ? error.message : "Invalid JSON body.",
+    });
+  }
+  if (!hasAiosSession(req) && !readOptionalApiKey(req, body)) {
+    return sendJson(res, 401, {
+      error: "Unauthorized",
+      message: "Sign in with Computer Agents or provide an API key.",
+    });
+  }
+  const teamId = normalizeTeamMemberProfileLookupString(body?.teamId);
+  const identifiers = collectTeamMemberProfileLookupIdentifiers(body);
+  const lookupBody = {
+    teamId,
+    emails: identifiers.emails,
+    userIds: identifiers.userIds,
+    memberIds: identifiers.userIds,
+    ids: identifiers.userIds,
+  };
+  const lookupPaths = [
+    teamId ? `/teams/${encodeURIComponent(teamId)}/member-profiles/lookup` : "",
+    teamId ? `/teams/${encodeURIComponent(teamId)}/member-profiles:lookup` : "",
+    teamId ? `/teams/${encodeURIComponent(teamId)}/members/profiles/lookup` : "",
+    teamId ? `/teams/${encodeURIComponent(teamId)}/members/profile-lookup` : "",
+    teamId ? `/teams/${encodeURIComponent(teamId)}/users/lookup` : "",
+    "/users/lookup",
+    "/users/profiles/lookup",
+    "/user-profiles/lookup",
+    "/profiles/lookup",
+    "/accounts/lookup",
+  ].filter(Boolean);
+  for (const path of lookupPaths) {
+    try {
+      const result = await fetchUpstreamJsonForProxyExactPath(req, path, "POST", lookupBody);
+      if (result.status >= 200 && result.status < 300) {
+        const profiles = normalizeTeamMemberLookupProfilesPayload(result.data);
+        if (profiles.length > 0) {
+          return sendJson(res, 200, {
+            profiles,
+            source: path,
+          });
+        }
+      }
+    } catch {}
+  }
+  const getPaths = [
+    teamId ? `/teams/${encodeURIComponent(teamId)}/member-profiles?emails=${encodeURIComponent(identifiers.emails.join(","))}&userIds=${encodeURIComponent(identifiers.userIds.join(","))}` : "",
+    teamId ? `/teams/${encodeURIComponent(teamId)}/members/profiles?emails=${encodeURIComponent(identifiers.emails.join(","))}&userIds=${encodeURIComponent(identifiers.userIds.join(","))}` : "",
+    `/users?emails=${encodeURIComponent(identifiers.emails.join(","))}&userIds=${encodeURIComponent(identifiers.userIds.join(","))}`,
+    `/users/profiles?emails=${encodeURIComponent(identifiers.emails.join(","))}&userIds=${encodeURIComponent(identifiers.userIds.join(","))}`,
+    `/user-profiles?emails=${encodeURIComponent(identifiers.emails.join(","))}&userIds=${encodeURIComponent(identifiers.userIds.join(","))}`,
+    `/profiles?emails=${encodeURIComponent(identifiers.emails.join(","))}&userIds=${encodeURIComponent(identifiers.userIds.join(","))}`,
+  ].filter(Boolean);
+  for (const path of getPaths) {
+    try {
+      const result = await fetchUpstreamJsonForProxyExactPath(req, path, "GET");
+      if (result.status >= 200 && result.status < 300) {
+        const profiles = normalizeTeamMemberLookupProfilesPayload(result.data);
+        if (profiles.length > 0) {
+          return sendJson(res, 200, {
+            profiles,
+            source: path,
+          });
+        }
+      }
+    } catch {}
+  }
+  const firebaseProfiles = await lookupTeamMemberProfilesViaFirebase(req, identifiers);
+  return sendJson(res, 200, {
+    profiles: firebaseProfiles,
+    source: firebaseProfiles.length > 0 ? "firebase" : "none",
+  });
 }
 
 function readAdminKey(req) {
@@ -176782,13 +182573,18 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === "POST" && url.pathname === "/api/real/team-member-profiles/lookup") {
+    void proxyTeamMemberProfileLookup(req, res);
+    return;
+  }
+
   const teamsProxyMatch = url.pathname.match(/^\/api\/real\/teams(?:\/(.*))?$/);
   if (teamsProxyMatch && ["GET", "POST", "PATCH", "PUT", "DELETE"].includes(req.method || "")) {
     const suffix = teamsProxyMatch[1]
       ? "/" + teamsProxyMatch[1].split("/").map((segment) => encodeURIComponent(decodeURIComponent(segment))).join("/")
       : "";
     if (req.method === "GET") {
-      void proxyUpstreamGet(req, res, "/teams" + suffix);
+      void proxyUpstreamGet(req, res, "/teams" + suffix + (url.search || ""));
     } else {
       void proxyUpstreamJsonRequest(req, res, "/teams" + suffix, req.method);
     }
@@ -176954,6 +182750,12 @@ const server = http.createServer((req, res) => {
   const threadStepsMatch = url.pathname.match(/^\/api\/real\/threads\/([^/]+)\/steps$/);
   if (req.method === "GET" && threadStepsMatch) {
     void proxyUpstreamGet(req, res, `/threads/${encodeURIComponent(decodeURIComponent(threadStepsMatch[1]))}/steps`);
+    return;
+  }
+
+  const threadTraceClustersMatch = url.pathname.match(/^\/api\/real\/threads\/([^/]+)\/trace-clusters$/);
+  if (req.method === "GET" && threadTraceClustersMatch) {
+    void proxyThreadTraceClustersGet(req, res, decodeURIComponent(threadTraceClustersMatch[1]));
     return;
   }
 
