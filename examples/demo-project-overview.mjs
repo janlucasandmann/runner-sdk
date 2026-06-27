@@ -2933,7 +2933,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-settings-rules-section {
-        margin-bottom: 42px;
+        margin-bottom: 0;
       }
 
       .playground-project-settings-rules-section .playground-project-overview-rules-empty .playground-tasks-empty-title {
@@ -2947,6 +2947,47 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         min-width: 0;
         position: relative;
         overflow: visible;
+        margin-bottom: 42px;
+      }
+
+      .playground-project-settings-reduced-access {
+        gap: 18px;
+      }
+
+      .playground-project-settings-reduced-access .playground-project-team-role-permission-page {
+        width: 100%;
+      }
+
+      .playground-project-settings-reduced-access .playground-team-role-permission-title {
+        font-size: 14px;
+        line-height: 1.3;
+      }
+
+      .playground-project-settings-reduced-access .playground-agents-permission-select-shell::after {
+        display: none;
+        content: none;
+      }
+
+      .playground-project-settings-reduced-access .playground-agents-permission-select {
+        padding-right: 0;
+        cursor: default;
+      }
+
+      .playground-project-settings-source-button {
+        flex: 0 0 auto;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        color: rgba(255, 255, 255, 0.58);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.2;
+        cursor: pointer;
+      }
+
+      .playground-project-settings-source-button:hover {
+        color: #fff;
       }
 
       .playground-project-teams-add-button,
@@ -5133,7 +5174,17 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-rule-editor-modal {
+        width: min(520px, calc(100vw - 32px));
         max-width: min(520px, calc(100vw - 32px));
+      }
+
+      .playground-project-overview-rule-description-editor {
+        margin-top: 0;
+        padding-top: 0;
+      }
+
+      .playground-project-overview-rule-editor-modal .playground-tasks-project-modal-actions {
+        margin-top: 16px;
       }
 
       .playground-project-overview-outcome-delete-button {
@@ -5148,7 +5199,6 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-rule-modal-textarea {
         min-height: 112px;
-        resize: vertical;
       }
 
       .playground-project-overview-outcome-ticket-list {
@@ -5443,6 +5493,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         line-height: 1.55;
         font-weight: 400;
         cursor: text;
+      }
+
+      .playground-project-overview-rule-copy.is-read-only {
+        cursor: default;
       }
 
       .playground-project-overview-rule-copy.tb-runner-chat {
@@ -6232,9 +6286,104 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
           const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
           const normalizedProjectOverviewHomeTab = projectOverviewHomeTab === "rules" ? "strategy" : projectOverviewHomeTab;
-	          const activeProjectOverviewHomeTab = normalizedProjectOverviewHomeTab === "resources" || normalizedProjectOverviewHomeTab === "strategy" || normalizedProjectOverviewHomeTab === "permissions"
-	            ? normalizedProjectOverviewHomeTab
-	            : "general";
+          const projectOverviewSettingsMetadata = projectOverviewDraft?.metadata && typeof projectOverviewDraft.metadata === "object" && !Array.isArray(projectOverviewDraft.metadata)
+            ? projectOverviewDraft.metadata
+            : {};
+          const selectedProjectSettingsMetadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
+            ? selectedProject.metadata
+            : {};
+	          const projectOverviewAccessLevel = String(
+	            projectOverviewDraft?.teamAccessLevel
+	            || selectedProject?.teamAccessLevel
+	            || projectOverviewSettingsMetadata.teamAccessLevel
+	            || selectedProjectSettingsMetadata.teamAccessLevel
+	            || ""
+	          ).trim().toLowerCase();
+          const projectOverviewSharedTeamId = String(
+            projectOverviewDraft?.teamId
+            || selectedProject?.teamId
+            || projectOverviewSettingsMetadata.teamId
+            || selectedProjectSettingsMetadata.teamId
+            || ""
+          ).trim();
+          const projectOverviewSharedWorkspaceTeam = projectOverviewSharedTeamId && Array.isArray(workspaceTeams)
+            ? workspaceTeams.find((team) => String(team?.id || "").trim() === projectOverviewSharedTeamId) || null
+            : null;
+          const projectOverviewSharedTeamName = String(
+            projectOverviewDraft?.teamName
+            || selectedProject?.teamName
+            || projectOverviewSettingsMetadata.teamName
+            || selectedProjectSettingsMetadata.teamName
+            || projectOverviewSharedWorkspaceTeam?.name
+            || ""
+          ).trim();
+          const projectOverviewViewerProjectRoleId = (() => {
+            const explicitRole = String(
+              projectOverviewDraft?.teamRoleId
+              || projectOverviewDraft?.teamRole
+              || projectOverviewDraft?.projectRoleId
+              || projectOverviewDraft?.projectRole
+              || selectedProject?.teamRoleId
+              || selectedProject?.teamRole
+              || selectedProject?.projectRoleId
+              || selectedProject?.projectRole
+              || projectOverviewSettingsMetadata.teamRoleId
+              || projectOverviewSettingsMetadata.teamRole
+              || projectOverviewSettingsMetadata.projectRoleId
+              || projectOverviewSettingsMetadata.projectRole
+              || selectedProjectSettingsMetadata.teamRoleId
+              || selectedProjectSettingsMetadata.teamRole
+              || selectedProjectSettingsMetadata.projectRoleId
+              || selectedProjectSettingsMetadata.projectRole
+              || ""
+            ).trim();
+            if (explicitRole) {
+              return normalizePlaygroundTeamRoleId(explicitRole, "");
+            }
+            const sharedTeamRole = String(
+              projectOverviewSharedWorkspaceTeam?.projectRoleId
+              || projectOverviewSharedWorkspaceTeam?.projectRole
+              || projectOverviewSharedWorkspaceTeam?.teamRoleId
+              || projectOverviewSharedWorkspaceTeam?.teamRole
+              || projectOverviewSharedWorkspaceTeam?.role
+              || ""
+            ).trim();
+            if (sharedTeamRole) {
+              return normalizePlaygroundTeamRoleId(sharedTeamRole, "");
+            }
+            if (
+              projectOverviewAccessLevel === "edit"
+              || projectOverviewAccessLevel === "write"
+              || projectOverviewAccessLevel === "contributor"
+              || projectOverviewAccessLevel === "develop"
+              || projectOverviewAccessLevel === "configure"
+            ) {
+              return "contributor";
+            }
+            if (
+              projectOverviewAccessLevel === "use"
+              || projectOverviewAccessLevel === "read"
+              || projectOverviewAccessLevel === "read_only"
+              || projectOverviewAccessLevel === "viewer"
+              || projectOverviewAccessLevel === "view"
+              || projectOverviewAccessLevel === "member"
+              || projectOverviewAccessLevel === "create"
+            ) {
+              return "member";
+            }
+            return "";
+          })();
+	          const hasReducedProjectRole = projectOverviewViewerProjectRoleId === "contributor" || projectOverviewViewerProjectRoleId === "member";
+          const isCurrentViewerProjectOwner = Boolean(isProjectCreatedByCurrentViewer?.(projectOverviewDraft || selectedProject));
+	          const canManageProjectAccess = Boolean(
+	            (!hasReducedProjectRole && isCurrentViewerProjectOwner)
+	            || (!hasReducedProjectRole && (projectOverviewViewerProjectRoleId === "owner" || projectOverviewViewerProjectRoleId === "admin" || projectOverviewAccessLevel === "owner" || projectOverviewAccessLevel === "manage"))
+	          );
+          const hasReducedProjectSettingsAccess = Boolean(!canManageProjectAccess && hasReducedProjectRole);
+          const canViewProjectSettings = canManageProjectAccess || hasReducedProjectSettingsAccess;
+	          const activeProjectOverviewHomeTab = normalizedProjectOverviewHomeTab === "resources" || normalizedProjectOverviewHomeTab === "strategy" || (canViewProjectSettings && normalizedProjectOverviewHomeTab === "permissions")
+		            ? normalizedProjectOverviewHomeTab
+		            : "general";
           function restoreProjectOverviewSidebarAfterPermissionClose() {
             if (!projectOverviewSidebarAutoCollapsedForPermissionRef.current) {
               return;
@@ -6253,11 +6402,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               restoreProjectOverviewSidebarAfterPermissionClose();
             }
           }
-          function openProjectOverviewPermissionDetail(team, roleId = "member") {
-            const teamId = String(team?.id || "").trim();
-            if (!teamId) {
-              return;
-            }
+	          function openProjectOverviewPermissionDetail(team, roleId = "member") {
+	            if (!canManageProjectAccess) {
+	              return;
+	            }
+	            const teamId = String(team?.id || "").trim();
+	            if (!teamId) {
+	              return;
+	            }
             if (typeof setProjectOverviewPermissionRoleId === "function") {
               setProjectOverviewPermissionRoleId(normalizePlaygroundTeamRoleId(roleId, "member"));
             }
@@ -6272,13 +6424,13 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               projectOverviewSidebarAutoCollapsedForPermissionRef.current = false;
             }
           }
-          function renderProjectOverviewHomeTabs() {
-            const tabs = [
-	              { id: "general", label: "General" },
-	              { id: "resources", label: "Resources" },
-		              { id: "strategy", label: "Strategy" },
-		              { id: "permissions", label: "Settings" },
-		            ];
+	          function renderProjectOverviewHomeTabs() {
+	            const tabs = [
+		              { id: "general", label: "General" },
+		              { id: "resources", label: "Resources" },
+			              { id: "strategy", label: "Strategy" },
+			              canViewProjectSettings ? { id: "permissions", label: "Settings" } : null,
+			            ].filter(Boolean);
             return React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs" },
               React.createElement("div", { className: "playground-project-overview-chart-tabs" },
                 tabs.map((tab) =>
@@ -12698,29 +12850,43 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 
 	          function renderProjectOverviewRulesPanel(options = {}) {
 	            const isInline = Boolean(options?.inline);
+	            const isReadOnly = Boolean(options?.readOnly);
 	            const ruleEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
-	            const canAddRule = Boolean(normalizePlaygroundProjectRuleEntry(projectRuleInputValue))
+	            const canAddRule = !isReadOnly
+	              && Boolean(normalizePlaygroundProjectRuleEntry(projectRuleInputValue))
 	              && !projectSaveState.isSaving;
 
 	            function closeProjectOverviewRuleComposer() {
-	              if (typeof setProjectRuleComposerOpen === "function") {
-	                setProjectRuleComposerOpen(false);
+	              if (typeof closeProjectRuleComposer === "function") {
+	                closeProjectRuleComposer();
+	                return;
 	              }
-	              if (typeof setProjectRuleInputValue === "function") {
-	                setProjectRuleInputValue("");
-	              }
+	              setProjectRuleComposerOpen(false);
+	              setProjectRuleInputValue("");
 	            }
 
 	            function renderProjectOverviewRuleComposerModal() {
-	              if (!projectRuleComposerOpen) {
+	              if (isReadOnly || !projectRuleComposerOpen) {
 	                return null;
 	              }
 	              const content = React.createElement("div", {
-	                  className: "playground-tasks-project-modal-backdrop",
-	                  onClick: closeProjectOverviewRuleComposer,
+	                  className: "playground-tasks-project-modal-backdrop playground-tasks-project-issue-backdrop playground-project-overview-rule-editor-backdrop"
+	                    + (projectRuleComposerVisible ? " is-visible" : "")
+	                    + (projectRuleComposerClosing ? " is-closing" : ""),
+	                  onClick: (event) => {
+	                    if (event.target === event.currentTarget) {
+	                      closeProjectOverviewRuleComposer();
+	                    }
+	                  },
 	                },
 	                React.createElement("form", {
-	                    className: "playground-tasks-project-modal playground-project-overview-rule-editor-modal",
+	                    className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-project-overview-rule-editor-modal"
+	                      + (projectRuleComposerVisible ? " is-visible" : "")
+	                      + (projectRuleComposerClosing ? " is-closing" : ""),
+	                    role: "dialog",
+	                    "aria-modal": "true",
+	                    "aria-label": "Add Rule",
+	                    onMouseDown: (event) => event.stopPropagation(),
 	                    onClick: (event) => event.stopPropagation(),
 	                    onSubmit: (event) => {
 	                      event.preventDefault();
@@ -12741,12 +12907,33 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                      title: "Close",
 	                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
 	                  ),
-	                  React.createElement("div", { className: "playground-project-overview-outcome-editor-body" },
-	                    React.createElement("label", { className: "playground-tasks-project-modal-field" },
-	                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Rule"),
+	                  React.createElement("div", { className: "playground-tasks-issue-modal-body playground-project-overview-rule-editor-body" },
+	                    React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-project-overview-rule-description-editor" },
+	                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
+	                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Rule"),
+	                        React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+	                          [
+	                            { id: "bold", label: "Bold", icon: Bold },
+	                            { id: "italic", label: "Italic", icon: Italic },
+	                            { id: "underline", label: "Underline", icon: Underline },
+	                            { id: "list", label: "List", icon: List },
+	                          ].map((action) =>
+	                            React.createElement("button", {
+	                              key: action.id,
+	                              type: "button",
+	                              className: "playground-tasks-detail-format-button",
+	                              title: action.label,
+	                              "aria-label": action.label,
+	                              onMouseDown: (event) => event.preventDefault(),
+	                              onClick: () => handleProjectRuleComposerFormat(action.id),
+	                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+	                          )
+	                        )
+	                      ),
+	                      React.createElement("div", { className: "playground-tasks-detail-description-editor is-editing" },
 	                      React.createElement("textarea", {
 	                        ref: projectRuleComposerTextareaRef,
-	                        className: "playground-environments-textarea playground-project-overview-rule-modal-textarea",
+	                          className: "playground-tasks-detail-description-input is-editing playground-project-overview-rule-modal-textarea",
 	                        rows: 4,
 	                        value: projectRuleInputValue,
 	                        placeholder: "Describe the rule agents should follow in this project",
@@ -12761,6 +12948,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                          }
 	                        },
 	                      })
+	                      )
 	                    )
 	                  ),
 	                  projectSaveState?.error
@@ -12804,7 +12992,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                            )
 	                          ),
 	                          React.createElement("div", { className: "playground-tasks-backlog-main playground-project-overview-rule-main" },
-	                            projectRuleEditingIndex === index
+	                            !isReadOnly && projectRuleEditingIndex === index
 	                              ? React.createElement("textarea", {
 	                                  ref: projectRuleEditTextareaRef,
 	                                  rows: 1,
@@ -12831,16 +13019,18 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                                  },
 	                                })
 	                              : React.createElement("div", {
-	                                  className: "playground-project-overview-rule-copy tb-runner-chat",
-	                                  role: "button",
-	                                  tabIndex: 0,
-	                                  onClick: () => beginProjectRuleEntryEdit(index, entry),
-	                                  onKeyDown: (event) => {
-	                                    if (event.key === "Enter" || event.key === " ") {
-	                                      event.preventDefault();
-	                                      beginProjectRuleEntryEdit(index, entry);
-	                                    }
-	                                  },
+	                                  className: "playground-project-overview-rule-copy tb-runner-chat" + (isReadOnly ? " is-read-only" : ""),
+	                                  ...(isReadOnly ? {} : {
+	                                    role: "button",
+	                                    tabIndex: 0,
+	                                    onClick: () => beginProjectRuleEntryEdit(index, entry),
+	                                    onKeyDown: (event) => {
+	                                      if (event.key === "Enter" || event.key === " ") {
+	                                        event.preventDefault();
+	                                        beginProjectRuleEntryEdit(index, entry);
+	                                      }
+	                                    },
+	                                  }),
 	                                },
 	                                  React.createElement(PlaygroundTaskDescriptionMarkdown, {
 	                                    content: entry,
@@ -12848,16 +13038,18 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                                  })
 	                                )
 	                          ),
-	                          React.createElement("div", { className: "playground-tasks-backlog-meta" },
-	                            React.createElement("button", {
-	                              type: "button",
-	                              className: "playground-project-overview-rule-remove",
-	                              onClick: () => void handleRemoveProjectRuleEntry(index),
-	                              disabled: projectSaveState.isSaving,
-	                              title: "Remove rule",
-	                              "aria-label": "Remove rule " + String(index + 1),
-	                            }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }))
-	                          )
+	                          isReadOnly
+	                            ? null
+	                            : React.createElement("div", { className: "playground-tasks-backlog-meta" },
+	                                React.createElement("button", {
+	                                  type: "button",
+	                                  className: "playground-project-overview-rule-remove",
+	                                  onClick: () => void handleRemoveProjectRuleEntry(index),
+	                                  disabled: projectSaveState.isSaving,
+	                                  title: "Remove rule",
+	                                  "aria-label": "Remove rule " + String(index + 1),
+	                                }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }))
+	                              )
 	                        )
 	                      )
 	                    )
@@ -12877,37 +13069,45 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	            );
 	          }
 
-	          function renderProjectOverviewSettingsRulesSection() {
-	            return React.createElement("section", { className: "playground-project-settings-section playground-project-settings-rules-section" },
+	          function renderProjectOverviewSettingsRulesSection(options = {}) {
+	            const canEditRules = options?.canEdit !== false;
+	            return React.createElement("section", {
+	                className: "playground-project-settings-section playground-project-settings-rules-section" + (canEditRules ? "" : " is-read-only"),
+	              },
 	              React.createElement("div", { className: "playground-project-overview-strategy-add-row playground-project-overview-rules-inline-title-row" },
 	                React.createElement("h2", { className: "playground-project-overview-strategy-add-title" }, "Rules"),
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-files-control-button playground-project-teams-add-button playground-project-settings-add-rule-button",
-	                  onClick: () => {
-	                    if (typeof setProjectRuleInputValue === "function") {
-	                      setProjectRuleInputValue("");
-	                    }
-	                    if (typeof setProjectRuleComposerOpen === "function") {
-	                      setProjectRuleComposerOpen(true);
-	                    }
-	                    window.requestAnimationFrame(() => {
-	                      const textarea = projectRuleComposerTextareaRef.current;
-	                      if (!textarea) return;
-	                      textarea.focus();
-	                      resizeTaskDescriptionTextarea(textarea);
-	                    });
-	                  },
-	                },
-	                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                  React.createElement("span", null, "Add Rule")
-	                )
+	                canEditRules
+	                  ? React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-files-control-button playground-project-teams-add-button playground-project-settings-add-rule-button",
+	                      onClick: () => {
+	                        if (typeof setProjectRuleInputValue === "function") {
+	                          setProjectRuleInputValue("");
+	                        }
+	                        if (typeof setProjectRuleComposerOpen === "function") {
+	                          setProjectRuleComposerOpen(true);
+	                        }
+	                        window.requestAnimationFrame(() => {
+	                          const textarea = projectRuleComposerTextareaRef.current;
+	                          if (!textarea) return;
+	                          textarea.focus();
+	                          resizeTaskDescriptionTextarea(textarea);
+	                        });
+	                      },
+	                    },
+	                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                      React.createElement("span", null, "Add Rule")
+	                    )
+	                  : null
 	              ),
-	              renderProjectOverviewRulesPanel({ inline: true })
+	              renderProjectOverviewRulesPanel({ inline: true, readOnly: !canEditRules })
 	            );
 	          }
 
 	          function renderProjectOverviewPermissionsPanel() {
+	            if (!canViewProjectSettings) {
+	              return null;
+	            }
 	            const projectPermissionSet = normalizePlaygroundPermissionSet(
 	              projectOverviewDraft?.permissionSet
 	                || projectOverviewDraft?.metadata?.permissionSet
@@ -12985,6 +13185,76 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	            const selectedPermissionTeam = projectPermissionTeams.find((team) =>
 	              String(team.id) === String(projectOverviewPermissionTeamId || "")
 	            ) || null;
+            const renderReducedProjectRoleView = () => {
+              const reducedTeamId = projectOverviewSharedTeamId;
+              const reducedWorkspaceTeam = reducedTeamId
+                ? availableWorkspaceTeams.find((team) => String(team?.id || "").trim() === reducedTeamId)
+                : null;
+              const reducedTeamName = String(
+                projectOverviewSharedTeamName
+                || reducedWorkspaceTeam?.name
+                || "Team access"
+              ).trim() || "Team access";
+              const reducedRoleId = normalizePlaygroundTeamRoleId(projectOverviewViewerProjectRoleId, "member");
+              const selectedRoleDefinition = getPlaygroundTeamRoleDefinition(reducedRoleId);
+              const reducedRolePermissionSets = getProjectTeamRolePermissionSets(projectOverviewDraft || selectedProject, reducedTeamId);
+              const selectedRolePermissionSet = normalizePlaygroundPermissionSet(
+                reducedRolePermissionSets[selectedRoleDefinition.id],
+                "project_team_role"
+              );
+              const projectRulesViewAction = getPlaygroundPermissionActionDefinition("project_rules_view");
+              const projectRulesEditAction = getPlaygroundPermissionActionDefinition("project_rules_edit");
+              const projectRulesViewAccess = projectRulesViewAction
+                ? getPlaygroundPermissionActionAccess(selectedRolePermissionSet, projectRulesViewAction)
+                : "full_access";
+              const projectRulesEditAccess = projectRulesEditAction
+                ? getPlaygroundPermissionActionAccess(selectedRolePermissionSet, projectRulesEditAction)
+                : "no_access";
+              const canViewProjectRules = projectRulesViewAccess !== "no_access";
+              const canEditProjectRules = projectRulesEditAccess === "full_access";
+              const openReducedProjectTeamRolePage = () => {
+                if (!reducedTeamId) {
+                  return;
+                }
+                onOpenTeamPage?.(reducedTeamId, {
+                  tab: "roles",
+                  roleId: selectedRoleDefinition.id,
+                });
+              };
+              return React.createElement("section", {
+                  className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root playground-project-settings-reduced-access-root",
+                },
+                canViewProjectRules
+                  ? renderProjectOverviewSettingsRulesSection({ canEdit: canEditProjectRules })
+                  : null,
+                React.createElement("section", {
+                    className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-permissions-section playground-project-teams-section playground-project-settings-reduced-access",
+                  },
+                  React.createElement("div", { className: "playground-team-role-permission-page playground-project-team-role-permission-page" },
+	                    React.createElement("div", { className: "playground-team-role-permission-header playground-project-team-role-permission-header" },
+	                      React.createElement("div", null,
+	                        React.createElement("h2", { className: "playground-team-role-permission-title" }, selectedRoleDefinition.label + " Role")
+                      ),
+                      reducedTeamId
+                        ? React.createElement("button", {
+                            type: "button",
+                            className: "playground-project-settings-source-button",
+                            onClick: openReducedProjectTeamRolePage,
+                          }, reducedTeamName)
+                        : React.createElement("span", { className: "playground-project-settings-source-button" }, reducedTeamName)
+                    ),
+                    renderPlaygroundPermissionPanel(selectedRolePermissionSet, {
+                      subjectType: "project_team_role",
+                      animationKey: projectPermissionChartAnimationKey,
+                      disabled: true,
+                    })
+                  )
+                )
+              );
+            };
+            if (hasReducedProjectSettingsAccess) {
+              return renderReducedProjectRoleView();
+            }
 	            const closeProjectTeamMenu = () => setProjectOverviewTeamMenuId?.("");
 	            const handleOpenTeamDetails = (team) => {
 	              if (!team || team.locked) {
@@ -13165,6 +13435,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	            if (selectedPermissionTeam) {
 	              const isAllAgentsTeam = selectedPermissionTeam.id === "all_agents";
 	              const selectedRoleDefinition = getPlaygroundTeamRoleDefinition(projectOverviewPermissionRoleId);
+	              const isSelectedOwnerRole = selectedRoleDefinition.id === "owner";
 	              const selectedRolePermissionSet = selectedPermissionTeam.rolePermissionSets
 	                ? normalizePlaygroundPermissionSet(
 	                    selectedPermissionTeam.rolePermissionSets[selectedRoleDefinition.id],
@@ -13193,7 +13464,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                      )
 	                    )
 	                  ),
-	                  React.createElement("div", { className: "playground-team-role-permission-page playground-project-team-role-permission-page" },
+	                  React.createElement("div", { className: "playground-team-role-permission-page playground-project-team-role-permission-page" + (isSelectedOwnerRole ? " is-read-only" : "") },
 	                    React.createElement("div", { className: "playground-team-role-permission-header playground-project-team-role-permission-header" },
 	                      React.createElement("div", null,
 	                        React.createElement("div", { className: "playground-team-role-permission-kicker" }, "Project role"),
@@ -13206,7 +13477,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                    renderPlaygroundPermissionPanel(selectedRolePermissionSet, {
 	                      subjectType: "project_team_role",
 	                      animationKey: projectPermissionChartAnimationKey,
-	                      disabled: !hasRealAccess,
+	                      disabled: isSelectedOwnerRole || !hasRealAccess,
 	                      onRingAccessChange: (ringId, nextAccess) => updateProjectTeamRolePermissionRingAccess?.(selectedPermissionTeam.id, selectedRoleDefinition.id, ringId, nextAccess),
 	                      onActionRingChange: (actionId, nextRingId) => updateProjectTeamRolePermissionActionRing?.(selectedPermissionTeam.id, selectedRoleDefinition.id, actionId, nextRingId),
 	                      onActionAccessChange: (actionId, nextAccess) => updateProjectTeamRolePermissionActionAccess?.(selectedPermissionTeam.id, selectedRoleDefinition.id, actionId, nextAccess),
@@ -13248,8 +13519,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	              },
 	              renderProjectOverviewWallpaperSettingsSection(),
 	              renderProjectOverviewPluginsPanel(),
-	              renderProjectTeamTable(),
-	              renderProjectOverviewSettingsRulesSection()
+	              renderProjectOverviewSettingsRulesSection(),
+	              renderProjectTeamTable()
 	            );
 	          }
 

@@ -29,6 +29,7 @@
     "build": "node ./scripts/runner-chat-assets.mjs prepare && tsc -p tsconfig.json && node ./scripts/runner-chat-assets.mjs copy",
     "clean": "rm -rf dist",
     "history-smoke": "npm run build && node ./examples/history-api-test.mjs",
+    "metronome-runtime-test": "node ./examples/metronome-dynamic-content-runtime-test.mjs",
     "smoke": "npm run build && node ./examples/smoke-test.mjs",
     "demo": "npm run build && node ./examples/demo-server.mjs"
   },

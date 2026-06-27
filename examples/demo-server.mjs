@@ -1806,7 +1806,7 @@ const html = `<!doctype html>
       }
 
       .sidebar-thread-popup-row:hover:enabled {
-        background: rgba(255, 255, 255, 0.1);
+        background: transparent;
       }
 
       .sidebar-thread-popup-row.is-danger {
@@ -1919,7 +1919,7 @@ const html = `<!doctype html>
       }
 
       .sidebar-thread-rename-button.is-secondary {
-        background: rgba(255, 255, 255, 0.1);
+        background: transparent;
         color: white;
       }
 
@@ -5456,7 +5456,7 @@ const html = `<!doctype html>
         box-sizing: border-box;
         border: 1px solid rgba(255, 255, 255, 0.10);
         border-radius: 20px;
-        background: rgba(255, 255, 255, 0.1);
+        background: transparent;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         line-height: 1rem;
@@ -10213,7 +10213,23 @@ const html = `<!doctype html>
         color: #fff;
       }
 
+      .playground-team-role-card:disabled {
+        cursor: default;
+      }
+
+      .playground-team-role-card:disabled:not(.is-active):hover {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
       .playground-team-role-card.is-active {
+        border-color: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+      }
+
+      .playground-team-role-card.is-active:disabled,
+      .playground-team-role-card.is-active:disabled:hover {
         border-color: rgba(255, 255, 255, 0.05);
         background: rgba(255, 255, 255, 0.05);
         color: #fff;
@@ -10240,6 +10256,16 @@ const html = `<!doctype html>
       .playground-team-role-permission-page {
         min-width: 0;
         overflow: visible;
+      }
+
+      .playground-team-role-permission-page.is-read-only .playground-agents-permission-select-shell::after {
+        display: none;
+        content: none;
+      }
+
+      .playground-team-role-permission-page.is-read-only .playground-agents-permission-select {
+        padding-right: 0;
+        cursor: default;
       }
 
       .playground-team-role-permission-header {
@@ -23154,118 +23180,98 @@ const html = `<!doctype html>
       }
 
       .playground-files-context-menu {
+        --playground-top-nav-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
         position: fixed;
         z-index: 301;
         width: 264px;
-        padding: 8px;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(39, 39, 41, 0.98);
-        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.42);
+        overflow: hidden;
+        padding: 4px 0;
+        border: 0;
+        border-radius: 25px;
+        background: rgba(30, 30, 30, 0.5);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
+        transform-origin: top right;
+      }
+
+      .playground-files-context-menu.account-menu-animate-up-in,
+      .playground-files-context-menu.account-menu-animate-up-out {
+        transform-origin: top right;
+      }
+
+      .playground-files-context-menu::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-top-nav-popup-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-files-context-menu > * {
+        position: relative;
+        z-index: 6;
       }
 
       .playground-files-context-title {
         min-width: 0;
-        padding: 4px 12px 8px;
-        font-size: 13px;
+        padding: 12px 16px 4px;
+        font-size: 14px;
         line-height: 1.35;
-        font-weight: 600;
+        font-weight: 500;
         color: rgba(255, 255, 255, 0.96);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
-      .playground-files-context-meta {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        padding: 0 12px 8px;
-      }
-
-      .playground-files-context-meta-row {
-        display: grid;
-        grid-template-columns: minmax(0, 96px) minmax(0, 1fr);
-        align-items: start;
-        gap: 12px;
-      }
-
-      .playground-files-context-meta-label,
-      .playground-files-context-meta-value,
-      .playground-files-context-meta-status {
-        font-size: 11px;
-        line-height: 1.45;
-      }
-
-      .playground-files-context-meta-label {
-        color: rgba(255, 255, 255, 0.42);
-      }
-
-      .playground-files-context-meta-value {
-        color: rgba(255, 255, 255, 0.76);
-        text-align: right;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .playground-files-context-meta-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-start;
-        width: 100%;
-        max-width: 100%;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: #4da3ff;
-        font: inherit;
-        font-size: 11px;
-        line-height: inherit;
-        text-align: left;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        cursor: pointer;
-      }
-
-      .playground-files-context-meta-link:hover {
-        color: #79b9ff;
-      }
-
-      .playground-files-context-meta-status {
-        color: rgba(255, 255, 255, 0.52);
-      }
-
       .playground-files-context-item {
         width: 100%;
         display: flex;
         align-items: center;
-        gap: 10px;
-        min-height: 34px;
-        padding: 0 12px;
+        gap: 12px;
+        min-height: 0;
+        padding: 12px 16px;
         border: 0;
-        border-radius: 10px;
+        border-radius: 0;
         background: transparent;
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 12px;
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
         text-align: left;
         cursor: pointer;
         transition: background-color 160ms ease, color 160ms ease;
       }
 
       .playground-files-context-item:hover {
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .playground-files-context-item svg {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
       }
 
       .playground-files-context-item.is-danger {
-        color: #ffb0b0;
+        color: rgba(255, 255, 255, 0.92);
       }
 
       .playground-files-context-divider {
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        height: auto;
+        margin: 4px 0;
+        padding: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .playground-environments-page {
@@ -34386,7 +34392,7 @@ const html = `<!doctype html>
       }
 
       .playground-content-body.is-tasks-page .playground-tasks-main-scroll.is-projects-home > .playground-projects-overview-surface.is-card-grid {
-        padding: 42px 50px 56px;
+        padding: 24px 24px 56px;
         display: block;
         flex: 0 0 auto;
         min-height: 100%;
@@ -34416,12 +34422,48 @@ const html = `<!doctype html>
       }
 
       .playground-projects-overview-surface.is-card-grid .playground-projects-overview-inner {
-        width: min(100%, var(--playground-centered-page-max-width));
-        max-width: var(--playground-centered-page-max-width);
+        width: min(100%, calc(var(--playground-thread-content-max-width) + 48px));
+        max-width: calc(var(--playground-thread-content-max-width) + 48px);
         margin: 0 auto;
         min-height: auto;
         flex: initial;
-        gap: 30px;
+        gap: 26px;
+      }
+
+      .playground-projects-library-header {
+        gap: 12px;
+      }
+
+      .playground-projects-library-title-row {
+        align-items: center;
+      }
+
+      .playground-projects-library-search {
+        width: min(240px, 34vw);
+      }
+
+      .playground-projects-library-nav-row {
+        justify-content: space-between !important;
+        min-height: 30px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-projects-library-tabs.content-mode-switch {
+        height: 30px;
+      }
+
+      .playground-projects-library-tabs .playground-files-library-tab {
+        min-width: 0;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .playground-projects-library-controls .playground-tasks-toolbar-popup-menu {
+        right: 0;
+        left: auto;
+        top: calc(100% + 8px);
+        width: 260px;
       }
 
       .playground-projects-overview-surface.is-empty-hero .playground-projects-overview-inner {
@@ -54957,6 +54999,11 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 
       const PLAYGROUND_TEAM_ROLE_DEFINITIONS = [
         {
+          id: "owner",
+          label: "Owner",
+          description: "Has permanent full control of the team, role permissions, shared resources, and governance settings.",
+        },
+        {
           id: "member",
           label: "Member",
           description: "Can participate in shared team work, with elevated team operations routed through approval.",
@@ -54973,6 +55020,7 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         },
       ];
 
+      const PLAYGROUND_ASSIGNABLE_TEAM_ROLE_DEFINITIONS = PLAYGROUND_TEAM_ROLE_DEFINITIONS.filter((role) => role.id !== "owner");
       const PLAYGROUND_TEAM_ROLE_IDS = PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id);
       const PLAYGROUND_TEAM_LEGACY_ROLE_MAP = {
         create: "member",
@@ -54983,13 +55031,14 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         contributor: "contributor",
         editor: "contributor",
         admin: "admin",
-        owner: "admin",
+        owner: "owner",
         manage: "admin",
       };
       const PLAYGROUND_TEAM_ROLE_API_VALUE_MAP = {
         member: "create",
         contributor: "develop",
         admin: "admin",
+        owner: "owner",
       };
 
       function normalizePlaygroundTeamRoleId(value, fallback = "member") {
@@ -55138,6 +55187,27 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           label: "Edit team settings",
           description: "Rename the team, change governance settings, delete the team, or alter role permission pages.",
           subjectTypes: ["team", "team_role"],
+        },
+        {
+          id: "project_rules_view",
+          ringId: "ring_1",
+          label: "View project rules",
+          description: "Read project rules that guide agents, tickets, and shared execution behavior.",
+          subjectTypes: ["project", "project_team_role"],
+        },
+        {
+          id: "project_rules_edit",
+          ringId: "ring_2",
+          label: "Edit project rules",
+          description: "Create, update, or remove project rules used by agents and collaborators.",
+          subjectTypes: ["project", "project_team_role"],
+        },
+        {
+          id: "project_access_manage",
+          ringId: "ring_3",
+          label: "Manage project access",
+          description: "Add teams, remove teams, or change project role permission pages.",
+          subjectTypes: ["project", "project_team_role"],
         },
         {
           id: "managed_resource_mutation",
@@ -55358,6 +55428,26 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
         };
       }
 
+      function createPlaygroundFullAccessPermissionSet(subjectType = "agent") {
+        const permissionSet = createPlaygroundDefaultPermissionSet(subjectType);
+        permissionSet.defaultAccess = "full_access";
+        PLAYGROUND_PERMISSION_RING_IDS.forEach((ringId) => {
+          permissionSet.rings[ringId] = {
+            ...(permissionSet.rings[ringId] || {}),
+            defaultAccess: "full_access",
+          };
+        });
+        PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.forEach((action) => {
+          permissionSet.actions[action.id] = {
+            ...(permissionSet.actions[action.id] || {}),
+            ringId: normalizePlaygroundPermissionRingId(action.ringId, "ring_1"),
+            access: "full_access",
+          };
+        });
+        permissionSet.resources = createPlaygroundDefaultPermissionResources("full_access");
+        return permissionSet;
+      }
+
       function normalizePlaygroundPermissionSet(value, subjectType = "agent") {
         const normalizedFallbackSubjectType = normalizePlaygroundPermissionSubjectType(subjectType, "agent");
         const fallback = createPlaygroundDefaultPermissionSet(normalizedFallbackSubjectType);
@@ -55403,6 +55493,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 
       function createPlaygroundTeamRolePermissionSet(roleId) {
         const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+        if (normalizedRoleId === "owner") {
+          return createPlaygroundFullAccessPermissionSet("team_role");
+        }
         const permissionSet = createPlaygroundDefaultPermissionSet("team_role");
         const applyRingAccess = (ringId, access) => {
           permissionSet.rings[ringId] = {
@@ -55466,6 +55559,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 
       function createPlaygroundProjectTeamRolePermissionSet(roleId) {
         const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+        if (normalizedRoleId === "owner") {
+          return createPlaygroundFullAccessPermissionSet("project_team_role");
+        }
         const permissionSet = createPlaygroundDefaultPermissionSet("project_team_role");
         const applyRingAccess = (ringId, access) => {
           permissionSet.rings[ringId] = {
@@ -55473,9 +55569,24 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
             defaultAccess: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
           };
         };
+        const applyActionAccess = (actionId, ringId, access) => {
+          permissionSet.actions[actionId] = {
+            ...(permissionSet.actions[actionId] || {}),
+            ringId: normalizePlaygroundPermissionRingId(ringId, "ring_1"),
+            access: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
+          };
+        };
 
         if (normalizedRoleId === "admin") {
           PLAYGROUND_PERMISSION_RING_IDS.forEach((ringId) => applyRingAccess(ringId, "full_access"));
+          [
+            "project_rules_view",
+            "project_rules_edit",
+            "project_access_manage",
+          ].forEach((actionId) => {
+            const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+            applyActionAccess(actionId, actionDefinition?.ringId || "ring_2", "full_access");
+          });
           return permissionSet;
         }
 
@@ -55483,18 +55594,28 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           applyRingAccess("ring_1", "full_access");
           applyRingAccess("ring_2", "full_access");
           applyRingAccess("ring_3", "ask_for_permission");
+          applyActionAccess("project_rules_view", "ring_1", "full_access");
+          applyActionAccess("project_rules_edit", "ring_2", "full_access");
+          applyActionAccess("project_access_manage", "ring_3", "no_access");
           return permissionSet;
         }
 
         applyRingAccess("ring_1", "read_only");
         applyRingAccess("ring_2", "ask_for_permission");
         applyRingAccess("ring_3", "no_access");
+        applyActionAccess("project_rules_view", "ring_1", "read_only");
+        applyActionAccess("project_rules_edit", "ring_2", "no_access");
+        applyActionAccess("project_access_manage", "ring_3", "no_access");
         return permissionSet;
       }
 
       function normalizePlaygroundTeamRolePermissionSets(value) {
         const inputSets = isPlaygroundPermissionRecord(value) ? value : {};
         return PLAYGROUND_TEAM_ROLE_DEFINITIONS.reduce((rolePermissionSets, role) => {
+          if (role.id === "owner") {
+            rolePermissionSets[role.id] = createPlaygroundTeamRolePermissionSet(role.id);
+            return rolePermissionSets;
+          }
           rolePermissionSets[role.id] = normalizePlaygroundPermissionSet(
             inputSets[role.id] || createPlaygroundTeamRolePermissionSet(role.id),
             "team_role"
@@ -60742,6 +60863,212 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           : null;
         const normalizedSource = sourceRecord ? normalizePlaygroundProjectRecord(sourceRecord) : null;
         return mergePlaygroundProjectRecords(sourceRecord, fallbackProject) || normalizedSource;
+      }
+
+      function parsePlaygroundTeamSharedResourceMetadata(share) {
+        const metadata = share?.metadata;
+        if (!metadata) {
+          return {};
+        }
+        if (typeof metadata === "string") {
+          try {
+            const parsed = JSON.parse(metadata);
+            return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+          } catch {
+            return {};
+          }
+        }
+        return metadata && typeof metadata === "object" && !Array.isArray(metadata) ? metadata : {};
+      }
+
+      function getPlaygroundTeamSharedResourceType(share) {
+        const metadata = parsePlaygroundTeamSharedResourceMetadata(share);
+        return String(
+          share?.resourceType
+          || share?.resource_type
+          || metadata.resourceType
+          || metadata.resource_type
+          || metadata.resourceKind
+          || metadata.resource_kind
+          || metadata.kind
+          || metadata.type
+          || ""
+        ).trim().toLowerCase();
+      }
+
+      function getPlaygroundTeamSharedProjectId(share) {
+        const metadata = parsePlaygroundTeamSharedResourceMetadata(share);
+        const metadataProject = metadata.project && typeof metadata.project === "object" && !Array.isArray(metadata.project)
+          ? metadata.project
+          : {};
+        return String(
+          share?.resourceId
+          || share?.resource_id
+          || metadata.projectId
+          || metadata.project_id
+          || metadataProject.id
+          || ""
+        ).trim();
+      }
+
+      function markPlaygroundProjectAsTeamShared(project, share, team) {
+        if (!project?.id) {
+          return project;
+        }
+        const metadata = parsePlaygroundTeamSharedResourceMetadata(share);
+        const existingMetadata = project.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+          ? project.metadata
+          : {};
+        return normalizePlaygroundProjectRecord({
+          ...project,
+          sharedWithMe: true,
+          isShared: true,
+          metadata: {
+            ...existingMetadata,
+            sharedWithMe: true,
+            isShared: true,
+            teamShared: true,
+            teamShareId: String(share?.id || existingMetadata.teamShareId || "").trim(),
+            teamId: String(team?.id || share?.teamId || share?.team_id || metadata.teamId || metadata.team_id || existingMetadata.teamId || "").trim(),
+            teamName: String(team?.name || metadata.teamName || metadata.team_name || existingMetadata.teamName || "").trim(),
+          },
+        });
+      }
+
+      function getPlaygroundFallbackTeamSharedProjectRecord(share, team) {
+        const metadata = parsePlaygroundTeamSharedResourceMetadata(share);
+        const metadataProject = metadata.project && typeof metadata.project === "object" && !Array.isArray(metadata.project)
+          ? metadata.project
+          : {};
+        const projectId = getPlaygroundTeamSharedProjectId(share);
+        if (!projectId) {
+          return null;
+        }
+        const projectName = String(
+          metadataProject.name
+          || metadataProject.title
+          || metadata.name
+          || metadata.title
+          || share?.resourceName
+          || share?.resource_name
+          || share?.name
+          || "Shared project"
+        ).trim() || "Shared project";
+        const shareUpdatedAt = String(share?.updatedAt || share?.updated_at || share?.createdAt || share?.created_at || "").trim();
+        return normalizePlaygroundProjectRecord({
+          ...metadataProject,
+          id: projectId,
+          name: projectName,
+          description: String(metadataProject.description || metadata.description || "").trim(),
+          updatedAt: shareUpdatedAt || metadataProject.updatedAt || metadata.updatedAt,
+          createdAt: String(share?.createdAt || share?.created_at || metadataProject.createdAt || metadata.createdAt || "").trim(),
+          metadata: {
+            ...(metadataProject.metadata && typeof metadataProject.metadata === "object" && !Array.isArray(metadataProject.metadata) ? metadataProject.metadata : {}),
+            ...metadata,
+            sharedWithMe: true,
+            isShared: true,
+            teamShared: true,
+            teamShareId: String(share?.id || "").trim(),
+            teamId: String(team?.id || share?.teamId || share?.team_id || metadata.teamId || metadata.team_id || "").trim(),
+            teamName: String(team?.name || metadata.teamName || metadata.team_name || "").trim(),
+          },
+        });
+      }
+
+      async function resolvePlaygroundTeamSharedProjects({ backendUrl, headers, projects = [] }) {
+        const projectsById = new Map(
+          (Array.isArray(projects) ? projects : [])
+            .map((project) => [String(project?.id || "").trim(), project])
+            .filter(([projectId]) => projectId)
+        );
+        if (!backendUrl) {
+          return Array.from(projectsById.values());
+        }
+
+        const teamsResult = await fetchJsonWithTimeout(backendUrl + "/teams", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+          headers,
+        }, 8000).catch(() => null);
+        const teams = teamsResult?.response?.ok
+          ? (Array.isArray(teamsResult.data?.data) ? teamsResult.data.data : (Array.isArray(teamsResult.data?.teams) ? teamsResult.data.teams : []))
+          : [];
+        const projectShares = [];
+
+        if (teams.length > 0) {
+          const shareResults = await Promise.allSettled(teams.map(async (team) => {
+            const teamId = String(team?.id || "").trim();
+            if (!teamId) {
+              return [];
+            }
+            const { response, data } = await fetchJsonWithTimeout(backendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers,
+            }, 8000);
+            if (!response.ok) {
+              return [];
+            }
+            return (Array.isArray(data?.data) ? data.data : [])
+              .filter((share) => getPlaygroundTeamSharedResourceType(share) === "project")
+              .map((share) => ({ share, team }));
+          }));
+          shareResults.forEach((result) => {
+            if (result.status === "fulfilled" && Array.isArray(result.value)) {
+              projectShares.push(...result.value);
+            }
+          });
+        }
+
+        projectShares.forEach(({ share, team }) => {
+          const projectId = getPlaygroundTeamSharedProjectId(share);
+          if (!projectId || !projectsById.has(projectId)) {
+            return;
+          }
+          const sharedProject = markPlaygroundProjectAsTeamShared(projectsById.get(projectId), share, team);
+          if (sharedProject?.id) {
+            projectsById.set(projectId, sharedProject);
+          }
+        });
+
+        const missingSharedProjectIds = Array.from(new Set(projectShares
+          .map(({ share }) => getPlaygroundTeamSharedProjectId(share))
+          .filter((projectId) => projectId && !projectsById.has(projectId))));
+
+        if (missingSharedProjectIds.length > 0) {
+          const detailResults = await Promise.allSettled(missingSharedProjectIds.map(async (projectId) => {
+            const detailResponse = await fetch(backendUrl + "/projects/" + encodeURIComponent(projectId), {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers,
+            });
+            const detailData = await detailResponse.json().catch(() => ({}));
+            if (!detailResponse.ok) {
+              throw new Error(detailData?.message || detailData?.error || "Failed to load shared project.");
+            }
+            return getPlaygroundProjectResponseRecord(detailData, { id: projectId }) || normalizePlaygroundProjectRecord({ id: projectId });
+          }));
+
+          missingSharedProjectIds.forEach((projectId, index) => {
+            const result = detailResults[index];
+            let sharedProject = result?.status === "fulfilled" ? result.value : null;
+            const matchingShare = projectShares.find(({ share }) => getPlaygroundTeamSharedProjectId(share) === projectId);
+            if (!sharedProject && matchingShare) {
+              sharedProject = getPlaygroundFallbackTeamSharedProjectRecord(matchingShare.share, matchingShare.team);
+            }
+            if (sharedProject && matchingShare) {
+              sharedProject = markPlaygroundProjectAsTeamShared(sharedProject, matchingShare.share, matchingShare.team);
+            }
+            if (sharedProject?.id) {
+              projectsById.set(projectId, sharedProject);
+            }
+          });
+        }
+
+        return Array.from(projectsById.values());
       }
 
       function toPlaygroundDatetimeLocalValue(value) {
@@ -70706,14 +71033,21 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const previousToolbarPopoverRef = useRef(toolbarPopover);
         const filesToolbarMenuCloseTimerRef = useRef(null);
         const [contextMenu, setContextMenu] = useState(null);
-        const [fileContextMetadataByKey, setFileContextMetadataByKey] = useState({});
+        const [contextMenuPhase, setContextMenuPhase] = useState("idle");
+        const contextMenuCloseTimerRef = useRef(null);
         const [fileProjectPickerState, setFileProjectPickerState] = useState(null);
         const [fileProjectPickerValue, setFileProjectPickerValue] = useState("");
         const [fileProjectPickerError, setFileProjectPickerError] = useState("");
         const [fileComputerPickerState, setFileComputerPickerState] = useState(null);
+        const [fileComputerPickerVisible, setFileComputerPickerVisible] = useState(false);
+        const [fileComputerPickerClosing, setFileComputerPickerClosing] = useState(false);
+        const [fileComputerPickerOpen, setFileComputerPickerOpen] = useState(false);
         const [fileComputerPickerValue, setFileComputerPickerValue] = useState("");
         const [fileComputerPickerError, setFileComputerPickerError] = useState("");
         const [fileTeamPickerState, setFileTeamPickerState] = useState(null);
+        const [fileTeamPickerVisible, setFileTeamPickerVisible] = useState(false);
+        const [fileTeamPickerClosing, setFileTeamPickerClosing] = useState(false);
+        const [fileTeamPickerOpen, setFileTeamPickerOpen] = useState(false);
         const [fileTeamPickerValue, setFileTeamPickerValue] = useState("");
         const [fileTeamPickerError, setFileTeamPickerError] = useState("");
         const [availableFileTeams, setAvailableFileTeams] = useState([]);
@@ -70741,6 +71075,8 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const imageCropStartPointRef = useRef(null);
         const imageCropDraftRectRef = useRef(null);
         const imageCropDragStateRef = useRef(null);
+        const fileComputerPickerCloseTimerRef = useRef(null);
+        const fileTeamPickerCloseTimerRef = useRef(null);
 
         const loadEnvironmentFolder = useCallback(async (environmentId, folderPath = "", options = {}) => {
           const normalizedFolderPath = normalizeHistoryPath(folderPath);
@@ -71283,13 +71619,20 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
           function handleKeyDown(event) {
             if (event.key === "Escape") {
-              setContextMenu(null);
+              closeContextMenu();
             }
           }
 
           window.addEventListener("keydown", handleKeyDown);
           return () => window.removeEventListener("keydown", handleKeyDown);
         }, [contextMenu]);
+
+        useEffect(() => () => {
+          if (contextMenuCloseTimerRef.current !== null) {
+            window.clearTimeout(contextMenuCloseTimerRef.current);
+            contextMenuCloseTimerRef.current = null;
+          }
+        }, []);
 
         useEffect(() => {
           if (!fileProjectPickerState) return;
@@ -71311,15 +71654,34 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
           function handleKeyDown(event) {
             if (event.key === "Escape") {
-              setFileComputerPickerState(null);
-              setFileComputerPickerValue("");
-              setFileComputerPickerError("");
+              closeFileComputerPickerDialog();
             }
           }
 
           window.addEventListener("keydown", handleKeyDown);
           return () => window.removeEventListener("keydown", handleKeyDown);
         }, [fileComputerPickerState]);
+
+        useEffect(() => {
+          if (!fileComputerPickerState) {
+            return undefined;
+          }
+          if (fileComputerPickerCloseTimerRef.current !== null) {
+            window.clearTimeout(fileComputerPickerCloseTimerRef.current);
+            fileComputerPickerCloseTimerRef.current = null;
+          }
+          setFileComputerPickerClosing(false);
+          setFileComputerPickerVisible(false);
+          const frameId = window.requestAnimationFrame(() => setFileComputerPickerVisible(true));
+          return () => window.cancelAnimationFrame(frameId);
+        }, [fileComputerPickerState]);
+
+        useEffect(() => () => {
+          if (fileComputerPickerCloseTimerRef.current !== null) {
+            window.clearTimeout(fileComputerPickerCloseTimerRef.current);
+            fileComputerPickerCloseTimerRef.current = null;
+          }
+        }, []);
 
         useEffect(() => {
           if (!fileTeamPickerState) return;
@@ -71333,6 +71695,27 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           window.addEventListener("keydown", handleKeyDown);
           return () => window.removeEventListener("keydown", handleKeyDown);
         }, [fileTeamPickerState]);
+
+        useEffect(() => {
+          if (!fileTeamPickerState) {
+            return undefined;
+          }
+          if (fileTeamPickerCloseTimerRef.current !== null) {
+            window.clearTimeout(fileTeamPickerCloseTimerRef.current);
+            fileTeamPickerCloseTimerRef.current = null;
+          }
+          setFileTeamPickerClosing(false);
+          setFileTeamPickerVisible(false);
+          const frameId = window.requestAnimationFrame(() => setFileTeamPickerVisible(true));
+          return () => window.cancelAnimationFrame(frameId);
+        }, [fileTeamPickerState]);
+
+        useEffect(() => () => {
+          if (fileTeamPickerCloseTimerRef.current !== null) {
+            window.clearTimeout(fileTeamPickerCloseTimerRef.current);
+            fileTeamPickerCloseTimerRef.current = null;
+          }
+        }, []);
 
         useEffect(() => {
           if (!renamingPath || !renameInputRef.current) return;
@@ -72419,153 +72802,19 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         }
 
         function closeContextMenu() {
-          setContextMenu(null);
-        }
-
-        function getFileContextMetadataCacheKey(environmentId, path) {
-          const normalizedEnvironmentId = String(environmentId || "").trim();
-          const normalizedPath = normalizeHistoryPath(path);
-          if (!normalizedEnvironmentId || !normalizedPath) {
-            return "";
+          if (!contextMenu) {
+            return;
           }
-          return normalizedEnvironmentId + "::" + normalizedPath;
-        }
-
-        function buildFallbackFileContextMetadata(entry) {
-          return {
-            createdAt: entry?.createdTime || entry?.modifiedTime || "",
-            updatedAt: entry?.modifiedTime || entry?.createdTime || "",
-            sourceThreadId: "",
-            sourceThreadTitle: "",
-            sourceThreadRecord: null,
-            updatedByLabel: "—",
-            sourceKind: "",
-          };
-        }
-
-        async function ensureFileContextMetadata(entry, environmentIdOverride = "") {
-          const normalizedEnvironmentId = String(environmentIdOverride || selectedEnvironmentId || "").trim();
-          const normalizedPath = normalizeHistoryPath(entry?.path || "");
-          const cacheKey = getFileContextMetadataCacheKey(normalizedEnvironmentId, normalizedPath);
-          if (!cacheKey || !entry || entry.isFolder) {
-            return null;
+          if (contextMenuCloseTimerRef.current !== null) {
+            window.clearTimeout(contextMenuCloseTimerRef.current);
+            contextMenuCloseTimerRef.current = null;
           }
-
-          const cached = fileContextMetadataByKey[cacheKey];
-          if (cached?.status === "ready" || cached?.status === "loading") {
-            return cached;
-          }
-
-          setFileContextMetadataByKey((current) => ({
-            ...current,
-            [cacheKey]: {
-              status: "loading",
-              data: buildFallbackFileContextMetadata(entry),
-              error: "",
-            },
-          }));
-
-          const fallbackData = buildFallbackFileContextMetadata(entry);
-
-          try {
-            let offset = 0;
-            let hasMore = true;
-            let latestMatch = null;
-            let pagesScanned = 0;
-
-            while (!latestMatch && hasMore && pagesScanned < 10) {
-              const result = await fetchEnvironmentChangesList({
-                backendUrl,
-                environmentId: normalizedEnvironmentId,
-                headers: requestHeaders,
-                projects: availableProjectFilters,
-                limit: 25,
-                offset,
-                projectFilterScope: "",
-                operationFilter: "all",
-                actorFilter: "__all__",
-              });
-              const items = Array.isArray(result?.data) ? result.data : [];
-              latestMatch = items.find((change) =>
-                Array.isArray(change?.files)
-                && change.files.some((file) => normalizeHistoryPath(file?.path) === normalizedPath)
-              ) || null;
-              offset = Math.max(offset, Number(result?.nextOffset || 0) || 0);
-              hasMore = Boolean(result?.hasMore) && items.length > 0;
-              pagesScanned += 1;
-            }
-
-            const sourceThreadId = String(latestMatch?.sourceThreadId || "").trim();
-            let sourceThreadTitle = "";
-            let sourceThreadRecord = null;
-
-            if (sourceThreadId) {
-              try {
-                const threadResponse = await fetch(backendUrl + "/threads/" + encodeURIComponent(sourceThreadId), {
-                  headers: requestHeaders,
-                });
-                if (threadResponse.ok) {
-                  const threadPayload = await threadResponse.json();
-                  const threadRecord = threadPayload?.thread && typeof threadPayload.thread === "object"
-                    ? threadPayload.thread
-                    : threadPayload?.data && typeof threadPayload.data === "object"
-                      ? threadPayload.data
-                      : (threadPayload && typeof threadPayload === "object" ? threadPayload : {});
-                  const normalizedThread = normalizeThreadItem(threadRecord);
-                  if (normalizedThread?.id) {
-                    sourceThreadRecord = normalizedThread;
-                    sourceThreadTitle = String(threadRecord?.title || normalizedThread.title || "").trim();
-                  }
-                }
-              } catch {
-                sourceThreadTitle = "";
-                sourceThreadRecord = null;
-              }
-            }
-
-            const nextData = latestMatch
-              ? {
-                  createdAt: entry?.createdTime || entry?.modifiedTime || "",
-                  updatedAt: latestMatch.createdAt || entry?.modifiedTime || entry?.createdTime || "",
-                  sourceThreadId,
-                  sourceThreadTitle,
-                  sourceThreadRecord,
-                  updatedByLabel: latestMatch?.sourceKind === "manual"
-                    ? "Me"
-                    : (String(latestMatch?.agentName || "").trim() || "Assistant"),
-                  sourceKind: latestMatch?.sourceKind || "",
-                }
-              : fallbackData;
-
-            setFileContextMetadataByKey((current) => ({
-              ...current,
-              [cacheKey]: {
-                status: "ready",
-                data: nextData,
-                error: "",
-              },
-            }));
-            return {
-              status: "ready",
-              data: nextData,
-              error: "",
-            };
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to load file metadata.";
-            setFileContextMetadataByKey((current) => ({
-              ...current,
-              [cacheKey]: {
-                status: "error",
-                data: fallbackData,
-                error: errorMessage,
-              },
-            }));
-            return {
-              status: "error",
-              data: fallbackData,
-              error: errorMessage,
-            };
-          }
+          setContextMenuPhase("exit");
+          contextMenuCloseTimerRef.current = window.setTimeout(() => {
+            setContextMenu(null);
+            setContextMenuPhase("idle");
+            contextMenuCloseTimerRef.current = null;
+          }, 180);
         }
 
         async function handleCopyEntry(entry) {
@@ -73307,36 +73556,50 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           }
         }
 
-        function handleOpenSourceThread(threadId, threadRecord = null) {
-          const normalizedThreadId = String(threadId || "").trim();
-          if (!normalizedThreadId || typeof onThreadOpen !== "function") {
-            return;
-          }
-          closeContextMenu();
-          onThreadOpen(
-            normalizedThreadId,
-            threadRecord?.id
-              ? { threadRecord }
-              : {}
-          );
-        }
-
         function closeFileProjectPickerDialog() {
           setFileProjectPickerState(null);
           setFileProjectPickerValue("");
           setFileProjectPickerError("");
         }
 
-        function closeFileComputerPickerDialog() {
-          setFileComputerPickerState(null);
-          setFileComputerPickerValue("");
-          setFileComputerPickerError("");
+        function closeFileComputerPickerDialog(options = {}) {
+          if (!options.force && fileComputerTransferState.action === "send") {
+            return;
+          }
+          setFileComputerPickerOpen(false);
+          if (fileComputerPickerCloseTimerRef.current !== null) {
+            window.clearTimeout(fileComputerPickerCloseTimerRef.current);
+            fileComputerPickerCloseTimerRef.current = null;
+          }
+          setFileComputerPickerVisible(false);
+          setFileComputerPickerClosing(true);
+          fileComputerPickerCloseTimerRef.current = window.setTimeout(() => {
+            setFileComputerPickerState(null);
+            setFileComputerPickerValue("");
+            setFileComputerPickerError("");
+            setFileComputerPickerClosing(false);
+            fileComputerPickerCloseTimerRef.current = null;
+          }, 75);
         }
 
-        function closeFileTeamPickerDialog() {
-          setFileTeamPickerState(null);
-          setFileTeamPickerValue("");
-          setFileTeamPickerError("");
+        function closeFileTeamPickerDialog(options = {}) {
+          if (!options.force && fileTeamShareState.action === "share") {
+            return;
+          }
+          setFileTeamPickerOpen(false);
+          if (fileTeamPickerCloseTimerRef.current !== null) {
+            window.clearTimeout(fileTeamPickerCloseTimerRef.current);
+            fileTeamPickerCloseTimerRef.current = null;
+          }
+          setFileTeamPickerVisible(false);
+          setFileTeamPickerClosing(true);
+          fileTeamPickerCloseTimerRef.current = window.setTimeout(() => {
+            setFileTeamPickerState(null);
+            setFileTeamPickerValue("");
+            setFileTeamPickerError("");
+            setFileTeamPickerClosing(false);
+            fileTeamPickerCloseTimerRef.current = null;
+          }, 75);
         }
 
         function setSingleSelection(path, options = {}) {
@@ -73866,6 +74129,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           const normalizedPath = normalizeHistoryPath(entries[0].path);
           const normalizedPaths = entries.map((entry) => normalizeHistoryPath(entry.path)).filter(Boolean);
           const defaultDestinationId = String(availableDestinationComputers[0]?.id || "").trim();
+          if (fileComputerPickerCloseTimerRef.current !== null) {
+            window.clearTimeout(fileComputerPickerCloseTimerRef.current);
+            fileComputerPickerCloseTimerRef.current = null;
+          }
+          setFileComputerPickerClosing(false);
+          setFileComputerPickerOpen(false);
           setFileComputerPickerState({
             path: normalizedPath,
             paths: normalizedPaths,
@@ -73921,6 +74190,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           const normalizedPath = normalizeHistoryPath(entries[0].path);
           const normalizedPaths = entries.map((entry) => normalizeHistoryPath(entry.path)).filter(Boolean);
           const defaultTeamId = String(availableFileTeams[0]?.id || "").trim();
+          if (fileTeamPickerCloseTimerRef.current !== null) {
+            window.clearTimeout(fileTeamPickerCloseTimerRef.current);
+            fileTeamPickerCloseTimerRef.current = null;
+          }
+          setFileTeamPickerClosing(false);
+          setFileTeamPickerOpen(false);
           setFileTeamPickerState({
             path: normalizedPath,
             paths: normalizedPaths,
@@ -74085,7 +74360,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               pickerEntries.map((entry) => getPlaygroundEntryParentPath(entry.path))
             ));
             await refreshEnvironmentFolders(normalizedDestinationId, destinationFolders.length ? destinationFolders : [""]);
-            closeFileComputerPickerDialog();
+            closeFileComputerPickerDialog({ force: true });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to send files to another computer.";
             setFileComputerPickerError(errorMessage);
@@ -74151,7 +74426,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to make files available to the team.");
             }
-            closeFileTeamPickerDialog();
+            closeFileTeamPickerDialog({ force: true });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to make files available to the team.";
             setFileTeamPickerError(errorMessage);
@@ -74179,16 +74454,19 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           }
 
           const isMultiFileSelectionMenu = Boolean(options.multiFileSelection);
-          const menuWidth = isMultiFileSelectionMenu ? 232 : (targetEntry && !targetEntry.isFolder ? 264 : 232);
+          const menuWidth = 264;
           const menuHeight = isMultiFileSelectionMenu ? 272 : (targetEntry
-            ? (!targetEntry.isFolder ? 408 : 240)
+            ? (!targetEntry.isFolder ? 316 : 240)
             : 138);
-          const x = Math.min(nextX, window.innerWidth - menuWidth - 12);
+          const requestedX = options.alignRight ? Number(nextX || 0) - menuWidth : Number(nextX || 0);
+          const x = Math.min(requestedX, window.innerWidth - menuWidth - 12);
           const y = Math.min(nextY, window.innerHeight - menuHeight - 12);
 
-          if (targetEntry && !targetEntry.isFolder) {
-            void ensureFileContextMetadata(targetEntry);
+          if (contextMenuCloseTimerRef.current !== null) {
+            window.clearTimeout(contextMenuCloseTimerRef.current);
+            contextMenuCloseTimerRef.current = null;
           }
+          setContextMenuPhase("enter");
 
           setContextMenu({
             x: Math.max(12, x),
@@ -74203,13 +74481,14 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           event.stopPropagation();
           const rect = event.currentTarget.getBoundingClientRect();
           if (selectedFileEntries.length > 1 && entry && selectedPaths.has(normalizeHistoryPath(entry.path))) {
-            openContextMenuAt(null, rect.right - 8, rect.bottom + 8, {
+            openContextMenuAt(null, rect.right, rect.bottom + 8, {
               selectTarget: false,
               multiFileSelection: true,
+              alignRight: true,
             });
             return;
           }
-          openContextMenuAt(entry, rect.right - 8, rect.bottom + 8, { selectTarget: false });
+          openContextMenuAt(entry, rect.right, rect.bottom + 8, { selectTarget: false, alignRight: true });
         }
 
         function handleSearchResultSelect(entry) {
@@ -75968,16 +76247,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           const isTeamSharePending = Boolean(fileTeamShareState.action === "share");
           const isFileContextTarget = Boolean(contextTargetEntry && !contextTargetEntry.isFolder);
           const isFolderContextTarget = Boolean(contextTargetEntry && contextTargetEntry.isFolder);
-          const contextMetadataCacheKey = isFileContextTarget
-            ? getFileContextMetadataCacheKey(selectedEnvironmentId, contextTargetEntry.path)
-            : "";
-          const contextMetadataRecord = contextMetadataCacheKey
-            ? fileContextMetadataByKey[contextMetadataCacheKey] || null
-            : null;
-          const contextMetadata = isFileContextTarget
-            ? (contextMetadataRecord?.data || buildFallbackFileContextMetadata(contextTargetEntry))
-            : null;
-          const isContextMetadataLoading = contextMetadataRecord?.status === "loading";
+          const contextMenuAnimationClass = contextMenuPhase === "exit"
+            ? " account-menu-animate-up-out"
+            : " account-menu-animate-up-in";
 
           return React.createElement(React.Fragment, null,
             React.createElement("div", {
@@ -75989,7 +76261,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               },
             }),
             React.createElement("div", {
-              className: "playground-files-context-menu",
+              className: "playground-files-context-menu" + contextMenuAnimationClass,
               style: {
                 left: contextMenu.x + "px",
                 top: contextMenu.y + "px",
@@ -76021,7 +76293,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                       onClick: () => openFileComputerPickerDialog(contextSelectedFileEntries),
                     },
                       React.createElement(Monitor, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, isComputerSendPending ? "Sending..." : "Send to another computer")
+                      React.createElement("span", null, isComputerSendPending ? "Sending..." : "Send to Computer")
                     ),
                     React.createElement("button", {
                       type: "button",
@@ -76030,7 +76302,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                       onClick: () => openFileTeamPickerDialog(contextSelectedFileEntries),
                     },
                       React.createElement(UsersRound, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, isTeamSharePending ? "Sharing..." : "Make available to team")
+                      React.createElement("span", null, isTeamSharePending ? "Sharing..." : "Share with Team")
                     ),
                     React.createElement("div", { className: "playground-files-context-divider" },
                       React.createElement("button", {
@@ -76046,39 +76318,6 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                 : null,
               !isMultiFileContext && isFileContextTarget
                 ? React.createElement(React.Fragment, null,
-                    React.createElement("div", { className: "playground-files-context-title" }, contextTargetEntry.name || "File"),
-                    React.createElement("div", { className: "playground-files-context-meta" },
-                      React.createElement("div", { className: "playground-files-context-meta-row" },
-                        React.createElement("span", { className: "playground-files-context-meta-label" }, "Creation date"),
-                        React.createElement("span", { className: "playground-files-context-meta-value" }, formatPlaygroundExactDate(contextMetadata?.createdAt || ""))
-                      ),
-                      React.createElement("div", { className: "playground-files-context-meta-row" },
-                        React.createElement("span", { className: "playground-files-context-meta-label" }, "Last update"),
-                        React.createElement("span", { className: "playground-files-context-meta-value" }, formatPlaygroundExactDate(contextMetadata?.updatedAt || ""))
-                      ),
-                      React.createElement("div", { className: "playground-files-context-meta-row" },
-                        React.createElement("span", { className: "playground-files-context-meta-label" }, "Thread"),
-                        String(contextMetadata?.sourceThreadId || "").trim()
-                          ? React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-context-meta-link",
-                              title: String(contextMetadata?.sourceThreadTitle || "").trim() || String(contextMetadata?.sourceThreadId || "").trim(),
-                              onClick: () => handleOpenSourceThread(
-                                contextMetadata?.sourceThreadId,
-                                contextMetadata?.sourceThreadRecord || null
-                              ),
-                            }, String(contextMetadata?.sourceThreadTitle || "").trim() || String(contextMetadata?.sourceThreadId || "").trim())
-                          : React.createElement("span", { className: "playground-files-context-meta-value" }, "—")
-                      ),
-                      React.createElement("div", { className: "playground-files-context-meta-row" },
-                        React.createElement("span", { className: "playground-files-context-meta-label" }, "Last updated by"),
-                        React.createElement("span", { className: "playground-files-context-meta-value" }, contextMetadata?.updatedByLabel || "—")
-                      ),
-                      isContextMetadataLoading
-                        ? React.createElement("div", { className: "playground-files-context-meta-status" }, "Loading file metadata…")
-                        : null
-                    ),
-                    React.createElement("div", { className: "playground-files-context-divider" }),
                     React.createElement("button", {
                       type: "button",
                       className: "playground-files-context-item",
@@ -76133,7 +76372,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                       onClick: () => openFileComputerPickerDialog(contextTargetEntry),
                     },
                       React.createElement(Monitor, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, isComputerSendPending ? "Sending..." : "Send to another computer")
+                      React.createElement("span", null, isComputerSendPending ? "Sending..." : "Send to Computer")
                     ),
                     React.createElement("button", {
                       type: "button",
@@ -76142,7 +76381,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                       onClick: () => openFileTeamPickerDialog(contextTargetEntry),
                     },
                       React.createElement(UsersRound, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, isTeamSharePending ? "Sharing..." : "Make available to team")
+                      React.createElement("span", null, isTeamSharePending ? "Sharing..." : "Share with Team")
                     ),
                     canDelete
                       ? React.createElement("div", { className: "playground-files-context-divider" },
@@ -76295,72 +76534,132 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
           const isComputerSendPending = fileComputerTransferState.action === "send"
             && fileComputerTransferState.path === fileComputerPickerState.path;
-
-          return React.createElement("div", {
-              className: "sidebar-thread-rename-scrim",
+          const selectedDestinationComputer = availableDestinationComputers.find((environment) =>
+            String(environment?.id || "").trim() === String(fileComputerPickerValue || "").trim()
+          ) || null;
+          const selectedDestinationTitle = String(
+            selectedDestinationComputer?.name
+            || selectedDestinationComputer?.label
+            || ""
+          ).trim() || "Select Computer";
+          const selectedDestinationDescription = selectedDestinationComputer
+            ? (String(selectedDestinationComputer?.id || "").trim() || "Computer")
+            : (availableDestinationComputers.length > 0
+              ? "Choose a destination computer"
+              : "No other computers are available yet");
+          const modalElement = React.createElement("div", {
+              className: "playground-team-modal-backdrop playground-team-mission-modal-backdrop"
+                + (fileComputerPickerVisible ? " is-visible" : "")
+                + (fileComputerPickerClosing ? " is-closing" : ""),
               onClick: closeFileComputerPickerDialog,
             },
               React.createElement("form", {
-                className: "sidebar-thread-rename-modal sidebar-thread-project-picker-modal",
+                className: "playground-team-modal playground-team-mission-modal is-share-resource"
+                  + (fileComputerPickerVisible ? " is-visible" : "")
+                  + (fileComputerPickerClosing ? " is-closing" : ""),
+                role: "dialog",
+                "aria-modal": "true",
+                "aria-labelledby": "file-computer-picker-modal-title",
                 onClick: (event) => event.stopPropagation(),
                 onSubmit: (event) => {
                   void handleFileComputerPickerSubmit(event);
                 },
               },
-                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Send to another computer"),
-                React.createElement("div", { className: "sidebar-thread-rename-copy" },
-                  "Copy ",
-                  React.createElement("strong", null, fileComputerPickerState.title || "these files"),
-                  " to another computer. Files keep their workspace paths and replace matching files there."
-                ),
-                availableDestinationComputers.length > 0
-                  ? React.createElement("div", { className: "sidebar-thread-project-picker-list" },
-                      availableDestinationComputers.map((environment) => {
-                        const environmentId = String(environment?.id || "").trim();
-                        const isSelected = environmentId === fileComputerPickerValue;
-                        const environmentName = String(environment?.name || environment?.label || "Computer").trim() || "Computer";
-                        return React.createElement("button", {
-                            key: environmentId,
-                            type: "button",
-                            className: "sidebar-thread-project-picker-row" + (isSelected ? " is-selected" : ""),
-                            disabled: isComputerSendPending,
-                            onClick: () => setFileComputerPickerValue(environmentId),
-                          },
-                            React.createElement("div", { className: "playground-tasks-project-row" },
-                              React.createElement(Monitor, {
-                                width: 14,
-                                height: 14,
-                                strokeWidth: 1.8,
-                                style: { color: "#fff" },
-                              }),
-                              React.createElement("div", { className: "playground-tasks-project-row-main" },
-                                React.createElement("div", { className: "playground-tasks-project-row-title" }, environmentName)
-                              )
-                            )
-                          );
-                      })
-                    )
-                  : React.createElement("div", { className: "sidebar-thread-project-picker-empty" },
-                      "No other computers are available yet."
-                    ),
-                fileComputerPickerError
-                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, fileComputerPickerError)
-                  : null,
-                React.createElement("div", { className: "sidebar-thread-rename-actions" },
+                React.createElement("div", { className: "playground-team-modal-header" },
+                  React.createElement("div", null,
+                    React.createElement("h2", { id: "file-computer-picker-modal-title", className: "playground-team-modal-title" }, "Send to Computer")
+                  ),
                   React.createElement("button", {
                     type: "button",
-                    className: "sidebar-thread-rename-button is-secondary",
+                    className: "playground-team-modal-close",
                     onClick: closeFileComputerPickerDialog,
                     disabled: isComputerSendPending,
-                  }, "Cancel"),
-                  React.createElement("button", {
-                    type: "submit",
-                    className: "sidebar-thread-rename-button is-primary",
-                    disabled: isComputerSendPending || availableDestinationComputers.length === 0 || !fileComputerPickerValue,
-                  }, isComputerSendPending ? "Sending..." : "Send")
+                    "aria-label": "Close send to computer modal",
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-team-share-picker" },
+                  React.createElement("div", {
+                      className: "playground-tasks-project-blueprint-section playground-tasks-toolbar-popup-shell playground-team-share-resource-selector"
+                        + (fileComputerPickerOpen ? " is-open" : ""),
+                    },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-tasks-project-blueprint-trigger",
+                      onClick: () => setFileComputerPickerOpen((current) => !current),
+                      disabled: isComputerSendPending || availableDestinationComputers.length === 0,
+                      "aria-haspopup": "listbox",
+                      "aria-expanded": fileComputerPickerOpen ? "true" : "false",
+                    },
+                      React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-main" },
+                        React.createElement("span", {
+                          className: "playground-tasks-project-blueprint-icon",
+                          style: { "--project-blueprint-accent": "#ffffff" },
+                          "aria-hidden": "true",
+                        }, React.createElement(Monitor, { width: 15, height: 15, strokeWidth: 1.85 })),
+                        React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-copy" },
+                          React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-title" }, selectedDestinationTitle),
+                          React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-description" }, selectedDestinationDescription)
+                        )
+                      ),
+                      React.createElement(ChevronDown, { className: "playground-tasks-project-blueprint-chevron", strokeWidth: 1.8 })
+                    ),
+                    fileComputerPickerOpen
+                      ? React.createElement("div", {
+                          className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-blueprint-popover playground-tasks-toolbar-popup-menu-animate-down-in",
+                          role: "listbox",
+                        },
+                          React.createElement("div", { className: "playground-tasks-project-blueprint-grid" },
+                            availableDestinationComputers.map((environment) => {
+                              const environmentId = String(environment?.id || "").trim();
+                              const environmentName = String(environment?.name || environment?.label || "Computer").trim() || "Computer";
+                              const isSelected = environmentId && environmentId === fileComputerPickerValue;
+                              return React.createElement("button", {
+                                  key: environmentId,
+                                  type: "button",
+                                  className: "playground-tasks-project-blueprint-option" + (isSelected ? " is-active" : ""),
+                                  onClick: () => {
+                                    setFileComputerPickerValue(environmentId);
+                                    setFileComputerPickerOpen(false);
+                                  },
+                                },
+                                React.createElement("span", {
+                                  className: "playground-tasks-project-blueprint-icon",
+                                  style: { "--project-blueprint-accent": "#ffffff" },
+                                  "aria-hidden": "true",
+                                }, React.createElement(Monitor, { width: 15, height: 15, strokeWidth: 1.85 })),
+                                React.createElement("span", { className: "playground-tasks-project-blueprint-copy" },
+                                  React.createElement("span", { className: "playground-tasks-project-blueprint-title" }, environmentName),
+                                  React.createElement("span", { className: "playground-tasks-project-blueprint-description" }, environmentId || "Computer")
+                                )
+                              );
+                            })
+                          )
+                        )
+                      : null
+                  ),
+                  fileComputerPickerError
+                    ? React.createElement("div", { className: "sidebar-thread-rename-error" }, fileComputerPickerError)
+                    : null,
+                  React.createElement("div", { className: "playground-team-modal-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-team-button",
+                      onClick: closeFileComputerPickerDialog,
+                      disabled: isComputerSendPending,
+                    }, "Cancel"),
+                    React.createElement("button", {
+                      type: "submit",
+                      className: "playground-team-button is-primary",
+                      disabled: isComputerSendPending || availableDestinationComputers.length === 0 || !fileComputerPickerValue,
+                    }, isComputerSendPending ? "Sending..." : "Send")
+                  )
                 )
               )
             );
+
+          return typeof document !== "undefined" && document.body
+            ? createPortal(modalElement, document.body)
+            : modalElement;
         }
 
         function renderFileTeamPickerModal() {
@@ -76370,74 +76669,129 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
           const isTeamSharePending = fileTeamShareState.action === "share"
             && fileTeamShareState.path === fileTeamPickerState.path;
-
-          return React.createElement("div", {
-              className: "sidebar-thread-rename-scrim",
+          const selectedTeamOption = availableFileTeams.find((team) =>
+            String(team?.id || "").trim() === String(fileTeamPickerValue || "").trim()
+          ) || null;
+          const selectedTeamTitle = String(selectedTeamOption?.name || "").trim() || "Select Team";
+          const selectedTeamDescription = selectedTeamOption
+            ? (String(selectedTeamOption?.role || "").trim() || "Team")
+            : (isLoadingFileTeams
+              ? "Loading teams..."
+              : (availableFileTeams.length > 0 ? "Choose a team" : "No teams are available yet"));
+          const modalElement = React.createElement("div", {
+              className: "playground-team-modal-backdrop playground-team-mission-modal-backdrop"
+                + (fileTeamPickerVisible ? " is-visible" : "")
+                + (fileTeamPickerClosing ? " is-closing" : ""),
               onClick: closeFileTeamPickerDialog,
             },
               React.createElement("form", {
-                className: "sidebar-thread-rename-modal sidebar-thread-project-picker-modal",
+                className: "playground-team-modal playground-team-mission-modal is-share-resource"
+                  + (fileTeamPickerVisible ? " is-visible" : "")
+                  + (fileTeamPickerClosing ? " is-closing" : ""),
+                role: "dialog",
+                "aria-modal": "true",
+                "aria-labelledby": "file-team-picker-modal-title",
                 onClick: (event) => event.stopPropagation(),
                 onSubmit: (event) => {
                   void handleFileTeamPickerSubmit(event);
                 },
               },
-                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Make available to team"),
-                React.createElement("div", { className: "sidebar-thread-rename-copy" },
-                  "Share ",
-                  React.createElement("strong", null, fileTeamPickerState.title || "these files"),
-                  " with a team. Team members can access the selected files from this computer workspace."
-                ),
-                isLoadingFileTeams
-                  ? React.createElement("div", { className: "sidebar-thread-project-picker-empty" }, "Loading teams...")
-                  : availableFileTeams.length > 0
-                    ? React.createElement("div", { className: "sidebar-thread-project-picker-list" },
-                        availableFileTeams.map((team) => {
-                          const teamId = String(team?.id || "").trim();
-                          const isSelected = teamId === fileTeamPickerValue;
-                          const teamName = String(team?.name || "Team").trim() || "Team";
-                          return React.createElement("button", {
-                              key: teamId,
-                              type: "button",
-                              className: "sidebar-thread-project-picker-row" + (isSelected ? " is-selected" : ""),
-                              disabled: isTeamSharePending,
-                              onClick: () => setFileTeamPickerValue(teamId),
-                            },
-                              React.createElement("div", { className: "playground-tasks-project-row" },
-                                React.createElement(UsersRound, {
-                                  width: 14,
-                                  height: 14,
-                                  strokeWidth: 1.8,
-                                  style: { color: "#fff" },
-                                }),
-                                React.createElement("div", { className: "playground-tasks-project-row-main" },
-                                  React.createElement("div", { className: "playground-tasks-project-row-title" }, teamName)
-                                )
-                              )
-                            );
-                        })
-                      )
-                    : React.createElement("div", { className: "sidebar-thread-project-picker-empty" },
-                        "No teams are available yet."
-                      ),
-                fileTeamPickerError
-                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, fileTeamPickerError)
-                  : null,
-                React.createElement("div", { className: "sidebar-thread-rename-actions" },
+                React.createElement("div", { className: "playground-team-modal-header" },
+                  React.createElement("div", null,
+                    React.createElement("h2", { id: "file-team-picker-modal-title", className: "playground-team-modal-title" }, "Share with Team")
+                  ),
                   React.createElement("button", {
                     type: "button",
-                    className: "sidebar-thread-rename-button is-secondary",
+                    className: "playground-team-modal-close",
                     onClick: closeFileTeamPickerDialog,
                     disabled: isTeamSharePending,
-                  }, "Cancel"),
-                  React.createElement("button", {
-                    type: "submit",
-                    className: "sidebar-thread-rename-button is-primary",
-                    disabled: isTeamSharePending || isLoadingFileTeams || availableFileTeams.length === 0 || !fileTeamPickerValue,
-                  }, isTeamSharePending ? "Sharing..." : "Share")
+                    "aria-label": "Close share with team modal",
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-team-share-picker" },
+                  React.createElement("div", {
+                      className: "playground-tasks-project-blueprint-section playground-tasks-toolbar-popup-shell playground-team-share-resource-selector"
+                        + (fileTeamPickerOpen ? " is-open" : ""),
+                    },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-tasks-project-blueprint-trigger",
+                      onClick: () => setFileTeamPickerOpen((current) => !current),
+                      disabled: isTeamSharePending || isLoadingFileTeams || availableFileTeams.length === 0,
+                      "aria-haspopup": "listbox",
+                      "aria-expanded": fileTeamPickerOpen ? "true" : "false",
+                    },
+                      React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-main" },
+                        React.createElement("span", {
+                          className: "playground-tasks-project-blueprint-icon",
+                          style: { "--project-blueprint-accent": "#ffffff" },
+                          "aria-hidden": "true",
+                        }, React.createElement(UsersRound, { width: 15, height: 15, strokeWidth: 1.85 })),
+                        React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-copy" },
+                          React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-title" }, selectedTeamTitle),
+                          React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-description" }, selectedTeamDescription)
+                        )
+                      ),
+                      React.createElement(ChevronDown, { className: "playground-tasks-project-blueprint-chevron", strokeWidth: 1.8 })
+                    ),
+                    fileTeamPickerOpen
+                      ? React.createElement("div", {
+                          className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-blueprint-popover playground-tasks-toolbar-popup-menu-animate-down-in",
+                          role: "listbox",
+                        },
+                          React.createElement("div", { className: "playground-tasks-project-blueprint-grid" },
+                            availableFileTeams.map((team) => {
+                              const teamId = String(team?.id || "").trim();
+                              const teamName = String(team?.name || "Team").trim() || "Team";
+                              const teamMeta = String(team?.role || "").trim() || "Team";
+                              const isSelected = teamId && teamId === fileTeamPickerValue;
+                              return React.createElement("button", {
+                                  key: teamId,
+                                  type: "button",
+                                  className: "playground-tasks-project-blueprint-option" + (isSelected ? " is-active" : ""),
+                                  onClick: () => {
+                                    setFileTeamPickerValue(teamId);
+                                    setFileTeamPickerOpen(false);
+                                  },
+                                },
+                                React.createElement("span", {
+                                  className: "playground-tasks-project-blueprint-icon",
+                                  style: { "--project-blueprint-accent": "#ffffff" },
+                                  "aria-hidden": "true",
+                                }, React.createElement(UsersRound, { width: 15, height: 15, strokeWidth: 1.85 })),
+                                React.createElement("span", { className: "playground-tasks-project-blueprint-copy" },
+                                  React.createElement("span", { className: "playground-tasks-project-blueprint-title" }, teamName),
+                                  React.createElement("span", { className: "playground-tasks-project-blueprint-description" }, teamMeta)
+                                )
+                              );
+                            })
+                          )
+                        )
+                      : null
+                  ),
+                  fileTeamPickerError
+                    ? React.createElement("div", { className: "sidebar-thread-rename-error" }, fileTeamPickerError)
+                    : null,
+                  React.createElement("div", { className: "playground-team-modal-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-team-button",
+                      onClick: closeFileTeamPickerDialog,
+                      disabled: isTeamSharePending,
+                    }, "Cancel"),
+                    React.createElement("button", {
+                      type: "submit",
+                      className: "playground-team-button is-primary",
+                      disabled: isTeamSharePending || isLoadingFileTeams || availableFileTeams.length === 0 || !fileTeamPickerValue,
+                    }, isTeamSharePending ? "Sharing..." : "Share")
+                  )
                 )
               )
             );
+
+          return typeof document !== "undefined" && document.body
+            ? createPortal(modalElement, document.body)
+            : modalElement;
         }
 
         function renderChangesFilterMenu() {
@@ -95505,6 +95859,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               },
             ],
             emptyText: environmentAnalyticsError || "No computer activity yet",
+            emptyContent: isEnvironmentAnalyticsLoading
+              ? null
+              : React.createElement("div", { className: "playground-settings-usage-chart-empty is-tall playground-auth-users-empty-state" },
+                  React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "No Computer Usage yet"),
+                  React.createElement("div", { className: "playground-auth-users-empty-state-copy" }, "Computer usage appears here once agents run work inside this computer.")
+                ),
             title: "Computer Activity",
             tickFormatter: (value) => String(Math.round(Number(value) || 0)),
             isLoading: isEnvironmentAnalyticsLoading && !activeEnvironmentAnalytics,
@@ -96411,9 +96771,6 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           const normalizedSeries = Array.isArray(series)
             ? series.filter((entry) => entry && Array.isArray(entry.values))
             : [];
-          if (!normalizedLabels.length || !normalizedSeries.length) {
-            return emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet");
-          }
 
           const frameHeight = 270;
           const svgHeight = 270;
@@ -96425,9 +96782,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             normalizedSeries.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
           );
           const hasUsageData = totals.some((value) => Math.max(0, Number(value || 0)) > 0);
-          if (!hasUsageData && !isLoading) {
-            return emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet");
-          }
+          const shouldShowEmptyState = !normalizedLabels.length || !normalizedSeries.length || !hasUsageData;
           const yMax = Math.max(1, ...totals, 1);
           const gridLineCount = 4;
           const formatTick = typeof tickFormatter === "function"
@@ -96467,106 +96822,116 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             : null;
 
           return React.createElement("div", { className: "playground-settings-usage-chart-card" },
-            isLoading
-              ? React.createElement("div", { className: "playground-overview-chart-loading", "aria-label": "Loading chart data" },
-                  React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
-                )
-              : null,
             React.createElement("div", { className: "playground-project-overview-chart-header" },
               React.createElement("div", { className: "playground-project-overview-chart-header-main" },
                 React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Activity comparison"),
                 controlsInFooter ? null : (timescaleControl || null)
               )
             ),
-            React.createElement(EnvironmentsHomeResponsiveSvgShared, {
-                frameClassName: "playground-project-overview-chart-shell",
-                frameHeight,
-                svgHeight,
-                fallbackWidth: 1200,
-                ariaLabel: ariaLabel || "Usage chart",
-              }, ({ svgWidth, svgHeight: measuredSvgHeight }) => {
-                const plotWidth = svgWidth - marginLeft - marginRight;
-                const plotHeight = measuredSvgHeight - marginTop - marginBottom;
-                const slotWidth = plotWidth / Math.max(normalizedLabels.length, 1);
-                const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
-                const baselineY = marginTop + plotHeight;
+            isLoading
+              ? React.createElement("div", {
+                  className: "playground-project-overview-chart-shell",
+                  style: { height: String(frameHeight) + "px" },
+                },
+                  React.createElement("div", {
+                      className: "playground-overview-chart-loading",
+                      style: { position: "static", inset: "auto", height: "100%" },
+                      "aria-label": "Loading chart data",
+                    },
+                    React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
+                  )
+                )
+              : shouldShowEmptyState
+                ? (emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet"))
+                : React.createElement(EnvironmentsHomeResponsiveSvgShared, {
+                    frameClassName: "playground-project-overview-chart-shell",
+                    frameHeight,
+                    svgHeight,
+                    fallbackWidth: 1200,
+                    ariaLabel: ariaLabel || "Usage chart",
+                  }, ({ svgWidth, svgHeight: measuredSvgHeight }) => {
+                    const plotWidth = svgWidth - marginLeft - marginRight;
+                    const plotHeight = measuredSvgHeight - marginTop - marginBottom;
+                    const slotWidth = plotWidth / Math.max(normalizedLabels.length, 1);
+                    const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
+                    const baselineY = marginTop + plotHeight;
 
-                return React.createElement(React.Fragment, null,
-                  Array.from({ length: gridLineCount + 1 }).map((_, index) => {
-                    const y = marginTop + (plotHeight / gridLineCount) * index;
-                    const tickValue = yMax - (yMax / gridLineCount) * index;
-                    return React.createElement(React.Fragment, { key: "grid:" + index },
-                      React.createElement("line", {
-                        x1: marginLeft,
-                        y1: y,
-                        x2: svgWidth - marginRight,
-                        y2: y,
-                        stroke: "rgba(255,255,255,0.10)",
-                        strokeWidth: "1",
-                      }),
-                      React.createElement("text", {
-                        x: 0,
-                        y,
-                        textAnchor: "start",
-                        dominantBaseline: "middle",
-                        fill: "rgba(255,255,255,0.4)",
-                        fontSize: "12",
-                        fontFamily: "Inter, sans-serif",
-                        fontWeight: "400",
-                      }, formatTick(tickValue))
-                    );
-                  }),
-                  normalizedLabels.map((label, index) => {
-                    const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
-                    const isFirstLabel = index === 0;
-                    const isLastLabel = index === normalizedLabels.length - 1;
-                    const labelX = isFirstLabel
-                      ? marginLeft
-                      : isLastLabel
-                        ? svgWidth - marginRight
-                        : marginLeft + slotWidth * index + slotWidth / 2;
-                    let stackOffsetY = baselineY;
-                    return React.createElement(React.Fragment, { key: "stack:" + index },
-                      normalizedSeries.map((entry, seriesIndex) => {
-                        const rawValue = Math.max(0, Number(entry.values[index] || 0));
-                        if (rawValue <= 0) {
-                          return null;
-                        }
-                        const segmentHeight = (rawValue / yMax) * plotHeight;
-                        stackOffsetY -= segmentHeight;
-                        return React.createElement("rect", {
-                          key: "segment:" + seriesIndex,
-                          x,
-                          y: stackOffsetY,
-                          width: barWidth,
-                          height: Math.max(segmentHeight, 1),
-                          rx: "3",
-                          fill: entry.color || "rgba(255,255,255,0.8)",
-                        });
-                      }),
-                      visibleLabelIndexes.has(index)
-                        ? React.createElement("text", {
-                            x: labelX,
-                            y: measuredSvgHeight - 28,
-                            textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
+                    return React.createElement(React.Fragment, null,
+                      Array.from({ length: gridLineCount + 1 }).map((_, index) => {
+                        const y = marginTop + (plotHeight / gridLineCount) * index;
+                        const tickValue = yMax - (yMax / gridLineCount) * index;
+                        return React.createElement(React.Fragment, { key: "grid:" + index },
+                          React.createElement("line", {
+                            x1: marginLeft,
+                            y1: y,
+                            x2: svgWidth - marginRight,
+                            y2: y,
+                            stroke: "rgba(255,255,255,0.10)",
+                            strokeWidth: "1",
+                          }),
+                          React.createElement("text", {
+                            x: 0,
+                            y,
+                            textAnchor: "start",
                             dominantBaseline: "middle",
                             fill: "rgba(255,255,255,0.4)",
                             fontSize: "12",
                             fontFamily: "Inter, sans-serif",
                             fontWeight: "400",
-                          }, label)
-                        : null
+                          }, formatTick(tickValue))
+                        );
+                      }),
+                      normalizedLabels.map((label, index) => {
+                        const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
+                        const isFirstLabel = index === 0;
+                        const isLastLabel = index === normalizedLabels.length - 1;
+                        const labelX = isFirstLabel
+                          ? marginLeft
+                          : isLastLabel
+                            ? svgWidth - marginRight
+                            : marginLeft + slotWidth * index + slotWidth / 2;
+                        let stackOffsetY = baselineY;
+                        return React.createElement(React.Fragment, { key: "stack:" + index },
+                          normalizedSeries.map((entry, seriesIndex) => {
+                            const rawValue = Math.max(0, Number(entry.values[index] || 0));
+                            if (rawValue <= 0) {
+                              return null;
+                            }
+                            const segmentHeight = (rawValue / yMax) * plotHeight;
+                            stackOffsetY -= segmentHeight;
+                            return React.createElement("rect", {
+                              key: "segment:" + seriesIndex,
+                              x,
+                              y: stackOffsetY,
+                              width: barWidth,
+                              height: Math.max(segmentHeight, 1),
+                              rx: "3",
+                              fill: entry.color || "rgba(255,255,255,0.8)",
+                            });
+                          }),
+                          visibleLabelIndexes.has(index)
+                            ? React.createElement("text", {
+                                x: labelX,
+                                y: measuredSvgHeight - 28,
+                                textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
+                                dominantBaseline: "middle",
+                                fill: "rgba(255,255,255,0.4)",
+                                fontSize: "12",
+                                fontFamily: "Inter, sans-serif",
+                                fontWeight: "400",
+                              }, label)
+                            : null
+                        );
+                      })
                     );
-                  })
-                );
-              }
-            ),
+                  }
+                ),
             controlsInFooter
               ? React.createElement("div", { className: "playground-develop-server-metrics-footer" },
-                  React.createElement("div", { className: "playground-develop-server-metrics-footer-left" }, chartLegend),
+                  React.createElement("div", { className: "playground-develop-server-metrics-footer-left" }, !isLoading && !shouldShowEmptyState ? chartLegend : null),
                   timescaleControl || null
                 )
-              : chartLegend
+              : (!isLoading && !shouldShowEmptyState ? chartLegend : null)
           );
         };
 
@@ -96868,9 +97233,6 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             const normalizedSeries = Array.isArray(series)
               ? series.filter((entry) => entry && Array.isArray(entry.values))
               : [];
-            if (!normalizedLabels.length || !normalizedSeries.length) {
-              return emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet");
-            }
 
             const frameHeight = 270;
             const svgHeight = 270;
@@ -96882,9 +97244,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               normalizedSeries.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
             );
             const hasUsageData = totals.some((value) => Math.max(0, Number(value || 0)) > 0);
-            if (!hasUsageData && !isLoading) {
-              return emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet");
-            }
+            const shouldShowEmptyState = !normalizedLabels.length || !normalizedSeries.length || !hasUsageData;
             const yMax = Math.max(1, ...totals, 1);
             const gridLineCount = 4;
             const formatTick = typeof tickFormatter === "function"
@@ -96925,106 +97285,116 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               );
 
             return React.createElement("div", { className: "playground-settings-usage-chart-card" },
-              isLoading
-                ? React.createElement("div", { className: "playground-overview-chart-loading", "aria-label": "Loading chart data" },
-                    React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
-                  )
-                : null,
               React.createElement("div", { className: "playground-project-overview-chart-header" },
                 React.createElement("div", { className: "playground-project-overview-chart-header-main" },
                   React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Activity comparison"),
                   controlsInFooter ? null : (timescaleControl || null)
                 )
               ),
-              React.createElement(EnvironmentsHomeResponsiveSvg, {
-                  frameClassName: "playground-project-overview-chart-shell",
-                  frameHeight,
-                  svgHeight,
-                  fallbackWidth: 1200,
-                  ariaLabel: ariaLabel || "Usage chart",
-                }, ({ svgWidth, svgHeight: measuredSvgHeight }) => {
-                  const plotWidth = svgWidth - marginLeft - marginRight;
-                  const plotHeight = measuredSvgHeight - marginTop - marginBottom;
-                  const slotWidth = plotWidth / Math.max(normalizedLabels.length, 1);
-                  const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
-                  const baselineY = marginTop + plotHeight;
+              isLoading
+                ? React.createElement("div", {
+                    className: "playground-project-overview-chart-shell",
+                    style: { height: String(frameHeight) + "px" },
+                  },
+                    React.createElement("div", {
+                        className: "playground-overview-chart-loading",
+                        style: { position: "static", inset: "auto", height: "100%" },
+                        "aria-label": "Loading chart data",
+                      },
+                      React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
+                    )
+                  )
+                : shouldShowEmptyState
+                  ? (emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet"))
+                  : React.createElement(EnvironmentsHomeResponsiveSvg, {
+                      frameClassName: "playground-project-overview-chart-shell",
+                      frameHeight,
+                      svgHeight,
+                      fallbackWidth: 1200,
+                      ariaLabel: ariaLabel || "Usage chart",
+                    }, ({ svgWidth, svgHeight: measuredSvgHeight }) => {
+                      const plotWidth = svgWidth - marginLeft - marginRight;
+                      const plotHeight = measuredSvgHeight - marginTop - marginBottom;
+                      const slotWidth = plotWidth / Math.max(normalizedLabels.length, 1);
+                      const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
+                      const baselineY = marginTop + plotHeight;
 
-                  return React.createElement(React.Fragment, null,
-                    Array.from({ length: gridLineCount + 1 }).map((_, index) => {
-                      const y = marginTop + (plotHeight / gridLineCount) * index;
-                      const tickValue = yMax - (yMax / gridLineCount) * index;
-                      return React.createElement(React.Fragment, { key: "grid:" + index },
-                        React.createElement("line", {
-                          x1: marginLeft,
-                          y1: y,
-                          x2: svgWidth - marginRight,
-                          y2: y,
-                          stroke: "rgba(255,255,255,0.10)",
-                          strokeWidth: "1",
-                        }),
-                        React.createElement("text", {
-                          x: 0,
-                          y,
-                          textAnchor: "start",
-                          dominantBaseline: "middle",
-                          fill: "rgba(255,255,255,0.4)",
-                          fontSize: "12",
-                          fontFamily: "Inter, sans-serif",
-                          fontWeight: "400",
-                        }, formatTick(tickValue))
-                      );
-                    }),
-                    normalizedLabels.map((label, index) => {
-                      const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
-                      const isFirstLabel = index === 0;
-                      const isLastLabel = index === normalizedLabels.length - 1;
-                      const labelX = isFirstLabel
-                        ? marginLeft
-                        : isLastLabel
-                          ? svgWidth - marginRight
-                          : marginLeft + slotWidth * index + slotWidth / 2;
-                      let stackOffsetY = baselineY;
-                      return React.createElement(React.Fragment, { key: "stack:" + index },
-                        normalizedSeries.map((entry, seriesIndex) => {
-                          const rawValue = Math.max(0, Number(entry.values[index] || 0));
-                          if (rawValue <= 0) {
-                            return null;
-                          }
-                          const segmentHeight = (rawValue / yMax) * plotHeight;
-                          stackOffsetY -= segmentHeight;
-                          return React.createElement("rect", {
-                            key: "segment:" + seriesIndex,
-                            x,
-                            y: stackOffsetY,
-                            width: barWidth,
-                            height: Math.max(segmentHeight, 1),
-                            rx: "3",
-                            fill: entry.color || "rgba(255,255,255,0.8)",
-                          });
-                        }),
-                        visibleLabelIndexes.has(index)
-                          ? React.createElement("text", {
-                              x: labelX,
-                              y: measuredSvgHeight - 28,
-                              textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
+                      return React.createElement(React.Fragment, null,
+                        Array.from({ length: gridLineCount + 1 }).map((_, index) => {
+                          const y = marginTop + (plotHeight / gridLineCount) * index;
+                          const tickValue = yMax - (yMax / gridLineCount) * index;
+                          return React.createElement(React.Fragment, { key: "grid:" + index },
+                            React.createElement("line", {
+                              x1: marginLeft,
+                              y1: y,
+                              x2: svgWidth - marginRight,
+                              y2: y,
+                              stroke: "rgba(255,255,255,0.10)",
+                              strokeWidth: "1",
+                            }),
+                            React.createElement("text", {
+                              x: 0,
+                              y,
+                              textAnchor: "start",
                               dominantBaseline: "middle",
                               fill: "rgba(255,255,255,0.4)",
                               fontSize: "12",
                               fontFamily: "Inter, sans-serif",
                               fontWeight: "400",
-                            }, label)
-                          : null
+                            }, formatTick(tickValue))
+                          );
+                        }),
+                        normalizedLabels.map((label, index) => {
+                          const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
+                          const isFirstLabel = index === 0;
+                          const isLastLabel = index === normalizedLabels.length - 1;
+                          const labelX = isFirstLabel
+                            ? marginLeft
+                            : isLastLabel
+                              ? svgWidth - marginRight
+                              : marginLeft + slotWidth * index + slotWidth / 2;
+                          let stackOffsetY = baselineY;
+                          return React.createElement(React.Fragment, { key: "stack:" + index },
+                            normalizedSeries.map((entry, seriesIndex) => {
+                              const rawValue = Math.max(0, Number(entry.values[index] || 0));
+                              if (rawValue <= 0) {
+                                return null;
+                              }
+                              const segmentHeight = (rawValue / yMax) * plotHeight;
+                              stackOffsetY -= segmentHeight;
+                              return React.createElement("rect", {
+                                key: "segment:" + seriesIndex,
+                                x,
+                                y: stackOffsetY,
+                                width: barWidth,
+                                height: Math.max(segmentHeight, 1),
+                                rx: "3",
+                                fill: entry.color || "rgba(255,255,255,0.8)",
+                              });
+                            }),
+                            visibleLabelIndexes.has(index)
+                              ? React.createElement("text", {
+                                  x: labelX,
+                                  y: measuredSvgHeight - 28,
+                                  textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
+                                  dominantBaseline: "middle",
+                                  fill: "rgba(255,255,255,0.4)",
+                                  fontSize: "12",
+                                  fontFamily: "Inter, sans-serif",
+                                  fontWeight: "400",
+                                }, label)
+                              : null
+                          );
+                        })
                       );
-                    })
-                  );
-                }
-              ),
+                    }
+                  ),
               controlsInFooter
                 ? React.createElement("div", { className: "playground-develop-server-metrics-footer" },
-                    chartLegend,
+                    !isLoading && !shouldShowEmptyState ? chartLegend : null,
                     timescaleControl || null
                   )
-                : chartLegend
+                : (!isLoading && !shouldShowEmptyState ? chartLegend : null)
             );
           };
 
@@ -103418,9 +103788,6 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           const normalizedSeries = Array.isArray(series)
             ? series.filter((entry) => entry && Array.isArray(entry.values))
             : [];
-          if (!normalizedLabels.length || !normalizedSeries.length) {
-            return emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet");
-          }
 
           const frameHeight = 270;
           const svgHeight = 270;
@@ -103432,9 +103799,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             normalizedSeries.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
           );
           const hasUsageData = totals.some((value) => Math.max(0, Number(value || 0)) > 0);
-          if (!hasUsageData && !isLoading) {
-            return emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet");
-          }
+          const shouldShowEmptyState = !normalizedLabels.length || !normalizedSeries.length || !hasUsageData;
           const yMax = Math.max(1, ...totals, 1);
           const gridLineCount = 4;
           const formatTick = typeof tickFormatter === "function"
@@ -103458,102 +103823,112 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           })();
 
           return React.createElement("div", { className: "playground-settings-usage-chart-card" },
-            isLoading
-              ? React.createElement("div", { className: "playground-overview-chart-loading", "aria-label": "Loading chart data" },
-                  React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
-                )
-              : null,
             React.createElement("div", { className: "playground-project-overview-chart-header" },
               React.createElement("div", { className: "playground-project-overview-chart-header-main" },
                 React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Activity comparison"),
                 timescaleControl || null
               )
             ),
-            React.createElement(EnvironmentsHomeResponsiveSvgShared, {
-                frameClassName: "playground-project-overview-chart-shell",
-                frameHeight,
-                svgHeight,
-                fallbackWidth: 1200,
-                ariaLabel: ariaLabel || "Usage chart",
-              }, ({ svgWidth, svgHeight: measuredSvgHeight }) => {
-                const plotWidth = svgWidth - marginLeft - marginRight;
-                const plotHeight = measuredSvgHeight - marginTop - marginBottom;
-                const slotWidth = plotWidth / Math.max(normalizedLabels.length, 1);
-                const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
-                const baselineY = marginTop + plotHeight;
+            isLoading
+              ? React.createElement("div", {
+                  className: "playground-project-overview-chart-shell",
+                  style: { height: String(frameHeight) + "px" },
+                },
+                  React.createElement("div", {
+                      className: "playground-overview-chart-loading",
+                      style: { position: "static", inset: "auto", height: "100%" },
+                      "aria-label": "Loading chart data",
+                    },
+                    React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
+                  )
+                )
+              : shouldShowEmptyState
+                ? (emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet"))
+                : React.createElement(EnvironmentsHomeResponsiveSvgShared, {
+                    frameClassName: "playground-project-overview-chart-shell",
+                    frameHeight,
+                    svgHeight,
+                    fallbackWidth: 1200,
+                    ariaLabel: ariaLabel || "Usage chart",
+                  }, ({ svgWidth, svgHeight: measuredSvgHeight }) => {
+                    const plotWidth = svgWidth - marginLeft - marginRight;
+                    const plotHeight = measuredSvgHeight - marginTop - marginBottom;
+                    const slotWidth = plotWidth / Math.max(normalizedLabels.length, 1);
+                    const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
+                    const baselineY = marginTop + plotHeight;
 
-                return React.createElement(React.Fragment, null,
-                  Array.from({ length: gridLineCount + 1 }).map((_, index) => {
-                    const y = marginTop + (plotHeight / gridLineCount) * index;
-                    const tickValue = yMax - (yMax / gridLineCount) * index;
-                    return React.createElement(React.Fragment, { key: "grid:" + index },
-                      React.createElement("line", {
-                        x1: marginLeft,
-                        y1: y,
-                        x2: svgWidth - marginRight,
-                        y2: y,
-                        stroke: "rgba(255,255,255,0.10)",
-                        strokeWidth: "1",
-                      }),
-                      React.createElement("text", {
-                        x: 0,
-                        y,
-                        textAnchor: "start",
-                        dominantBaseline: "middle",
-                        fill: "rgba(255,255,255,0.4)",
-                        fontSize: "12",
-                        fontFamily: "Inter, sans-serif",
-                        fontWeight: "400",
-                      }, formatTick(tickValue))
-                    );
-                  }),
-                  normalizedLabels.map((label, index) => {
-                    const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
-                    const isFirstLabel = index === 0;
-                    const isLastLabel = index === normalizedLabels.length - 1;
-                    const labelX = isFirstLabel
-                      ? marginLeft
-                      : isLastLabel
-                        ? svgWidth - marginRight
-                        : marginLeft + slotWidth * index + slotWidth / 2;
-                    let stackOffsetY = baselineY;
-                    return React.createElement(React.Fragment, { key: "stack:" + index },
-                      normalizedSeries.map((entry, seriesIndex) => {
-                        const rawValue = Math.max(0, Number(entry.values[index] || 0));
-                        if (rawValue <= 0) {
-                          return null;
-                        }
-                        const segmentHeight = (rawValue / yMax) * plotHeight;
-                        stackOffsetY -= segmentHeight;
-                        return React.createElement("rect", {
-                          key: "segment:" + seriesIndex,
-                          x,
-                          y: stackOffsetY,
-                          width: barWidth,
-                          height: Math.max(segmentHeight, 1),
-                          rx: "3",
-                          fill: entry.color || "rgba(255,255,255,0.8)",
-                        });
-                      }),
-                      visibleLabelIndexes.has(index)
-                        ? React.createElement("text", {
-                            x: labelX,
-                            y: measuredSvgHeight - 28,
-                            textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
+                    return React.createElement(React.Fragment, null,
+                      Array.from({ length: gridLineCount + 1 }).map((_, index) => {
+                        const y = marginTop + (plotHeight / gridLineCount) * index;
+                        const tickValue = yMax - (yMax / gridLineCount) * index;
+                        return React.createElement(React.Fragment, { key: "grid:" + index },
+                          React.createElement("line", {
+                            x1: marginLeft,
+                            y1: y,
+                            x2: svgWidth - marginRight,
+                            y2: y,
+                            stroke: "rgba(255,255,255,0.10)",
+                            strokeWidth: "1",
+                          }),
+                          React.createElement("text", {
+                            x: 0,
+                            y,
+                            textAnchor: "start",
                             dominantBaseline: "middle",
                             fill: "rgba(255,255,255,0.4)",
                             fontSize: "12",
                             fontFamily: "Inter, sans-serif",
                             fontWeight: "400",
-                          }, label)
-                        : null
+                          }, formatTick(tickValue))
+                        );
+                      }),
+                      normalizedLabels.map((label, index) => {
+                        const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
+                        const isFirstLabel = index === 0;
+                        const isLastLabel = index === normalizedLabels.length - 1;
+                        const labelX = isFirstLabel
+                          ? marginLeft
+                          : isLastLabel
+                            ? svgWidth - marginRight
+                            : marginLeft + slotWidth * index + slotWidth / 2;
+                        let stackOffsetY = baselineY;
+                        return React.createElement(React.Fragment, { key: "stack:" + index },
+                          normalizedSeries.map((entry, seriesIndex) => {
+                            const rawValue = Math.max(0, Number(entry.values[index] || 0));
+                            if (rawValue <= 0) {
+                              return null;
+                            }
+                            const segmentHeight = (rawValue / yMax) * plotHeight;
+                            stackOffsetY -= segmentHeight;
+                            return React.createElement("rect", {
+                              key: "segment:" + seriesIndex,
+                              x,
+                              y: stackOffsetY,
+                              width: barWidth,
+                              height: Math.max(segmentHeight, 1),
+                              rx: "3",
+                              fill: entry.color || "rgba(255,255,255,0.8)",
+                            });
+                          }),
+                          visibleLabelIndexes.has(index)
+                            ? React.createElement("text", {
+                                x: labelX,
+                                y: measuredSvgHeight - 28,
+                                textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
+                                dominantBaseline: "middle",
+                                fill: "rgba(255,255,255,0.4)",
+                                fontSize: "12",
+                                fontFamily: "Inter, sans-serif",
+                                fontWeight: "400",
+                              }, label)
+                            : null
+                        );
+                      })
                     );
-                  })
-                );
-              }
-            ),
+                  }
+                ),
             showLegend
-              ? React.createElement("div", {
+              ? (!isLoading && !shouldShowEmptyState ? React.createElement("div", {
                   className: "playground-settings-usage-inline-legend",
                   style: { justifyContent: "flex-start" },
                 },
@@ -103566,7 +103941,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                       React.createElement("span", null, entry.label)
                     )
                   )
-                )
+                ) : null)
               : null
           );
         };
@@ -111993,6 +112368,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         speechToTextUrl,
         computerAgents,
         skills,
+        currentUserId,
         currentUserName,
         currentUserEmail,
         currentUserAvatarUrl,
@@ -112142,6 +112518,9 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const [projectSidebarPopover, setProjectSidebarPopover] = useState("");
         const [projectCardMenuProjectId, setProjectCardMenuProjectId] = useState("");
         const [projectsHomeSortMode, setProjectsHomeSortMode] = useState("updated-desc");
+        const [projectsHomeScope, setProjectsHomeScope] = useState("all");
+        const [projectsHomeFilterMode, setProjectsHomeFilterMode] = useState("all");
+        const [projectsHomeToolbarPopover, setProjectsHomeToolbarPopover] = useState("");
         const [projectDraft, setProjectDraft] = useState(buildPlaygroundDefaultProjectDraft());
         const [projectWallpaperTransition, setProjectWallpaperTransition] = useState(null);
         const projectWallpaperTransitionTimerRef = useRef(null);
@@ -112440,6 +112819,11 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	        const [projectRulesDraft, setProjectRulesDraft] = useState("");
 	        const [projectRuleInputValue, setProjectRuleInputValue] = useState("");
 	        const [projectRuleComposerOpen, setProjectRuleComposerOpen] = useState(false);
+	        const [projectRuleComposerVisible, setProjectRuleComposerVisible] = useState(false);
+	        const [projectRuleComposerClosing, setProjectRuleComposerClosing] = useState(false);
+	        const projectRuleComposerCloseTimerRef = useRef(null);
+	        const projectRuleComposerFrameRef = useRef(null);
+	        const projectRuleComposerAnimationMs = 75;
 	        const [projectRuleEditingIndex, setProjectRuleEditingIndex] = useState(-1);
 	        const [projectRuleEditingValue, setProjectRuleEditingValue] = useState("");
 	        const [isMissionControlDocumentEditing, setIsMissionControlDocumentEditing] = useState(false);
@@ -115315,6 +115699,16 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           { id: "name-asc", label: "Name (A-Z)", description: "Sort projects alphabetically" },
           { id: "tasks-desc", label: "Most Open Tasks", description: "Surface projects with the most remaining work" },
         ];
+        const projectsHomeFilterOptions = [
+          { id: "all", label: "All project types", description: "Show every project type." },
+          { id: "active", label: "Active", description: "Show projects that still have open work." },
+          { id: "completed", label: "Completed", description: "Show projects with no open issues." },
+          ...PLAYGROUND_PROJECT_BLUEPRINT_OPTIONS.map((blueprint) => ({
+            id: "type:" + blueprint.id,
+            label: blueprint.title || blueprint.shortTitle || "Project type",
+            description: blueprint.description || blueprint.shortTitle || "Filter by project type.",
+          })),
+        ];
         const activeBacklogFilterOption = backlogFilterOptions.find((option) => option.id === backlogFilterMode) || backlogFilterOptions[0];
         const activeBoardFilterOption = boardFilterOptions.find((option) => option.id === boardFilterMode) || boardFilterOptions[0];
         const activeBacklogSortOption = backlogSortOptions.find((option) => option.id === backlogSortMode) || backlogSortOptions[0];
@@ -115329,6 +115723,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
         const activeReleaseBacklogFilterOption = backlogFilterOptions.find((option) => option.id === releaseBacklogFilterMode) || backlogFilterOptions[0];
         const activeReleaseBacklogSortOption = backlogSortOptions.find((option) => option.id === releaseBacklogSortMode) || backlogSortOptions[0];
         const activeProjectsHomeSortOption = projectsHomeSortOptions.find((option) => option.id === projectsHomeSortMode) || projectsHomeSortOptions[0];
+        const activeProjectsHomeFilterOption = projectsHomeFilterOptions.find((option) => option.id === projectsHomeFilterMode) || projectsHomeFilterOptions[0];
         const sortedReleaseOptions = useMemo(() => releases.slice().sort(compareTaskReleaseOrder), [releases, releaseSortMode]);
 
         function taskHasStartedThread(task) {
@@ -116959,8 +117354,187 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           return PLAYGROUND_PROJECT_VIEW_OPTIONS.filter((item) => item.id !== "calendar");
         }, []);
 
+        const currentProjectViewerTokens = useMemo(() => {
+          return [
+            currentUserId,
+            currentUserEmail,
+            currentUserName,
+          ]
+            .map((value) => String(value || "").trim().toLowerCase())
+            .filter(Boolean);
+        }, [currentUserEmail, currentUserId, currentUserName]);
+
+        function getProjectIdentityTokens(project) {
+          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+            ? project.metadata
+            : {};
+          const owner = project?.owner && typeof project.owner === "object" && !Array.isArray(project.owner)
+            ? project.owner
+            : {};
+          const creator = project?.createdBy && typeof project.createdBy === "object" && !Array.isArray(project.createdBy)
+            ? project.createdBy
+            : {};
+          const metadataOwner = metadata.owner && typeof metadata.owner === "object" && !Array.isArray(metadata.owner)
+            ? metadata.owner
+            : {};
+          const metadataCreator = metadata.createdBy && typeof metadata.createdBy === "object" && !Array.isArray(metadata.createdBy)
+            ? metadata.createdBy
+            : {};
+          const lead = project?.lead && typeof project.lead === "object" && !Array.isArray(project.lead)
+            ? project.lead
+            : {};
+          return [
+            project?.ownerUserId,
+            project?.ownerId,
+            project?.createdByUserId,
+            project?.createdById,
+            project?.creatorId,
+            project?.userId,
+            project?.leadUserId,
+            project?.leadEmail,
+            project?.leadName,
+            metadata.ownerUserId,
+            metadata.ownerId,
+            metadata.createdByUserId,
+            metadata.createdById,
+            metadata.creatorId,
+            metadata.userId,
+            metadata.leadUserId,
+            metadata.leadEmail,
+            metadata.leadName,
+            owner.id,
+            owner.userId,
+            owner.email,
+            owner.name,
+            creator.id,
+            creator.userId,
+            creator.email,
+            creator.name,
+            metadataOwner.id,
+            metadataOwner.userId,
+            metadataOwner.email,
+            metadataOwner.name,
+            metadataCreator.id,
+            metadataCreator.userId,
+            metadataCreator.email,
+            metadataCreator.name,
+            lead.id,
+            lead.userId,
+            lead.email,
+            lead.name,
+          ]
+            .map((value) => String(value || "").trim().toLowerCase())
+            .filter(Boolean);
+        }
+
+        function getProjectSharedIdentityTokens(project) {
+          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+            ? project.metadata
+            : {};
+          const tokens = [];
+          const addValue = (value) => {
+            if (Array.isArray(value)) {
+              value.forEach(addValue);
+              return;
+            }
+            if (value && typeof value === "object") {
+              [
+                value.id,
+                value.userId,
+                value.email,
+                value.name,
+                value.memberId,
+                value.accountId,
+              ].forEach(addValue);
+              return;
+            }
+            const normalizedValue = String(value || "").trim().toLowerCase();
+            if (normalizedValue) {
+              tokens.push(normalizedValue);
+            }
+          };
+          [
+            project?.sharedWith,
+            project?.sharedWithUsers,
+            project?.sharedWithUserIds,
+            project?.collaborators,
+            project?.members,
+            project?.memberIds,
+            project?.teamMembers,
+            project?.accessUsers,
+            metadata.sharedWith,
+            metadata.sharedWithUsers,
+            metadata.sharedWithUserIds,
+            metadata.collaborators,
+            metadata.members,
+            metadata.memberIds,
+            metadata.teamMembers,
+            metadata.accessUsers,
+          ].forEach(addValue);
+          return [...new Set(tokens)];
+        }
+
+        function isProjectCreatedByCurrentViewer(project) {
+          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+            ? project.metadata
+            : {};
+          const ownerTokens = getProjectIdentityTokens(project);
+          if ((project?.sharedWithMe === true || metadata.sharedWithMe === true || metadata.teamShared === true) && ownerTokens.length === 0) {
+            return false;
+          }
+          if (currentProjectViewerTokens.length === 0 || ownerTokens.length === 0) {
+            return true;
+          }
+          return ownerTokens.some((token) => currentProjectViewerTokens.includes(token));
+        }
+
+        function isProjectSharedWithCurrentViewer(project) {
+          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+            ? project.metadata
+            : {};
+          if ((project?.sharedWithMe === true || metadata.sharedWithMe === true || metadata.teamShared === true) && !isProjectCreatedByCurrentViewer(project)) {
+            return true;
+          }
+          if (isProjectCreatedByCurrentViewer(project)) {
+            return false;
+          }
+          if (project?.isShared === true || metadata.isShared === true) {
+            return true;
+          }
+          const sharedTokens = getProjectSharedIdentityTokens(project);
+          if (currentProjectViewerTokens.length === 0) {
+            return sharedTokens.length > 0;
+          }
+          return sharedTokens.some((token) => currentProjectViewerTokens.includes(token));
+        }
+
         const filteredProjects = useMemo(() => {
-          const matchedProjects = projects.filter((project) => {
+          const scopedProjects = projects.filter((project) => {
+            if (projectsHomeScope === "created") {
+              return isProjectCreatedByCurrentViewer(project);
+            }
+            if (projectsHomeScope === "shared") {
+              return isProjectSharedWithCurrentViewer(project);
+            }
+            return true;
+          });
+          const typedProjects = scopedProjects.filter((project) => {
+            if (projectsHomeFilterMode === "all") {
+              return true;
+            }
+            const summary = getProjectListSummary(project);
+            if (projectsHomeFilterMode === "active") {
+              return Number(summary.openTasksCount || 0) > 0 || Number(summary.activeThreadsCount || 0) > 0;
+            }
+            if (projectsHomeFilterMode === "completed") {
+              return Number(summary.tasksCount || 0) > 0 && Number(summary.openTasksCount || 0) <= 0;
+            }
+            if (projectsHomeFilterMode.startsWith("type:")) {
+              return getProjectListBlueprint(project).id === projectsHomeFilterMode.slice(5);
+            }
+            return true;
+          });
+          const matchedProjects = typedProjects.filter((project) => {
             if (!normalizedSearchQuery) return true;
             const haystack = [
               project.name || "",
@@ -116994,7 +117568,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             }
             return String(left.name || "").localeCompare(String(right.name || ""));
           });
-        }, [normalizedSearchQuery, projects, projectsHomeSortMode]);
+        }, [currentProjectViewerTokens, normalizedSearchQuery, projects, projectsHomeFilterMode, projectsHomeScope, projectsHomeSortMode]);
 
         const sortedTasks = useMemo(() => {
           return [...tasks]
@@ -118396,6 +118970,49 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           applyProjectDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
+        function applyProjectRuleComposerSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          setProjectRuleInputValue(nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = projectRuleComposerTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeTaskDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleProjectRuleComposerFormat(formatType) {
+          const textarea = projectRuleComposerTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(projectRuleInputValue || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyProjectRuleComposerSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
         function applyMissionControlInstructionsSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
           setMissionControlInstructionsDraft(nextValue);
           window.requestAnimationFrame(() => {
@@ -119435,6 +120052,43 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           finishCloseProjectComposer();
         }
 
+        function finishCloseProjectRuleComposer() {
+          if (projectRuleComposerCloseTimerRef.current) {
+            window.clearTimeout(projectRuleComposerCloseTimerRef.current);
+            projectRuleComposerCloseTimerRef.current = null;
+          }
+          if (projectRuleComposerFrameRef.current) {
+            window.cancelAnimationFrame(projectRuleComposerFrameRef.current);
+            projectRuleComposerFrameRef.current = null;
+          }
+          setProjectRuleComposerVisible(false);
+          setProjectRuleComposerClosing(false);
+          setProjectRuleComposerOpen(false);
+          setProjectRuleInputValue("");
+        }
+
+        function closeProjectRuleComposer(options = {}) {
+          if (!projectRuleComposerOpen) {
+            return;
+          }
+          if (options?.animate === false) {
+            finishCloseProjectRuleComposer();
+            return;
+          }
+          if (projectRuleComposerClosing) {
+            return;
+          }
+          setProjectRuleComposerVisible(false);
+          setProjectRuleComposerClosing(true);
+          if (projectRuleComposerCloseTimerRef.current) {
+            window.clearTimeout(projectRuleComposerCloseTimerRef.current);
+          }
+          projectRuleComposerCloseTimerRef.current = window.setTimeout(() => {
+            projectRuleComposerCloseTimerRef.current = null;
+            finishCloseProjectRuleComposer();
+          }, projectRuleComposerAnimationMs);
+        }
+
         function finishCloseMissionControlSetupModal() {
           if (missionControlSetupCloseTimerRef.current) {
             window.clearTimeout(missionControlSetupCloseTimerRef.current);
@@ -119532,19 +120186,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             return;
           }
           if (options?.persist !== false) {
-            if (missionControlSetupCommitInFlightRef.current) {
-              return;
-            }
-            void (async () => {
-              const committed = await commitMissionControlSetupDraftBeforeClose();
-              if (committed) {
-                closeMissionControlSetupModal({
-                  ...options,
-                  persist: false,
-                });
-              }
-            })();
-            return;
+            void commitMissionControlSetupDraftBeforeClose();
           }
           if (options?.animate === false) {
             finishCloseMissionControlSetupModal();
@@ -119569,6 +120211,31 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             finishCloseMissionControlSetupModal();
           }, missionControlSetupAnimationMs);
         }
+
+        useEffect(() => {
+          if (!projectRuleComposerOpen) {
+            setProjectRuleComposerVisible(false);
+            setProjectRuleComposerClosing(false);
+            return undefined;
+          }
+          if (projectRuleComposerCloseTimerRef.current) {
+            window.clearTimeout(projectRuleComposerCloseTimerRef.current);
+            projectRuleComposerCloseTimerRef.current = null;
+          }
+          if (projectRuleComposerFrameRef.current) {
+            window.cancelAnimationFrame(projectRuleComposerFrameRef.current);
+            projectRuleComposerFrameRef.current = null;
+          }
+          setProjectRuleComposerVisible(false);
+          setProjectRuleComposerClosing(false);
+          projectRuleComposerFrameRef.current = window.requestAnimationFrame(() => {
+            projectRuleComposerFrameRef.current = window.requestAnimationFrame(() => {
+              projectRuleComposerFrameRef.current = null;
+              setProjectRuleComposerVisible(true);
+            });
+          });
+          return undefined;
+        }, [projectRuleComposerOpen]);
 
         useEffect(() => {
           if (!missionControlSetupOpen) {
@@ -120447,9 +121114,16 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
               throw new Error(data?.message || data?.error || "Projects API unavailable.");
             }
 
-            const nextProjects = sortPlaygroundProjectsByRecent(
+            const baseProjects = sortPlaygroundProjectsByRecent(
               parsePlaygroundProjectListResponse(data).map((project) => applyProjectLocalNameOverride(project))
             );
+            const nextProjects = sortPlaygroundProjectsByRecent(
+              await resolvePlaygroundTeamSharedProjects({
+                backendUrl,
+                headers: requestHeaders,
+                projects: baseProjects,
+              })
+            ).map((project) => applyProjectLocalNameOverride(project));
             setProjects((current) =>
               sortPlaygroundProjectsByRecent(nextProjects.map((project) => {
                 const existingProject = current.find((currentProject) => currentProject?.id === project.id) || null;
@@ -120799,6 +121473,14 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             if (missionControlSetupFrameRef.current) {
               window.cancelAnimationFrame(missionControlSetupFrameRef.current);
               missionControlSetupFrameRef.current = null;
+            }
+            if (projectRuleComposerCloseTimerRef.current) {
+              window.clearTimeout(projectRuleComposerCloseTimerRef.current);
+              projectRuleComposerCloseTimerRef.current = null;
+            }
+            if (projectRuleComposerFrameRef.current) {
+              window.cancelAnimationFrame(projectRuleComposerFrameRef.current);
+              projectRuleComposerFrameRef.current = null;
             }
             if (projectOverviewOutcomeEditorCloseTimerRef.current) {
               window.clearTimeout(projectOverviewOutcomeEditorCloseTimerRef.current);
@@ -122602,6 +123284,8 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          setProjectRulesDraft(String(selectedProjectRules || ""));
 	          setProjectRuleInputValue("");
 	          setProjectRuleComposerOpen(false);
+	          setProjectRuleComposerVisible(false);
+	          setProjectRuleComposerClosing(false);
 	          setProjectRuleEditingIndex(-1);
 	          setProjectRuleEditingValue("");
 	        }, [
@@ -125751,6 +126435,10 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	              return result;
 	            }
 	            result[normalizedTeamId] = PLAYGROUND_TEAM_ROLE_DEFINITIONS.reduce((sets, role) => {
+	              if (role.id === "owner") {
+	                sets[role.id] = createPlaygroundProjectTeamRolePermissionSet(role.id);
+	                return sets;
+	              }
 	              if (rolePermissionSets[role.id]) {
 	                sets[role.id] = normalizePlaygroundPermissionSet(rolePermissionSets[role.id], "project_team_role");
 	              }
@@ -125781,6 +126469,10 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	            : {};
 	          const legacyPermissionSet = getProjectTeamLegacyPermissionSet(project, normalizedTeamId);
 	          return PLAYGROUND_TEAM_ROLE_DEFINITIONS.reduce((rolePermissionSets, role) => {
+	            if (role.id === "owner") {
+	              rolePermissionSets[role.id] = createPlaygroundProjectTeamRolePermissionSet(role.id);
+	              return rolePermissionSets;
+	            }
 	            rolePermissionSets[role.id] = normalizePlaygroundPermissionSet(
 	              currentRolePermissionSets[role.id]
 	                || legacyPermissionSet
@@ -125808,6 +126500,20 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	            ? metadata.teamAccessRemovedIds
 	            : Array.isArray(metadata.removedTeamIds)
 	              ? metadata.removedTeamIds
+	              : [];
+	          return source
+	            .map((teamId) => String(teamId || "").trim())
+	            .filter(Boolean);
+	        }
+
+	        function getProjectTeamAccessIds(project) {
+	          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+	            ? project.metadata
+	            : {};
+	          const source = Array.isArray(metadata.teamAccessIds)
+	            ? metadata.teamAccessIds
+	            : Array.isArray(metadata.sharedTeamIds)
+	              ? metadata.sharedTeamIds
 	              : [];
 	          return source
 	            .map((teamId) => String(teamId || "").trim())
@@ -125871,17 +126577,21 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	            const currentTeamRolePermissionSets = getProjectTeamRolePermissionSetsMap(project);
 	            const nextTeamRolePermissionSets = { ...currentTeamRolePermissionSets };
 	            const removedTeamIds = new Set(getProjectRemovedTeamIds(project));
+	            const teamAccessIds = new Set(getProjectTeamAccessIds(project));
 	            if (normalizedAction === "remove") {
 	              delete nextTeamPermissionSets[normalizedTeamId];
 	              delete nextTeamRolePermissionSets[normalizedTeamId];
+	              teamAccessIds.delete(normalizedTeamId);
 	              removedTeamIds.add(normalizedTeamId);
 	            } else {
+	              teamAccessIds.add(normalizedTeamId);
 	              removedTeamIds.delete(normalizedTeamId);
 	            }
 	            return normalizePlaygroundProjectRecord({
 	              ...(project && typeof project === "object" ? project : {}),
 	              metadata: {
 	                ...metadata,
+	                teamAccessIds: Array.from(teamAccessIds),
 	                teamPermissionSets: nextTeamPermissionSets,
 	                teamRolePermissionSets: nextTeamRolePermissionSets,
 	                teamAccessRemovedIds: Array.from(removedTeamIds),
@@ -125919,24 +126629,30 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          const currentTeamRolePermissionSets = getProjectTeamRolePermissionSetsMap(normalizedProject);
 	          const nextTeamRolePermissionSets = { ...currentTeamRolePermissionSets };
 	          const removedTeamIds = new Set(getProjectRemovedTeamIds(normalizedProject));
+	          const teamAccessIds = new Set(getProjectTeamAccessIds(normalizedProject));
 	          if (normalizedAction === "remove") {
 	            delete nextTeamPermissionSets[normalizedTeamId];
 	            delete nextTeamRolePermissionSets[normalizedTeamId];
+	            teamAccessIds.delete(normalizedTeamId);
 	            removedTeamIds.add(normalizedTeamId);
 	          } else {
+	            teamAccessIds.add(normalizedTeamId);
 	            removedTeamIds.delete(normalizedTeamId);
 	          }
+	          const nextTeamAccessIds = Array.from(teamAccessIds);
 	          const nextRemovedTeamIds = Array.from(removedTeamIds);
 	          const nextProjectRecord = normalizePlaygroundProjectRecord({
 	            ...normalizedProject,
 	            metadata: {
 	              ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),
+	              teamAccessIds: nextTeamAccessIds,
 	              teamPermissionSets: nextTeamPermissionSets,
 	              teamRolePermissionSets: nextTeamRolePermissionSets,
 	              teamAccessRemovedIds: nextRemovedTeamIds,
 	            },
 	          });
 	          const savePayload = buildPlaygroundProjectSavePayload(nextProjectRecord, {
+	            teamAccessIds: nextTeamAccessIds,
 	            teamPermissionSets: nextTeamPermissionSets,
 	            teamRolePermissionSets: nextTeamRolePermissionSets,
 	            teamAccessRemovedIds: nextRemovedTeamIds,
@@ -125977,6 +126693,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          }
 	          const previousTeamPermissionSets = getProjectTeamPermissionSets(normalizedProject);
 	          const previousTeamRolePermissionSets = getProjectTeamRolePermissionSetsMap(normalizedProject);
+	          const previousTeamAccessIds = getProjectTeamAccessIds(normalizedProject);
 	          const previousRemovedTeamIds = getProjectRemovedTeamIds(normalizedProject);
 	          applyProjectTeamWorkspaceMembershipLocally(normalizedProjectId, normalizedTeamId, normalizedAction);
 	          void persistProjectTeamWorkspaceMembership(normalizedTeamId, normalizedAction).catch((error) => {
@@ -125985,6 +126702,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	              ...(project && typeof project === "object" ? project : {}),
 	              metadata: {
 	                ...(project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata) ? project.metadata : {}),
+	                teamAccessIds: previousTeamAccessIds,
 	                teamPermissionSets: previousTeamPermissionSets,
 	                teamRolePermissionSets: previousTeamRolePermissionSets,
 	                teamAccessRemovedIds: previousRemovedTeamIds,
@@ -126175,7 +126893,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          const normalizedProjectId = String(projectId || "").trim();
 	          const normalizedTeamId = String(teamId || "").trim();
 	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
-	          if (!normalizedProjectId || !normalizedTeamId) {
+	          if (!normalizedProjectId || !normalizedTeamId || normalizedRoleId === "owner") {
 	            return;
 	          }
 	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "project_team_role");
@@ -126222,7 +126940,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          const normalizedProjectId = String(normalizedProject.id || "").trim();
 	          const normalizedTeamId = String(teamId || "").trim();
 	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
-	          if (!normalizedProjectId || !normalizedTeamId) {
+	          if (!normalizedProjectId || !normalizedTeamId || normalizedRoleId === "owner") {
 	            return null;
 	          }
 	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(nextPermissionSet, "project_team_role");
@@ -126276,7 +126994,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 	          const normalizedProjectId = String(normalizedProject.id || "").trim();
 	          const normalizedTeamId = String(teamId || "").trim();
 	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
-	          if (!normalizedProjectId || !normalizedTeamId) {
+	          if (!normalizedProjectId || !normalizedTeamId || normalizedRoleId === "owner") {
 	            return;
 	          }
 	          const currentPermissionSet = getProjectTeamRolePermissionSet(normalizedProject, normalizedTeamId, normalizedRoleId);
@@ -128937,9 +129655,8 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
 	          const currentEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
 	          const nextRules = serializePlaygroundProjectRuleEntries([...currentEntries, nextEntry]);
-	          setProjectRuleInputValue("");
 	          setProjectRulesDraft(nextRules);
-	          setProjectRuleComposerOpen(false);
+	          finishCloseProjectRuleComposer();
 	          await saveProjectRules(nextRules);
 	        }
 
@@ -133631,6 +134348,145 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           );
         }
 
+        function renderProjectsHomeHeader() {
+          const scopeOptions = [
+            { id: "all", label: "All projects" },
+            { id: "created", label: "Created by me" },
+            { id: "shared", label: "Shared with me" },
+          ];
+          return React.createElement("div", { className: "playground-files-library-header playground-projects-library-header" },
+            React.createElement("div", { className: "playground-files-library-title-row playground-projects-library-title-row" },
+              React.createElement("h1", { className: "playground-files-library-title playground-projects-library-title" }, "Projects"),
+              React.createElement("div", { className: "playground-files-library-actions playground-projects-library-actions" },
+                React.createElement("div", { className: "playground-files-library-search-anchor playground-projects-library-search-anchor" },
+                  React.createElement("label", { className: "playground-files-library-search playground-projects-library-search" },
+                    React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
+                    React.createElement("input", {
+                      type: "search",
+                      value: searchQuery,
+                      onChange: (event) => setSearchQuery(event.target.value),
+                      className: "playground-files-library-search-input",
+                      placeholder: "Search projects",
+                      "aria-label": "Search projects",
+                    })
+                  )
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-library-new-button playground-projects-library-new-button",
+                  onClick: () => openProjectComposer(),
+                }, "New")
+              )
+            ),
+            React.createElement("div", { className: "playground-files-library-nav-row playground-projects-library-nav-row" },
+              React.createElement("div", { className: "playground-files-library-tabs content-mode-switch playground-projects-library-tabs" },
+                scopeOptions.map((option) =>
+                  React.createElement("button", {
+                    key: option.id,
+                    type: "button",
+                    className: "playground-files-library-tab" + (projectsHomeScope === option.id ? " is-active" : ""),
+                    onClick: () => setProjectsHomeScope(option.id),
+                    "aria-pressed": projectsHomeScope === option.id ? "true" : "false",
+                  }, option.label)
+                )
+              ),
+              React.createElement("div", { className: "playground-files-library-controls playground-projects-library-controls" },
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-library-icon-button" + (projectsHomeToolbarPopover === "sort" || projectsHomeSortMode !== "updated-desc" ? " is-active" : ""),
+                    title: "Sort projects",
+                    "aria-label": "Sort projects",
+                    "aria-expanded": projectsHomeToolbarPopover === "sort" ? "true" : "false",
+                    onClick: () => setProjectsHomeToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                  }, React.createElement(ArrowUpDown, { strokeWidth: 1.8 })),
+                  projectsHomeToolbarPopover === "sort"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        projectsHomeSortOptions.map((option) =>
+                          React.createElement("button", {
+                            key: option.id,
+                            type: "button",
+                            className: "tb-popup-row tb-popup-row-select" + (projectsHomeSortMode === option.id ? " selected" : ""),
+                            onClick: () => {
+                              setProjectsHomeSortMode(option.id);
+                              setProjectsHomeToolbarPopover("");
+                            },
+                          },
+                            React.createElement("span", { className: "tb-popup-check-slot" },
+                              projectsHomeSortMode === option.id
+                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            ),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, option.label),
+                              option.description ? React.createElement("span", null, option.description) : null
+                            )
+                          )
+                        )
+                      )
+                    : null
+                ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-library-icon-button" + (projectsHomeToolbarPopover === "filter" || projectsHomeFilterMode !== "all" ? " is-active" : ""),
+                    title: "Filter projects",
+                    "aria-label": "Filter projects",
+                    "aria-expanded": projectsHomeToolbarPopover === "filter" ? "true" : "false",
+                    onClick: () => setProjectsHomeToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                  }, React.createElement(SlidersHorizontal, { strokeWidth: 1.8 })),
+                  projectsHomeToolbarPopover === "filter"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        projectsHomeFilterOptions.map((option) =>
+                          React.createElement("button", {
+                            key: option.id,
+                            type: "button",
+                            className: "tb-popup-row tb-popup-row-select" + (projectsHomeFilterMode === option.id ? " selected" : ""),
+                            onClick: () => {
+                              setProjectsHomeFilterMode(option.id);
+                              setProjectsHomeToolbarPopover("");
+                            },
+                          },
+                            React.createElement("span", { className: "tb-popup-check-slot" },
+                              projectsHomeFilterMode === option.id
+                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            ),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, option.label),
+                              option.description ? React.createElement("span", null, option.description) : null
+                            )
+                          )
+                        )
+                      )
+                    : null
+                )
+              )
+            )
+          );
+        }
+
+        function renderProjectsListTable() {
+          return React.createElement("div", { className: "playground-projects-list-shell" },
+            React.createElement("div", { className: "playground-projects-list-table" },
+              React.createElement("div", { className: "playground-projects-list-header" },
+                React.createElement("div", { className: "playground-projects-list-col-name" }, "Name"),
+                React.createElement("div", { className: "playground-projects-list-col-health" }, "Health"),
+                React.createElement("div", { className: "playground-projects-list-col-priority" }, "Priority"),
+                React.createElement("div", { className: "playground-projects-list-col-lead" }, "Lead"),
+                React.createElement("div", { className: "playground-projects-list-col-target" }, "Target date"),
+                React.createElement("div", { className: "playground-projects-list-col-issues" }, "Issues"),
+                React.createElement("div", { className: "playground-projects-list-col-status" }, "Status")
+              ),
+              React.createElement("div", { className: "playground-projects-list-body" },
+                filteredProjects.length > 0
+                  ? filteredProjects.map((project, index) => renderProjectListRow(project, index))
+                  : renderNoMatchingProjectsState()
+              )
+            )
+          );
+        }
+
         function renderNoMatchingProjectsState() {
           return React.createElement("div", { className: "playground-tasks-empty" },
             React.createElement("div", { className: "playground-tasks-empty-title" }, "No projects found"),
@@ -133664,19 +134520,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             React.createElement("div", { className: "playground-projects-overview-inner" },
               hasProjects
                 ? React.createElement(React.Fragment, null,
-                    React.createElement("div", { className: "playground-projects-overview-title-block" },
-                      React.createElement("div", { className: "playground-projects-overview-title-copy" },
-                        React.createElement("h1", { className: "playground-project-overview-summary-title" }, "Organize your work in projects")
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-projects-overview-add-button",
-                        onClick: () => openProjectComposer(),
-                      },
-                        React.createElement(Plus, { strokeWidth: 1.8, "aria-hidden": "true" }),
-                        React.createElement("span", null, "Add Project")
-                      )
-                    ),
+                    renderProjectsHomeHeader(),
                     filteredProjects.length > 0
                       ? React.createElement("div", { className: "playground-tasks-project-grid" },
                           filteredProjects.map((project, index) => renderProjectCard(project, index))
@@ -136556,10 +137400,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return null;
           }
 
-          const projectWorkspaceTitle = selectedProjectWorkspaceTitle;
-          const projectWorkspaceScrollClassName = "playground-environments-detail-scroll playground-tasks-project-workspace-scroll"
-            + (taskView === "overview" ? " is-overview" : "")
-            + (taskView === "backlog" ? " is-backlog" : "")
+	          const projectWorkspaceTitle = selectedProjectWorkspaceTitle;
+	          const selectedProjectAccessLevel = String(
+	            selectedProject?.teamAccessLevel
+	            || selectedProject?.metadata?.teamAccessLevel
+	            || ""
+	          ).trim().toLowerCase();
+	          const canManageSelectedProject = Boolean(
+	            isProjectCreatedByCurrentViewer(selectedProject)
+	            || selectedProjectAccessLevel === "owner"
+	            || selectedProjectAccessLevel === "manage"
+	          );
+	          const projectWorkspaceScrollClassName = "playground-environments-detail-scroll playground-tasks-project-workspace-scroll"
+	            + (taskView === "overview" ? " is-overview" : "")
+	            + (taskView === "backlog" ? " is-backlog" : "")
             + (taskView === "board" ? " is-board" : "");
           const projectWorkspaceScrollStyle = undefined;
 
@@ -136669,37 +137523,41 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 )
                               )
                             : null,
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => {
+	                          canManageSelectedProject
+	                            ? React.createElement("button", {
+	                            type: "button",
+	                            className: "tb-popup-row",
+	                            onClick: () => {
                               setProjectSidebarPopover("");
                               openProjectComposerForEdit(selectedProject);
                             },
                           },
                             React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                             React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "Edit Project"),
-                              React.createElement("span", null, "Change icon, title, and description.")
-                            )
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row playground-tasks-detail-menu-item-danger",
-                            onClick: () => {
+	                              React.createElement("span", null, "Edit Project"),
+	                              React.createElement("span", null, "Change icon, title, and description.")
+	                            )
+	                          )
+	                            : null,
+	                          canManageSelectedProject
+	                            ? React.createElement("button", {
+	                            type: "button",
+	                            className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+	                            onClick: () => {
                               setProjectSidebarPopover("");
                               void handleDeleteProject(selectedProject.id);
                             },
                           },
                             React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                             React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "Delete Project"),
-                              React.createElement("span", null, "Remove this project and its planning scope.")
-                            )
-                          )
-                        )
-                      : null
-                  )
+	                              React.createElement("span", null, "Delete Project"),
+	                              React.createElement("span", null, "Remove this project and its planning scope.")
+	                            )
+	                          )
+	                            : null
+	                        )
+	                      : null
+	                  )
                 )
               ),
               React.createElement("div", {
@@ -141782,8 +142640,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
               .map((share) => String(share?.resourceId || "").trim())
               .filter(Boolean)
           );
-          const isKnownTeam = (Array.isArray(teamPageTeams) ? teamPageTeams : [])
-            .some((team) => String(team?.id || "").trim() === normalizedTeamId);
           const hasTeamAccessToProject = (project) => {
             const normalizedProjectId = String(project?.id || "").trim();
             if (!normalizedProjectId) {
@@ -141803,13 +142659,26 @@ ${PROJECT_OVERVIEW_SCRIPT}
             if (removedTeamIds.has(normalizedTeamId)) {
               return false;
             }
+            const teamAccessIds = new Set(
+              (Array.isArray(metadata.teamAccessIds) ? metadata.teamAccessIds : [])
+                .map((value) => String(value || "").trim())
+                .filter(Boolean)
+            );
+            const sharedTeamIds = new Set(
+              (Array.isArray(metadata.sharedTeamIds) ? metadata.sharedTeamIds : [])
+                .map((value) => String(value || "").trim())
+                .filter(Boolean)
+            );
+            if (teamAccessIds.has(normalizedTeamId) || sharedTeamIds.has(normalizedTeamId)) {
+              return true;
+            }
             const rolePermissionSets = metadata.teamRolePermissionSets && typeof metadata.teamRolePermissionSets === "object" && !Array.isArray(metadata.teamRolePermissionSets)
               ? metadata.teamRolePermissionSets
               : {};
             const teamPermissionSets = metadata.teamPermissionSets && typeof metadata.teamPermissionSets === "object" && !Array.isArray(metadata.teamPermissionSets)
               ? metadata.teamPermissionSets
               : {};
-            return Boolean(rolePermissionSets[normalizedTeamId] || teamPermissionSets[normalizedTeamId] || isKnownTeam);
+            return Boolean(rolePermissionSets[normalizedTeamId] || teamPermissionSets[normalizedTeamId]);
           };
           const accessibleProjectIds = (Array.isArray(realProjects) ? realProjects : [])
             .filter(hasTeamAccessToProject)
@@ -144593,7 +145462,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function applyTeamRolePermissionSetLocally(teamId, roleId, permissionSet) {
           const normalizedTeamId = String(teamId || "").trim();
           const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "");
-          if (!normalizedTeamId || !normalizedRoleId) {
+          if (!normalizedTeamId || !normalizedRoleId || normalizedRoleId === "owner") {
             return;
           }
           const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "team_role");
@@ -144615,7 +145484,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         async function persistTeamRolePermissionSet(teamId, roleId, permissionSet) {
           const normalizedTeamId = String(teamId || "").trim();
           const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "");
-          if (!normalizedTeamId || !normalizedRoleId) {
+          if (!normalizedTeamId || !normalizedRoleId || normalizedRoleId === "owner") {
             return null;
           }
           const selectedTeam = teamPageTeams.find((team) => String(team?.id || "") === normalizedTeamId) || null;
@@ -144655,7 +145524,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "");
           const teamId = String(teamPageSelectedTeamId || "").trim();
           const selectedTeam = teamPageTeams.find((team) => String(team?.id || "") === teamId) || null;
-          if (!teamId || !selectedTeam || !normalizedRoleId) {
+          if (!teamId || !selectedTeam || !normalizedRoleId || normalizedRoleId === "owner") {
             return;
           }
           const currentRolePermissionSets = normalizePlaygroundTeamRolePermissionSets(selectedTeam.rolePermissionSets);
@@ -152103,8 +152972,197 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return;
             }
             const nextProjects = parsePlaygroundProjectListResponse(data);
+            const projectsById = new Map(
+              nextProjects
+                .map((project) => [String(project?.id || "").trim(), project])
+                .filter(([projectId]) => projectId)
+            );
+            const parseShareMetadata = (share) => {
+              const metadata = share?.metadata;
+              if (!metadata) {
+                return {};
+              }
+              if (typeof metadata === "string") {
+                try {
+                  const parsed = JSON.parse(metadata);
+                  return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+                } catch {
+                  return {};
+                }
+              }
+              return metadata && typeof metadata === "object" && !Array.isArray(metadata) ? metadata : {};
+            };
+            const getShareResourceType = (share) => {
+              const metadata = parseShareMetadata(share);
+              return String(
+                share?.resourceType
+                || share?.resource_type
+                || metadata.resourceType
+                || metadata.resource_type
+                || metadata.resourceKind
+                || metadata.resource_kind
+                || metadata.kind
+                || metadata.type
+                || ""
+              ).trim().toLowerCase();
+            };
+            const getFallbackSharedProjectRecord = (share, team) => {
+              const metadata = parseShareMetadata(share);
+              const metadataProject = metadata.project && typeof metadata.project === "object" && !Array.isArray(metadata.project)
+                ? metadata.project
+                : {};
+              const projectId = String(share?.resourceId || share?.resource_id || metadata.projectId || metadata.project_id || metadataProject.id || "").trim();
+              if (!projectId) {
+                return null;
+              }
+              const projectName = String(
+                metadataProject.name
+                || metadataProject.title
+                || metadata.name
+                || metadata.title
+                || share?.resourceName
+                || share?.resource_name
+                || share?.name
+                || "Shared project"
+              ).trim() || "Shared project";
+              const shareUpdatedAt = String(share?.updatedAt || share?.updated_at || share?.createdAt || share?.created_at || "").trim();
+              return normalizePlaygroundProjectRecord({
+                ...metadataProject,
+                id: projectId,
+                name: projectName,
+                description: String(metadataProject.description || metadata.description || "").trim(),
+                updatedAt: shareUpdatedAt || metadataProject.updatedAt || metadata.updatedAt,
+                createdAt: String(share?.createdAt || share?.created_at || metadataProject.createdAt || metadata.createdAt || "").trim(),
+                metadata: {
+                  ...(metadataProject.metadata && typeof metadataProject.metadata === "object" && !Array.isArray(metadataProject.metadata) ? metadataProject.metadata : {}),
+                  ...metadata,
+                  sharedWithMe: true,
+                  teamShared: true,
+                  teamShareId: String(share?.id || "").trim(),
+                  teamId: String(team?.id || share?.teamId || share?.team_id || metadata.teamId || metadata.team_id || "").trim(),
+                  teamName: String(team?.name || metadata.teamName || metadata.team_name || "").trim(),
+                },
+              });
+            };
+            const markProjectAsTeamShared = (project, share, team) => {
+              if (!project?.id) {
+                return project;
+              }
+              const metadata = parseShareMetadata(share);
+              const existingMetadata = project.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+                ? project.metadata
+                : {};
+              return normalizePlaygroundProjectRecord({
+                ...project,
+                sharedWithMe: true,
+                isShared: true,
+                metadata: {
+                  ...existingMetadata,
+                  sharedWithMe: true,
+                  isShared: true,
+                  teamShared: true,
+                  teamShareId: String(share?.id || existingMetadata.teamShareId || "").trim(),
+                  teamId: String(team?.id || share?.teamId || share?.team_id || metadata.teamId || metadata.team_id || existingMetadata.teamId || "").trim(),
+                  teamName: String(team?.name || metadata.teamName || metadata.team_name || existingMetadata.teamName || "").trim(),
+                },
+              });
+            };
+            const teamsResult = await fetchJsonWithTimeout(proxyBackendBase + "/teams", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: authRequestHeaders,
+            }, 8000).catch(() => null);
+            const teams = teamsResult?.response?.ok
+              ? (Array.isArray(teamsResult.data?.data) ? teamsResult.data.data : (Array.isArray(teamsResult.data?.teams) ? teamsResult.data.teams : []))
+              : [];
+            const projectShares = [];
+            if (teams.length > 0) {
+              const shareResults = await Promise.allSettled(teams.map(async (team) => {
+                const teamId = String(team?.id || "").trim();
+                if (!teamId) {
+                  return [];
+                }
+                const { response: sharesResponse, data: sharesData } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/resource-shares", {
+                  method: "GET",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: authRequestHeaders,
+                }, 8000);
+                if (!sharesResponse.ok) {
+                  return [];
+                }
+                return (Array.isArray(sharesData?.data) ? sharesData.data : [])
+                  .filter((share) => getShareResourceType(share) === "project")
+                  .map((share) => ({ share, team }));
+              }));
+              shareResults.forEach((result) => {
+                if (result.status === "fulfilled" && Array.isArray(result.value)) {
+                  projectShares.push(...result.value);
+                }
+              });
+            }
+            projectShares.forEach(({ share, team }) => {
+              const metadata = parseShareMetadata(share);
+              const metadataProject = metadata.project && typeof metadata.project === "object" && !Array.isArray(metadata.project)
+                ? metadata.project
+                : {};
+              const projectId = String(share?.resourceId || share?.resource_id || metadata.projectId || metadata.project_id || metadataProject.id || "").trim();
+              if (!projectId || !projectsById.has(projectId)) {
+                return;
+              }
+              const sharedProject = markProjectAsTeamShared(projectsById.get(projectId), share, team);
+              if (sharedProject?.id) {
+                projectsById.set(projectId, sharedProject);
+              }
+            });
+            const missingSharedProjectIds = Array.from(new Set(projectShares
+              .map(({ share }) => {
+                const metadata = parseShareMetadata(share);
+                const metadataProject = metadata.project && typeof metadata.project === "object" && !Array.isArray(metadata.project)
+                  ? metadata.project
+                  : {};
+                return String(share?.resourceId || share?.resource_id || metadata.projectId || metadata.project_id || metadataProject.id || "").trim();
+              })
+              .filter((projectId) => projectId && !projectsById.has(projectId))));
+            if (missingSharedProjectIds.length > 0) {
+              const detailResults = await Promise.allSettled(missingSharedProjectIds.map(async (projectId) => {
+                const detailResponse = await fetch(proxyBackendBase + "/projects/" + encodeURIComponent(projectId), {
+                  method: "GET",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: authRequestHeaders,
+                });
+                const detailData = await detailResponse.json().catch(() => ({}));
+                if (!detailResponse.ok) {
+                  throw new Error(detailData?.message || detailData?.error || "Failed to load shared project.");
+                }
+                return getPlaygroundProjectResponseRecord(detailData, { id: projectId }) || normalizePlaygroundProjectRecord({ id: projectId });
+              }));
+              missingSharedProjectIds.forEach((projectId, index) => {
+                const result = detailResults[index];
+                let sharedProject = result?.status === "fulfilled" ? result.value : null;
+                const matchingShare = projectShares.find(({ share }) => {
+                  const metadata = parseShareMetadata(share);
+                  const metadataProject = metadata.project && typeof metadata.project === "object" && !Array.isArray(metadata.project)
+                    ? metadata.project
+                    : {};
+                  return String(share?.resourceId || share?.resource_id || metadata.projectId || metadata.project_id || metadataProject.id || "").trim() === projectId;
+                });
+                if (!sharedProject && matchingShare) {
+                  sharedProject = getFallbackSharedProjectRecord(matchingShare.share, matchingShare.team);
+                }
+                if (sharedProject && matchingShare) {
+                  sharedProject = markProjectAsTeamShared(sharedProject, matchingShare.share, matchingShare.team);
+                }
+                if (sharedProject?.id) {
+                  projectsById.set(projectId, sharedProject);
+                }
+              });
+            }
+            const mergedProjects = Array.from(projectsById.values());
             setRealProjects((current) =>
-              sortPlaygroundProjectsByRecent(nextProjects.map((project) => {
+              sortPlaygroundProjectsByRecent(mergedProjects.map((project) => {
                 const existingProject = current.find((currentProject) => currentProject?.id === project.id) || null;
                 return mergePlaygroundProjectRecords(project, existingProject) || project;
               }))
@@ -161923,10 +162981,65 @@ ${PROJECT_OVERVIEW_SCRIPT}
               .sort((left, right) => String(left.label || "").localeCompare(String(right.label || "")));
           })();
           const selectedTeam = teamPageTeams.find((team) => team.id === teamPageSelectedTeamId) || null;
-          const currentMember = teamPageMembers.find((member) => member.userId === sessionState.userId) || null;
-          const currentMemberRoleId = normalizePlaygroundTeamRoleId(currentMember?.role || selectedTeam?.role, "member");
-          const selectedTeamRoleId = normalizePlaygroundTeamRoleId(teamPageSelectedRoleId, "member");
-          const canManageTeam = currentMemberRoleId === "admin" || normalizePlaygroundTeamRoleId(selectedTeam?.role, "member") === "admin" || selectedTeam?.ownerUserId === sessionState.userId;
+          const currentSessionUserId = String(sessionState.userId || "").trim();
+          const currentSessionEmail = String(accountEmail || sessionState.email || "").trim().toLowerCase();
+          const currentMember = teamPageMembers.find((member) => {
+            const memberUserId = String(
+              member?.userId
+              || member?.user_id
+              || member?.uid
+              || member?.localId
+              || member?.local_id
+              || member?.user?.id
+              || member?.user?.uid
+              || member?.user?.userId
+              || member?.user?.user_id
+              || member?.profile?.id
+              || member?.profile?.uid
+              || member?.profile?.userId
+              || member?.profile?.user_id
+              || ""
+            ).trim();
+            const memberEmail = readTeamPageIdentityEmail(member);
+            return Boolean(
+              (currentSessionUserId && memberUserId && memberUserId === currentSessionUserId)
+              || (currentSessionEmail && memberEmail && memberEmail === currentSessionEmail)
+            );
+          }) || null;
+          const currentViewerRoleValue = String(
+            selectedTeam?.currentUserRole
+            || selectedTeam?.current_user_role
+            || selectedTeam?.viewerRole
+            || selectedTeam?.viewer_role
+            || selectedTeam?.myRole
+            || selectedTeam?.my_role
+            || selectedTeam?.memberRole
+            || selectedTeam?.member_role
+            || selectedTeam?.membershipRole
+            || selectedTeam?.membership_role
+            || ""
+          ).trim();
+          const currentMemberRoleId = normalizePlaygroundTeamRoleId(
+            currentMember ? currentMember.role : currentViewerRoleValue,
+            "member"
+          );
+          const selectedTeamOwnerId = String(
+            selectedTeam?.ownerUserId
+            || selectedTeam?.ownerId
+            || selectedTeam?.createdByUserId
+            || selectedTeam?.owner?.userId
+            || selectedTeam?.owner?.id
+            || ""
+          ).trim();
+          const canManageTeam = currentMemberRoleId === "owner"
+            || currentMemberRoleId === "admin"
+            || Boolean(currentSessionUserId && selectedTeamOwnerId && selectedTeamOwnerId === currentSessionUserId);
+          const requestedTeamRoleId = normalizePlaygroundTeamRoleId(teamPageSelectedRoleId, "");
+          const selectedTeamRoleId = canManageTeam
+            ? normalizePlaygroundTeamRoleId(teamPageSelectedRoleId, "member")
+            : requestedTeamRoleId === "owner"
+              ? "owner"
+              : currentMemberRoleId;
           const resourceOptionsByType = {
             project: realProjects.map((project) => ({
               id: project.id,
@@ -161989,7 +163102,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             className: "playground-team-select",
             ...props,
             value: normalizePlaygroundTeamRoleId(props?.value, "member"),
-          }, PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((option) =>
+          }, PLAYGROUND_ASSIGNABLE_TEAM_ROLE_DEFINITIONS.map((option) =>
             React.createElement("option", { key: option.id, value: option.id }, option.label)
           ));
 
@@ -162660,7 +163773,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               && !selectedTeamOwnerEmail
               && memberUserId
               && memberUserId === String(sessionState.userId || "").trim()
-              && normalizePlaygroundTeamRoleId(selectedTeam?.role, "member") === "admin";
+              && ["admin", "owner"].includes(normalizePlaygroundTeamRoleId(selectedTeam?.role, "member"));
           };
           const isCurrentTeamMemberRow = (item, isInvitation = false) => {
             if (isInvitation) {
@@ -163231,13 +164344,26 @@ ${PROJECT_OVERVIEW_SCRIPT}
             if (removedTeamIds.has(normalizedTeamId)) {
               return false;
             }
+            const teamAccessIds = new Set(
+              (Array.isArray(metadata.teamAccessIds) ? metadata.teamAccessIds : [])
+                .map((value) => String(value || "").trim())
+                .filter(Boolean)
+            );
+            const sharedTeamIds = new Set(
+              (Array.isArray(metadata.sharedTeamIds) ? metadata.sharedTeamIds : [])
+                .map((value) => String(value || "").trim())
+                .filter(Boolean)
+            );
+            if (teamAccessIds.has(normalizedTeamId) || sharedTeamIds.has(normalizedTeamId)) {
+              return true;
+            }
             const rolePermissionSets = metadata.teamRolePermissionSets && typeof metadata.teamRolePermissionSets === "object" && !Array.isArray(metadata.teamRolePermissionSets)
               ? metadata.teamRolePermissionSets
               : {};
             const teamPermissionSets = metadata.teamPermissionSets && typeof metadata.teamPermissionSets === "object" && !Array.isArray(metadata.teamPermissionSets)
               ? metadata.teamPermissionSets
               : {};
-            return Boolean(rolePermissionSets[normalizedTeamId] || teamPermissionSets[normalizedTeamId] || selectedTeam?.id === normalizedTeamId);
+            return Boolean(rolePermissionSets[normalizedTeamId] || teamPermissionSets[normalizedTeamId]);
           }
 
           function buildTeamProjectResourceRows(project, source, resourceIndex = null) {
@@ -164016,10 +165142,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
             const selectedRoleDefinition = getPlaygroundTeamRoleDefinition(selectedTeamRoleId);
             const selectedRolePermissionSet = normalizePlaygroundPermissionSet(rolePermissionSets[selectedRoleDefinition.id], "team_role");
             const selectedRoleActionId = "team-role-permissions:" + selectedRoleDefinition.id;
+            const isSelectedOwnerRole = selectedRoleDefinition.id === "owner";
+            const visibleRoleDefinitions = canManageTeam
+              ? PLAYGROUND_TEAM_ROLE_DEFINITIONS
+              : PLAYGROUND_TEAM_ROLE_DEFINITIONS.filter((role) => role.id === currentMemberRoleId || role.id === "owner");
             const getAssignedRowsForRole = (roleId) => memberRows.filter((row) =>
-              row.kind === "member"
-              && !isTeamOwnerMember(row.item, false)
-              && normalizePlaygroundTeamRoleId(row.item?.role, "member") === roleId
+              roleId === "owner"
+                ? row.kind === "member" && isTeamOwnerMember(row.item, false)
+                : row.kind === "member"
+                  && !isTeamOwnerMember(row.item, false)
+                  && normalizePlaygroundTeamRoleId(row.item?.role, "member") === roleId
             );
             const getRoleRowCount = (roleId) => getAssignedRowsForRole(roleId).length;
             const renderAssignedUsersPopup = (role) => {
@@ -164058,7 +165190,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return React.createElement("div", { className: "playground-team-detail-panel playground-team-roles-panel" },
               React.createElement("div", { className: "playground-team-role-pages" },
                 React.createElement("div", { className: "playground-team-role-list", role: "tablist", "aria-label": "Team roles" },
-                  PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) =>
+                  visibleRoleDefinitions.map((role) =>
                     React.createElement("button", {
                       key: role.id,
                       type: "button",
@@ -164076,7 +165208,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     )
                   )
                 ),
-                React.createElement("div", { className: "playground-team-role-permission-page" },
+                React.createElement("div", { className: "playground-team-role-permission-page" + (!canManageTeam || isSelectedOwnerRole ? " is-read-only" : "") },
                   React.createElement("div", { className: "playground-team-role-permission-header" },
                     React.createElement("div", null,
                       React.createElement("div", { className: "playground-team-role-permission-kicker" }, "Role"),
@@ -164088,7 +165220,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   renderPlaygroundPermissionPanel(selectedRolePermissionSet, {
                     subjectType: "team_role",
                     animationKey: teamPermissionChartAnimationKey,
-                    disabled: !canManageTeam || teamPageActionId === selectedRoleActionId,
+                    disabled: isSelectedOwnerRole || !canManageTeam || teamPageActionId === selectedRoleActionId,
                     onRingAccessChange: (ringId, access) => updateTeamRolePermissionRingAccess(selectedRoleDefinition.id, ringId, access),
                     onActionRingChange: (actionId, ringId) => updateTeamRolePermissionActionRing(selectedRoleDefinition.id, actionId, ringId),
                     onActionAccessChange: (actionId, access) => updateTeamRolePermissionActionAccess(selectedRoleDefinition.id, actionId, access),
@@ -171833,7 +172965,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 { id: "duplicate", label: "Duplicate", icon: Copy, action: () => metronomeTopNavActionsRef.current?.duplicate?.() },
               ]
             : [
-                { id: "rename", label: "Rename", icon: SquarePen, action: () => metronomeTopNavActionsRef.current?.rename?.() },
+                { id: "rename", label: "Edit", icon: SquarePen, action: () => metronomeTopNavActionsRef.current?.rename?.() },
                 { id: "duplicate", label: "Duplicate", icon: Copy, action: () => metronomeTopNavActionsRef.current?.duplicate?.() },
                 { id: "delete", label: "Delete", icon: Trash2, action: () => metronomeTopNavActionsRef.current?.delete?.(), danger: true },
               ];
@@ -175127,6 +176259,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               backendUrl: proxyBackendBase,
                               apiKey: effectiveApiKey,
                               requestHeaders,
+                              currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
                               currentUserName: hasSessionAuth ? accountName : "Me",
                               currentUserEmail: hasSessionAuth ? accountEmail : "",
                               currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
@@ -175174,10 +176307,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             speechToTextUrl: speechToTextUrl || "",
                             subscriptionTierId: settingsCurrentTierId || accountTierId || "",
                             onUpgradeToIndividual: () => handleSettingsSubscribe("individual"),
-                            computerAgents: demoComputerAgents,
-                            skills: demoSkills,
-                            currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",
-                            currentUserEmail: hasSessionAuth ? accountEmail : "",
+	                            computerAgents: demoComputerAgents,
+	                            skills: demoSkills,
+	                            currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
+	                            currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",
+	                            currentUserEmail: hasSessionAuth ? accountEmail : "",
                             currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                             canStartThreads: hasRealAccess,
                             hasRealAccess,
@@ -175232,12 +176366,21 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             onWorkspaceTeamsRequest: () => {
                               void loadTeamPageData({ selectedTeamId: "" });
                             },
-                            onOpenTeamPage: (teamId = "") => {
-                              const normalizedTeamId = String(teamId || "").trim();
-                              openTeamPage();
-                              setTeamPageSelectedTeamId(normalizedTeamId);
-                              void loadTeamPageData({ selectedTeamId: normalizedTeamId });
-                            },
+	                            onOpenTeamPage: (teamId = "", options = {}) => {
+	                              const normalizedTeamId = String(teamId || "").trim();
+	                              const requestedTab = options?.tab === "resources"
+	                                ? "resources"
+	                                : options?.tab === "roles" || options?.tab === "permissions"
+	                                  ? "roles"
+	                                  : "members";
+	                              openTeamPage();
+	                              setTeamPageSelectedTeamId(normalizedTeamId);
+	                              setTeamPageActiveTab(requestedTab);
+	                              if (requestedTab === "roles") {
+	                                setTeamPageSelectedRoleId(normalizePlaygroundTeamRoleId(options?.roleId, "member"));
+	                              }
+	                              void loadTeamPageData({ selectedTeamId: normalizedTeamId });
+	                            },
                             onThreadOpen: (threadId, options = {}) => {
                               const normalizedThreadId = String(threadId || "").trim();
                               if (!normalizedThreadId) {
@@ -175852,12 +176995,21 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               onWorkspaceTeamsRequest: () => {
                                 void loadTeamPageData({ selectedTeamId: "" });
                               },
-                              onOpenTeamPage: (teamId = "") => {
-                                const normalizedTeamId = String(teamId || "").trim();
-                                openTeamPage();
-                                setTeamPageSelectedTeamId(normalizedTeamId);
-                                void loadTeamPageData({ selectedTeamId: normalizedTeamId });
-                              },
+	                              onOpenTeamPage: (teamId = "", options = {}) => {
+	                                const normalizedTeamId = String(teamId || "").trim();
+	                                const requestedTab = options?.tab === "resources"
+	                                  ? "resources"
+	                                  : options?.tab === "roles" || options?.tab === "permissions"
+	                                    ? "roles"
+	                                    : "members";
+	                                openTeamPage();
+	                                setTeamPageSelectedTeamId(normalizedTeamId);
+	                                setTeamPageActiveTab(requestedTab);
+	                                if (requestedTab === "roles") {
+	                                  setTeamPageSelectedRoleId(normalizePlaygroundTeamRoleId(options?.roleId, "member"));
+	                                }
+	                                void loadTeamPageData({ selectedTeamId: normalizedTeamId });
+	                              },
                               onThreadOpen: (threadId, options = {}) => {
                                 const normalizedThreadId = String(threadId || "").trim();
                                 if (!normalizedThreadId) {
