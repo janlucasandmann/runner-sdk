@@ -237,20 +237,50 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-workflow-grid {
-        grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
         gap: 18px;
       }
 
       .playground-metronome-workflow-grid-card {
+        --playground-home-widget-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
         position: relative;
-        min-height: 244px;
+        min-height: 220px;
         padding: 0;
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.06);
+        border-radius: 25px;
+        background: #171717;
+        box-shadow: 0 22px 52px rgba(0, 0, 0, 0.24);
         text-align: left;
+      }
+
+      .playground-metronome-workflow-grid-card::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-home-widget-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-metronome-workflow-grid-card > * {
+        position: relative;
+        z-index: 1;
       }
 
       .playground-project-resources-grid-card.playground-metronome-workflow-grid-card {
@@ -258,7 +288,7 @@ export const METRONOME_PAGE_CSS = String.raw`
         justify-content: flex-start;
         gap: 0;
         padding: 0;
-        border-radius: 8px;
+        border-radius: 25px;
       }
 
       .playground-metronome-workflow-grid-card.is-removed-shared {
@@ -266,35 +296,94 @@ export const METRONOME_PAGE_CSS = String.raw`
         opacity: 0.82;
       }
 
+      .playground-metronome-workflow-card-hero {
+        position: relative;
+        width: 100%;
+        height: 50px;
+        flex: 0 0 50px;
+        overflow: hidden;
+        border-radius: 25px 25px 0 0;
+        background:
+          linear-gradient(180deg, rgba(9, 10, 12, 0.06), rgba(9, 10, 12, 0.32)),
+          var(--metronome-workflow-wallpaper-image, none);
+        background-size: cover, cover;
+        background-position: center, center;
+        background-repeat: no-repeat;
+      }
+
+      .playground-metronome-workflow-card-hero::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.2));
+        pointer-events: none;
+      }
+
+      .playground-metronome-workflow-card-hero-top {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 0 10px 0 12px;
+        background: rgba(9, 9, 10, 0.38);
+      }
+
+      .playground-metronome-workflow-card-hero-title {
+        min-width: 0;
+        flex: 1 1 auto;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 600;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .playground-metronome-workflow-card-hero .playground-metronome-table-menu-trigger {
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .playground-metronome-workflow-card-hero .playground-metronome-table-menu-trigger:hover,
+      .playground-metronome-workflow-card-hero .playground-metronome-table-menu-trigger:focus-visible,
+      .playground-metronome-workflow-card-hero .playground-metronome-table-menu-trigger.is-open {
+        color: rgba(255, 255, 255, 0.96);
+      }
+
       .playground-metronome-workflow-card-preview {
         position: relative;
         width: 100%;
         align-self: stretch;
         box-sizing: border-box;
-        height: 112px;
+        height: 76px;
         flex: 0 0 auto;
         overflow: hidden;
-        border-radius: 8px 8px 0 0;
-        background:
-          linear-gradient(180deg, rgba(5, 5, 5, 0.16), rgba(5, 5, 5, 0.58)),
-          var(--metronome-workflow-wallpaper-image, none),
-          radial-gradient(circle at 18% 20%, rgba(68, 166, 255, 0.12), transparent 30%),
-          radial-gradient(circle at 78% 72%, rgba(57, 184, 119, 0.1), transparent 32%),
-          linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025));
-        background-size: cover, cover, auto, auto, auto;
-        background-position: center, center, center, center, center;
+        background: transparent;
+      }
+
+      .playground-metronome-workflow-grid-card > .playground-metronome-workflow-card-preview:first-child {
+        height: 126px;
+        flex-basis: 126px;
+        overflow: hidden;
+        border-radius: 25px 25px 0 0;
+        background-image:
+          linear-gradient(transparent, transparent),
+          linear-gradient(180deg, rgba(9, 10, 12, 0.06), rgba(9, 10, 12, 0.32)),
+          var(--metronome-workflow-wallpaper-image, none);
+        background-position: 0 50px, center top, center top;
+        background-size: 100% calc(100% - 50px), 100% 50px, cover;
         background-repeat: no-repeat;
       }
 
-      .playground-metronome-workflow-card-preview::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background-image:
-          linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
-        background-size: 22px 22px;
-        opacity: 0.18;
+      .playground-metronome-workflow-grid-card > .playground-metronome-workflow-card-preview:first-child .playground-metronome-workflow-card-preview-svg {
+        top: 50px;
+        height: 76px;
+      }
+
+      .playground-metronome-workflow-grid-card > .playground-metronome-workflow-card-preview:first-child .playground-metronome-workflow-card-preview-node {
+        transform: translate(-50%, calc(-50% + 24px));
       }
 
       .playground-metronome-workflow-card-preview-svg {
@@ -314,20 +403,23 @@ export const METRONOME_PAGE_CSS = String.raw`
 
       .playground-metronome-workflow-card-preview-node {
         position: absolute;
-        width: 26px;
-        height: 26px;
-        border-radius: 9px;
+        width: 18px;
+        height: 18px;
         transform: translate(-50%, -50%);
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.34), inset 0 0 0 1px rgba(255,255,255,0.2);
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent !important;
+        box-shadow: none;
         z-index: 2;
       }
 
       .playground-metronome-workflow-card-preview-node svg {
-        width: 13px;
-        height: 13px;
+        width: 14px;
+        height: 14px;
         display: block;
         filter: var(--metronome-preview-icon-shadow, none);
       }
@@ -360,56 +452,61 @@ export const METRONOME_PAGE_CSS = String.raw`
         flex: 1 1 auto;
         display: flex;
         flex-direction: column;
-        gap: 13px;
-        padding: 15px 16px 16px;
+        gap: 10px;
+        padding: 0 12px 12px;
+        background: #000000;
       }
 
       .playground-metronome-workflow-grid-card-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 8;
+        height: 50px;
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        min-width: 0;
+        gap: 9px;
+        padding: 0 10px 0 12px;
+        pointer-events: none;
+        background: rgba(9, 9, 10, 0.38);
       }
 
       .playground-metronome-workflow-grid-card-title-copy {
         min-width: 0;
+        flex: 1 1 auto;
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 0;
       }
 
       .playground-metronome-workflow-grid-card-title {
         margin: 0;
-        color: rgba(255, 255, 255, 0.94);
-        font-size: 16px;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
         line-height: 1.2;
-        font-weight: 500;
+        font-weight: 600;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
       .playground-metronome-workflow-grid-card-subtitle {
-        color: rgba(255, 255, 255, 0.54);
-        font-size: 11px;
-        line-height: 1.35;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+        display: none;
       }
 
       .playground-metronome-workflow-grid-card .playground-metronome-table-menu-shell {
         flex: 0 0 auto;
         z-index: 4;
+        pointer-events: auto;
       }
 
       .playground-metronome-workflow-grid-meta {
-        margin-top: auto;
+        margin-top: 0;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px 14px;
+        gap: 7px 14px;
       }
 
       .playground-metronome-workflow-grid-meta-item {
@@ -426,14 +523,19 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-workflow-grid-card-footer {
-        margin-top: 2px;
+        margin-top: auto;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: 12px;
       }
 
+      .playground-metronome-workflow-grid-card-footer .playground-metronome-table-owner-label {
+        display: none;
+      }
+
       .playground-metronome-workflow-grid-card-open {
+        display: none;
         min-width: 30px;
         height: 30px;
         border: 0;
@@ -19133,7 +19235,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               const layout = getMetronomeWorkflowPreviewLayout(workflow);
               return React.createElement("div", {
                 className: "playground-metronome-workflow-card-preview",
-                style: { "--metronome-workflow-wallpaper-image": buildMetronomeWorkflowWallpaperImage(workflow) },
                 "aria-hidden": "true",
               },
                 layout.edges.length
@@ -19192,15 +19293,17 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                     ...interactiveProps,
                     className: "playground-project-resources-grid-card playground-metronome-workflow-grid-card " + (interactiveProps.className || ""),
                   },
-                    renderMetronomeWorkflowGraphPreview(workflow),
-                    React.createElement("div", { className: "playground-metronome-workflow-card-body" },
-                      React.createElement("div", { className: "playground-metronome-workflow-grid-card-header" },
-                        React.createElement("span", { className: "playground-metronome-workflow-grid-card-title-copy" },
-                          React.createElement("span", { className: "playground-metronome-workflow-grid-card-title" }, presentation.title),
-                          React.createElement("span", { className: "playground-metronome-workflow-grid-card-subtitle" }, presentation.subtitle)
-                        ),
+                    React.createElement("div", {
+                      className: "playground-metronome-workflow-card-hero",
+                      style: { "--metronome-workflow-wallpaper-image": buildMetronomeWorkflowWallpaperImage(workflow) },
+                    },
+                      React.createElement("div", { className: "playground-metronome-workflow-card-hero-top" },
+                        React.createElement("span", { className: "playground-metronome-workflow-card-hero-title" }, presentation.title),
                         renderWorkflowRowActions(workflow)
-                      ),
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-metronome-workflow-card-body" },
+                      renderMetronomeWorkflowGraphPreview(workflow),
                       React.createElement("div", { className: "playground-metronome-workflow-grid-meta" },
                         React.createElement("div", { className: "playground-metronome-workflow-grid-meta-item" },
                           React.createElement("span", { className: "playground-metronome-workflow-grid-meta-label" }, "Status"),
@@ -19212,10 +19315,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                         )
                       ),
                       React.createElement("div", { className: "playground-metronome-workflow-grid-card-footer" },
-                        renderWorkflowCreatorColumn(workflow),
-                        React.createElement("span", { className: "playground-metronome-workflow-grid-card-open" },
-                          React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 2 })
-                        )
+                        renderWorkflowCreatorColumn(workflow)
                       )
                     )
                   );

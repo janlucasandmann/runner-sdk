@@ -5053,19 +5053,6 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.42);
       }
 
-      .playground-project-overview-outcome-preview-progress-track {
-        height: 2px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-      }
-
-      .playground-project-overview-outcome-preview-progress-fill {
-        height: 100%;
-        border-radius: inherit;
-        background: rgba(255, 255, 255, 0.94);
-      }
-
       .playground-project-overview-strategy-add-row {
         display: flex;
         align-items: center;
@@ -5144,14 +5131,39 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-outcome-preview {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+        display: block;
       }
 
-      .playground-tasks-backlog-project-icon.is-outcome {
-        color: #fff;
-        background: linear-gradient(135deg, #d8b64f 0%, #b77c1e 52%, #6f4708 100%);
+      .playground-project-overview-outcome-progress-ring {
+        position: relative;
+        display: inline-flex;
+        width: 24px;
+        height: 24px;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        color: var(--permission-mini-ring-icon-color, rgba(255, 255, 255, 0.72));
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        overflow: visible;
+      }
+
+      .playground-project-overview-outcome-progress-ring-canvas {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+        pointer-events: none;
+      }
+
+      .playground-project-overview-outcome-progress-ring svg {
+        position: relative;
+        z-index: 2;
+        width: 10px;
+        height: 10px;
       }
 
       .playground-project-overview-outcome-preview .playground-tasks-backlog-item-content {
@@ -5160,13 +5172,6 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-outcome-preview .playground-tasks-backlog-main {
         margin-left: 2px;
-      }
-
-      .playground-project-overview-outcome-preview-progress {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
       }
 
       .playground-project-overview-outcome-editor-modal {
@@ -5763,6 +5768,39 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Math.round(numericValue));
         }
 
+        function getProjectOverviewOutcomeReleaseIds(outcome) {
+          if (typeof normalizePlaygroundStrategyOutcomeReleaseIds === "function") {
+            return normalizePlaygroundStrategyOutcomeReleaseIds(outcome);
+          }
+          const next = [];
+          const seen = new Set();
+          const addReleaseId = (releaseId) => {
+            const normalizedReleaseId = String(releaseId || "").trim();
+            if (!normalizedReleaseId || seen.has(normalizedReleaseId)) {
+              return;
+            }
+            seen.add(normalizedReleaseId);
+            next.push(normalizedReleaseId);
+          };
+          const addReleaseIds = (releaseIds) => {
+            if (Array.isArray(releaseIds)) {
+              releaseIds.forEach(addReleaseId);
+              return;
+            }
+            if (typeof releaseIds === "string") {
+              releaseIds
+                .replaceAll(String.fromCharCode(13), "")
+                .split(new RegExp("[" + String.fromCharCode(10) + ",]+"))
+                .forEach(addReleaseId);
+            }
+          };
+          if (outcome && typeof outcome === "object" && !Array.isArray(outcome)) {
+            addReleaseIds(outcome.releaseIds || outcome.release_ids || outcome.milestoneIds || outcome.milestone_ids);
+            addReleaseId(outcome.releaseId || outcome.release_id || outcome.milestoneId || outcome.milestone_id);
+          }
+          return next;
+        }
+
         function getProjectOverviewLocalDayKey(dateLike) {
           const date = dateLike instanceof Date ? new Date(dateLike) : new Date(dateLike);
           if (Number.isNaN(date.getTime())) {
@@ -5792,6 +5830,196 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           date.setHours(0, 0, 0, 0);
           date.setDate(1);
           return getProjectOverviewLocalDayKey(date);
+        }
+
+        function getProjectOverviewOutcomeProgressRingValue(value) {
+          const numericValue = Number(value || 0);
+          if (!Number.isFinite(numericValue)) {
+            return 0;
+          }
+          return Math.max(0, Math.min(100, numericValue));
+        }
+
+        function drawProjectOverviewOutcomeProgressRing(canvas, progressValue, ringId = "ring_1") {
+          if (!canvas) {
+            return;
+          }
+          const fallbackSize = typeof PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE === "number"
+            ? PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE
+            : 24;
+          const fallbackLineWidthRatio = typeof PLAYGROUND_PERMISSION_MINI_RING_ICON_LINE_WIDTH === "number"
+            ? PLAYGROUND_PERMISSION_MINI_RING_ICON_LINE_WIDTH / fallbackSize
+            : 1 / 24;
+          const fallbackPaddingRatio = typeof PLAYGROUND_PERMISSION_MINI_RING_ICON_PADDING === "number"
+            ? PLAYGROUND_PERMISSION_MINI_RING_ICON_PADDING / fallbackSize
+            : 2.9 / 24;
+          const startAngle = typeof PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE === "number"
+            ? PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE
+            : -Math.PI / 2 - 0.18;
+          const fullCapStartOffset = typeof PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_START_OFFSET === "number"
+            ? PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_START_OFFSET
+            : -0.18;
+          const fullCapEndOffset = typeof PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_END_OFFSET === "number"
+            ? PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_END_OFFSET
+            : 0.32;
+          const fullCapClipOffset = typeof PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_CLIP_OFFSET === "number"
+            ? PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_CLIP_OFFSET
+            : 0.14;
+          const normalizedRingId = typeof normalizePlaygroundPermissionRingId === "function"
+            ? normalizePlaygroundPermissionRingId(ringId, "ring_1")
+            : "ring_1";
+          const rawProgress = getProjectOverviewOutcomeProgressRingValue(progressValue) / 100;
+          const progress = rawProgress > 0 ? rawProgress : 0.05;
+          const rect = canvas.getBoundingClientRect();
+          const width = Math.max(1, Math.round(rect.width || fallbackSize));
+          const height = Math.max(1, Math.round(rect.height || fallbackSize));
+          const dpr = Math.max(1, window.devicePixelRatio || 1);
+          const targetWidth = Math.round(width * dpr);
+          const targetHeight = Math.round(height * dpr);
+          if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+          }
+
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            return;
+          }
+
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          ctx.clearRect(0, 0, width, height);
+
+          const size = Math.min(width, height);
+          const centerX = width / 2;
+          const centerY = height / 2;
+          const lineWidth = Math.max(1, size * fallbackLineWidthRatio);
+          const padding = Math.max(2, size * fallbackPaddingRatio);
+          const radius = Math.max(1, size / 2 - lineWidth / 2 - padding);
+          const miniRingGradients = typeof PLAYGROUND_PERMISSION_MINI_RING_ICON_GRADIENTS === "object"
+            ? PLAYGROUND_PERMISSION_MINI_RING_ICON_GRADIENTS
+            : undefined;
+          const makeGradient = (alpha, gradientProgress = Math.max(progress, 0.001)) => {
+            if (typeof createPlaygroundPermissionRingGradient === "function") {
+              return createPlaygroundPermissionRingGradient(ctx, width, height, normalizedRingId, alpha, gradientProgress, miniRingGradients);
+            }
+            const gradient = ctx.createLinearGradient(width / 2, 0, width / 2, height);
+            gradient.addColorStop(0, "rgba(31, 130, 72, " + alpha + ")");
+            gradient.addColorStop(1, "rgba(29, 225, 163, " + alpha + ")");
+            return gradient;
+          };
+          const getStartColor = (alpha = 1) => typeof getPlaygroundPermissionRingStartColor === "function"
+            ? getPlaygroundPermissionRingStartColor(normalizedRingId, alpha)
+            : "rgba(31, 130, 72, " + alpha + ")";
+          const getEndColor = (alpha = 1) => typeof getPlaygroundPermissionRingEndColor === "function"
+            ? getPlaygroundPermissionRingEndColor(normalizedRingId, alpha)
+            : "rgba(29, 225, 163, " + alpha + ")";
+
+          ctx.save();
+          ctx.lineWidth = lineWidth;
+          ctx.strokeStyle = makeGradient(0.1, 1);
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+
+          if (progress <= 0) {
+            return;
+          }
+
+          const endAngle = startAngle + Math.PI * 2 * Math.min(progress, 1);
+
+          ctx.save();
+          ctx.lineWidth = lineWidth;
+          ctx.strokeStyle = makeGradient(1, progress);
+          ctx.lineCap = "butt";
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+          ctx.stroke();
+          ctx.restore();
+
+          if (progress < 0.999) {
+            const startCapX = centerX + Math.cos(startAngle) * radius;
+            const startCapY = centerY + Math.sin(startAngle) * radius;
+            const endCapX = centerX + Math.cos(endAngle) * radius;
+            const endCapY = centerY + Math.sin(endAngle) * radius;
+
+            ctx.save();
+            ctx.fillStyle = getStartColor(1);
+            ctx.beginPath();
+            ctx.arc(startCapX, startCapY, lineWidth / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            ctx.save();
+            ctx.fillStyle = getEndColor(1);
+            ctx.beginPath();
+            ctx.arc(endCapX, endCapY, lineWidth / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            return;
+          }
+
+          const fullCapStartAngle = startAngle + fullCapStartOffset;
+          const fullCapEndAngle = startAngle + fullCapEndOffset;
+          const capClipAngle = startAngle + fullCapClipOffset;
+          const capClipX = centerX + Math.cos(capClipAngle) * radius;
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(capClipX + lineWidth * 0.08, 0, width - capClipX, height);
+          ctx.clip();
+          ctx.lineWidth = lineWidth;
+          ctx.lineCap = "round";
+          ctx.strokeStyle = getEndColor(1);
+          ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+          ctx.shadowBlur = Math.max(3, lineWidth * 0.8);
+          ctx.shadowOffsetX = Math.max(1, lineWidth * 0.24);
+          ctx.shadowOffsetY = Math.max(0.5, lineWidth * 0.14);
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, fullCapStartAngle, fullCapEndAngle);
+          ctx.stroke();
+          ctx.restore();
+
+          ctx.save();
+          ctx.lineWidth = lineWidth;
+          ctx.lineCap = "round";
+          ctx.strokeStyle = getEndColor(1);
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, fullCapStartAngle, fullCapEndAngle);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        function PlaygroundProjectOverviewOutcomeProgressRing({ progress, label } = {}) {
+          const normalizedProgress = getProjectOverviewOutcomeProgressRingValue(progress);
+          const canvasRef = useRef(null);
+          const iconColor = typeof getPlaygroundPermissionRingIconColor === "function"
+            ? getPlaygroundPermissionRingIconColor("ring_1", 1)
+            : "rgba(29, 225, 163, 1)";
+
+          useEffect(() => {
+            const redraw = () => drawProjectOverviewOutcomeProgressRing(canvasRef.current, normalizedProgress, "ring_1");
+            redraw();
+            window.addEventListener("resize", redraw);
+            return () => window.removeEventListener("resize", redraw);
+          }, [normalizedProgress]);
+
+          return React.createElement("span", {
+              className: "playground-project-overview-outcome-progress-ring"
+                + (normalizedProgress >= 100 ? " is-complete" : normalizedProgress > 0 ? " is-active" : " is-empty"),
+              role: "img",
+              "aria-label": label || ("Outcome progress " + Math.round(normalizedProgress) + "%"),
+              style: {
+                "--permission-mini-ring-icon-color": iconColor,
+              },
+            },
+            React.createElement("canvas", {
+              ref: canvasRef,
+              className: "playground-project-overview-outcome-progress-ring-canvas",
+            }),
+            React.createElement(Award, { strokeWidth: 2.35 })
+          );
         }
 
         function PlaygroundProjectOverviewResponsiveSvg({ frameClassName, frameHeight, svgHeight, fallbackWidth = 960, ariaLabel, renderOverlay, children }) {
@@ -7085,7 +7313,20 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const overviewCurrentTaskReleaseSections = (() => {
             const sections = [];
             const sectionIndexByKey = new Map();
-            visibleOverviewTasks.forEach((task) => {
+            (Array.isArray(releases) ? releases : []).forEach((release) => {
+              const releaseId = String(release?.id || "").trim();
+              if (!releaseId || sectionIndexByKey.has(releaseId)) {
+                return;
+              }
+              sectionIndexByKey.set(releaseId, sections.length);
+              sections.push({
+                key: releaseId,
+                releaseId,
+                title: release.name || "Untitled Milestone",
+                tasks: [],
+              });
+            });
+            normalizedOverviewTasks.forEach((task) => {
               const normalizedReleaseId = typeof task?.releaseId === "string" && task.releaseId.trim()
                 ? task.releaseId.trim()
                 : "";
@@ -12010,8 +12251,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               Number(selectedProjectSummary?.openTasksCount) || Number(selectedProjectTaskStatusOverview?.total) || Number(progressStats.scopeCount) || 0
             );
             const releaseSections = overviewCurrentTaskReleaseSections
-              .filter((section) => section.key !== "__no_release__")
-              .slice(0, 2);
+              .filter((section) => section.key !== "__no_release__");
             const metronomeResourceCount = allOverviewResourceItems.filter((item) => isProjectOverviewMetronomeResource(item)).length;
             const webAppResourceCount = allOverviewResourceItems
               .filter((item) => !isProjectOverviewMetronomeResource(item) && isProjectOverviewWebAppResource(item))
@@ -12308,11 +12548,11 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
 
             function getOutcomeTasks(outcome) {
-              const releaseId = normalizePlaygroundStrategyText(outcome?.releaseId);
-              if (!releaseId) {
+              const releaseIds = new Set(getProjectOverviewOutcomeReleaseIds(outcome));
+              if (releaseIds.size === 0) {
                 return [];
               }
-              return normalizedOverviewTasks.filter((task) => String(task?.releaseId || "").trim() === releaseId);
+              return normalizedOverviewTasks.filter((task) => releaseIds.has(String(task?.releaseId || "").trim()));
             }
 
             function getOutcomeTaskProgressValue(task) {
@@ -12357,6 +12597,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     title: "",
                     description: "",
                     successCriteria: [],
+                    releaseIds: [],
                     releaseId: "",
                   }, nextIndex),
                 });
@@ -12455,8 +12696,16 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             }
 
             function updateProjectOverviewOutcomeMilestone(releaseId) {
+              const normalizedReleaseId = String(releaseId || "").trim();
+              const currentReleaseIds = getProjectOverviewOutcomeReleaseIds(projectOverviewOutcomeEditorState?.draft || {});
+              const nextReleaseIds = normalizedReleaseId
+                ? (currentReleaseIds.includes(normalizedReleaseId)
+                    ? currentReleaseIds.filter((id) => id !== normalizedReleaseId)
+                    : currentReleaseIds.concat(normalizedReleaseId))
+                : [];
               updateProjectOverviewOutcomeEditorDraft({
-                releaseId: String(releaseId || "").trim(),
+                releaseIds: nextReleaseIds,
+                releaseId: nextReleaseIds[0] || "",
                 taskIds: [],
               });
             }
@@ -12464,11 +12713,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             function renderOutcomePreviewRow(outcome, index) {
               const progressInfo = getOutcomeProgressInfo(outcome);
               const outcomeNumber = String(index + 1).padStart(3, "0");
-              const outcomeReleaseId = String(outcome?.releaseId || "").trim();
-              const linkedMilestone = outcomeReleaseId ? releasesById[outcomeReleaseId] || null : null;
-              const linkedLabel = linkedMilestone
-                ? ((linkedMilestone.name || "Milestone") + (progressInfo.tasks.length ? " · " + progressInfo.doneTasks.length + "/" + progressInfo.tasks.length + " tickets done" : ""))
-                : "No milestone linked";
+              const outcomeReleaseIds = getProjectOverviewOutcomeReleaseIds(outcome);
+              const linkedMilestones = outcomeReleaseIds
+                .map((releaseId) => releasesById[releaseId] || null)
+                .filter(Boolean);
+              const linkedMilestoneCount = linkedMilestones.length;
+              const linkedMilestoneLabel = String(linkedMilestoneCount) + " " + (linkedMilestoneCount === 1 ? "milestone" : "milestones");
+              const linkedTicketLabel = String(progressInfo.doneTasks.length) + "/" + String(progressInfo.tasks.length) + " tickets done";
+              const linkedLabel = linkedMilestoneLabel + " · " + linkedTicketLabel;
               return React.createElement("div", {
                   key: outcome.id || index,
                   className: "playground-tasks-backlog-item playground-project-overview-outcome-preview",
@@ -12484,10 +12736,10 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 },
                 React.createElement("div", { className: "playground-tasks-backlog-item-content" },
                   React.createElement("div", { className: "playground-tasks-backlog-leading" },
-                    React.createElement("div", {
-                      className: "playground-tasks-backlog-project-icon is-outcome",
-                      "aria-hidden": "true",
-                    }, React.createElement(Award, { width: 14, height: 14, strokeWidth: 1.9 })),
+                    React.createElement(PlaygroundProjectOverviewOutcomeProgressRing, {
+                      progress: progressInfo.progress,
+                      label: "Outcome " + outcomeNumber + " progress " + String(progressInfo.progress) + "%",
+                    }),
                     React.createElement("div", { className: "playground-tasks-backlog-main" },
                       React.createElement("span", { className: "playground-tasks-backlog-ticket" }, "Outcome " + outcomeNumber),
                       React.createElement("span", { className: "playground-tasks-backlog-title" }, outcome.title || "Untitled Outcome")
@@ -12495,14 +12747,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   ),
                   React.createElement("div", { className: "playground-tasks-backlog-meta" },
                     React.createElement("span", { className: "playground-tasks-backlog-ticket" }, linkedLabel)
-                  )
-                ),
-                React.createElement("div", { className: "playground-project-overview-outcome-preview-progress" },
-                  React.createElement("div", { className: "playground-project-overview-outcome-preview-progress-track" },
-                    React.createElement("div", {
-                      className: "playground-project-overview-outcome-preview-progress-fill",
-                      style: { width: String(progressInfo.progress) + "%" },
-                    })
                   )
                 )
               );
@@ -12520,12 +12764,16 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               if (!projectOverviewOutcomeEditorState || !Number.isInteger(index) || index < 0) {
                 return null;
               }
-              const selectedReleaseId = String(draft.releaseId || "").trim();
-              const selectedRelease = selectedReleaseId ? releasesById[selectedReleaseId] || null : null;
-              const selectedReleaseTasks = selectedReleaseId
-                ? normalizedOverviewTasks.filter((task) => String(task?.releaseId || "").trim() === selectedReleaseId)
-                : [];
-              const selectedReleaseDoneTasks = selectedReleaseTasks.filter((task) => getTaskBoardStatus(task) === "done");
+              const selectedReleaseIds = getProjectOverviewOutcomeReleaseIds(draft);
+              const selectedReleaseIdSet = new Set(selectedReleaseIds);
+              const selectedReleaseTasksById = selectedReleaseIds.reduce((result, releaseId) => {
+                const releaseTasks = normalizedOverviewTasks.filter((task) => String(task?.releaseId || "").trim() === releaseId);
+                result[releaseId] = {
+                  tasks: releaseTasks,
+                  doneTasks: releaseTasks.filter((task) => getTaskBoardStatus(task) === "done"),
+                };
+                return result;
+              }, {});
               const content = React.createElement("div", {
                   className: "playground-tasks-project-modal-backdrop",
                   onClick: () => setProjectOverviewOutcomeEditorState(null),
@@ -12584,44 +12832,42 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                       })
                     ),
                     React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Linked Milestone"),
-                      selectedRelease
-                        ? React.createElement("div", { className: "playground-project-overview-outcome-ticket-list" },
-                            React.createElement("div", { className: "playground-project-overview-outcome-ticket-row is-selected" },
-                              React.createElement("span", { className: "playground-project-overview-outcome-ticket-check" },
-                                React.createElement(Check, { width: 11, height: 11, strokeWidth: 2.1 })
-                              ),
-                              React.createElement("span", { className: "playground-project-overview-outcome-ticket-title" },
-                                selectedRelease.name || "Untitled Milestone"
-                              ),
-                              React.createElement("span", { className: "playground-project-overview-outcome-ticket-status" },
-                                selectedReleaseTasks.length
-                                  ? selectedReleaseDoneTasks.length + "/" + selectedReleaseTasks.length + " tickets done"
-                                  : "No tickets"
-                              )
-                            ),
-                            React.createElement("button", {
+                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Linked Milestones"),
+                      React.createElement("div", { className: "playground-project-overview-outcome-ticket-list" },
+                        releases.length > 0
+                          ? releases.map((release) => {
+                              const isSelected = selectedReleaseIdSet.has(release.id);
+                              const releaseTaskInfo = selectedReleaseTasksById[release.id] || { tasks: [], doneTasks: [] };
+                              return React.createElement("button", {
+                                  key: release.id,
+                                  type: "button",
+                                  className: "playground-project-overview-outcome-ticket-row" + (isSelected ? " is-selected" : ""),
+                                  onClick: () => updateProjectOverviewOutcomeMilestone(release.id),
+                                },
+                                React.createElement("span", { className: "playground-project-overview-outcome-ticket-check" },
+                                  isSelected
+                                    ? React.createElement(Check, { width: 11, height: 11, strokeWidth: 2.1 })
+                                    : null
+                                ),
+                                React.createElement("span", { className: "playground-project-overview-outcome-ticket-title" },
+                                  release.name || "Untitled Milestone"
+                                ),
+                                React.createElement("span", { className: "playground-project-overview-outcome-ticket-status" },
+                                  releaseTaskInfo.tasks.length
+                                    ? releaseTaskInfo.doneTasks.length + "/" + releaseTaskInfo.tasks.length + " tickets done"
+                                    : "No tickets"
+                                )
+                              );
+                            })
+                          : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No milestones in this project yet."),
+                        selectedReleaseIds.length > 0
+                          ? React.createElement("button", {
                               type: "button",
                               className: "playground-project-overview-outcome-ticket-row",
                               onClick: () => updateProjectOverviewOutcomeMilestone(""),
-                            }, "Unlink milestone")
-                          )
-                        : React.createElement("div", { className: "playground-project-overview-outcome-ticket-list" },
-                            releases.length > 0
-                              ? releases.map((release) =>
-                                  React.createElement("button", {
-                                      key: release.id,
-                                      type: "button",
-                                      className: "playground-project-overview-outcome-ticket-row",
-                                      onClick: () => updateProjectOverviewOutcomeMilestone(release.id),
-                                    },
-                                    React.createElement("span", { className: "playground-project-overview-outcome-ticket-title" },
-                                      release.name || "Untitled Milestone"
-                                    )
-                                  )
-                                )
-                              : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No milestones in this project yet.")
-                          )
+                            }, "Unlink all milestones")
+                          : null
+                      )
                     )
                   ),
                   missionControlSaveState?.error
@@ -12662,8 +12908,11 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             const notAchievedOutcomesCount = Math.max(0, allOutcomesCount - achievedOutcomesCount);
             const linkedMilestoneIds = new Set();
             outcomeProgressItems.forEach((item) => {
-              const releaseId = String(item.outcome?.releaseId || "").trim();
-              if (releaseId) linkedMilestoneIds.add(releaseId);
+              getProjectOverviewOutcomeReleaseIds(item.outcome).forEach((releaseId) => {
+                if (releasesById[releaseId]) {
+                  linkedMilestoneIds.add(releaseId);
+                }
+              });
             });
             const projectReadinessPercent = allOutcomesCount > 0
               ? Math.round((achievedOutcomesCount / allOutcomesCount) * 100)
@@ -12854,7 +13103,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	            const ruleEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
 	            const canAddRule = !isReadOnly
 	              && Boolean(normalizePlaygroundProjectRuleEntry(projectRuleInputValue))
-	              && !projectSaveState.isSaving;
+	              && !projectRulesSaveState.isSaving;
 
 	            function closeProjectOverviewRuleComposer() {
 	              if (typeof closeProjectRuleComposer === "function") {
@@ -12951,8 +13200,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                      )
 	                    )
 	                  ),
-	                  projectSaveState?.error
-	                    ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, projectSaveState.error)
+	                  projectRulesSaveState?.error
+	                    ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, projectRulesSaveState.error)
 	                    : null,
 	                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
 	                    React.createElement("button", {
@@ -12964,7 +13213,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                      type: "submit",
 	                      className: "playground-environments-action-button is-primary",
 	                      disabled: !canAddRule,
-	                    }, projectSaveState.isSaving ? "Saving..." : "Add Rule")
+	                    }, projectRulesSaveState.isSaving ? "Saving..." : "Add Rule")
 	                  )
 	                )
 	              );
@@ -13045,7 +13294,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                                  type: "button",
 	                                  className: "playground-project-overview-rule-remove",
 	                                  onClick: () => void handleRemoveProjectRuleEntry(index),
-	                                  disabled: projectSaveState.isSaving,
+	                                  disabled: projectRulesSaveState.isSaving,
 	                                  title: "Remove rule",
 	                                  "aria-label": "Remove rule " + String(index + 1),
 	                                }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }))
@@ -13059,9 +13308,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                        "Add project rules for repository conventions, deployment expectations, commit policy, communication style, or other operating constraints."
 	                      )
 	                    ),
-	                projectSaveState.error
-	                  ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, projectSaveState.error)
-	                  : projectSaveState.isSaving
+	                projectRulesSaveState.error
+	                  ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, projectRulesSaveState.error)
+	                  : projectRulesSaveState.isSaving
 	                    ? React.createElement("div", { className: "playground-environments-muted playground-tasks-comment-feedback" }, "Saving changes...")
 	                    : null
 	              ),
