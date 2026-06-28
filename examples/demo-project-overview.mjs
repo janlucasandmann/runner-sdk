@@ -6539,6 +6539,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const projectOverviewSharedWorkspaceTeam = projectOverviewSharedTeamId && Array.isArray(workspaceTeams)
             ? workspaceTeams.find((team) => String(team?.id || "").trim() === projectOverviewSharedTeamId) || null
             : null;
+          const normalizedWorkspaceTeamMembersTeamId = String(workspaceTeamMembersTeamId || "").trim();
+          const projectOverviewSharedTeamMemberRows = projectOverviewSharedTeamId
+            && normalizedWorkspaceTeamMembersTeamId === projectOverviewSharedTeamId
+            && Array.isArray(workspaceTeamMembers)
+              ? workspaceTeamMembers
+              : [];
           const projectOverviewSharedTeamName = String(
             projectOverviewDraft?.teamName
             || selectedProject?.teamName
@@ -11855,8 +11861,24 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             if (!projectRecord?.id || typeof commitLocalProjectRecord !== "function") {
               return;
             }
-            commitLocalProjectRecord(projectRecord, {
-              summary: projectRecord.summary || selectedProjectSummary,
+            const normalizedProjectRecord = normalizePlaygroundProjectRecord(projectRecord);
+            if (typeof setProjectDraft === "function") {
+              setProjectDraft((current) => {
+                if (!current || String(current.id || "") !== String(normalizedProjectRecord.id || "")) {
+                  return current;
+                }
+                return normalizePlaygroundProjectRecord({
+                  ...current,
+                  ...normalizedProjectRecord,
+                  metadata: {
+                    ...(current.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata) ? current.metadata : {}),
+                    ...(normalizedProjectRecord.metadata && typeof normalizedProjectRecord.metadata === "object" && !Array.isArray(normalizedProjectRecord.metadata) ? normalizedProjectRecord.metadata : {}),
+                  },
+                });
+              });
+            }
+            commitLocalProjectRecord(normalizedProjectRecord, {
+              summary: normalizedProjectRecord.summary || selectedProjectSummary,
               environments: selectedProjectEnvironments,
               recentThreads: selectedProjectRecentThreads,
               threads: selectedProjectRecentThreads,
@@ -12147,6 +12169,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 className: "playground-project-overview-sidebar-select-trigger" + (isOpen ? " is-open" : "") + (options.empty ? " is-empty" : ""),
                 onClick: (event) => {
                   event.stopPropagation();
+                  if (normalizedId === "lead" && !isOpen && projectOverviewSharedTeamId) {
+                    requestProjectOverviewWorkspaceTeams({ teamId: projectOverviewSharedTeamId });
+                  }
                   if (typeof setProjectOverviewSidebarPropertyPopover === "function") {
                     setProjectOverviewSidebarPropertyPopover(isOpen ? "" : normalizedId);
                   }
@@ -12160,14 +12185,223 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             });
           }
 
+          function getProjectOverviewLeadCandidateSources(record) {
+            const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
+            const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : {};
+            return [
+              source,
+              source.user,
+              source.profile,
+              source.account,
+              source.member,
+              source.identity,
+              source.userProfile,
+              source.accountProfile,
+              source.publicProfile,
+              metadata,
+              metadata.user,
+              metadata.profile,
+              metadata.account,
+              metadata.member,
+              metadata.identity,
+              metadata.userProfile,
+              metadata.accountProfile,
+              metadata.publicProfile,
+            ].filter((value) => value && typeof value === "object" && !Array.isArray(value));
+          }
+
+          function readProjectOverviewLeadCandidateString(record, keys = []) {
+            for (const source of getProjectOverviewLeadCandidateSources(record)) {
+              for (const key of keys) {
+                const value = String(source?.[key] || "").replace(/\s+/g, " ").trim();
+                if (value) {
+                  return value;
+                }
+              }
+            }
+            return "";
+          }
+
+          function getProjectOverviewLeadCandidateName(record) {
+            const directName = readProjectOverviewLeadCandidateString(record, [
+              "displayName",
+              "display_name",
+              "name",
+              "fullName",
+              "full_name",
+              "accountDisplayName",
+              "accountName",
+              "memberDisplayName",
+              "memberName",
+              "publicName",
+              "username",
+              "userName",
+              "label",
+            ]);
+            if (directName) {
+              return directName;
+            }
+            for (const source of getProjectOverviewLeadCandidateSources(record)) {
+              const firstName = String(source.firstName || source.first_name || source.givenName || source.given_name || "").trim();
+              const lastName = String(source.lastName || source.last_name || source.familyName || source.family_name || "").trim();
+              const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+              if (fullName) {
+                return fullName;
+              }
+            }
+            return "";
+          }
+
+          function getProjectOverviewLeadCandidateEmail(record) {
+            return readProjectOverviewLeadCandidateString(record, [
+              "email",
+              "emailAddress",
+              "email_address",
+              "mail",
+              "primaryEmail",
+              "primary_email",
+            ]).toLowerCase();
+          }
+
+          function getProjectOverviewLeadCandidateUserId(record) {
+            return readProjectOverviewLeadCandidateString(record, [
+              "userId",
+              "user_id",
+              "uid",
+              "accountId",
+              "account_id",
+              "memberUserId",
+              "member_user_id",
+              "localId",
+              "local_id",
+            ]);
+          }
+
+          function getProjectOverviewLeadCandidateAvatarUrl(record) {
+            return readProjectOverviewLeadCandidateString(record, [
+              "photoURL",
+              "photoUrl",
+              "photo_url",
+              "avatarUrl",
+              "avatarURL",
+              "avatar",
+              "picture",
+              "imageUrl",
+              "profileImageUrl",
+              "profile_image_url",
+            ]);
+          }
+
+          function isProjectOverviewAgentLeadCandidate(record) {
+            const sources = getProjectOverviewLeadCandidateSources(record);
+            const typeValues = [];
+            sources.forEach((source) => {
+              [
+                source.type,
+                source.kind,
+                source.memberType,
+                source.member_type,
+                source.actorKind,
+                source.actor_kind,
+                source.agentType,
+                source.agent_type,
+                source.resourceType,
+                source.resource_type,
+                source.subjectType,
+                source.subject_type,
+                source.entityType,
+                source.entity_type,
+              ].forEach((value) => {
+                const normalized = String(value || "").trim().toLowerCase();
+                if (normalized) {
+                  typeValues.push(normalized);
+                }
+              });
+            });
+            if (typeValues.some((value) => value.includes("agent") || value.includes("bot") || value.includes("assistant") || value.includes("automation"))) {
+              return true;
+            }
+            return sources.some((source) =>
+              source.isAgent === true
+              || source.agent === true
+              || Boolean(String(source.agentId || source.agent_id || source.agentUid || source.agent_uid || "").trim())
+            );
+          }
+
+          function isProjectOverviewHumanLeadCandidate(record, options = {}) {
+            if (options.forceHuman) {
+              return true;
+            }
+            if (isProjectOverviewAgentLeadCandidate(record)) {
+              return false;
+            }
+            if (getProjectOverviewLeadCandidateEmail(record) || getProjectOverviewLeadCandidateUserId(record)) {
+              return true;
+            }
+            return getProjectOverviewLeadCandidateSources(record).some((source) => {
+              const normalized = String(source.type || source.kind || source.memberType || source.member_type || source.subjectType || source.subject_type || "").trim().toLowerCase();
+              return normalized.includes("human")
+                || normalized.includes("user")
+                || normalized.includes("person")
+                || normalized.includes("account")
+                || normalized === "member";
+            });
+          }
+
+          function collectProjectOverviewLeadCandidateRecords(value, addCandidate) {
+            if (Array.isArray(value)) {
+              value.forEach((item) => collectProjectOverviewLeadCandidateRecords(item, addCandidate));
+              return;
+            }
+            if (!value || typeof value !== "object") {
+              return;
+            }
+            addCandidate(value);
+            const source = value;
+            const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : {};
+            [
+              source.members,
+              source.teamMembers,
+              source.users,
+              source.userMembers,
+              source.memberProfiles,
+              source.memberships,
+              source.collaborators,
+              source.sharedWith,
+              source.sharedWithUsers,
+              source.accessUsers,
+              metadata.members,
+              metadata.teamMembers,
+              metadata.users,
+              metadata.userMembers,
+              metadata.memberProfiles,
+              metadata.memberships,
+              metadata.collaborators,
+              metadata.sharedWith,
+              metadata.sharedWithUsers,
+              metadata.accessUsers,
+            ].forEach((collection) => {
+              if (Array.isArray(collection)) {
+                collection.forEach((item) => addCandidate(item));
+              }
+            });
+          }
+
           function buildProjectOverviewSidebarLeadOptions() {
             const currentLead = getProjectOverviewSidebarLead();
             const options = [];
             const seen = new Set();
-            function addOption(option) {
-              const name = String(option?.name || option?.label || "").trim();
-              const email = String(option?.email || "").trim();
-              const id = String(option?.id || option?.userId || option?.agentId || email || name || "").trim();
+            function addOption(option, addOptions = {}) {
+              if (!option || typeof option !== "object") {
+                return;
+              }
+              if (option.id !== "__unassigned__" && !isProjectOverviewHumanLeadCandidate(option, addOptions)) {
+                return;
+              }
+              const name = getProjectOverviewLeadCandidateName(option) || String(option?.name || option?.label || "").trim();
+              const email = getProjectOverviewLeadCandidateEmail(option) || String(option?.email || "").trim();
+              const userId = getProjectOverviewLeadCandidateUserId(option) || String(option?.userId || "").trim();
+              const id = String(userId || email || option?.id || name || "").trim();
               if (!id && !name) return;
               const key = (id || email || name).toLowerCase();
               if (seen.has(key)) return;
@@ -12176,33 +12410,25 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 id: id || key,
                 name: name || email || "Project lead",
                 email,
-                avatarUrl: String(option?.avatarUrl || option?.photoUrl || option?.profilePhotoUrl || "").trim(),
+                avatarUrl: getProjectOverviewLeadCandidateAvatarUrl(option) || String(option?.avatarUrl || option?.photoUrl || option?.profilePhotoUrl || "").trim(),
               });
             }
             addOption({
               id: "__unassigned__",
               name: "Unassigned",
-            });
-            addOption({
-              id: currentUserEmail || currentUserName || "current-user",
-              name: currentUserName || currentUserEmail || "Me",
-              email: currentUserEmail,
-              avatarUrl: currentUserAvatarUrl,
-            });
+            }, { forceHuman: true });
             addOption({
               id: currentLead.id || currentLead.email || currentLead.name,
+              userId: currentLead.id,
               name: currentLead.name,
               email: currentLead.email,
               avatarUrl: currentLead.avatarUrl,
             });
-            (Array.isArray(sortedAgents) ? sortedAgents : []).forEach((agent) => {
-              addOption({
-                id: agent.id,
-                name: agent.name,
-                email: agent.email,
-                avatarUrl: agent.profilePhotoUrl || agent.avatarUrl || agent.photoUrl,
-              });
-            });
+            [
+              projectOverviewSharedWorkspaceTeam,
+              ...projectOverviewSharedTeamMemberRows,
+              ...(Array.isArray(workspaceTeams) ? workspaceTeams : []),
+            ].forEach((source) => collectProjectOverviewLeadCandidateRecords(source, addOption));
             return options;
           }
 

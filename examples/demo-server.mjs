@@ -9624,7 +9624,7 @@ const html = `<!doctype html>
         padding: 0 0 56px;
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 12px;
         box-sizing: border-box;
       }
 
@@ -10135,7 +10135,7 @@ const html = `<!doctype html>
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        margin: 0 0 12px;
+        margin: 0;
       }
 
       .playground-team-detail-actions {
@@ -26970,6 +26970,26 @@ const html = `<!doctype html>
         height: 10px;
       }
 
+      .playground-agents-permission-ring-summary-icons {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+        min-width: 0;
+      }
+
+      .playground-agents-permission-ring-summary-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      .playground-agents-permission-ring-summary-icons .playground-permission-mini-ring-icon {
+        width: 26px;
+        height: 26px;
+      }
+
       .playground-agents-permission-ring-card::before {
         content: "";
         position: absolute;
@@ -32653,7 +32673,7 @@ const html = `<!doctype html>
         background: transparent;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 6px;
         overflow: hidden;
       }
 
@@ -32681,6 +32701,47 @@ const html = `<!doctype html>
       .playground-agents-creation-config-box .playground-tasks-detail-description.playground-environments-editor-description {
         margin-top: 0;
         padding-top: 0;
+      }
+
+      .playground-agents-creation-instructions-section .playground-tasks-detail-section-header {
+        margin-bottom: 8px;
+      }
+
+      .playground-agents-creation-instructions-section .playground-tasks-detail-description-editor {
+        height: 88px;
+        min-height: 88px;
+        max-height: 88px;
+        overflow: hidden;
+        cursor: text;
+      }
+
+      .playground-agents-creation-instructions-section .playground-tasks-detail-description-input,
+      .playground-agents-creation-instructions-section .playground-tasks-detail-description-preview {
+        height: 88px;
+        min-height: 88px;
+        max-height: 88px;
+        padding-bottom: 0;
+      }
+
+      .playground-agents-creation-instructions-section .playground-tasks-detail-description-preview-scope.tb-runner-chat {
+        overflow-y: auto;
+        scrollbar-width: none;
+        pointer-events: auto;
+      }
+
+      .playground-agents-creation-instructions-section .playground-tasks-detail-description-input {
+        height: 88px !important;
+        overflow-y: auto;
+        scrollbar-width: none;
+      }
+
+      .playground-agents-creation-instructions-section .playground-tasks-detail-description-preview-scope.tb-runner-chat::-webkit-scrollbar,
+      .playground-agents-creation-instructions-section .playground-tasks-detail-description-input::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-agents-creation-instructions-section .playground-tasks-detail-description-editor.is-preview .playground-tasks-detail-description-input {
+        pointer-events: none;
       }
 
       .playground-agents-creation-settings {
@@ -32893,12 +32954,25 @@ const html = `<!doctype html>
 	        padding-right: 0;
 	      }
 
-	      .playground-agents-permission-modal {
-	        width: min(760px, 100%);
+	      .playground-tasks-project-modal.playground-agents-permission-modal {
+	        width: min(800px, calc(100vw - 48px));
+	        max-height: min(700px, calc(100vh - 48px));
+	        display: flex;
+	        flex-direction: column;
+	        overflow: visible;
+	        scrollbar-width: none;
 	      }
 
-      .playground-agents-permission-modal .playground-agent-composer-modal-body {
-        max-height: min(62vh, 620px);
+      .playground-agents-permission-modal .playground-agents-permission-modal-body {
+        gap: 18px;
+        max-height: min(488px, calc(100vh - 260px));
+        overflow: auto;
+        scrollbar-width: none;
+      }
+
+      .playground-agents-permission-modal::-webkit-scrollbar,
+      .playground-agents-permission-modal .playground-agents-permission-modal-body::-webkit-scrollbar {
+        display: none;
       }
 
       .playground-agents-nav-create-button {
@@ -33104,9 +33178,12 @@ const html = `<!doctype html>
         filter: brightness(0) invert(1);
       }
 
-      .playground-agents-model-picker-modal {
-        width: min(1860px, calc(100vw - 24px));
-        max-height: min(82vh, 860px);
+      .playground-tasks-project-modal.playground-agents-model-picker-modal {
+        width: min(800px, calc(100vw - 48px));
+        max-height: min(700px, calc(100vh - 48px));
+        display: flex;
+        flex-direction: column;
+        overflow: visible;
         scrollbar-width: none;
       }
 
@@ -33179,14 +33256,15 @@ const html = `<!doctype html>
         border-radius: 10px;
       }
 
-      .playground-agents-model-picker-modal .playground-agent-composer-modal-body {
+      .playground-agents-model-picker-modal .playground-agents-model-picker-body {
         gap: 18px;
-        max-height: calc(min(82vh, 860px) - 212px);
+        max-height: min(488px, calc(100vh - 260px));
+        overflow: auto;
         scrollbar-width: none;
       }
 
       .playground-agents-model-picker-modal::-webkit-scrollbar,
-      .playground-agents-model-picker-modal .playground-agent-composer-modal-body::-webkit-scrollbar {
+      .playground-agents-model-picker-modal .playground-agents-model-picker-body::-webkit-scrollbar {
         display: none;
       }
 
@@ -33306,28 +33384,25 @@ const html = `<!doctype html>
         justify-self: end;
         align-self: center;
         flex-shrink: 0;
-        padding: 4px 8px;
-        border-radius: 999px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
         font-size: 10px;
         font-weight: 500;
+        color: #ffffff;
       }
 
       .playground-agents-model-picker-card-cost-badge.is-low {
-        border: 1px solid rgba(77, 214, 122, 0.32);
-        background: rgba(77, 214, 122, 0.1);
-        color: rgba(144, 245, 176, 0.96);
+        color: #ffffff;
       }
 
       .playground-agents-model-picker-card-cost-badge.is-baseline {
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.8);
+        color: #ffffff;
       }
 
       .playground-agents-model-picker-card-cost-badge.is-high {
-        border: 1px solid rgba(255, 163, 77, 0.35);
-        background: rgba(255, 145, 0, 0.08);
-        color: rgba(255, 183, 102, 0.92);
+        color: #ffffff;
       }
 
       .playground-agents-model-picker-card-description {
@@ -34039,7 +34114,24 @@ const html = `<!doctype html>
         align-items: center;
         gap: 4px;
         min-width: 0;
+        width: fit-content;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
         color: rgba(255, 255, 255, 0.7);
+        font: inherit;
+        text-align: left;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .playground-tasks-ticket-page-nav-ticket-row:hover {
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-tasks-ticket-page-nav-ticket-row:focus-visible {
+        outline: 1px solid rgba(255, 255, 255, 0.42);
+        outline-offset: 3px;
       }
 
       .playground-tasks-ticket-page-nav-back {
@@ -34057,7 +34149,9 @@ const html = `<!doctype html>
         cursor: pointer;
       }
 
-      .playground-tasks-ticket-page-nav-back:hover {
+      .playground-tasks-ticket-page-nav-back:hover,
+      .playground-tasks-ticket-page-nav-ticket-row:hover .playground-tasks-ticket-page-nav-back,
+      .playground-tasks-ticket-page-nav-ticket-row:hover .playground-tasks-ticket-page-nav-ticket {
         color: rgba(255, 255, 255, 0.94);
       }
 
@@ -37226,7 +37320,7 @@ const html = `<!doctype html>
       .playground-tasks-detail-fact-label {
         font-size: 12px;
         font-weight: 400;
-        color: rgba(255, 255, 255, 0.56);
+        color: #ffffff;
         line-height: 1.35;
       }
 
@@ -39347,8 +39441,6 @@ const html = `<!doctype html>
         justify-content: space-between;
         gap: 16px;
         margin-bottom: 14px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .playground-tasks-project-modal-name-row {
@@ -51557,18 +51649,53 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         return auth;
       }
 
+      function createFetchAbortReason(name, message) {
+        if (typeof DOMException === "function") {
+          return new DOMException(message, name);
+        }
+        const error = new Error(message);
+        error.name = name;
+        return error;
+      }
+
+      function getSignalAbortReason(signal, fallbackMessage) {
+        return signal && "reason" in signal && signal.reason
+          ? signal.reason
+          : createFetchAbortReason("AbortError", fallbackMessage);
+      }
+
+      function isFetchAbortError(error) {
+        const name = String(error?.name || "").toLowerCase();
+        const message = String(error?.message || error || "").toLowerCase();
+        return name === "aborterror"
+          || name === "timeouterror"
+          || message.includes("aborted")
+          || message.includes("signal is aborted")
+          || message.includes("aborterror")
+          || message.includes("timeouterror");
+      }
+
       async function fetchJsonWithTimeout(input, init = {}, timeoutMs = 8000) {
         const controller = new AbortController();
         const externalSignal = init?.signal;
-        const abortFromExternalSignal = () => controller.abort();
+        const abortFromExternalSignal = () => {
+          if (!controller.signal.aborted) {
+            controller.abort(getSignalAbortReason(externalSignal, "Request was cancelled."));
+          }
+        };
         if (externalSignal) {
           if (externalSignal.aborted) {
-            controller.abort();
+            controller.abort(getSignalAbortReason(externalSignal, "Request was cancelled."));
           } else {
             externalSignal.addEventListener("abort", abortFromExternalSignal, { once: true });
           }
         }
-        const timeoutId = window.setTimeout(() => controller.abort(), Math.max(250, Number(timeoutMs) || 0));
+        const normalizedTimeoutMs = Math.max(250, Number(timeoutMs) || 0);
+        const timeoutId = window.setTimeout(() => {
+          if (!controller.signal.aborted) {
+            controller.abort(createFetchAbortReason("TimeoutError", "Request timed out after " + String(normalizedTimeoutMs) + "ms."));
+          }
+        }, normalizedTimeoutMs);
 
         try {
           const response = await fetch(input, {
@@ -54197,6 +54324,29 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           || normalizedId.startsWith("agent-assistant-");
       }
 
+      function isPlaygroundDefaultAgentConfigurationLocked(agent) {
+        if (!agent || getPlaygroundAgentListMode(agent) === "teams" || agent?.agentType === "team") {
+          return false;
+        }
+        const normalizedName = String(agent?.name || "").trim().toLowerCase();
+        const normalizedId = String(agent?.id || "").trim().toLowerCase();
+        const hasDefaultMarker = agent?.isDefault === true || agent?.isSystem === true;
+        const hasDefaultIdentity = isPlaygroundDeveloperAgent(agent)
+          || isPlaygroundResearcherAgent(agent)
+          || isPlaygroundAssistantAgent(agent);
+        const hasBuiltinName = normalizedName === "forge" || normalizedName === "spark" || normalizedName === "foundry";
+        const hasBuiltinId = normalizedId === "agent_default"
+          || normalizedId === "agent-default"
+          || normalizedId.startsWith("agent-default-")
+          || normalizedId === "agent_research"
+          || normalizedId === "agent-research"
+          || normalizedId.startsWith("agent-research-")
+          || normalizedId === "agent_assistant"
+          || normalizedId === "agent-assistant"
+          || normalizedId.startsWith("agent-assistant-");
+        return hasDefaultIdentity && (hasDefaultMarker || hasBuiltinName || hasBuiltinId);
+      }
+
       function isPlaygroundFreePlanLockedComposerAgent(agent) {
         return isPlaygroundDeveloperAgent(agent) || isPlaygroundResearcherAgent(agent) || getPlaygroundAgentListMode(agent) === "teams";
       }
@@ -55005,13 +55155,13 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           id: PLAYGROUND_AGENT_DRAFT_ID,
           name: kind === "team" ? "New Team" : "New Agent",
           description: "",
-          model: "claude-haiku-4-5",
+          model: "deepseek-v4-flash",
           instructions: "",
           binary: "Claude Code CLI",
           reasoningEffort: "medium",
           enabledSkills: ["frontend_design"],
           deepResearchModel: defaultDeepResearchModel,
-          permissionSet: createPlaygroundDefaultPermissionSet("agent"),
+          permissionSet: createPlaygroundFullAccessPermissionSet("agent"),
           agentType: kind === "team" ? "team" : "single",
           teamOrchestratorAgentId: "",
           teamSubagentIds: [],
@@ -55077,8 +55227,8 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         return selectPlaygroundAgentModelId(
           modelOptions,
           isFreeTier
-            ? ["claude-haiku-4-5", "gemini-3-flash", "gemini-3-1-flash", "gemini-3-flash-preview"]
-            : ["claude-haiku-4-5", "gemini-3-flash", "gemini-3-1-flash"]
+            ? ["deepseek-v4-flash", "claude-haiku-4-5", "gemini-3-flash", "gemini-3-1-flash", "gemini-3-flash-preview"]
+            : ["deepseek-v4-flash", "claude-haiku-4-5", "gemini-3-flash", "gemini-3-1-flash"]
         );
       }
 
@@ -55856,6 +56006,52 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         return normalizePlaygroundPermissionAccess(actionPolicy?.access, inheritedAccess);
       }
 
+      function getPlaygroundPermissionActionExplicitAccess(permissionSet, actionDefinition) {
+        const resolvedActionDefinition = typeof actionDefinition === "string"
+          ? getPlaygroundPermissionActionDefinition(actionDefinition)
+          : actionDefinition;
+        if (!resolvedActionDefinition) {
+          return "";
+        }
+        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, permissionSet?.subjectType || "agent");
+        const actionPolicy = normalizedPermissionSet.actions?.[resolvedActionDefinition.id] || {};
+        const rawAccess = typeof actionPolicy.access === "string"
+          ? normalizePlaygroundPermissionAccess(actionPolicy.access, "")
+          : "";
+        if (!rawAccess) {
+          return "";
+        }
+        const actionRingId = getPlaygroundPermissionActionRingId(normalizedPermissionSet, resolvedActionDefinition);
+        const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, actionRingId);
+        return rawAccess === inheritedAccess ? "" : rawAccess;
+      }
+
+      function buildPlaygroundPermissionActionPolicy(permissionSet, actionDefinition, currentActionPolicy = {}, nextAccess = "", nextRingId = "") {
+        const resolvedActionDefinition = typeof actionDefinition === "string"
+          ? getPlaygroundPermissionActionDefinition(actionDefinition)
+          : actionDefinition;
+        if (!resolvedActionDefinition) {
+          return currentActionPolicy || {};
+        }
+        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, permissionSet?.subjectType || "agent");
+        const normalizedRingId = normalizePlaygroundPermissionRingId(
+          nextRingId || currentActionPolicy?.ringId,
+          resolvedActionDefinition.ringId
+        );
+        const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, normalizedRingId);
+        const normalizedAccess = normalizePlaygroundPermissionAccess(nextAccess, "");
+        const nextPolicy = {
+          ...(currentActionPolicy || {}),
+          ringId: normalizedRingId,
+        };
+        if (normalizedAccess && normalizedAccess !== inheritedAccess) {
+          nextPolicy.access = normalizedAccess;
+        } else {
+          delete nextPolicy.access;
+        }
+        return nextPolicy;
+      }
+
       function getPlaygroundPermissionAccessLabel(access) {
         return PLAYGROUND_PERMISSION_ACCESS_OPTIONS.find((option) => option.id === access)?.label || "Custom";
       }
@@ -56101,7 +56297,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         });
       }
 
-      function drawPlaygroundPermissionMiniRingIcon(canvas, ringId) {
+      function drawPlaygroundPermissionMiniRingIcon(canvas, ringId, progressValue = 100) {
         if (!canvas) {
           return;
         }
@@ -56132,16 +56328,37 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         const lineWidth = Math.max(1, size * (PLAYGROUND_PERMISSION_MINI_RING_ICON_LINE_WIDTH / PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE));
         const padding = Math.max(2, size * (PLAYGROUND_PERMISSION_MINI_RING_ICON_PADDING / PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE));
         const radius = Math.max(1, size / 2 - lineWidth / 2 - padding);
-        const activeGradient = createPlaygroundPermissionRingGradient(ctx, width, height, normalizedRingId, 1, 1, PLAYGROUND_PERMISSION_MINI_RING_ICON_GRADIENTS);
+        const progress = Math.max(0, Math.min(100, Number(progressValue) || 0)) / 100;
+        const trackGradient = createPlaygroundPermissionRingGradient(ctx, width, height, normalizedRingId, 0.12, 1, PLAYGROUND_PERMISSION_MINI_RING_ICON_GRADIENTS);
+        const activeGradient = createPlaygroundPermissionRingGradient(ctx, width, height, normalizedRingId, 1, progress, PLAYGROUND_PERMISSION_MINI_RING_ICON_GRADIENTS);
 
         ctx.save();
         ctx.lineWidth = lineWidth;
-        ctx.strokeStyle = activeGradient;
+        ctx.strokeStyle = trackGradient;
         ctx.lineCap = "butt";
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE, PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + Math.PI * 2);
         ctx.stroke();
         ctx.restore();
+
+        if (progress <= 0) {
+          return;
+        }
+
+        const endAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + Math.PI * 2 * Math.min(progress, 1);
+
+        ctx.save();
+        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = activeGradient;
+        ctx.lineCap = progress < 0.999 ? "round" : "butt";
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE, endAngle);
+        ctx.stroke();
+        ctx.restore();
+
+        if (progress < 0.999) {
+          return;
+        }
 
         const fullCapStartAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_START_OFFSET;
         const fullCapEndAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_END_OFFSET;
@@ -56174,17 +56391,19 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         ctx.restore();
       }
 
-      function PlaygroundPermissionMiniRingIcon({ ringId } = {}) {
+      function PlaygroundPermissionMiniRingIcon({ ringId, access } = {}) {
         const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "ring_1");
+        const normalizedAccess = access == null ? "" : normalizePlaygroundPermissionAccess(access, "no_access");
+        const ringProgress = normalizedAccess ? getPlaygroundPermissionAccessProgress(normalizedAccess) : 100;
         const canvasRef = useRef(null);
         const RingIcon = getPlaygroundPermissionRingIconComponent(normalizedRingId);
 
         useEffect(() => {
-          const redraw = () => drawPlaygroundPermissionMiniRingIcon(canvasRef.current, normalizedRingId);
+          const redraw = () => drawPlaygroundPermissionMiniRingIcon(canvasRef.current, normalizedRingId, ringProgress);
           redraw();
           window.addEventListener("resize", redraw);
           return () => window.removeEventListener("resize", redraw);
-        }, [normalizedRingId]);
+        }, [normalizedRingId, ringProgress]);
 
         return React.createElement("span", {
             className: "playground-permission-mini-ring-icon is-" + normalizedRingId.replace("_", "-"),
@@ -56313,7 +56532,9 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       }
 
       function renderPlaygroundPermissionAccessSelect({ value, onChange, ariaLabel, includeInherit = false, inheritedAccess = "", disabled = false }) {
-        const selectedValue = includeInherit && !value ? "" : normalizePlaygroundPermissionAccess(value);
+        const selectedValue = includeInherit && !value
+          ? normalizePlaygroundPermissionAccess(inheritedAccess)
+          : normalizePlaygroundPermissionAccess(value);
         return React.createElement("label", {
             className: "playground-agents-permission-select-shell",
             "aria-label": ariaLabel,
@@ -56328,9 +56549,6 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
               },
               disabled: Boolean(disabled),
             },
-            includeInherit
-              ? React.createElement("option", { value: "" }, "Inherit " + getPlaygroundPermissionAccessLabel(inheritedAccess))
-              : null,
             PLAYGROUND_PERMISSION_ACCESS_OPTIONS.map((option) =>
               React.createElement("option", { key: option.id, value: option.id }, option.label)
             )
@@ -56424,9 +56642,9 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         );
       }
 
-      function renderPlaygroundPermissionMiniRingIcon(activeRingId) {
+      function renderPlaygroundPermissionMiniRingIcon(activeRingId, access = undefined) {
         const normalizedRingId = normalizePlaygroundPermissionRingId(activeRingId, "ring_1");
-        return React.createElement(PlaygroundPermissionMiniRingIcon, { ringId: normalizedRingId });
+        return React.createElement(PlaygroundPermissionMiniRingIcon, { ringId: normalizedRingId, access });
       }
 
       function renderAgentPermissionsList(permissionSet, handlers = {}) {
@@ -56491,7 +56709,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
                   const actionPolicy = normalizedPermissionSet.actions?.[action.id] || {};
                   const actionRingId = getPlaygroundPermissionActionRingId(normalizedPermissionSet, action);
                   const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, actionRingId);
-                  const explicitAccess = typeof actionPolicy.access === "string" ? actionPolicy.access : "";
+                  const explicitAccess = getPlaygroundPermissionActionExplicitAccess(normalizedPermissionSet, action);
                   const effectiveAccess = getPlaygroundPermissionActionAccess(normalizedPermissionSet, action);
                   return React.createElement("div", { className: "playground-agents-permission-action-row", key: action.id },
                     React.createElement("div", { className: "playground-agents-permission-copy" },
@@ -58518,6 +58736,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           wallpaperId: blueprint.wallpaperId,
           useCardBackgroundAsWallpaper: true,
           color: blueprint.color,
+          priority: "medium",
           defaultEnvironmentId: null,
           leadUserId: "",
           leadName: "",
@@ -60527,7 +60746,10 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 	        const resolvedProjectDescription = typeof project.description === "string" && (project.description.trim() || !metadataDescription)
 	          ? project.description
 	          : (metadataDescription || (typeof project.description === "string" ? project.description : draft.description));
-	        const projectRules = getPlaygroundProjectRules(project);
+        const projectRules = getPlaygroundProjectRules(project);
+        const normalizedProjectPriority = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === String(project.priority || metadata?.priority || "").trim().toLowerCase())
+          ? String(project.priority || metadata?.priority || "").trim().toLowerCase()
+          : "medium";
         const metadataLead = metadata?.lead && typeof metadata.lead === "object" && !Array.isArray(metadata.lead)
           ? metadata.lead
           : {};
@@ -60551,6 +60773,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           color: typeof project.color === "string" && project.color.trim()
             ? project.color.trim()
             : (typeof metadata?.color === "string" && metadata.color.trim() ? metadata.color.trim() : projectBlueprint.color),
+          priority: normalizedProjectPriority,
           defaultEnvironmentId: typeof project.defaultEnvironmentId === "string" && project.defaultEnvironmentId.trim()
             ? project.defaultEnvironmentId.trim()
             : typeof metadata?.defaultEnvironmentId === "string" && metadata.defaultEnvironmentId.trim()
@@ -60568,6 +60791,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 		          metadata: {
 		            ...(metadata && typeof metadata === "object" ? metadata : {}),
 		            ...buildPlaygroundProjectBlueprintMetadata(projectBlueprint),
+            priority: normalizedProjectPriority,
             leadUserId,
             leadName,
             leadEmail,
@@ -100439,6 +100663,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentDetailMainRef = useRef(null);
         const agentResourcesDetailScrollRef = useRef(null);
         const agentInstructionsTextareaRef = useRef(null);
+        const agentCreationInstructionsTextareaRef = useRef(null);
         const agentComposerInstructionsTextareaRef = useRef(null);
         const agentProfileAvatarPickerRef = useRef(null);
         const agentActionsPopoverRef = useRef(null);
@@ -100448,6 +100673,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentCreationAssistantSavePromiseRef = useRef(null);
         const agentCreationNameAutofocusedRef = useRef(false);
         const agentModelPopoverRef = useRef(null);
+        const agentModelPickerCloseTimerRef = useRef(null);
+        const agentModelPickerFrameRef = useRef(null);
+        const agentCreationPermissionModalCloseTimerRef = useRef(null);
+        const agentCreationPermissionModalFrameRef = useRef(null);
         const agentComposerModelPopoverRef = useRef(null);
         const agentComposerModelTriggerRef = useRef(null);
         const agentComposerReasoningTriggerRef = useRef(null);
@@ -100519,6 +100748,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentRenameError, setAgentRenameError] = useState("");
         const [agentModelPopover, setAgentModelPopover] = useState("");
         const [agentModelPickerState, setAgentModelPickerState] = useState(null);
+        const [agentModelPickerVisible, setAgentModelPickerVisible] = useState(false);
+        const [agentModelPickerClosing, setAgentModelPickerClosing] = useState(false);
         const [agentComposerOpen, setAgentComposerOpen] = useState(false);
         const [agentComposerDraft, setAgentComposerDraft] = useState(() => buildPlaygroundDefaultAgentDraft());
         const [agentComposerSaveState, setAgentComposerSaveState] = useState({
@@ -100533,6 +100764,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentCreationSetupSubmitting, setAgentCreationSetupSubmitting] = useState(false);
         const [agentCreationSetupResetToken, setAgentCreationSetupResetToken] = useState(0);
         const [agentCreationPermissionModalOpen, setAgentCreationPermissionModalOpen] = useState(false);
+        const [agentCreationPermissionModalVisible, setAgentCreationPermissionModalVisible] = useState(false);
+        const [agentCreationPermissionModalClosing, setAgentCreationPermissionModalClosing] = useState(false);
+        const [isAgentCreationInstructionsEditing, setIsAgentCreationInstructionsEditing] = useState(false);
         const [agentCreationInstructionRunRequest, setAgentCreationInstructionRunRequest] = useState(null);
         const [agentCreationInstructionContext, setAgentCreationInstructionContext] = useState(null);
         const [agentUpgradeModalOpen, setAgentUpgradeModalOpen] = useState(false);
@@ -100978,6 +101212,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         function resizeAgentDescriptionTextarea(textarea) {
           if (!textarea) return;
+          if (textarea.classList?.contains("playground-agents-creation-instructions-input")) {
+            textarea.style.height = "";
+            return;
+          }
           const computedStyles = window.getComputedStyle(textarea);
           const lineHeight = Number.parseFloat(computedStyles.lineHeight) || 21;
           const paddingTop = Number.parseFloat(computedStyles.paddingTop) || 0;
@@ -101097,6 +101335,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }
 
         function handleAgentMarkdownFormat(field, textareaRef, formatType) {
+          if (field === "instructions" && isPlaygroundDefaultAgentConfigurationLocked(draftAgent)) {
+            return;
+          }
           const textarea = textareaRef.current;
           if (!textarea || !draftAgent) {
             return;
@@ -101137,6 +101378,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }
 
         function updateAgentField(field, value) {
+          if (
+            ["instructions", "model", "reasoningEffort", "deepResearchModel"].includes(field)
+            && isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
+          ) {
+            return;
+          }
           updateDraftAgent((current) => ({
             ...current,
             [field]: value,
@@ -101216,6 +101463,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const currentActionPolicy = currentActions[actionDefinition.id] || {
               ringId: actionDefinition.ringId,
             };
+            const explicitAccess = getPlaygroundPermissionActionExplicitAccess(currentPermissionSet, actionDefinition);
             return {
               ...current,
               permissionSet: {
@@ -101224,10 +101472,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 subjectType: "agent",
                 actions: {
                   ...currentActions,
-                  [actionDefinition.id]: {
-                    ...currentActionPolicy,
-                    ringId: nextRingId,
-                  },
+                  [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
+                    currentPermissionSet,
+                    actionDefinition,
+                    currentActionPolicy,
+                    explicitAccess,
+                    nextRingId
+                  ),
                 },
               },
             };
@@ -101247,15 +101498,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const currentActionPolicy = currentActions[actionDefinition.id] || {
               ringId: actionDefinition.ringId,
             };
-            const nextPolicy = {
-              ...currentActionPolicy,
-              ringId: normalizePlaygroundPermissionRingId(currentActionPolicy.ringId, actionDefinition.ringId),
-            };
-            if (shouldInherit) {
-              delete nextPolicy.access;
-            } else {
-              nextPolicy.access = nextAccess;
-            }
+            const nextPolicy = buildPlaygroundPermissionActionPolicy(
+              currentPermissionSet,
+              actionDefinition,
+              currentActionPolicy,
+              shouldInherit ? "" : nextAccess
+            );
             return {
               ...current,
               permissionSet: {
@@ -101283,7 +101531,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }
 
         function renderAgentPermissionAccessSelect({ value, onChange, ariaLabel, includeInherit = false, inheritedAccess = "", disabled = false }) {
-          const selectedValue = includeInherit && !value ? "" : normalizePlaygroundPermissionAccess(value);
+          const selectedValue = includeInherit && !value
+            ? normalizePlaygroundPermissionAccess(inheritedAccess)
+            : normalizePlaygroundPermissionAccess(value);
           return React.createElement("label", {
               className: "playground-agents-permission-select-shell",
               "aria-label": ariaLabel,
@@ -101294,9 +101544,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 onChange: (event) => onChange(event.target.value),
                 disabled: Boolean(disabled),
               },
-              includeInherit
-                ? React.createElement("option", { value: "" }, "Inherit " + getAgentPermissionAccessLabel(inheritedAccess))
-                : null,
               PLAYGROUND_PERMISSION_ACCESS_OPTIONS.map((option) =>
                 React.createElement("option", { key: option.id, value: option.id }, option.label)
               )
@@ -101326,6 +101573,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const subjectType = normalizePlaygroundPermissionSubjectType(handlers.subjectType || permissionSet?.subjectType, "agent");
           const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, subjectType);
           const isDisabled = Boolean(handlers.disabled);
+          const isDetailsOnly = Boolean(handlers.detailsOnly);
           const onRingAccessChange = !isDisabled && typeof handlers.onRingAccessChange === "function"
             ? handlers.onRingAccessChange
             : updateAgentPermissionRingAccess;
@@ -101336,35 +101584,48 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             ? handlers.onActionAccessChange
             : updateAgentPermissionActionAccess;
 
-          return React.createElement("div", { className: "playground-agents-permissions-list" },
+          return React.createElement("div", { className: "playground-agents-permissions-list" + (isDetailsOnly ? " is-details-only" : "") },
             PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
               const ringAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
               const ringActions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter((action) =>
                 getPlaygroundPermissionActionRingId(normalizedPermissionSet, action) === ring.id
               );
-              return React.createElement("section", { className: "playground-agents-permission-ring-card", key: ring.id },
-                React.createElement("div", { className: "playground-agents-permission-ring-header" },
-                  React.createElement("div", { className: "playground-agents-permission-ring-kicker" },
-                    React.createElement("span", { className: "playground-agents-permission-ring-index" }, String(ring.number)),
-                    React.createElement("span", null, ring.label + " · " + ring.shortLabel)
-                  ),
-                  renderAgentPermissionAccessSelect({
-	                    value: ringAccess,
-	                    onChange: (nextAccess) => onRingAccessChange(ring.id, nextAccess),
-	                    ariaLabel: ring.label + " default permissions",
-	                    disabled: isDisabled,
-	                  })
-                ),
-                React.createElement("div", { className: "playground-agents-permission-ring-copy" },
-                  React.createElement("div", { className: "playground-agents-permission-ring-title" }, ring.title),
-                  React.createElement("div", { className: "playground-agents-permission-ring-description" }, ring.description)
-                ),
+              return React.createElement("section", { className: "playground-agents-permission-ring-card" + (isDetailsOnly ? " is-details-only" : ""), key: ring.id },
+                isDetailsOnly
+                  ? React.createElement("div", { className: "playground-agents-permission-detail-ring-title-row" },
+                      React.createElement("div", { className: "playground-agents-permission-detail-ring-title-label" },
+                        renderPlaygroundPermissionMiniRingIcon(ring.id),
+                        React.createElement("span", null, ring.label)
+                      ),
+                      React.createElement("div", { className: "playground-agents-permission-detail-column-headings", "aria-hidden": "true" },
+                        React.createElement("span", null, "Ring"),
+                        React.createElement("span", null, "Permission")
+                      )
+                    )
+                  : React.createElement(React.Fragment, null,
+                      React.createElement("div", { className: "playground-agents-permission-ring-header" },
+                        React.createElement("div", { className: "playground-agents-permission-ring-kicker" },
+                          React.createElement("span", { className: "playground-agents-permission-ring-index" }, String(ring.number)),
+                          React.createElement("span", null, ring.label + " · " + ring.shortLabel)
+                        ),
+                        renderAgentPermissionAccessSelect({
+	                          value: ringAccess,
+	                          onChange: (nextAccess) => onRingAccessChange(ring.id, nextAccess),
+	                          ariaLabel: ring.label + " default permissions",
+	                          disabled: isDisabled,
+	                        })
+                      ),
+                      React.createElement("div", { className: "playground-agents-permission-ring-copy" },
+                        React.createElement("div", { className: "playground-agents-permission-ring-title" }, ring.title),
+                        React.createElement("div", { className: "playground-agents-permission-ring-description" }, ring.description)
+                      )
+                    ),
                 React.createElement("div", { className: "playground-agents-permission-actions" },
                   ringActions.map((action) => {
                     const actionPolicy = normalizedPermissionSet.actions?.[action.id] || {};
                     const actionRingId = getPlaygroundPermissionActionRingId(normalizedPermissionSet, action);
                     const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, actionRingId);
-                    const explicitAccess = typeof actionPolicy.access === "string" ? actionPolicy.access : "";
+                    const explicitAccess = getPlaygroundPermissionActionExplicitAccess(normalizedPermissionSet, action);
                     const effectiveAccess = getPlaygroundPermissionActionAccess(normalizedPermissionSet, action);
                     return React.createElement("div", { className: "playground-agents-permission-action-row", key: action.id },
                       React.createElement("div", { className: "playground-agents-permission-copy" },
@@ -102382,20 +102643,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return savedAgent;
         }
 
-        function focusAgentCreationTaskInput() {
-          if (agentCreationSetupSubmitting || saveState.isSaving || agentCreationAssistantPreparing || !agentCreationAssistantAgent?.id) {
-            return;
-          }
-          window.requestAnimationFrame(() => {
-            const root = agentCreationRunnerRef.current;
-            const textarea = root?.querySelector(".playground-agents-creation-runner .sidebar-textarea")
-              || root?.querySelector("textarea.sidebar-textarea");
-            if (textarea && typeof textarea.focus === "function") {
-              textarea.focus({ preventScroll: true });
-            }
-          });
-        }
-
         function handleAgentCreationSetupCreateOnly() {
           if (agentCreationSetupSubmitting || saveState.isSaving) {
             return;
@@ -102514,7 +102761,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         function renderAgentCreationSetupEmptyState() {
           const setupDraft = normalizePlaygroundAgentRecord(draftAgent || buildPlaygroundDefaultAgentDraft("single"));
           const selectedSetupModel = getPlaygroundAgentModelMeta((setupDraft.model || "claude-haiku-4-5"), resolvedAgentModelOptions);
-          const setupPermissionSummary = getAgentPermissionSummary(setupDraft.permissionSet);
+          const setupPermissionSet = normalizePlaygroundPermissionSet(setupDraft.permissionSet, "agent");
+          const setupPermissionSummary = getAgentPermissionSummary(setupPermissionSet);
+          const setupPermissionRingAccessById = PLAYGROUND_PERMISSION_RING_DEFINITIONS.reduce((result, ring) => {
+            result[ring.id] = getPlaygroundPermissionRingAccess(setupPermissionSet, ring.id);
+            return result;
+          }, {});
           const avatarPhotoUrl = agentProfilePhotoUrl;
           const isSubmitting = Boolean(agentCreationSetupSubmitting || saveState.isSaving);
           const isAgentCreatorReady = Boolean(agentCreationAssistantAgent?.id && !agentCreationAssistantPreparing && !agentCreationAssistantError);
@@ -102602,18 +102854,34 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             )
           );
 
+          const renderSetupPermissionRings = () => React.createElement("span", {
+              className: "playground-agents-permission-ring-summary-icons",
+              "aria-hidden": "true",
+            },
+            PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
+              const ringAccess = setupPermissionRingAccessById[ring.id];
+              const ringAccessLabel = getPlaygroundPermissionAccessLabel(ringAccess);
+              return React.createElement("span", {
+                  key: ring.id,
+                  className: "playground-agents-permission-ring-summary-icon",
+                  title: ring.label + ": " + ringAccessLabel,
+                },
+                renderPlaygroundPermissionMiniRingIcon(ring.id, ringAccess)
+              );
+            })
+          );
+
           const renderSetupPermissionButton = () => React.createElement("button", {
               type: "button",
               className: "playground-environments-runtime-value-button playground-agents-model-picker-trigger playground-tasks-detail-select-trigger playground-agents-creation-permission-button",
-              onClick: () => setAgentCreationPermissionModalOpen(true),
+              onClick: openAgentCreationPermissionModal,
               disabled: isSubmitting,
+              title: "Permissions: " + setupPermissionSummary,
+              "aria-label": "Permissions: " + setupPermissionSummary,
             },
             React.createElement("span", { className: "playground-agents-model-picker-trigger-copy" },
-              React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
-                React.createElement(Shield, { width: 14, height: 14, strokeWidth: 1.8 })
-              ),
               React.createElement("span", { className: "playground-agents-model-picker-trigger-labels" },
-                React.createElement("span", { className: "playground-environments-runtime-value-label" }, setupPermissionSummary)
+                renderSetupPermissionRings()
               )
             ),
             React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", width: 14, height: 14, strokeWidth: 1.8 })
@@ -102622,6 +102890,77 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const renderSetupFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
             React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
+          );
+
+          const focusSetupInstructionsTextarea = () => {
+            if (isSubmitting) {
+              return;
+            }
+            setIsAgentCreationInstructionsEditing(true);
+            window.requestAnimationFrame(() => {
+              const textarea = agentCreationInstructionsTextareaRef.current;
+              if (!textarea || textarea.disabled) {
+                return;
+              }
+              textarea.focus();
+              resizeAgentDescriptionTextarea(textarea);
+            });
+          };
+
+          const renderSetupInstructionsSection = () => React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-creation-instructions-section" },
+            React.createElement("div", { className: "playground-tasks-detail-section-header" },
+              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Instructions"),
+              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                [
+                  { id: "bold", label: "Bold", icon: Bold },
+                  { id: "italic", label: "Italic", icon: Italic },
+                  { id: "underline", label: "Underline", icon: Underline },
+                  { id: "list", label: "List", icon: List },
+                ].map((action) =>
+                  React.createElement("button", {
+                    key: "creation-instructions-" + action.id,
+                    type: "button",
+                    className: "playground-tasks-detail-format-button",
+                    title: action.label,
+                    "aria-label": action.label,
+                    disabled: isSubmitting,
+                    onMouseDown: (event) => event.preventDefault(),
+                    onClick: () => handleAgentMarkdownFormat("instructions", agentCreationInstructionsTextareaRef, action.id),
+                  }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                )
+              )
+            ),
+            React.createElement("div", {
+                className: "playground-tasks-detail-description-editor" + (isAgentCreationInstructionsEditing ? " is-editing" : " is-preview"),
+                onClick: focusSetupInstructionsTextarea,
+              },
+              !isAgentCreationInstructionsEditing
+                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                    String(setupDraft.instructions || "").trim()
+                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                          content: setupDraft.instructions,
+                          className: "playground-tasks-detail-description-preview tb-message-markdown",
+                        })
+                      : React.createElement("div", {
+                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                        }, "Add agent instructions here.")
+                  )
+                : null,
+              React.createElement("textarea", {
+                ref: agentCreationInstructionsTextareaRef,
+                className: "playground-tasks-detail-description-input playground-agents-creation-instructions-input " + (isAgentCreationInstructionsEditing ? "is-editing" : "is-preview"),
+                rows: 1,
+                placeholder: isAgentCreationInstructionsEditing ? "Add agent instructions here." : "",
+                value: setupDraft.instructions || "",
+                disabled: isSubmitting,
+                onFocus: () => setIsAgentCreationInstructionsEditing(true),
+                onChange: (event) => {
+                  updateAgentField("instructions", event.target.value);
+                  resizeAgentDescriptionTextarea(event.currentTarget);
+                },
+                onBlur: () => setIsAgentCreationInstructionsEditing(false),
+              })
+            )
           );
 
           return React.createElement("div", { className: "playground-agents-creation-form" },
@@ -102640,22 +102979,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   renderSetupPermissionButton()
                 )
               ),
+              renderSetupInstructionsSection(),
               React.createElement("div", { className: "playground-agents-creation-actions" },
                 React.createElement("button", {
                   type: "button",
                   className: "playground-agents-creation-action-button is-secondary",
                   onClick: handleAgentCreationSetupCreateOnly,
                   disabled: isSubmitting,
-                }, "Create Agent"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-creation-action-button is-primary",
-                  onClick: focusAgentCreationTaskInput,
-                  disabled: isSubmitting || !isAgentCreatorReady,
-                },
-                  React.createElement(ArrowDown, { width: 13, height: 13, strokeWidth: 1.9, "aria-hidden": "true" }),
-                  React.createElement("span", null, "Generate Instructions")
-                )
+                }, "Create Agent")
               )
             ),
             visibleCreationSetupError
@@ -102698,7 +103029,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 ? "Preparing agent creator..."
                 : agentCreationAssistantError
                   ? "Agent creator unavailable"
-                  : "Describe your Agent",
+                  : "Describe your Agent to generate Instructions",
               emptyState: renderAgentCreationSetupEmptyState(),
               onExternalRunRequestCreate: handleAgentCreationSetupRunRequest,
               onThreadIdChange: (threadId) => {
@@ -102722,14 +103053,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return null;
           }
 
-          return React.createElement("div", {
-              className: "playground-tasks-project-modal-backdrop",
-              onClick: () => setAgentCreationPermissionModalOpen(false),
-            },
-            React.createElement("div", {
-                className: "playground-tasks-project-modal playground-agent-composer-modal playground-agents-permission-modal",
-                onClick: (event) => event.stopPropagation(),
-              },
+          return renderPlaygroundPlatformModal({
+            open: Boolean(agentCreationPermissionModalOpen && agentCreationSetupOpen),
+            visible: agentCreationPermissionModalVisible,
+            closing: agentCreationPermissionModalClosing,
+            onClose: () => closeAgentCreationPermissionModal(),
+            backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-permission-modal-backdrop",
+            className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-permission-modal",
+            ariaLabel: "Permissions",
+            children: React.createElement(React.Fragment, null,
               React.createElement("div", { className: "playground-tasks-project-modal-top" },
                 React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
                   React.createElement("div", {
@@ -102739,25 +103071,25 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   React.createElement("button", {
                     type: "button",
                     className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                    onClick: () => setAgentCreationPermissionModalOpen(false),
+                    onClick: () => closeAgentCreationPermissionModal(),
                     title: "Close",
                   }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 )
               ),
-              React.createElement("div", { className: "playground-agent-composer-modal-body" },
+              React.createElement("div", { className: "playground-tasks-issue-modal-body playground-agents-permission-modal-body" },
                 React.createElement("div", { className: "playground-agents-permissions-card" },
-                  renderAgentPermissionsList(draftAgent?.permissionSet)
+                  renderAgentPermissionsList(draftAgent?.permissionSet, { detailsOnly: true })
                 )
               ),
               React.createElement("div", { className: "playground-tasks-project-modal-actions" },
                 React.createElement("button", {
                   type: "button",
                   className: "playground-environments-action-button is-primary",
-                  onClick: () => setAgentCreationPermissionModalOpen(false),
+                  onClick: () => closeAgentCreationPermissionModal(),
                 }, "Done")
               )
             )
-          );
+          });
         }
 
         function renderAgentListAvatar(agent, className) {
@@ -103170,6 +103502,19 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         useLayoutEffect(() => {
           resizeAgentDescriptionTextarea(agentInstructionsTextareaRef.current);
         }, [draftAgent?.instructions, draftAgent?.id]);
+
+        useLayoutEffect(() => {
+          if (!agentCreationSetupOpen) {
+            return;
+          }
+          resizeAgentDescriptionTextarea(agentCreationInstructionsTextareaRef.current);
+        }, [agentCreationSetupOpen, draftAgent?.instructions, draftAgent?.id]);
+
+        useEffect(() => {
+          if (!agentCreationSetupOpen) {
+            setIsAgentCreationInstructionsEditing(false);
+          }
+        }, [agentCreationSetupOpen]);
 
         useLayoutEffect(() => {
           if (!agentComposerOpen) {
@@ -103637,10 +103982,20 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [createAgentRequestToken]);
 
         function openAgentModelPicker(target) {
+          if (agentModelPickerCloseTimerRef.current) {
+            window.clearTimeout(agentModelPickerCloseTimerRef.current);
+            agentModelPickerCloseTimerRef.current = null;
+          }
+          if (agentModelPickerFrameRef.current) {
+            window.cancelAnimationFrame(agentModelPickerFrameRef.current);
+            agentModelPickerFrameRef.current = null;
+          }
           const normalizedTarget = target === "composer" ? "composer" : "detail";
           const activeModelId = normalizedTarget === "composer"
             ? (agentComposerDraft?.model || "claude-haiku-4-5")
             : (draftAgent?.model || "claude-haiku-4-5");
+          setAgentModelPickerVisible(false);
+          setAgentModelPickerClosing(false);
           setAgentModelPickerState({
             target: normalizedTarget,
             pendingModelId: activeModelId,
@@ -103648,11 +104003,171 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             providerFilters: [],
             isProviderFilterOpen: false,
           });
+          agentModelPickerFrameRef.current = window.requestAnimationFrame(() => {
+            agentModelPickerFrameRef.current = window.requestAnimationFrame(() => {
+              agentModelPickerFrameRef.current = null;
+              setAgentModelPickerVisible(true);
+            });
+          });
         }
 
-        function closeAgentModelPicker() {
+        function finishCloseAgentModelPicker() {
+          if (agentModelPickerCloseTimerRef.current) {
+            window.clearTimeout(agentModelPickerCloseTimerRef.current);
+            agentModelPickerCloseTimerRef.current = null;
+          }
+          if (agentModelPickerFrameRef.current) {
+            window.cancelAnimationFrame(agentModelPickerFrameRef.current);
+            agentModelPickerFrameRef.current = null;
+          }
+          setAgentModelPickerVisible(false);
+          setAgentModelPickerClosing(false);
           setAgentModelPickerState(null);
         }
+
+        function closeAgentModelPicker(options = {}) {
+          if (options?.animate === false || (!agentModelPickerState && !agentModelPickerVisible && !agentModelPickerClosing)) {
+            finishCloseAgentModelPicker();
+            return;
+          }
+          if (agentModelPickerClosing) {
+            return;
+          }
+          if (agentModelPickerFrameRef.current) {
+            window.cancelAnimationFrame(agentModelPickerFrameRef.current);
+            agentModelPickerFrameRef.current = null;
+          }
+          setAgentModelPickerVisible(false);
+          setAgentModelPickerClosing(true);
+          if (agentModelPickerCloseTimerRef.current) {
+            window.clearTimeout(agentModelPickerCloseTimerRef.current);
+          }
+          agentModelPickerCloseTimerRef.current = window.setTimeout(() => {
+            agentModelPickerCloseTimerRef.current = null;
+            finishCloseAgentModelPicker();
+          }, 75);
+        }
+
+        useEffect(() => {
+          return () => {
+            if (agentModelPickerCloseTimerRef.current) {
+              window.clearTimeout(agentModelPickerCloseTimerRef.current);
+              agentModelPickerCloseTimerRef.current = null;
+            }
+            if (agentModelPickerFrameRef.current) {
+              window.cancelAnimationFrame(agentModelPickerFrameRef.current);
+              agentModelPickerFrameRef.current = null;
+            }
+          };
+        }, []);
+
+        useEffect(() => {
+          if (!agentModelPickerState) {
+            return undefined;
+          }
+
+          function handleAgentModelPickerEscape(event) {
+            if (event.key !== "Escape") return;
+            if (agentModelPickerState?.isProviderFilterOpen) {
+              setAgentModelPickerState((current) => current ? {
+                ...current,
+                isProviderFilterOpen: false,
+              } : current);
+              return;
+            }
+            closeAgentModelPicker();
+          }
+
+          window.addEventListener("keydown", handleAgentModelPickerEscape);
+          return () => window.removeEventListener("keydown", handleAgentModelPickerEscape);
+        }, [agentModelPickerClosing, agentModelPickerState]);
+
+        function openAgentCreationPermissionModal() {
+          if (!agentCreationSetupOpen) {
+            return;
+          }
+          if (agentCreationPermissionModalCloseTimerRef.current) {
+            window.clearTimeout(agentCreationPermissionModalCloseTimerRef.current);
+            agentCreationPermissionModalCloseTimerRef.current = null;
+          }
+          if (agentCreationPermissionModalFrameRef.current) {
+            window.cancelAnimationFrame(agentCreationPermissionModalFrameRef.current);
+            agentCreationPermissionModalFrameRef.current = null;
+          }
+          setAgentCreationPermissionModalVisible(false);
+          setAgentCreationPermissionModalClosing(false);
+          setAgentCreationPermissionModalOpen(true);
+          agentCreationPermissionModalFrameRef.current = window.requestAnimationFrame(() => {
+            agentCreationPermissionModalFrameRef.current = window.requestAnimationFrame(() => {
+              agentCreationPermissionModalFrameRef.current = null;
+              setAgentCreationPermissionModalVisible(true);
+            });
+          });
+        }
+
+        function finishCloseAgentCreationPermissionModal() {
+          if (agentCreationPermissionModalCloseTimerRef.current) {
+            window.clearTimeout(agentCreationPermissionModalCloseTimerRef.current);
+            agentCreationPermissionModalCloseTimerRef.current = null;
+          }
+          if (agentCreationPermissionModalFrameRef.current) {
+            window.cancelAnimationFrame(agentCreationPermissionModalFrameRef.current);
+            agentCreationPermissionModalFrameRef.current = null;
+          }
+          setAgentCreationPermissionModalVisible(false);
+          setAgentCreationPermissionModalClosing(false);
+          setAgentCreationPermissionModalOpen(false);
+        }
+
+        function closeAgentCreationPermissionModal(options = {}) {
+          if (options?.animate === false || (!agentCreationPermissionModalOpen && !agentCreationPermissionModalVisible && !agentCreationPermissionModalClosing)) {
+            finishCloseAgentCreationPermissionModal();
+            return;
+          }
+          if (agentCreationPermissionModalClosing) {
+            return;
+          }
+          if (agentCreationPermissionModalFrameRef.current) {
+            window.cancelAnimationFrame(agentCreationPermissionModalFrameRef.current);
+            agentCreationPermissionModalFrameRef.current = null;
+          }
+          setAgentCreationPermissionModalVisible(false);
+          setAgentCreationPermissionModalClosing(true);
+          if (agentCreationPermissionModalCloseTimerRef.current) {
+            window.clearTimeout(agentCreationPermissionModalCloseTimerRef.current);
+          }
+          agentCreationPermissionModalCloseTimerRef.current = window.setTimeout(() => {
+            agentCreationPermissionModalCloseTimerRef.current = null;
+            finishCloseAgentCreationPermissionModal();
+          }, 75);
+        }
+
+        useEffect(() => {
+          return () => {
+            if (agentCreationPermissionModalCloseTimerRef.current) {
+              window.clearTimeout(agentCreationPermissionModalCloseTimerRef.current);
+              agentCreationPermissionModalCloseTimerRef.current = null;
+            }
+            if (agentCreationPermissionModalFrameRef.current) {
+              window.cancelAnimationFrame(agentCreationPermissionModalFrameRef.current);
+              agentCreationPermissionModalFrameRef.current = null;
+            }
+          };
+        }, []);
+
+        useEffect(() => {
+          if (!agentCreationPermissionModalOpen || !agentCreationSetupOpen) {
+            return undefined;
+          }
+
+          function handleAgentCreationPermissionModalEscape(event) {
+            if (event.key !== "Escape") return;
+            closeAgentCreationPermissionModal();
+          }
+
+          window.addEventListener("keydown", handleAgentCreationPermissionModalEscape);
+          return () => window.removeEventListener("keydown", handleAgentCreationPermissionModalEscape);
+        }, [agentCreationPermissionModalClosing, agentCreationPermissionModalOpen, agentCreationSetupOpen]);
 
         function renderPlaygroundAgentModelButton(modelMeta, onClick, isDisabled, isDetailView = false) {
           const providerIcon = getPlaygroundAgentModelProviderIcon(modelMeta);
@@ -103808,7 +104323,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const isCustomModel = getPlaygroundAgentModelProviderFilterKey(option) === "custom";
             const intelligenceLevel = Math.max(1, Math.min(4, getPlaygroundAgentIntelligenceLevel(option.intelligence || option.intelligenceLabel || "")));
             const costMultiplier = getPlaygroundAgentModelCostMultiplier(option.id);
-            const costMultiplierLabel = formatPlaygroundAgentModelCostMultiplier(costMultiplier);
+            const costBadgeLabel = formatPlaygroundAgentModelComputeTokenCost(option.id).replace(" CT / 1M", " CT / mTok");
             const costBadgeClass = costMultiplier < 1
               ? " is-low"
               : costMultiplier > 1
@@ -103837,7 +104352,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 React.createElement("span", { className: "playground-agents-model-picker-card-title" }, option.label || option.id)
               ),
               !isCustomModel
-                ? React.createElement("span", { className: "playground-agents-model-picker-card-cost-badge" + costBadgeClass }, costMultiplierLabel)
+                ? React.createElement("span", { className: "playground-agents-model-picker-card-cost-badge" + costBadgeClass }, costBadgeLabel)
                 : null,
               React.createElement("span", { className: "playground-agents-model-picker-card-description" }, option.description || "Selected model"),
               React.createElement("span", { className: "playground-agents-model-picker-card-footer" },
@@ -103859,24 +104374,28 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             );
           };
 
-          return React.createElement("div", {
-              className: "playground-tasks-project-modal-backdrop",
-              onClick: closeAgentModelPicker,
-            },
-            React.createElement("div", {
-                className: "playground-tasks-project-modal playground-agent-composer-modal playground-agents-model-picker-modal",
-                onClick: (event) => {
-                  event.stopPropagation();
-                  if (!event.target.closest(".playground-agents-model-picker-filter-anchor")) {
-                    setAgentModelPickerState((current) => current ? {
-                      ...current,
-                      isProviderFilterOpen: false,
-                    } : current);
-                  }
-                },
+          return renderPlaygroundPlatformModal({
+            open: Boolean(agentModelPickerState),
+            visible: agentModelPickerVisible,
+            closing: agentModelPickerClosing,
+            onClose: () => closeAgentModelPicker(),
+            backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-model-picker-backdrop",
+            className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-model-picker-modal",
+            ariaLabel: "Select model",
+            surfaceProps: {
+              onClick: (event) => {
+                const target = event?.target instanceof Element ? event.target : null;
+                if (!target || !target.closest(".playground-agents-model-picker-filter-anchor")) {
+                  setAgentModelPickerState((current) => current ? {
+                    ...current,
+                    isProviderFilterOpen: false,
+                  } : current);
+                }
               },
+            },
+            children: React.createElement(React.Fragment, null,
               React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                React.createElement("div", { className: "playground-agents-model-picker-top-copy" },
+                  React.createElement("div", { className: "playground-agents-model-picker-top-copy" },
                   React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
                     React.createElement("div", {
                       className: "playground-content-title playground-tasks-project-modal-name-input",
@@ -103885,7 +104404,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     React.createElement("button", {
                       type: "button",
                       className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: closeAgentModelPicker,
+                      onClick: () => closeAgentModelPicker(),
                       title: "Close",
                     }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                   ),
@@ -103937,7 +104456,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   )
                 )
               ),
-              React.createElement("div", { className: "playground-agent-composer-modal-body" },
+              React.createElement("div", { className: "playground-tasks-issue-modal-body playground-agents-model-picker-body" },
                 groupedVisibleModelOptions.length > 0
                   ? React.createElement("div", { className: "playground-agents-model-picker-groups" },
                       groupedVisibleModelOptions.map((group) =>
@@ -103957,7 +104476,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 React.createElement("button", {
                   type: "button",
                   className: "playground-environments-action-button",
-                  onClick: closeAgentModelPicker,
+                  onClick: () => closeAgentModelPicker(),
                 }, "Cancel"),
                 React.createElement("button", {
                   type: "button",
@@ -103967,7 +104486,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 }, "Confirm")
               )
             )
-          );
+          });
         }
 
         function EnvironmentsHomeResponsiveSvgShared({ frameClassName, frameHeight, svgHeight, fallbackWidth = 640, ariaLabel, children }) {
@@ -106608,12 +107127,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const modelMeta = getPlaygroundAgentModelMeta(draftAgent.model, resolvedAgentModelOptions);
           const enabledSkills = Array.isArray(draftAgent.enabledSkills) ? draftAgent.enabledSkills : [];
           const selectedAgentModel = getPlaygroundAgentModelMeta((draftAgent.model || "claude-haiku-4-5"), resolvedAgentModelOptions);
-          const reasoningOptions = ["minimal", "low", "medium", "high"].map((value) => ({
-            id: value,
-            label: value.charAt(0).toUpperCase() + value.slice(1),
-          }));
-          const selectedReasoningOption = reasoningOptions.find((option) => option.id === (draftAgent.reasoningEffort || "medium")) || reasoningOptions[2];
           const isTeamAgent = draftAgent.agentType === "team";
+          const isDefaultAgentConfigurationLocked = isPlaygroundDefaultAgentConfigurationLocked(draftAgent);
           const hasDeepResearchSkillEnabled = !isTeamAgent && enabledSkills.includes("deep_research");
           const selectedDeepResearchModel = getPlaygroundDeepResearchModelMeta(draftAgent.deepResearchModel);
           const selectedTeamOrchestrator = draftAgent.teamOrchestratorAgentId
@@ -106765,6 +107280,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }
             return sum + readAgentDetailThreadTotalCT(thread);
           }, 0));
+          const agentDetailRunCountValues = agentDetailCostBuckets.map((bucket) => agentDetailThreads.reduce((sum, thread) => {
+            const createdAtMs = readAgentDetailThreadCreatedAtMs(thread);
+            if (!Number.isFinite(createdAtMs) || createdAtMs < bucket.startMs || createdAtMs >= bucket.endMs) {
+              return sum;
+            }
+            return sum + 1;
+          }, 0));
           const totalAgentDetailCT = agentDetailThreads.reduce((sum, thread) => sum + readAgentDetailThreadTotalCT(thread), 0);
           const totalAgentDetailRuns = agentDetailThreads.length;
           const averageAgentDetailCT = totalAgentDetailRuns > 0 ? totalAgentDetailCT / totalAgentDetailRuns : 0;
@@ -106797,7 +107319,244 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               React.createElement("option", { value: "month" }, "Monthly")
             )
           );
-          const renderAgentDetailCostChart = () => renderHomeStackedUsageChartShared({
+          function PlaygroundAgentDetailStackedUsageChart({
+            ariaLabel,
+            labels,
+            series,
+            countSeries,
+            emptyText,
+            emptyContent,
+            title,
+            timescaleControl,
+            isLoading,
+          }) {
+            const canvasRef = useRef(null);
+            const chartRef = useRef(null);
+            const normalizedLabels = Array.isArray(labels) ? labels : [];
+            const normalizedSeries = Array.isArray(series)
+              ? series.filter((entry) => entry && Array.isArray(entry.values))
+              : [];
+            const normalizedCountSeries = Array.isArray(countSeries)
+              ? countSeries.filter((entry) => entry && Array.isArray(entry.values))
+              : [];
+            const totals = normalizedLabels.map((_, index) =>
+              normalizedSeries.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
+            );
+            const hasUsageData = normalizedLabels.length > 0
+              && normalizedSeries.length > 0
+              && totals.some((value) => Math.max(0, Number(value || 0)) > 0);
+            const chartSignature = JSON.stringify({
+              labels: normalizedLabels,
+              series: normalizedSeries.map((entry) => ({
+                id: entry.id,
+                label: entry.label,
+                color: entry.color,
+                values: entry.values,
+              })),
+              countSeries: normalizedCountSeries.map((entry) => ({
+                id: entry.id,
+                values: entry.values,
+              })),
+            });
+
+            useEffect(() => () => {
+              if (chartRef.current) {
+                chartRef.current.destroy();
+                chartRef.current = null;
+              }
+            }, []);
+
+            useEffect(() => {
+              const canvas = canvasRef.current;
+              if (!canvas || typeof Chart !== "function" || !hasUsageData) {
+                if (chartRef.current) {
+                  chartRef.current.destroy();
+                  chartRef.current = null;
+                }
+                return undefined;
+              }
+
+              const countValuesById = normalizedCountSeries.reduce((map, entry) => {
+                map[entry.id] = Array.isArray(entry.values) ? entry.values : [];
+                return map;
+              }, {});
+              const maxLabelCount = Math.max(2, Math.floor(normalizedLabels.length <= 7 ? 7 : 7));
+              const labelStep = Math.max(1, Math.ceil(normalizedLabels.length / maxLabelCount));
+              const visibleLabelIndexes = (() => {
+                const next = new Set();
+                for (let index = 0; index < normalizedLabels.length; index += labelStep) {
+                  next.add(index);
+                }
+                const lastIndex = normalizedLabels.length - 1;
+                if (lastIndex >= 0) {
+                  next.add(lastIndex);
+                }
+                return next;
+              })();
+              const chartData = {
+                labels: normalizedLabels,
+                datasets: normalizedSeries.map((entry) => ({
+                  id: entry.id,
+                  label: entry.label,
+                  data: entry.values.map((value) => Math.max(0, Number(value || 0))),
+                  backgroundColor: entry.color || "rgba(255,255,255,0.8)",
+                  borderColor: entry.color || "rgba(255,255,255,0.8)",
+                  borderWidth: 0,
+                  borderRadius: 3,
+                  borderSkipped: false,
+                  barPercentage: 0.92,
+                  categoryPercentage: 0.58,
+                  maxBarThickness: 24,
+                  stack: "agent-detail-usage",
+                })),
+              };
+              const chartOptions = {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                normalized: true,
+                interaction: {
+                  intersect: true,
+                  mode: "nearest",
+                },
+                layout: {
+                  padding: {
+                    top: 12,
+                    right: 14,
+                    bottom: 0,
+                    left: 0,
+                  },
+                },
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    enabled: true,
+                    backgroundColor: "rgba(8, 8, 8, 0.96)",
+                    borderColor: "rgba(255, 255, 255, 0.14)",
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    titleColor: "rgba(255, 255, 255, 0.94)",
+                    bodyColor: "rgba(255, 255, 255, 0.78)",
+                    padding: 10,
+                    callbacks: {
+                      label: (context) => {
+                        const datasetId = String(context.dataset?.id || "");
+                        const label = String(context.dataset?.label || "Usage");
+                        const value = Math.max(0, Number(context.parsed?.y || 0));
+                        const runCount = Math.max(0, Number(countValuesById[datasetId]?.[context.dataIndex] || 0));
+                        const runSuffix = runCount === 1 ? "1 run" : runCount + " runs";
+                        return label + ": " + formatSettingsComputeTokens(value) + " · " + runSuffix;
+                      },
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    stacked: true,
+                    grid: { display: false, drawBorder: false },
+                    border: { display: false },
+                    ticks: {
+                      color: "rgba(255, 255, 255, 0.4)",
+                      font: {
+                        size: 10,
+                        weight: "400",
+                        family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+                      },
+                      maxRotation: 0,
+                      minRotation: 0,
+                      padding: 10,
+                      callback: (_value, index) => visibleLabelIndexes.has(index) ? String(normalizedLabels[index] || "") : "",
+                    },
+                  },
+                  y: {
+                    stacked: true,
+                    min: 0,
+                    grid: {
+                      color: "rgba(255,255,255,0.10)",
+                      drawTicks: false,
+                    },
+                    border: { display: false },
+                    ticks: {
+                      color: "rgba(255, 255, 255, 0.4)",
+                      padding: 8,
+                      maxTicksLimit: 5,
+                      font: {
+                        size: 10,
+                        weight: "400",
+                        family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+                      },
+                      callback: (value) => formatSettingsComputeTokens(value),
+                    },
+                  },
+                },
+              };
+
+              if (chartRef.current) {
+                chartRef.current.data = chartData;
+                chartRef.current.options = chartOptions;
+                chartRef.current.update("none");
+                return undefined;
+              }
+
+              chartRef.current = new Chart(canvas, {
+                type: "bar",
+                data: chartData,
+                options: chartOptions,
+              });
+              return undefined;
+            }, [chartSignature, hasUsageData]);
+
+            return React.createElement("div", { className: "playground-settings-usage-chart-card" },
+              React.createElement("div", { className: "playground-project-overview-chart-header" },
+                React.createElement("div", { className: "playground-project-overview-chart-header-main" },
+                  React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Daily CT by Agent"),
+                  timescaleControl || null
+                )
+              ),
+              isLoading
+                ? React.createElement("div", {
+                    className: "playground-project-overview-chart-shell playground-agents-home-chartjs-frame",
+                  },
+                    React.createElement("div", {
+                        className: "playground-overview-chart-loading",
+                        style: { position: "static", inset: "auto", height: "100%" },
+                        "aria-label": "Loading chart data",
+                      },
+                      React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
+                    )
+                  )
+                : (!normalizedLabels.length || !normalizedSeries.length || !hasUsageData)
+                  ? (emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet"))
+                  : React.createElement(React.Fragment, null,
+                      React.createElement("div", {
+                          className: "playground-project-overview-chart-shell playground-agents-home-chartjs-frame",
+                          role: "img",
+                          "aria-label": ariaLabel || "Agent compute token cost over time",
+                        },
+                        React.createElement("canvas", {
+                          ref: canvasRef,
+                          className: "playground-agents-home-chartjs-canvas",
+                        })
+                      ),
+                      React.createElement("div", {
+                          className: "playground-settings-usage-inline-legend",
+                          style: { justifyContent: "flex-start" },
+                        },
+                        normalizedSeries.map((entry) =>
+                          React.createElement("div", { key: entry.id || entry.label, className: "playground-settings-usage-legend-item" },
+                            React.createElement("span", {
+                              className: "playground-settings-usage-legend-swatch",
+                              style: { background: entry.color },
+                            }),
+                            React.createElement("span", null, entry.label)
+                          )
+                        )
+                      )
+                    )
+            );
+          }
+          const renderAgentDetailCostChart = () => React.createElement(PlaygroundAgentDetailStackedUsageChart, {
             ariaLabel: "Compute token cost created by this agent",
             labels: agentDetailCostBuckets.map((bucket) => String(bucket?.label || "")),
             series: [
@@ -106808,6 +107567,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 values: agentDetailCostValues,
               },
             ],
+            countSeries: [
+              {
+                id: "agent-ct-cost",
+                values: agentDetailRunCountValues,
+              },
+            ],
             emptyText: agentsHomeThreadsLoading ? "Loading cost data..." : (agentsHomeThreadsError || "No cost data yet"),
             emptyContent: agentsHomeThreadsLoading
               ? null
@@ -106816,15 +107581,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   React.createElement("div", { className: "playground-auth-users-empty-state-copy" }, "Agent usage appears here once this agent starts running and consuming compute tokens.")
                 ),
             title: "CT Cost Created by Agent",
-            tickFormatter: formatSettingsComputeTokens,
             isLoading: agentsHomeThreadsLoading,
-            showLegend: false,
             timescaleControl: renderAgentDetailTimescaleControl(),
           });
           const renderAgentFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
             React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
           );
+          const renderAgentFactValue = (value, extraClassName = "") =>
+            React.createElement("span", {
+              className: "playground-environments-editor-fact-value" + (extraClassName ? " " + extraClassName : ""),
+            }, value);
           const renderAgentAnalyticsKpi = (label, value, tone) => React.createElement("div", {
               className: "playground-servers-analytics-kpi",
               key: label,
@@ -107036,97 +107803,59 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const agentModelDetailRows = isTeamAgent
             ? React.createElement(React.Fragment, null,
                 renderAgentFactRow("Model",
-                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, teamDerivedModelMeta?.label || "Select orchestrator first")
-                ),
-                renderAgentFactRow("Reasoning Effort",
-                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, String(selectedTeamOrchestrator?.reasoningEffort || "medium").replace(/^./, (value) => value.toUpperCase()))
+                  renderAgentFactValue(teamDerivedModelMeta?.label || "Select orchestrator first")
                 )
               )
             : React.createElement(React.Fragment, null,
                 renderAgentFactRow("Model",
-                  renderPlaygroundAgentModelButton(
-                    selectedAgentModel,
-                    () => openAgentModelPicker("detail"),
-                    false,
-                    true
-                  )
+                  isDefaultAgentConfigurationLocked
+                    ? renderAgentFactValue(selectedAgentModel?.label || "Select model")
+                    : renderPlaygroundAgentModelButton(
+                        selectedAgentModel,
+                        () => openAgentModelPicker("detail"),
+                        false,
+                        true
+                      )
                 ),
                 hasDeepResearchSkillEnabled
                   ? renderAgentFactRow("Deep Research Model",
-                      React.createElement("div", {
-                          className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup" + (agentModelPopover === "deep-research" ? " is-open" : ""),
-                          ref: agentModelPopover === "deep-research" ? agentModelPopoverRef : null,
-                        },
-                        React.createElement("button", {
-                          ref: agentDeepResearchModelTriggerRef,
-                          type: "button",
-                          className: "playground-environments-runtime-value-button",
-                          onClick: () => {
-                            setAgentModelPopover((current) => current === "deep-research" ? "" : "deep-research");
+                      isDefaultAgentConfigurationLocked
+                        ? renderAgentFactValue(selectedDeepResearchModel?.label || "Gemini 3.1 Flash")
+                        : React.createElement("div", {
+                            className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup" + (agentModelPopover === "deep-research" ? " is-open" : ""),
+                            ref: agentModelPopover === "deep-research" ? agentModelPopoverRef : null,
                           },
-                        },
-                          React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedDeepResearchModel?.label || "Gemini 3.1 Flash"),
-                          React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                        ),
-                        agentModelPopover === "deep-research"
-                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                              PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.map((option) =>
-                                React.createElement("button", {
-                                    key: option.id,
-                                    type: "button",
-                                    className: "tb-popup-row tb-popup-row-select" + ((draftAgent.deepResearchModel || "") === option.id ? " selected" : ""),
-                                    onClick: () => {
-                                      updateAgentField("deepResearchModel", option.id);
-                                      setAgentModelPopover("");
+                          React.createElement("button", {
+                            ref: agentDeepResearchModelTriggerRef,
+                            type: "button",
+                            className: "playground-environments-runtime-value-button",
+                            onClick: () => {
+                              setAgentModelPopover((current) => current === "deep-research" ? "" : "deep-research");
+                            },
+                          },
+                            React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedDeepResearchModel?.label || "Gemini 3.1 Flash"),
+                            React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                          ),
+                          agentModelPopover === "deep-research"
+                            ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.map((option) =>
+                                  React.createElement("button", {
+                                      key: option.id,
+                                      type: "button",
+                                      className: "tb-popup-row tb-popup-row-select" + ((draftAgent.deepResearchModel || "") === option.id ? " selected" : ""),
+                                      onClick: () => {
+                                        updateAgentField("deepResearchModel", option.id);
+                                        setAgentModelPopover("");
+                                      },
                                     },
-                                  },
-                                  React.createElement("span", null, option.label)
+                                    React.createElement("span", null, option.label)
+                                  )
                                 )
                               )
-                            )
-                          : null
-                      )
-                    )
-                  : null,
-                renderAgentFactRow("Reasoning Effort",
-                  React.createElement("div", {
-                      className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup" + (agentModelPopover === "reasoning" ? " is-open" : ""),
-                      ref: agentModelPopover === "reasoning" ? agentModelPopoverRef : null,
-                    },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-runtime-value-button",
-                      onClick: () => {
-                        setAgentModelPopover((current) => current === "reasoning" ? "" : "reasoning");
-                      },
-                    },
-                      React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedReasoningOption?.label || "Medium"),
-                      React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                    ),
-                    agentModelPopover === "reasoning"
-                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          reasoningOptions.map((option) =>
-                            React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "tb-popup-row tb-popup-row-select" + ((draftAgent.reasoningEffort || "medium") === option.id ? " selected" : ""),
-                                onClick: () => {
-                                  updateAgentField("reasoningEffort", option.id);
-                                  setAgentModelPopover("");
-                                },
-                              },
-                                React.createElement("span", { className: "tb-popup-check-slot" },
-                                  (draftAgent.reasoningEffort || "medium") === option.id
-                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                    : null
-                                ),
-                                React.createElement("span", null, option.label)
-                              )
-                          )
+                            : null
                         )
-                      : null
-                  )
-                )
+                    )
+                  : null
               );
 
           const agentFactsSection = React.createElement(React.Fragment, null,
@@ -107288,27 +108017,33 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const instructionsSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
             React.createElement("div", { className: "playground-tasks-detail-section-header" },
               React.createElement("div", { className: "playground-tasks-detail-section-title" }, isTeamAgent ? "Team Instructions" : "Instructions"),
-              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                [
-                  { id: "bold", label: "Bold", icon: Bold },
-                  { id: "italic", label: "Italic", icon: Italic },
-                  { id: "underline", label: "Underline", icon: Underline },
-                  { id: "list", label: "List", icon: List },
-                ].map((action) =>
-                  React.createElement("button", {
-                    key: action.id,
-                    type: "button",
-                    className: "playground-tasks-detail-format-button",
-                    title: action.label,
-                    "aria-label": action.label,
-                    onMouseDown: (event) => event.preventDefault(),
-                    onClick: () => handleAgentMarkdownFormat("instructions", agentInstructionsTextareaRef, action.id),
-                  }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                )
-              )
+              isDefaultAgentConfigurationLocked
+                ? null
+                : React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                    [
+                      { id: "bold", label: "Bold", icon: Bold },
+                      { id: "italic", label: "Italic", icon: Italic },
+                      { id: "underline", label: "Underline", icon: Underline },
+                      { id: "list", label: "List", icon: List },
+                    ].map((action) =>
+                      React.createElement("button", {
+                        key: action.id,
+                        type: "button",
+                        className: "playground-tasks-detail-format-button",
+                        title: action.label,
+                        "aria-label": action.label,
+                        onMouseDown: (event) => event.preventDefault(),
+                        onClick: () => handleAgentMarkdownFormat("instructions", agentInstructionsTextareaRef, action.id),
+                      }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                    )
+                  )
             ),
-            React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isAgentInstructionsEditing ? " is-editing" : " is-preview") },
-              !isAgentInstructionsEditing
+            React.createElement("div", {
+                className: "playground-tasks-detail-description-editor"
+                  + (isAgentInstructionsEditing && !isDefaultAgentConfigurationLocked ? " is-editing" : " is-preview")
+                  + (isDefaultAgentConfigurationLocked ? " is-readonly" : ""),
+              },
+              (!isAgentInstructionsEditing || isDefaultAgentConfigurationLocked)
                 ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
                     String(draftAgent.instructions || "").trim()
                       ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
@@ -107320,23 +108055,25 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                         }, isTeamAgent ? "Add Team Instructions here" : "Add Instructions here")
                   )
                 : null,
-              React.createElement("textarea", {
-                ref: agentInstructionsTextareaRef,
-                className: "playground-tasks-detail-description-input " + (isAgentInstructionsEditing ? "is-editing" : "is-preview"),
-                rows: 1,
-                placeholder: isAgentInstructionsEditing ? (isTeamAgent ? "Add Team Instructions here" : "Add Instructions here") : "",
-                value: draftAgent.instructions || "",
-                onFocus: () => {
-                  setIsAgentInstructionsEditing(true);
-                },
-                onChange: (event) => {
-                  updateAgentField("instructions", event.target.value);
-                  resizeAgentDescriptionTextarea(event.currentTarget);
-                },
-                onBlur: () => {
-                  setIsAgentInstructionsEditing(false);
-                },
-              })
+              isDefaultAgentConfigurationLocked
+                ? null
+                : React.createElement("textarea", {
+                    ref: agentInstructionsTextareaRef,
+                    className: "playground-tasks-detail-description-input " + (isAgentInstructionsEditing ? "is-editing" : "is-preview"),
+                    rows: 1,
+                    placeholder: isAgentInstructionsEditing ? (isTeamAgent ? "Add Team Instructions here" : "Add Instructions here") : "",
+                    value: draftAgent.instructions || "",
+                    onFocus: () => {
+                      setIsAgentInstructionsEditing(true);
+                    },
+                    onChange: (event) => {
+                      updateAgentField("instructions", event.target.value);
+                      resizeAgentDescriptionTextarea(event.currentTarget);
+                    },
+                    onBlur: () => {
+                      setIsAgentInstructionsEditing(false);
+                    },
+                  })
             )
           );
 
@@ -112654,6 +113391,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         projectOverviewResourceMenuId = "",
         setProjectOverviewResourceMenuId = () => {},
         workspaceTeams = [],
+        workspaceTeamMembers = [],
+        workspaceTeamMembersTeamId = "",
         workspaceTeamsLoading = false,
         workspaceTeamsRequiresPlan = false,
         onWorkspaceTeamsRequest,
@@ -112735,6 +113474,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const missionControlAutosaveQueuedRef = useRef(null);
         const handledOpenTaskRequestTokenRef = useRef("");
         const projectOverviewWorkspaceTeamsRequestedRef = useRef(false);
+        const projectOverviewWorkspaceTeamMembersRequestedRef = useRef("");
         const [projects, setProjects] = useState([]);
         const [selectedProjectId, setSelectedProjectId] = useState(() => {
           try {
@@ -112816,8 +113556,26 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [projectOverviewTeamMenuId, setProjectOverviewTeamMenuId] = useState("");
         const [projectOverviewMilestoneMenuId, setProjectOverviewMilestoneMenuId] = useState("");
         const workspaceTeamsCount = Array.isArray(workspaceTeams) ? workspaceTeams.length : 0;
-        function requestProjectOverviewWorkspaceTeams() {
-          if (!hasRealAccess || workspaceTeamsLoading || workspaceTeamsRequiresPlan || workspaceTeamsCount > 0) {
+        function requestProjectOverviewWorkspaceTeams(options = {}) {
+          if (!hasRealAccess || workspaceTeamsLoading || workspaceTeamsRequiresPlan) {
+            return;
+          }
+          const requestedTeamId = String(options?.teamId || options?.selectedTeamId || "").trim();
+          if (requestedTeamId) {
+            const currentMembersTeamId = String(workspaceTeamMembersTeamId || "").trim();
+            const hasMatchingMemberRows = currentMembersTeamId === requestedTeamId
+              && Array.isArray(workspaceTeamMembers)
+              && workspaceTeamMembers.length > 0;
+            if (hasMatchingMemberRows || projectOverviewWorkspaceTeamMembersRequestedRef.current === requestedTeamId) {
+              return;
+            }
+            projectOverviewWorkspaceTeamMembersRequestedRef.current = requestedTeamId;
+            if (typeof onWorkspaceTeamsRequest === "function") {
+              onWorkspaceTeamsRequest({ selectedTeamId: requestedTeamId, teamId: requestedTeamId });
+            }
+            return;
+          }
+          if (workspaceTeamsCount > 0) {
             return;
           }
           if (projectOverviewWorkspaceTeamsRequestedRef.current) {
@@ -126425,6 +127183,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 		            normalizedProject.permissionSet || normalizedProject.metadata?.permissionSet,
 		            "project"
 		          );
+          const normalizedProjectPriority = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === String(normalizedProject.priority || metadataOverrides?.priority || normalizedProject.metadata?.priority || "").trim().toLowerCase())
+            ? String(normalizedProject.priority || metadataOverrides?.priority || normalizedProject.metadata?.priority || "").trim().toLowerCase()
+            : "medium";
+          const normalizedProjectLead = {
+            userId: String(normalizedProject.leadUserId || metadataOverrides?.leadUserId || metadataOverrides?.lead?.userId || metadataOverrides?.lead?.id || normalizedProject.metadata?.leadUserId || normalizedProject.metadata?.lead?.userId || normalizedProject.metadata?.lead?.id || "").trim(),
+            name: String(normalizedProject.leadName || metadataOverrides?.leadName || metadataOverrides?.lead?.name || normalizedProject.metadata?.leadName || normalizedProject.metadata?.lead?.name || "").trim(),
+            email: String(normalizedProject.leadEmail || metadataOverrides?.leadEmail || metadataOverrides?.lead?.email || normalizedProject.metadata?.leadEmail || normalizedProject.metadata?.lead?.email || "").trim(),
+            avatarUrl: String(normalizedProject.leadAvatarUrl || metadataOverrides?.leadAvatarUrl || metadataOverrides?.lead?.avatarUrl || normalizedProject.metadata?.leadAvatarUrl || normalizedProject.metadata?.lead?.avatarUrl || "").trim(),
+          };
 		          const hasMetadataMissionControlOverride = metadataOverrides
 	            && typeof metadataOverrides === "object"
 	            && Object.prototype.hasOwnProperty.call(metadataOverrides, "missionControl");
@@ -126454,9 +127221,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             name: normalizedProject.name || "Project",
             description: normalizedProject.description,
             icon: getPlaygroundProjectIconId(normalizedProject.icon),
+            priority: normalizedProjectPriority,
             wallpaperId: getPlaygroundProjectWallpaperId(normalizedProject.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
             useCardBackgroundAsWallpaper: normalizedProject.useCardBackgroundAsWallpaper !== false,
             defaultEnvironmentId: normalizedProject.defaultEnvironmentId || null,
+            leadUserId: normalizedProjectLead.userId,
+            leadName: normalizedProjectLead.name,
+            leadEmail: normalizedProjectLead.email,
+            leadAvatarUrl: normalizedProjectLead.avatarUrl,
+            lead: normalizedProjectLead.userId || normalizedProjectLead.name || normalizedProjectLead.email
+              ? normalizedProjectLead
+              : null,
 	            attachments: normalizedProjectAttachments,
 	            connectors: hasPlaygroundTaskConnectorSelections(normalizedProjectConnectors) ? normalizedProjectConnectors : null,
 	            projectRules: normalizedProjectRules,
@@ -126469,7 +127244,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            name: normalizedProject.name || "Project",
 	            description: normalizedProject.description,
             color: normalizedProject.color || getPlaygroundProjectAccent(normalizedProject, projectIndex),
+            priority: normalizedProjectPriority,
 	            defaultEnvironmentId: normalizedProject.defaultEnvironmentId || undefined,
+            leadUserId: normalizedProjectLead.userId || undefined,
+            leadName: normalizedProjectLead.name || undefined,
+            leadEmail: normalizedProjectLead.email || undefined,
+            leadAvatarUrl: normalizedProjectLead.avatarUrl || undefined,
+            lead: normalizedProjectLead.userId || normalizedProjectLead.name || normalizedProjectLead.email
+              ? normalizedProjectLead
+              : undefined,
 	            permissionSet: normalizedProjectPermissionSet,
 	            attachments: normalizedProjectAttachments,
 	            metadata: metadataPayload,
@@ -126611,16 +127394,20 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            const currentActionPolicy = currentActions[actionDefinition.id] || {
 	              ringId: actionDefinition.ringId,
 	            };
+	            const explicitAccess = getPlaygroundPermissionActionExplicitAccess(currentPermissionSet, actionDefinition);
 	            return {
 	              ...currentPermissionSet,
 	              version: 1,
 	              subjectType: "project",
 	              actions: {
 	                ...currentActions,
-	                [actionDefinition.id]: {
-	                  ...currentActionPolicy,
-	                  ringId: normalizePlaygroundPermissionRingId(nextRingId, actionDefinition.ringId),
-	                },
+	                [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
+	                  currentPermissionSet,
+	                  actionDefinition,
+	                  currentActionPolicy,
+	                  explicitAccess,
+	                  normalizePlaygroundPermissionRingId(nextRingId, actionDefinition.ringId)
+	                ),
 	              },
 	            };
 	          });
@@ -126638,15 +127425,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            const currentActionPolicy = currentActions[actionDefinition.id] || {
 	              ringId: actionDefinition.ringId,
 	            };
-	            const nextPolicy = {
-	              ...currentActionPolicy,
-	              ringId: normalizePlaygroundPermissionRingId(currentActionPolicy.ringId, actionDefinition.ringId),
-	            };
-	            if (!nextAccess) {
-	              delete nextPolicy.access;
-	            } else {
-	              nextPolicy.access = normalizePlaygroundPermissionAccess(nextAccess);
-	            }
+	            const nextPolicy = buildPlaygroundPermissionActionPolicy(
+	              currentPermissionSet,
+	              actionDefinition,
+	              currentActionPolicy,
+	              nextAccess
+	            );
 	            return {
 	              ...currentPermissionSet,
 	              version: 1,
@@ -127105,16 +127889,20 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            const currentActionPolicy = currentActions[actionDefinition.id] || {
 	              ringId: actionDefinition.ringId,
 	            };
+	            const explicitAccess = getPlaygroundPermissionActionExplicitAccess(currentPermissionSet, actionDefinition);
 	            return {
 	              ...currentPermissionSet,
 	              version: 1,
 	              subjectType: "team",
 	              actions: {
 	                ...currentActions,
-	                [actionDefinition.id]: {
-	                  ...currentActionPolicy,
-	                  ringId: normalizePlaygroundPermissionRingId(nextRingId, actionDefinition.ringId),
-	                },
+	                [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
+	                  currentPermissionSet,
+	                  actionDefinition,
+	                  currentActionPolicy,
+	                  explicitAccess,
+	                  normalizePlaygroundPermissionRingId(nextRingId, actionDefinition.ringId)
+	                ),
 	              },
 	            };
 	          });
@@ -127132,15 +127920,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            const currentActionPolicy = currentActions[actionDefinition.id] || {
 	              ringId: actionDefinition.ringId,
 	            };
-	            const nextPolicy = {
-	              ...currentActionPolicy,
-	              ringId: normalizePlaygroundPermissionRingId(currentActionPolicy.ringId, actionDefinition.ringId),
-	            };
-	            if (!nextAccess) {
-	              delete nextPolicy.access;
-	            } else {
-	              nextPolicy.access = normalizePlaygroundPermissionAccess(nextAccess);
-	            }
+	            const nextPolicy = buildPlaygroundPermissionActionPolicy(
+	              currentPermissionSet,
+	              actionDefinition,
+	              currentActionPolicy,
+	              nextAccess
+	            );
 	            return {
 	              ...currentPermissionSet,
 	              version: 1,
@@ -127313,16 +128098,20 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            const currentActionPolicy = currentActions[actionDefinition.id] || {
 	              ringId: actionDefinition.ringId,
 	            };
+	            const explicitAccess = getPlaygroundPermissionActionExplicitAccess(currentPermissionSet, actionDefinition);
 	            return {
 	              ...currentPermissionSet,
 	              version: 1,
 	              subjectType: "project_team_role",
 	              actions: {
 	                ...currentActions,
-	                [actionDefinition.id]: {
-	                  ...currentActionPolicy,
-	                  ringId: normalizePlaygroundPermissionRingId(nextRingId, actionDefinition.ringId),
-	                },
+	                [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
+	                  currentPermissionSet,
+	                  actionDefinition,
+	                  currentActionPolicy,
+	                  explicitAccess,
+	                  normalizePlaygroundPermissionRingId(nextRingId, actionDefinition.ringId)
+	                ),
 	              },
 	            };
 	          });
@@ -127340,15 +128129,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            const currentActionPolicy = currentActions[actionDefinition.id] || {
 	              ringId: actionDefinition.ringId,
 	            };
-	            const nextPolicy = {
-	              ...currentActionPolicy,
-	              ringId: normalizePlaygroundPermissionRingId(currentActionPolicy.ringId, actionDefinition.ringId),
-	            };
-	            if (!nextAccess) {
-	              delete nextPolicy.access;
-	            } else {
-	              nextPolicy.access = normalizePlaygroundPermissionAccess(nextAccess);
-	            }
+	            const nextPolicy = buildPlaygroundPermissionActionPolicy(
+	              currentPermissionSet,
+	              actionDefinition,
+	              currentActionPolicy,
+	              nextAccess
+	            );
 	            return {
 	              ...currentPermissionSet,
 	              version: 1,
@@ -139175,14 +139961,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
               React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
 	                isFullPageTaskDetail
 	                  ? React.createElement("div", { className: "playground-tasks-ticket-page-nav-title" },
-	                      React.createElement("div", { className: "playground-tasks-ticket-page-nav-ticket-row" },
-	                        React.createElement("button", {
-	                          type: "button",
-	                          className: "playground-tasks-ticket-page-nav-back",
-	                          onClick: handleCloseTaskDetail,
-	                          title: "Back",
-	                          "aria-label": "Back to project",
-	                        }, React.createElement(ChevronLeft, { width: 12, height: 12, strokeWidth: 1.9 })),
+	                      React.createElement("button", {
+	                        type: "button",
+	                        className: "playground-tasks-ticket-page-nav-ticket-row",
+	                        onClick: handleCloseTaskDetail,
+	                        title: "Back to project",
+	                        "aria-label": "Back to project",
+	                      },
+	                        React.createElement("span", { className: "playground-tasks-ticket-page-nav-back", "aria-hidden": "true" },
+	                          React.createElement(ChevronLeft, { width: 12, height: 12, strokeWidth: 1.9 })
+	                        ),
 	                        React.createElement("span", { className: "playground-tasks-ticket-page-nav-ticket" }, activeTicketNumber)
 	                      ),
 	                      React.createElement("input", {
@@ -142373,6 +143161,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [developServerOperationalMetricsLoading, setDevelopServerOperationalMetricsLoading] = useState(false);
         const [developServerOperationalMetricsError, setDevelopServerOperationalMetricsError] = useState("");
         const teamPageRef = useRef(null);
+        const teamPageLoadAbortControllerRef = useRef(null);
+        const teamPageLoadSequenceRef = useRef(0);
         const [teamPageLoading, setTeamPageLoading] = useState(false);
         const [teamPageError, setTeamPageError] = useState("");
         const [teamPageRequiresPlan, setTeamPageRequiresPlan] = useState(false);
@@ -142539,6 +143329,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
           if (teamPageShareModalCloseTimerRef.current) {
             window.clearTimeout(teamPageShareModalCloseTimerRef.current);
+          }
+          if (teamPageLoadAbortControllerRef.current) {
+            teamPageLoadAbortControllerRef.current.abort(createFetchAbortReason("AbortError", "Team page unmounted."));
+            teamPageLoadAbortControllerRef.current = null;
           }
         }, []);
 
@@ -144975,6 +145769,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (isHtmlRouteError) {
             return "Team workspace API is not available on this backend yet. Redeploy the backend, then refresh this page.";
           }
+          if (
+            normalizedMessage.includes("signal is aborted")
+            || normalizedMessage.includes("aborted without reason")
+            || normalizedMessage.includes("aborterror")
+          ) {
+            return "The team data request was interrupted. Refresh the team page to try again.";
+          }
+          if (normalizedMessage.includes("timeouterror") || normalizedMessage.includes("request timed out")) {
+            return "Team data is taking longer than expected to load. Refresh the team page to try again.";
+          }
           return rawMessage || fallback;
         }
 
@@ -145241,17 +146045,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
-        async function fetchTeamPageMemberProfilePayload(teamId, members = []) {
+        async function fetchTeamPageMemberProfilePayload(teamId, members = [], options = {}) {
           const normalizedTeamId = String(teamId || "").trim();
           if (!normalizedTeamId) {
             return null;
           }
           const memberPayload = Array.isArray(members) ? members : [];
+          const requestSignal = options && typeof options === "object" ? options.signal : undefined;
           try {
             const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/team-member-profiles/lookup", {
               method: "POST",
               credentials: "include",
               cache: "no-store",
+              signal: requestSignal,
               headers: {
                 ...requestHeaders,
                 "Content-Type": "application/json",
@@ -145282,6 +146088,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
+                signal: requestSignal,
                 headers: requestHeaders,
               }, 5000);
               if (response.ok) {
@@ -145294,8 +146101,23 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         async function loadTeamPageData(options = {}) {
           if (!hasRealAccess) {
+            if (teamPageLoadAbortControllerRef.current) {
+              teamPageLoadAbortControllerRef.current.abort(createFetchAbortReason("AbortError", "Team page access changed."));
+              teamPageLoadAbortControllerRef.current = null;
+            }
             return;
           }
+          if (teamPageLoadAbortControllerRef.current) {
+            teamPageLoadAbortControllerRef.current.abort(createFetchAbortReason("AbortError", "A newer team page load started."));
+          }
+          const loadAbortController = new AbortController();
+          teamPageLoadAbortControllerRef.current = loadAbortController;
+          const loadSequenceId = teamPageLoadSequenceRef.current + 1;
+          teamPageLoadSequenceRef.current = loadSequenceId;
+          const isCurrentLoad = () => (
+            teamPageLoadSequenceRef.current === loadSequenceId
+            && teamPageLoadAbortControllerRef.current === loadAbortController
+          );
           const hasSelectedTeamIdOverride = options
             && typeof options === "object"
             && Object.prototype.hasOwnProperty.call(options, "selectedTeamId");
@@ -145308,8 +146130,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
               method: "GET",
               credentials: "include",
               cache: "no-store",
+              signal: loadAbortController.signal,
               headers: requestHeaders,
-            }, 8000);
+            }, 12000);
+            if (!isCurrentLoad()) {
+              return;
+            }
             if (!response.ok) {
               if (response.status === 402 || data?.requiredPlan === "team") {
                 setTeamPageRequiresPlan(true);
@@ -145329,41 +146155,83 @@ ${PROJECT_OVERVIEW_SCRIPT}
               : null;
             const selectedTeamId = selectedTeam?.id || "";
             setTeamPageSelectedTeamId(selectedTeamId);
+            if (selectedTeamId !== String(teamPageSelectedTeamId || "").trim()) {
+              setTeamPageMembers([]);
+              setTeamPageInvitations([]);
+              setTeamPageShares([]);
+            }
             if (!selectedTeamId) {
               setTeamPageMembers([]);
               setTeamPageInvitations([]);
               setTeamPageShares([]);
               return;
             }
-            const [membersResult, invitationsResult, sharesResult] = await Promise.all([
+            const [membersResult, invitationsResult, sharesResult] = await Promise.allSettled([
               fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(selectedTeamId) + "/members?includeProfiles=1&includeUsers=1&include=profile,user,account&expand=profile,user,account", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
+                signal: loadAbortController.signal,
                 headers: requestHeaders,
-              }, 8000),
+              }, 15000),
               fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(selectedTeamId) + "/invitations", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
+                signal: loadAbortController.signal,
                 headers: requestHeaders,
-              }, 8000),
+              }, 10000),
               fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(selectedTeamId) + "/resource-shares", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
+                signal: loadAbortController.signal,
                 headers: requestHeaders,
-              }, 8000),
+              }, 10000),
             ]);
-            const rawMembers = Array.isArray(membersResult.data?.data) ? membersResult.data.data : [];
-            const memberProfilesPayload = await fetchTeamPageMemberProfilePayload(selectedTeamId, rawMembers);
-            setTeamPageMembers(mergeTeamPageMemberProfiles(rawMembers, membersResult.data, memberProfilesPayload));
-            setTeamPageInvitations(Array.isArray(invitationsResult.data?.data) ? invitationsResult.data.data : []);
-            setTeamPageShares(Array.isArray(sharesResult.data?.data) ? sharesResult.data.data : []);
+            if (!isCurrentLoad()) {
+              return;
+            }
+            if (membersResult.status === "rejected") {
+              throw membersResult.reason;
+            }
+            if (!membersResult.value.response.ok) {
+              throw new Error(getTeamPageApiErrorMessage(membersResult.value.data));
+            }
+            const rawMembers = Array.isArray(membersResult.value.data?.data) ? membersResult.value.data.data : [];
+            const memberProfilesPayload = await fetchTeamPageMemberProfilePayload(selectedTeamId, rawMembers, { signal: loadAbortController.signal });
+            if (!isCurrentLoad()) {
+              return;
+            }
+            setTeamPageMembers(mergeTeamPageMemberProfiles(rawMembers, membersResult.value.data, memberProfilesPayload));
+            setTeamPageInvitations(
+              invitationsResult.status === "fulfilled"
+              && invitationsResult.value.response.ok
+              && Array.isArray(invitationsResult.value.data?.data)
+                ? invitationsResult.value.data.data
+                : []
+            );
+            setTeamPageShares(
+              sharesResult.status === "fulfilled"
+              && sharesResult.value.response.ok
+              && Array.isArray(sharesResult.value.data?.data)
+                ? sharesResult.value.data.data
+                : []
+            );
           } catch (error) {
-            setTeamPageError(getTeamPageApiErrorMessage({ message: error instanceof Error ? error.message : "" }));
+            if (!isCurrentLoad() || loadAbortController.signal.aborted) {
+              return;
+            }
+            setTeamPageError(getTeamPageApiErrorMessage({
+              message: error instanceof Error ? error.message : "",
+            }, isFetchAbortError(error)
+              ? "Team data is taking longer than expected to load. Refresh the team page to try again."
+              : "Failed to load teams."));
           } finally {
-            setTeamPageLoading(false);
+            if (isCurrentLoad()) {
+              setTeamPageLoading(false);
+              teamPageLoadAbortControllerRef.current = null;
+            }
           }
         }
 
@@ -145698,20 +146566,24 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function updateTeamPermissionActionRing(actionId, nextRingId) {
           const normalizedActionId = String(actionId || "").trim();
           const normalizedRingId = String(nextRingId || "").trim();
-          if (!normalizedActionId || !normalizedRingId) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(normalizedActionId);
+          if (!normalizedActionId || !normalizedRingId || !actionDefinition) {
             return;
           }
           updateTeamPermissionSet((currentPermissionSet) => {
             const existingAction = (currentPermissionSet.actions || {})[normalizedActionId] || {};
+            const explicitAccess = getPlaygroundPermissionActionExplicitAccess(currentPermissionSet, actionDefinition);
             return {
               ...currentPermissionSet,
               actions: {
                 ...(currentPermissionSet.actions || {}),
-                [normalizedActionId]: {
-                  ...existingAction,
-                  ringId: normalizedRingId,
-                  access: existingAction.access || getPlaygroundPermissionRingAccess(currentPermissionSet, normalizedRingId),
-                },
+                [normalizedActionId]: buildPlaygroundPermissionActionPolicy(
+                  currentPermissionSet,
+                  actionDefinition,
+                  existingAction,
+                  explicitAccess,
+                  normalizedRingId
+                ),
               },
             };
           });
@@ -145719,21 +146591,26 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function updateTeamPermissionActionAccess(actionId, nextAccess) {
           const normalizedActionId = String(actionId || "").trim();
-          const normalizedAccess = normalizePlaygroundPermissionAccess(nextAccess);
+          const normalizedAccess = normalizePlaygroundPermissionAccess(nextAccess, "");
           if (!normalizedActionId) {
             return;
           }
           updateTeamPermissionSet((currentPermissionSet) => {
             const existingAction = (currentPermissionSet.actions || {})[normalizedActionId] || {};
+            const actionDefinition = getPlaygroundPermissionActionDefinition(normalizedActionId);
+            if (!actionDefinition) {
+              return currentPermissionSet;
+            }
             return {
               ...currentPermissionSet,
               actions: {
                 ...(currentPermissionSet.actions || {}),
-                [normalizedActionId]: {
-                  ...existingAction,
-                  ringId: existingAction.ringId || getPlaygroundPermissionActionRingId(currentPermissionSet, normalizedActionId),
-                  access: normalizedAccess,
-                },
+                [normalizedActionId]: buildPlaygroundPermissionActionPolicy(
+                  currentPermissionSet,
+                  actionDefinition,
+                  existingAction,
+                  normalizedAccess
+                ),
               },
             };
           });
@@ -145849,20 +146726,24 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "");
           const normalizedActionId = String(actionId || "").trim();
           const normalizedRingId = String(nextRingId || "").trim();
-          if (!normalizedRoleId || !normalizedActionId || !normalizedRingId) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(normalizedActionId);
+          if (!normalizedRoleId || !normalizedActionId || !normalizedRingId || !actionDefinition) {
             return;
           }
           updateTeamRolePermissionSet(normalizedRoleId, (currentPermissionSet) => {
             const existingAction = (currentPermissionSet.actions || {})[normalizedActionId] || {};
+            const explicitAccess = getPlaygroundPermissionActionExplicitAccess(currentPermissionSet, actionDefinition);
             return {
               ...currentPermissionSet,
               actions: {
                 ...(currentPermissionSet.actions || {}),
-                [normalizedActionId]: {
-                  ...existingAction,
-                  ringId: normalizedRingId,
-                  access: existingAction.access || getPlaygroundPermissionRingAccess(currentPermissionSet, normalizedRingId),
-                },
+                [normalizedActionId]: buildPlaygroundPermissionActionPolicy(
+                  currentPermissionSet,
+                  actionDefinition,
+                  existingAction,
+                  explicitAccess,
+                  normalizedRingId
+                ),
               },
             };
           });
@@ -145877,15 +146758,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
           updateTeamRolePermissionSet(normalizedRoleId, (currentPermissionSet) => {
             const existingAction = (currentPermissionSet.actions || {})[normalizedActionId] || {};
-            const nextAction = {
-              ...existingAction,
-              ringId: existingAction.ringId || getPlaygroundPermissionActionRingId(currentPermissionSet, normalizedActionId),
-            };
-            if (normalizedAccess) {
-              nextAction.access = normalizedAccess;
-            } else {
-              delete nextAction.access;
+            const actionDefinition = getPlaygroundPermissionActionDefinition(normalizedActionId);
+            if (!actionDefinition) {
+              return currentPermissionSet;
             }
+            const nextAction = buildPlaygroundPermissionActionPolicy(
+              currentPermissionSet,
+              actionDefinition,
+              existingAction,
+              normalizedAccess
+            );
             return {
               ...currentPermissionSet,
               actions: {
@@ -176629,10 +177511,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             projectOverviewResourceMenuId,
                             setProjectOverviewResourceMenuId,
                             workspaceTeams: teamPageTeams,
+                            workspaceTeamMembers: teamPageMembers,
+                            workspaceTeamMembersTeamId: teamPageSelectedTeamId,
                             workspaceTeamsLoading: teamPageLoading,
                             workspaceTeamsRequiresPlan: teamPageRequiresPlan,
-                            onWorkspaceTeamsRequest: () => {
-                              void loadTeamPageData({ selectedTeamId: "" });
+                            onWorkspaceTeamsRequest: (options = {}) => {
+                              const requestedTeamId = String(options?.selectedTeamId || options?.teamId || "").trim();
+                              void loadTeamPageData({ selectedTeamId: requestedTeamId });
                             },
 	                            onOpenTeamPage: (teamId = "", options = {}) => {
 	                              const normalizedTeamId = String(teamId || "").trim();
@@ -177258,10 +178143,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               projectOverviewResourceMenuId,
                               setProjectOverviewResourceMenuId,
                               workspaceTeams: teamPageTeams,
+                              workspaceTeamMembers: teamPageMembers,
+                              workspaceTeamMembersTeamId: teamPageSelectedTeamId,
                               workspaceTeamsLoading: teamPageLoading,
                               workspaceTeamsRequiresPlan: teamPageRequiresPlan,
-                              onWorkspaceTeamsRequest: () => {
-                                void loadTeamPageData({ selectedTeamId: "" });
+                              onWorkspaceTeamsRequest: (options = {}) => {
+                                const requestedTeamId = String(options?.selectedTeamId || options?.teamId || "").trim();
+                                void loadTeamPageData({ selectedTeamId: requestedTeamId });
                               },
 	                              onOpenTeamPage: (teamId = "", options = {}) => {
 	                                const normalizedTeamId = String(teamId || "").trim();
@@ -180695,8 +181583,8 @@ async function proxyThreadMessagesGet(req, res, threadId) {
 async function proxyUpstreamJsonRequest(req, res, upstreamPath, method) {
   const controller = new AbortController();
   const abortUpstreamIfClientClosed = () => {
-    if (!res.writableEnded) {
-      controller.abort();
+    if (!res.writableEnded && !controller.signal.aborted) {
+      controller.abort(new Error("Client request closed before the upstream request completed."));
     }
   };
   res.once("close", abortUpstreamIfClientClosed);
