@@ -3506,7 +3506,7 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                   type: "button",
                   className: "playground-imagine-template-from-computer",
                   onClick: () => requestFileBrowser("workspace"),
-                }, "From Computer")
+                }, "Upload from Computer")
               ),
               React.createElement("div", { className: "playground-imagine-template-attachments-surface" },
                 React.createElement("button", {

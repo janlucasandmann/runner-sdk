@@ -2291,6 +2291,19 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
               size: "large",
             },
             {
+              id: "astra-ads",
+              title: "AstraFlow ads",
+              description: "Sci-fi SaaS launch ads with cinematic product mood and bold conversion copy.",
+              prompt: "Create a sci-fi SaaS early-access advertisement with an astronaut product hero, luminous platform blocks, bold launch typography, premium dark-blue lighting, concise offer copy, and a polished conversion-focused call to action.",
+              placeholder: "Create an AstraFlow ad",
+              defaultStyles: ["product", "premium", "cinematic", "bold"],
+              Icon: Sparkles,
+              imageUrl: "/img/imagine/astra-ad.webp",
+              tone: "url('/img/imagine/astra-ad.webp') center / cover no-repeat",
+              aspectRatio: "4 / 5",
+              size: "large",
+            },
+            {
               id: "multi-asset-campaign-set",
               title: "Pitch deck",
               description: "Modern multi-slide pitch decks with sharp narrative, data, and visual hierarchy.",
@@ -2330,6 +2343,32 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                   type: "image",
                   url: "/img/imagine/pitch-deck/05.webp",
                   title: "Business model reference",
+                  aspectRatio: "16 / 9",
+                },
+              ],
+            },
+            {
+              id: "modern-pitch-deck",
+              title: "Modern pitch deck",
+              description: "Elegant investor and report slides with editorial type, clean metrics, and operational storytelling.",
+              prompt: "Create a modern pitch deck that follows the attached slide references: elegant editorial typography, clean white space, soft green analytical panels, polished metrics, strong platform impact storytelling, and a cohesive report-ready slide system across every generated asset.",
+              placeholder: "Create a modern deck",
+              defaultStyles: ["professional", "minimal", "data-driven", "premium"],
+              Icon: LayoutGrid,
+              imageUrl: "/img/imagine/pitch-deck-modern/01.webp",
+              tone: "url('/img/imagine/pitch-deck-modern/01.webp') center / cover no-repeat",
+              aspectRatio: "16 / 9",
+              assets: [
+                {
+                  type: "image",
+                  url: "/img/imagine/pitch-deck-modern/01.webp",
+                  title: "Platform impact slide reference",
+                  aspectRatio: "16 / 9",
+                },
+                {
+                  type: "image",
+                  url: "/img/imagine/pitch-deck-modern/02.webp",
+                  title: "Efficiency metrics slide reference",
                   aspectRatio: "16 / 9",
                 },
               ],
@@ -2840,8 +2879,8 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
           }, [templateAssetIndexes]);
 
           const filterGroups = useMemo(() => ({
-            campaign: ["product-ads", "multi-asset-campaign-set", "luxury-watch-ads", "video-product-launch", "akita-space-video", "youtube-intro-video", "fragrance-ads", "coffee-ads", "beauty-ads", "metal-typography-ads", "text-led-ads", "payment-ads", "logo-branding", "furniture-campaigns", "sneaker-campaigns", "brand-campaigns", "social-posts", "restaurant-ads", "comparison-ads"],
-            product: ["product-ads", "multi-asset-campaign-set", "luxury-watch-ads", "video-product-launch", "fragrance-ads", "coffee-ads", "beauty-ads", "metal-typography-ads", "text-led-ads", "payment-ads", "furniture-campaigns", "sneaker-campaigns", "technical-drawings", "app-screens", "data-visuals"],
+            campaign: ["product-ads", "astra-ads", "multi-asset-campaign-set", "modern-pitch-deck", "luxury-watch-ads", "video-product-launch", "akita-space-video", "youtube-intro-video", "fragrance-ads", "coffee-ads", "beauty-ads", "metal-typography-ads", "text-led-ads", "payment-ads", "logo-branding", "furniture-campaigns", "sneaker-campaigns", "brand-campaigns", "social-posts", "restaurant-ads", "comparison-ads"],
+            product: ["product-ads", "astra-ads", "multi-asset-campaign-set", "modern-pitch-deck", "luxury-watch-ads", "video-product-launch", "fragrance-ads", "coffee-ads", "beauty-ads", "metal-typography-ads", "text-led-ads", "payment-ads", "furniture-campaigns", "sneaker-campaigns", "technical-drawings", "app-screens", "data-visuals"],
             editorial: ["editorial", "logo-branding", "fashion-campaigns", "portrait-studio"],
             concept: ["akita-space-video", "cell-division-video", "youtube-intro-video", "video-cinematic-scene", "infographics", "technical-drawings", "concept-art", "animated-characters", "cinematic-wildlife"],
           }), []);
@@ -3888,7 +3927,7 @@ export const IMAGINE_PAGE_SCRIPT = String.raw`
                               className: "playground-imagine-template-from-computer",
                               disabled: createReferenceImportState.status === "loading",
                               onClick: openCreateReferenceFileBrowser,
-                            }, createReferenceImportState.status === "loading" ? "Importing..." : "From Computer")
+                            }, createReferenceImportState.status === "loading" ? "Importing..." : "Upload from Computer")
                           ),
                           React.createElement("div", { className: "playground-tasks-attachments playground-imagine-create-upload-surface" },
                             React.createElement("input", {

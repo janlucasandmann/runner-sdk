@@ -6932,7 +6932,9 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
         const METRONOME_RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
         const METRONOME_IMAGINE_BUILT_IN_TEMPLATE_OPTIONS = [
           { id: "product-ads", title: "Product ads", mediaType: "image", prompt: "Create a premium product ad with a clean studio setup, soft light, and conversion-focused composition." },
+          { id: "astra-ads", title: "AstraFlow ads", mediaType: "image", prompt: "Create a sci-fi SaaS early-access advertisement with an astronaut product hero, luminous platform blocks, bold launch typography, premium dark-blue lighting, concise offer copy, and a polished conversion-focused call to action." },
           { id: "multi-asset-campaign-set", title: "Pitch deck", mediaType: "image", prompt: "Create a modern pitch deck with crisp narrative, strong page hierarchy, premium black/white/blue visual language, and investor-ready copy." },
+          { id: "modern-pitch-deck", title: "Modern pitch deck", mediaType: "image", prompt: "Create a modern pitch deck with elegant editorial typography, clean white space, soft green analytical panels, polished metrics, strong platform impact storytelling, and a report-ready slide system." },
           { id: "luxury-watch-ads", title: "Luxury watch ads", mediaType: "image", prompt: "Create a luxury watch advertisement with dramatic lighting, crisp macro detail, bold headline typography, and a premium editorial finish." },
           { id: "video-product-launch", title: "Product launch video", mediaType: "video", prompt: "Create a short cinematic product launch video with premium camera movement, crisp lighting, restrained motion graphics, and a clear brand reveal." },
           { id: "akita-space-video", title: "Akita in space", mediaType: "video", prompt: "Create a playful cinematic video of an Akita floating weightlessly through deep space with gentle camera motion, soft starlight, and a polished sci-fi finish." },
@@ -20653,7 +20655,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   placeholder: "Add instructions for handling matching emails",
                   tooltip: "Additional instructions appended to the inbound email before the workflow continues.",
                 }),
-                renderThreadAttachments({ borderless: true, buttonLabel: "From Computer" }),
+                renderThreadAttachments({ borderless: true, buttonLabel: "Upload from Computer" }),
                 renderMetronomeAttachmentModalPortal()
               );
             };
@@ -20723,7 +20725,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   placeholder: "Add instructions for handling matching Telegram messages",
                   tooltip: "Additional instructions appended to the inbound Telegram message before the workflow continues.",
                 }),
-                renderThreadAttachments({ borderless: true, buttonLabel: "From Computer" }),
+                renderThreadAttachments({ borderless: true, buttonLabel: "Upload from Computer" }),
                 renderMetronomeAttachmentModalPortal()
               );
             };
@@ -20854,7 +20856,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   placeholder: "Add instructions for handling matching GitHub events",
                   tooltip: "Additional instructions appended to the GitHub webhook event before the workflow continues.",
                 }),
-                renderThreadAttachments({ borderless: true, buttonLabel: "From Computer" }),
+                renderThreadAttachments({ borderless: true, buttonLabel: "Upload from Computer" }),
                 renderMetronomeAttachmentModalPortal()
               );
             };
@@ -21126,7 +21128,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	                      placeholder: "Add prompt extension here",
 	                      tooltip: "Additional instructions appended to the triggering message before the workflow continues.",
 	                    }),
-	                    renderThreadAttachments({ borderless: true, buttonLabel: "From Computer" }),
+	                    renderThreadAttachments({ borderless: true, buttonLabel: "Upload from Computer" }),
 	                    renderMetronomeAttachmentModalPortal()
                   )
                 : selectedTriggerType === "periodic"
@@ -21898,7 +21900,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 : null
             );
             const renderThreadAttachments = (options = {}) => {
-              const buttonLabel = String(options?.buttonLabel || "From Computer").trim() || "From Computer";
+              const buttonLabel = String(options?.buttonLabel || "Upload from Computer").trim() || "Upload from Computer";
               const wrapperClassName = "playground-tasks-attachments playground-metronome-thread-attachments" + (options?.borderless ? " is-borderless" : "");
               const attachments = Array.isArray(config.attachments) ? config.attachments : [];
               const hasAttachments = attachments.length > 0;
@@ -22431,7 +22433,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 }),
                 renderMetronomeAgentSelector(),
                 renderMetronomeWorkspaceSelector(),
-                renderThreadAttachments({ buttonLabel: "From Computer" }),
+                renderThreadAttachments({ buttonLabel: "Upload from Computer" }),
                 React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
                   React.createElement("div", { className: "playground-metronome-switch-copy" },
                     React.createElement("span", null, "Use full workflow context"),

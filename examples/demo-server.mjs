@@ -13,6 +13,7 @@ import { IMAGINE_PAGE_CSS, IMAGINE_PAGE_SCRIPT } from "./demo-imagine-page.mjs";
 import { IMAGINE_TEMPLATE_PAGE_CSS, IMAGINE_TEMPLATE_PAGE_SCRIPT } from "./demo-imagine-template-page.mjs";
 import { METRONOME_PAGE_CSS, METRONOME_PAGE_SCRIPT } from "./demo-metronome-page.mjs";
 import { MODELS_PAGE_CSS, MODELS_PAGE_SCRIPT } from "./demo-models-page.mjs";
+import { PLATFORM_UI_PRIMITIVES_CSS, PLATFORM_UI_PRIMITIVES_SCRIPT } from "./demo-platform-ui-primitives.mjs";
 import { PROJECT_TYPE_ALIASES, PROJECT_TYPE_REGISTRY } from "./demo-project-types.mjs";
 import { RESOURCE_TEMPLATE_CATALOG, RESOURCE_TEMPLATE_TYPES } from "./demo-resource-templates.mjs";
 import { RESOURCE_TEMPLATES_PAGE_CSS, RESOURCE_TEMPLATES_PAGE_SCRIPT } from "./demo-resource-templates-page.mjs";
@@ -1568,7 +1569,7 @@ const html = `<!doctype html>
       .sidebar-thread-ticket-number {
         flex-shrink: 0;
         font-size: 12px;
-        color: #4da3ff;
+        color: #fff;
       }
 
       .sidebar-thread-running-indicator {
@@ -27487,7 +27488,7 @@ const html = `<!doctype html>
       }
 
       .playground-environments-action-button {
-        font-weight: 500;
+        font-weight: 500 !important;
       }
 
       .playground-environments-page:not(.playground-agents-page) .playground-environments-action-button,
@@ -33860,6 +33861,7 @@ const html = `<!doctype html>
 
       .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail) {
         --playground-content-nav-height: 56px;
+        --playground-task-detail-sidebar-inset: 23px;
       }
 
       .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail)
@@ -33876,6 +33878,8 @@ const html = `<!doctype html>
         height: calc(100% + var(--playground-content-nav-height, 56px));
         border-left: 0;
         background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
 
       .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail)
@@ -33893,8 +33897,8 @@ const html = `<!doctype html>
         .playground-tasks-shell.is-detail-open
         > .playground-tasks-detail-panel.is-project-task-detail
         .playground-tasks-detail-navbar {
-        padding-left: 10px;
-        padding-right: 10px;
+        padding-left: var(--playground-task-detail-sidebar-inset, 18px);
+        padding-right: var(--playground-task-detail-sidebar-inset, 18px);
       }
 
       .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail)
@@ -33908,16 +33912,16 @@ const html = `<!doctype html>
         .playground-tasks-shell.is-detail-open
         > .playground-tasks-detail-panel.is-project-task-detail
         .playground-tasks-detail-scroll {
-        padding-left: 10px;
-        padding-right: 10px;
+        padding-left: calc(var(--playground-task-detail-sidebar-inset, 18px) - 5px);
+        padding-right: var(--playground-task-detail-sidebar-inset, 18px);
       }
 
       .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail)
         .playground-tasks-shell.is-detail-open
         > .playground-tasks-detail-panel.is-project-task-detail
         .playground-tasks-comment-dock {
-        padding-left: 10px;
-        padding-right: 10px;
+        padding-left: var(--playground-task-detail-sidebar-inset, 18px);
+        padding-right: var(--playground-task-detail-sidebar-inset, 18px);
         padding-bottom: 15px;
       }
 
@@ -34266,9 +34270,12 @@ const html = `<!doctype html>
         border: 0 !important;
         border-radius: 0 !important;
         background: transparent !important;
+        background-color: transparent !important;
         box-shadow: none !important;
         color: #66a6ff !important;
+        font-size: 12px !important;
         font-weight: 400 !important;
+        line-height: 1.2;
       }
 
       .playground-tasks-ticket-screen-panel .playground-tasks-attachments-environment-button::before,
@@ -35370,7 +35377,7 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-detail-threads-section.playground-plugins-section {
-        gap: 12px;
+        gap: 0px;
         margin-bottom: 0;
       }
 
@@ -35385,7 +35392,7 @@ const html = `<!doctype html>
       }
 
 	      .playground-tasks-detail-threads-section .playground-plugins-section-title {
-	        font-size: 12px;
+	        font-size: 14px;
 	        font-weight: 400;
 	        line-height: 1.3;
 	      }
@@ -35418,6 +35425,7 @@ const html = `<!doctype html>
       .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-detail-thread-empty .playground-tasks-empty-primary-button::before,
       .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-detail-thread-footer .playground-environments-action-button::before,
       .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-detail-thread-footer .playground-tasks-review-action-button::before,
+      .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-connectors::before,
       .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-detail-facts::before {
         content: "";
         pointer-events: none;
@@ -36544,11 +36552,36 @@ const html = `<!doctype html>
         box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
       }
 
+      .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-connectors {
+        position: relative;
+        overflow: visible;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
+      }
+
+      .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-skills {
+        margin-bottom: 14px;
+      }
+
       .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-detail-facts::before {
         content: "";
         display: block;
       }
 
+      .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-connectors::before {
+        content: "";
+        display: block;
+      }
+
+      .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-connectors > *,
       .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-detail-facts > * {
         position: relative;
         z-index: 1;
@@ -38217,6 +38250,36 @@ const html = `<!doctype html>
         color: #66a6ff;
       }
 
+      .playground-tasks-detail-shell .playground-environments-action-button.playground-tasks-attachments-environment-button,
+      .playground-tasks-detail-shell .playground-environments-action-button.playground-tasks-skills-manage-button {
+        min-height: 0 !important;
+        height: auto;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        color: #66a6ff !important;
+        font-size: 12px !important;
+        font-weight: 400 !important;
+        line-height: 1.2;
+      }
+
+      .playground-tasks-detail-shell .playground-environments-action-button.playground-tasks-attachments-environment-button::before,
+      .playground-tasks-detail-shell .playground-environments-action-button.playground-tasks-skills-manage-button::before {
+        content: none !important;
+        display: none !important;
+      }
+
+      .playground-tasks-detail-shell .playground-environments-action-button.playground-tasks-attachments-environment-button:hover:not(:disabled),
+      .playground-tasks-detail-shell .playground-environments-action-button.playground-tasks-skills-manage-button:hover:not(:disabled),
+      .playground-tasks-detail-shell .playground-environments-action-button.playground-tasks-skills-manage-button.is-active {
+        background: transparent !important;
+        background-color: transparent !important;
+        color: #66a6ff !important;
+      }
+
       .playground-tasks-skills {
         padding-top: 14px;
       }
@@ -38329,55 +38392,69 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-subtasks-add-button {
-        position: relative;
-        flex: 0 0 28px;
-        width: 28px;
-        min-width: 28px;
-        height: 28px;
-        min-height: 28px;
-        max-height: 28px;
+        flex: 0 0 24px;
+        width: 24px;
+        min-width: 24px;
+        height: 24px;
+        min-height: 24px;
+        max-height: 24px;
         padding: 0;
         border: 0;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.88);
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        color: rgba(255, 255, 255, 0.7);
+        display: inline-flex;
+        align-items: center;
         justify-content: center;
-        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .playground-tasks-detail-shell .playground-tasks-subtasks-add-button,
+      .playground-tasks-detail-shell .playground-environments-action-button.playground-tasks-subtasks-add-button {
+        flex: 0 0 24px !important;
+        width: 24px !important;
+        min-width: 24px !important;
+        height: 24px !important;
+        min-height: 24px !important;
+        max-height: 24px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        color: rgba(255, 255, 255, 0.82) !important;
       }
 
       .playground-environments-page:not(.playground-agents-page) .playground-tasks-subtasks-add-button {
-        width: 28px;
-        min-width: 28px;
-        height: 28px;
-        min-height: 28px;
-        max-height: 28px;
+        width: 24px;
+        min-width: 24px;
+        height: 24px;
+        min-height: 24px;
+        max-height: 24px;
         padding: 0;
       }
 
       .playground-tasks-subtasks-add-button::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: 999px;
-        padding: 1px;
-        background: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
+        content: none !important;
+        display: none !important;
       }
 
-      .playground-tasks-subtasks-add-button:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.12);
+      .playground-tasks-subtasks-add-button:hover:not(:disabled),
+      .playground-tasks-subtasks-add-button.is-active {
+        background: transparent !important;
+        background-color: transparent !important;
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+
+      .playground-tasks-subtasks-add-button svg {
+        display: block;
+        width: 14px;
+        height: 14px;
+        color: currentColor;
+        stroke: currentColor;
+        opacity: 1;
       }
 
       .playground-tasks-subtasks-list {
@@ -38450,6 +38527,12 @@ const html = `<!doctype html>
         flex-direction: column;
         gap: 14px;
         margin-bottom: 14px;
+      }
+
+      .playground-tasks-comments > .playground-tasks-comment-dock {
+        margin-top: 12px;
+        padding: 0;
+        background: transparent;
       }
 
       .playground-tasks-comment {
@@ -48857,6 +48940,7 @@ ${METRONOME_PAGE_CSS}
       }
 ${MODELS_PAGE_CSS}
 ${RESOURCE_TEMPLATES_PAGE_CSS}
+${PLATFORM_UI_PRIMITIVES_CSS}
     </style>
 
     <script type="importmap">
@@ -52253,6 +52337,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           : thread?.computer && typeof thread.computer === "object" && !Array.isArray(thread.computer)
             ? thread.computer
             : {};
+        const threadAgentRecord = thread?.agent && typeof thread.agent === "object" && !Array.isArray(thread.agent)
+          ? thread.agent
+          : {};
         const rawProjectId = typeof thread?.projectId === "string"
           ? thread.projectId
           : typeof thread?.project_id === "string"
@@ -52317,6 +52404,66 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
                       : typeof runnerTaskPreview?.environmentName === "string"
                         ? runnerTaskPreview.environmentName
                         : "";
+        const rawAgentName = typeof thread?.agentName === "string"
+          ? thread.agentName
+          : typeof thread?.agent_name === "string"
+            ? thread.agent_name
+            : typeof threadAgentRecord?.name === "string"
+              ? threadAgentRecord.name
+              : typeof threadAgentRecord?.label === "string"
+                ? threadAgentRecord.label
+                : typeof metadata?.agentName === "string"
+                  ? metadata.agentName
+                  : typeof metadata?.agent_name === "string"
+                    ? metadata.agent_name
+                    : typeof runnerPlaygroundMetadata?.agentName === "string"
+                      ? runnerPlaygroundMetadata.agentName
+                      : typeof runnerPlaygroundMetadata?.agent_name === "string"
+                        ? runnerPlaygroundMetadata.agent_name
+                        : typeof runnerTaskPreview?.agentName === "string"
+                          ? runnerTaskPreview.agentName
+                          : typeof runnerTaskPreview?.agent_name === "string"
+                            ? runnerTaskPreview.agent_name
+                            : "";
+        const rawAgentPhotoUrl = typeof thread?.agentPhotoUrl === "string"
+          ? thread.agentPhotoUrl
+          : typeof thread?.agent_photo_url === "string"
+            ? thread.agent_photo_url
+            : typeof thread?.agentAvatarUrl === "string"
+              ? thread.agentAvatarUrl
+              : typeof thread?.agent_avatar_url === "string"
+                ? thread.agent_avatar_url
+                : typeof threadAgentRecord?.profilePhotoUrl === "string"
+                  ? threadAgentRecord.profilePhotoUrl
+                  : typeof threadAgentRecord?.photoUrl === "string"
+                    ? threadAgentRecord.photoUrl
+                    : typeof threadAgentRecord?.avatarUrl === "string"
+                      ? threadAgentRecord.avatarUrl
+                      : typeof metadata?.agentPhotoUrl === "string"
+                        ? metadata.agentPhotoUrl
+                        : typeof metadata?.agent_photo_url === "string"
+                          ? metadata.agent_photo_url
+                          : typeof metadata?.agentAvatarUrl === "string"
+                            ? metadata.agentAvatarUrl
+                            : typeof metadata?.agent_avatar_url === "string"
+                              ? metadata.agent_avatar_url
+                              : typeof runnerPlaygroundMetadata?.agentPhotoUrl === "string"
+                                ? runnerPlaygroundMetadata.agentPhotoUrl
+                                : typeof runnerPlaygroundMetadata?.agent_photo_url === "string"
+                                  ? runnerPlaygroundMetadata.agent_photo_url
+                                  : typeof runnerPlaygroundMetadata?.agentAvatarUrl === "string"
+                                    ? runnerPlaygroundMetadata.agentAvatarUrl
+                                    : typeof runnerPlaygroundMetadata?.agent_avatar_url === "string"
+                                      ? runnerPlaygroundMetadata.agent_avatar_url
+                                      : typeof runnerTaskPreview?.agentPhotoUrl === "string"
+                                        ? runnerTaskPreview.agentPhotoUrl
+                                        : typeof runnerTaskPreview?.agent_photo_url === "string"
+                                          ? runnerTaskPreview.agent_photo_url
+                                          : typeof runnerTaskPreview?.agentAvatarUrl === "string"
+                                            ? runnerTaskPreview.agentAvatarUrl
+                                            : typeof runnerTaskPreview?.agent_avatar_url === "string"
+                                              ? runnerTaskPreview.agent_avatar_url
+                                              : "";
         const rawCreatedAt = typeof thread?.createdAt === "string" ? thread.createdAt : "";
         const rawUpdatedAt = typeof thread?.updatedAt === "string" ? thread.updatedAt : "";
         const rawStartedAt = typeof thread?.startedAt === "string"
@@ -52350,6 +52497,9 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           title: rawTitle || "Untitled thread",
           status: resolvedStatus,
           agentId: rawAgentId,
+          agentName: rawAgentName,
+          agentPhotoUrl: rawAgentPhotoUrl,
+          agentAvatarUrl: rawAgentPhotoUrl,
           projectId: rawProjectId,
           projectName: rawProjectName,
           environmentId: rawEnvironmentId,
@@ -52411,16 +52561,58 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
 
       function getPlaygroundThreadActorInfo(thread, agentsById = {}, fallbackName = "No agent") {
         const safeThread = normalizeThreadItem(thread);
+        const threadMetadata = safeThread?.metadata && typeof safeThread.metadata === "object" && !Array.isArray(safeThread.metadata)
+          ? safeThread.metadata
+          : {};
+        const runnerPlaygroundMetadata = threadMetadata?.runnerPlayground && typeof threadMetadata.runnerPlayground === "object" && !Array.isArray(threadMetadata.runnerPlayground)
+          ? threadMetadata.runnerPlayground
+          : {};
+        const taskPreview = runnerPlaygroundMetadata?.taskPreview && typeof runnerPlaygroundMetadata.taskPreview === "object" && !Array.isArray(runnerPlaygroundMetadata.taskPreview)
+          ? runnerPlaygroundMetadata.taskPreview
+          : {};
         const agentId = String(
           safeThread?.agentId
           || safeThread?.agent?.id
           || safeThread?.metadata?.agentId
+          || runnerPlaygroundMetadata?.agentId
+          || taskPreview?.agentId
           || ""
         ).trim();
+        const explicitAgentName = String(
+          safeThread?.agentName
+          || safeThread?.agent_name
+          || threadMetadata?.agentName
+          || threadMetadata?.agent_name
+          || runnerPlaygroundMetadata?.agentName
+          || runnerPlaygroundMetadata?.agent_name
+          || taskPreview?.agentName
+          || taskPreview?.agent_name
+          || ""
+        ).trim();
+        const explicitAgentPhotoUrl = normalizeSessionPhotoUrl(
+          safeThread?.agentPhotoUrl
+          || safeThread?.agent_photo_url
+          || safeThread?.agentAvatarUrl
+          || safeThread?.agent_avatar_url
+          || threadMetadata?.agentPhotoUrl
+          || threadMetadata?.agent_photo_url
+          || threadMetadata?.agentAvatarUrl
+          || threadMetadata?.agent_avatar_url
+          || runnerPlaygroundMetadata?.agentPhotoUrl
+          || runnerPlaygroundMetadata?.agent_photo_url
+          || runnerPlaygroundMetadata?.agentAvatarUrl
+          || runnerPlaygroundMetadata?.agent_avatar_url
+          || taskPreview?.agentPhotoUrl
+          || taskPreview?.agent_photo_url
+          || taskPreview?.agentAvatarUrl
+          || taskPreview?.agent_avatar_url
+          || ""
+        );
         if (getThreadMissionControlMetadata(safeThread)) {
           return {
             id: agentId,
             name: "Mission Control Agent",
+            photoUrl: explicitAgentPhotoUrl,
             kind: "mission-control",
           };
         }
@@ -52429,16 +52621,21 @@ ${RESOURCE_TEMPLATES_PAGE_CSS}
           ? agentsById[agentId]
           : null;
         if (agentRecord) {
+          const agentPhotoUrl = typeof getPlaygroundAgentProfilePhotoUrl === "function"
+            ? normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(agentRecord))
+            : "";
           return {
             id: agentId,
-            name: agentRecord.name || agentId,
+            name: agentRecord.name || agentRecord.label || explicitAgentName || agentId,
+            photoUrl: agentPhotoUrl || explicitAgentPhotoUrl,
             kind: "agent",
           };
         }
 
         return {
           id: agentId,
-          name: agentId || fallbackName,
+          name: explicitAgentName || agentId || fallbackName,
+          photoUrl: explicitAgentPhotoUrl,
           kind: agentId ? "agent" : "none",
         };
       }
@@ -70642,6 +70839,7 @@ ${IMAGINE_PAGE_SCRIPT}
 ${METRONOME_PAGE_SCRIPT}
 ${MODELS_PAGE_SCRIPT}
 ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
+${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
       function getPlaygroundImageMaskViewportRect(containerWidth, containerHeight, naturalWidth, naturalHeight) {
         const safeContainerWidth = Math.max(1, Number(containerWidth) || 1);
@@ -127828,12 +128026,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           }
 
           function renderProjectOverviewOutcomeMilestonePicker() {
-            return React.createElement("div", {
-                className: "playground-project-overview-outcome-milestone-picker-shell playground-tasks-toolbar-popup-shell"
-                  + (projectOverviewOutcomeMilestonePickerOpen ? " is-open" : ""),
-                ref: projectOverviewOutcomeMilestonePickerRef,
-              },
-              React.createElement("button", {
+            return renderPlaygroundPlatformPopup({
+              open: projectOverviewOutcomeMilestonePickerOpen,
+              shellRef: projectOverviewOutcomeMilestonePickerRef,
+              shellClassName: "playground-project-overview-outcome-milestone-picker-shell",
+              menuClassName: "playground-project-overview-outcome-milestone-menu",
+              trigger: React.createElement("button", {
                 type: "button",
                 className: "playground-project-overview-outcome-milestone-add",
                 title: "Link milestones",
@@ -127841,29 +128039,25 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                 "aria-expanded": projectOverviewOutcomeMilestonePickerOpen ? "true" : "false",
                 onClick: () => setProjectOverviewOutcomeMilestonePickerOpen((current) => !current),
               }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 })),
-              projectOverviewOutcomeMilestonePickerOpen
-                ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-overview-outcome-milestone-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                    sortedOutcomeMilestones.length > 0
-                      ? sortedOutcomeMilestones.map((release) =>
-                          React.createElement("button", {
-                              key: release.id,
-                              type: "button",
-                              className: "tb-popup-row tb-popup-row-select" + (activeOutcomeMilestoneIdSet.has(release.id) ? " selected" : ""),
-                              onClick: () => updateProjectOverviewOutcomeEditorMilestone(release.id),
-                            },
-                            activeOutcomeMilestoneIdSet.has(release.id)
-                              ? React.createElement(Check, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 })
-                              : React.createElement(ListTodo, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, release.name || "Untitled milestone"),
-                              React.createElement("small", null, formatPlaygroundTaskReleaseDateRange(release))
-                            )
-                          )
-                        )
-                      : React.createElement("div", { className: "tb-popup-empty-state" }, "No milestones yet.")
+              children: sortedOutcomeMilestones.length > 0
+                ? sortedOutcomeMilestones.map((release) =>
+                    React.createElement("button", {
+                        key: release.id,
+                        type: "button",
+                        className: "tb-popup-row tb-popup-row-select" + (activeOutcomeMilestoneIdSet.has(release.id) ? " selected" : ""),
+                        onClick: () => updateProjectOverviewOutcomeEditorMilestone(release.id),
+                      },
+                      activeOutcomeMilestoneIdSet.has(release.id)
+                        ? React.createElement(Check, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 })
+                        : React.createElement(ListTodo, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, release.name || "Untitled milestone"),
+                        React.createElement("small", null, formatPlaygroundTaskReleaseDateRange(release))
+                      )
+                    )
                   )
-                : null
-            );
+                : React.createElement("div", { className: "tb-popup-empty-state" }, "No milestones yet."),
+            });
           }
 
           function renderProjectOverviewOutcomeMilestoneField() {
@@ -127913,25 +128107,22 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             );
           }
 
-          const content = React.createElement("div", {
-              className: "playground-tasks-project-modal-backdrop playground-mission-control-modal-backdrop playground-project-overview-outcome-editor-backdrop"
-                + (projectOverviewOutcomeEditorVisible ? " is-visible" : "")
-                + (projectOverviewOutcomeEditorClosing ? " is-closing" : ""),
-              onClick: () => closeProjectOverviewOutcomeEditor(),
-            },
-            React.createElement("form", {
-                className: "playground-tasks-project-modal playground-mission-control-modal playground-project-overview-outcome-editor-modal"
-                  + (projectOverviewOutcomeEditorVisible ? " is-visible" : "")
-                  + (projectOverviewOutcomeEditorClosing ? " is-closing" : ""),
-                role: "dialog",
-                "aria-modal": "true",
-                "aria-label": "Edit outcome",
-                onClick: (event) => event.stopPropagation(),
-                onSubmit: (event) => {
+          const content = renderPlaygroundPlatformModal({
+            open: Boolean(projectOverviewOutcomeEditorState),
+            visible: projectOverviewOutcomeEditorVisible,
+            closing: projectOverviewOutcomeEditorClosing,
+            onClose: () => closeProjectOverviewOutcomeEditor(),
+            as: "form",
+            backdropClassName: "playground-mission-control-modal-backdrop playground-project-overview-outcome-editor-backdrop",
+            className: "playground-tasks-project-modal playground-mission-control-modal playground-project-overview-outcome-editor-modal",
+            ariaLabel: "Edit outcome",
+            surfaceProps: {
+              onSubmit: (event) => {
                   event.preventDefault();
                   void saveProjectOverviewOutcomeEditor({ strategyBrief: sourceStrategyBrief });
                 },
-              },
+            },
+            children: React.createElement(React.Fragment, null,
               React.createElement("div", { className: "playground-tasks-project-modal-top" },
                 React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
                   React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
@@ -127997,10 +128188,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                 )
               )
             )
-          );
-          if (typeof document !== "undefined" && document.body) {
-            return createPortal(content, document.body);
-          }
+          });
           return content;
         }
 
@@ -128831,7 +129019,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
           });
         }
 
-        function renderTaskActionsMenu(task, { closeMenu } = {}) {
+        function renderTaskActionsMenu(task, { closeMenu, includeFullScreenAction = false } = {}) {
           if (!task?.id) {
             return null;
           }
@@ -128878,6 +129066,23 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                     React.createElement("span", null, "Revert Changes"),
                     React.createElement("span", null, "Open the last started thread in Changes view.")
+                  )
+                )
+              : null,
+            includeFullScreenAction
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row",
+                  onClick: () => {
+                    dismissMenu();
+                    openProjectTaskDetailScreen(task.id);
+                  },
+                  disabled: saveState.isSaving,
+                },
+                  React.createElement(Maximize2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                    React.createElement("span", null, "Full screen"),
+                    React.createElement("span", null, "Open this ticket in full screen mode.")
                   )
                 )
               : null,
@@ -132629,11 +132834,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 
           function renderIssueComposerComputerSelector() {
             return React.createElement("div", { className: "playground-tasks-project-modal-environment-picker playground-tasks-issue-modal-computer-picker" },
-              React.createElement("div", {
-                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (issueComposerEnvironmentPopoverOpen ? " is-open" : ""),
-                ref: issueComposerEnvironmentPopoverRef,
-              },
-                React.createElement("button", {
+              renderPlaygroundPlatformPopup({
+                open: issueComposerEnvironmentPopoverOpen,
+                shellRef: issueComposerEnvironmentPopoverRef,
+                shellClassName: "playground-environments-runtime-popup-shell playground-tasks-detail-select-shell",
+                menuClassName: "playground-tasks-toolbar-popup-menu-environment",
+                trigger: React.createElement("button", {
                   type: "button",
                   className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger playground-tasks-project-modal-environment-button" + (selectedIssueEnvironment ? "" : " is-empty") + (issueComposerEnvironmentPopoverOpen ? " is-active" : ""),
                   onClick: () => {
@@ -132648,16 +132854,10 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                   React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, issueEnvironmentLabel),
                   React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
                 ),
-                issueComposerEnvironmentPopoverOpen
-                  ? React.createElement("div", {
-                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-toolbar-popup-menu-environment",
-                    },
-                      availableBacklogEnvironments.length > 0
-                        ? availableBacklogEnvironments.map((environment) => renderIssueComposerEnvironmentOptionRow(environment))
-                        : React.createElement("div", { className: "tb-popup-empty-state" }, "No environments available.")
-                    )
-                  : null
-              )
+                children: availableBacklogEnvironments.length > 0
+                  ? availableBacklogEnvironments.map((environment) => renderIssueComposerEnvironmentOptionRow(environment))
+                  : React.createElement("div", { className: "tb-popup-empty-state" }, "No environments available."),
+              })
             );
           }
 
@@ -132754,11 +132954,12 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             children,
           }) {
             const isOpen = issueComposerDetailSelectPopover === popoverId;
-            return React.createElement("div", {
-                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (isOpen ? " is-open" : ""),
-                ref: isOpen ? issueComposerDetailSelectPopoverRef : null,
-              },
-              React.createElement("button", {
+            return renderPlaygroundPlatformPopup({
+              open: isOpen,
+              shellRef: isOpen ? issueComposerDetailSelectPopoverRef : null,
+              shellClassName: "playground-environments-runtime-popup-shell playground-tasks-detail-select-shell",
+              menuClassName,
+              trigger: React.createElement("button", {
                 type: "button",
                 className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (isEmpty ? " is-empty" : "") + (isOpen ? " is-active" : ""),
                 disabled,
@@ -132772,12 +132973,8 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                 buttonContent || React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, valueLabel),
                 React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
               ),
-              isOpen
-                ? React.createElement("div", {
-                    className: ("tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in " + menuClassName).trim(),
-                  }, children)
-                : null
-            );
+              children,
+            });
           }
 
           function renderIssueComposerDetailFact(label, control) {
@@ -133168,23 +133365,20 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
             );
           }
 
-			          const modalElement = React.createElement("div", {
-		              className: "playground-tasks-project-modal-backdrop playground-tasks-project-issue-backdrop"
-	                  + (issueComposerVisible ? " is-visible" : "")
-                  + (issueComposerClosing ? " is-closing" : ""),
-	              onClick: () => closeProjectIssueComposer(),
-	            },
-	            React.createElement("form", {
-	                className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal"
-                    + (issueComposerVisible ? " is-visible" : "")
-                    + (issueComposerClosing ? " is-closing" : ""),
-	                role: "dialog",
-                "aria-modal": "true",
-                "aria-label": "New issue",
-                onClick: (event) => event.stopPropagation(),
-                onSubmit: (event) => void handleSaveProjectIssue(event),
-              },
-	              React.createElement("div", { className: "playground-tasks-project-modal-top" },
+          return renderPlaygroundPlatformModal({
+            open: issueComposerOpen,
+            visible: issueComposerVisible,
+            closing: issueComposerClosing,
+            onClose: () => closeProjectIssueComposer(),
+            as: "form",
+            backdropClassName: "playground-tasks-project-issue-backdrop",
+            className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal",
+            ariaLabel: "New issue",
+            surfaceProps: {
+              onSubmit: (event) => void handleSaveProjectIssue(event),
+            },
+            children: React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-tasks-project-modal-top" },
 	                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
 	                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
 	                    React.createElement(Bookmark, { width: 18, height: 18, strokeWidth: 1.9 })
@@ -133228,11 +133422,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                 }, issueComposerSaveState.isSaving ? "Creating..." : "Create Issue")
               )
             )
-          );
-
-          return typeof document !== "undefined" && document.body
-            ? createPortal(modalElement, document.body)
-            : modalElement;
+          });
         }
 
         function renderProjectComposerDialog(options = {}) {
@@ -133675,7 +133865,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                           title: activeProjectAttachmentEnvironmentId
                             ? "Add files from " + (activeProjectAttachmentEnvironment?.name || "the selected environment")
                             : "Select an environment first",
-	                        }, "From Computer")
+	                        }, "Upload from Computer")
                       )
                     ),
                     React.createElement("input", {
@@ -136479,7 +136669,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                           title: activeTaskEnvironmentId
                             ? "Add files from " + (activeTaskEnvironment?.name || "the selected computer")
                             : "Select a computer first",
-                        }, "From Computer")
+                        }, "Upload from Computer")
                       )
                     ),
                     React.createElement("input", {
@@ -136676,7 +136866,7 @@ ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
                       React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Subtasks"),
                       React.createElement("button", {
                         type: "button",
-                        className: "playground-environments-action-button playground-tasks-subtasks-add-button",
+                        className: "playground-tasks-subtasks-add-button",
                         disabled: true,
                         title: "Scheduled tasks do not support subtasks yet",
                         "aria-label": "Add subtask",
@@ -139129,6 +139319,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
                           renderTaskActionsMenu(draftTask, {
                             closeMenu: () => setTaskDetailPopover(""),
+                            includeFullScreenAction: true,
 	                          })
 	                        )
 	                      : null
@@ -139236,7 +139427,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       title: activeTaskEnvironmentId
                         ? "Add files from " + (activeTaskEnvironment?.name || "the selected computer")
                         : "Select a computer first",
-                      }, "From Computer")
+                      }, "Upload from Computer")
                     )
                   ),
                   React.createElement("input", {
@@ -139435,7 +139626,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Subtasks"),
                     React.createElement("button", {
                       type: "button",
-                      className: "playground-environments-action-button playground-tasks-subtasks-add-button",
+                      className: "playground-tasks-subtasks-add-button",
                       onClick: () => openBacklogSubtaskComposer(activeTicketNumber),
                       title: "Add subtask",
                       "aria-label": "Add subtask",
@@ -139464,10 +139655,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 React.createElement("div", { className: "playground-tasks-comments" },
                   React.createElement("div", { className: "playground-tasks-attachments-toolbar playground-tasks-comments-toolbar" },
                     React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Comments"),
-                    isFullPageTaskDetail
-                      ? React.createElement("button", {
+                    React.createElement("button", {
                           type: "button",
-                          className: "playground-environments-action-button playground-tasks-subtasks-add-button playground-tasks-comments-add-button" + (taskCommentComposerOpen ? " is-active" : ""),
+                          className: "playground-tasks-subtasks-add-button playground-tasks-comments-add-button" + (taskCommentComposerOpen ? " is-active" : ""),
                           onClick: () => {
                             setTaskCommentComposerOpen((current) => {
                               const nextValue = !current;
@@ -139481,7 +139671,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           "aria-label": taskCommentComposerOpen ? "Close comment" : "Add comment",
                           "aria-expanded": taskCommentComposerOpen ? "true" : "false",
                         }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
-                      : null
                   ),
                   taskComments.length > 0
                     ? React.createElement("div", { className: "playground-tasks-comments-list" },
@@ -139506,10 +139695,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     )
                     : React.createElement("div", { className: "playground-tasks-secondary-copy playground-tasks-comment-empty" }, "No comments yet.")
                   ,
-                  isFullPageTaskDetail && taskCommentComposerOpen ? renderTaskCommentDock() : null
+                  taskCommentComposerOpen ? renderTaskCommentDock() : null
                 )
                 ),
-                isFullPageTaskDetail ? null : renderTaskCommentDock()
+                null
               )
             ),
 		            isFullPageTaskDetail
@@ -142153,6 +142342,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [modelsPageProviderFilter, setModelsPageProviderFilter] = useState("all");
         const [modelsPageSort, setModelsPageSort] = useState("provider");
         const [modelsPageToolbarPopover, setModelsPageToolbarPopover] = useState("");
+        const [modelsPageViewMode, setModelsPageViewMode] = useState("table");
         const [modelsPageAgentModelOptions, setModelsPageAgentModelOptions] = useState(() => PLAYGROUND_AGENT_MODEL_OPTIONS);
         const [resourceTemplateTypeFilter, setResourceTemplateTypeFilter] = useState("all");
         const [resourceTemplateSearchQuery, setResourceTemplateSearchQuery] = useState("");
@@ -166634,7 +166824,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
 
           if (entry.page === "models") {
-            setModelsPageTab(entry.modelsTab === "provider" ? "provider" : "agent");
+            setModelsPageTab(normalizePlaygroundManagedModelsTab(entry.modelsTab));
             openModelsPage();
             return;
           }
@@ -172337,11 +172527,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           function renderTopNavIssueComputerSelector() {
             return React.createElement("div", { className: "playground-tasks-project-modal-environment-picker playground-tasks-issue-modal-computer-picker" },
-              React.createElement("div", {
-                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (topNavIssueEnvironmentPopoverOpen ? " is-open" : ""),
-                ref: topNavIssueEnvironmentPopoverRef,
-              },
-                React.createElement("button", {
+              renderPlaygroundPlatformPopup({
+                open: topNavIssueEnvironmentPopoverOpen,
+                shellRef: topNavIssueEnvironmentPopoverRef,
+                shellClassName: "playground-environments-runtime-popup-shell playground-tasks-detail-select-shell",
+                menuClassName: "playground-tasks-toolbar-popup-menu-environment",
+                trigger: React.createElement("button", {
                   type: "button",
                   className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger playground-tasks-project-modal-environment-button" + (selectedTopNavIssueEnvironment ? "" : " is-empty") + (topNavIssueEnvironmentPopoverOpen ? " is-active" : ""),
                   onClick: () => {
@@ -172356,16 +172547,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, topNavIssueEnvironmentLabel),
                   React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
                 ),
-                topNavIssueEnvironmentPopoverOpen
-                  ? React.createElement("div", {
-                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-toolbar-popup-menu-environment",
-                    },
-                      runtimeEnvironments.length > 0
-                        ? runtimeEnvironments.map((environment) => renderTopNavIssueEnvironmentOptionRow(environment))
-                        : React.createElement("div", { className: "tb-popup-empty-state" }, "No environments available.")
-                    )
-                  : null
-              )
+                children: runtimeEnvironments.length > 0
+                  ? runtimeEnvironments.map((environment) => renderTopNavIssueEnvironmentOptionRow(environment))
+                  : React.createElement("div", { className: "tb-popup-empty-state" }, "No environments available."),
+              })
             );
           }
 
@@ -172462,11 +172647,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
             children,
           }) {
             const isOpen = topNavIssueDetailSelectPopover === popoverId;
-            return React.createElement("div", {
-                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (isOpen ? " is-open" : ""),
-                ref: isOpen ? topNavIssueDetailSelectPopoverRef : null,
-              },
-              React.createElement("button", {
+            return renderPlaygroundPlatformPopup({
+              open: isOpen,
+              shellRef: isOpen ? topNavIssueDetailSelectPopoverRef : null,
+              shellClassName: "playground-environments-runtime-popup-shell playground-tasks-detail-select-shell",
+              menuClassName,
+              trigger: React.createElement("button", {
                 type: "button",
                 className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (isEmpty ? " is-empty" : "") + (isOpen ? " is-active" : ""),
                 disabled,
@@ -172480,12 +172666,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 buttonContent || React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, valueLabel),
                 React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
               ),
-              isOpen
-                ? React.createElement("div", {
-                    className: ("tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in " + menuClassName).trim(),
-                  }, children)
-                : null
-            );
+              children,
+            });
           }
 
           function renderTopNavIssueDetailFact(label, control) {
@@ -172725,23 +172907,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
             );
           }
 
-		          const modalElement = React.createElement("div", {
-		              className: "playground-tasks-project-modal-backdrop playground-tasks-project-issue-backdrop"
-	                  + (topNavIssueComposerVisible ? " is-visible" : "")
-                  + (topNavIssueComposerClosing ? " is-closing" : ""),
-	              onClick: () => closeTopNavIssueComposer(),
-	            },
-	            React.createElement("form", {
-	                className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal"
-                    + (topNavIssueComposerVisible ? " is-visible" : "")
-                    + (topNavIssueComposerClosing ? " is-closing" : ""),
-	                role: "dialog",
-                "aria-modal": "true",
-                "aria-label": "New issue",
-                onClick: (event) => event.stopPropagation(),
-                onSubmit: (event) => void handleSaveTopNavIssue(event),
-              },
-	              React.createElement("div", { className: "playground-tasks-project-modal-top" },
+          return renderPlaygroundPlatformModal({
+            open: topNavIssueComposerOpen,
+            visible: topNavIssueComposerVisible,
+            closing: topNavIssueComposerClosing,
+            onClose: () => closeTopNavIssueComposer(),
+            as: "form",
+            backdropClassName: "playground-tasks-project-issue-backdrop",
+            className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal",
+            ariaLabel: "New issue",
+            surfaceProps: {
+              onSubmit: (event) => void handleSaveTopNavIssue(event),
+            },
+            children: React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-tasks-project-modal-top" },
 	                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
 	                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
 	                    React.createElement(Bookmark, { width: 18, height: 18, strokeWidth: 1.9 })
@@ -172785,10 +172964,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 }, topNavIssueSaveState.isSaving ? "Creating..." : "Create Issue")
               )
             )
-          );
-          return typeof document !== "undefined" && document.body
-            ? createPortal(modalElement, document.body)
-            : modalElement;
+          });
         }
 
         function renderTasksPageNav() {
@@ -173393,6 +173569,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             toolbarPopover: modelsPageToolbarPopover,
             setToolbarPopover: setModelsPageToolbarPopover,
             toolbarRef: modelsPageToolbarRef,
+            viewMode: modelsPageViewMode,
+            setViewMode: setModelsPageViewMode,
             agentModelOptions: resolvedModelsPageAgentModelOptions,
             pricingUrl: ${JSON.stringify(aiosOrigin + "/pricing")},
             onOpenSkillSettings: (skillId) => openToolsView("skills", { skillId, preserveSidebarMode: true }),

@@ -48,6 +48,8 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         transform: translateX(0);
         visibility: visible;
         pointer-events: auto;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
         transition:
           opacity 180ms ease,
           transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -650,7 +652,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         display: flex;
         flex-direction: column;
         align-items: stretch;
-        gap: 20px;
+        gap: 12px;
         padding-top: 0;
       }
 
@@ -8265,7 +8267,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             const threadAgentName = String(threadActor?.name || "").trim() || "No agent";
             const threadAgentPhotoUrl = threadAgent
               ? normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(threadAgent))
-              : "";
+              : normalizeSessionPhotoUrl(
+                  threadActor?.photoUrl
+                  || safeThread?.agentPhotoUrl
+                  || safeThread?.agent_photo_url
+                  || safeThread?.agentAvatarUrl
+                  || safeThread?.agent_avatar_url
+                  || ""
+                );
             const threadDateLabel = typeof formatThreadSearchTimestamp === "function"
               ? (formatThreadSearchTimestamp(typeof resolveThreadSortTimestamp === "function" ? resolveThreadSortTimestamp(safeThread) : (safeThread?.updatedAt || safeThread?.createdAt || "")) || "—")
               : (formatRelativeThreadTime(safeThread?.updatedAt || safeThread?.createdAt) || "—");
@@ -8813,9 +8822,59 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
-          function resolveProjectOverviewActivityActor(agentId, fallbackName) {
+          function readProjectOverviewActivityActorString(source, keys) {
+            if (!source || typeof source !== "object" || Array.isArray(source)) {
+              return "";
+            }
+            for (const key of keys) {
+              const value = source[key];
+              if (typeof value === "string" && value.trim()) {
+                return value.trim();
+              }
+              if (typeof value === "number" && Number.isFinite(value)) {
+                return String(value);
+              }
+            }
+            return "";
+          }
+
+          function getProjectOverviewActivityActorSnapshot(source) {
+            const metadata = source?.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+              ? source.metadata
+              : {};
+            const runnerPlayground = metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+              ? metadata.runnerPlayground
+              : {};
+            const taskPreview = runnerPlayground?.taskPreview && typeof runnerPlayground.taskPreview === "object" && !Array.isArray(runnerPlayground.taskPreview)
+              ? runnerPlayground.taskPreview
+              : {};
+            const nestedAgent = source?.agent && typeof source.agent === "object" && !Array.isArray(source.agent)
+              ? source.agent
+              : {};
+            return {
+              id: readProjectOverviewActivityActorString(source, ["agentId", "agent_id", "assigneeId", "assigneeAgentId"])
+                || readProjectOverviewActivityActorString(metadata, ["agentId", "agent_id", "assigneeId", "assigneeAgentId"])
+                || readProjectOverviewActivityActorString(runnerPlayground, ["agentId", "agent_id"])
+                || readProjectOverviewActivityActorString(taskPreview, ["agentId", "agent_id"]),
+              name: readProjectOverviewActivityActorString(source, ["name", "agentName", "agent_name", "assigneeName", "assignee", "actorName", "label", "displayName"])
+                || readProjectOverviewActivityActorString(metadata, ["agentName", "agent_name", "assigneeName", "actorName"])
+                || readProjectOverviewActivityActorString(runnerPlayground, ["agentName", "agent_name"])
+                || readProjectOverviewActivityActorString(taskPreview, ["agentName", "agent_name"])
+                || readProjectOverviewActivityActorString(nestedAgent, ["name", "label", "displayName"]),
+              photoUrl: readProjectOverviewActivityActorString(source, ["photoUrl", "profilePhotoUrl", "avatarUrl", "agentPhotoUrl", "agent_photo_url", "agentAvatarUrl", "agent_avatar_url", "assigneePhotoUrl", "assigneeAvatarUrl", "actorAvatarUrl"])
+                || readProjectOverviewActivityActorString(metadata, ["agentPhotoUrl", "agent_photo_url", "agentAvatarUrl", "agent_avatar_url", "assigneePhotoUrl", "actorAvatarUrl"])
+                || readProjectOverviewActivityActorString(runnerPlayground, ["agentPhotoUrl", "agent_photo_url", "agentAvatarUrl", "agent_avatar_url"])
+                || readProjectOverviewActivityActorString(taskPreview, ["agentPhotoUrl", "agent_photo_url", "agentAvatarUrl", "agent_avatar_url"])
+                || readProjectOverviewActivityActorString(nestedAgent, ["profilePhotoUrl", "photoUrl", "avatarUrl", "picture"]),
+            };
+          }
+
+          function resolveProjectOverviewActivityActor(agentId, fallbackName, fallbackActor) {
             const normalizedAgentId = String(agentId || "").trim();
-            const fallback = String(fallbackName || "").trim();
+            const fallbackSnapshot = getProjectOverviewActivityActorSnapshot(fallbackActor || {});
+            const fallbackSnapshotName = String(fallbackSnapshot.name || "").trim();
+            const rawFallback = String(fallbackName || "").trim();
+            const fallback = (rawFallback && rawFallback.toLowerCase() !== "agent" ? rawFallback : "") || fallbackSnapshotName || rawFallback;
             let resolvedAgent = normalizedAgentId && agentsById ? agentsById[normalizedAgentId] || null : null;
             if (!resolvedAgent && normalizedAgentId && typeof assignableActorsById !== "undefined" && assignableActorsById) {
               resolvedAgent = assignableActorsById[normalizedAgentId] || null;
@@ -8831,10 +8890,13 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 || String(agent?.label || "").trim().toLowerCase() === fallbackKey
               ) || null;
             }
-            const actorName = String(resolvedAgent?.name || resolvedAgent?.label || fallback || "Agent").trim();
+            const actorName = String(resolvedAgent?.name || resolvedAgent?.label || fallbackSnapshotName || fallback || "Agent").trim();
             let photoUrl = resolvedAgent && typeof getPlaygroundAgentProfilePhotoUrl === "function"
               ? getPlaygroundAgentProfilePhotoUrl(resolvedAgent)
               : "";
+            if (!photoUrl) {
+              photoUrl = String(fallbackSnapshot.photoUrl || "").trim();
+            }
             if (!photoUrl) {
               const defaultPhotoUrls = {
                 spark: "/img/agent-profile-pics/spark.webp",
@@ -8844,6 +8906,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               photoUrl = defaultPhotoUrls[actorName.toLowerCase()] || "";
             }
             return {
+              id: normalizedAgentId || fallbackSnapshot.id || "",
               name: actorName || "Agent",
               photoUrl: photoUrl && typeof normalizeSessionPhotoUrl === "function" ? normalizeSessionPhotoUrl(photoUrl) : photoUrl,
             };
@@ -8909,11 +8972,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 : null;
               const threadTaskId = String(threadTaskPreview?.taskId || safeThread?.taskId || "").trim();
               const threadTask = threadTaskId ? normalizedOverviewTasksById[threadTaskId] || null : null;
-              const threadActivityActor = resolveProjectOverviewActivityActor(threadActor?.id, threadActor?.name || "Agent");
+              const threadActivityActor = resolveProjectOverviewActivityActor(threadActor?.id, threadActor?.name || "Agent", {
+                ...safeThread,
+                ...threadActor,
+              });
               const timestamp = Date.parse(String(safeThread?.updatedAt || safeThread?.createdAt || ""));
               items.push({
                 id: "thread:" + String(safeThread?.id || displayThreadTitle || items.length),
-                actorId: String(threadActor?.id || "").trim(),
+                actorId: String(threadActivityActor.id || threadActor?.id || "").trim(),
                 actor: threadActivityActor.name,
                 photoUrl: threadActivityActor.photoUrl,
                 task: threadTask,
@@ -8927,7 +8993,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             });
             (projectOverviewFileActivityState?.items || []).forEach((row, index) => {
               const assigneeId = String(row?.assigneeId || "").trim();
-              const fileActivityActor = resolveProjectOverviewActivityActor(assigneeId, row?.assignee || "Agent");
+              const fileActivityActor = resolveProjectOverviewActivityActor(assigneeId, row?.assignee || "Agent", row);
               const fileTaskId = String(row?.taskId || "").trim();
               const fileTask = fileTaskId ? normalizedOverviewTasksById[fileTaskId] || null : null;
               const timestamp = Number(row?.timestamp || 0);
@@ -8953,7 +9019,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               const actorName = typeof getTaskAssigneeName === "function"
                 ? getTaskAssigneeName(assigneeId, "Agent")
                 : "Agent";
-              const taskActivityActor = resolveProjectOverviewActivityActor(assigneeId, actorName);
+              const taskActivityActor = resolveProjectOverviewActivityActor(assigneeId, actorName, task);
               items.push({
                 id: "task:" + String(task?.id || task?.title || items.length),
                 actorId: assigneeId,
@@ -12069,10 +12135,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           function renderProjectOverviewSidebarSelectControl(id, content, options = {}) {
             const normalizedId = String(id || "").trim();
             const isOpen = Boolean(normalizedId && projectOverviewSidebarPropertyPopover === normalizedId);
-            return React.createElement("span", {
-                className: "playground-project-overview-sidebar-select-shell playground-tasks-toolbar-popup-shell" + (isOpen ? " is-open" : ""),
+            return renderPlaygroundPlatformPopup({
+              open: isOpen,
+              shellClassName: "playground-project-overview-sidebar-select-shell",
+              menuClassName: "playground-project-overview-sidebar-select-menu",
+              menuProps: {
+                onClick: (event) => event.stopPropagation(),
               },
-              React.createElement("button", {
+              trigger: React.createElement("button", {
                 type: "button",
                 className: "playground-project-overview-sidebar-select-trigger" + (isOpen ? " is-open" : "") + (options.empty ? " is-empty" : ""),
                 onClick: (event) => {
@@ -12086,13 +12156,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 React.createElement("span", { className: "playground-project-overview-sidebar-select-trigger-copy" }, content),
                 React.createElement(ChevronDown, { className: "playground-project-overview-sidebar-select-trigger-caret", strokeWidth: 2 })
               ),
-              isOpen
-                ? React.createElement("div", {
-                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-overview-sidebar-select-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                    onClick: (event) => event.stopPropagation(),
-                  }, options.children)
-                : null
-            );
+              children: options.children,
+            });
           }
 
           function buildProjectOverviewSidebarLeadOptions() {
@@ -12492,10 +12557,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                               )
                             )
                           ),
-                          React.createElement("div", {
-                              className: "playground-project-overview-sidebar-milestone-menu-shell" + (isMenuOpen ? " is-open" : ""),
+                          renderPlaygroundPlatformPopup({
+                            open: isMenuOpen,
+                            shellClassName: "playground-project-overview-sidebar-milestone-menu-shell",
+                            menuClassName: "playground-project-overview-sidebar-milestone-menu",
+                            menuProps: {
+                              onClick: (event) => event.stopPropagation(),
                             },
-                            React.createElement("button", {
+                            trigger: React.createElement("button", {
                               type: "button",
                               className: "playground-project-overview-sidebar-icon-button",
                               onClick: (event) => {
@@ -12509,12 +12578,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                               "aria-label": "Milestone actions for " + (section.title || "milestone"),
                               "aria-expanded": isMenuOpen ? "true" : "false",
                             }, React.createElement(EllipsisVertical, { width: 14, height: 14, strokeWidth: 1.8 })),
-                            isMenuOpen
-                              ? React.createElement("div", {
-                                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-overview-sidebar-milestone-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                                  onClick: (event) => event.stopPropagation(),
-                                },
-                                  React.createElement("button", {
+                            children: React.createElement("button", {
                                     type: "button",
                                     className: "tb-popup-row playground-project-team-menu-item is-danger",
                                     disabled: !releaseId,
@@ -12531,10 +12595,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                                   },
                                     React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
                                     React.createElement("span", null, "Delete milestone")
-                                  )
-                                )
-                              : null
-                          )
+                                  ),
+                          })
                         );
                       })
                     )
