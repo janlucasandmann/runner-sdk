@@ -5641,7 +5641,8 @@ const html = `<!doctype html>
 
       .playground-content-body.is-thread-task-detail-open,
       .playground-content-body.is-thread-side-detail-open,
-      .playground-content-body.is-metronome-node-detail-open {
+      .playground-content-body.is-metronome-node-detail-open,
+      .playground-content-body.is-agent-versions-detail-open {
         margin-right: calc(var(--playground-thread-task-detail-width) + 6px);
       }
 
@@ -32481,6 +32482,22 @@ const html = `<!doctype html>
         transform: translateX(0);
       }
 
+      .playground-agents-versions-sidebar {
+        border-left: 0;
+      }
+
+      .playground-agents-versions-sidebar .playground-metronome-inspector-body {
+        padding-top: 0;
+      }
+
+      .playground-agents-versions-sidebar .playground-metronome-publish-row-main:disabled {
+        cursor: default;
+      }
+
+      .playground-agents-versions-sidebar .playground-metronome-publish-row-action {
+        min-width: 0;
+      }
+
       .tb-runner-chat.playground-agents-assistant-runner {
         flex: 1 1 auto;
         min-width: 0;
@@ -43693,6 +43710,81 @@ ${METRONOME_PAGE_CSS}
       .playground-agents-detail-content .playground-database-overview {
         gap: 0;
         padding: 0;
+      }
+
+      .playground-agents-detail-content.is-agent-overview-general {
+        width: 100%;
+        max-width: none;
+      }
+
+      .playground-agents-detail-overview-layout.playground-project-overview-layout {
+        column-gap: 42px;
+        row-gap: 20px;
+      }
+
+      .playground-agents-detail-overview-main.playground-project-overview-main {
+        gap: 20px;
+      }
+
+      .playground-agents-detail-chart-surface.playground-project-overview-chart-surface {
+        margin-bottom: 0;
+      }
+
+      .playground-agents-detail-chart-card.playground-project-overview-chart-card {
+        gap: 12px;
+      }
+
+      .playground-agents-detail-chart-card .playground-project-overview-chart-kpis {
+        margin-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-agents-detail-chart-card .playground-project-overview-chart-header {
+        display: flex;
+      }
+
+      .playground-agents-detail-chart-card .playground-settings-usage-chart-empty {
+        min-height: 270px;
+      }
+
+      .playground-agents-detail-sidebar .playground-project-overview-sidebar-row {
+        grid-template-columns: minmax(90px, 0.85fr) minmax(0, 1.35fr);
+      }
+
+      .playground-agents-detail-sidebar .playground-project-overview-sidebar-row-value {
+        justify-content: flex-start;
+      }
+
+      .playground-agents-detail-sidebar .playground-environments-runtime-value-button {
+        min-width: 0;
+        max-width: 100%;
+        width: 100%;
+        min-height: 28px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+      }
+
+      .playground-agents-detail-sidebar .playground-environments-runtime-value-button:hover {
+        background: transparent;
+      }
+
+      .playground-agents-detail-sidebar .playground-agents-model-picker-trigger-copy,
+      .playground-agents-detail-sidebar .playground-agents-model-picker-trigger-labels,
+      .playground-agents-detail-sidebar .playground-environments-runtime-value-label,
+      .playground-agents-detail-sidebar .playground-environments-editor-fact-value {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-agents-detail-sidebar .playground-environments-editor-fact-value.is-id {
+        max-width: 100%;
+      }
+
+      .playground-agents-detail-sidebar .playground-agents-model-select-popup {
+        width: 100%;
       }
 
       .playground-agents-detail-summary .playground-environments-home-summary-kpis,
@@ -57591,6 +57683,244 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             ? agent.metadata
             : null,
         };
+      }
+
+      function stripPlaygroundAgentVersionMetadata(metadata) {
+        const source = metadata && typeof metadata === "object" && !Array.isArray(metadata)
+          ? { ...metadata }
+          : {};
+        delete source.agentVersions;
+        delete source.agent_versions;
+        delete source.versions;
+        delete source.activeAgentVersionId;
+        delete source.active_agent_version_id;
+        delete source.activeAgentVersionNumber;
+        delete source.active_agent_version_number;
+        delete source.restoredFromAgentVersionId;
+        delete source.restored_from_agent_version_id;
+        delete source.restoredFromAgentVersionNumber;
+        delete source.restored_from_agent_version_number;
+        delete source.publishedAt;
+        delete source.published_at;
+        delete source.unpublishedAt;
+        delete source.unpublished_at;
+        return source;
+      }
+
+      function normalizePlaygroundAgentVersion(rawVersion, fallbackIndex = 0) {
+        const version = rawVersion && typeof rawVersion === "object" && !Array.isArray(rawVersion) ? rawVersion : {};
+        const snapshot = version.snapshot && typeof version.snapshot === "object" && !Array.isArray(version.snapshot)
+          ? version.snapshot
+          : {};
+        const createdAt = String(version.createdAt || version.created_at || version.publishedAt || version.published_at || new Date().toISOString()).trim();
+        const id = String(version.id || version.versionId || version.version_id || ("agent_version_" + (fallbackIndex + 1))).trim();
+        const versionNumber = Number(version.version || version.versionNumber || version.version_number || 0) || (fallbackIndex + 1);
+        const rawStatus = String(version.status || "").trim().toLowerCase();
+        const status = ["active", "saved", "superseded", "unpublished"].includes(rawStatus) ? rawStatus : "saved";
+        const agentType = version.agentType === "team" || snapshot.agentType === "team" ? "team" : "single";
+        const enabledSkills = Array.isArray(version.enabledSkills)
+          ? version.enabledSkills
+          : Array.isArray(snapshot.enabledSkills)
+            ? snapshot.enabledSkills
+            : [];
+        const teamSubagentIds = Array.isArray(version.teamSubagentIds)
+          ? version.teamSubagentIds
+          : Array.isArray(snapshot.teamSubagentIds)
+            ? snapshot.teamSubagentIds
+            : [];
+        const normalizedSnapshot = {
+          name: String(version.name || snapshot.name || "").trim(),
+          description: typeof version.description === "string"
+            ? version.description
+            : typeof snapshot.description === "string"
+              ? snapshot.description
+              : "",
+          model: getPlaygroundAgentModelMeta(typeof version.model === "string" ? version.model : snapshot.model || "").id,
+          instructions: typeof version.instructions === "string"
+            ? version.instructions
+            : typeof snapshot.instructions === "string"
+              ? snapshot.instructions
+              : "",
+          binary: String(version.binary || snapshot.binary || "Claude Code CLI").trim() || "Claude Code CLI",
+          reasoningEffort: ["minimal", "low", "medium", "high"].includes(version.reasoningEffort)
+            ? version.reasoningEffort
+            : ["minimal", "low", "medium", "high"].includes(snapshot.reasoningEffort)
+              ? snapshot.reasoningEffort
+              : "medium",
+          enabledSkills: enabledSkills.map((value) => String(value || "").trim()).filter(Boolean),
+          deepResearchModel: PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.some((option) => option.id === version.deepResearchModel)
+            ? version.deepResearchModel
+            : PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.some((option) => option.id === snapshot.deepResearchModel)
+              ? snapshot.deepResearchModel
+              : null,
+          permissionSet: normalizePlaygroundPermissionSet(version.permissionSet || snapshot.permissionSet, "agent"),
+          agentType,
+          teamOrchestratorAgentId: String(version.teamOrchestratorAgentId || snapshot.teamOrchestratorAgentId || "").trim(),
+          teamSubagentIds: dedupePlaygroundAgentIds(teamSubagentIds),
+          teamExecutionMode: agentType === "team" ? PLAYGROUND_AGENT_TEAM_EXECUTION_MODE : "",
+          metadata: stripPlaygroundAgentVersionMetadata(snapshot.metadata),
+        };
+
+        return {
+          id,
+          version: versionNumber,
+          label: String(version.label || version.name || ("Version " + versionNumber)).trim(),
+          description: String(version.description || version.summary || "").trim(),
+          status,
+          createdAt,
+          updatedAt: String(version.updatedAt || version.updated_at || "").trim(),
+          publishedAt: String(version.publishedAt || version.published_at || "").trim(),
+          name: normalizedSnapshot.name,
+          model: normalizedSnapshot.model,
+          skillCount: normalizedSnapshot.enabledSkills.length,
+          permissionSet: normalizedSnapshot.permissionSet,
+          snapshot: normalizedSnapshot,
+        };
+      }
+
+      function normalizePlaygroundAgentVersions(value) {
+        const rawItems = Array.isArray(value) ? value : [];
+        return rawItems
+          .map((version, index) => normalizePlaygroundAgentVersion(version, index))
+          .filter((version) => version.id)
+          .sort((a, b) => {
+            const versionDelta = Number(b.version || 0) - Number(a.version || 0);
+            if (versionDelta) return versionDelta;
+            return new Date(b.publishedAt || b.createdAt || 0).getTime() - new Date(a.publishedAt || a.createdAt || 0).getTime();
+          });
+      }
+
+      function readPlaygroundAgentVersions(agent) {
+        const metadata = agent?.metadata && typeof agent.metadata === "object" && !Array.isArray(agent.metadata)
+          ? agent.metadata
+          : {};
+        return normalizePlaygroundAgentVersions(
+          agent?.agentVersions
+          || agent?.versions
+          || metadata.agentVersions
+          || metadata.agent_versions
+          || metadata.versions
+          || []
+        );
+      }
+
+      function createPlaygroundAgentVersionId() {
+        return "agent_version_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+      }
+
+      function buildPlaygroundAgentVersionSnapshot(agent) {
+        const normalizedAgent = normalizePlaygroundAgentRecord(agent || buildPlaygroundDefaultAgentDraft());
+        return {
+          name: String(normalizedAgent.name || "").trim() || (normalizedAgent.agentType === "team" ? "New Team" : "New Agent"),
+          description: typeof normalizedAgent.description === "string" ? normalizedAgent.description : "",
+          model: getPlaygroundAgentModelMeta(normalizedAgent.model || "").id,
+          instructions: typeof normalizedAgent.instructions === "string" ? normalizedAgent.instructions : "",
+          binary: String(normalizedAgent.binary || "Claude Code CLI").trim() || "Claude Code CLI",
+          reasoningEffort: ["minimal", "low", "medium", "high"].includes(normalizedAgent.reasoningEffort)
+            ? normalizedAgent.reasoningEffort
+            : "medium",
+          enabledSkills: normalizePlaygroundEnabledSkillIds(normalizedAgent.enabledSkills),
+          deepResearchModel: PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.some((option) => option.id === normalizedAgent.deepResearchModel)
+            ? normalizedAgent.deepResearchModel
+            : null,
+          permissionSet: normalizePlaygroundPermissionSet(normalizedAgent.permissionSet, "agent"),
+          agentType: normalizedAgent.agentType === "team" ? "team" : "single",
+          teamOrchestratorAgentId: String(normalizedAgent.teamOrchestratorAgentId || "").trim(),
+          teamSubagentIds: dedupePlaygroundAgentIds(normalizedAgent.teamSubagentIds),
+          teamExecutionMode: normalizedAgent.agentType === "team" ? PLAYGROUND_AGENT_TEAM_EXECUTION_MODE : "",
+          metadata: stripPlaygroundAgentVersionMetadata(normalizedAgent.metadata),
+        };
+      }
+
+      function createPlaygroundAgentVersion(agent, existingVersions = [], options = {}) {
+        const now = new Date().toISOString();
+        const normalizedExisting = normalizePlaygroundAgentVersions(existingVersions);
+        const nextVersion = normalizedExisting.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), 0) + 1;
+        const requestedStatus = String(options?.status || "saved").trim().toLowerCase();
+        const status = requestedStatus === "active" ? "active" : "saved";
+        const snapshot = buildPlaygroundAgentVersionSnapshot(agent);
+        return normalizePlaygroundAgentVersion({
+          id: createPlaygroundAgentVersionId(),
+          version: nextVersion,
+          label: String(options?.label || ("Version " + nextVersion)).trim(),
+          description: String(options?.description || "").trim(),
+          status,
+          createdAt: now,
+          publishedAt: status === "active" ? now : "",
+          name: snapshot.name,
+          model: snapshot.model,
+          enabledSkills: snapshot.enabledSkills,
+          permissionSet: snapshot.permissionSet,
+          snapshot,
+        }, nextVersion - 1);
+      }
+
+      function createPlaygroundAgentWithVersionList(agent, versions, preferredSelectedId = "") {
+        const baseAgent = normalizePlaygroundAgentRecord(agent || buildPlaygroundDefaultAgentDraft());
+        const normalizedVersions = normalizePlaygroundAgentVersions(versions);
+        const metadata = baseAgent.metadata && typeof baseAgent.metadata === "object" && !Array.isArray(baseAgent.metadata)
+          ? { ...baseAgent.metadata }
+          : {};
+        const previousSelectedId = String(metadata.restoredFromAgentVersionId || metadata.restored_from_agent_version_id || metadata.activeAgentVersionId || metadata.active_agent_version_id || "").trim();
+        const selectedVersion = normalizedVersions.find((version) => version.id === String(preferredSelectedId || "").trim())
+          || normalizedVersions.find((version) => version.id === previousSelectedId)
+          || normalizedVersions.find((version) => version.status === "active")
+          || normalizedVersions[0]
+          || null;
+        const activeVersion = normalizedVersions.find((version) => version.status === "active")
+          || normalizedVersions.find((version) => version.id === String(metadata.activeAgentVersionId || metadata.active_agent_version_id || "").trim())
+          || null;
+        metadata.agentVersions = normalizedVersions;
+        metadata.agent_versions = normalizedVersions;
+        metadata.activeAgentVersionId = activeVersion?.id || "";
+        metadata.active_agent_version_id = activeVersion?.id || "";
+        metadata.activeAgentVersionNumber = activeVersion?.version || 0;
+        metadata.active_agent_version_number = activeVersion?.version || 0;
+        metadata.restoredFromAgentVersionId = selectedVersion?.id || "";
+        metadata.restored_from_agent_version_id = selectedVersion?.id || "";
+        metadata.restoredFromAgentVersionNumber = selectedVersion?.version || 0;
+        metadata.restored_from_agent_version_number = selectedVersion?.version || 0;
+        if (activeVersion?.publishedAt) {
+          metadata.publishedAt = activeVersion.publishedAt;
+          metadata.published_at = activeVersion.publishedAt;
+        } else {
+          delete metadata.publishedAt;
+          delete metadata.published_at;
+        }
+        return normalizePlaygroundAgentRecord({
+          ...baseAgent,
+          metadata,
+          publishedAt: activeVersion?.publishedAt || "",
+        });
+      }
+
+      function createPlaygroundAgentFromVersionSnapshot(agent, version, versions, preferredSelectedId = "") {
+        const baseAgent = normalizePlaygroundAgentRecord(agent || buildPlaygroundDefaultAgentDraft());
+        const normalizedVersion = normalizePlaygroundAgentVersion(version || {});
+        const snapshot = normalizedVersion.snapshot || {};
+        const baseMetadata = stripPlaygroundAgentVersionMetadata(baseAgent.metadata);
+        const snapshotMetadata = stripPlaygroundAgentVersionMetadata(snapshot.metadata);
+        const nextAgent = normalizePlaygroundAgentRecord({
+          ...baseAgent,
+          name: snapshot.name || baseAgent.name,
+          description: typeof snapshot.description === "string" ? snapshot.description : baseAgent.description,
+          model: snapshot.model || baseAgent.model,
+          instructions: typeof snapshot.instructions === "string" ? snapshot.instructions : baseAgent.instructions,
+          binary: snapshot.binary || baseAgent.binary,
+          reasoningEffort: snapshot.reasoningEffort || baseAgent.reasoningEffort,
+          enabledSkills: Array.isArray(snapshot.enabledSkills) ? snapshot.enabledSkills : baseAgent.enabledSkills,
+          deepResearchModel: snapshot.deepResearchModel || baseAgent.deepResearchModel,
+          permissionSet: snapshot.permissionSet || baseAgent.permissionSet,
+          agentType: snapshot.agentType === "team" ? "team" : baseAgent.agentType,
+          teamOrchestratorAgentId: snapshot.teamOrchestratorAgentId || baseAgent.teamOrchestratorAgentId,
+          teamSubagentIds: Array.isArray(snapshot.teamSubagentIds) ? snapshot.teamSubagentIds : baseAgent.teamSubagentIds,
+          teamExecutionMode: snapshot.agentType === "team" ? PLAYGROUND_AGENT_TEAM_EXECUTION_MODE : baseAgent.teamExecutionMode,
+          metadata: {
+            ...baseMetadata,
+            ...snapshotMetadata,
+          },
+        });
+        return createPlaygroundAgentWithVersionList(nextAgent, versions, preferredSelectedId || normalizedVersion.id);
       }
 
       function parsePlaygroundAgentListResponse(data) {
@@ -100701,7 +101031,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         onUpgradeToIndividual,
         embeddedInResources = false,
         topNavActionsPortalId = "",
+        versionsDrawerPortalId = "",
         onResourcesHeaderChange,
+        onVersionsSidebarOpenChange,
         onOpenSettingsUsage,
         backRequestToken = 0,
         overviewTabRequest = null,
@@ -100822,6 +101154,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [isAgentCreationInstructionsEditing, setIsAgentCreationInstructionsEditing] = useState(false);
         const [agentCreationInstructionRunRequest, setAgentCreationInstructionRunRequest] = useState(null);
         const [agentCreationInstructionContext, setAgentCreationInstructionContext] = useState(null);
+        const [agentVersionsSidebarOpen, setAgentVersionsSidebarOpen] = useState(false);
+        const [agentVersionState, setAgentVersionState] = useState({
+          status: "idle",
+          message: "",
+          error: "",
+        });
+        const [openAgentVersionMenuId, setOpenAgentVersionMenuId] = useState("");
         const [agentUpgradeModalOpen, setAgentUpgradeModalOpen] = useState(false);
         const [agentUpgradeCheckoutLoading, setAgentUpgradeCheckoutLoading] = useState(false);
         const [agentAssistantPresetRunState, setAgentAssistantPresetRunState] = useState({
@@ -100833,6 +101172,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentCreationAssistantPreparing, setAgentCreationAssistantPreparing] = useState(false);
         const [agentCreationAssistantError, setAgentCreationAssistantError] = useState("");
         const [topNavActionsContainer, setTopNavActionsContainer] = useState(null);
+        const [agentVersionsDrawerContainer, setAgentVersionsDrawerContainer] = useState(null);
         const [agentModelOptions, setAgentModelOptions] = useState(() => PLAYGROUND_AGENT_MODEL_OPTIONS);
         const [isAgentComposerInstructionsEditing, setIsAgentComposerInstructionsEditing] = useState(false);
         const [agentComposerModelPopover, setAgentComposerModelPopover] = useState("");
@@ -101224,6 +101564,27 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return () => window.cancelAnimationFrame(frame);
         }, [topNavActionsPortalId]);
 
+        useLayoutEffect(() => {
+          if (!versionsDrawerPortalId || typeof document === "undefined") {
+            setAgentVersionsDrawerContainer(null);
+            return undefined;
+          }
+          const updateContainer = () => {
+            setAgentVersionsDrawerContainer(document.getElementById(versionsDrawerPortalId));
+          };
+          updateContainer();
+          const frame = window.requestAnimationFrame(updateContainer);
+          return () => window.cancelAnimationFrame(frame);
+        }, [versionsDrawerPortalId]);
+
+        useEffect(() => {
+          if (typeof onVersionsSidebarOpenChange !== "function") {
+            return undefined;
+          }
+          onVersionsSidebarOpenChange(Boolean(agentVersionsSidebarOpen));
+          return () => onVersionsSidebarOpenChange(false);
+        }, [agentVersionsSidebarOpen, onVersionsSidebarOpenChange]);
+
         useEffect(() => {
           if (!embeddedInResources || typeof onResourcesHeaderChange !== "function") {
             return;
@@ -101255,6 +101616,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setIsAgentInstructionsEditing(false);
           setAgentActionsPopoverOpen(false);
           setAgentModelPopover("");
+          setAgentVersionsSidebarOpen(false);
+          setOpenAgentVersionMenuId("");
+          setAgentVersionState({
+            status: "idle",
+            message: "",
+            error: "",
+          });
           setAgentCreationSetupError("");
           setSaveState({
             isSaving: false,
@@ -102365,6 +102733,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setAgentRenameState(null);
           setAgentRenameValue("");
           setAgentRenameError("");
+          setAgentVersionsSidebarOpen(false);
+          setOpenAgentVersionMenuId("");
+          setAgentVersionState({
+            status: "idle",
+            message: "",
+            error: "",
+          });
           setAgentsHomeActiveCreationCommand("");
           setAgentsHomeCreationCommandRequest(null);
           setAgentCreationSetupOpen(false);
@@ -103725,6 +104100,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setAgentCreationPermissionModalOpen(false);
           setAgentCreationInstructionRunRequest(null);
           setAgentCreationInstructionContext(null);
+          setAgentVersionsSidebarOpen(false);
+          setOpenAgentVersionMenuId("");
+          setAgentVersionState({
+            status: "idle",
+            message: "",
+            error: "",
+          });
           setIsHomeViewActive(false);
           setSelectedAgentId(agentId);
         }
@@ -103798,6 +104180,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	          if (draftAgent && !canUseAgentOnCurrentPlan(draftAgent)) {
 	            return;
 	          }
+	          setAgentVersionsSidebarOpen(false);
+	          setOpenAgentVersionMenuId("");
 	          setAgentAssistantOpen(true);
 	          setAgentAssistantCommandRequest(null);
 	          setAgentAssistantPresetRunState((current) => (
@@ -103898,6 +104282,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const visiblePrompt = getAgentAssistantPresetActionLabel(normalizedActionType);
             const executionPrompt = buildAgentAssistantPresetPrompt(normalizedActionType, targetAgent);
             rememberAgentAssistantThread(targetAgentId, threadId);
+            setAgentVersionsSidebarOpen(false);
+            setOpenAgentVersionMenuId("");
             setAgentAssistantOpen(true);
             setAgentCreationInstructionContext({
               agentId: targetAgentId,
@@ -106696,6 +107082,261 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
         }
 
+        function formatAgentVersionTimestamp(value) {
+          if (!value) return "Not published yet";
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return "Not published yet";
+          return date.toLocaleString(undefined, {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        }
+
+        function getAgentVersionMetadata(agentRecord = draftAgent) {
+          return agentRecord?.metadata && typeof agentRecord.metadata === "object" && !Array.isArray(agentRecord.metadata)
+            ? agentRecord.metadata
+            : {};
+        }
+
+        function readDraftAgentVersions() {
+          return readPlaygroundAgentVersions(draftAgent);
+        }
+
+        function getDraftAgentActiveVersion() {
+          const versions = readDraftAgentVersions();
+          const metadata = getAgentVersionMetadata();
+          const activeId = String(metadata.activeAgentVersionId || metadata.active_agent_version_id || "").trim();
+          return versions.find((version) => version.id === activeId)
+            || versions.find((version) => version.status === "active")
+            || null;
+        }
+
+        async function commitVersionedAgentRecord(nextAgent, options = {}) {
+          const normalizedNextAgent = normalizePlaygroundAgentRecord(nextAgent);
+          const loadingMessage = options.loadingMessage || "Saving agent version...";
+          setAgentVersionState({
+            status: "loading",
+            message: loadingMessage,
+            error: "",
+          });
+          setSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const savedAgent = await persistAgentRecord(normalizedNextAgent);
+            const savedHasVersionMetadata = readPlaygroundAgentVersions(savedAgent).length > 0
+              || Boolean(savedAgent?.metadata?.activeAgentVersionId || savedAgent?.metadata?.active_agent_version_id);
+            const mergedSavedAgent = normalizePlaygroundAgentRecord({
+              ...normalizedNextAgent,
+              ...savedAgent,
+              metadata: savedHasVersionMetadata ? savedAgent.metadata : normalizedNextAgent.metadata,
+              publishedAt: savedAgent?.publishedAt || normalizedNextAgent.publishedAt || "",
+            });
+            editorDirtyRef.current = false;
+            setAgentDetailsById((current) => ({
+              ...current,
+              [mergedSavedAgent.id]: mergedSavedAgent,
+            }));
+            setAgentListMode(getPlaygroundAgentListMode(mergedSavedAgent));
+            setSelectedAgentId(mergedSavedAgent.id);
+            setDraftAgent(mergedSavedAgent);
+            setOpenAgentVersionMenuId("");
+            setSaveState({
+              isSaving: false,
+              error: "",
+              message: options.successMessage || "Saved",
+            });
+            setAgentVersionState({
+              status: "success",
+              message: options.successMessage || "Saved",
+              error: "",
+            });
+            if (onAgentMutated) {
+              await onAgentMutated();
+            }
+            window.setTimeout(() => {
+              setAgentVersionState((current) => current.status === "success"
+                ? { status: "idle", message: "", error: "" }
+                : current
+              );
+            }, 1800);
+            return mergedSavedAgent;
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : (options.errorMessage || "Failed to save agent version.");
+            setSaveState({
+              isSaving: false,
+              error: errorMessage,
+              message: "",
+            });
+            setAgentVersionState({
+              status: "error",
+              message: "",
+              error: errorMessage,
+            });
+            return null;
+          }
+        }
+
+        function toggleAgentVersionsSidebar() {
+          if (!canShowAgentVersions) {
+            return;
+          }
+          setAgentActionsPopoverOpen(false);
+          setAgentAssistantOpen(false);
+          setOpenAgentVersionMenuId("");
+          setAgentVersionState((current) => current.status === "loading" ? current : {
+            status: "idle",
+            message: "",
+            error: "",
+          });
+          setAgentVersionsSidebarOpen((current) => !current);
+        }
+
+        function closeAgentVersionsSidebar() {
+          setAgentVersionsSidebarOpen(false);
+          setOpenAgentVersionMenuId("");
+        }
+
+        async function saveCurrentAgentVersion() {
+          if (!draftAgent || agentVersionState.status === "loading") {
+            return;
+          }
+          const versions = readDraftAgentVersions();
+          const newVersion = createPlaygroundAgentVersion(draftAgent, versions, { status: "saved" });
+          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, [newVersion, ...versions], newVersion.id);
+          await commitVersionedAgentRecord(nextAgent, {
+            loadingMessage: "Saving agent version...",
+            successMessage: "Version saved",
+            errorMessage: "Failed to save agent version.",
+          });
+        }
+
+        async function publishCurrentAgentVersion() {
+          if (!draftAgent || agentVersionState.status === "loading") {
+            return;
+          }
+          const versions = readDraftAgentVersions();
+          const supersededVersions = versions.map((version) => (
+            version.status === "active" ? { ...version, status: "superseded" } : version
+          ));
+          const publishedVersion = createPlaygroundAgentVersion(draftAgent, supersededVersions, { status: "active" });
+          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, [publishedVersion, ...supersededVersions], publishedVersion.id);
+          await commitVersionedAgentRecord(nextAgent, {
+            loadingMessage: "Publishing agent...",
+            successMessage: "Published",
+            errorMessage: "Failed to publish agent.",
+          });
+        }
+
+        async function restoreAgentVersion(versionId) {
+          if (!draftAgent || agentVersionState.status === "loading") {
+            return;
+          }
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftAgentVersions();
+          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
+          if (!targetVersion) {
+            return;
+          }
+          const nextAgent = createPlaygroundAgentFromVersionSnapshot(draftAgent, targetVersion, versions, targetVersion.id);
+          await commitVersionedAgentRecord(nextAgent, {
+            loadingMessage: "Restoring agent version...",
+            successMessage: "Version restored",
+            errorMessage: "Failed to restore agent version.",
+          });
+        }
+
+        async function publishAgentVersion(versionId) {
+          if (!draftAgent || agentVersionState.status === "loading") {
+            return;
+          }
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftAgentVersions();
+          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
+          if (!targetVersion) {
+            return;
+          }
+          const now = new Date().toISOString();
+          const nextVersions = normalizePlaygroundAgentVersions(versions.map((version) => {
+            if (version.id === targetVersion.id) {
+              return {
+                ...version,
+                status: "active",
+                publishedAt: now,
+              };
+            }
+            return version.status === "active" ? { ...version, status: "superseded" } : version;
+          }));
+          const nextTargetVersion = nextVersions.find((version) => version.id === targetVersion.id) || targetVersion;
+          const nextAgent = createPlaygroundAgentFromVersionSnapshot(draftAgent, nextTargetVersion, nextVersions, nextTargetVersion.id);
+          await commitVersionedAgentRecord(nextAgent, {
+            loadingMessage: "Publishing agent version...",
+            successMessage: "Published",
+            errorMessage: "Failed to publish agent version.",
+          });
+        }
+
+        async function deleteAgentVersion(versionId) {
+          if (!draftAgent || agentVersionState.status === "loading") {
+            return;
+          }
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftAgentVersions();
+          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
+          if (!targetVersion) {
+            return;
+          }
+          if (!window.confirm("Delete this agent version?")) {
+            return;
+          }
+          const nextVersions = versions.filter((version) => version.id !== targetVersion.id);
+          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, nextVersions);
+          await commitVersionedAgentRecord(nextAgent, {
+            loadingMessage: "Deleting agent version...",
+            successMessage: "Version deleted",
+            errorMessage: "Failed to delete agent version.",
+          });
+        }
+
+        async function unpublishActiveAgentVersion() {
+          if (!draftAgent || agentVersionState.status === "loading") {
+            return;
+          }
+          const activeVersion = getDraftAgentActiveVersion();
+          if (!activeVersion) {
+            return;
+          }
+          if (!window.confirm("Unpublish this agent? Version history will be kept.")) {
+            return;
+          }
+          const now = new Date().toISOString();
+          const nextVersions = normalizePlaygroundAgentVersions(readDraftAgentVersions().map((version) => (
+            version.id === activeVersion.id || version.status === "active"
+              ? { ...version, status: "unpublished" }
+              : version
+          )));
+          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, nextVersions);
+          const nextMetadata = nextAgent.metadata && typeof nextAgent.metadata === "object" && !Array.isArray(nextAgent.metadata)
+            ? { ...nextAgent.metadata, unpublishedAt: now, unpublished_at: now }
+            : { unpublishedAt: now, unpublished_at: now };
+          delete nextMetadata.publishedAt;
+          delete nextMetadata.published_at;
+          await commitVersionedAgentRecord({
+            ...nextAgent,
+            metadata: nextMetadata,
+            publishedAt: "",
+          }, {
+            loadingMessage: "Unpublishing agent...",
+            successMessage: "Unpublished",
+            errorMessage: "Failed to unpublish agent.",
+          });
+        }
+
         function handleRevertDraft() {
           if (selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
             setDraftAgent(buildPlaygroundDefaultAgentDraft(draftAgent?.agentType === "team" ? "team" : "single"));
@@ -107340,6 +107981,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }
             return sum + 1;
           }, 0));
+          const hasAgentDetailCostData = agentDetailCostValues.some((value) => Math.max(0, Number(value || 0)) > 0);
           const totalAgentDetailCT = agentDetailThreads.reduce((sum, thread) => sum + readAgentDetailThreadTotalCT(thread), 0);
           const totalAgentDetailRuns = agentDetailThreads.length;
           const averageAgentDetailCT = totalAgentDetailRuns > 0 ? totalAgentDetailCT / totalAgentDetailRuns : 0;
@@ -107560,7 +108202,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               return undefined;
             }, [chartSignature, hasUsageData]);
 
-            return React.createElement("div", { className: "playground-settings-usage-chart-card" },
+            return React.createElement(React.Fragment, null,
               React.createElement("div", { className: "playground-project-overview-chart-header" },
                 React.createElement("div", { className: "playground-project-overview-chart-header-main" },
                   React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Daily CT by Agent"),
@@ -107592,10 +108234,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                           className: "playground-agents-home-chartjs-canvas",
                         })
                       ),
-                      React.createElement("div", {
-                          className: "playground-settings-usage-inline-legend",
-                          style: { justifyContent: "flex-start" },
-                        },
+                      React.createElement("div", { className: "playground-project-overview-chart-footer-row" },
+                        React.createElement("div", { className: "playground-settings-usage-inline-legend" },
                         normalizedSeries.map((entry) =>
                           React.createElement("div", { key: entry.id || entry.label, className: "playground-settings-usage-legend-item" },
                             React.createElement("span", {
@@ -107605,6 +108245,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                             React.createElement("span", null, entry.label)
                           )
                         )
+                        ),
+                        React.createElement("div", { "aria-hidden": "true" })
                       )
                     )
             );
@@ -107637,9 +108279,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             isLoading: agentsHomeThreadsLoading,
             timescaleControl: renderAgentDetailTimescaleControl(),
           });
-          const renderAgentFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
-            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
-            React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
+          const renderAgentFactRow = (label, control) => React.createElement("div", { className: "playground-project-overview-sidebar-row", key: label },
+            React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, label),
+            React.createElement("div", { className: "playground-project-overview-sidebar-row-value is-editable" }, control)
           );
           const renderAgentFactValue = (value, extraClassName = "") =>
             React.createElement("span", {
@@ -107911,60 +108553,77 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   : null
               );
 
-          const agentFactsSection = React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-environments-home-metrics playground-agents-detail-metrics" },
-              React.createElement("div", {
-                  className: "playground-tasks-detail-facts playground-environments-editor-facts"
-                    + (agentModelPopover ? " is-popover-open" : ""),
+          const agentUsageChartSection = React.createElement("div", { className: "playground-project-overview-chart-surface playground-agents-detail-chart-surface" },
+            React.createElement("div", { className: "playground-project-overview-chart-grid" },
+              React.createElement("section", {
+                  className: "playground-settings-usage-chart-card playground-project-overview-chart-card playground-agents-detail-chart-card"
+                    + (!hasAgentDetailCostData && !agentsHomeThreadsLoading ? " is-cost-empty" : ""),
                 },
-                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                  React.createElement("div", { className: "playground-database-overview" },
-                    React.createElement("div", { className: "playground-database-overview-chart-block playground-agents-detail-chart-block" },
-                      React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-agents-detail-chart-kpis" },
-                        agentDetailKpis.map((item) =>
-                          React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
-                            React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                              React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                            ),
-                            React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                          )
-                        )
+                React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-agents-detail-chart-kpis" },
+                  agentDetailKpis.map((item) =>
+                    React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
+                      React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                        React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
                       ),
-                      shouldShowAgentAnalytics && agentAnalyticsError
-                        ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, agentAnalyticsError)
-                        : null,
-                      shouldShowAgentAnalytics && isAgentAnalyticsLoading && !activeAgentAnalytics
-                        ? React.createElement("div", { className: "playground-files-state" }, "Loading activity...")
-                        : null,
-                      renderAgentDetailCostChart(),
-                      React.createElement("div", { className: "playground-agents-detail-fact-rows" },
-                        agentModelDetailRows,
-                        renderAgentFactRow("Agent ID",
-                          React.createElement("span", {
-                            className: "playground-environments-editor-fact-value is-id",
-                            title: draftAgent.id || "Unsaved agent",
-                          }, draftAgent.id || "Unsaved agent")
-                        ),
-                        renderAgentFactRow("Created",
-                          React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftAgent.createdAt))
-                        ),
-                        renderAgentFactRow("Updated",
-                          React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftAgent.updatedAt))
-                        ),
-                        isTeamAgent
-                          ? renderAgentFactRow("Orchestrator",
-                              React.createElement("span", { className: "playground-environments-editor-fact-value" }, selectedTeamOrchestrator?.name || "Not selected")
-                            )
-                          : null,
-                        isTeamAgent
-                          ? renderAgentFactRow("Subagents",
-                              React.createElement("span", { className: "playground-environments-editor-fact-value" }, String(selectedTeamSubagentIds.length))
-                            )
-                          : null
-                      )
+                      React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
                     )
                   )
-                )
+                ),
+                shouldShowAgentAnalytics && agentAnalyticsError
+                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, agentAnalyticsError)
+                  : null,
+                shouldShowAgentAnalytics && isAgentAnalyticsLoading && !activeAgentAnalytics
+                  ? React.createElement("div", { className: "playground-files-state" }, "Loading activity...")
+                  : null,
+                renderAgentDetailCostChart()
+              )
+            )
+          );
+
+          const agentPropertiesSidebar = React.createElement("aside", {
+              className: "playground-project-overview-sidebar playground-agents-detail-sidebar" + (agentModelPopover ? " is-popover-open" : ""),
+              "aria-label": isTeamAgent ? "Team settings" : "Agent settings",
+            },
+            React.createElement("section", { className: "playground-project-overview-sidebar-card" },
+              React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties")
+              ),
+              React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
+                agentModelDetailRows,
+                renderAgentFactRow("Agent ID",
+                  React.createElement("span", {
+                    className: "playground-environments-editor-fact-value is-id",
+                    title: draftAgent.id || "Unsaved agent",
+                  }, draftAgent.id || "Unsaved agent")
+                ),
+                renderAgentFactRow("Created",
+                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftAgent.createdAt))
+                ),
+                renderAgentFactRow("Updated",
+                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftAgent.updatedAt))
+                ),
+                renderAgentFactRow("Skills",
+                  React.createElement("span", {
+                    className: "playground-environments-editor-fact-value",
+                    title: skillsSummary,
+                  }, skillsSummary)
+                ),
+                renderAgentFactRow("Permissions",
+                  React.createElement("span", {
+                    className: "playground-environments-editor-fact-value",
+                    title: getAgentPermissionSummary(draftAgent.permissionSet),
+                  }, getAgentPermissionSummary(draftAgent.permissionSet))
+                ),
+                isTeamAgent
+                  ? renderAgentFactRow("Orchestrator",
+                      React.createElement("span", { className: "playground-environments-editor-fact-value" }, selectedTeamOrchestrator?.name || "Not selected")
+                    )
+                  : null,
+                isTeamAgent
+                  ? renderAgentFactRow("Subagents",
+                      React.createElement("span", { className: "playground-environments-editor-fact-value" }, String(selectedTeamSubagentIds.length))
+                    )
+                  : null
               )
             )
           );
@@ -108130,6 +108789,18 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             )
           );
 
+          const agentGeneralSection = React.createElement("div", { className: "playground-project-overview-layout playground-agents-detail-overview-layout" },
+            React.createElement("div", { className: "playground-project-overview-main playground-agents-detail-overview-main" },
+              agentDetailTabs,
+              agentUsageChartSection,
+              isTeamAgent
+                ? renderEditorSection("team", "Team Setup", "", teamSection, null, false)
+                : null,
+              instructionsSection
+            ),
+            agentPropertiesSidebar
+          );
+
           const agentDetailBackgroundImageUrl = getPlaygroundAgentBackgroundImageUrl(draftAgent);
           const agentDetailMainClassName = "playground-environments-editor-main playground-tasks-detail-main"
             + (agentDetailBackgroundImageUrl ? " is-agent-background-active" : "");
@@ -108139,7 +108810,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
           return React.createElement("div", { className: agentDetailMainClassName, ref: agentDetailMainRef, style: agentDetailMainStyle },
             React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-              React.createElement("div", { className: "playground-agents-detail-content" },
+              React.createElement("div", { className: "playground-agents-detail-content" + (agentDetailTab === "general" ? " is-agent-overview-general" : "") },
                 saveState.error
                   ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, saveState.error)
                   : saveState.message
@@ -108147,16 +108818,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                  : null,
 	                agentResourceDetailBackButton,
 	                agentProfileSection,
-                agentDetailTabs,
                 agentDetailTab === "permissions"
-                  ? agentPermissionsSection
-                  : React.createElement(React.Fragment, null,
-                      agentFactsSection,
-                      isTeamAgent
-                        ? renderEditorSection("team", "Team Setup", "", teamSection, null, false)
-                        : null,
-                      instructionsSection
-                    )
+                  ? React.createElement(React.Fragment, null, agentDetailTabs, agentPermissionsSection)
+                  : agentGeneralSection
               )
             )
           );
@@ -108193,6 +108857,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
           && !draftAgent.isSystem
           && !draftAgent.isDefault
+        );
+        const canShowAgentVersions = Boolean(
+          !shouldShowAgentsHome
+          && !agentCreationSetupOpen
+          && draftAgent?.id
+          && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
+          && !draftAgent.isSystem
+          && !draftAgent.isDefault
+          && !isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
         );
         const agentsTopNavActions = topNavActionsContainer
           ? createPortal(
@@ -108265,7 +108938,20 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                         : null
                     )
 	                  : null,
-                !agentCreationSetupOpen
+                canShowAgentVersions
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-metronome-create-button playground-metronome-publish-button" + (agentVersionsSidebarOpen ? " is-active" : ""),
+                      onClick: toggleAgentVersionsSidebar,
+                      title: "Publish agent",
+                      "aria-label": "Publish agent",
+                      "aria-expanded": agentVersionsSidebarOpen ? "true" : "false",
+                      disabled: saveState.isSaving && agentVersionState.status !== "loading",
+                    },
+                      React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Publish")
+                    )
+                  : !agentCreationSetupOpen
                   ? React.createElement("button", {
                   type: "button",
                   className: "playground-top-nav-private-chat-button",
@@ -108289,7 +108975,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           : null;
         const agentDetailLayoutClass = "playground-agents-detail-layout"
           + (canShowAgentAssistant ? " has-assistant" : "")
-          + (canShowAgentAssistant && agentAssistantOpen ? " is-assistant-open" : "");
+          + (canShowAgentAssistant && agentAssistantOpen && !agentVersionsSidebarOpen ? " is-assistant-open" : "");
 
         function handleAgentAssistantRunFinish(_result, threadId) {
           const normalizedThreadId = String(threadId || "").trim();
@@ -108358,7 +109044,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }
 
         function renderAgentAssistantPanel() {
-          if (!canShowAgentAssistant) {
+          if (!canShowAgentAssistant || agentVersionsSidebarOpen) {
             return null;
           }
 
@@ -108461,6 +109147,242 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 }
               },
             })
+          );
+        }
+
+        function renderAgentVersionRows() {
+          const versions = readDraftAgentVersions();
+          const metadata = getAgentVersionMetadata();
+          const activeVersion = getDraftAgentActiveVersion();
+          const activeVersionId = String(activeVersion?.id || metadata.activeAgentVersionId || metadata.active_agent_version_id || "").trim();
+          const selectedVersionId = String(
+            metadata.restoredFromAgentVersionId
+            || metadata.restored_from_agent_version_id
+            || activeVersionId
+            || ""
+          ).trim();
+          const isBusy = agentVersionState.status === "loading";
+
+          if (!versions.length) {
+            return React.createElement("div", { className: "playground-metronome-publish-empty-state" },
+              React.createElement("div", { className: "playground-metronome-publish-empty-card" },
+                React.createElement("img", {
+                  className: "playground-metronome-publish-empty-image",
+                  src: "/img/empty-state/metronome.webp",
+                  alt: "",
+                  "aria-hidden": "true",
+                }),
+                React.createElement("h3", { className: "playground-metronome-publish-empty-title" }, "No saved versions yet"),
+                React.createElement("p", { className: "playground-metronome-publish-empty-copy" },
+                  "Create a version to track instructions, model, permissions, skills, and team setup."
+                )
+              )
+            );
+          }
+
+          return versions.map((version) => {
+            const isActiveVersion = version.id === activeVersionId || version.status === "active";
+            const isSelectedVersion = version.id === selectedVersionId;
+            const versionTitle = String(version.label || ("Version " + version.version)).trim();
+            const versionDescription = String(version.description || "").trim();
+            const modelMeta = getPlaygroundAgentModelMeta(version.model || version.snapshot?.model || draftAgent?.model || "", resolvedAgentModelOptions);
+            const skillCount = Number(version.skillCount || version.snapshot?.enabledSkills?.length || 0) || 0;
+            return React.createElement("div", {
+              key: version.id,
+              className: "playground-metronome-publish-row"
+                + (isActiveVersion ? " is-active" : "")
+                + (isSelectedVersion ? " is-selected" : ""),
+            },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-metronome-publish-row-checkbox" + (isSelectedVersion ? " is-selected" : ""),
+                disabled: isBusy || isSelectedVersion,
+                onClick: () => void restoreAgentVersion(version.id),
+                "aria-label": "Display agent version " + version.version,
+                "aria-pressed": isSelectedVersion ? "true" : "false",
+              },
+                isSelectedVersion
+                  ? React.createElement(Check, { width: 16, height: 16, strokeWidth: 2.5 })
+                  : null
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-metronome-publish-row-main",
+                disabled: isBusy || isSelectedVersion,
+                onClick: () => void restoreAgentVersion(version.id),
+              },
+                React.createElement("div", { className: "playground-metronome-publish-row-title" },
+                  React.createElement("span", null, versionTitle),
+                  isActiveVersion
+                    ? React.createElement("span", { className: "playground-metronome-publish-active-chip" },
+                        React.createElement(Check, { width: 11, height: 11, strokeWidth: 2 }),
+                        React.createElement("span", null, "Published")
+                      )
+                    : null
+                ),
+                versionDescription
+                  ? React.createElement("div", { className: "playground-metronome-publish-row-description" }, versionDescription)
+                  : null,
+                React.createElement("div", { className: "playground-metronome-publish-row-copy playground-metronome-publish-row-meta" },
+                  (version.publishedAt ? "Published " : "Saved ")
+                  + formatAgentVersionTimestamp(version.publishedAt || version.createdAt)
+                  + " · "
+                  + (modelMeta?.label || version.model || "Model")
+                  + " · "
+                  + skillCount
+                  + " skill"
+                  + (skillCount === 1 ? "" : "s")
+                )
+              ),
+              React.createElement("div", { className: "playground-metronome-publish-row-actions" },
+                isActiveVersion
+                  ? null
+                  : React.createElement("button", {
+                      type: "button",
+                      className: "playground-metronome-secondary-button playground-metronome-publish-row-action",
+                      disabled: isBusy,
+                      onClick: () => void publishAgentVersion(version.id),
+                    },
+                      React.createElement(Rocket, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Publish")
+                    ),
+                React.createElement("span", { className: "playground-metronome-publish-row-menu-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-metronome-publish-row-menu-trigger" + (openAgentVersionMenuId === version.id ? " is-open" : ""),
+                    disabled: isBusy,
+                    onClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setOpenAgentVersionMenuId((current) => current === version.id ? "" : version.id);
+                    },
+                    "aria-label": "Agent version options",
+                    "aria-expanded": openAgentVersionMenuId === version.id ? "true" : "false",
+                  }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
+                  openAgentVersionMenuId === version.id
+                    ? React.createElement("div", {
+                        className: "playground-metronome-publish-row-menu",
+                        role: "menu",
+                      },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-metronome-publish-row-menu-item",
+                          onClick: () => void restoreAgentVersion(version.id),
+                        },
+                          React.createElement(RotateCcw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", null, "Restore version")
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-metronome-publish-row-menu-item is-danger",
+                          onClick: () => void deleteAgentVersion(version.id),
+                        },
+                          React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", null, "Delete version")
+                        )
+                      )
+                    : null
+                )
+              )
+            );
+          });
+        }
+
+        function renderAgentVersionsSidebar() {
+          if (!canShowAgentVersions || !agentVersionsSidebarOpen) {
+            return null;
+          }
+          const isBusy = agentVersionState.status === "loading";
+          const activeVersion = getDraftAgentActiveVersion();
+          return React.createElement("aside", {
+              className: "playground-agents-versions-sidebar playground-metronome-node-inspector playground-metronome-publish-sidebar",
+              "aria-hidden": agentVersionsSidebarOpen ? "false" : "true",
+            },
+            React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-metronome-inspector-header" },
+              React.createElement("div", { className: "playground-tasks-detail-navbar-title playground-metronome-inspector-navbar-title" },
+                React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
+                  React.createElement("span", { className: "playground-metronome-inspector-node-kind is-icon", "aria-label": "Versions" },
+                    React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.9 })
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
+                  React.createElement("div", { className: "playground-content-title playground-tasks-detail-navbar-title-input playground-metronome-inspector-title-input" }, "Versions")
+                )
+              ),
+              React.createElement("div", { className: "playground-content-nav-center" }),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-header-icon-button is-plain playground-metronome-inspector-close",
+                onClick: closeAgentVersionsSidebar,
+                "aria-label": "Close versions",
+              }, React.createElement(X, { width: 15, height: 15, strokeWidth: 1.9 }))
+            ),
+            React.createElement("div", { className: "playground-metronome-inspector-body" },
+              React.createElement("div", { className: "playground-metronome-publish-sidebar-section-title" },
+                React.createElement("span", { className: "playground-metronome-publish-sidebar-section-title-text" }, "Saved versions"),
+                React.createElement("span", { className: "playground-metronome-publish-title-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-metronome-publish-version-button",
+                    disabled: isBusy,
+                    onClick: () => void saveCurrentAgentVersion(),
+                  },
+                    React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Version")
+                  )
+                )
+              ),
+              agentVersionState.status === "loading"
+                ? React.createElement("div", { className: "playground-metronome-publish-state" }, agentVersionState.message || "Saving agent version...")
+                : null,
+              agentVersionState.status === "error"
+                ? React.createElement("div", { className: "playground-metronome-publish-state is-error" }, agentVersionState.error || "Failed to update agent versions.")
+                : null,
+              agentVersionState.status === "success"
+                ? React.createElement("div", { className: "playground-metronome-publish-state is-success" }, agentVersionState.message || "Saved")
+                : null,
+              React.createElement("div", { className: "playground-metronome-publish-list" }, renderAgentVersionRows())
+            ),
+            React.createElement("div", { className: "playground-metronome-publish-sidebar-actions" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-metronome-primary-button playground-metronome-publish-new-button",
+                disabled: isBusy,
+                onClick: () => void publishCurrentAgentVersion(),
+              },
+                React.createElement(Rocket, { width: 13, height: 13, strokeWidth: 1.8 }),
+                React.createElement("span", null, isBusy ? "Publishing..." : "Publish current editor")
+              ),
+              activeVersion
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "playground-metronome-secondary-button playground-metronome-publish-new-button",
+                    disabled: isBusy,
+                    onClick: () => void unpublishActiveAgentVersion(),
+                  },
+                    React.createElement(PauseCircle, { width: 13, height: 13, strokeWidth: 1.8 }),
+                    React.createElement("span", null, isBusy ? "Working..." : "Unpublish agent")
+                  )
+                : null
+            )
+          );
+        }
+
+        function renderAgentVersionsSidebarPortal() {
+          const sidebar = renderAgentVersionsSidebar();
+          if (!sidebar) {
+            return null;
+          }
+          if (agentVersionsDrawerContainer && typeof createPortal === "function") {
+            return createPortal(sidebar, agentVersionsDrawerContainer);
+          }
+          if (versionsDrawerPortalId) {
+            return null;
+          }
+          return React.createElement("aside", {
+              className: "playground-metronome-node-drawer playground-agent-versions-inline-drawer is-open",
+            },
+            sidebar
           );
         }
 
@@ -108893,6 +109815,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     renderAgentAssistantPanel()
                   )
                 ),
+            renderAgentVersionsSidebarPortal(),
             renderAgentListActionMenu(),
             renderAgentRenameModal(),
             renderAgentComposerDialog(),
@@ -109172,6 +110095,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           renderAgentComposerDialog(),
           renderAgentCreationPermissionModal(),
           renderAgentModelPickerDialog(),
+          renderAgentVersionsSidebarPortal(),
           renderAgentUpgradeModal()
         );
       }
@@ -143466,6 +144390,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           mode: "overview",
           title: "",
         });
+        const [isAgentVersionsDetailOpen, setIsAgentVersionsDetailOpen] = useState(false);
         const [resourcesBackRequestToken, setResourcesBackRequestToken] = useState(0);
         const [tasksHeaderState, setTasksHeaderState] = useState({
           mode: "overview",
@@ -167431,6 +168356,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : resourcesView;
         const activeResourcesServerKind = activeResourcesView === "servers" ? resourcesServerKind : "";
         const isResourcesPage = activePage === "resources" || activePage === "agents" || activePage === "environments";
+        const isAgentVersionsDrawerOpen = isResourcesPage && activeResourcesView === "agents" && isAgentVersionsDetailOpen;
         const platformNavigationHistoryRef = useRef([]);
         const platformNavigationInitializedRef = useRef(false);
         const platformNavigationLastKeyRef = useRef("");
@@ -174385,7 +175311,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   },
                   embeddedInResources: true,
                   topNavActionsPortalId: "playground-resources-nav-actions",
+                  versionsDrawerPortalId: "playground-agent-versions-drawer-root",
                   onResourcesHeaderChange: setResourcesHeaderState,
+                  onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
                   onOpenSettingsUsage: () => openSettingsPage("costs-overview"),
                   backRequestToken: resourcesBackRequestToken,
                   overviewTabRequest: agentsOverviewTabRequest,
@@ -177182,7 +178110,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             : null
                         )
                       ),
-	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (activePage === "files" ? " is-files-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
+	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isAgentVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (activePage === "files" ? " is-files-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
 	                    activePage === "settings"
 	                      ? renderSettingsPage()
 	                      : activePage === "team"
@@ -178105,6 +179033,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     ? React.createElement("aside", {
                         id: "playground-metronome-node-drawer-root",
                         className: "playground-metronome-node-drawer" + (isMetronomeNodeDetailOpen ? " is-open" : ""),
+                      })
+                    : null
+                  ,
+                  isResourcesPage && activeResourcesView === "agents"
+                    ? React.createElement("aside", {
+                        id: "playground-agent-versions-drawer-root",
+                        className: "playground-metronome-node-drawer playground-agent-versions-node-drawer" + (isAgentVersionsDrawerOpen ? " is-open" : ""),
                       })
                     : null
                   ,
