@@ -50114,6 +50114,11 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         }
       }
 
+      function readInitialThreadDeepLinkId() {
+        const normalized = String(readCurrentSearchParam("thread") || readCurrentSearchParam("threadId") || "").trim();
+        return /^thread[_-]/.test(normalized) ? normalized : "";
+      }
+
       function normalizePlaygroundInitialPrompt(value) {
         return String(value || "")
           .split(String.fromCharCode(13) + String.fromCharCode(10))
@@ -64852,6 +64857,10 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         }
         return items
           .map((item) => {
+            if (typeof item === "string") {
+              const text = item.trim();
+              return text ? { text, completed: false } : null;
+            }
             if (!item || typeof item !== "object") {
               return null;
             }
@@ -64867,6 +64876,46 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             return { text, completed };
           })
           .filter(Boolean);
+      }
+
+      function parseThreadTodoListCandidateValue(value, depth = 0) {
+        if (depth > 3 || value == null) {
+          return [];
+        }
+        if (typeof value === "string") {
+          const trimmed = value.trim();
+          if (!trimmed || (!trimmed.startsWith("[") && !trimmed.startsWith("{"))) {
+            return [];
+          }
+          try {
+            return parseThreadTodoListCandidateValue(JSON.parse(trimmed), depth + 1);
+          } catch {
+            return [];
+          }
+        }
+        const directItems = normalizeThreadTodoListItems(value);
+        if (directItems.length > 0) {
+          return directItems;
+        }
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          return [];
+        }
+        const record = value;
+        const directKeys = ["todos", "todoItems", "todo_items", "taskList", "task_list", "todoList", "todo_list", "items", "tasks"];
+        for (const key of directKeys) {
+          const items = parseThreadTodoListCandidateValue(record[key], depth + 1);
+          if (items.length > 0) {
+            return items;
+          }
+        }
+        const nestedKeys = ["metadata", "logMetadata", "log_metadata", "result", "output", "data", "payload", "body", "args", "arguments", "input"];
+        for (const key of nestedKeys) {
+          const items = parseThreadTodoListCandidateValue(record[key], depth + 1);
+          if (items.length > 0) {
+            return items;
+          }
+        }
+        return [];
       }
 
       function getThreadTodoLogArray(data) {
@@ -64900,13 +64949,17 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             return;
           }
           const metadata = getThreadTodoLogMetadata(log);
-          const todos = normalizeThreadTodoListItems(metadata.todos || metadata.todoItems || metadata.taskList);
-          if (todos.length === 0) {
-            return;
-          }
           const eventType = String(log.eventType || log.event_type || log.kind || "").trim().toLowerCase();
           const toolName = String(metadata.toolName || metadata.tool_name || "").trim().toLowerCase();
-          if (eventType && eventType !== "todo_list" && toolName !== "todowrite") {
+          const isTodoListSignal = eventType === "todo_list"
+            || toolName === "todowrite"
+            || toolName === "todo_write"
+            || toolName === "todo-write";
+          if (eventType && !isTodoListSignal) {
+            return;
+          }
+          const todos = parseThreadTodoListCandidateValue(log);
+          if (todos.length === 0 && !isTodoListSignal) {
             return;
           }
           const timestamp = String(log.createdAt || log.created_at || log.timestamp || log.time || "").trim();
@@ -142863,7 +142916,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [agentPageSelectionRequest, setAgentPageSelectionRequest] = useState(null);
         const [agentCreationPageRequestToken, setAgentCreationPageRequestToken] = useState(0);
         const [threadAgentSelectionOverride, setThreadAgentSelectionOverride] = useState(null);
-        const [currentThreadId, setCurrentThreadId] = useState(() => (isDemoMode ? DEFAULT_DEMO_THREAD_ID : ""));
+        const [currentThreadId, setCurrentThreadId] = useState(() => (isDemoMode ? DEFAULT_DEMO_THREAD_ID : readInitialThreadDeepLinkId()));
         const [initialThreadPrivateMode, setInitialThreadPrivateMode] = useState(false);
         const [privateThreadIds, setPrivateThreadIds] = useState([]);
         const privateThreadIdsRef = useRef(new Set());
@@ -155985,6 +156038,27 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return [];
           }
         }, [hasRealAccess, proxyBackendBase, requestHeaders]);
+
+        const handleThreadTaskListChange = useCallback((threadId, log) => {
+          const normalizedThreadId = String(threadId || "").trim();
+          if (!normalizedThreadId || !hasRealAccess || !isRealThreadId(normalizedThreadId) || isPrivateThreadId(normalizedThreadId)) {
+            return;
+          }
+          const todos = extractLatestThreadTodoList({ logs: [log] });
+          setThreadTaskListAvailabilityById((current) => ({
+            ...(current && typeof current === "object" ? current : {}),
+            [normalizedThreadId]: "available",
+          }));
+          if (Array.isArray(todos) && todos.length > 0) {
+            setThreadTaskListState({
+              threadId: normalizedThreadId,
+              status: "loaded",
+              error: "",
+              todos,
+              updatedAt: new Date().toISOString(),
+            });
+          }
+        }, [hasRealAccess]);
 
         function toggleThreadTaskListMenu(event) {
           event.preventDefault();
@@ -177718,6 +177792,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     followUpError: threadFollowUpActionState.error || "",
                                     activeTaskPreviewId: threadTaskOpenRequest?.taskId || null,
                                     onOpenTaskList: openCurrentThreadTaskListMenu,
+                                    onTaskListChange: handleThreadTaskListChange,
                                     initialDocumentPreviewAttachment: pendingThreadDocumentPreviewRequest && pendingThreadDocumentPreviewRequest.threadId === activeRunnerThreadId
                                       ? pendingThreadDocumentPreviewRequest.attachment
                                       : null,
@@ -177888,6 +177963,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                       if (metronomeRunTraceSelectionRef.current?.key) {
                                         if (!isPrivateThreadId(normalizedThreadId)) {
                                           void loadThreadGroundTruthStatus(normalizedThreadId);
+                                          void loadThreadTaskListForThread(normalizedThreadId, { force: true });
                                           void refreshThreads();
                                         }
                                         return;
@@ -177896,6 +177972,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                       setCurrentThreadId(normalizedThreadId);
                                       if (!isPrivateThreadId(normalizedThreadId)) {
                                         void loadThreadGroundTruthStatus(normalizedThreadId);
+                                        void loadThreadTaskListForThread(normalizedThreadId, { force: true });
                                         void refreshThreads();
                                       }
                                     },
@@ -180829,6 +180906,7 @@ function readAdminKey(req) {
 }
 
 let cachedFeedbackSummaryAdminKey = null;
+let cachedContactSalesApiToken = null;
 
 async function readRuntimeEnvValue(key, fileCandidates = []) {
   const directValue = typeof process.env[key] === "string" ? process.env[key].trim() : "";
@@ -180870,6 +180948,14 @@ async function readFeedbackSummaryAdminKey() {
   }
   cachedFeedbackSummaryAdminKey = await readRuntimeEnvValue("ADMIN_API_KEY", feedbackSummaryAdminEnvFileCandidates);
   return cachedFeedbackSummaryAdminKey;
+}
+
+async function readContactSalesApiToken() {
+  if (cachedContactSalesApiToken !== null) {
+    return cachedContactSalesApiToken;
+  }
+  cachedContactSalesApiToken = await readRuntimeEnvValue("CONTACT_SALES_API_TOKEN", feedbackSummaryAdminEnvFileCandidates);
+  return cachedContactSalesApiToken;
 }
 
 function normalizeFeedbackSummaryEmail(value) {
@@ -181414,6 +181500,63 @@ async function proxyProductUsageSummaryGet(req, res) {
   } catch (error) {
     return sendJson(res, 502, {
       error: "Failed to proxy product usage summary request",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+async function proxyContactSalesSummaryGet(req, res) {
+  try {
+    const session = await fetchFeedbackSummarySessionEmail(req);
+    if (session.status === 401 || session.status === 403 || !session.email) {
+      return sendJson(res, 401, {
+        error: "Unauthorized",
+        message: "Sign in with Computer Agents to view contact sales requests.",
+        loginUrl: buildUsageSummaryLoginUrl(req),
+      });
+    }
+
+    if (session.email !== feedbackSummaryAllowedEmail) {
+      return sendJson(res, 401, {
+        error: "Unauthorized",
+        message: "Sign in with the product usage admin account.",
+        loginUrl: buildUsageSummaryLoginUrl(req, { signedOut: true }),
+      });
+    }
+
+    const contactToken = await readContactSalesApiToken();
+    const token = contactToken || await readFeedbackSummaryAdminKey();
+    if (!token) {
+      return sendJson(res, 503, {
+        error: "Contact sales summary is not configured",
+        message: "CONTACT_SALES_API_TOKEN or ADMIN_API_KEY is missing on the demo server.",
+      });
+    }
+
+    const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
+    const targetUrl = new URL(`${aiosOrigin}/api/contact-sales`);
+    targetUrl.search = requestUrl.search;
+    const upstream = await fetch(targetUrl.toString(), {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "x-internal-api-token": token,
+      },
+    });
+    const text = await upstream.text();
+    let parsed = {};
+    try {
+      parsed = text ? JSON.parse(text) : {};
+    } catch {
+      parsed = { message: text };
+    }
+    if (upstream.ok && parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      parsed.viewer = { email: session.email };
+    }
+    return sendJson(res, upstream.status, parsed);
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to proxy contact sales request",
       message: error instanceof Error ? error.message : String(error),
     });
   }
@@ -185069,9 +185212,23 @@ function serveProductUsageSummaryPageV2(res) {
       </div>
     </div>
     <script type="module">
-      import Chart from "https://esm.sh/chart.js@4.5.1/auto?bundle";
-
       const AIOS_ORIGIN = ${JSON.stringify(aiosOrigin)};
+      let ChartConstructor = null;
+      let chartConstructorPromise = null;
+      let chartRenderSequence = 0;
+
+      function loadChartConstructor() {
+        if (ChartConstructor) return Promise.resolve(ChartConstructor);
+        if (!chartConstructorPromise) {
+          chartConstructorPromise = import("https://esm.sh/chart.js@4.5.1/auto?bundle")
+            .then(function(module) {
+              ChartConstructor = module.default || module.Chart;
+              return ChartConstructor;
+            });
+        }
+        return chartConstructorPromise;
+      }
+
       const navItems = [
         { id: "overview", label: "Overview", icon: "dashboard" },
         { id: "users", label: "Users", icon: "users" },
@@ -185084,6 +185241,7 @@ function serveProductUsageSummaryPageV2(res) {
         { id: "calendar", label: "Calendar", icon: "calendar" },
         { id: "teams", label: "Teams", icon: "teams" },
         { id: "models", label: "Models", icon: "models" },
+        { id: "sales", label: "Sales", icon: "sales" },
         { id: "feedback", label: "Feedback", icon: "feedback" },
       ];
       const sectionConfig = {
@@ -185306,6 +185464,25 @@ function serveProductUsageSummaryPageV2(res) {
           breakdown: "models",
           table: "models",
         },
+        sales: {
+          title: "Sales",
+          copy: "Enterprise contact requests submitted from the contact sales page.",
+          primaryTitle: "Enterprise Inquiries",
+          primaryNote: "Requests by day",
+          breakdownTitle: "Inquiry Status",
+          breakdownNote: "Latest contact-sales statuses",
+          chartSeries: [
+            { key: "count", label: "Inquiries", color: "#66a6ff", type: "bar" },
+          ],
+          kpis: [
+            ["Inquiries", "salesSummary.total", "Latest requests"],
+            ["New", "salesSummary.newCount", "Needs follow-up"],
+            ["Contacted", "salesSummary.contactedCount", "Marked contacted"],
+            ["Unique emails", "salesSummary.uniqueEmails", "Distinct contacts"],
+          ],
+          breakdown: "sales",
+          table: "sales",
+        },
         feedback: {
           title: "Feedback",
           copy: "Thread ratings and issue reports submitted by users.",
@@ -185328,9 +185505,9 @@ function serveProductUsageSummaryPageV2(res) {
       };
       let currentDays = 7;
       let activeSection = window.location.hash ? window.location.hash.slice(1) : "overview";
-      let currentPayload = null;
-      let currentFeedbackPayload = null;
-      let isLoading = false;
+      const sectionPayloadCache = new Map();
+      const sectionLoadingKeys = new Set();
+      const sectionErrorCache = new Map();
       let primaryChart = null;
 
       const navEl = document.getElementById("usage-sidebar-nav");
@@ -185369,6 +185546,7 @@ function serveProductUsageSummaryPageV2(res) {
           calendar: '<rect x="4" y="5" width="16" height="15" rx="2" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
           teams: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/>',
           models: '<path d="M12 3a4 4 0 0 0-4 4v1H7a4 4 0 0 0 0 8h1v1a4 4 0 0 0 8 0v-1h1a4 4 0 0 0 0-8h-1V7a4 4 0 0 0-4-4Z" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M8 8h8M8 16h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+          sales: '<path d="M4 7h16v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/><path d="M4 7l8 6 8-6M8 4h8" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
           feedback: '<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 4 11.5a8.5 8.5 0 1 1 17 0Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
         };
         return '<svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">' + (paths[id] || paths.dashboard) + '</svg>';
@@ -185434,6 +185612,56 @@ function serveProductUsageSummaryPageV2(res) {
         statusEl.classList.toggle("is-error", Boolean(isError));
       }
 
+      function isProductUsageSection(section) {
+        return section !== "feedback" && section !== "sales";
+      }
+
+      function getSectionCacheKey(section) {
+        return isProductUsageSection(section) ? "product:" + currentDays + ":" + (section || "overview") : section;
+      }
+
+      function getActiveSectionCacheKey() {
+        return getSectionCacheKey(activeSection);
+      }
+
+      function getActiveSectionPayload() {
+        return sectionPayloadCache.get(getActiveSectionCacheKey()) || null;
+      }
+
+      function isActiveSectionLoading() {
+        return sectionLoadingKeys.has(getActiveSectionCacheKey());
+      }
+
+      function getActiveSectionError() {
+        return sectionErrorCache.get(getActiveSectionCacheKey()) || "";
+      }
+
+      function updateRefreshState() {
+        refreshButton.disabled = isActiveSectionLoading();
+      }
+
+      function getSectionFetchUrl(section) {
+        if (section === "feedback") return "/api/real/admin/feedback-summary?limit=100";
+        if (section === "sales") return "/api/real/admin/contact-sales?limit=100";
+        return "/api/real/admin/product-usage-summary?days=" + encodeURIComponent(currentDays) + "&section=" + encodeURIComponent(section || "overview");
+      }
+
+      function getSectionLoadingText(section) {
+        const config = sectionConfig[section] || sectionConfig.overview;
+        return "Loading " + String(config.title || "usage").toLowerCase() + "...";
+      }
+
+      function getSectionLoadedText(section, payload) {
+        const config = sectionConfig[section] || sectionConfig.overview;
+        if (section === "feedback") {
+          return "Loaded feedback" + (payload?.generatedAt ? " at " + formatDate(payload.generatedAt) : ".");
+        }
+        if (section === "sales") {
+          return "Loaded sales inquiries" + (payload?.generatedAt ? " at " + formatDate(payload.generatedAt) : ".");
+        }
+        return "Loaded " + currentDays + " days" + (payload?.viewer && payload.viewer.email ? " for " + payload.viewer.email : "") + (payload?.generatedAt ? " at " + formatDate(payload.generatedAt) : ".");
+      }
+
       function renderNav() {
         navEl.innerHTML = navItems.map(function(item) {
           return '<button type="button" class="usage-sidebar-link' + (item.id === activeSection ? " is-active" : "") + '" data-section="' + item.id + '">' +
@@ -185446,6 +185674,7 @@ function serveProductUsageSummaryPageV2(res) {
             activeSection = button.getAttribute("data-section") || "overview";
             window.location.hash = activeSection;
             renderPage();
+            void loadActiveSection();
           });
         });
       }
@@ -185766,6 +185995,84 @@ function serveProductUsageSummaryPageV2(res) {
         ];
       }
 
+      function normalizeSalesSubmissions(payload) {
+        const rows = readFirstArray(payload || {}, [
+          "submissions",
+          "inquiries",
+          "requests",
+          "sales",
+          "contactSales",
+          "contact_sales",
+        ]);
+        return rows.map(function(row) {
+          return {
+            id: String(row?.id || row?.submissionId || row?.submission_id || "").trim(),
+            name: String(row?.name || row?.fullName || row?.full_name || "").trim(),
+            email: String(row?.email || row?.businessEmail || row?.business_email || "").trim(),
+            goal: String(row?.goal || row?.message || row?.notes || "").trim(),
+            source: String(row?.source || row?.origin || "").trim(),
+            status: String(row?.status || "new").trim().toLowerCase(),
+            createdAt: row?.createdAt || row?.created_at || row?.createdAtIso || row?.created_at_iso || null,
+          };
+        }).filter(function(row) {
+          return row.email || row.name || row.goal || row.id;
+        }).sort(function(left, right) {
+          return new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime();
+        });
+      }
+
+      function buildSalesSummary(payload) {
+        const rows = normalizeSalesSubmissions(payload || {});
+        const uniqueEmails = new Set(rows.map(function(row) {
+          return String(row.email || "").trim().toLowerCase();
+        }).filter(Boolean));
+        return {
+          total: rows.length,
+          newCount: rows.filter(function(row) { return row.status === "new" || row.status === "open"; }).length,
+          contactedCount: rows.filter(function(row) { return row.status === "contacted" || row.status === "replied"; }).length,
+          uniqueEmails: uniqueEmails.size,
+        };
+      }
+
+      function buildSalesTrendRows(payload) {
+        const rows = normalizeSalesSubmissions(payload || {});
+        const buckets = new Map();
+        const today = new Date();
+        for (let index = currentDays - 1; index >= 0; index -= 1) {
+          const date = new Date(today.getTime() - index * 24 * 60 * 60 * 1000);
+          const key = date.toISOString().slice(0, 10);
+          buckets.set(key, { date: key, count: 0 });
+        }
+        rows.forEach(function(row) {
+          if (!row.createdAt) return;
+          const date = new Date(row.createdAt);
+          if (!Number.isFinite(date.getTime())) return;
+          const key = date.toISOString().slice(0, 10);
+          if (buckets.has(key)) {
+            buckets.get(key).count += 1;
+          }
+        });
+        return Array.from(buckets.values());
+      }
+
+      function buildSalesBreakdownRows(payload) {
+        const rows = normalizeSalesSubmissions(payload || {});
+        const counts = rows.reduce(function(next, row) {
+          const key = row.status || "new";
+          next[key] = (next[key] || 0) + 1;
+          return next;
+        }, {});
+        return Object.keys(counts).sort(function(left, right) {
+          return counts[right] - counts[left];
+        }).map(function(key) {
+          return {
+            label: key.replace(/_/g, " "),
+            meta: "Contact sales status",
+            value: counts[key],
+          };
+        });
+      }
+
       function buildFeedbackBreakdownRows(payload) {
         const summary = buildFeedbackSummary(payload || {});
         const reportsByType = summary.reportsByType || {};
@@ -185876,6 +186183,9 @@ function serveProductUsageSummaryPageV2(res) {
         if (type === "feedback") {
           return buildFeedbackBreakdownRows(payload || {});
         }
+        if (type === "sales") {
+          return buildSalesBreakdownRows(payload || {});
+        }
         if (type === "calendar" || type === "teams" || type === "models") {
           const query = type === "models" ? "model" : type;
           const matches = featureUsage.filter(function(row) {
@@ -185947,18 +186257,23 @@ function serveProductUsageSummaryPageV2(res) {
       }
 
       function renderLoadingChart() {
+        chartRenderSequence += 1;
         destroyPrimaryChart();
         primaryChartFrameEl.innerHTML = '<div class="usage-loading"><div class="usage-dot-loader" aria-label="Loading"><span></span><span></span><span></span></div></div>';
       }
 
-      function renderPrimaryChart(payload, config) {
+      async function renderPrimaryChart(payload, config) {
+        const renderSequence = ++chartRenderSequence;
         const isModelSection = activeSection === "models";
         const isFeedbackSection = activeSection === "feedback";
+        const isSalesSection = activeSection === "sales";
         const rows = isFeedbackSection
           ? buildFeedbackTrendRows(payload || {})
-          : isModelSection
-            ? buildModelTrendRows(payload || {})
-            : (Array.isArray(payload && payload.timeSeries) ? payload.timeSeries : []);
+          : isSalesSection
+            ? buildSalesTrendRows(payload || {})
+            : isModelSection
+              ? buildModelTrendRows(payload || {})
+              : (Array.isArray(payload && payload.timeSeries) ? payload.timeSeries : []);
         const series = Array.isArray(config.chartSeries) ? config.chartSeries : [];
         destroyPrimaryChart();
         primaryChartFrameEl.innerHTML = '<canvas id="usage-primary-chart" aria-label="Usage trend chart"></canvas>';
@@ -185967,6 +186282,16 @@ function serveProductUsageSummaryPageV2(res) {
           primaryChartFrameEl.innerHTML = '<div class="usage-empty">No chart data for this period.</div>';
           return;
         }
+        let Chart;
+        try {
+          Chart = await loadChartConstructor();
+        } catch {
+          if (renderSequence === chartRenderSequence) {
+            primaryChartFrameEl.innerHTML = '<div class="usage-empty">Chart library failed to load.</div>';
+          }
+          return;
+        }
+        if (renderSequence !== chartRenderSequence || !document.body.contains(canvas)) return;
         const labels = rows.map(function(row) {
           const raw = String(row.date || row.day || "");
           return raw.length >= 10 ? raw.slice(5) : raw;
@@ -186166,7 +186491,32 @@ function serveProductUsageSummaryPageV2(res) {
           '</tbody></table>';
       }
 
+      function renderSalesTable(payload) {
+        const rows = normalizeSalesSubmissions(payload || {});
+        if (!rows.length) {
+          return '<div class="usage-empty">No contact sales inquiries yet.</div>';
+        }
+        return '<table><thead><tr><th>Status</th><th>Name</th><th>Email</th><th>Goal</th><th>Source</th><th>Created</th></tr></thead><tbody>' +
+          rows.slice(0, 100).map(function(row) {
+            return '<tr>' +
+              '<td><span class="usage-pill">' + escapeHtml(row.status || "new") + '</span></td>' +
+              '<td>' + escapeHtml(row.name || "—") + '</td>' +
+              '<td>' + escapeHtml(row.email || "—") + '</td>' +
+              '<td class="usage-wide-cell">' + escapeHtml(row.goal || "—") + '</td>' +
+              '<td class="usage-muted-cell">' + escapeHtml(row.source || "—") + '</td>' +
+              '<td>' + formatDate(row.createdAt) + '</td>' +
+            '</tr>';
+          }).join("") +
+          '</tbody></table>';
+      }
+
       function renderTable(payload, config) {
+        if (config.table === "sales") {
+          tableTitleEl.textContent = "Contact Sales Inquiries";
+          tableNoteEl.textContent = "Latest enterprise requests";
+          tableWrapEl.innerHTML = renderSalesTable(payload || {});
+          return;
+        }
         if (config.table === "feedback") {
           tableTitleEl.textContent = "Recent Feedback";
           tableNoteEl.textContent = "Latest ratings and issue reports";
@@ -186198,8 +186548,11 @@ function serveProductUsageSummaryPageV2(res) {
       function renderPage() {
         if (!sectionConfig[activeSection]) activeSection = "overview";
         const config = sectionConfig[activeSection];
-        const pagePayload = activeSection === "feedback" ? currentFeedbackPayload : currentPayload;
+        const pagePayload = getActiveSectionPayload();
+        const isLoading = isActiveSectionLoading();
+        const loadError = getActiveSectionError();
         renderNav();
+        updateRefreshState();
         titleEl.textContent = config.title;
         copyEl.textContent = config.copy;
         breadcrumbEl.textContent = config.title;
@@ -186209,31 +186562,54 @@ function serveProductUsageSummaryPageV2(res) {
         breakdownNoteEl.textContent = config.breakdownNote || "Top signals";
         if (isLoading || !pagePayload) {
           kpisEl.innerHTML = "";
-          breakdownEl.innerHTML = '<div class="usage-empty">Loading usage data...</div>';
+          const message = isLoading ? "Loading usage data..." : (loadError || "No usage data loaded yet.");
+          breakdownEl.innerHTML = '<div class="usage-empty">' + escapeHtml(message) + '</div>';
           tableTitleEl.textContent = "Details";
           tableNoteEl.textContent = "";
-          tableWrapEl.innerHTML = '<div class="usage-empty">Loading usage data...</div>';
-          renderLoadingChart();
+          tableWrapEl.innerHTML = '<div class="usage-empty">' + escapeHtml(message) + '</div>';
+          if (isLoading) {
+            renderLoadingChart();
+          } else {
+            destroyPrimaryChart();
+            primaryChartFrameEl.innerHTML = '<div class="usage-empty">' + escapeHtml(message) + '</div>';
+          }
           return;
         }
         const renderPayload = activeSection === "models"
           ? Object.assign({}, pagePayload, { modelSummary: buildModelSummary(pagePayload || {}) })
           : activeSection === "feedback"
             ? Object.assign({}, pagePayload, { feedbackSummary: buildFeedbackSummary(pagePayload || {}) })
-            : pagePayload;
+            : activeSection === "sales"
+              ? Object.assign({}, pagePayload, { salesSummary: buildSalesSummary(pagePayload || {}) })
+              : pagePayload;
         renderKpis(renderPayload, config);
-        renderPrimaryChart(pagePayload, config);
+        void renderPrimaryChart(pagePayload, config);
         renderBreakdown(pagePayload, config);
         renderTable(pagePayload, config);
       }
 
-      async function loadUsage() {
-        isLoading = true;
-        refreshButton.disabled = true;
-        setStatus("Loading product usage...", false);
+      async function loadActiveSection(options) {
+        if (!sectionConfig[activeSection]) activeSection = "overview";
+        const section = activeSection;
+        const key = getSectionCacheKey(section);
+        const force = Boolean(options && options.force);
+        if (!force && sectionPayloadCache.has(key)) {
+          sectionErrorCache.delete(key);
+          setStatus(getSectionLoadedText(section, sectionPayloadCache.get(key) || {}), false);
+          renderPage();
+          return;
+        }
+        if (!force && sectionLoadingKeys.has(key)) {
+          renderPage();
+          return;
+        }
+        sectionLoadingKeys.add(key);
+        sectionErrorCache.delete(key);
+        updateRefreshState();
+        setStatus(getSectionLoadingText(section), false);
         renderPage();
         try {
-          const response = await fetch("/api/real/admin/product-usage-summary?days=" + encodeURIComponent(currentDays), {
+          const response = await fetch(getSectionFetchUrl(section), {
             cache: "no-store",
             credentials: "include",
           });
@@ -186243,39 +186619,25 @@ function serveProductUsageSummaryPageV2(res) {
             return;
           }
           if (!response.ok) {
-            throw new Error(payload.message || payload.error || "Failed to load product usage summary.");
+            throw new Error(payload.message || payload.error || "Failed to load " + (sectionConfig[section]?.title || "usage") + ".");
           }
-          currentPayload = payload || {};
-          let feedbackWarning = "";
-          try {
-            const feedbackResponse = await fetch("/api/real/admin/feedback-summary?limit=100", {
-              cache: "no-store",
-              credentials: "include",
-            });
-            const feedbackPayload = await feedbackResponse.json().catch(function() { return {}; });
-            if (feedbackResponse.status === 401 || feedbackResponse.status === 403) {
-              window.location.replace(feedbackPayload.loginUrl || buildLoginUrl());
-              return;
-            }
-            if (feedbackResponse.ok) {
-              currentFeedbackPayload = feedbackPayload || {};
-            } else {
-              currentFeedbackPayload = { summary: {}, ratings: [], reports: [] };
-              feedbackWarning = " Feedback unavailable.";
-            }
-          } catch {
-            currentFeedbackPayload = { summary: {}, ratings: [], reports: [] };
-            feedbackWarning = " Feedback unavailable.";
+          sectionPayloadCache.set(key, payload || {});
+          if (getActiveSectionCacheKey() === key) {
+            setStatus(getSectionLoadedText(section, payload || {}), false);
           }
-          setStatus("Loaded " + currentDays + " days" + (payload.viewer && payload.viewer.email ? " for " + payload.viewer.email : "") + (payload.generatedAt ? " at " + formatDate(payload.generatedAt) : ".") + feedbackWarning, false);
         } catch (error) {
-          currentPayload = null;
-          currentFeedbackPayload = null;
-          setStatus(error instanceof Error ? error.message : String(error), true);
+          const message = error instanceof Error ? error.message : String(error);
+          sectionPayloadCache.delete(key);
+          sectionErrorCache.set(key, message);
+          if (getActiveSectionCacheKey() === key) {
+            setStatus(message, true);
+          }
         } finally {
-          isLoading = false;
-          refreshButton.disabled = false;
-          renderPage();
+          sectionLoadingKeys.delete(key);
+          updateRefreshState();
+          if (getActiveSectionCacheKey() === key) {
+            renderPage();
+          }
         }
       }
 
@@ -186285,18 +186647,19 @@ function serveProductUsageSummaryPageV2(res) {
           document.querySelectorAll("[data-days]").forEach(function(item) {
             item.classList.toggle("is-active", item === button);
           });
-          void loadUsage();
+          void loadActiveSection({ force: isProductUsageSection(activeSection) });
         });
       });
       window.addEventListener("hashchange", function() {
         activeSection = window.location.hash ? window.location.hash.slice(1) : "overview";
         renderPage();
+        void loadActiveSection();
       });
       refreshButton.addEventListener("click", function() {
-        void loadUsage();
+        void loadActiveSection({ force: true });
       });
       renderNav();
-      void loadUsage();
+      void loadActiveSection();
     </script>
   </body>
 </html>`);
@@ -186342,6 +186705,20 @@ async function handleProductUsageSummaryPageRequest(req, res) {
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url || "/", `http://localhost:${port}`);
+
+  const rawThreadPathMatch = url.pathname.match(/^\/(thread[_-][A-Za-z0-9_-]+)\/?$/);
+  if ((req.method === "GET" || req.method === "HEAD") && rawThreadPathMatch) {
+    const target = new URL("/", platformOrigin);
+    target.searchParams.set("thread", rawThreadPathMatch[1]);
+    url.searchParams.forEach((value, key) => {
+      if (key !== "thread") {
+        target.searchParams.append(key, value);
+      }
+    });
+    res.writeHead(308, { Location: target.toString() });
+    res.end();
+    return;
+  }
 
   if (isGithubApiRequestPath(url.pathname)) {
     void handleGithubApiRequest({
@@ -186800,6 +187177,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/real/admin/product-usage-summary") {
     void proxyProductUsageSummaryGet(req, res);
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/real/admin/contact-sales") {
+    void proxyContactSalesSummaryGet(req, res);
     return;
   }
 

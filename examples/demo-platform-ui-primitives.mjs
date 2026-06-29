@@ -79,6 +79,9 @@ export const PLATFORM_UI_PRIMITIVES_CSS = String.raw`
 
       .playground-platform-popup-shell .playground-platform-popup-menu {
         --playground-platform-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
         overflow: hidden;
         border: 0;
         border-radius: 25px;

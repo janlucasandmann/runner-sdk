@@ -271,6 +271,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-sidebar-select-option:hover,
       .playground-project-overview-sidebar-select-option.is-selected {
         background: rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
         color: rgba(255, 255, 255, 0.96);
       }
 

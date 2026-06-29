@@ -178,10 +178,65 @@ interface RunnerEmailPromptDisplay {
   isEmailPrompt: boolean;
 }
 
-function getRunnerEmailPromptDisplay(prompt: string): RunnerEmailPromptDisplay {
+function cleanRunnerEmailPromptContent(value: string): string {
+  return value
+    .replace(/\n*\[Email task from:\s*[^\]\r\n]+\]\s*$/i, "")
+    .replace(/\n*\[Email task from:\s*[^\]\r\n]+\]\s*/gi, "\n")
+    .replace(/\n{1,3}Attached files:\s*(?:\r?\n\s*(?:-\s*)?.+)+\s*$/i, "")
+    .trim();
+}
+
+function getRunnerEmailMetadataDisplay(metadata?: Record<string, unknown> | null): {
+  emailFrom: string;
+  isEmailPrompt: boolean;
+} {
+  if (!metadata) {
+    return { emailFrom: "", isEmailPrompt: false };
+  }
+
+  const emailRecord = getRecordObject(metadata, ["email", "emailMetadata", "email_metadata"]);
+  const emailFrom =
+    getRecordString(emailRecord, ["from", "fromEmail", "from_email", "sender", "senderEmail", "sender_email", "replyTo", "reply_to"]) ||
+    getRecordString(metadata, ["emailFrom", "email_from", "fromEmail", "from_email", "replyToEmail", "reply_to_email", "senderEmail", "sender_email"]);
+  const source = getRecordString(metadata, ["source", "channel", "appId", "app_id"]).trim().toLowerCase();
+  const isEmailPrompt =
+    Boolean(emailRecord) ||
+    Boolean(emailFrom) ||
+    source === "email" ||
+    source === "mail" ||
+    source === "incoming_email";
+
+  return {
+    emailFrom: emailFrom || (isEmailPrompt ? "email" : ""),
+    isEmailPrompt,
+  };
+}
+
+function isRunnerEmailMetadata(metadata?: Record<string, unknown> | null): boolean {
+  return getRunnerEmailMetadataDisplay(metadata).isEmailPrompt;
+}
+
+function normalizeRunnerTurnMessageMetadata(
+  messageMetadata?: Record<string, unknown> | null,
+  threadMetadata?: Record<string, unknown> | null,
+): Record<string, unknown> | null {
+  if (isRunnerEmailMetadata(messageMetadata)) {
+    return messageMetadata || null;
+  }
+  if (isRunnerEmailMetadata(threadMetadata)) {
+    return {
+      ...(threadMetadata || {}),
+      ...(messageMetadata || {}),
+    };
+  }
+  return messageMetadata || null;
+}
+
+function getRunnerEmailPromptDisplay(prompt: string, metadata?: Record<string, unknown> | null): RunnerEmailPromptDisplay {
   const strippedPrompt = stripSystemTags(String(prompt || ""));
   const emailMatch = strippedPrompt.match(/\[Email task from:\s*([^\]\r\n]+)\]\s*$/i);
-  const emailFrom = emailMatch ? emailMatch[1].trim() : "";
+  const metadataDisplay = getRunnerEmailMetadataDisplay(metadata);
+  const emailFrom = emailMatch ? emailMatch[1].trim() : metadataDisplay.emailFrom;
   if (!emailFrom) {
     return {
       content: strippedPrompt,
@@ -190,14 +245,8 @@ function getRunnerEmailPromptDisplay(prompt: string): RunnerEmailPromptDisplay {
     };
   }
 
-  const content = strippedPrompt
-    .replace(/\n*\[Email task from:\s*[^\]\r\n]+\]\s*$/i, "")
-    .replace(/\n*\[Email task from:\s*[^\]\r\n]+\]\s*/gi, "\n")
-    .replace(/\n{2,}Attached files:\s*(?:\r?\n\s*-\s+.*)+\s*$/i, "")
-    .trim();
-
   return {
-    content,
+    content: cleanRunnerEmailPromptContent(strippedPrompt),
     emailFrom,
     isEmailPrompt: true,
   };
@@ -525,6 +574,7 @@ interface RunnerTurn {
   id: string;
   sourceMessageId?: string | null;
   prompt: string;
+  messageMetadata?: Record<string, unknown> | null;
   logs: RunnerLog[];
   startedAtMs: number;
   completedAtMs?: number;
@@ -903,7 +953,10 @@ const RUNNER_THREAD_FEEDBACK_REPORT_OPTIONS: Array<{ value: RunnerThreadFeedback
   { value: "response", label: "Response feedback" },
 ];
 
-function getRecordString(record: Record<string, unknown>, keys: string[]): string {
+function getRecordString(record: Record<string, unknown> | null | undefined, keys: string[]): string {
+  if (!record) {
+    return "";
+  }
   for (const key of keys) {
     const value = record[key];
     if (typeof value === "string" && value.trim().length > 0) {
@@ -1793,6 +1846,7 @@ interface RunnerThreadHydrationPayload {
   threadUpdatedAt?: string | null;
   threadEnvironmentId?: string | null;
   threadEnvironmentName?: string | null;
+  threadMetadata?: Record<string, unknown> | null;
   initialPrompt: string;
   logs: RunnerLog[];
   messages: RunnerConversationMessage[];
@@ -2521,6 +2575,7 @@ export interface RunnerChatProps {
   activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
   onOpenTaskList?: () => void;
+  onTaskListChange?: (threadId: string, log: RunnerLog) => void;
   onResourcePreviewClick?: (resource: RunnerCreatedResourcePreview) => void;
   onAgentTurnClick?: (payload: RunnerChatAgentTurnClickPayload) => void;
   onSummaryWorkspacePathClick?: (payload: RunnerChatSummaryWorkspacePathClickPayload) => void;
@@ -6424,6 +6479,7 @@ async function fetchThreadHydrationPayload(params: {
         : null,
     threadEnvironmentName:
       parsedLogs.environmentName ?? parsedThread.thread?.environmentName ?? null,
+    threadMetadata: parsedThread.thread?.metadata ?? null,
     initialPrompt: typeof parsedThread.thread?.task === "string" ? parsedThread.thread.task : "",
     logs: mergedLogs,
     messages: chronologicalMessages,
@@ -6794,6 +6850,7 @@ function buildHydratedTurnsFromMessages(
     backendUrl?: string;
     threadStatus?: string | null;
     completedAtMs?: number | null;
+    threadMetadata?: Record<string, unknown> | null;
   }
 ): RunnerTurn[] {
   const chronologicalMessages = sortRunnerConversationMessagesChronologically(messages);
@@ -6833,6 +6890,7 @@ function buildHydratedTurnsFromMessages(
           id: message.id || generateId("turn"),
           sourceMessageId: message.id || null,
           prompt: message.content || "",
+          messageMetadata: normalizeRunnerTurnMessageMetadata(message.logMetadata, meta?.threadMetadata),
           logs: [],
           startedAtMs: safeTimestamp,
           completedAtMs: safeTimestamp,
@@ -6856,6 +6914,7 @@ function buildHydratedTurnsFromMessages(
           id: message.id || generateId("turn"),
           sourceMessageId: message.id || null,
           prompt: message.content || "",
+          messageMetadata: normalizeRunnerTurnMessageMetadata(message.logMetadata, meta?.threadMetadata),
           logs: [],
           startedAtMs: safeTimestamp,
           completedAtMs: safeTimestamp,
@@ -6973,7 +7032,7 @@ function buildHydratedTurnsFromMessages(
     sortedTurns[0].isInitialTurn = true;
   }
   return applyHydratedRunningThreadState(
-    attachHydratedMessageIdsToTurns(sortedTurns, chronologicalMessages, meta?.backendUrl),
+    attachHydratedMessageIdsToTurns(sortedTurns, chronologicalMessages, meta?.backendUrl, meta?.threadMetadata),
     meta
   );
 }
@@ -7107,7 +7166,8 @@ function applyHydratedRunningThreadState(
 function attachHydratedMessageIdsToTurns(
   turns: RunnerTurn[],
   messages: RunnerConversationMessage[],
-  backendUrl?: string
+  backendUrl?: string,
+  threadMetadata?: Record<string, unknown> | null
 ): RunnerTurn[] {
   const userMessages = messages.filter(
     (message) =>
@@ -7154,6 +7214,7 @@ function attachHydratedMessageIdsToTurns(
       ...turn,
       id: turn.sourceMessageId ? turn.id : matchedMessage.id!,
       sourceMessageId: matchedMessage.id!,
+      messageMetadata: normalizeRunnerTurnMessageMetadata(matchedMessage.logMetadata, threadMetadata),
       quotedSelection: normalizeQuotedSelection(matchedMessage.logMetadata?.quotedSelection),
       attachments: normalizeTurnAttachments(matchedMessage.logMetadata?.attachments, backendUrl),
     };
@@ -7179,6 +7240,7 @@ function buildHydratedTurnsFromPayload(
       backendUrl: fallbackMeta?.backendUrl,
       threadStatus: payload.threadStatus,
       completedAtMs: payload.completedAtMs,
+      threadMetadata: payload.threadMetadata,
     });
     if (messageTurns.length > 0) {
       const messageTurnsWithTimeline = mergeHydratedTimelineLogsIntoMessageTurns(messageTurns, chronologicalLogs, {
@@ -7201,6 +7263,7 @@ function buildHydratedTurnsFromPayload(
     agentName: payload.agentName,
     environmentName: payload.environmentName,
     backendUrl: fallbackMeta?.backendUrl,
+    threadMetadata: payload.threadMetadata,
   });
   const turnsWithCanonicalMessages = mergeHydratedMessageTurnsIntoTurns(turnsFromLogs, chronologicalMessages, {
     agentName: payload.agentName ?? fallbackMeta?.agentName ?? null,
@@ -7208,6 +7271,7 @@ function buildHydratedTurnsFromPayload(
     backendUrl: fallbackMeta?.backendUrl,
     threadStatus: payload.threadStatus,
     completedAtMs: payload.completedAtMs,
+    threadMetadata: payload.threadMetadata,
   });
   const hasConversationMessages = chronologicalMessages.some(
     (message) =>
@@ -7229,6 +7293,7 @@ function buildHydratedTurnsFromPayload(
       backendUrl: fallbackMeta?.backendUrl,
       threadStatus: payload.threadStatus,
       completedAtMs: payload.completedAtMs,
+      threadMetadata: payload.threadMetadata,
     });
   }
 
@@ -8625,6 +8690,7 @@ function mergeHydratedMessageTurnsIntoTurns(
     backendUrl?: string;
     threadStatus?: string | null;
     completedAtMs?: number | null;
+    threadMetadata?: Record<string, unknown> | null;
   }
 ): RunnerTurn[] {
   if (turns.length === 0 || messages.length === 0) {
@@ -8654,6 +8720,7 @@ function mergeHydratedMessageTurnsIntoTurns(
     return {
       ...turn,
       prompt: turn.prompt || messageTurn.prompt,
+      messageMetadata: turn.messageMetadata ?? messageTurn.messageMetadata ?? null,
       sourceMessageId: turn.sourceMessageId ?? messageTurn.sourceMessageId ?? null,
       quotedSelection: turn.quotedSelection ?? messageTurn.quotedSelection ?? null,
       attachments: pickTurnAttachments(turn.attachments, messageTurn.attachments),
@@ -9782,6 +9849,7 @@ function buildHydratedTurnsFromLogs(
     agentName?: string | null;
     environmentName?: string | null;
     backendUrl?: string;
+    threadMetadata?: Record<string, unknown> | null;
   }
 ): RunnerTurn[] {
   const turns: RunnerTurn[] = [];
@@ -9792,6 +9860,7 @@ function buildHydratedTurnsFromLogs(
     ? {
         id: generateId("turn"),
         prompt: initialPrompt.trim(),
+        messageMetadata: normalizeRunnerTurnMessageMetadata(null, meta?.threadMetadata),
         logs: [],
         startedAtMs: meta?.startedAtMs ?? Date.now(),
         completedAtMs: meta?.completedAtMs ?? meta?.startedAtMs ?? Date.now(),
@@ -9810,6 +9879,7 @@ function buildHydratedTurnsFromLogs(
     currentTurn = {
       id: generateId("turn"),
       prompt: "",
+      messageMetadata: null,
       logs: [],
       startedAtMs: fallbackTime,
       completedAtMs: fallbackTime,
@@ -9868,6 +9938,7 @@ function buildHydratedTurnsFromLogs(
         pendingBtwTurn = {
           id: generateId("turn"),
           prompt,
+          messageMetadata: normalizeRunnerTurnMessageMetadata(log.metadata, meta?.threadMetadata),
           logs: [],
           startedAtMs,
           completedAtMs: startedAtMs,
@@ -9884,6 +9955,7 @@ function buildHydratedTurnsFromLogs(
         currentTurn = {
           id: generateId("turn"),
           prompt,
+          messageMetadata: normalizeRunnerTurnMessageMetadata(log.metadata, meta?.threadMetadata),
           logs: [],
           startedAtMs,
           completedAtMs: startedAtMs,
@@ -10026,7 +10098,7 @@ function buildHydratedTurnsFromLogs(
     }
   }
   return applyHydratedRunningThreadState(
-    attachHydratedMessageIdsToTurns(sortedTurns, chronologicalMessages, meta?.backendUrl),
+    attachHydratedMessageIdsToTurns(sortedTurns, chronologicalMessages, meta?.backendUrl, meta?.threadMetadata),
     meta
   );
 }
@@ -10118,6 +10190,7 @@ export function RunnerChat({
   activeTaskPreviewId = null,
   onTaskPreviewClick,
   onOpenTaskList,
+  onTaskListChange,
   onResourcePreviewClick,
   onAgentTurnClick,
   onSummaryWorkspacePathClick,
@@ -10394,6 +10467,7 @@ export function RunnerChat({
   const githubPreparationPromisesRef = useRef<Record<string, Promise<void> | undefined>>({});
   const turnsRef = useRef<RunnerTurn[]>([]);
   const threadHydrationCacheRef = useRef<RunnerThreadHydrationPayload | null>(null);
+  const notifiedTaskListLogKeysRef = useRef<Set<string>>(new Set());
   const initializedThreadHistoryIdRef = useRef<string | null>(null);
   const locallyOwnedExecutionThreadIdRef = useRef<string | null>(null);
   const lastEnvironmentStartRequestKeyRef = useRef<string | null>(null);
@@ -10469,6 +10543,34 @@ export function RunnerChat({
     () => turns.some((turn) => turn.presentation !== "context-action-notice" && turn.prompt.trim().length > 0),
     [turns]
   );
+  function notifyTaskListChange(threadIdValue: string | null | undefined, log: RunnerLog) {
+    const normalizedThreadId = String(threadIdValue || "").trim();
+    if (!normalizedThreadId || log.eventType !== "todo_list") {
+      return;
+    }
+    const notificationKey = `${normalizedThreadId}:${runnerLogSignature(log)}`;
+    if (notifiedTaskListLogKeysRef.current.has(notificationKey)) {
+      return;
+    }
+    notifiedTaskListLogKeysRef.current.add(notificationKey);
+    try {
+      onTaskListChange?.(normalizedThreadId, log);
+    } catch (error) {
+      reportRunnerLifecycleCallbackError("onTaskListChange", error);
+    }
+  }
+
+  useEffect(() => {
+    const normalizedThreadId = String(currentThreadId || "").trim();
+    if (!normalizedThreadId || typeof onTaskListChange !== "function") {
+      return;
+    }
+    for (const turn of turns) {
+      for (const log of turn.logs) {
+        notifyTaskListChange(normalizedThreadId, normalizeHydratedLog(log));
+      }
+    }
+  }, [currentThreadId, onTaskListChange, turns]);
   const currentThreadHasWorkspaceChanges = useMemo(
     () => turns.some((turn) => collectTurnChangedFiles(turn.logs).length > 0),
     [turns]
@@ -13493,6 +13595,7 @@ export function RunnerChat({
             }
           }
           appendTurnLog(turnId, log);
+          notifyTaskListChange(threadId, normalizeHydratedLog(log));
           const metronomeWorkflowRunPayload = buildRunnerMetronomeWorkflowRunPayload(log, threadId, {
             userMessage: visibleTaskText || taskText,
             attachments: resolvedAttachments || null,
@@ -20992,7 +21095,7 @@ export function RunnerChat({
               const metronomeWorkflowPromptLog = getTurnMetronomeWorkflowPromptLog(turn);
               const shouldRenderMetronomeWorkflowPrompt = Boolean(metronomeWorkflowPromptLog);
               const normalizedPrompt = turn.prompt.trim();
-              const emailPromptDisplay = getRunnerEmailPromptDisplay(turn.prompt);
+              const emailPromptDisplay = getRunnerEmailPromptDisplay(turn.prompt, turn.messageMetadata);
               const displayedUserPrompt = emailPromptDisplay.content;
               const emailPromptLabel = emailPromptDisplay.isEmailPrompt ? (
                 <div className="tb-user-turn-email-label">Email from {emailPromptDisplay.emailFrom}</div>
