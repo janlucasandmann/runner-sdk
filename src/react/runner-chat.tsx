@@ -76,6 +76,7 @@ import {
   buildRunnerPreviewHtmlPreviewUrlFromDownloadUrl,
   buildRunnerPreviewHtmlPreviewUrl,
   getRunnerPreviewFilename,
+  inferRunnerPreviewMimeType,
   getRunnerPreviewHeaderValue,
   isRunnerPreviewHtmlFile,
   isRunnerDocumentPreviewable,
@@ -178,6 +179,25 @@ interface RunnerEmailPromptDisplay {
   isEmailPrompt: boolean;
 }
 
+interface RunnerEmailDeliveryAttachmentFile {
+  filename: string;
+  workspacePath?: string;
+  mimeType?: string;
+  sizeBytes?: number;
+  url?: string;
+  reason?: string;
+  kind?: "attachment" | "download_link";
+}
+
+interface RunnerEmailDeliveryDisplay {
+  label: string;
+  detail: string;
+  className: string;
+  attachmentCount: number;
+  downloadLinkCount: number;
+  attachmentFiles: RunnerEmailDeliveryAttachmentFile[];
+}
+
 function cleanRunnerEmailPromptContent(value: string): string {
   return value
     .replace(/\n*\[Email task from:\s*[^\]\r\n]+\]\s*$/i, "")
@@ -221,6 +241,18 @@ function normalizeRunnerTurnMessageMetadata(
   threadMetadata?: Record<string, unknown> | null,
 ): Record<string, unknown> | null {
   if (isRunnerEmailMetadata(messageMetadata)) {
+    if (isRunnerEmailMetadata(threadMetadata)) {
+      const threadEmail = getRecordObject(threadMetadata, ["email", "emailMetadata", "email_metadata"]);
+      const messageEmail = getRecordObject(messageMetadata, ["email", "emailMetadata", "email_metadata"]);
+      return {
+        ...(threadMetadata || {}),
+        ...(messageMetadata || {}),
+        email: {
+          ...(threadEmail || {}),
+          ...(messageEmail || {}),
+        },
+      };
+    }
     return messageMetadata || null;
   }
   if (isRunnerEmailMetadata(threadMetadata)) {
@@ -230,6 +262,250 @@ function normalizeRunnerTurnMessageMetadata(
     };
   }
   return messageMetadata || null;
+}
+
+function getRunnerEmailAttachmentFilename(value: string): string {
+  const normalized = String(value || "").trim().replace(/[?#].*$/, "");
+  const segments = normalized.split(/[\\/]/).filter(Boolean);
+  return segments[segments.length - 1] || normalized || "Attachment";
+}
+
+function normalizeRunnerEmailDeliveryAttachmentFile(
+  value: unknown,
+  kind: RunnerEmailDeliveryAttachmentFile["kind"] = "attachment"
+): RunnerEmailDeliveryAttachmentFile | null {
+  if (typeof value === "string" && value.trim()) {
+    const workspacePath = value.trim();
+    return {
+      filename: getRunnerEmailAttachmentFilename(workspacePath),
+      workspacePath,
+      kind,
+    };
+  }
+  const record = normalizeRecordObject(value);
+  if (!record) {
+    return null;
+  }
+  const workspacePath = getRecordString(record, ["workspacePath", "workspace_path", "path", "filePath", "file_path"]);
+  const filename =
+    getRecordString(record, ["filename", "fileName", "file_name", "name"]) ||
+    getRunnerEmailAttachmentFilename(workspacePath || getRecordString(record, ["url", "href"]));
+  if (!filename) {
+    return null;
+  }
+  const sizeBytes = getRecordNumber(record, ["sizeBytes", "size_bytes", "bytes", "size"]);
+  const mimeType = getRecordString(record, ["mimeType", "mime_type", "contentType", "content_type"]);
+  const url = getRecordString(record, ["url", "href"]);
+  const reason = getRecordString(record, ["reason"]);
+  return {
+    filename,
+    ...(workspacePath ? { workspacePath } : {}),
+    ...(mimeType ? { mimeType } : {}),
+    ...(typeof sizeBytes === "number" ? { sizeBytes } : {}),
+    ...(url ? { url } : {}),
+    ...(reason ? { reason } : {}),
+    kind,
+  };
+}
+
+function getRecordArray(record: Record<string, unknown> | null | undefined, keys: string[]): unknown[] {
+  if (!record) {
+    return [];
+  }
+  for (const key of keys) {
+    const value = record[key];
+    if (Array.isArray(value)) {
+      return value;
+    }
+    if (typeof value === "string" && value.trim()) {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch {
+        // Ignore malformed metadata arrays.
+      }
+    }
+  }
+  return [];
+}
+
+function extractRunnerEmailAttachmentFilesFromSummary(summaryText?: string | null): RunnerEmailDeliveryAttachmentFile[] {
+  const content = String(summaryText || "");
+  if (!content.includes("email-attachments")) {
+    return [];
+  }
+  const files: RunnerEmailDeliveryAttachmentFile[] = [];
+  const pattern = /<!--\s*email-attachments\s*:\s*([\s\S]*?)\s*-->/gi;
+  let match: RegExpExecArray | null = null;
+  while ((match = pattern.exec(content)) !== null) {
+    const rawManifest = String(match[1] || "").trim();
+    if (!rawManifest) {
+      continue;
+    }
+    try {
+      const parsed = JSON.parse(rawManifest);
+      const entries = Array.isArray(parsed) ? parsed : [parsed];
+      for (const entry of entries) {
+        const file = normalizeRunnerEmailDeliveryAttachmentFile(entry, "attachment");
+        if (file) {
+          files.push(file);
+        }
+      }
+    } catch {
+      for (const path of rawManifest.match(/\/workspace\/[^"',\]\s]+/g) || []) {
+        const file = normalizeRunnerEmailDeliveryAttachmentFile(path, "attachment");
+        if (file) {
+          files.push(file);
+        }
+      }
+    }
+  }
+  return dedupeRunnerEmailDeliveryAttachmentFiles(files);
+}
+
+function dedupeRunnerEmailDeliveryAttachmentFiles(
+  files: RunnerEmailDeliveryAttachmentFile[]
+): RunnerEmailDeliveryAttachmentFile[] {
+  const seen = new Set<string>();
+  const deduped: RunnerEmailDeliveryAttachmentFile[] = [];
+  for (const file of files) {
+    const key = [
+      file.kind || "attachment",
+      file.workspacePath || "",
+      file.url || "",
+      file.filename,
+    ].join("|").toLowerCase();
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    deduped.push(file);
+  }
+  return deduped;
+}
+
+function getRunnerEmailDeliveryDisplay(
+  metadata?: Record<string, unknown> | null,
+  summaryText?: string | null
+): RunnerEmailDeliveryDisplay | null {
+  if (!metadata) {
+    return null;
+  }
+
+  const emailRecord = getRecordObject(metadata, ["email", "emailMetadata", "email_metadata"]);
+  const deliveryRecord =
+    getRecordObject(metadata, ["emailDelivery", "email_delivery"]) ||
+    getRecordObject(emailRecord, ["delivery", "emailDelivery", "email_delivery"]);
+  if (!deliveryRecord) {
+    return null;
+  }
+
+  const status = getRecordString(deliveryRecord, ["status", "deliveryStatus", "delivery_status"]).trim().toLowerCase();
+  if (!status) {
+    return null;
+  }
+
+  const attachmentCount = getRecordNumber(deliveryRecord, ["attachmentCount", "attachment_count"]);
+  const downloadLinkCount = getRecordNumber(deliveryRecord, ["downloadLinkCount", "download_link_count"]);
+  const issue = getRecordString(deliveryRecord, ["issue", "deliveryIssue", "delivery_issue", "error"]);
+  const metadataAttachmentFiles = getRecordArray(deliveryRecord, ["attachmentFiles", "attachment_files", "attachments"])
+    .map((entry) => normalizeRunnerEmailDeliveryAttachmentFile(entry, "attachment"))
+    .filter((file): file is RunnerEmailDeliveryAttachmentFile => Boolean(file));
+  const metadataDownloadLinks = getRecordArray(deliveryRecord, ["downloadLinks", "download_links"])
+    .map((entry) => normalizeRunnerEmailDeliveryAttachmentFile(entry, "download_link"))
+    .filter((file): file is RunnerEmailDeliveryAttachmentFile => Boolean(file));
+  const manifestAttachmentFiles = extractRunnerEmailAttachmentFilesFromSummary(summaryText);
+  const attachmentFiles = dedupeRunnerEmailDeliveryAttachmentFiles([
+    ...metadataAttachmentFiles,
+    ...metadataDownloadLinks,
+    ...manifestAttachmentFiles,
+  ]);
+  const effectiveAttachmentCount = Math.max(
+    0,
+    Math.round(attachmentCount || metadataAttachmentFiles.length || manifestAttachmentFiles.length || 0)
+  );
+  const effectiveDownloadLinkCount = Math.max(0, Math.round(downloadLinkCount || metadataDownloadLinks.length || 0));
+  const detailParts: string[] = [];
+  if (issue && ["deferred", "failed", "bounced", "dropped", "spam_report"].includes(status)) {
+    detailParts.push(issue);
+  }
+  if (effectiveDownloadLinkCount > 0) {
+    detailParts.push(`${effectiveDownloadLinkCount} download link${effectiveDownloadLinkCount === 1 ? "" : "s"}`);
+  }
+
+  switch (status) {
+    case "delivered":
+    case "opened":
+    case "clicked":
+      return {
+        label: status === "delivered" ? "Email delivered" : "Email reply delivered",
+        detail: detailParts.join(" | "),
+        className: "is-delivered",
+        attachmentCount: effectiveAttachmentCount,
+        downloadLinkCount: effectiveDownloadLinkCount,
+        attachmentFiles,
+      };
+    case "sending":
+    case "accepted":
+    case "processed":
+      return {
+        label: "Email reply sent",
+        detail: detailParts.join(" | "),
+        className: "is-pending",
+        attachmentCount: effectiveAttachmentCount,
+        downloadLinkCount: effectiveDownloadLinkCount,
+        attachmentFiles,
+      };
+    case "deferred":
+      return {
+        label: "Email delivery delayed",
+        detail: detailParts.join(" | "),
+        className: "is-issue",
+        attachmentCount: effectiveAttachmentCount,
+        downloadLinkCount: effectiveDownloadLinkCount,
+        attachmentFiles,
+      };
+    case "failed":
+      return {
+        label: "Email send failed",
+        detail: detailParts.join(" | "),
+        className: "is-issue",
+        attachmentCount: effectiveAttachmentCount,
+        downloadLinkCount: effectiveDownloadLinkCount,
+        attachmentFiles,
+      };
+    case "bounced":
+      return {
+        label: "Email bounced",
+        detail: detailParts.join(" | "),
+        className: "is-issue",
+        attachmentCount: effectiveAttachmentCount,
+        downloadLinkCount: effectiveDownloadLinkCount,
+        attachmentFiles,
+      };
+    case "dropped":
+      return {
+        label: "Email dropped",
+        detail: detailParts.join(" | "),
+        className: "is-issue",
+        attachmentCount: effectiveAttachmentCount,
+        downloadLinkCount: effectiveDownloadLinkCount,
+        attachmentFiles,
+      };
+    case "spam_report":
+      return {
+        label: "Spam report received",
+        detail: detailParts.join(" | "),
+        className: "is-issue",
+        attachmentCount: effectiveAttachmentCount,
+        downloadLinkCount: effectiveDownloadLinkCount,
+        attachmentFiles,
+      };
+    default:
+      return null;
+  }
 }
 
 function getRunnerEmailPromptDisplay(prompt: string, metadata?: Record<string, unknown> | null): RunnerEmailPromptDisplay {
@@ -10266,6 +10542,7 @@ export function RunnerChat({
     isSubmitting: false,
   });
   const [runSummaryMoreTurnId, setRunSummaryMoreTurnId] = useState<string | null>(null);
+  const [emailDeliveryAttachmentsTurnId, setEmailDeliveryAttachmentsTurnId] = useState<string | null>(null);
   const [reportIssueTurn, setReportIssueTurn] = useState<{ turnId: string; summaryText: string } | null>(null);
   const [reportIssueType, setReportIssueType] = useState<RunnerThreadFeedbackReportType>("bug");
   const [reportIssueMessage, setReportIssueMessage] = useState("");
@@ -10443,6 +10720,7 @@ export function RunnerChat({
   const projectCreateMenuRef = useRef<HTMLDivElement | null>(null);
   const forkEnvironmentPopupRef = useRef<HTMLDivElement | null>(null);
   const runSummaryMoreMenuRef = useRef<HTMLSpanElement | null>(null);
+  const emailDeliveryAttachmentsPopoverRef = useRef<HTMLSpanElement | null>(null);
   const currentInputRef = useRef(initialTask);
   const speechSocketRef = useRef<WebSocket | null>(null);
   const speechSocketReadyRef = useRef(false);
@@ -12648,98 +12926,224 @@ export function RunnerChat({
     );
   }
 
-  function renderRunSummaryActionLine(turn: RunnerTurn, summaryText: string, options?: { isLatest?: boolean; canEditTurn?: boolean }) {
+  function renderRunSummaryActionLine(
+    turn: RunnerTurn,
+    summaryText: string,
+    options?: {
+      isLatest?: boolean;
+      canEditTurn?: boolean;
+      emailDeliveryDisplay?: RunnerEmailDeliveryDisplay | null;
+    }
+  ) {
     const isForkingThisTurn = forkingTurnId === turn.id;
     const isMoreMenuOpen = runSummaryMoreTurnId === turn.id;
+    const emailDeliveryDisplay = options?.emailDeliveryDisplay || null;
+    const isAttachmentPopoverOpen = emailDeliveryAttachmentsTurnId === turn.id;
+    const attachmentCount = emailDeliveryDisplay?.attachmentCount || 0;
+    const attachmentFiles = emailDeliveryDisplay?.attachmentFiles || [];
+    const attachmentLabel = `${attachmentCount} attachment${attachmentCount === 1 ? "" : "s"}`;
+    const buildEmailDeliveryPreviewAttachment = (file: RunnerEmailDeliveryAttachmentFile): RunnerTurnAttachment | null => {
+      const workspacePath = normalizeRunnerPreviewWorkspacePath(file.workspacePath || "");
+      if (workspacePath && summaryPreviewEnvironmentId) {
+        return {
+          ...buildRunnerPreviewAttachmentFromPath(workspacePath, {
+            backendUrl: normalizedBackendUrl,
+            environmentId: summaryPreviewEnvironmentId,
+            idPrefix: "email-delivery",
+          }),
+          filename: file.filename,
+          mimeType: file.mimeType || inferRunnerPreviewMimeType(workspacePath),
+          workspacePath,
+        };
+      }
+
+      const url = String(file.url || "").trim();
+      if (!url) {
+        return null;
+      }
+      const filename = String(file.filename || getRunnerEmailAttachmentFilename(url)).trim() || "Attachment";
+      const mimeType = String(file.mimeType || inferRunnerPreviewMimeType(filename) || "application/octet-stream").trim() || "application/octet-stream";
+      const type = attachmentTypeForFile(mimeType, filename);
+      return {
+        id: `email-delivery:${turn.id}:${file.kind || "attachment"}:${workspacePath || url || filename}`,
+        filename,
+        mimeType,
+        type,
+        url,
+        previewUrl: type === "image" ? url : undefined,
+        ...(workspacePath ? { workspacePath } : {}),
+      };
+    };
+    const openEmailDeliveryAttachmentPreview = (file: RunnerEmailDeliveryAttachmentFile) => {
+      const previewAttachment = buildEmailDeliveryPreviewAttachment(file);
+      if (!previewAttachment || !isAttachmentDocumentPreviewable(previewAttachment)) {
+        return;
+      }
+      setEmailDeliveryAttachmentsTurnId(null);
+      toggleDocumentAttachmentPreview(previewAttachment);
+    };
     return (
       <div className={`tb-run-summary-action-line ${options?.isLatest ? "is-latest" : ""}`.trim()} aria-label="Run summary actions">
-        <button
-          type="button"
-          className="tb-run-summary-action-button"
-          data-label="Copy"
-          title="Copy run summary"
-          aria-label="Copy run summary"
-          onClick={() => {
-            void copyRunSummaryText(summaryText);
-          }}
-        >
-          <LucideCopy className="tb-run-summary-action-icon" strokeWidth={2} />
-        </button>
-        <button
-          type="button"
-          className="tb-run-summary-action-button"
-          data-label="Fork"
-          title="Fork from message"
-          aria-label="Fork from message"
-          onClick={() => openForkDialogForTurn(turn)}
-        >
-          {isForkingThisTurn ? (
-            <LucideLoaderCircle className="tb-run-summary-action-icon tb-context-action-notice-icon-spinner" strokeWidth={2} />
-          ) : (
-            <LucideSplit className="tb-run-summary-action-icon" strokeWidth={2} />
-          )}
-        </button>
-        <button
-          type="button"
-          className={`tb-run-summary-action-button ${threadFeedback.userRating === "up" ? "is-active" : ""}`.trim()}
-          data-label="Good"
-          title="Mark as helpful"
-          aria-label="Mark as helpful"
-          aria-pressed={threadFeedback.userRating === "up"}
-          onClick={() => submitThreadFeedback("up")}
-        >
-          <LucideThumbsUp className="tb-run-summary-action-icon" strokeWidth={2} />
-        </button>
-        <button
-          type="button"
-          className={`tb-run-summary-action-button ${threadFeedback.userRating === "down" ? "is-active" : ""}`.trim()}
-          data-label="Bad"
-          title="Mark as not helpful"
-          aria-label="Mark as not helpful"
-          aria-pressed={threadFeedback.userRating === "down"}
-          onClick={() => submitThreadFeedback("down")}
-        >
-          <LucideThumbsDown className="tb-run-summary-action-icon" strokeWidth={2} />
-        </button>
-        <button
-          type="button"
-          className="tb-run-summary-action-button"
-          data-label="Rerun"
-          title="Rerun from message"
-          aria-label="Rerun from message"
-          onClick={() => rerunTurnFromSummary(turn)}
-        >
-          <LucideRefreshCw className="tb-run-summary-action-icon" strokeWidth={2} />
-        </button>
-        <span className="tb-run-summary-more-anchor" ref={isMoreMenuOpen ? runSummaryMoreMenuRef : undefined}>
+        <span className="tb-run-summary-action-group">
           <button
             type="button"
-            className={`tb-run-summary-action-button ${isMoreMenuOpen ? "is-open" : ""}`.trim()}
-            data-label="More"
-            title="More"
-            aria-label="More"
-            aria-haspopup="menu"
-            aria-expanded={isMoreMenuOpen}
-            onClick={(event) => {
-              event.stopPropagation();
-              setRunSummaryMoreTurnId((current) => current === turn.id ? null : turn.id);
+            className="tb-run-summary-action-button"
+            data-label="Copy"
+            title="Copy run summary"
+            aria-label="Copy run summary"
+            onClick={() => {
+              void copyRunSummaryText(summaryText);
             }}
           >
-            <LucideEllipsis className="tb-run-summary-action-icon" strokeWidth={2} />
+            <LucideCopy className="tb-run-summary-action-icon" strokeWidth={2} />
           </button>
-          {isMoreMenuOpen ? (
-            <div className="tb-run-summary-more-menu" role="menu" onClick={(event) => event.stopPropagation()}>
-              <button
-                type="button"
-                className="tb-run-summary-more-menu-item"
-                role="menuitem"
-                onClick={() => openReportIssueModal(turn, summaryText)}
-              >
-                Report issue
-              </button>
-            </div>
-          ) : null}
+          <button
+            type="button"
+            className="tb-run-summary-action-button"
+            data-label="Fork"
+            title="Fork from message"
+            aria-label="Fork from message"
+            onClick={() => openForkDialogForTurn(turn)}
+          >
+            {isForkingThisTurn ? (
+              <LucideLoaderCircle className="tb-run-summary-action-icon tb-context-action-notice-icon-spinner" strokeWidth={2} />
+            ) : (
+              <LucideSplit className="tb-run-summary-action-icon" strokeWidth={2} />
+            )}
+          </button>
+          <button
+            type="button"
+            className={`tb-run-summary-action-button ${threadFeedback.userRating === "up" ? "is-active" : ""}`.trim()}
+            data-label="Good"
+            title="Mark as helpful"
+            aria-label="Mark as helpful"
+            aria-pressed={threadFeedback.userRating === "up"}
+            onClick={() => submitThreadFeedback("up")}
+          >
+            <LucideThumbsUp className="tb-run-summary-action-icon" strokeWidth={2} />
+          </button>
+          <button
+            type="button"
+            className={`tb-run-summary-action-button ${threadFeedback.userRating === "down" ? "is-active" : ""}`.trim()}
+            data-label="Bad"
+            title="Mark as not helpful"
+            aria-label="Mark as not helpful"
+            aria-pressed={threadFeedback.userRating === "down"}
+            onClick={() => submitThreadFeedback("down")}
+          >
+            <LucideThumbsDown className="tb-run-summary-action-icon" strokeWidth={2} />
+          </button>
+          <button
+            type="button"
+            className="tb-run-summary-action-button"
+            data-label="Rerun"
+            title="Rerun from message"
+            aria-label="Rerun from message"
+            onClick={() => rerunTurnFromSummary(turn)}
+          >
+            <LucideRefreshCw className="tb-run-summary-action-icon" strokeWidth={2} />
+          </button>
+          <span className="tb-run-summary-more-anchor" ref={isMoreMenuOpen ? runSummaryMoreMenuRef : undefined}>
+            <button
+              type="button"
+              className={`tb-run-summary-action-button ${isMoreMenuOpen ? "is-open" : ""}`.trim()}
+              data-label="More"
+              title="More"
+              aria-label="More"
+              aria-haspopup="menu"
+              aria-expanded={isMoreMenuOpen}
+              onClick={(event) => {
+                event.stopPropagation();
+                setEmailDeliveryAttachmentsTurnId(null);
+                setRunSummaryMoreTurnId((current) => current === turn.id ? null : turn.id);
+              }}
+            >
+              <LucideEllipsis className="tb-run-summary-action-icon" strokeWidth={2} />
+            </button>
+            {isMoreMenuOpen ? (
+              <div className="tb-run-summary-more-menu" role="menu" onClick={(event) => event.stopPropagation()}>
+                <button
+                  type="button"
+                  className="tb-run-summary-more-menu-item"
+                  role="menuitem"
+                  onClick={() => openReportIssueModal(turn, summaryText)}
+                >
+                  Report issue
+                </button>
+              </div>
+            ) : null}
+          </span>
         </span>
+        {emailDeliveryDisplay ? (
+          <span className="tb-run-summary-email-status">
+            <span className={`tb-email-delivery-status ${emailDeliveryDisplay.className}`}>
+              <LucideMail className="tb-email-delivery-status-icon" strokeWidth={1.7} />
+              <span>{emailDeliveryDisplay.label}</span>
+              {emailDeliveryDisplay.detail ? <span className="tb-email-delivery-status-detail">{emailDeliveryDisplay.detail}</span> : null}
+            </span>
+            {attachmentCount > 0 ? (
+              <span
+                className="tb-email-delivery-attachments-anchor"
+                ref={isAttachmentPopoverOpen ? emailDeliveryAttachmentsPopoverRef : undefined}
+              >
+                <button
+                  type="button"
+                  className={`tb-email-delivery-attachments-button ${isAttachmentPopoverOpen ? "is-open" : ""}`.trim()}
+                  aria-label={`Show ${attachmentLabel}`}
+                  aria-haspopup="dialog"
+                  aria-expanded={isAttachmentPopoverOpen}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setRunSummaryMoreTurnId(null);
+                    setEmailDeliveryAttachmentsTurnId((current) => current === turn.id ? null : turn.id);
+                  }}
+                >
+                  {attachmentLabel}
+                </button>
+                {isAttachmentPopoverOpen ? (
+                  <div className="tb-email-delivery-attachments-popover tb-popup-menu tb-popup-menu-animate-up-in" role="dialog" aria-label="Email attachments" onClick={(event) => event.stopPropagation()}>
+                    <div className="tb-email-delivery-attachments-popover-title">Attached files</div>
+                    <div className="tb-email-delivery-attachments-list">
+                      {attachmentFiles.length > 0 ? attachmentFiles.map((file, index) => {
+                        const meta = [
+                          file.kind === "download_link" ? "Download link" : "",
+                          formatBrowserFileSize(file.sizeBytes),
+                          file.workspacePath,
+                        ].filter(Boolean).join(" · ");
+                        const previewAttachment = buildEmailDeliveryPreviewAttachment(file);
+                        const isPreviewable = Boolean(previewAttachment && isAttachmentDocumentPreviewable(previewAttachment));
+                        const rowContent = (
+                          <>
+                            <img className="tb-email-delivery-attachment-icon" src={RUNNER_EMAIL_ATTACHMENT_FILE_ICON_URL} alt="" aria-hidden="true" />
+                            <span className="tb-email-delivery-attachment-copy">
+                              <span className="tb-email-delivery-attachment-name">{file.filename}</span>
+                              {meta ? <span className="tb-email-delivery-attachment-meta">{meta}</span> : null}
+                            </span>
+                          </>
+                        );
+                        return (
+                          <button
+                            type="button"
+                            key={`${file.filename}:${file.workspacePath || file.url || index}`}
+                            className={`tb-email-delivery-attachment-row ${isPreviewable ? "is-previewable" : ""}`.trim()}
+                            disabled={!isPreviewable}
+                            onClick={() => openEmailDeliveryAttachmentPreview(file)}
+                          >
+                            {rowContent}
+                          </button>
+                        );
+                      }) : (
+                        <div className="tb-email-delivery-attachments-empty">
+                          Attachment details are not available for this email.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+              </span>
+            ) : null}
+          </span>
+        ) : null}
       </div>
     );
   }
@@ -14497,6 +14901,22 @@ export function RunnerChat({
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, [runSummaryMoreTurnId]);
+
+  useEffect(() => {
+    if (!emailDeliveryAttachmentsTurnId) {
+      return;
+    }
+
+    const handlePointerDown = (event: Event) => {
+      const target = event.target as Node | null;
+      if (emailDeliveryAttachmentsPopoverRef.current && target && !emailDeliveryAttachmentsPopoverRef.current.contains(target)) {
+        setEmailDeliveryAttachmentsTurnId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [emailDeliveryAttachmentsTurnId]);
 
   useEffect(() => {
     if (!agents.length) return;
@@ -21096,6 +21516,9 @@ export function RunnerChat({
               const shouldRenderMetronomeWorkflowPrompt = Boolean(metronomeWorkflowPromptLog);
               const normalizedPrompt = turn.prompt.trim();
               const emailPromptDisplay = getRunnerEmailPromptDisplay(turn.prompt, turn.messageMetadata);
+              const emailDeliveryDisplay = agentMessage?.message && isLatestTurn
+                ? getRunnerEmailDeliveryDisplay(turn.messageMetadata, agentMessage.message)
+                : null;
               const displayedUserPrompt = emailPromptDisplay.content;
               const emailPromptLabel = emailPromptDisplay.isEmailPrompt ? (
                 <div className="tb-user-turn-email-label">Email from {emailPromptDisplay.emailFrom}</div>
@@ -21406,6 +21829,13 @@ export function RunnerChat({
                             softBreaks: true,
                             canPreviewSummaryWorkspacePaths,
                           })}
+                          {emailDeliveryDisplay ? (
+                            <div className={`tb-email-delivery-status ${emailDeliveryDisplay.className}`}>
+                              <LucideMail className="tb-email-delivery-status-icon" strokeWidth={1.7} />
+                              <span>{emailDeliveryDisplay.label}</span>
+                              {emailDeliveryDisplay.detail ? <span className="tb-email-delivery-status-detail">{emailDeliveryDisplay.detail}</span> : null}
+                            </div>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>
@@ -21543,7 +21973,7 @@ export function RunnerChat({
                           })}
                         </div>
                         {renderModelProviderRetryAction(turn, agentMessage.message)}
-                        {renderRunSummaryActionLine(turn, agentMessage.message, { isLatest: isLatestTurn, canEditTurn })}
+                        {renderRunSummaryActionLine(turn, agentMessage.message, { isLatest: isLatestTurn, canEditTurn, emailDeliveryDisplay })}
                         {shouldRenderFollowUpEngine ? (
                           <div className="tb-follow-up-engine" role="group" aria-label="Follow-up actions">
                             <div className="tb-follow-up-engine-stack">
@@ -21764,7 +22194,7 @@ export function RunnerChat({
                         })}
                       </div>
                       {renderModelProviderRetryAction(turn, agentMessage.message)}
-                      {renderRunSummaryActionLine(turn, agentMessage.message, { isLatest: isLatestTurn, canEditTurn })}
+                      {renderRunSummaryActionLine(turn, agentMessage.message, { isLatest: isLatestTurn, canEditTurn, emailDeliveryDisplay })}
                       {shouldRenderFollowUpEngine ? (
                         <div className="tb-follow-up-engine" role="group" aria-label="Follow-up actions">
                           <div className="tb-follow-up-engine-stack">

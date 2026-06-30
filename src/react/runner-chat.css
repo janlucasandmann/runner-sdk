@@ -1746,6 +1746,203 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   white-space: normal;
 }
 
+.tb-runner-chat .tb-email-delivery-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-email-delivery-status.is-delivered {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.tb-runner-chat .tb-email-delivery-status.is-pending {
+  color: #8fbfff;
+}
+
+.tb-runner-chat .tb-email-delivery-status.is-issue {
+  color: #ff9a9a;
+}
+
+.tb-runner-chat .tb-email-delivery-status-icon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-email-delivery-status-detail {
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.tb-runner-chat .tb-run-summary-email-status {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-run-summary-email-status .tb-email-delivery-status {
+  margin-top: 0;
+  flex: 0 1 auto;
+}
+
+.tb-runner-chat .tb-email-delivery-attachments-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-email-delivery-attachments-button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 400;
+  padding: 0;
+  cursor: pointer;
+  transition: color 140ms ease;
+}
+
+.tb-runner-chat .tb-email-delivery-attachments-button:hover,
+.tb-runner-chat .tb-email-delivery-attachments-button.is-open {
+  color: #ffffff;
+}
+
+.tb-runner-chat .tb-popup-menu.tb-email-delivery-attachments-popover {
+  position: absolute;
+  top: auto;
+  bottom: calc(100% + 10px);
+  right: 0;
+  left: auto;
+  z-index: 28;
+  width: min(420px, calc(100vw - 32px));
+  max-width: 420px;
+  min-width: min(340px, calc(100vw - 32px));
+  padding: 8px;
+  border-radius: 18px;
+  background: rgba(30, 30, 30, 0.5);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  transform-origin: bottom right;
+}
+
+.tb-runner-chat .tb-popup-menu.tb-email-delivery-attachments-popover::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--tb-task-input-border, var(--tb-runner-input-border));
+  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  mask-origin: content-box, border-box;
+  mask-repeat: repeat, repeat;
+  mask-size: auto, auto;
+}
+
+.tb-runner-chat .tb-email-delivery-attachments-popover-title {
+  position: relative;
+  z-index: 6;
+  padding: 2px 4px 8px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.tb-runner-chat .tb-email-delivery-attachments-list {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  overflow: auto;
+}
+
+.tb-runner-chat .tb-email-delivery-attachment-row {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-email-delivery-attachment-row:hover:not(:disabled),
+.tb-runner-chat .tb-email-delivery-attachment-row.is-previewable:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tb-runner-chat .tb-email-delivery-attachment-row:disabled {
+  cursor: default;
+}
+
+.tb-runner-chat .tb-email-delivery-attachment-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.tb-runner-chat .tb-email-delivery-attachment-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tb-runner-chat .tb-email-delivery-attachment-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-email-delivery-attachment-meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.tb-runner-chat .tb-email-delivery-attachments-empty {
+  padding: 8px 4px 4px;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .tb-runner-chat .tb-provider-retry {
   display: flex;
   align-items: center;
@@ -2073,7 +2270,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-run-summary-action-line {
   display: flex;
   align-items: center;
-  gap: 18px;
+  justify-content: space-between;
+  gap: 12px;
   height: 0;
   margin-top: 0;
   overflow: visible;
@@ -2084,6 +2282,13 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   line-height: 1;
   font-weight: 400;
   transition: opacity 140ms ease, margin-top 140ms ease, height 140ms ease;
+}
+
+.tb-runner-chat .tb-run-summary-action-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
 }
 
 .tb-runner-chat .tb-turn-summary.is-latest-summary .tb-run-summary-action-line,

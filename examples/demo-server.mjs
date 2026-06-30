@@ -956,7 +956,7 @@ const html = `<!doctype html>
         font-size: 11px;
         font-weight: 400;
         line-height: 1.25;
-        color: rgba(255, 255, 255, 0.46);
+        color: rgba(255, 255, 255, 0.62);
       }
 
       .sidebar-workspace-option-check {
@@ -2694,7 +2694,7 @@ const html = `<!doctype html>
         white-space: nowrap;
         font-size: 12px;
         font-weight: 400;
-        color: rgba(255, 255, 255, 0.46);
+        color: rgba(255, 255, 255, 0.62);
       }
 
       .playground-configure-row-meta {
@@ -21155,6 +21155,456 @@ const html = `<!doctype html>
         text-align: center;
       }
 
+      .playground-guardrails-page {
+        height: 100%;
+        min-height: 0;
+        background: transparent;
+      }
+
+      .playground-guardrails-library-tabs .playground-files-library-tab {
+        min-width: 68px;
+      }
+
+      .playground-guardrails-toolbar-menu {
+        z-index: 10090;
+      }
+
+      .playground-guardrails-browser {
+        overflow: hidden;
+      }
+
+      .playground-files-page .playground-guardrails-browser-body {
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 24px;
+        overflow: hidden;
+      }
+
+      .playground-guardrails-layout {
+        width: 100%;
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .playground-guardrails-list-panel,
+      .playground-guardrails-editor {
+        min-width: 0;
+        min-height: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-sizing: border-box;
+      }
+
+      .playground-guardrails-list-panel {
+        overflow: hidden;
+        padding: 0;
+      }
+
+      .playground-guardrails-table-shell {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow: auto;
+      }
+
+      .playground-guardrails-table {
+        width: 100%;
+        min-width: 680px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-guardrails-table-header,
+      .playground-guardrails-table-row {
+        display: grid;
+        grid-template-columns: minmax(240px, 1.45fr) 92px 96px 112px 32px;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-guardrails-table-header {
+        min-height: 34px;
+        padding: 0 10px;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 11px;
+        font-weight: 500;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-guardrails-table-row {
+        min-height: 62px;
+        padding: 0 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.9);
+        cursor: pointer;
+        transition: background-color 160ms ease;
+      }
+
+      .playground-guardrails-table-row:hover,
+      .playground-guardrails-table-row.is-selected {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-guardrails-set-cell {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-guardrails-set-icon {
+        width: 26px;
+        height: 26px;
+        flex: 0 0 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-guardrails-set-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-guardrails-set-title {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 13px;
+        line-height: 1.25;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-guardrails-set-description,
+      .playground-guardrails-table-muted {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-guardrails-status-pill {
+        width: fit-content;
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 400;
+      }
+
+      .playground-guardrails-status-dot {
+        width: 7px;
+        height: 7px;
+        flex: 0 0 7px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.34);
+      }
+
+      .playground-guardrails-status-pill.is-active .playground-guardrails-status-dot {
+        background: #54e5a6;
+        box-shadow: 0 0 0 3px rgba(84, 229, 166, 0.12);
+      }
+
+      .playground-guardrails-status-pill.is-paused .playground-guardrails-status-dot {
+        background: rgba(255, 255, 255, 0.34);
+      }
+
+      .playground-guardrails-row-action,
+      .playground-guardrails-prompt-delete {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.42);
+        padding: 0;
+        cursor: pointer;
+        transition: color 160ms ease, background 160ms ease;
+      }
+
+      .playground-guardrails-row-action:hover,
+      .playground-guardrails-prompt-delete:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+
+      .playground-guardrails-editor {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 0;
+        border-left: 0;
+        overflow: visible;
+      }
+
+      .playground-guardrails-detail {
+        width: 100%;
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .playground-guardrails-detail::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-guardrails-title-with-back {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-guardrails-back-button.playground-files-nav-button {
+        width: 24px;
+        height: 24px;
+        background: transparent;
+      }
+
+      .playground-guardrails-detail-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-guardrails-editor-header,
+      .playground-guardrails-prompts-header,
+      .playground-guardrails-prompt-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-guardrails-editor-title-row,
+      .playground-guardrails-prompts-title {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .playground-guardrails-toggle {
+        width: 38px;
+        height: 22px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 2px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        cursor: pointer;
+        transition: background 160ms ease, border-color 160ms ease;
+      }
+
+      .playground-guardrails-toggle.is-active {
+        justify-content: flex-end;
+        border-color: rgba(84, 229, 166, 0.28);
+        background: rgba(84, 229, 166, 0.18);
+      }
+
+      .playground-guardrails-toggle-knob {
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-guardrails-toggle.is-active .playground-guardrails-toggle-knob {
+        background: #54e5a6;
+      }
+
+      .playground-guardrails-field {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+
+      .playground-guardrails-field > span {
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .playground-guardrails-input,
+      .playground-guardrails-textarea,
+      .playground-guardrails-prompt-title-input {
+        width: 100%;
+        min-width: 0;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.94);
+        font: inherit;
+        font-size: 12px;
+        line-height: 1.45;
+        outline: none;
+        box-sizing: border-box;
+      }
+
+      .playground-guardrails-input,
+      .playground-guardrails-prompt-title-input {
+        height: 34px;
+        padding: 0 11px;
+      }
+
+      .playground-guardrails-textarea {
+        resize: none;
+        padding: 10px 11px;
+      }
+
+      .playground-guardrails-textarea.is-description {
+        min-height: 74px;
+      }
+
+      .playground-guardrails-textarea.is-prompt {
+        min-height: 118px;
+      }
+
+      .playground-guardrails-input:focus,
+      .playground-guardrails-textarea:focus,
+      .playground-guardrails-prompt-title-input:focus {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .playground-guardrails-inline-action {
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-guardrails-inline-action:hover {
+        color: #fff;
+      }
+
+      .playground-guardrails-prompts-list {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow: auto;
+      }
+
+      .playground-guardrails-prompts-list::-webkit-scrollbar,
+      .playground-guardrails-table-shell::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-guardrails-prompt-card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-guardrails-prompt-title-input {
+        flex: 1 1 auto;
+      }
+
+      .playground-guardrails-prompt-enable {
+        height: 26px;
+        flex: 0 0 auto;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 11px;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-guardrails-prompt-enable.is-active {
+        color: #54e5a6;
+      }
+
+      .playground-guardrails-empty,
+      .playground-guardrails-editor-empty,
+      .playground-guardrails-prompt-empty {
+        height: 100%;
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        color: rgba(255, 255, 255, 0.46);
+        text-align: center;
+      }
+
+      .playground-guardrails-prompt-empty {
+        min-height: 88px;
+        height: auto;
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        font-size: 12px;
+      }
+
+      .playground-guardrails-empty-icon {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .playground-guardrails-empty-title {
+        color: rgba(255, 255, 255, 0.76);
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .playground-guardrails-empty-button {
+        margin-top: 2px;
+      }
+
       .playground-files-action-error {
         font-size: 12px;
         line-height: 1.45;
@@ -24116,6 +24566,7 @@ const html = `<!doctype html>
 
       .playground-plugin-detail-tabs.playground-agents-overview-tabs {
         margin-top: 0;
+        margin-bottom: 0;
       }
 
       .playground-plugin-detail-tutorial {
@@ -43621,7 +44072,7 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-page .playground-agents-detail-main-pane .playground-environments-detail-scroll,
       .playground-agents-detail-assistant-page .playground-agents-detail-main-pane > .playground-environments-detail-scroll.playground-settings-detail-scroll {
-        padding: 42px 44px 56px;
+        padding: 0 44px 56px;
       }
 
       .playground-agents-detail-assistant-page .playground-agents-detail-main-pane .playground-environments-detail-scroll.playground-environments-editor-scroll {
@@ -43633,6 +44084,11 @@ ${METRONOME_PAGE_CSS}
       .playground-agents-detail-assistant-page .playground-agents-detail-content {
         width: min(100%, var(--playground-centered-page-max-width));
         max-width: var(--playground-centered-page-max-width);
+      }
+
+      .playground-agents-page .playground-agents-detail-main-pane .playground-agents-detail-content,
+      .playground-agents-detail-assistant-page .playground-agents-detail-main-pane .playground-agents-detail-content {
+        padding-top: 42px;
       }
 
       .playground-agents-detail-main-pane.is-agent-background-active,
@@ -43712,9 +44168,299 @@ ${METRONOME_PAGE_CSS}
         padding: 0;
       }
 
+      .playground-agents-detail-content .playground-agents-profile-section {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 14px;
+      }
+
+      .playground-agents-detail-content .playground-agents-profile-avatar-wrap {
+        flex: 0 0 auto;
+      }
+
+      .playground-agents-detail-content .playground-agents-profile-avatar.profile-editor-avatar {
+        width: 48px;
+        height: 48px;
+      }
+
+      .playground-agents-detail-avatar-surface-button.profile-editor-avatar-surface {
+        padding: 0;
+        border: 0;
+        font: inherit;
+        cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+
+      .playground-agents-detail-avatar-surface-button.profile-editor-avatar-surface:hover {
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .playground-agents-detail-avatar-surface-button.profile-editor-avatar-surface:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.72);
+        outline-offset: 3px;
+      }
+
+      .playground-agents-detail-content .playground-agents-avatar-picker-shell.playground-tasks-toolbar-popup-shell {
+        left: 0;
+        right: auto;
+        top: 0;
+        bottom: auto;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .playground-agents-detail-content .playground-agents-avatar-picker-menu {
+        left: 0;
+        right: auto;
+        top: calc(100% + 8px);
+        pointer-events: auto;
+      }
+
+      .playground-agents-profile-copy {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 7px;
+      }
+
+      .playground-agents-detail-profile-actions,
+      .playground-agents-detail-sidebar-controls {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .playground-agents-detail-profile-actions {
+        margin-left: auto;
+      }
+
+      .playground-tags-detail-profile-actions.playground-agents-detail-profile-actions,
+      .playground-tags-detail-sidebar-controls.playground-agents-detail-sidebar-controls {
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      .playground-tags-detail-sidebar-controls.playground-agents-detail-sidebar-controls {
+        width: auto;
+        margin-left: auto;
+        margin-top: 2px;
+      }
+
+      .playground-tags-detail-profile-actions .playground-plugin-detail-connect-button,
+      .playground-tags-detail-sidebar-controls .playground-plugin-detail-connect-button {
+        margin-right: 0;
+        min-height: 30px;
+        padding-left: 11px;
+        padding-right: 11px;
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-tags-detail-profile-actions .playground-project-overview-sidebar-toggle,
+      .playground-tags-detail-sidebar-controls .playground-project-overview-sidebar-toggle {
+        margin: 0;
+      }
+
+      .playground-agents-detail-header-publish-button.playground-metronome-create-button {
+        flex: 0 0 auto;
+        min-width: 0;
+      }
+
+      .playground-agents-detail-publish-split-shell.playground-tasks-toolbar-popup-shell {
+        z-index: 74;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .playground-agents-detail-publish-split-control.playground-metronome-create-button {
+        padding: 0;
+        gap: 0;
+        cursor: default;
+      }
+
+      .playground-agents-detail-publish-split-control.is-disabled {
+        opacity: 0.62;
+      }
+
+      .playground-agents-detail-publish-main,
+      .playground-agents-detail-publish-chevron {
+        position: relative;
+        z-index: 1;
+        height: 30px;
+        min-height: 30px;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .playground-agents-detail-publish-main {
+        gap: 8px;
+        padding: 0 10px 0 14px;
+      }
+
+      .playground-agents-detail-publish-chevron {
+        width: 30px;
+        padding: 0;
+      }
+
+      .playground-agents-detail-publish-main:disabled,
+      .playground-agents-detail-publish-chevron:disabled {
+        cursor: not-allowed;
+      }
+
+      .playground-agents-detail-publish-main:focus-visible,
+      .playground-agents-detail-publish-chevron:focus-visible {
+        outline: none;
+      }
+
+      .playground-agents-detail-publish-divider {
+        position: relative;
+        z-index: 1;
+        width: 1px;
+        height: 14px;
+        flex: 0 0 1px;
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      .playground-agents-detail-publish-split-shell .playground-agents-detail-publish-menu {
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        width: 236px;
+        min-width: 236px;
+        max-height: min(260px, calc(100vh - 160px));
+        transform-origin: top right;
+      }
+
+      .playground-agents-detail-publish-menu .tb-popup-row {
+        padding: 10px 14px;
+      }
+
+      .playground-agents-detail-publish-menu .tb-popup-row:disabled {
+        cursor: not-allowed;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-agents-detail-publish-menu .tb-popup-row:disabled:hover {
+        background: transparent;
+      }
+
+      .playground-agents-detail-content .playground-agents-profile-name-wrap {
+        width: 100%;
+        max-width: 620px;
+        justify-content: flex-start;
+        margin-top: 0;
+      }
+
+      .playground-agents-detail-content .playground-agents-profile-name-wrap .playground-agents-profile-name-input {
+        width: 100%;
+        font-size: 18px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: 0;
+        text-align: left;
+      }
+
+      .playground-tags-detail-profile-title.playground-agents-profile-name-input {
+        margin: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-tags-detail-avatar-surface.profile-editor-avatar-surface {
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .playground-tags-detail-profile-section .playground-agents-profile-avatar-wrap {
+        display: none;
+      }
+
       .playground-agents-detail-content.is-agent-overview-general {
         width: 100%;
         max-width: none;
+      }
+
+      .playground-tags-detail-content.playground-plugin-detail-content.playground-agents-detail-content.is-agent-overview-general {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .playground-computer-detail-content.playground-agents-detail-content.is-agent-overview-general {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .playground-computer-detail-main .playground-environments-detail-scroll.playground-environments-editor-scroll {
+        padding: 0;
+        overflow: visible;
+      }
+
+      .playground-computer-detail-profile-section.playground-agents-profile-section {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-computer-detail-profile-avatar.profile-editor-avatar {
+        width: 48px;
+        height: 48px;
+      }
+
+      .playground-computer-detail-avatar-surface.profile-editor-avatar-surface {
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .playground-computer-detail-profile-title.playground-agents-profile-name-input {
+        margin: 0;
+      }
+
+      .playground-computer-detail-profile-actions.playground-agents-detail-profile-actions,
+      .playground-computer-detail-sidebar-controls.playground-agents-detail-sidebar-controls {
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      .playground-computer-detail-sidebar-controls.playground-agents-detail-sidebar-controls {
+        width: auto;
+        margin-left: auto;
+        margin-top: 2px;
+      }
+
+      .playground-computer-detail-profile-actions .playground-plugin-detail-connect-button,
+      .playground-computer-detail-sidebar-controls .playground-plugin-detail-connect-button {
+        margin-right: 0;
+        min-height: 30px;
+        padding-left: 11px;
+        padding-right: 11px;
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-computer-detail-profile-actions .playground-project-overview-sidebar-toggle,
+      .playground-computer-detail-sidebar-controls .playground-project-overview-sidebar-toggle {
+        margin: 0;
       }
 
       .playground-agents-detail-overview-layout.playground-project-overview-layout {
@@ -43722,12 +44468,20 @@ ${METRONOME_PAGE_CSS}
         row-gap: 20px;
       }
 
+      .playground-agents-detail-overview-layout.is-sidebar-collapsed {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .playground-agents-detail-overview-layout.is-sidebar-collapsed > .playground-agents-detail-sidebar {
+        display: none;
+      }
+
       .playground-agents-detail-overview-main.playground-project-overview-main {
         gap: 20px;
       }
 
       .playground-agents-detail-chart-surface.playground-project-overview-chart-surface {
-        margin-bottom: 0;
+        margin: 0 0 24px;
       }
 
       .playground-agents-detail-chart-card.playground-project-overview-chart-card {
@@ -43747,12 +44501,526 @@ ${METRONOME_PAGE_CSS}
         min-height: 270px;
       }
 
+      .playground-agents-detail-threads-section .playground-project-overview-threads-table-header,
+      .playground-agents-detail-threads-section .playground-project-overview-threads-table-row {
+        grid-template-columns: minmax(0, 2fr) minmax(86px, 0.62fr) minmax(0, 1.08fr) minmax(0, 1.2fr) minmax(82px, 0.62fr) 28px;
+      }
+
+      .playground-agents-detail-threads-section .playground-project-overview-threads-table {
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .playground-agents-detail-threads-section .playground-project-overview-thread-cell.is-source,
+      .playground-agents-detail-threads-section .playground-project-overview-thread-cell.is-environment,
+      .playground-agents-detail-threads-section .playground-project-overview-thread-cell.is-triggered-by {
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.62);
+        overflow: visible;
+        text-overflow: clip;
+      }
+
+      .playground-agents-detail-threads-section .playground-project-overview-thread-cell.is-source {
+        color: rgba(255, 255, 255, 0.74);
+        white-space: nowrap;
+      }
+
+      .playground-agents-detail-threads-section .playground-project-overview-thread-cell.is-date {
+        white-space: nowrap;
+      }
+
+      .playground-agents-detail-thread-triggered-by {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        max-width: 100%;
+      }
+
+      .playground-agents-detail-thread-user-avatar {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 20px;
+        border-radius: 999px;
+        overflow: hidden;
+        font-size: 9px;
+        font-weight: 500;
+      }
+
+      .playground-agents-detail-thread-user-avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .playground-agents-detail-thread-user-avatar-fallback {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.84);
+      }
+
+      .playground-agents-detail-thread-triggered-by-label {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.72);
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+      }
+
+      .playground-project-overview-progress-combo-card {
+        margin-top: -7px;
+      }
+
+      .playground-agents-detail-progress-combo-card .playground-project-overview-progress-combo-metric-dot.is-total-runs {
+        background: #7effff;
+        box-shadow: 0 0 0 3px rgba(126, 255, 255, 0.12);
+      }
+
+      .playground-agents-detail-progress-combo-card .playground-project-overview-progress-combo-metric-dot.is-cost {
+        background: rgb(95, 112, 230);
+        box-shadow: 0 0 0 3px rgba(95, 112, 230, 0.12);
+      }
+
+      .playground-agents-detail-progress-combo-card .playground-project-overview-progress-combo-metric-dot.is-avg-ct {
+        background: #4da3ff;
+        box-shadow: 0 0 0 3px rgba(77, 163, 255, 0.12);
+      }
+
+      .playground-agents-detail-progress-combo-card .playground-project-overview-progress-combo-metric-dot.is-success-rate {
+        background: #54e5a6;
+        box-shadow: 0 0 0 3px rgba(84, 229, 166, 0.12);
+      }
+
+      .playground-computer-detail-progress-combo-card .playground-project-overview-progress-combo-metric-dot.is-runs {
+        background: #7effff;
+        box-shadow: 0 0 0 3px rgba(126, 255, 255, 0.12);
+      }
+
+      .playground-computer-detail-progress-combo-card .playground-project-overview-progress-combo-metric-dot.is-success-rate {
+        background: #54e5a6;
+        box-shadow: 0 0 0 3px rgba(84, 229, 166, 0.12);
+      }
+
+      .playground-computer-detail-progress-combo-card .playground-project-overview-progress-combo-metric-dot.is-runtime {
+        background: #4da3ff;
+        box-shadow: 0 0 0 3px rgba(77, 163, 255, 0.12);
+      }
+
+      .playground-computer-detail-progress-combo-card .playground-project-overview-progress-combo-metric-dot.is-failed {
+        background: #f87171;
+        box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.12);
+      }
+
+      .playground-computer-detail-progress-combo-card .playground-environments-home-comparison-timescale {
+        margin: 0;
+      }
+
+      .playground-computer-detail-progress-combo-chart .playground-settings-usage-chart-block,
+      .playground-computer-detail-progress-combo-chart .playground-settings-usage-chart {
+        width: 100%;
+      }
+
+      .playground-agents-detail-instructions-section {
+        margin-bottom: 42px;
+      }
+
+      .playground-agents-detail-instructions-section .playground-tasks-detail-section-header {
+        position: sticky;
+        top: 0;
+        z-index: 8;
+        background: #000;
+        padding-top: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-agents-detail-instructions-section .playground-tasks-detail-description-editor {
+        display: block;
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+      }
+
+      .playground-agents-detail-instructions-section .playground-tasks-detail-description-editor.is-preview .playground-tasks-detail-description-preview-scope.tb-runner-chat {
+        position: relative;
+        inset: auto;
+        display: block;
+        width: 100%;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible;
+      }
+
+      .playground-agents-detail-instructions-section .playground-tasks-detail-description-editor.is-preview .playground-tasks-detail-description-input {
+        position: absolute;
+        inset: 0;
+        height: 100% !important;
+        min-height: 100%;
+        padding: 0;
+        opacity: 0;
+      }
+
+      .playground-agents-detail-instructions-section .playground-tasks-detail-format-actions {
+        flex-wrap: nowrap;
+      }
+
+      .playground-agents-detail-instructions-toolbar-divider {
+        width: 1px;
+        height: 16px;
+        margin: 0 2px;
+        flex: 0 0 1px;
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .playground-agents-detail-instructions-section .playground-tasks-detail-format-button:disabled {
+        color: rgba(255, 255, 255, 0.28);
+        opacity: 1;
+      }
+
       .playground-agents-detail-sidebar .playground-project-overview-sidebar-row {
         grid-template-columns: minmax(90px, 0.85fr) minmax(0, 1.35fr);
       }
 
+      .playground-agents-detail-sidebar.playground-project-overview-sidebar {
+        top: 12px;
+        margin-top: -4px;
+        overflow: visible;
+      }
+
+      .playground-agents-detail-sidebar-controls {
+        width: 100%;
+        min-height: 30px;
+        margin-bottom: 0;
+      }
+
+      .playground-agents-detail-sidebar-copy-button {
+        flex: 0 0 auto;
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.62);
+        padding: 0;
+        cursor: pointer;
+        transition: color 160ms ease, background 160ms ease;
+      }
+
+      .playground-agents-detail-sidebar-copy-button:hover,
+      .playground-agents-detail-sidebar-copy-button:focus-visible {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+        outline: none;
+      }
+
+      .playground-agents-detail-sidebar-copy-button:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+
+      .playground-agents-detail-sidebar-copy-value {
+        min-width: 0;
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .playground-agents-detail-sidebar-copy-value .playground-environments-editor-fact-value {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: right;
+      }
+
+      .playground-agents-detail-sidebar > .playground-project-overview-sidebar-card {
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+      }
+
+      .playground-agents-detail-sidebar > .playground-tags-detail-properties-card {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-agents-detail-sidebar > .playground-tags-detail-properties-card.is-computer-popup-open {
+        z-index: 560;
+        overflow: visible;
+      }
+
       .playground-agents-detail-sidebar .playground-project-overview-sidebar-row-value {
         justify-content: flex-start;
+      }
+
+      .playground-agents-detail-sidebar .playground-tags-detail-provider-value {
+        justify-content: flex-end;
+        text-align: right;
+      }
+
+      .playground-agents-detail-sidebar .playground-tags-detail-provider-value .playground-plugin-detail-info-link {
+        max-width: 100%;
+        margin-left: auto;
+        justify-content: flex-end;
+      }
+
+      .playground-agents-detail-sidebar .playground-tags-detail-provider-value .playground-environments-editor-fact-value {
+        text-align: right;
+      }
+
+      .playground-computer-detail-sidebar .playground-project-overview-sidebar-row-value {
+        justify-content: flex-end;
+        text-align: right;
+      }
+
+      .playground-computer-detail-sidebar .playground-environments-editor-fact-value {
+        text-align: right;
+      }
+
+      .playground-computer-detail-sidebar .playground-environments-editor-fact-value.is-id {
+        max-width: 100%;
+      }
+
+      .playground-computer-detail-sidebar .playground-computer-detail-profile-row.playground-project-overview-sidebar-row {
+        align-items: flex-start;
+        grid-template-columns: minmax(90px, 0.85fr) minmax(0, 1.35fr);
+      }
+
+      .playground-computer-detail-sidebar .playground-computer-detail-profile-value {
+        min-width: 0;
+        justify-content: flex-end;
+        overflow: visible;
+      }
+
+      .playground-computer-profile-select-popup.playground-agents-model-select-popup {
+        width: 100%;
+      }
+
+      .playground-computer-profile-select-popup .playground-tasks-toolbar-popup-menu {
+        right: 0;
+        left: auto;
+        width: min(220px, calc(100vw - 32px));
+        min-width: 190px;
+      }
+
+      .playground-computer-detail-sidebar .playground-environment-profile-selector.is-compact {
+        width: 100%;
+        max-width: 160px;
+        margin-left: auto;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 6px;
+      }
+
+      .playground-computer-detail-sidebar .playground-environment-profile-card {
+        min-width: 0;
+        padding: 8px 9px;
+        border-radius: 8px;
+        text-align: left;
+      }
+
+      .playground-computer-detail-sidebar .playground-environment-profile-card-top,
+      .playground-computer-detail-sidebar .playground-environment-profile-card-meta {
+        min-width: 0;
+      }
+
+      .playground-computer-detail-sidebar-status-value.playground-project-overview-sidebar-row-value,
+      .playground-computer-detail-sidebar-toggle-value.playground-project-overview-sidebar-row-value {
+        overflow: visible;
+      }
+
+      .playground-computer-detail-sidebar-status.playground-environments-desktop-status {
+        min-height: 24px;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-computer-detail-sidebar-status.playground-environments-desktop-status.is-running {
+        color: rgba(167, 243, 208, 0.96);
+      }
+
+      .playground-computer-detail-sidebar-status.playground-environments-desktop-status.is-starting {
+        color: rgba(254, 240, 138, 0.96);
+      }
+
+      .playground-computer-detail-sidebar-status.playground-environments-desktop-status.is-error {
+        color: rgba(254, 202, 202, 0.96);
+      }
+
+      .playground-computer-detail-sidebar-status.playground-environments-desktop-status.is-stopped {
+        color: rgba(255, 255, 255, 0.66);
+      }
+
+      .playground-computer-detail-sidebar-action.playground-project-overview-sidebar-resource-row {
+        min-height: 34px;
+      }
+
+      .playground-computer-detail-add-icon-button {
+        width: 18px;
+        height: 18px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+      }
+
+      .playground-computer-detail-add-icon-button:hover,
+      .playground-computer-detail-add-icon-button:focus-visible {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.94);
+        outline: none;
+      }
+
+      .playground-computer-runtime-versions-box.playground-tasks-detail-description {
+        min-height: 0;
+        margin: 0;
+      }
+
+      .playground-computer-runtime-versions-box.playground-mission-control-modal-outcomes-editor {
+        margin-bottom: 0;
+      }
+
+      .playground-computer-runtime-versions-box .playground-tasks-connectors-list {
+        gap: 0;
+      }
+
+      .playground-computer-runtime-versions-box .playground-tasks-connector-row {
+        min-height: 38px;
+        padding: 3px 0;
+      }
+
+      .playground-computer-api-modal.playground-tasks-project-modal {
+        width: min(760px, calc(100vw - 32px));
+      }
+
+      .playground-computer-api-modal-body.playground-tasks-issue-modal-body {
+        padding-top: 0;
+      }
+
+      .playground-computer-api-card.playground-server-invoke-card {
+        margin: 0;
+      }
+
+      .playground-computer-api-header.playground-server-invoke-header {
+        align-items: center;
+      }
+
+      .playground-computer-api-copy-button.playground-settings-icon-button {
+        flex: 0 0 auto;
+      }
+
+      .playground-computer-api-code.playground-server-invoke-code-fallback {
+        min-height: 240px;
+        max-height: min(460px, calc(100vh - 260px));
+        overflow: auto;
+        margin: 0;
+        white-space: pre;
+      }
+
+      .playground-agents-detail-sidebar .playground-tags-detail-sidebar-actions {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-agents-detail-sidebar .playground-tags-detail-sidebar-action {
+        min-width: 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px 0;
+      }
+
+      .playground-agents-detail-sidebar .playground-tags-detail-sidebar-action + .playground-tags-detail-sidebar-action {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-agents-detail-sidebar .playground-tags-detail-sidebar-action-icon.playground-plugin-detail-feature-icon {
+        width: 24px;
+        height: 24px;
+        flex-basis: 24px;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+        background: transparent;
+      }
+
+      .playground-agents-detail-sidebar .playground-tags-detail-sidebar-action-copy {
+        gap: 3px;
+      }
+
+      .playground-agents-detail-sidebar .playground-tags-detail-sidebar-action-copy .playground-plugin-detail-feature-title {
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .playground-agents-detail-sidebar .playground-tags-detail-sidebar-action-copy .playground-plugin-detail-feature-description {
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .playground-agents-detail-sidebar-permission-row.playground-project-overview-sidebar-row {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-agents-detail-sidebar-permission-row:hover .playground-project-overview-sidebar-row-label,
+      .playground-agents-detail-sidebar-permission-row:focus-visible .playground-project-overview-sidebar-row-label {
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-agents-detail-sidebar-permission-row:focus-visible {
+        outline: none;
+      }
+
+      .playground-agents-detail-sidebar-permission-row:focus-visible .playground-agents-detail-sidebar-permission-value {
+        color: #fff;
+      }
+
+      .playground-agents-detail-sidebar .playground-agents-detail-sidebar-permission-value {
+        justify-content: flex-end;
+        overflow: visible;
+      }
+
+      .playground-agents-detail-permission-rings {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+      }
+
+      .playground-agents-detail-permission-ring {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      .playground-agents-detail-permission-rings .playground-permission-mini-ring-icon {
+        width: 26px;
+        height: 26px;
       }
 
       .playground-agents-detail-sidebar .playground-environments-runtime-value-button {
@@ -43785,6 +45053,544 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-detail-sidebar .playground-agents-model-select-popup {
         width: 100%;
+      }
+
+      .playground-tags-detail-computer-popup.playground-platform-popup-shell,
+      .playground-tags-detail-computer-popup.playground-platform-popup-shell .playground-platform-popup-menu,
+      .playground-tags-detail-computer-popup.playground-environments-runtime-popup-shell.is-open,
+      .playground-tags-detail-computer-popup.playground-environments-runtime-popup-shell.is-open .playground-tasks-toolbar-popup-menu {
+        z-index: 520;
+      }
+
+      .playground-tags-detail-computer-popup.playground-platform-popup-shell .playground-platform-popup-menu {
+        background: rgba(30, 30, 30, 0.9);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-tags-detail-computer-popup .playground-tasks-toolbar-popup-menu {
+        background: rgba(30, 30, 30, 0.9);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-tags-detail-environment-menu.tb-popup-menu-inline-workspace {
+        width: min(280px, calc(100vw - 32px));
+        max-height: min(360px, calc(100vh - 156px));
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        padding: 10px 0 8px;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-panel-section-attach-header {
+        flex: 0 0 auto;
+        padding: 0 12px 8px;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-nav {
+        display: flex;
+        gap: 8px;
+        padding: 2px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        line-height: 1rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-nav-button {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 0;
+        padding: 4px 12px;
+        border: 0;
+        border-radius: 20px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1rem;
+        cursor: pointer;
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-nav-button.active {
+        background: rgba(255, 255, 255, 0.35);
+        color: white;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-menu-inline-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: 292px;
+        overflow-y: auto;
+        padding: 4px 0 0;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-menu-inline-body::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-menu-inline-body::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.22);
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border: 0;
+        background: transparent;
+        color: white;
+        cursor: pointer;
+        text-align: left;
+        transition: background-color 160ms ease;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-row:hover,
+      .playground-tags-detail-environment-menu .tb-popup-row.selected {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-row:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-row:disabled:hover {
+        background: transparent;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-icon {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-check-slot {
+        order: 2;
+        margin-left: auto;
+        width: 16px;
+        height: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-check {
+        color: white;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-menu-inline-empty {
+        padding: 10px 14px 12px;
+      }
+
+      .playground-tags-detail-environment-menu .tb-popup-empty-state {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .playground-tags-detail-label-with-help {
+        display: inline-flex;
+        align-items: center;
+        min-width: 0;
+        gap: 5px;
+      }
+
+      .playground-tags-default-environment-help {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 14px;
+        height: 14px;
+        color: rgba(255, 255, 255, 0.5);
+        cursor: help;
+      }
+
+      .playground-tags-default-environment-help:hover,
+      .playground-tags-default-environment-help:focus-visible {
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .playground-tags-default-environment-tooltip {
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 9px);
+        width: 236px;
+        padding: 8px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 8px;
+        background: rgba(30, 30, 30, 0.92);
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.35;
+        text-transform: none;
+        letter-spacing: 0;
+        text-align: left;
+        white-space: normal;
+        box-shadow: 0 16px 42px rgba(0, 0, 0, 0.36);
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, 3px);
+        transition: opacity 140ms ease, transform 140ms ease;
+        z-index: 900;
+      }
+
+      .playground-tags-default-environment-tooltip::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 100%;
+        width: 8px;
+        height: 8px;
+        border-right: 1px solid rgba(255, 255, 255, 0.14);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(30, 30, 30, 0.92);
+        transform: translate(-50%, -4px) rotate(45deg);
+      }
+
+      .playground-tags-default-environment-help:hover .playground-tags-default-environment-tooltip,
+      .playground-tags-default-environment-help:focus-visible .playground-tags-default-environment-tooltip {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      .playground-agents-detail-sidebar-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-agents-detail-sidebar-action.playground-project-overview-sidebar-resource-row {
+        grid-template-columns: 18px minmax(0, 1fr);
+      }
+
+      .playground-agents-detail-sidebar-action:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .playground-agents-detail-owner-popup-shell {
+        width: 100%;
+        z-index: 88;
+      }
+
+      .playground-agents-detail-sidebar-owner-row.playground-project-overview-sidebar-row {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-agents-detail-sidebar-owner-row:hover .playground-project-overview-sidebar-row-label,
+      .playground-agents-detail-sidebar-owner-row:focus-visible .playground-project-overview-sidebar-row-label {
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-agents-detail-sidebar-owner-row:focus-visible {
+        outline: none;
+      }
+
+      .playground-agents-detail-owner-value {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end !important;
+        gap: 8px;
+      }
+
+      .playground-agents-detail-owner-member-cell.playground-team-member-cell {
+        min-width: 0;
+        max-width: 100%;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .playground-agents-detail-owner-member-cell .playground-team-member-avatar {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 20px;
+        font-size: 8px;
+      }
+
+      .playground-agents-detail-owner-member-cell .playground-team-member-copy {
+        min-width: 0;
+        text-align: right;
+      }
+
+      .playground-agents-detail-owner-member-cell .playground-team-table-title {
+        max-width: 132px;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.35;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-agents-detail-owner-avatar,
+      .playground-agents-detail-owner-option-avatar {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+      }
+
+      .playground-agents-detail-owner-avatar {
+        width: 20px;
+        height: 20px;
+        font-size: 9px;
+      }
+
+      .playground-agents-detail-owner-option-avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+      }
+
+      .playground-agents-detail-owner-avatar-image,
+      .playground-agents-detail-owner-option-avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .playground-agents-detail-owner-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+      }
+
+      .playground-agents-detail-owner-name,
+      .playground-agents-detail-owner-email {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: right;
+      }
+
+      .playground-agents-detail-owner-name {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-agents-detail-owner-email {
+        color: rgba(255, 255, 255, 0.44);
+        font-size: 10px;
+        font-weight: 400;
+      }
+
+      .playground-agents-detail-owner-popup-shell .playground-agents-detail-owner-menu {
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        width: 260px;
+        min-width: 260px;
+        max-height: min(320px, calc(100vh - 180px));
+        overflow: auto;
+        transform-origin: top right;
+        scrollbar-width: none;
+      }
+
+      .playground-agents-detail-owner-popup-shell.playground-platform-popup-shell .playground-platform-popup-menu {
+        background: rgba(30, 30, 30, 0.9);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-agents-detail-owner-popup-shell .playground-agents-detail-owner-menu::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-agents-detail-owner-option.tb-popup-row {
+        grid-template-columns: 24px minmax(0, 1fr) 14px;
+        align-items: center;
+        gap: 10px;
+        min-height: 42px;
+        padding: 8px 12px;
+      }
+
+      .playground-agents-detail-owner-option-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-agents-detail-owner-option-copy span:first-child {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-agents-detail-owner-option-copy span:last-child {
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 10px;
+        font-weight: 400;
+      }
+
+      .playground-agents-detail-owner-menu-empty {
+        padding: 13px 14px;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .playground-tasks-project-modal.playground-agents-send-team-modal {
+        width: min(520px, calc(100vw - 48px));
+        max-height: min(560px, calc(100vh - 48px));
+        display: flex;
+        flex-direction: column;
+        overflow: visible;
+      }
+
+      .playground-agents-send-team-modal .playground-tasks-project-modal-top {
+        gap: 12px;
+      }
+
+      .playground-agents-send-team-modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: min(350px, calc(100vh - 250px));
+        overflow: auto;
+        scrollbar-width: none;
+      }
+
+      .playground-agents-send-team-modal-body::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-agents-send-team-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-agents-send-team-option {
+        width: 100%;
+        min-height: 52px;
+        display: grid;
+        grid-template-columns: 26px minmax(0, 1fr) 18px;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.92);
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-agents-send-team-option:hover:not(:disabled) {
+        border-color: rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .playground-agents-send-team-option.is-selected {
+        border-color: rgba(77, 163, 255, 0.66);
+        background: rgba(77, 163, 255, 0.08);
+      }
+
+      .playground-agents-send-team-option:disabled {
+        opacity: 0.58;
+        cursor: default;
+      }
+
+      .playground-agents-send-team-option-icon {
+        width: 26px;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-agents-send-team-option-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .playground-agents-send-team-option-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-agents-send-team-option-meta {
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 10px;
+        font-weight: 400;
+      }
+
+      .playground-agents-send-team-empty {
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.54);
+        font-size: 12px;
+        line-height: 1.45;
+        text-align: center;
+      }
+
+      .playground-agents-send-team-actions {
+        margin-top: 16px;
       }
 
       .playground-agents-detail-summary .playground-environments-home-summary-kpis,
@@ -49190,7 +50996,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Telescope, Terminal, Trash2, Underline, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -52887,6 +54693,155 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         };
       }
 
+      function renderPlaygroundThreadOverviewPersonAvatar(label, photoUrl = "") {
+        const normalizedLabel = String(label || "").trim() || "User";
+        const fallbackLabel = typeof getAccountInitials === "function"
+          ? getAccountInitials(normalizedLabel)
+          : normalizedLabel.charAt(0).toUpperCase() || "U";
+        const normalizedPhotoUrl = typeof normalizeSessionPhotoUrl === "function"
+          ? normalizeSessionPhotoUrl(photoUrl)
+          : String(photoUrl || "").trim();
+        return React.createElement("div", {
+            className: "playground-agents-detail-thread-user-avatar",
+            title: normalizedLabel,
+            "aria-hidden": "true",
+          },
+          typeof canRenderAvatarImage === "function" && canRenderAvatarImage(normalizedPhotoUrl)
+            ? React.createElement("img", {
+                className: "playground-agents-detail-thread-user-avatar-image",
+                src: normalizedPhotoUrl,
+                alt: fallbackLabel,
+              })
+            : React.createElement("span", { className: "playground-agents-detail-thread-user-avatar-fallback" }, fallbackLabel)
+        );
+      }
+
+      function renderPlaygroundThreadOverviewRow(thread, options = {}) {
+        const { safeThread, displayThreadTitle } = typeof getSidebarThreadTitleParts === "function"
+          ? getSidebarThreadTitleParts(thread)
+          : {
+              safeThread: thread,
+              displayThreadTitle: thread?.title || "Untitled thread",
+            };
+        const threadId = String(safeThread?.id || thread?.id || "").trim();
+        const sourceLabel = String(
+          typeof options.getSourceLabel === "function"
+            ? options.getSourceLabel(thread, safeThread)
+            : ""
+        ).trim() || "Chat";
+        const environmentLabel = String(
+          typeof options.getEnvironmentLabel === "function"
+            ? options.getEnvironmentLabel(thread, safeThread)
+            : ""
+        ).trim() || "Workspace";
+        const triggeredByLabel = String(
+          typeof options.getTriggeredByLabel === "function"
+            ? options.getTriggeredByLabel(thread, safeThread)
+            : ""
+        ).trim() || "-";
+        const triggeredByAvatarUrl = typeof options.getTriggeredByAvatarUrl === "function"
+          ? options.getTriggeredByAvatarUrl(thread, safeThread)
+          : "";
+        const threadDateLabel = String(
+          typeof options.getDateLabel === "function"
+            ? options.getDateLabel(thread, safeThread)
+            : (
+                typeof formatThreadSearchTimestamp === "function"
+                  ? formatThreadSearchTimestamp(typeof resolveThreadSortTimestamp === "function" ? resolveThreadSortTimestamp(safeThread) : (safeThread?.updatedAt || safeThread?.createdAt || ""))
+                  : ""
+              )
+        ).trim() || "—";
+        const openThread = () => {
+          if (!threadId || typeof options.onOpenThread !== "function") {
+            return;
+          }
+          options.onOpenThread(threadId, safeThread, thread);
+        };
+        const openThreadActions = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (!threadId) {
+            return;
+          }
+          if (typeof options.onThreadActions === "function") {
+            options.onThreadActions(event, threadId, safeThread, thread);
+            return;
+          }
+          openThread();
+        };
+
+        return React.createElement("div", {
+            key: threadId || displayThreadTitle,
+            className: "playground-project-overview-threads-table-row",
+            role: "button",
+            tabIndex: 0,
+            onClick: openThread,
+            onKeyDown: (event) => {
+              if ((event.key === "Enter" || event.key === " ") && threadId) {
+                event.preventDefault();
+                openThread();
+              }
+            },
+          },
+          React.createElement("div", { className: "playground-project-overview-thread-cell" },
+            React.createElement("div", { className: "playground-plugin-row-title" }, displayThreadTitle || "Untitled thread")
+          ),
+          React.createElement("div", {
+            className: "playground-project-overview-thread-cell is-source",
+            title: sourceLabel,
+          }, sourceLabel),
+          React.createElement("div", {
+            className: "playground-project-overview-thread-cell is-environment",
+            title: environmentLabel,
+          }, environmentLabel),
+          React.createElement("div", {
+            className: "playground-project-overview-thread-cell is-triggered-by",
+            title: triggeredByLabel,
+          },
+            triggeredByLabel && triggeredByLabel !== "-"
+              ? React.createElement("span", { className: "playground-agents-detail-thread-triggered-by" },
+                  renderPlaygroundThreadOverviewPersonAvatar(triggeredByLabel, triggeredByAvatarUrl),
+                  React.createElement("span", { className: "playground-agents-detail-thread-triggered-by-label" }, triggeredByLabel)
+                )
+              : "-"
+          ),
+          React.createElement("div", {
+            className: "playground-project-overview-thread-cell is-date",
+            title: threadDateLabel,
+          }, threadDateLabel),
+          React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
+            threadId
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "playground-project-overview-thread-menu-button",
+                  "aria-label": "Thread actions",
+                  onClick: openThreadActions,
+                }, React.createElement(Ellipsis, { width: 15, height: 15, strokeWidth: 1.8 }))
+              : null
+          )
+        );
+      }
+
+      function renderPlaygroundThreadOverviewTable({
+        threads = [],
+        rowOptions = {},
+      } = {}) {
+        const safeThreads = Array.isArray(threads) ? threads : [];
+        return React.createElement("div", { className: "playground-project-overview-threads-table" },
+          React.createElement("div", { className: "playground-project-overview-threads-table-header" },
+            React.createElement("div", null, "Title"),
+            React.createElement("div", null, "Source"),
+            React.createElement("div", null, "Environment"),
+            React.createElement("div", null, "Triggered by"),
+            React.createElement("div", null, "Date"),
+            React.createElement("div", null)
+          ),
+          React.createElement("div", { className: "playground-project-overview-thread-list" },
+            safeThreads.map((thread) => renderPlaygroundThreadOverviewRow(thread, rowOptions))
+          )
+        );
+      }
+
       function getThreadMetronomeMetadata(thread) {
         const safeThread = normalizeThreadItem(thread || {});
         const metadata = safeThread?.metadata && typeof safeThread.metadata === "object" && !Array.isArray(safeThread.metadata)
@@ -55155,6 +57110,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           id: "",
           userId: "",
           name: "New Environment",
+          description: "",
           runtimes: defaultRuntimes,
           packageVersions: defaultRuntimes,
           packages: {
@@ -56927,6 +58883,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           id: typeof environment.id === "string" ? environment.id : draft.id,
           userId: typeof environment.userId === "string" ? environment.userId : draft.userId,
           name: typeof environment.name === "string" && environment.name.trim() ? environment.name : draft.name,
+          description: typeof environment.description === "string" ? environment.description : draft.description,
           runtimes,
           packageVersions: {
             ...(runtimes || {}),
@@ -56987,6 +58944,286 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         return source && typeof source === "object" && typeof source.id === "string"
           ? normalizePlaygroundEnvironmentRecord(source)
           : null;
+      }
+
+      function stripPlaygroundEnvironmentVersionMetadata(metadata) {
+        const source = metadata && typeof metadata === "object" && !Array.isArray(metadata)
+          ? { ...metadata }
+          : {};
+        delete source.environmentVersions;
+        delete source.environment_versions;
+        delete source.computerVersions;
+        delete source.computer_versions;
+        delete source.versions;
+        delete source.activeEnvironmentVersionId;
+        delete source.active_environment_version_id;
+        delete source.activeComputerVersionId;
+        delete source.active_computer_version_id;
+        delete source.activeEnvironmentVersionNumber;
+        delete source.active_environment_version_number;
+        delete source.activeComputerVersionNumber;
+        delete source.active_computer_version_number;
+        delete source.restoredFromEnvironmentVersionId;
+        delete source.restored_from_environment_version_id;
+        delete source.restoredFromComputerVersionId;
+        delete source.restored_from_computer_version_id;
+        delete source.restoredFromEnvironmentVersionNumber;
+        delete source.restored_from_environment_version_number;
+        delete source.restoredFromComputerVersionNumber;
+        delete source.restored_from_computer_version_number;
+        delete source.publishedAt;
+        delete source.published_at;
+        delete source.unpublishedAt;
+        delete source.unpublished_at;
+        return source;
+      }
+
+      function normalizePlaygroundEnvironmentVersion(rawVersion, fallbackIndex = 0) {
+        const version = rawVersion && typeof rawVersion === "object" && !Array.isArray(rawVersion) ? rawVersion : {};
+        const snapshot = version.snapshot && typeof version.snapshot === "object" && !Array.isArray(version.snapshot)
+          ? version.snapshot
+          : {};
+        const createdAt = String(version.createdAt || version.created_at || version.publishedAt || version.published_at || new Date().toISOString()).trim();
+        const id = String(version.id || version.versionId || version.version_id || ("environment_version_" + (fallbackIndex + 1))).trim();
+        const versionNumber = Number(version.version || version.versionNumber || version.version_number || 0) || (fallbackIndex + 1);
+        const rawStatus = String(version.status || "").trim().toLowerCase();
+        const status = ["active", "saved", "superseded", "unpublished"].includes(rawStatus) ? rawStatus : "saved";
+        const rawRuntimes = version.runtimes && typeof version.runtimes === "object" && !Array.isArray(version.runtimes)
+          ? version.runtimes
+          : snapshot.runtimes && typeof snapshot.runtimes === "object" && !Array.isArray(snapshot.runtimes)
+            ? snapshot.runtimes
+            : {};
+        const runtimes = Object.fromEntries(
+          Object.entries(rawRuntimes).filter(([, value]) => typeof value === "string" && value.trim())
+        );
+        const normalizedSnapshot = {
+          name: String(version.name || snapshot.name || "").trim(),
+          description: typeof version.description === "string"
+            ? version.description
+            : typeof snapshot.description === "string"
+              ? snapshot.description
+              : "",
+          runtimes,
+          packageVersions: { ...runtimes },
+          packages: normalizePlaygroundPackages(version.packages || snapshot.packages),
+          environmentVariables: normalizePlaygroundEnvironmentVariables(version.environmentVariables || snapshot.environmentVariables),
+          secrets: normalizePlaygroundEnvironmentVariables(version.secrets || snapshot.secrets),
+          setupScripts: Array.isArray(version.setupScripts)
+            ? version.setupScripts.map((value) => String(value || ""))
+            : Array.isArray(snapshot.setupScripts)
+              ? snapshot.setupScripts.map((value) => String(value || ""))
+              : [],
+          mcpServers: normalizePlaygroundMcpServers(version.mcpServers || snapshot.mcpServers),
+          documentation: normalizePlaygroundDocumentationFiles(version.documentation || snapshot.documentation),
+          internetAccess: (Object.prototype.hasOwnProperty.call(version, "internetAccess") ? version.internetAccess : snapshot.internetAccess) !== false,
+          guiEnabled: Boolean(Object.prototype.hasOwnProperty.call(version, "guiEnabled") ? version.guiEnabled : snapshot.guiEnabled),
+          officeAppsEnabled: Boolean(Object.prototype.hasOwnProperty.call(version, "officeAppsEnabled") ? version.officeAppsEnabled : snapshot.officeAppsEnabled),
+          computeProfile: normalizePlaygroundEnvironmentComputeProfileId(version.computeProfile || snapshot.computeProfile)
+            || PLAYGROUND_DEFAULT_CUSTOM_ENVIRONMENT_COMPUTE_PROFILE,
+          dockerfileExtensions: typeof version.dockerfileExtensions === "string"
+            ? version.dockerfileExtensions
+            : typeof snapshot.dockerfileExtensions === "string"
+              ? snapshot.dockerfileExtensions
+              : "",
+          baseImage: typeof version.baseImage === "string"
+            ? version.baseImage
+            : typeof snapshot.baseImage === "string"
+              ? snapshot.baseImage
+              : "",
+          metadata: stripPlaygroundEnvironmentVersionMetadata(snapshot.metadata),
+        };
+
+        return {
+          id,
+          version: versionNumber,
+          label: String(version.label || version.name || ("Version " + versionNumber)).trim(),
+          description: String(version.description || version.summary || "").trim(),
+          status,
+          createdAt,
+          updatedAt: String(version.updatedAt || version.updated_at || "").trim(),
+          publishedAt: String(version.publishedAt || version.published_at || "").trim(),
+          name: normalizedSnapshot.name,
+          computeProfile: normalizedSnapshot.computeProfile,
+          runtimeCount: Object.keys(normalizedSnapshot.runtimes || {}).length,
+          snapshot: normalizedSnapshot,
+        };
+      }
+
+      function normalizePlaygroundEnvironmentVersions(value) {
+        const rawItems = Array.isArray(value) ? value : [];
+        return rawItems
+          .map((version, index) => normalizePlaygroundEnvironmentVersion(version, index))
+          .filter((version) => version.id)
+          .sort((a, b) => {
+            const versionDelta = Number(b.version || 0) - Number(a.version || 0);
+            if (versionDelta) return versionDelta;
+            return new Date(b.publishedAt || b.createdAt || 0).getTime() - new Date(a.publishedAt || a.createdAt || 0).getTime();
+          });
+      }
+
+      function readPlaygroundEnvironmentVersions(environment) {
+        const metadata = environment?.metadata && typeof environment.metadata === "object" && !Array.isArray(environment.metadata)
+          ? environment.metadata
+          : {};
+        return normalizePlaygroundEnvironmentVersions(
+          environment?.environmentVersions
+          || environment?.computerVersions
+          || environment?.versions
+          || metadata.environmentVersions
+          || metadata.environment_versions
+          || metadata.computerVersions
+          || metadata.computer_versions
+          || metadata.versions
+          || []
+        );
+      }
+
+      function createPlaygroundEnvironmentVersionId() {
+        return "environment_version_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+      }
+
+      function buildPlaygroundEnvironmentVersionSnapshot(environment) {
+        const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environment || buildPlaygroundDefaultEnvironmentDraft());
+        const runtimes = Object.fromEntries(
+          Object.entries(normalizedEnvironment.runtimes || {}).filter(([, value]) => typeof value === "string" && value.trim())
+        );
+        return {
+          name: String(normalizedEnvironment.name || "").trim() || "Untitled Computer",
+          description: typeof normalizedEnvironment.description === "string" ? normalizedEnvironment.description : "",
+          runtimes,
+          packageVersions: { ...runtimes },
+          packages: normalizePlaygroundPackages(normalizedEnvironment.packages),
+          environmentVariables: normalizePlaygroundEnvironmentVariables(normalizedEnvironment.environmentVariables),
+          secrets: normalizePlaygroundEnvironmentVariables(normalizedEnvironment.secrets),
+          setupScripts: Array.isArray(normalizedEnvironment.setupScripts)
+            ? normalizedEnvironment.setupScripts.map((value) => String(value || ""))
+            : [],
+          mcpServers: normalizePlaygroundMcpServers(normalizedEnvironment.mcpServers),
+          documentation: normalizePlaygroundDocumentationFiles(normalizedEnvironment.documentation),
+          internetAccess: normalizedEnvironment.internetAccess !== false,
+          guiEnabled: normalizedEnvironment.guiEnabled === true,
+          officeAppsEnabled: normalizedEnvironment.officeAppsEnabled === true,
+          computeProfile: normalizePlaygroundEnvironmentComputeProfileId(normalizedEnvironment.computeProfile)
+            || PLAYGROUND_DEFAULT_CUSTOM_ENVIRONMENT_COMPUTE_PROFILE,
+          dockerfileExtensions: typeof normalizedEnvironment.dockerfileExtensions === "string" ? normalizedEnvironment.dockerfileExtensions : "",
+          baseImage: typeof normalizedEnvironment.baseImage === "string" ? normalizedEnvironment.baseImage : "",
+          metadata: stripPlaygroundEnvironmentVersionMetadata(normalizedEnvironment.metadata),
+        };
+      }
+
+      function createPlaygroundEnvironmentVersion(environment, existingVersions = [], options = {}) {
+        const now = new Date().toISOString();
+        const normalizedExisting = normalizePlaygroundEnvironmentVersions(existingVersions);
+        const nextVersion = normalizedExisting.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), 0) + 1;
+        const requestedStatus = String(options?.status || "saved").trim().toLowerCase();
+        const status = requestedStatus === "active" ? "active" : "saved";
+        const snapshot = buildPlaygroundEnvironmentVersionSnapshot(environment);
+        return normalizePlaygroundEnvironmentVersion({
+          id: createPlaygroundEnvironmentVersionId(),
+          version: nextVersion,
+          label: String(options?.label || ("Version " + nextVersion)).trim(),
+          description: String(options?.description || "").trim(),
+          status,
+          createdAt: now,
+          publishedAt: status === "active" ? now : "",
+          name: snapshot.name,
+          computeProfile: snapshot.computeProfile,
+          runtimes: snapshot.runtimes,
+          snapshot,
+        }, nextVersion - 1);
+      }
+
+      function createPlaygroundEnvironmentWithVersionList(environment, versions, preferredSelectedId = "") {
+        const baseEnvironment = normalizePlaygroundEnvironmentRecord(environment || buildPlaygroundDefaultEnvironmentDraft());
+        const normalizedVersions = normalizePlaygroundEnvironmentVersions(versions);
+        const metadata = baseEnvironment.metadata && typeof baseEnvironment.metadata === "object" && !Array.isArray(baseEnvironment.metadata)
+          ? { ...baseEnvironment.metadata }
+          : {};
+        const previousSelectedId = String(
+          metadata.restoredFromEnvironmentVersionId
+          || metadata.restored_from_environment_version_id
+          || metadata.restoredFromComputerVersionId
+          || metadata.restored_from_computer_version_id
+          || metadata.activeEnvironmentVersionId
+          || metadata.active_environment_version_id
+          || metadata.activeComputerVersionId
+          || metadata.active_computer_version_id
+          || ""
+        ).trim();
+        const selectedVersion = normalizedVersions.find((version) => version.id === String(preferredSelectedId || "").trim())
+          || normalizedVersions.find((version) => version.id === previousSelectedId)
+          || normalizedVersions.find((version) => version.status === "active")
+          || normalizedVersions[0]
+          || null;
+        const activeVersion = normalizedVersions.find((version) => version.status === "active")
+          || normalizedVersions.find((version) => (
+            version.id === String(metadata.activeEnvironmentVersionId || metadata.active_environment_version_id || metadata.activeComputerVersionId || metadata.active_computer_version_id || "").trim()
+          ))
+          || null;
+        metadata.environmentVersions = normalizedVersions;
+        metadata.environment_versions = normalizedVersions;
+        metadata.computerVersions = normalizedVersions;
+        metadata.computer_versions = normalizedVersions;
+        metadata.activeEnvironmentVersionId = activeVersion?.id || "";
+        metadata.active_environment_version_id = activeVersion?.id || "";
+        metadata.activeComputerVersionId = activeVersion?.id || "";
+        metadata.active_computer_version_id = activeVersion?.id || "";
+        metadata.activeEnvironmentVersionNumber = activeVersion?.version || 0;
+        metadata.active_environment_version_number = activeVersion?.version || 0;
+        metadata.activeComputerVersionNumber = activeVersion?.version || 0;
+        metadata.active_computer_version_number = activeVersion?.version || 0;
+        metadata.restoredFromEnvironmentVersionId = selectedVersion?.id || "";
+        metadata.restored_from_environment_version_id = selectedVersion?.id || "";
+        metadata.restoredFromComputerVersionId = selectedVersion?.id || "";
+        metadata.restored_from_computer_version_id = selectedVersion?.id || "";
+        metadata.restoredFromEnvironmentVersionNumber = selectedVersion?.version || 0;
+        metadata.restored_from_environment_version_number = selectedVersion?.version || 0;
+        metadata.restoredFromComputerVersionNumber = selectedVersion?.version || 0;
+        metadata.restored_from_computer_version_number = selectedVersion?.version || 0;
+        if (activeVersion?.publishedAt) {
+          metadata.publishedAt = activeVersion.publishedAt;
+          metadata.published_at = activeVersion.publishedAt;
+        } else {
+          delete metadata.publishedAt;
+          delete metadata.published_at;
+        }
+        return normalizePlaygroundEnvironmentRecord({
+          ...baseEnvironment,
+          metadata,
+          publishedAt: activeVersion?.publishedAt || "",
+        });
+      }
+
+      function createPlaygroundEnvironmentFromVersionSnapshot(environment, version, versions, preferredSelectedId = "") {
+        const baseEnvironment = normalizePlaygroundEnvironmentRecord(environment || buildPlaygroundDefaultEnvironmentDraft());
+        const normalizedVersion = normalizePlaygroundEnvironmentVersion(version || {});
+        const snapshot = normalizedVersion.snapshot || {};
+        const baseMetadata = stripPlaygroundEnvironmentVersionMetadata(baseEnvironment.metadata);
+        const snapshotMetadata = stripPlaygroundEnvironmentVersionMetadata(snapshot.metadata);
+        const nextEnvironment = normalizePlaygroundEnvironmentRecord({
+          ...baseEnvironment,
+          name: snapshot.name || baseEnvironment.name,
+          description: typeof snapshot.description === "string" ? snapshot.description : baseEnvironment.description,
+          runtimes: snapshot.runtimes || baseEnvironment.runtimes,
+          packageVersions: snapshot.packageVersions || snapshot.runtimes || baseEnvironment.packageVersions,
+          packages: snapshot.packages || baseEnvironment.packages,
+          environmentVariables: Array.isArray(snapshot.environmentVariables) ? snapshot.environmentVariables : baseEnvironment.environmentVariables,
+          secrets: Array.isArray(snapshot.secrets) ? snapshot.secrets : baseEnvironment.secrets,
+          setupScripts: Array.isArray(snapshot.setupScripts) ? snapshot.setupScripts : baseEnvironment.setupScripts,
+          mcpServers: Array.isArray(snapshot.mcpServers) ? snapshot.mcpServers : baseEnvironment.mcpServers,
+          documentation: Array.isArray(snapshot.documentation) ? snapshot.documentation : baseEnvironment.documentation,
+          internetAccess: snapshot.internetAccess !== false,
+          guiEnabled: snapshot.guiEnabled === true,
+          officeAppsEnabled: snapshot.officeAppsEnabled === true,
+          computeProfile: snapshot.computeProfile || baseEnvironment.computeProfile,
+          dockerfileExtensions: typeof snapshot.dockerfileExtensions === "string" ? snapshot.dockerfileExtensions : baseEnvironment.dockerfileExtensions,
+          baseImage: typeof snapshot.baseImage === "string" ? snapshot.baseImage : baseEnvironment.baseImage,
+          metadata: {
+            ...baseMetadata,
+            ...snapshotMetadata,
+          },
+        });
+        return createPlaygroundEnvironmentWithVersionList(nextEnvironment, versions, preferredSelectedId || normalizedVersion.id);
       }
 
       function normalizePlaygroundServerRecord(server) {
@@ -59721,7 +61958,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             return;
           }
           const branch = String(item.ref || "").trim() || "main";
-          const key = repoFullName + "\u0000" + branch;
+          const key = repoFullName + "::" + branch;
           if (seen.has(key)) {
             return;
           }
@@ -78873,6 +81110,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         canConfigureResourceBilling = true,
         onResourceBillingPreferencesChange = null,
         resourceTemplatePreviewResources = [],
+        workspaceTeams = [],
+        workspaceTeamsLoading = false,
+        workspaceTeamsRequiresPlan = false,
+        onWorkspaceTeamsRequest,
+        versionsDrawerPortalId = "",
+        onVersionsSidebarOpenChange,
         developServerOperationalMetrics = null,
         developServerOperationalMetricsLoading = false,
         developServerOperationalMetricsError = "",
@@ -78906,7 +81149,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const environmentRuntimePopoverRef = useRef(null);
         const environmentComposerRuntimePopoverRef = useRef(null);
         const environmentActionsPopoverRef = useRef(null);
+        const environmentPublishMenuRef = useRef(null);
+        const environmentVersionsDrawerContainerRef = useRef(null);
+        const environmentShareTeamModalCloseTimerRef = useRef(null);
+        const environmentShareTeamModalFrameRef = useRef(null);
+        const environmentApiModalCloseTimerRef = useRef(null);
+        const environmentApiModalFrameRef = useRef(null);
         const environmentRenameInputRef = useRef(null);
+        const environmentDescriptionTextareaRef = useRef(null);
         const databaseActionsPopoverRef = useRef(null);
         const databaseRenameInputRef = useRef(null);
         const agentRuntimeSkillsActionsRef = useRef(null);
@@ -79056,6 +81306,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [environmentsHomeActiveResourceCommand, setEnvironmentsHomeActiveResourceCommand] = useState("");
         const [environmentHomeChartTimescale, setEnvironmentHomeChartTimescale] = useState("month");
         const [environmentDetailChartTimescale, setEnvironmentDetailChartTimescale] = useState("day");
+        const [environmentDetailTab, setEnvironmentDetailTab] = useState("general");
         const [serverDetailChartTimescale, setServerDetailChartTimescale] = useState("day");
 	        const [databaseDetailChartTimescale, setDatabaseDetailChartTimescale] = useState("day");
 	        const [databaseDetailTab, setDatabaseDetailTab] = useState("data");
@@ -79063,9 +81314,34 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	        const [secretsDetailTab, setSecretsDetailTab] = useState("secrets");
 	        const [agentRuntimeDetailTab, setAgentRuntimeDetailTab] = useState("general");
 	        const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
+        const [environmentPublishMenuOpen, setEnvironmentPublishMenuOpen] = useState(false);
+        const [environmentVersionsSidebarOpen, setEnvironmentVersionsSidebarOpen] = useState(false);
+        const [environmentVersionsDrawerContainer, setEnvironmentVersionsDrawerContainer] = useState(null);
+        const [environmentVersionState, setEnvironmentVersionState] = useState({
+          status: "idle",
+          message: "",
+          error: "",
+        });
+        const [openEnvironmentVersionMenuId, setOpenEnvironmentVersionMenuId] = useState("");
+        const [environmentShareTeamModalOpen, setEnvironmentShareTeamModalOpen] = useState(false);
+        const [environmentShareTeamModalVisible, setEnvironmentShareTeamModalVisible] = useState(false);
+        const [environmentShareTeamModalClosing, setEnvironmentShareTeamModalClosing] = useState(false);
+        const [environmentShareTeamPickerValue, setEnvironmentShareTeamPickerValue] = useState("");
+        const [environmentShareTeamError, setEnvironmentShareTeamError] = useState("");
+        const [environmentShareTeamState, setEnvironmentShareTeamState] = useState({
+          teamId: "",
+          action: "",
+          error: "",
+        });
+        const [environmentApiModalOpen, setEnvironmentApiModalOpen] = useState(false);
+        const [environmentApiModalVisible, setEnvironmentApiModalVisible] = useState(false);
+        const [environmentApiModalClosing, setEnvironmentApiModalClosing] = useState(false);
+        const [environmentApiSnippetTab, setEnvironmentApiSnippetTab] = useState("curl");
+        const [copiedEnvironmentApiSnippet, setCopiedEnvironmentApiSnippet] = useState("");
         const [environmentRenameState, setEnvironmentRenameState] = useState(null);
         const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
         const [environmentRenameError, setEnvironmentRenameError] = useState("");
+        const [isEnvironmentDescriptionEditing, setIsEnvironmentDescriptionEditing] = useState(false);
         const [serverActionsPopoverOpen, setServerActionsPopoverOpen] = useState(false);
         const [serverFileActionsPopoverOpen, setServerFileActionsPopoverOpen] = useState(false);
         const [serverCodeAddFileMenuOpen, setServerCodeAddFileMenuOpen] = useState(false);
@@ -79729,6 +82005,74 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             || null;
         }, [environmentDetailsById, orderedEnvironments, selectedEnvironmentId]);
 
+        function normalizeEnvironmentWorkspaceTeamOption(team) {
+          const source = team && typeof team === "object" && !Array.isArray(team) ? team : {};
+          const id = String(source.id || source.teamId || source.team_id || "").trim();
+          if (!id) {
+            return null;
+          }
+          const name = String(source.name || source.title || source.displayName || "Team").trim() || "Team";
+          const roleId = normalizePlaygroundTeamRoleId(
+            source.role || source.membershipRole || source.membership_role || source.currentUserRole || source.current_user_role,
+            "admin"
+          );
+          return {
+            ...source,
+            id,
+            name,
+            roleId,
+            roleLabel: roleId ? roleId.charAt(0).toUpperCase() + roleId.slice(1) : "Team",
+          };
+        }
+
+        function getEnvironmentMetadataRecord(environmentRecord) {
+          return environmentRecord?.metadata && typeof environmentRecord.metadata === "object" && !Array.isArray(environmentRecord.metadata)
+            ? environmentRecord.metadata
+            : {};
+        }
+
+        function getEnvironmentSharedTeamIds(environmentRecord) {
+          const metadata = getEnvironmentMetadataRecord(environmentRecord);
+          const source = Array.isArray(metadata.sharedTeamIds)
+            ? metadata.sharedTeamIds
+            : Array.isArray(metadata.teamAccessIds)
+              ? metadata.teamAccessIds
+              : Array.isArray(environmentRecord?.sharedTeamIds)
+                ? environmentRecord.sharedTeamIds
+                : [];
+          return Array.from(new Set(
+            source.map((teamId) => String(teamId || "").trim()).filter(Boolean)
+          ));
+        }
+
+        const normalizedEnvironmentWorkspaceTeams = useMemo(() => (
+          (Array.isArray(workspaceTeams) ? workspaceTeams : [])
+            .map(normalizeEnvironmentWorkspaceTeamOption)
+            .filter(Boolean)
+        ), [workspaceTeams]);
+
+        const environmentSharedTeamIds = useMemo(() => getEnvironmentSharedTeamIds(draftEnvironment), [draftEnvironment]);
+        const environmentSharedTeamIdSet = useMemo(() => new Set(environmentSharedTeamIds), [environmentSharedTeamIds]);
+        const environmentShareTeamById = useMemo(() => {
+          const next = new Map();
+          normalizedEnvironmentWorkspaceTeams.forEach((team) => {
+            if (team?.id) {
+              next.set(team.id, team);
+            }
+          });
+          return next;
+        }, [normalizedEnvironmentWorkspaceTeams]);
+        const availableEnvironmentShareTeams = useMemo(() => (
+          normalizedEnvironmentWorkspaceTeams.filter((team) => ["admin", "owner"].includes(team.roleId || ""))
+        ), [normalizedEnvironmentWorkspaceTeams]);
+        const defaultEnvironmentShareTeamId = useMemo(() => {
+          return (
+            availableEnvironmentShareTeams.find((team) => !environmentSharedTeamIdSet.has(team.id))?.id
+            || availableEnvironmentShareTeams[0]?.id
+            || ""
+          );
+        }, [availableEnvironmentShareTeams, environmentSharedTeamIdSet]);
+
         const displayEnvironments = useMemo(() => {
           const items = [...orderedEnvironments];
           if (selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID && draftEnvironment) {
@@ -80026,6 +82370,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           editorDirtyRef.current = false;
           setEnvironmentRuntimePopover("");
           setEnvironmentActionsPopoverOpen(false);
+          setEnvironmentPublishMenuOpen(false);
+          setEnvironmentVersionsSidebarOpen(false);
+          setOpenEnvironmentVersionMenuId("");
+          setEnvironmentVersionState({
+            status: "idle",
+            message: "",
+            error: "",
+          });
+          setIsEnvironmentDescriptionEditing(false);
           setPackageComposerState({
             type: "",
             value: "",
@@ -82591,6 +84944,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
           resetEditorAuxiliaryState();
           setEnvironmentDetailsCollapsed(false);
+          setEnvironmentDetailTab("general");
           setDraftEnvironment(seedEnvironment ? normalizePlaygroundEnvironmentRecord(seedEnvironment) : null);
           void loadEnvironmentDetails(selectedEnvironmentId);
         }, [environmentDetailsById, loadEnvironmentDetails, orderedEnvironments, selectedEnvironmentId]);
@@ -82915,6 +85269,23 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [resourceMode]);
 
         useEffect(() => {
+          if (!versionsDrawerPortalId || typeof document === "undefined") {
+            setEnvironmentVersionsDrawerContainer(null);
+            return undefined;
+          }
+          setEnvironmentVersionsDrawerContainer(document.getElementById(versionsDrawerPortalId));
+          return undefined;
+        }, [versionsDrawerPortalId]);
+
+        useEffect(() => {
+          if (typeof onVersionsSidebarOpenChange !== "function") {
+            return undefined;
+          }
+          onVersionsSidebarOpenChange(Boolean(environmentVersionsSidebarOpen));
+          return () => onVersionsSidebarOpenChange(false);
+        }, [environmentVersionsSidebarOpen, onVersionsSidebarOpenChange]);
+
+        useEffect(() => {
           const normalizedTargetEnvironmentId = String(navigationTargetEnvironmentId || "").trim();
           const previousRequest = environmentNavigationRequestRef.current || {
             token: null,
@@ -83216,6 +85587,61 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             window.removeEventListener("keydown", handleEnvironmentActionsPopoverEscape);
           };
         }, [environmentActionsPopoverOpen]);
+
+        useEffect(() => {
+          if (!environmentPublishMenuOpen) return undefined;
+
+          function handleEnvironmentPublishMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !environmentPublishMenuRef.current || environmentPublishMenuRef.current.contains(target)) {
+              return;
+            }
+            setEnvironmentPublishMenuOpen(false);
+          }
+
+          function handleEnvironmentPublishMenuEscape(event) {
+            if (event.key === "Escape") {
+              setEnvironmentPublishMenuOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleEnvironmentPublishMenuPointerDown);
+          window.addEventListener("keydown", handleEnvironmentPublishMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleEnvironmentPublishMenuPointerDown);
+            window.removeEventListener("keydown", handleEnvironmentPublishMenuEscape);
+          };
+        }, [environmentPublishMenuOpen]);
+
+        useEffect(() => {
+          if (!environmentShareTeamModalOpen && !environmentShareTeamModalClosing) {
+            return undefined;
+          }
+
+          function handleEnvironmentShareTeamEscape(event) {
+            if (event.key === "Escape") {
+              closeEnvironmentShareTeamModal();
+            }
+          }
+
+          window.addEventListener("keydown", handleEnvironmentShareTeamEscape);
+          return () => window.removeEventListener("keydown", handleEnvironmentShareTeamEscape);
+        }, [environmentShareTeamModalOpen, environmentShareTeamModalClosing, environmentShareTeamState.action]);
+
+        useEffect(() => {
+          if (!environmentApiModalOpen && !environmentApiModalClosing) {
+            return undefined;
+          }
+
+          function handleEnvironmentApiModalEscape(event) {
+            if (event.key === "Escape") {
+              closeEnvironmentApiModal();
+            }
+          }
+
+          window.addEventListener("keydown", handleEnvironmentApiModalEscape);
+          return () => window.removeEventListener("keydown", handleEnvironmentApiModalEscape);
+        }, [environmentApiModalOpen, environmentApiModalClosing]);
 
         useEffect(() => {
           if (!serverActionsPopoverOpen) return undefined;
@@ -85211,6 +87637,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
           return {
             name: String(normalizedEnvironment?.name || "").trim() || "Untitled Environment",
+            description: typeof normalizedEnvironment?.description === "string" ? normalizedEnvironment.description : "",
             runtimes,
             packages,
             dockerfileExtensions: typeof normalizedEnvironment?.dockerfileExtensions === "string" ? normalizedEnvironment.dockerfileExtensions : "",
@@ -88518,6 +90945,646 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
         }
 
+        function clearEnvironmentAutosaveQueue() {
+          if (environmentAutosaveTimerRef.current) {
+            window.clearTimeout(environmentAutosaveTimerRef.current);
+            environmentAutosaveTimerRef.current = null;
+          }
+          environmentAutosaveQueuedRef.current = null;
+        }
+
+        async function saveDraftEnvironmentImmediate(options = {}) {
+          if (!draftEnvironment) {
+            return null;
+          }
+          const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(draftEnvironment);
+          clearEnvironmentAutosaveQueue();
+          editorDirtyRef.current = false;
+          setSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+          try {
+            const savedEnvironment = await persistEnvironmentRecord(normalizedEnvironment);
+            setEnvironmentDetailsById((current) => ({
+              ...current,
+              [savedEnvironment.id]: savedEnvironment,
+            }));
+            setSelectedEnvironmentId(savedEnvironment.id);
+            setDraftEnvironment(savedEnvironment);
+            setModifiedSecrets({});
+            setModifiedMcpTokens({});
+            setSaveState({
+              isSaving: false,
+              error: "",
+              message: options.successMessage || "Saved",
+            });
+            if (onEnvironmentMutated) {
+              await onEnvironmentMutated();
+            }
+            return savedEnvironment;
+          } catch (error) {
+            setSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : (options.errorMessage || "Failed to save computer."),
+              message: "",
+            });
+            return null;
+          }
+        }
+
+        function formatEnvironmentVersionTimestamp(value) {
+          if (!value) return "Not published yet";
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return "Not published yet";
+          return date.toLocaleString(undefined, {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        }
+
+        function getEnvironmentVersionMetadata(environmentRecord = draftEnvironment) {
+          return environmentRecord?.metadata && typeof environmentRecord.metadata === "object" && !Array.isArray(environmentRecord.metadata)
+            ? environmentRecord.metadata
+            : {};
+        }
+
+        function readDraftEnvironmentVersions() {
+          return readPlaygroundEnvironmentVersions(draftEnvironment);
+        }
+
+        function getDraftEnvironmentActiveVersion() {
+          const versions = readDraftEnvironmentVersions();
+          const metadata = getEnvironmentVersionMetadata();
+          const activeId = String(
+            metadata.activeEnvironmentVersionId
+            || metadata.active_environment_version_id
+            || metadata.activeComputerVersionId
+            || metadata.active_computer_version_id
+            || ""
+          ).trim();
+          return versions.find((version) => version.id === activeId)
+            || versions.find((version) => version.status === "active")
+            || null;
+        }
+
+        async function commitVersionedEnvironmentRecord(nextEnvironment, options = {}) {
+          const normalizedNextEnvironment = normalizePlaygroundEnvironmentRecord(nextEnvironment);
+          const loadingMessage = options.loadingMessage || "Saving computer version...";
+          clearEnvironmentAutosaveQueue();
+          editorDirtyRef.current = false;
+          setEnvironmentVersionState({
+            status: "loading",
+            message: loadingMessage,
+            error: "",
+          });
+          setSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const savedEnvironment = await persistEnvironmentRecord(normalizedNextEnvironment);
+            const savedHasVersionMetadata = readPlaygroundEnvironmentVersions(savedEnvironment).length > 0
+              || Boolean(
+                savedEnvironment?.metadata?.activeEnvironmentVersionId
+                || savedEnvironment?.metadata?.active_environment_version_id
+                || savedEnvironment?.metadata?.activeComputerVersionId
+                || savedEnvironment?.metadata?.active_computer_version_id
+              );
+            const mergedSavedEnvironment = normalizePlaygroundEnvironmentRecord({
+              ...normalizedNextEnvironment,
+              ...savedEnvironment,
+              metadata: savedHasVersionMetadata ? savedEnvironment.metadata : normalizedNextEnvironment.metadata,
+              publishedAt: savedEnvironment?.publishedAt || normalizedNextEnvironment.publishedAt || "",
+            });
+            setEnvironmentDetailsById((current) => ({
+              ...current,
+              [mergedSavedEnvironment.id]: mergedSavedEnvironment,
+            }));
+            setSelectedEnvironmentId(mergedSavedEnvironment.id);
+            setDraftEnvironment(mergedSavedEnvironment);
+            setOpenEnvironmentVersionMenuId("");
+            setModifiedSecrets({});
+            setModifiedMcpTokens({});
+            setSaveState({
+              isSaving: false,
+              error: "",
+              message: options.successMessage || "Saved",
+            });
+            setEnvironmentVersionState({
+              status: "success",
+              message: options.successMessage || "Saved",
+              error: "",
+            });
+            if (onEnvironmentMutated) {
+              await onEnvironmentMutated();
+            }
+            window.setTimeout(() => {
+              setEnvironmentVersionState((current) => current.status === "success"
+                ? { status: "idle", message: "", error: "" }
+                : current
+              );
+            }, 1800);
+            return mergedSavedEnvironment;
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : (options.errorMessage || "Failed to save computer version.");
+            setSaveState({
+              isSaving: false,
+              error: errorMessage,
+              message: "",
+            });
+            setEnvironmentVersionState({
+              status: "error",
+              message: "",
+              error: errorMessage,
+            });
+            return null;
+          }
+        }
+
+        function toggleEnvironmentVersionsSidebar() {
+          if (!draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+            return;
+          }
+          setEnvironmentActionsPopoverOpen(false);
+          setEnvironmentPublishMenuOpen(false);
+          setOpenEnvironmentVersionMenuId("");
+          setEnvironmentVersionState((current) => current.status === "loading" ? current : {
+            status: "idle",
+            message: "",
+            error: "",
+          });
+          setEnvironmentVersionsSidebarOpen((current) => !current);
+        }
+
+        function closeEnvironmentVersionsSidebar() {
+          setEnvironmentVersionsSidebarOpen(false);
+          setEnvironmentPublishMenuOpen(false);
+          setOpenEnvironmentVersionMenuId("");
+        }
+
+        async function saveCurrentEnvironmentVersion() {
+          if (!draftEnvironment || environmentVersionState.status === "loading") {
+            return;
+          }
+          const versions = readDraftEnvironmentVersions();
+          const newVersion = createPlaygroundEnvironmentVersion(draftEnvironment, versions, { status: "saved" });
+          const nextEnvironment = createPlaygroundEnvironmentWithVersionList(draftEnvironment, [newVersion, ...versions], newVersion.id);
+          await commitVersionedEnvironmentRecord(nextEnvironment, {
+            loadingMessage: "Saving computer version...",
+            successMessage: "Version saved",
+            errorMessage: "Failed to save computer version.",
+          });
+        }
+
+        async function publishCurrentEnvironmentVersion() {
+          if (!draftEnvironment || environmentVersionState.status === "loading") {
+            return;
+          }
+          const versions = readDraftEnvironmentVersions();
+          const supersededVersions = versions.map((version) => (
+            version.status === "active" ? { ...version, status: "superseded" } : version
+          ));
+          const publishedVersion = createPlaygroundEnvironmentVersion(draftEnvironment, supersededVersions, { status: "active" });
+          const nextEnvironment = createPlaygroundEnvironmentWithVersionList(draftEnvironment, [publishedVersion, ...supersededVersions], publishedVersion.id);
+          await commitVersionedEnvironmentRecord(nextEnvironment, {
+            loadingMessage: "Publishing computer...",
+            successMessage: "Published",
+            errorMessage: "Failed to publish computer.",
+          });
+        }
+
+        async function restoreEnvironmentVersion(versionId) {
+          if (!draftEnvironment || environmentVersionState.status === "loading") {
+            return;
+          }
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftEnvironmentVersions();
+          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
+          if (!targetVersion) {
+            return;
+          }
+          const nextEnvironment = createPlaygroundEnvironmentFromVersionSnapshot(draftEnvironment, targetVersion, versions, targetVersion.id);
+          await commitVersionedEnvironmentRecord(nextEnvironment, {
+            loadingMessage: "Restoring computer version...",
+            successMessage: "Version restored",
+            errorMessage: "Failed to restore computer version.",
+          });
+        }
+
+        async function publishEnvironmentVersion(versionId) {
+          if (!draftEnvironment || environmentVersionState.status === "loading") {
+            return;
+          }
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftEnvironmentVersions();
+          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
+          if (!targetVersion) {
+            return;
+          }
+          const now = new Date().toISOString();
+          const nextVersions = normalizePlaygroundEnvironmentVersions(versions.map((version) => {
+            if (version.id === targetVersion.id) {
+              return {
+                ...version,
+                status: "active",
+                publishedAt: now,
+              };
+            }
+            return version.status === "active" ? { ...version, status: "superseded" } : version;
+          }));
+          const nextTargetVersion = nextVersions.find((version) => version.id === targetVersion.id) || targetVersion;
+          const nextEnvironment = createPlaygroundEnvironmentFromVersionSnapshot(draftEnvironment, nextTargetVersion, nextVersions, nextTargetVersion.id);
+          await commitVersionedEnvironmentRecord(nextEnvironment, {
+            loadingMessage: "Publishing computer version...",
+            successMessage: "Published",
+            errorMessage: "Failed to publish computer version.",
+          });
+        }
+
+        async function deleteEnvironmentVersion(versionId) {
+          if (!draftEnvironment || environmentVersionState.status === "loading") {
+            return;
+          }
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftEnvironmentVersions();
+          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
+          if (!targetVersion) {
+            return;
+          }
+          if (!window.confirm("Delete this computer version?")) {
+            return;
+          }
+          const nextVersions = versions.filter((version) => version.id !== targetVersion.id);
+          const nextEnvironment = createPlaygroundEnvironmentWithVersionList(draftEnvironment, nextVersions);
+          await commitVersionedEnvironmentRecord(nextEnvironment, {
+            loadingMessage: "Deleting computer version...",
+            successMessage: "Version deleted",
+            errorMessage: "Failed to delete computer version.",
+          });
+        }
+
+        async function unpublishActiveEnvironmentVersion() {
+          if (!draftEnvironment || environmentVersionState.status === "loading") {
+            return;
+          }
+          const activeVersion = getDraftEnvironmentActiveVersion();
+          if (!activeVersion) {
+            return;
+          }
+          if (!window.confirm("Unpublish this computer? Version history will be kept.")) {
+            return;
+          }
+          const now = new Date().toISOString();
+          const nextVersions = normalizePlaygroundEnvironmentVersions(readDraftEnvironmentVersions().map((version) => (
+            version.id === activeVersion.id || version.status === "active"
+              ? { ...version, status: "unpublished" }
+              : version
+          )));
+          const nextEnvironment = createPlaygroundEnvironmentWithVersionList(draftEnvironment, nextVersions);
+          const nextMetadata = nextEnvironment.metadata && typeof nextEnvironment.metadata === "object" && !Array.isArray(nextEnvironment.metadata)
+            ? { ...nextEnvironment.metadata, unpublishedAt: now, unpublished_at: now }
+            : { unpublishedAt: now, unpublished_at: now };
+          delete nextMetadata.publishedAt;
+          delete nextMetadata.published_at;
+          await commitVersionedEnvironmentRecord({
+            ...nextEnvironment,
+            metadata: nextMetadata,
+            publishedAt: "",
+          }, {
+            loadingMessage: "Unpublishing computer...",
+            successMessage: "Unpublished",
+            errorMessage: "Failed to unpublish computer.",
+          });
+        }
+
+        function applyEnvironmentSharedTeam(environmentRecord, teamId) {
+          const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environmentRecord || buildPlaygroundDefaultEnvironmentDraft());
+          const normalizedTeamId = String(teamId || "").trim();
+          if (!normalizedTeamId) {
+            return normalizedEnvironment;
+          }
+          const metadata = getEnvironmentMetadataRecord(normalizedEnvironment);
+          const nextTeamIds = Array.from(new Set([
+            ...getEnvironmentSharedTeamIds(normalizedEnvironment),
+            normalizedTeamId,
+          ]));
+          metadata.sharedTeamIds = nextTeamIds;
+          metadata.teamAccessIds = nextTeamIds;
+          return normalizePlaygroundEnvironmentRecord({
+            ...normalizedEnvironment,
+            metadata,
+          });
+        }
+
+        function buildEnvironmentTeamSharePayload(environmentRecord, teamRecord) {
+          const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environmentRecord || buildPlaygroundDefaultEnvironmentDraft());
+          const normalizedTeam = teamRecord && typeof teamRecord === "object" && !Array.isArray(teamRecord) ? teamRecord : {};
+          const metadata = getEnvironmentMetadataRecord(normalizedEnvironment);
+          const computerSnapshot = {
+            id: normalizedEnvironment.id,
+            name: normalizedEnvironment.name,
+            description: normalizedEnvironment.description || "",
+            computeProfile: normalizedEnvironment.computeProfile,
+            runtimes: normalizedEnvironment.runtimes || {},
+          };
+          return {
+            resourceType: "computer",
+            resourceId: normalizedEnvironment.id,
+            resourceName: normalizedEnvironment.name || "Computer",
+            accessLevel: "use",
+            title: normalizedEnvironment.name || "Computer",
+            description: normalizedEnvironment.description || "",
+            metadata: {
+              ...metadata,
+              resourceType: "computer",
+              resourceKind: "computer",
+              sharedTeamId: normalizedTeam.id || "",
+              sharedTeamName: normalizedTeam.name || "",
+              computer: computerSnapshot,
+              environment: computerSnapshot,
+            },
+          };
+        }
+
+        function openEnvironmentShareTeamModal() {
+          if (!draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+            return;
+          }
+          if (typeof onWorkspaceTeamsRequest === "function") {
+            onWorkspaceTeamsRequest({});
+          }
+          if (environmentShareTeamModalCloseTimerRef.current) {
+            window.clearTimeout(environmentShareTeamModalCloseTimerRef.current);
+            environmentShareTeamModalCloseTimerRef.current = null;
+          }
+          if (environmentShareTeamModalFrameRef.current) {
+            window.cancelAnimationFrame(environmentShareTeamModalFrameRef.current);
+            environmentShareTeamModalFrameRef.current = null;
+          }
+          setEnvironmentShareTeamError("");
+          setEnvironmentShareTeamPickerValue(defaultEnvironmentShareTeamId);
+          setEnvironmentShareTeamModalVisible(false);
+          setEnvironmentShareTeamModalClosing(false);
+          setEnvironmentShareTeamModalOpen(true);
+          environmentShareTeamModalFrameRef.current = window.requestAnimationFrame(() => {
+            environmentShareTeamModalFrameRef.current = window.requestAnimationFrame(() => {
+              environmentShareTeamModalFrameRef.current = null;
+              setEnvironmentShareTeamModalVisible(true);
+            });
+          });
+        }
+
+        function finishCloseEnvironmentShareTeamModal() {
+          if (environmentShareTeamModalCloseTimerRef.current) {
+            window.clearTimeout(environmentShareTeamModalCloseTimerRef.current);
+            environmentShareTeamModalCloseTimerRef.current = null;
+          }
+          if (environmentShareTeamModalFrameRef.current) {
+            window.cancelAnimationFrame(environmentShareTeamModalFrameRef.current);
+            environmentShareTeamModalFrameRef.current = null;
+          }
+          setEnvironmentShareTeamModalVisible(false);
+          setEnvironmentShareTeamModalClosing(false);
+          setEnvironmentShareTeamModalOpen(false);
+          setEnvironmentShareTeamPickerValue("");
+          setEnvironmentShareTeamError("");
+          setEnvironmentShareTeamState({
+            teamId: "",
+            action: "",
+            error: "",
+          });
+        }
+
+        function closeEnvironmentShareTeamModal(options = {}) {
+          if (!options.force && environmentShareTeamState.action === "share") {
+            return;
+          }
+          if (options?.animate === false || (!environmentShareTeamModalOpen && !environmentShareTeamModalVisible && !environmentShareTeamModalClosing)) {
+            finishCloseEnvironmentShareTeamModal();
+            return;
+          }
+          if (environmentShareTeamModalClosing) {
+            return;
+          }
+          if (environmentShareTeamModalFrameRef.current) {
+            window.cancelAnimationFrame(environmentShareTeamModalFrameRef.current);
+            environmentShareTeamModalFrameRef.current = null;
+          }
+          setEnvironmentShareTeamModalVisible(false);
+          setEnvironmentShareTeamModalClosing(true);
+          if (environmentShareTeamModalCloseTimerRef.current) {
+            window.clearTimeout(environmentShareTeamModalCloseTimerRef.current);
+          }
+          environmentShareTeamModalCloseTimerRef.current = window.setTimeout(() => {
+            environmentShareTeamModalCloseTimerRef.current = null;
+            finishCloseEnvironmentShareTeamModal();
+          }, 75);
+        }
+
+        async function handleEnvironmentShareTeamSubmit(event) {
+          event.preventDefault();
+          if (!draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+            setEnvironmentShareTeamError("Save this computer before sharing it with a team.");
+            return;
+          }
+          const normalizedTeamId = String(environmentShareTeamPickerValue || "").trim();
+          if (!normalizedTeamId) {
+            setEnvironmentShareTeamError("Choose a team first.");
+            return;
+          }
+          if (environmentSharedTeamIdSet.has(normalizedTeamId)) {
+            setEnvironmentShareTeamError("This computer is already shared with that team.");
+            return;
+          }
+          const selectedTeam = availableEnvironmentShareTeams.find((team) => team.id === normalizedTeamId) || null;
+          if (!selectedTeam) {
+            setEnvironmentShareTeamError("Choose a team you can manage.");
+            return;
+          }
+          setEnvironmentShareTeamError("");
+          setEnvironmentShareTeamState({
+            teamId: normalizedTeamId,
+            action: "share",
+            error: "",
+          });
+          try {
+            const payload = buildEnvironmentTeamSharePayload(draftEnvironment, selectedTeam);
+            const { response, data } = await fetchJsonWithTimeout(backendUrl + "/teams/" + encodeURIComponent(normalizedTeamId) + "/resource-shares", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            }, 8000);
+            if (!response.ok && Number(response.status || 0) !== 409) {
+              throw new Error(data?.message || data?.error || "Failed to share computer with team.");
+            }
+            const nextEnvironment = applyEnvironmentSharedTeam(draftEnvironment, normalizedTeamId);
+            await commitVersionedEnvironmentRecord(nextEnvironment, {
+              loadingMessage: "Sharing computer...",
+              successMessage: "Shared with team",
+              errorMessage: "Computer was shared, but local sharing metadata could not be saved.",
+            });
+            if (typeof onWorkspaceTeamsRequest === "function") {
+              onWorkspaceTeamsRequest({
+                selectedTeamId: normalizedTeamId,
+                teamId: normalizedTeamId,
+              });
+            }
+            closeEnvironmentShareTeamModal({ force: true });
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to share computer with team.";
+            setEnvironmentShareTeamError(message);
+            setEnvironmentShareTeamState({
+              teamId: normalizedTeamId,
+              action: "",
+              error: message,
+            });
+          }
+        }
+
+        function openEnvironmentApiModal() {
+          if (!draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+            return;
+          }
+          if (environmentApiModalCloseTimerRef.current) {
+            window.clearTimeout(environmentApiModalCloseTimerRef.current);
+            environmentApiModalCloseTimerRef.current = null;
+          }
+          if (environmentApiModalFrameRef.current) {
+            window.cancelAnimationFrame(environmentApiModalFrameRef.current);
+            environmentApiModalFrameRef.current = null;
+          }
+          setCopiedEnvironmentApiSnippet("");
+          setEnvironmentApiModalVisible(false);
+          setEnvironmentApiModalClosing(false);
+          setEnvironmentApiModalOpen(true);
+          environmentApiModalFrameRef.current = window.requestAnimationFrame(() => {
+            environmentApiModalFrameRef.current = window.requestAnimationFrame(() => {
+              environmentApiModalFrameRef.current = null;
+              setEnvironmentApiModalVisible(true);
+            });
+          });
+        }
+
+        function finishCloseEnvironmentApiModal() {
+          if (environmentApiModalCloseTimerRef.current) {
+            window.clearTimeout(environmentApiModalCloseTimerRef.current);
+            environmentApiModalCloseTimerRef.current = null;
+          }
+          if (environmentApiModalFrameRef.current) {
+            window.cancelAnimationFrame(environmentApiModalFrameRef.current);
+            environmentApiModalFrameRef.current = null;
+          }
+          setEnvironmentApiModalVisible(false);
+          setEnvironmentApiModalClosing(false);
+          setEnvironmentApiModalOpen(false);
+          setCopiedEnvironmentApiSnippet("");
+        }
+
+        function closeEnvironmentApiModal(options = {}) {
+          if (options?.animate === false || (!environmentApiModalOpen && !environmentApiModalVisible && !environmentApiModalClosing)) {
+            finishCloseEnvironmentApiModal();
+            return;
+          }
+          if (environmentApiModalClosing) {
+            return;
+          }
+          if (environmentApiModalFrameRef.current) {
+            window.cancelAnimationFrame(environmentApiModalFrameRef.current);
+            environmentApiModalFrameRef.current = null;
+          }
+          setEnvironmentApiModalVisible(false);
+          setEnvironmentApiModalClosing(true);
+          if (environmentApiModalCloseTimerRef.current) {
+            window.clearTimeout(environmentApiModalCloseTimerRef.current);
+          }
+          environmentApiModalCloseTimerRef.current = window.setTimeout(() => {
+            environmentApiModalCloseTimerRef.current = null;
+            finishCloseEnvironmentApiModal();
+          }, 75);
+        }
+
+        function buildEnvironmentApiSnippets(environmentRecord = draftEnvironment) {
+          const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environmentRecord || buildPlaygroundDefaultEnvironmentDraft());
+          const apiOrigin = ${JSON.stringify(defaultUpstreamOrigin)};
+          const environmentId = String(normalizedEnvironment.id || "computer_id").trim() || "computer_id";
+          const payload = {
+            title: "Run on " + (normalizedEnvironment.name || "Computer"),
+            messages: [
+              {
+                role: "user",
+                content: "Use this computer to inspect the project and summarize the current state.",
+              },
+            ],
+            environmentId,
+          };
+          const payloadJson = JSON.stringify(payload, null, 2);
+          return {
+            curl: [
+              "curl -sS -X POST '" + apiOrigin + "/threads' \\\\",
+              "  -H \\\"Authorization: Bearer $COMPUTER_AGENTS_API_KEY\\\" \\\\",
+              "  -H 'Content-Type: application/json' \\\\",
+              "  --data '" + payloadJson.replace(/'/g, "'\\\\''") + "'",
+            ].join("\\n"),
+            python: [
+              "import os",
+              "import requests",
+              "",
+              "api_key = os.environ['COMPUTER_AGENTS_API_KEY']",
+              "response = requests.post(",
+              "    '" + apiOrigin + "/threads',",
+              "    headers={",
+              "        'Authorization': f'Bearer {api_key}',",
+              "        'Content-Type': 'application/json',",
+              "    },",
+              "    json=" + JSON.stringify(payload, null, 4).replace(/true/g, "True").replace(/false/g, "False").replace(/null/g, "None") + ",",
+              ")",
+              "response.raise_for_status()",
+              "print(response.json())",
+            ].join("\\n"),
+            javascript: [
+              "const apiKey = process.env.COMPUTER_AGENTS_API_KEY;",
+              "",
+              "const response = await fetch('" + apiOrigin + "/threads', {",
+              "  method: 'POST',",
+              "  headers: {",
+              "    Authorization: 'Bearer ' + apiKey,",
+              "    'Content-Type': 'application/json',",
+              "  },",
+              "  body: JSON.stringify(" + payloadJson.replace(/\\n/g, "\\n  ") + "),",
+              "});",
+              "",
+              "if (!response.ok) {",
+              "  throw new Error(await response.text());",
+              "}",
+              "",
+              "console.log(await response.json());",
+            ].join("\\n"),
+          };
+        }
+
+        async function copyEnvironmentApiSnippet(snippetKey, snippetValue) {
+          try {
+            await navigator.clipboard?.writeText(String(snippetValue || ""));
+            setCopiedEnvironmentApiSnippet(snippetKey);
+            window.setTimeout(() => {
+              setCopiedEnvironmentApiSnippet((current) => current === snippetKey ? "" : current);
+            }, 1400);
+          } catch {
+            setCopiedEnvironmentApiSnippet("");
+          }
+        }
+
         function handleRevertDraft() {
           if (selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
             resetEditorAuxiliaryState();
@@ -88559,6 +91626,49 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               [field]: value,
             };
           });
+        }
+
+        function applyEnvironmentDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateEnvironmentField("description", nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = environmentDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeEnvironmentDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleEnvironmentDescriptionFormat(formatType) {
+          const textarea = environmentDescriptionTextareaRef.current;
+          if (!textarea || !draftEnvironment) {
+            return;
+          }
+          const value = String(draftEnvironment?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyEnvironmentDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
         function closeEnvironmentRenameDialog() {
@@ -88713,6 +91823,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
             resetEditorAuxiliaryState();
             setEnvironmentDetailsCollapsed(false);
+            setEnvironmentDetailTab("general");
             setEnvironmentDetailsById((current) => ({
               ...current,
               [savedEnvironment.id]: savedEnvironment,
@@ -96724,90 +99835,36 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "No Computer Usage yet"),
                   React.createElement("div", { className: "playground-auth-users-empty-state-copy" }, "Computer usage appears here once agents run work inside this computer.")
                 ),
-            title: "Computer Activity",
             tickFormatter: (value) => String(Math.round(Number(value) || 0)),
             isLoading: isEnvironmentAnalyticsLoading && !activeEnvironmentAnalytics,
             showLegend: true,
-            timescaleControl: renderEnvironmentDetailTimescaleControl(),
-            controlsInFooter: true,
+            timescaleControl: null,
+            controlsInFooter: false,
+            hideHeader: true,
           });
-          const environmentFactsSection = React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-environments-home-metrics playground-computer-detail-metrics playground-develop-server-metrics playground-settings-usage-top-chart" },
-              React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-computer-details-card" },
-                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                  React.createElement("div", { className: "playground-database-overview" },
-                    React.createElement("div", { className: "playground-database-overview-chart-block playground-settings-usage-chart-block playground-develop-server-metrics-chart-block playground-computer-detail-chart-block" },
-                      React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-settings-usage-chart-kpis playground-develop-server-metrics-kpis playground-computer-detail-chart-kpis" },
-                        environmentDetailKpis.map((item) =>
-                          React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi playground-settings-usage-chart-kpi playground-develop-server-metrics-kpi" },
-                            React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                              React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                            ),
-                            React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                          )
-                        )
-                      ),
-                      shouldShowEnvironmentAnalytics && environmentAnalyticsError
-                        ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, environmentAnalyticsError)
-                        : null,
-                      renderEnvironmentDetailActivityChart(),
-                      React.createElement("div", { className: "playground-computer-detail-fact-rows" },
-                        React.createElement("div", { className: "playground-environment-profile-section" },
-                          React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Computer Profile"),
-                          renderEnvironmentComputeProfileSelector(
-                            draftEnvironment.computeProfile,
-                            (profileId) => updateEnvironmentField("computeProfile", profileId),
-                            { compact: true }
-                          )
-                        ),
-                        renderEnvironmentFactRow("ID",
-                          React.createElement("span", {
-                            className: "playground-environments-editor-fact-value is-id",
-                            title: draftEnvironment.id || "Unsaved environment",
-                          }, draftEnvironment.id || "Unsaved environment")
-                        ),
-                        renderEnvironmentFactRow("Created",
-                          React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftEnvironment.createdAt))
-                        ),
-                        renderEnvironmentFactRow("Updated",
-                          React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftEnvironment.updatedAt))
-                        ),
-                        renderEnvironmentFactRow("Storage",
-                          React.createElement("span", { className: "playground-environments-editor-fact-value" }, storageDisplay)
-                        ),
-                        renderEnvironmentFactRow("Rate",
-                          React.createElement("span", { className: "playground-environments-editor-fact-value" },
-                            formatPlaygroundEnvironmentProfileRate(activeEnvironmentComputeProfile) + " · " + formatPlaygroundEnvironmentProfileHourlyPrice(activeEnvironmentComputeProfile)
-                          )
-                        ),
-                        renderEnvironmentFactRow("Resources",
-                          React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundEnvironmentProfileResources(activeEnvironmentComputeProfile))
-                        ),
-                        renderEnvironmentFactRow("Internet",
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-environments-toggle" + (draftEnvironment.internetAccess ? " is-active" : ""),
-                            onClick: () => updateEnvironmentField("internetAccess", !draftEnvironment.internetAccess),
-                            "aria-pressed": draftEnvironment.internetAccess ? "true" : "false",
-                            title: draftEnvironment.internetAccess ? "Internet access enabled" : "Internet access disabled",
-                          }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
-                        ),
-                        draftEnvironment.computeProfile === "desktop"
-                          ? renderEnvironmentFactRow("Office Apps",
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-environments-toggle" + (officeAppsEnabled ? " is-active" : ""),
-                                onClick: () => updateEnvironmentField("officeAppsEnabled", !officeAppsEnabled),
-                                "aria-pressed": officeAppsEnabled ? "true" : "false",
-                                title: officeAppsEnabled ? "Office apps enabled" : "Office apps disabled",
-                              }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
-                            )
-                          : null
-                      )
-                    )
-                  )
+          const environmentAnalyticsSection = React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-computer-detail-progress-combo-card" },
+            React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
+              React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Analytics"),
+              React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
+                renderEnvironmentDetailTimescaleControl()
+              )
+            ),
+            React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
+              environmentDetailKpis.map((item) =>
+                React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+                    React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
+                    React.createElement("span", null, item.label)
+                  ),
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
                 )
               )
+            ),
+            shouldShowEnvironmentAnalytics && environmentAnalyticsError
+              ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, environmentAnalyticsError)
+              : null,
+            React.createElement("div", { className: "playground-project-overview-progress-combo-chart playground-computer-detail-progress-combo-chart" },
+              renderEnvironmentDetailActivityChart()
             )
           );
           const normalizedEnvironmentRuntimeStatus = String(environmentRuntimeState.status || "idle").trim().toLowerCase();
@@ -96895,89 +99952,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               ),
             },
           ];
-          const environmentSettingsAction = draftEnvironment.id && !draftEnvironment.isSystem && !draftEnvironment.isDefault
-            ? React.createElement("div", {
-                className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
-                ref: environmentActionsPopoverRef,
-              },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-content-menu-button",
-                  "aria-label": "Environment actions",
-                  "aria-expanded": environmentActionsPopoverOpen ? "true" : "false",
-                  onClick: () => setEnvironmentActionsPopoverOpen((current) => !current),
-                  disabled: saveState.isSaving,
-                }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-                environmentActionsPopoverOpen
-                  ? React.createElement("div", {
-                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                      onClick: (event) => event.stopPropagation(),
-                    },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "tb-popup-row",
-                        onClick: () => openEnvironmentRenameDialog(draftEnvironment),
-                      },
-                        React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "Rename")
-                        )
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "tb-popup-row",
-                        onClick: () => {
-                          setEnvironmentActionsPopoverOpen(false);
-                          void handleDeleteEnvironment(draftEnvironment.id);
-                        },
-                      },
-                        React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "Delete")
-                        )
-                      )
-                    )
-                  : null
-              )
-	            : null;
-	          const environmentDesktopHeaderActions = React.createElement("div", { className: "playground-environments-desktop-header-actions" },
-	            environmentSettingsAction,
-	            React.createElement("span", {
-              className: "playground-environments-desktop-status is-" + (
-                normalizedEnvironmentRuntimeStatus === "running"
-                  ? "running"
-                  : normalizedEnvironmentRuntimeStatus === "starting"
-                    ? "starting"
-                    : normalizedEnvironmentRuntimeStatus === "error"
-                      ? "error"
-                      : "stopped"
-              ),
-            }, environmentDesktopStatusLabel),
-            React.createElement("button", {
-              type: "button",
-              className: "playground-environments-action-button playground-environments-desktop-header-button is-secondary",
-              onClick: () => {
-                void handleOpenEnvironmentGui({ forceRestart: true });
-              },
-              disabled: !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID || environmentGuiState.isStarting,
-            },
-              React.createElement(RefreshCw, {
-                width: 12,
-                height: 12,
-                strokeWidth: 1.8,
-                className: environmentGuiState.isStarting ? "playground-environments-spin" : "",
-              }),
-              React.createElement("span", null, environmentGuiState.isStarting ? "Restarting..." : "Restart")
-            ),
-            React.createElement("button", {
-              type: "button",
-              className: "playground-environments-action-button playground-environments-desktop-header-button",
-              onClick: () => {
-                void handleOpenEnvironmentGui();
-              },
-              disabled: !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID || environmentGuiState.isStarting || draftEnvironment.guiEnabled === false,
-            }, environmentGuiState.isStarting ? "Opening..." : (environmentGuiOpen ? "Show Desktop" : "Open GUI"))
-          );
           const desktopOverlay = environmentGuiOpen
             ? React.createElement("div", { className: "playground-environments-desktop-overlay" },
                 React.createElement("div", { className: "playground-environments-desktop-overlay-header" },
@@ -97083,7 +100057,67 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 )
               )
             : null;
-          const descriptionSection = null;
+          const environmentDescriptionFormatActions = React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+            [
+              { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
+              { id: "italic", label: "Italic", icon: Italic },
+              { id: "underline", label: "Underline", icon: Underline },
+              { id: "list", label: "List", icon: List },
+            ].map((action) =>
+              React.createElement("button", {
+                key: "computer-description-" + action.id,
+                type: "button",
+                className: "playground-tasks-detail-format-button",
+                title: action.label,
+                "aria-label": action.label,
+                onMouseDown: (event) => event.preventDefault(),
+                onClick: () => handleEnvironmentDescriptionFormat(action.id),
+              }, React.createElement(action.icon, {
+                width: 14,
+                height: 14,
+                strokeWidth: action.strokeWidth || 1.8,
+              }))
+            )
+          );
+          const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-computer-detail-description-section" },
+            React.createElement("div", { className: "playground-tasks-detail-section-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+              environmentDescriptionFormatActions
+            ),
+            React.createElement("div", {
+                className: "playground-tasks-detail-description-editor"
+                  + (isEnvironmentDescriptionEditing ? " is-editing" : " is-preview"),
+              },
+              !isEnvironmentDescriptionEditing
+                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                    String(draftEnvironment.description || "").trim()
+                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                          content: draftEnvironment.description,
+                          className: "playground-tasks-detail-description-preview tb-message-markdown",
+                        })
+                      : React.createElement("div", {
+                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                        }, "Add Description here")
+                  )
+                : null,
+              React.createElement("textarea", {
+                ref: environmentDescriptionTextareaRef,
+                className: "playground-tasks-detail-description-input " + (isEnvironmentDescriptionEditing ? "is-editing" : "is-preview"),
+                rows: 1,
+                placeholder: isEnvironmentDescriptionEditing ? "Add Description here" : "",
+                value: draftEnvironment.description || "",
+                onFocus: () => setIsEnvironmentDescriptionEditing(true),
+                onChange: (event) => {
+                  updateEnvironmentField("description", event.target.value);
+                  resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                },
+                onBlur: () => {
+                  setIsEnvironmentDescriptionEditing(false);
+                  commitDraftEnvironmentIfDirty();
+                },
+              })
+            )
+          );
 
           const runtimesSection = React.createElement("div", { className: "playground-tasks-connectors playground-environments-runtimes-section" },
             React.createElement("div", { className: "playground-tasks-connectors-list" },
@@ -97390,33 +100424,886 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             )
           );
 
-          return React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: environmentDetailMainRef },
-	              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-computer-detail-navbar" },
-	              React.createElement("div", { className: "playground-environments-editor-navbar-title" },
-	                React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-	                  React.createElement("input", {
-	                    type: "text",
-                    className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input",
-                    value: draftEnvironment.name || "",
-                    placeholder: "Environment",
-                    "aria-label": "Environment name",
-                    title: draftEnvironment.name || "Environment",
-                    onChange: (event) => updateEnvironmentField("name", event.target.value),
-                    onBlur: commitDraftEnvironmentIfDirty,
-                  })
-                )
+          const environmentResourceDetailBackButton = embeddedInResources
+            ? React.createElement("button", {
+                type: "button",
+                className: "playground-resource-detail-back-button",
+                onClick: showEnvironmentsHome,
+                "aria-label": "Back to Computers",
+              },
+                React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Back")
+              )
+            : null;
+          const environmentSidebarCollapsed = Boolean(environmentDetailsCollapsed);
+          const renderEnvironmentSidebarToggleButton = () => React.createElement("button", {
+              type: "button",
+              className: "playground-project-overview-sidebar-toggle",
+              onClick: () => setEnvironmentDetailsCollapsed((current) => !current),
+              title: environmentSidebarCollapsed ? "Show computer sidebar" : "Hide computer sidebar",
+              "aria-label": environmentSidebarCollapsed ? "Show computer sidebar" : "Hide computer sidebar",
+              "aria-pressed": environmentSidebarCollapsed ? "true" : "false",
+            },
+            React.createElement(PanelRight, {
+              width: 15,
+              height: 15,
+              strokeWidth: 1.8,
+            })
+          );
+          const canShowEnvironmentDetailHeaderPublish = Boolean(
+            draftEnvironment?.id
+            && draftEnvironment.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
+            && !draftEnvironment.isSystem
+          );
+          const isEnvironmentPublishControlDisabled = saveState.isSaving || environmentVersionState.status === "loading";
+          const areEnvironmentPublishMenuActionsDisabled = saveState.isSaving || environmentVersionState.status === "loading";
+          const renderEnvironmentPublishSplitButton = () => renderPlaygroundPlatformPopup({
+            open: environmentPublishMenuOpen,
+            shellRef: environmentPublishMenuRef,
+            shellClassName: "playground-agents-detail-publish-split-shell playground-computer-detail-publish-split-shell",
+            menuClassName: "playground-agents-detail-publish-menu playground-computer-detail-publish-menu",
+            trigger: React.createElement("div", {
+                className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-computer-detail-header-publish-button playground-agents-detail-publish-split-control"
+                  + (environmentVersionsSidebarOpen ? " is-active" : "")
+                  + (isEnvironmentPublishControlDisabled ? " is-disabled" : ""),
+              },
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-detail-publish-main",
+                  title: "Publish computer",
+                  "aria-label": "Publish computer",
+                  "aria-expanded": environmentVersionsSidebarOpen ? "true" : "false",
+                  disabled: isEnvironmentPublishControlDisabled,
+                  onClick: () => {
+                    setEnvironmentPublishMenuOpen(false);
+                    toggleEnvironmentVersionsSidebar();
+                  },
+                },
+                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Publish")
               ),
-              React.createElement("div", { className: "playground-content-nav-center" }),
-              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-                environmentDesktopHeaderActions,
-                draftEnvironment.isSystem
-                  ? React.createElement("span", { className: "playground-environments-badge" }, "System")
-                  : null,
+              React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-detail-publish-chevron",
+                  title: "Publish save options",
+                  "aria-label": "Publish save options",
+                  "aria-haspopup": "menu",
+                  "aria-expanded": environmentPublishMenuOpen ? "true" : "false",
+                  disabled: isEnvironmentPublishControlDisabled,
+                  onClick: (event) => {
+                    event.stopPropagation();
+                    setEnvironmentPublishMenuOpen((current) => !current);
+                  },
+                },
+                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
               )
             ),
+            menuProps: {
+              role: "menu",
+              onClick: (event) => event.stopPropagation(),
+            },
+            children: React.createElement(React.Fragment, null,
+              React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row",
+                  role: "menuitem",
+                  disabled: areEnvironmentPublishMenuActionsDisabled || !draftEnvironment,
+                  onClick: () => {
+                    setEnvironmentPublishMenuOpen(false);
+                    void saveDraftEnvironmentImmediate();
+                  },
+                },
+                React.createElement(Save, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Save")
+                )
+              ),
+              React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row",
+                  role: "menuitem",
+                  disabled: areEnvironmentPublishMenuActionsDisabled || !draftEnvironment,
+                  onClick: () => {
+                    setEnvironmentPublishMenuOpen(false);
+                    void saveCurrentEnvironmentVersion();
+                  },
+                },
+                React.createElement(GitBranchPlus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Save to new Version")
+                )
+              ),
+              React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row",
+                  role: "menuitem",
+                  disabled: areEnvironmentPublishMenuActionsDisabled || !draftEnvironment,
+                  onClick: () => {
+                    setEnvironmentPublishMenuOpen(false);
+                    handleRevertDraft();
+                  },
+                },
+                React.createElement(Undo2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Revert to last saved Version")
+                )
+              )
+            )
+          });
+          const renderEnvironmentControlRow = (className) =>
+            React.createElement("div", { className },
+              canShowEnvironmentDetailHeaderPublish
+                ? renderEnvironmentPublishSplitButton()
+                : null,
+              renderEnvironmentSidebarToggleButton()
+            );
+          const environmentProfileSection = React.createElement("div", { className: "playground-agents-profile-section playground-computer-detail-profile-section" },
+            React.createElement("div", { className: "playground-agents-profile-copy" },
+              React.createElement("div", { className: "playground-agents-profile-name-wrap" },
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agents-profile-name-input playground-computer-detail-profile-title",
+                  value: draftEnvironment.name || "",
+                  placeholder: "Computer",
+                  "aria-label": "Computer name",
+                  title: draftEnvironment.name || "Computer",
+                  onKeyDown: (event) => event.stopPropagation(),
+                  onChange: (event) => updateEnvironmentField("name", event.target.value),
+                  onBlur: commitDraftEnvironmentIfDirty,
+                })
+              )
+            ),
+            environmentSidebarCollapsed
+              ? renderEnvironmentControlRow("playground-agents-detail-profile-actions playground-computer-detail-profile-actions")
+              : null
+          );
+          const renderEnvironmentSidebarValue = (value, className = "") =>
+            React.createElement("span", {
+              className: "playground-environments-editor-fact-value" + (className ? " " + className : ""),
+              title: String(value || ""),
+            }, value || "Not set");
+          const renderEnvironmentSidebarRow = (label, valueNode, props = {}) =>
+            React.createElement(props.asButton ? "button" : "div", {
+                key: label,
+                type: props.asButton ? "button" : undefined,
+                className: "playground-project-overview-sidebar-row" + (props.className ? " " + props.className : ""),
+                onClick: props.onClick,
+              },
+              React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, label),
+              React.createElement("div", {
+                className: "playground-project-overview-sidebar-row-value"
+                  + (props.editable ? " is-editable" : "")
+                  + (props.valueClassName ? " " + props.valueClassName : ""),
+              }, valueNode)
+            );
+          const environmentRuntimeStatusNode = React.createElement("span", {
+            className: "playground-environments-desktop-status playground-computer-detail-sidebar-status is-" + (
+              normalizedEnvironmentRuntimeStatus === "running"
+                ? "running"
+                : normalizedEnvironmentRuntimeStatus === "starting"
+                  ? "starting"
+                  : normalizedEnvironmentRuntimeStatus === "error"
+                    ? "error"
+                    : "stopped"
+            ),
+          }, environmentDesktopStatusLabel);
+          const renderEnvironmentActionRow = (key, label, Icon, onClick, options = {}) =>
+            React.createElement("button", {
+                key,
+                type: "button",
+                className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-computer-detail-sidebar-action",
+                onClick,
+                disabled: Boolean(options.disabled),
+              },
+              React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
+                React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.85 })
+              ),
+              React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, label)
+            );
+          const selectedEnvironmentComputeProfile = activeEnvironmentComputeProfile || getPlaygroundEnvironmentComputeProfileConfig(draftEnvironment.computeProfile);
+          const environmentComputeProfilePopoverOpen = environmentRuntimePopover === "compute-profile";
+          const environmentComputeProfileSelector = React.createElement("div", {
+              className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup playground-computer-profile-select-popup" + (environmentComputeProfilePopoverOpen ? " is-open" : ""),
+              ref: environmentComputeProfilePopoverOpen ? environmentRuntimePopoverRef : null,
+            },
+            React.createElement("button", {
+                type: "button",
+                className: "playground-environments-runtime-value-button playground-agents-model-picker-trigger",
+                onClick: () => setEnvironmentRuntimePopover((current) => current === "compute-profile" ? "" : "compute-profile"),
+                title: selectedEnvironmentComputeProfile.label || "Computer profile",
+                "aria-label": "Computer profile: " + (selectedEnvironmentComputeProfile.label || "Computer profile"),
+                "aria-expanded": environmentComputeProfilePopoverOpen ? "true" : "false",
+              },
+              React.createElement("span", { className: "playground-agents-model-picker-trigger-copy" },
+                React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
+                  React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.8 })
+                ),
+                React.createElement("span", { className: "playground-agents-model-picker-trigger-labels" },
+                  React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedEnvironmentComputeProfile.label || "Computer profile")
+                )
+              ),
+              React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+            ),
+            environmentComputeProfilePopoverOpen
+              ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                  PLAYGROUND_ENVIRONMENT_COMPUTE_PROFILES.map((profile) =>
+                    React.createElement("button", {
+                        key: profile.id,
+                        type: "button",
+                        className: "tb-popup-row tb-popup-row-select" + (profile.id === selectedEnvironmentComputeProfile.id ? " selected" : ""),
+                        onClick: () => {
+                          updateEnvironmentField("computeProfile", profile.id);
+                          setEnvironmentRuntimePopover("");
+                        },
+                      },
+                      React.createElement("span", { className: "tb-popup-check-slot" },
+                        profile.id === selectedEnvironmentComputeProfile.id
+                          ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                          : null
+                      ),
+                      React.createElement("span", null, profile.label)
+                    )
+                  )
+                )
+              : null
+          );
+          const canMutateEnvironmentRecord = Boolean(draftEnvironment.id && !draftEnvironment.isSystem && !draftEnvironment.isDefault);
+          const environmentSidebar = React.createElement("aside", {
+              className: "playground-project-overview-sidebar playground-agents-detail-sidebar playground-computer-detail-sidebar",
+              "aria-label": (draftEnvironment.name || "Computer") + " settings",
+            },
+            !environmentSidebarCollapsed
+              ? renderEnvironmentControlRow("playground-agents-detail-sidebar-controls playground-computer-detail-sidebar-controls")
+              : null,
+            React.createElement("section", { className: "playground-project-overview-sidebar-card playground-computer-detail-properties-card" },
+              React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties")
+              ),
+              React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
+                renderEnvironmentSidebarRow("Status", environmentRuntimeStatusNode, {
+                  valueClassName: "playground-computer-detail-sidebar-status-value",
+                }),
+                renderEnvironmentSidebarRow("Computer Profile",
+                  environmentComputeProfileSelector,
+                  {
+                    editable: true,
+                    className: "playground-computer-detail-profile-row",
+                    valueClassName: "playground-computer-detail-profile-value",
+                  }
+                ),
+                renderEnvironmentSidebarRow("Rate",
+                  renderEnvironmentSidebarValue(formatPlaygroundEnvironmentProfileRate(activeEnvironmentComputeProfile))
+                ),
+                renderEnvironmentSidebarRow("Computer ID", renderEnvironmentSidebarValue(draftEnvironment.id || "Unsaved computer", "is-id")),
+                renderEnvironmentSidebarRow("Created", renderEnvironmentSidebarValue(formatPlaygroundFileDate(draftEnvironment.createdAt))),
+                renderEnvironmentSidebarRow("Updated", renderEnvironmentSidebarValue(formatPlaygroundFileDate(draftEnvironment.updatedAt))),
+                renderEnvironmentSidebarRow("Storage", renderEnvironmentSidebarValue(storageDisplay)),
+                renderEnvironmentSidebarRow("Resources", renderEnvironmentSidebarValue(formatPlaygroundEnvironmentProfileResources(activeEnvironmentComputeProfile))),
+                renderEnvironmentSidebarRow("Internet",
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-toggle" + (draftEnvironment.internetAccess ? " is-active" : ""),
+                    onClick: () => updateEnvironmentField("internetAccess", !draftEnvironment.internetAccess),
+                    "aria-pressed": draftEnvironment.internetAccess ? "true" : "false",
+                    title: draftEnvironment.internetAccess ? "Internet access enabled" : "Internet access disabled",
+                  }, React.createElement("span", { className: "playground-environments-toggle-thumb" })),
+                  { valueClassName: "playground-computer-detail-sidebar-toggle-value" }
+                ),
+                draftEnvironment.computeProfile === "desktop"
+                  ? renderEnvironmentSidebarRow("Office Apps",
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-toggle" + (officeAppsEnabled ? " is-active" : ""),
+                        onClick: () => updateEnvironmentField("officeAppsEnabled", !officeAppsEnabled),
+                        "aria-pressed": officeAppsEnabled ? "true" : "false",
+                        title: officeAppsEnabled ? "Office apps enabled" : "Office apps disabled",
+                      }, React.createElement("span", { className: "playground-environments-toggle-thumb" })),
+                      { valueClassName: "playground-computer-detail-sidebar-toggle-value" }
+                    )
+                  : null,
+                draftEnvironment.isSystem
+                  ? renderEnvironmentSidebarRow("Type", renderEnvironmentSidebarValue("System"))
+                  : null
+              )
+            ),
+            React.createElement("section", { className: "playground-project-overview-sidebar-card playground-agents-detail-actions-card playground-computer-detail-actions-card" },
+              React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Actions")
+              ),
+              React.createElement("div", { className: "playground-agents-detail-sidebar-actions" },
+                canMutateEnvironmentRecord
+                  ? renderEnvironmentActionRow("share-team", "Share with Team", UsersRound, () => openEnvironmentShareTeamModal(), {
+                      disabled: saveState.isSaving || environmentShareTeamState.action === "share",
+                    })
+                  : null,
+                draftEnvironment?.id && draftEnvironment.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
+                  ? renderEnvironmentActionRow("api", "Use via API", Code, () => openEnvironmentApiModal(), {
+                      disabled: saveState.isSaving,
+                    })
+                  : null,
+                renderEnvironmentActionRow("open-gui", environmentGuiOpen ? "Show Desktop" : "Open GUI", Monitor, () => {
+                  void handleOpenEnvironmentGui();
+                }, {
+                  disabled: !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID || environmentGuiState.isStarting || draftEnvironment.guiEnabled === false,
+                }),
+                renderEnvironmentActionRow("restart", environmentGuiState.isStarting ? "Restarting..." : "Restart", RefreshCw, () => {
+                  void handleOpenEnvironmentGui({ forceRestart: true });
+                }, {
+                  disabled: !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID || environmentGuiState.isStarting,
+                }),
+                canMutateEnvironmentRecord
+                  ? renderEnvironmentActionRow("rename", "Rename", SquarePen, () => openEnvironmentRenameDialog(draftEnvironment), {
+                      disabled: saveState.isSaving,
+                    })
+                  : null,
+                canMutateEnvironmentRecord
+                  ? renderEnvironmentActionRow("delete", "Delete", Trash2, () => {
+                      void handleDeleteEnvironment(draftEnvironment.id);
+                    }, {
+                      disabled: saveState.isSaving,
+                    })
+                  : null
+              )
+            )
+          );
+          const normalizedEnvironmentDetailTab = environmentDetailTab === "advanced" ? "advanced" : "general";
+          const environmentDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-computer-detail-tabs" },
+            React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+              [
+                { id: "general", label: "General" },
+                { id: "advanced", label: "Advanced Settings" },
+              ].map((tab) =>
+                React.createElement("button", {
+                    key: tab.id,
+                    type: "button",
+                    className: "playground-project-overview-chart-tab" + (normalizedEnvironmentDetailTab === tab.id ? " is-active" : ""),
+                    onClick: () => setEnvironmentDetailTab(tab.id),
+                    "aria-pressed": normalizedEnvironmentDetailTab === tab.id ? "true" : "false",
+                  },
+                  tab.label
+                )
+              )
+            )
+          );
+          const environmentDetailGeneralSection = React.createElement(React.Fragment, null,
+            environmentAnalyticsSection,
+            descriptionSection
+          );
+          const runtimeVersionsBox = React.createElement("div", {
+              className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-mission-control-modal-context-editor playground-mission-control-modal-outcomes-editor playground-computer-runtime-versions-box",
+            },
+            runtimesSection
+          );
+          const renderEnvironmentAddIconButton = (label, onClick) => React.createElement("button", {
+              type: "button",
+              className: "playground-computer-detail-add-icon-button",
+              onClick,
+              title: label,
+              "aria-label": label,
+            },
+            React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.9 })
+          );
+          const environmentDetailAdvancedSection = React.createElement(React.Fragment, null,
+            renderEditorSection("runtimes", "Runtime Versions", "", runtimeVersionsBox, null, false),
+            renderEditorSection(
+              "packages-system",
+              "System Packages",
+              "",
+              renderPackageGroup("system", "System", "ffmpeg, curl, imagemagick..."),
+              renderEnvironmentAddIconButton("Add Package", () => openPackageComposer("system")),
+              false
+            ),
+            renderEditorSection(
+              "packages-python",
+              "Python Packages",
+              "",
+              renderPackageGroup("python", "Python", "numpy, pandas, flask..."),
+              renderEnvironmentAddIconButton("Add Package", () => openPackageComposer("python")),
+              false
+            ),
+            renderEditorSection(
+              "packages-node",
+              "Node.js Packages",
+              "",
+              renderPackageGroup("node", "Node.js", "express, typescript, axios..."),
+              renderEnvironmentAddIconButton("Add Package", () => openPackageComposer("node")),
+              false
+            ),
+            renderEditorSection(
+              "variables",
+              "Environment Variables",
+              "",
+              environmentVariablesSection,
+              renderEnvironmentAddIconButton("Add Variable", addEnvironmentVariable),
+              false
+            ),
+            renderEditorSection(
+              "secrets",
+              "Secrets",
+              "",
+              secretsSection,
+              renderEnvironmentAddIconButton("Add Secret", addSecret),
+              false
+            ),
+            renderEditorSection(
+              "mcp",
+              "MCP Servers",
+              "",
+              mcpSection,
+              renderEnvironmentAddIconButton("Add Server", addMcpServer),
+              false
+            ),
+            renderEditorSection(
+              "scripts",
+              "Setup Scripts",
+              "",
+              setupScriptsSection,
+              renderEnvironmentAddIconButton("Add Script", addSetupScript),
+              false
+            ),
+            renderEditorSection(
+              "dockerfile",
+              "Dockerfile Extension",
+              "",
+              dockerfileSection,
+              null,
+              false
+            )
+          );
+          const environmentDetailActiveSection = normalizedEnvironmentDetailTab === "advanced"
+            ? environmentDetailAdvancedSection
+            : environmentDetailGeneralSection;
+
+          function renderEnvironmentVersionRows() {
+            const versions = readDraftEnvironmentVersions();
+            const metadata = getEnvironmentVersionMetadata();
+            const activeVersion = getDraftEnvironmentActiveVersion();
+            const activeVersionId = String(
+              activeVersion?.id
+              || metadata.activeEnvironmentVersionId
+              || metadata.active_environment_version_id
+              || metadata.activeComputerVersionId
+              || metadata.active_computer_version_id
+              || ""
+            ).trim();
+            const selectedVersionId = String(
+              metadata.restoredFromEnvironmentVersionId
+              || metadata.restored_from_environment_version_id
+              || metadata.restoredFromComputerVersionId
+              || metadata.restored_from_computer_version_id
+              || activeVersionId
+              || ""
+            ).trim();
+            const isBusy = environmentVersionState.status === "loading";
+
+            if (!versions.length) {
+              return React.createElement("div", { className: "playground-metronome-publish-empty-state" },
+                React.createElement("div", { className: "playground-metronome-publish-empty-card" },
+                  React.createElement("img", {
+                    className: "playground-metronome-publish-empty-image",
+                    src: "/img/empty-state/metronome.webp",
+                    alt: "",
+                    "aria-hidden": "true",
+                  }),
+                  React.createElement("h3", { className: "playground-metronome-publish-empty-title" }, "No saved versions yet"),
+                  React.createElement("p", { className: "playground-metronome-publish-empty-copy" },
+                    "Create a version to track runtime versions, packages, environment variables, secrets, MCP servers, and setup scripts."
+                  )
+                )
+              );
+            }
+
+            return versions.map((version) => {
+              const isActiveVersion = version.id === activeVersionId || version.status === "active";
+              const isSelectedVersion = version.id === selectedVersionId;
+              const versionTitle = String(version.label || ("Version " + version.version)).trim();
+              const versionDescription = String(version.description || "").trim();
+              const profile = getPlaygroundEnvironmentComputeProfileConfig(version.computeProfile || version.snapshot?.computeProfile || draftEnvironment?.computeProfile);
+              const runtimeCount = Number(version.runtimeCount || Object.keys(version.snapshot?.runtimes || {}).length || 0) || 0;
+              return React.createElement("div", {
+                key: version.id,
+                className: "playground-metronome-publish-row"
+                  + (isActiveVersion ? " is-active" : "")
+                  + (isSelectedVersion ? " is-selected" : ""),
+              },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-metronome-publish-row-checkbox" + (isSelectedVersion ? " is-selected" : ""),
+                  disabled: isBusy || isSelectedVersion,
+                  onClick: () => void restoreEnvironmentVersion(version.id),
+                  "aria-label": "Display computer version " + version.version,
+                  "aria-pressed": isSelectedVersion ? "true" : "false",
+                },
+                  isSelectedVersion
+                    ? React.createElement(Check, { width: 16, height: 16, strokeWidth: 2.5 })
+                    : null
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-metronome-publish-row-main",
+                  disabled: isBusy || isSelectedVersion,
+                  onClick: () => void restoreEnvironmentVersion(version.id),
+                },
+                  React.createElement("div", { className: "playground-metronome-publish-row-title" },
+                    React.createElement("span", null, versionTitle),
+                    isActiveVersion
+                      ? React.createElement("span", { className: "playground-metronome-publish-active-chip" },
+                          React.createElement(Check, { width: 11, height: 11, strokeWidth: 2 }),
+                          React.createElement("span", null, "Published")
+                        )
+                      : null
+                  ),
+                  versionDescription
+                    ? React.createElement("div", { className: "playground-metronome-publish-row-description" }, versionDescription)
+                    : null,
+                  React.createElement("div", { className: "playground-metronome-publish-row-copy playground-metronome-publish-row-meta" },
+                    (version.publishedAt ? "Published " : "Saved ")
+                    + formatEnvironmentVersionTimestamp(version.publishedAt || version.createdAt)
+                    + " · "
+                    + (profile?.label || "Computer profile")
+                    + " · "
+                    + runtimeCount
+                    + " runtime"
+                    + (runtimeCount === 1 ? "" : "s")
+                  )
+                ),
+                React.createElement("div", { className: "playground-metronome-publish-row-actions" },
+                  isActiveVersion
+                    ? null
+                    : React.createElement("button", {
+                        type: "button",
+                        className: "playground-metronome-secondary-button playground-metronome-publish-row-action",
+                        disabled: isBusy,
+                        onClick: () => void publishEnvironmentVersion(version.id),
+                      },
+                        React.createElement(Rocket, { width: 13, height: 13, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Publish")
+                      ),
+                  React.createElement("span", { className: "playground-metronome-publish-row-menu-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-metronome-publish-row-menu-trigger" + (openEnvironmentVersionMenuId === version.id ? " is-open" : ""),
+                      disabled: isBusy,
+                      onClick: (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setOpenEnvironmentVersionMenuId((current) => current === version.id ? "" : version.id);
+                      },
+                      "aria-label": "Computer version options",
+                      "aria-expanded": openEnvironmentVersionMenuId === version.id ? "true" : "false",
+                    }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
+                    openEnvironmentVersionMenuId === version.id
+                      ? React.createElement("div", {
+                          className: "playground-metronome-publish-row-menu",
+                          role: "menu",
+                        },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-metronome-publish-row-menu-item",
+                            onClick: () => void restoreEnvironmentVersion(version.id),
+                          },
+                            React.createElement(RotateCcw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("span", null, "Restore version")
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-metronome-publish-row-menu-item is-danger",
+                            onClick: () => void deleteEnvironmentVersion(version.id),
+                          },
+                            React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("span", null, "Delete version")
+                          )
+                        )
+                      : null
+                  )
+                )
+              );
+            });
+          }
+
+          function renderEnvironmentVersionsSidebar() {
+            if (!canShowEnvironmentDetailHeaderPublish || !environmentVersionsSidebarOpen) {
+              return null;
+            }
+            const isBusy = environmentVersionState.status === "loading";
+            const activeVersion = getDraftEnvironmentActiveVersion();
+            return React.createElement("aside", {
+                className: "playground-agents-versions-sidebar playground-computer-versions-sidebar playground-metronome-node-inspector playground-metronome-publish-sidebar",
+                "aria-hidden": environmentVersionsSidebarOpen ? "false" : "true",
+              },
+              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-metronome-inspector-header" },
+                React.createElement("div", { className: "playground-tasks-detail-navbar-title playground-metronome-inspector-navbar-title" },
+                  React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
+                    React.createElement("span", { className: "playground-metronome-inspector-node-kind is-icon", "aria-label": "Versions" },
+                      React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.9 })
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
+                    React.createElement("div", { className: "playground-content-title playground-tasks-detail-navbar-title-input playground-metronome-inspector-title-input" }, "Versions")
+                  )
+                ),
+                React.createElement("div", { className: "playground-content-nav-center" }),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-header-icon-button is-plain playground-metronome-inspector-close",
+                  onClick: closeEnvironmentVersionsSidebar,
+                  "aria-label": "Close versions",
+                }, React.createElement(X, { width: 15, height: 15, strokeWidth: 1.9 }))
+              ),
+              React.createElement("div", { className: "playground-metronome-inspector-body" },
+                React.createElement("div", { className: "playground-metronome-publish-sidebar-section-title" },
+                  React.createElement("span", { className: "playground-metronome-publish-sidebar-section-title-text" }, "Saved versions"),
+                  React.createElement("span", { className: "playground-metronome-publish-title-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-metronome-publish-version-button",
+                      disabled: isBusy,
+                      onClick: () => void saveCurrentEnvironmentVersion(),
+                    },
+                      React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Version")
+                    )
+                  )
+                ),
+                environmentVersionState.status === "loading"
+                  ? React.createElement("div", { className: "playground-metronome-publish-state" }, environmentVersionState.message || "Saving computer version...")
+                  : null,
+                environmentVersionState.status === "error"
+                  ? React.createElement("div", { className: "playground-metronome-publish-state is-error" }, environmentVersionState.error || "Failed to update computer versions.")
+                  : null,
+                environmentVersionState.status === "success"
+                  ? React.createElement("div", { className: "playground-metronome-publish-state is-success" }, environmentVersionState.message || "Saved")
+                  : null,
+                React.createElement("div", { className: "playground-metronome-publish-list" }, renderEnvironmentVersionRows())
+              ),
+              React.createElement("div", { className: "playground-metronome-publish-sidebar-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-metronome-primary-button playground-metronome-publish-new-button",
+                  disabled: isBusy,
+                  onClick: () => void publishCurrentEnvironmentVersion(),
+                },
+                  React.createElement(Rocket, { width: 13, height: 13, strokeWidth: 1.8 }),
+                  React.createElement("span", null, isBusy ? "Publishing..." : "Publish current editor")
+                ),
+                activeVersion
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-metronome-secondary-button playground-metronome-publish-new-button",
+                      disabled: isBusy,
+                      onClick: () => void unpublishActiveEnvironmentVersion(),
+                    },
+                      React.createElement(PauseCircle, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, isBusy ? "Working..." : "Unpublish computer")
+                    )
+                  : null
+              )
+            );
+          }
+
+          function renderEnvironmentVersionsSidebarPortal() {
+            const sidebar = renderEnvironmentVersionsSidebar();
+            if (!sidebar) {
+              return null;
+            }
+            if (environmentVersionsDrawerContainer && typeof createPortal === "function") {
+              return createPortal(sidebar, environmentVersionsDrawerContainer);
+            }
+            if (versionsDrawerPortalId) {
+              return null;
+            }
+            return React.createElement("aside", {
+                className: "playground-metronome-node-drawer playground-agent-versions-inline-drawer is-open",
+              },
+              sidebar
+            );
+          }
+
+          function renderEnvironmentShareTeamModal() {
+            if (!environmentShareTeamModalOpen) {
+              return null;
+            }
+            const isSharingEnvironmentToTeam = environmentShareTeamState.action === "share";
+            const selectedTeamAlreadyShared = environmentSharedTeamIdSet.has(String(environmentShareTeamPickerValue || "").trim());
+            const hasManageableTeams = availableEnvironmentShareTeams.length > 0;
+            const showTeamsLoading = workspaceTeamsLoading && !hasManageableTeams;
+            const selectedTeam = availableEnvironmentShareTeams.find((team) => team.id === environmentShareTeamPickerValue) || null;
+            const modal = renderPlaygroundPlatformModal({
+              open: environmentShareTeamModalOpen,
+              visible: environmentShareTeamModalVisible,
+              closing: environmentShareTeamModalClosing,
+              onClose: () => closeEnvironmentShareTeamModal(),
+              as: "form",
+              backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-send-team-modal-backdrop playground-computer-share-team-modal-backdrop",
+              className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-send-team-modal playground-computer-share-team-modal",
+              ariaLabel: "Share computer with team",
+              surfaceProps: {
+                onSubmit: (event) => {
+                  void handleEnvironmentShareTeamSubmit(event);
+                },
+              },
+              children: React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("div", {
+                      className: "playground-content-title playground-tasks-project-modal-name-input",
+                      style: { display: "flex", alignItems: "center" },
+                    }, "Share with Team"),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                      onClick: () => closeEnvironmentShareTeamModal(),
+                      disabled: isSharingEnvironmentToTeam,
+                      title: "Close",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-issue-modal-body playground-agents-send-team-modal-body" },
+                  showTeamsLoading
+                    ? React.createElement("div", { className: "playground-agents-send-team-empty" },
+                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                        React.createElement("span", null, "Loading teams...")
+                      )
+                    : workspaceTeamsRequiresPlan
+                      ? React.createElement("div", { className: "playground-agents-send-team-empty" }, "Teams are not available on this workspace plan.")
+                      : hasManageableTeams
+                        ? React.createElement("div", { className: "playground-agents-send-team-list", role: "radiogroup", "aria-label": "Teams" },
+                            availableEnvironmentShareTeams.map((team) => {
+                              const isSelected = team.id === environmentShareTeamPickerValue;
+                              const isShared = environmentSharedTeamIdSet.has(team.id);
+                              return React.createElement("button", {
+                                  key: team.id,
+                                  type: "button",
+                                  className: "playground-agents-send-team-option" + (isSelected ? " is-selected" : "") + (isShared ? " is-shared" : ""),
+                                  onClick: () => setEnvironmentShareTeamPickerValue(team.id),
+                                  disabled: isSharingEnvironmentToTeam,
+                                  role: "radio",
+                                  "aria-checked": isSelected ? "true" : "false",
+                                },
+                                React.createElement("span", { className: "playground-agents-send-team-option-icon", "aria-hidden": "true" },
+                                  React.createElement(UsersRound, { width: 15, height: 15, strokeWidth: 1.85 })
+                                ),
+                                React.createElement("span", { className: "playground-agents-send-team-option-copy" },
+                                  React.createElement("span", { className: "playground-agents-send-team-option-title" }, team.name),
+                                  React.createElement("span", { className: "playground-agents-send-team-option-meta" }, isShared ? "Already shared" : team.roleLabel)
+                                ),
+                                isSelected
+                                  ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
+                                  : null
+                              );
+                            })
+                          )
+                        : React.createElement("div", { className: "playground-agents-send-team-empty" }, "No teams are available yet.")
+                ),
+                environmentShareTeamError
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, environmentShareTeamError)
+                  : null,
+                React.createElement("div", { className: "playground-tasks-project-modal-actions playground-agents-send-team-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: () => closeEnvironmentShareTeamModal(),
+                    disabled: isSharingEnvironmentToTeam,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: isSharingEnvironmentToTeam || !selectedTeam || selectedTeamAlreadyShared,
+                  }, isSharingEnvironmentToTeam ? "Sharing..." : "Share")
+                )
+              )
+            });
+            return modal && typeof createPortal === "function" && typeof document !== "undefined" && document.body
+              ? createPortal(modal, document.body)
+              : modal;
+          }
+
+          function renderEnvironmentApiModal() {
+            if (!environmentApiModalOpen) {
+              return null;
+            }
+            const snippetTabs = [
+              { id: "curl", label: "cURL" },
+              { id: "python", label: "Python" },
+              { id: "javascript", label: "JavaScript" },
+            ];
+            const snippets = buildEnvironmentApiSnippets(draftEnvironment);
+            const activeSnippet = snippets[environmentApiSnippetTab] || snippets.curl;
+            const modal = renderPlaygroundPlatformModal({
+              open: environmentApiModalOpen,
+              visible: environmentApiModalVisible,
+              closing: environmentApiModalClosing,
+              onClose: () => closeEnvironmentApiModal(),
+              backdropClassName: "playground-tasks-project-issue-backdrop playground-computer-api-modal-backdrop",
+              className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-computer-api-modal",
+              ariaLabel: "Use computer via API",
+              children: React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("div", {
+                      className: "playground-content-title playground-tasks-project-modal-name-input",
+                      style: { display: "flex", alignItems: "center" },
+                    }, "Use via API"),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                      onClick: () => closeEnvironmentApiModal(),
+                      title: "Close",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-issue-modal-body playground-computer-api-modal-body" },
+                  React.createElement("div", { className: "playground-server-invoke-card playground-computer-api-card" },
+                    React.createElement("div", { className: "playground-server-invoke-header playground-computer-api-header" },
+                      React.createElement("div", { className: "playground-server-invoke-tabs", role: "tablist", "aria-label": "Computer API examples" },
+                        snippetTabs.map((tab) =>
+                          React.createElement("button", {
+                            key: tab.id,
+                            type: "button",
+                            role: "tab",
+                            className: "playground-server-invoke-tab" + (environmentApiSnippetTab === tab.id ? " is-active" : ""),
+                            "aria-selected": environmentApiSnippetTab === tab.id ? "true" : "false",
+                            onClick: () => setEnvironmentApiSnippetTab(tab.id),
+                          }, tab.label)
+                        )
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-settings-icon-button playground-computer-api-copy-button",
+                        onClick: () => void copyEnvironmentApiSnippet(environmentApiSnippetTab, activeSnippet),
+                        title: "Copy code",
+                        "aria-label": "Copy code",
+                      }, copiedEnvironmentApiSnippet === environmentApiSnippetTab
+                        ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.9 })
+                        : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.9 }))
+                    ),
+                    React.createElement("pre", { className: "playground-server-invoke-code-fallback playground-computer-api-code" },
+                      React.createElement("code", null, activeSnippet)
+                    )
+                  )
+                )
+              )
+            });
+            return modal && typeof createPortal === "function" && typeof document !== "undefined" && document.body
+              ? createPortal(modal, document.body)
+              : modal;
+          }
+
+          const environmentDetailWorkspaceSection = React.createElement("div", {
+              className: "playground-project-overview-layout playground-agents-detail-overview-layout playground-computer-detail-overview-layout" + (environmentSidebarCollapsed ? " is-sidebar-collapsed" : ""),
+            },
+            React.createElement("div", { className: "playground-project-overview-main playground-agents-detail-overview-main playground-computer-detail-overview-main" },
+              environmentDetailTabs,
+              environmentDetailActiveSection
+            ),
+            environmentSidebar
+          );
+
+          return React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main playground-computer-detail-main", ref: environmentDetailMainRef },
             React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-              React.createElement("div", { className: "playground-computer-detail-content" },
+              React.createElement("div", { className: "playground-agents-detail-content playground-computer-detail-content is-agent-overview-general" },
                 saveState.error
                   ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, saveState.error)
                   : saveState.message
@@ -97425,105 +101312,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 environmentGuiState.error
                   ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, environmentGuiState.error)
                   : null,
-                descriptionSection,
-                environmentFactsSection,
-                renderEditorSection("runtimes", "Runtime Versions", "", runtimesSection, null, false),
-                renderEditorSection(
-                  "packages-system",
-                  "System Packages",
-                  "",
-                  renderPackageGroup("system", "System", "ffmpeg, curl, imagemagick..."),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button playground-tasks-skills-manage-button",
-                    onClick: () => openPackageComposer("system"),
-                  }, "Add Package"),
-                  false
-                ),
-                renderEditorSection(
-                  "packages-python",
-                  "Python Packages",
-                  "",
-                  renderPackageGroup("python", "Python", "numpy, pandas, flask..."),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button playground-tasks-skills-manage-button",
-                    onClick: () => openPackageComposer("python"),
-                  }, "Add Package"),
-                  false
-                ),
-                renderEditorSection(
-                  "packages-node",
-                  "Node.js Packages",
-                  "",
-                  renderPackageGroup("node", "Node.js", "express, typescript, axios..."),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button playground-tasks-skills-manage-button",
-                    onClick: () => openPackageComposer("node"),
-                  }, "Add Package"),
-                  false
-                ),
-                renderEditorSection(
-                  "variables",
-                  "Environment Variables",
-                  "",
-                  environmentVariablesSection,
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button playground-tasks-skills-manage-button",
-                    onClick: addEnvironmentVariable,
-                  }, "Add Variable"),
-                  false
-                ),
-                renderEditorSection(
-                  "secrets",
-                  "Secrets",
-                  "",
-                  secretsSection,
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button playground-tasks-skills-manage-button",
-                    onClick: addSecret,
-                  }, "Add Secret"),
-                  false
-                ),
-                renderEditorSection(
-                  "mcp",
-                  "MCP Servers",
-                  "",
-                  mcpSection,
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button playground-tasks-skills-manage-button",
-                    onClick: addMcpServer,
-                  }, "Add Server"),
-                  false
-                ),
-                renderEditorSection(
-                  "scripts",
-                  "Setup Scripts",
-                  "",
-                  setupScriptsSection,
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button playground-tasks-skills-manage-button",
-                    onClick: addSetupScript,
-                  }, "Add Script"),
-                  false
-                ),
-                renderEditorSection(
-                  "dockerfile",
-                  "Dockerfile Extension",
-                  "",
-                  dockerfileSection,
-                  null,
-                  false
-                )
+                environmentResourceDetailBackButton,
+                environmentProfileSection,
+                environmentDetailWorkspaceSection
               )
             )
             ),
-            desktopOverlay
+            desktopOverlay,
+            renderEnvironmentVersionsSidebarPortal(),
+            renderEnvironmentShareTeamModal(),
+            renderEnvironmentApiModal()
           );
         }
 
@@ -97560,7 +101358,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return true;
         };
 
-        function EnvironmentsHomeResponsiveSvgShared({ frameClassName, frameHeight, svgHeight, fallbackWidth = 640, ariaLabel, children }) {
+        function EnvironmentsHomeResponsiveSvgShared({ frameClassName, frameHeight, svgHeight, fallbackWidth = 640, ariaLabel, svgClassName, children }) {
           const frameRef = useRef(null);
           const [measuredWidth, setMeasuredWidth] = useState(0);
 
@@ -97596,7 +101394,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               style: frameHeight ? { height: String(frameHeight) + "px" } : undefined,
             },
             React.createElement("svg", {
-              className: "playground-settings-usage-chart-svg",
+              className: svgClassName || "playground-settings-usage-chart-svg",
               width: resolvedSvgWidth,
               height: resolvedSvgHeight,
               role: "img",
@@ -97625,7 +101423,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             React.createElement("div", { className: "playground-auth-users-empty-state-copy" }, copy)
           );
 
-        const renderHomeStackedUsageChartShared = ({ ariaLabel, labels, series, emptyText, emptyContent, title, timescaleControl, tickFormatter, isLoading, showLegend = true, controlsInFooter = false }) => {
+        const renderHomeStackedUsageChartShared = ({ ariaLabel, labels, series, emptyText, emptyContent, title, timescaleControl, tickFormatter, isLoading, showLegend = true, controlsInFooter = false, hideHeader = false }) => {
           const normalizedLabels = Array.isArray(labels) ? labels : [];
           const normalizedSeries = Array.isArray(series)
             ? series.filter((entry) => entry && Array.isArray(entry.values))
@@ -97681,12 +101479,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             : null;
 
           return React.createElement("div", { className: "playground-settings-usage-chart-card" },
-            React.createElement("div", { className: "playground-project-overview-chart-header" },
-              React.createElement("div", { className: "playground-project-overview-chart-header-main" },
-                React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Activity comparison"),
-                controlsInFooter ? null : (timescaleControl || null)
+            hideHeader
+              ? null
+              : React.createElement("div", { className: "playground-project-overview-chart-header" },
+                React.createElement("div", { className: "playground-project-overview-chart-header-main" },
+                  React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Activity comparison"),
+                  controlsInFooter ? null : (timescaleControl || null)
+                )
               )
-            ),
+            ,
             isLoading
               ? React.createElement("div", {
                   className: "playground-project-overview-chart-shell",
@@ -101014,6 +104815,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         agents,
         environments = [],
         skills = [],
+        currentUserId = "",
+        currentUserName = "",
+        currentUserEmail = "",
+        currentUserAvatarUrl = "",
+        workspaceTeams = [],
+        workspaceTeamMembers = [],
+        workspaceTeamMembersTeamId = "",
+        workspaceTeamsLoading = false,
+        workspaceTeamsRequiresPlan = false,
+        onWorkspaceTeamsRequest,
         initialAgentId,
         preferredEnvironmentId = "",
         preferredAgentId = "",
@@ -101025,6 +104836,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         onPreferredEnvironmentChange,
         onThreadRegistered,
         onThreadOpen,
+        onThreadActionMenuOpen,
+        threadMutationSignal = null,
         onThreadStarted,
         onAgentMutated,
         onStartThreadWithAgent,
@@ -101052,6 +104865,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentComposerInstructionsTextareaRef = useRef(null);
         const agentProfileAvatarPickerRef = useRef(null);
         const agentActionsPopoverRef = useRef(null);
+        const agentPublishMenuRef = useRef(null);
+        const agentOwnerPopoverRef = useRef(null);
+        const agentSendTeamModalCloseTimerRef = useRef(null);
+        const agentSendTeamModalFrameRef = useRef(null);
+        const agentWorkspaceTeamMembersRequestedRef = useRef(new Set());
+        const agentOwnerProfileLookupKeyRef = useRef("");
+        const agentOwnerCandidateProfileLookupKeyRef = useRef("");
         const agentRenameInputRef = useRef(null);
         const agentCreationNameInputRef = useRef(null);
         const agentCreationRunnerRef = useRef(null);
@@ -101086,6 +104906,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
         const [agentsOverviewHomeTab, setAgentsOverviewHomeTab] = useState("general");
         const [agentDetailTab, setAgentDetailTab] = useState("general");
+        const [agentDetailSidebarCollapsed, setAgentDetailSidebarCollapsed] = useState(false);
+        const [agentDetailCopiedFact, setAgentDetailCopiedFact] = useState("");
         const [agentPermissionChartAnimationKey, setAgentPermissionChartAnimationKey] = useState(0);
         const [agentsOverviewToolbarPopover, setAgentsOverviewToolbarPopover] = useState("");
         const [agentsOverviewFilter, setAgentsOverviewFilter] = useState("all");
@@ -101094,6 +104916,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentsObservabilityStatusFilter, setAgentsObservabilityStatusFilter] = useState("all");
         const [agentsObservabilitySort, setAgentsObservabilitySort] = useState("newest");
         const [agentsObservabilityVisibleThreadLimit, setAgentsObservabilityVisibleThreadLimit] = useState(20);
+        const [agentDetailThreadSearchQuery, setAgentDetailThreadSearchQuery] = useState("");
+        const [agentDetailThreadSortMode, setAgentDetailThreadSortMode] = useState("recent-desc");
+        const [agentDetailThreadFilterMode, setAgentDetailThreadFilterMode] = useState("all");
+        const [agentDetailThreadToolbarPopover, setAgentDetailThreadToolbarPopover] = useState("");
+        const [agentDetailVisibleThreadCount, setAgentDetailVisibleThreadCount] = useState(5);
         const [selectedAgentsObservabilityThreadId, setSelectedAgentsObservabilityThreadId] = useState("");
         const [agentsObservabilityThreadDetailsById, setAgentsObservabilityThreadDetailsById] = useState({});
         const [loadingAgentId, setLoadingAgentId] = useState("");
@@ -101105,6 +104932,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentsHomeChartTimescale, setAgentsHomeChartTimescale] = useState("month");
         const [agentsAnalyticsMenuOpen, setAgentsAnalyticsMenuOpen] = useState(false);
         const [agentDetailChartTimescale, setAgentDetailChartTimescale] = useState("month");
+        const [agentDetailPerformanceRange, setAgentDetailPerformanceRange] = useState("1m");
         const [agentsHomeCreationCommandRequest, setAgentsHomeCreationCommandRequest] = useState(null);
         const [agentsHomeActiveCreationCommand, setAgentsHomeActiveCreationCommand] = useState("");
         const [agentListMode, setAgentListMode] = useState(() => {
@@ -101125,9 +104953,27 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           message: "",
         });
         const [isAgentInstructionsEditing, setIsAgentInstructionsEditing] = useState(false);
+        const [agentInstructionsHistory, setAgentInstructionsHistory] = useState({
+          past: [],
+          future: [],
+        });
         const [agentProfileAvatarBroken, setAgentProfileAvatarBroken] = useState(false);
         const [agentProfileAvatarPickerOpen, setAgentProfileAvatarPickerOpen] = useState(false);
         const [agentActionsPopoverOpen, setAgentActionsPopoverOpen] = useState(false);
+        const [agentOwnerPopoverOpen, setAgentOwnerPopoverOpen] = useState(false);
+        const [agentOwnerProfileIdentity, setAgentOwnerProfileIdentity] = useState(null);
+        const [agentOwnerCandidateProfileIdentitiesByKey, setAgentOwnerCandidateProfileIdentitiesByKey] = useState({});
+        const [agentWorkspaceTeamMembersById, setAgentWorkspaceTeamMembersById] = useState({});
+        const [agentSendTeamModalOpen, setAgentSendTeamModalOpen] = useState(false);
+        const [agentSendTeamModalVisible, setAgentSendTeamModalVisible] = useState(false);
+        const [agentSendTeamModalClosing, setAgentSendTeamModalClosing] = useState(false);
+        const [agentSendTeamPickerValue, setAgentSendTeamPickerValue] = useState("");
+        const [agentSendTeamError, setAgentSendTeamError] = useState("");
+        const [agentSendTeamShareState, setAgentSendTeamShareState] = useState({
+          teamId: "",
+          action: "",
+          error: "",
+        });
         const [agentRenameState, setAgentRenameState] = useState(null);
         const [agentRenameValue, setAgentRenameValue] = useState("");
         const [agentRenameError, setAgentRenameError] = useState("");
@@ -101144,6 +104990,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentAssistantOpen, setAgentAssistantOpen] = useState(false);
         const [agentAssistantCommandRequest, setAgentAssistantCommandRequest] = useState(null);
         const [agentAssistantThreadByAgentId, setAgentAssistantThreadByAgentId] = useState({});
+        const [agentPublishMenuOpen, setAgentPublishMenuOpen] = useState(false);
         const [agentCreationSetupOpen, setAgentCreationSetupOpen] = useState(false);
         const [agentCreationSetupError, setAgentCreationSetupError] = useState("");
         const [agentCreationSetupSubmitting, setAgentCreationSetupSubmitting] = useState(false);
@@ -101544,6 +105391,709 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             || (draftAgent.isSystem !== true && draftAgent.isDefault !== true)
           )
         );
+        function getAgentMetadataRecord(agentRecord) {
+          return agentRecord?.metadata && typeof agentRecord.metadata === "object" && !Array.isArray(agentRecord.metadata)
+            ? agentRecord.metadata
+            : {};
+        }
+        function getAgentSharedTeamIds(agentRecord) {
+          const metadata = getAgentMetadataRecord(agentRecord);
+          const source = Array.isArray(metadata.sharedTeamIds)
+            ? metadata.sharedTeamIds
+            : Array.isArray(metadata.teamAccessIds)
+              ? metadata.teamAccessIds
+              : Array.isArray(agentRecord?.sharedTeamIds)
+                ? agentRecord.sharedTeamIds
+                : [];
+          return Array.from(new Set(
+            source.map((teamId) => String(teamId || "").trim()).filter(Boolean)
+          ));
+        }
+        function normalizeAgentWorkspaceTeamOption(team) {
+          const source = team && typeof team === "object" && !Array.isArray(team) ? team : {};
+          const id = String(source.id || source.teamId || source.team_id || "").trim();
+          if (!id) {
+            return null;
+          }
+          const name = String(source.name || source.title || source.displayName || "Team").trim() || "Team";
+          const roleId = normalizePlaygroundTeamRoleId(
+            source.role || source.membershipRole || source.membership_role || source.currentUserRole || source.current_user_role,
+            "admin"
+          );
+          return {
+            ...source,
+            id,
+            name,
+            roleId,
+            roleLabel: roleId ? roleId.charAt(0).toUpperCase() + roleId.slice(1) : "Team",
+          };
+        }
+        function getAgentIdentitySources(record) {
+          const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
+          const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+            ? source.metadata
+            : {};
+          const sources = [
+            source,
+            source.owner,
+            source.creator,
+            source.createdBy,
+            source.created_by,
+            source.user,
+            source.profile,
+            source.authProfile,
+            source.account,
+            source.member,
+            source.identity,
+            source.userProfile,
+            source.accountProfile,
+            source.publicProfile,
+            source.firebaseUser,
+            source.authUser,
+            metadata,
+            metadata.owner,
+            metadata.creator,
+            metadata.createdBy,
+            metadata.created_by,
+            metadata.user,
+            metadata.profile,
+            metadata.authProfile,
+            metadata.account,
+            metadata.member,
+            metadata.identity,
+            metadata.userProfile,
+            metadata.accountProfile,
+            metadata.publicProfile,
+            metadata.firebaseUser,
+            metadata.authUser,
+          ].filter((value) => value && typeof value === "object" && !Array.isArray(value));
+          sources.slice().forEach((value) => {
+            [value.providerUserInfo, value.providerData].forEach((providerProfiles) => {
+              if (!Array.isArray(providerProfiles)) {
+                return;
+              }
+              providerProfiles.forEach((providerProfile) => {
+                if (providerProfile && typeof providerProfile === "object" && !Array.isArray(providerProfile)) {
+                  sources.push(providerProfile);
+                }
+              });
+            });
+          });
+          return sources;
+        }
+        function readAgentIdentityString(record, keys = []) {
+          for (const source of getAgentIdentitySources(record)) {
+            for (const key of keys) {
+              const value = String(source?.[key] || "").replace(/\\s+/g, " ").trim();
+              if (value) {
+                return value;
+              }
+            }
+          }
+          return "";
+        }
+        function isAgentOpaqueIdentityValue(value) {
+          const normalized = String(value || "").trim();
+          if (!normalized || normalized.includes("@") || /\\s/.test(normalized)) {
+            return false;
+          }
+          if (normalized.length < 16) {
+            return false;
+          }
+          return /^[A-Za-z0-9_-]+$/.test(normalized)
+            && /[A-Za-z]/.test(normalized)
+            && /\\d/.test(normalized);
+        }
+        function isAgentPlaceholderIdentityName(value) {
+          const normalized = String(value || "").replace(/\\s+/g, " ").trim().toLowerCase();
+          return !normalized || normalized === "owner" || normalized === "team member";
+        }
+        function getAgentIdentityKeyValues(record, fallback = {}) {
+          const values = [];
+          const pushValue = (value) => {
+            const normalized = String(value || "").trim();
+            if (normalized) {
+              values.push(normalized.toLowerCase());
+            }
+          };
+          for (const source of getAgentIdentitySources(record)) {
+            [
+              source.id,
+              source.userId,
+              source.user_id,
+              source.uid,
+              source.localId,
+              source.local_id,
+              source.firebaseUid,
+              source.firebase_uid,
+              source.firebaseUserId,
+              source.firebase_user_id,
+              source.authUid,
+              source.auth_uid,
+              source.authUserId,
+              source.auth_user_id,
+              source.providerUid,
+              source.provider_uid,
+              source.providerUserId,
+              source.provider_user_id,
+              source.sub,
+              source.subject,
+              source.memberId,
+              source.member_id,
+              source.ownerId,
+              source.owner_id,
+              source.ownerUserId,
+              source.owner_user_id,
+              source.creatorId,
+              source.creator_id,
+              source.creatorUserId,
+              source.creator_user_id,
+              source.email,
+              source.emailAddress,
+              source.email_address,
+              source.mail,
+              source.primaryEmail,
+              source.primary_email,
+            ].forEach(pushValue);
+          }
+          [
+            fallback.id,
+            fallback.userId,
+            fallback.user_id,
+            fallback.uid,
+            fallback.email,
+          ].forEach(pushValue);
+          return Array.from(new Set(values));
+        }
+        function getAgentIdentityMatchKeys(record, fallback = {}) {
+          const values = [...getAgentIdentityKeyValues(record, fallback)];
+          const pushIdentityKeys = (value) => {
+            if (!value || typeof value !== "object" || Array.isArray(value)) {
+              return;
+            }
+            if (!Array.isArray(value.identityKeys)) {
+              return;
+            }
+            value.identityKeys.forEach((key) => {
+              const normalized = String(key || "").trim().toLowerCase();
+              if (normalized) {
+                values.push(normalized);
+              }
+            });
+          };
+          pushIdentityKeys(record);
+          pushIdentityKeys(fallback);
+          return Array.from(new Set(values));
+        }
+        function readAgentTeamMemberDisplayName(record) {
+          const directName = readAgentIdentityString(record, [
+            "displayName",
+            "display_name",
+            "name",
+            "fullName",
+            "full_name",
+            "accountDisplayName",
+            "accountName",
+            "memberDisplayName",
+            "memberName",
+            "firebaseDisplayName",
+            "providerDisplayName",
+            "publicName",
+            "username",
+            "userName",
+          ]);
+          if (directName) {
+            return directName;
+          }
+          for (const source of getAgentIdentitySources(record)) {
+            const firstName = String(source.firstName || source.first_name || source.givenName || source.given_name || "").trim();
+            const lastName = String(source.lastName || source.last_name || source.familyName || source.family_name || "").trim();
+            const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+            if (fullName) {
+              return fullName;
+            }
+          }
+          return "";
+        }
+        function readAgentTeamMemberEmail(record) {
+          return readAgentIdentityString(record, [
+            "email",
+            "emailAddress",
+            "email_address",
+            "mail",
+            "primaryEmail",
+            "primary_email",
+          ]).toLowerCase();
+        }
+        function readAgentTeamMemberAvatarUrl(record) {
+          return readAgentIdentityString(record, [
+            "photoURL",
+            "photoUrl",
+            "photo_url",
+            "avatarUrl",
+            "avatarURL",
+            "avatar",
+            "picture",
+            "imageUrl",
+            "profileImageUrl",
+            "profile_image_url",
+          ]);
+        }
+        function buildAgentTeamMemberProfileMap(payload) {
+          const profileMap = new Map();
+          const addProfile = (profile, explicitKey = "") => {
+            if (!profile || typeof profile !== "object" || Array.isArray(profile)) {
+              return;
+            }
+            const normalizedProfile = explicitKey
+              ? { id: explicitKey, ...profile }
+              : profile;
+            const keys = getAgentIdentityKeyValues(normalizedProfile, normalizedProfile);
+            keys.forEach((key) => profileMap.set(key, normalizedProfile));
+          };
+          const addProfiles = (value) => {
+            if (Array.isArray(value)) {
+              value.forEach((profile) => addProfile(profile));
+              return;
+            }
+            if (!value || typeof value !== "object") {
+              return;
+            }
+            if (
+              readAgentTeamMemberDisplayName(value)
+              || readAgentTeamMemberEmail(value)
+              || getAgentIdentityKeyValues(value, value).length > 0
+            ) {
+              addProfile(value);
+            }
+            if (Array.isArray(value.data)) {
+              value.data.forEach((profile) => addProfile(profile));
+              return;
+            }
+            Object.entries(value).forEach(([key, profile]) => addProfile(profile, key));
+          };
+          [
+            payload,
+            payload?.profile,
+            payload?.user,
+            payload?.account,
+            payload?.member,
+            payload?.profiles,
+            payload?.memberProfiles,
+            payload?.member_profiles,
+            payload?.users,
+            payload?.accounts,
+            payload?.items,
+            payload?.results,
+            payload?.data,
+            payload?.data?.profile,
+            payload?.data?.user,
+            payload?.data?.account,
+            payload?.data?.member,
+            payload?.included?.profiles,
+            payload?.included?.users,
+            payload?.included?.accounts,
+            payload?.data?.profiles,
+            payload?.data?.memberProfiles,
+            payload?.data?.users,
+            payload?.data?.accounts,
+            payload?.data?.items,
+            payload?.data?.results,
+          ].forEach(addProfiles);
+          return profileMap;
+        }
+        function mergeAgentTeamMemberProfiles(members, ...profilePayloads) {
+          const profileMap = new Map();
+          profilePayloads.forEach((payload) => {
+            buildAgentTeamMemberProfileMap(payload).forEach((profile, key) => {
+              profileMap.set(key, profile);
+            });
+          });
+          return (Array.isArray(members) ? members : []).map((member) => {
+            const matchingProfile = getAgentIdentityMatchKeys(member, member)
+              .map((key) => profileMap.get(key))
+              .find(Boolean);
+            if (!matchingProfile) {
+              return member;
+            }
+            const memberEmail = readAgentTeamMemberEmail(member);
+            const profileEmail = readAgentTeamMemberEmail(matchingProfile);
+            const email = memberEmail || profileEmail;
+            const memberDisplayName = readAgentTeamMemberDisplayName(member);
+            const profileDisplayName = readAgentTeamMemberDisplayName(matchingProfile);
+            const displayName = getTrustedDisplayName(profileDisplayName, email)
+              || getTrustedDisplayName(memberDisplayName, email);
+            const avatarUrl = readAgentTeamMemberAvatarUrl(matchingProfile)
+              || readAgentTeamMemberAvatarUrl(member);
+            return {
+              ...member,
+              ...(displayName ? { displayName, name: displayName } : {}),
+              ...(email ? { email } : {}),
+              ...(avatarUrl ? { photoURL: avatarUrl, photoUrl: avatarUrl } : {}),
+              profile: {
+                ...(member.profile && typeof member.profile === "object" && !Array.isArray(member.profile) ? member.profile : {}),
+                ...(matchingProfile && typeof matchingProfile === "object" ? matchingProfile : {}),
+                ...(displayName ? { displayName, name: displayName } : {}),
+                ...(email ? { email } : {}),
+                ...(avatarUrl ? { photoURL: avatarUrl, photoUrl: avatarUrl } : {}),
+              },
+              user: {
+                ...(member.user && typeof member.user === "object" && !Array.isArray(member.user) ? member.user : {}),
+                ...(matchingProfile && typeof matchingProfile === "object" ? matchingProfile : {}),
+                ...(displayName ? { displayName, name: displayName } : {}),
+                ...(email ? { email } : {}),
+                ...(avatarUrl ? { photoURL: avatarUrl, photoUrl: avatarUrl } : {}),
+              },
+            };
+          });
+        }
+        function normalizeAgentPersonIdentity(record, fallback = {}) {
+          const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
+          const email = (readAgentIdentityString(source, [
+            "email",
+            "emailAddress",
+            "email_address",
+            "mail",
+            "primaryEmail",
+            "primary_email",
+          ]) || String(fallback.email || "")).trim().toLowerCase();
+          const displayName = readAgentIdentityString(source, [
+            "displayName",
+            "display_name",
+            "name",
+            "fullName",
+            "full_name",
+            "accountDisplayName",
+            "accountName",
+            "memberDisplayName",
+            "memberName",
+            "firebaseDisplayName",
+            "providerDisplayName",
+            "publicName",
+            "username",
+            "userName",
+          ]) || String(fallback.name || "").trim();
+          const userId = readAgentIdentityString(source, [
+            "userId",
+            "user_id",
+            "uid",
+            "localId",
+            "local_id",
+            "firebaseUid",
+            "firebase_uid",
+            "firebaseUserId",
+            "firebase_user_id",
+            "authUid",
+            "auth_uid",
+            "authUserId",
+            "auth_user_id",
+            "providerUid",
+            "provider_uid",
+            "providerUserId",
+            "provider_user_id",
+            "sub",
+            "subject",
+            "ownerUserId",
+            "owner_user_id",
+            "creatorUserId",
+            "creator_user_id",
+          ]) || String(fallback.userId || "").trim();
+          const id = readAgentIdentityString(source, [
+            "id",
+            "ownerId",
+            "owner_id",
+            "creatorId",
+            "creator_id",
+            "memberId",
+            "member_id",
+          ]) || userId || email || String(fallback.id || "").trim();
+          const rawAvatarUrl = readAgentIdentityString(source, [
+            "photoURL",
+            "photoUrl",
+            "photo_url",
+            "avatarUrl",
+            "avatarURL",
+            "avatar",
+            "picture",
+            "imageUrl",
+            "profileImageUrl",
+            "profile_image_url",
+            "ownerAvatarUrl",
+            "creatorAvatarUrl",
+          ]) || String(fallback.avatarUrl || fallback.photoURL || "").trim();
+          const avatarUrl = normalizeSessionPhotoUrl(rawAvatarUrl || "");
+          const trustedDisplayName = getTrustedDisplayName(displayName, email);
+          const trustedFallbackName = getTrustedDisplayName(fallback.name || fallback.label || "", email);
+          const name = (trustedDisplayName && !isAgentOpaqueIdentityValue(trustedDisplayName) ? trustedDisplayName : "")
+            || (trustedFallbackName && !isAgentOpaqueIdentityValue(trustedFallbackName) ? trustedFallbackName : "")
+            || email
+            || (!isAgentOpaqueIdentityValue(userId) ? userId : "")
+            || (!isAgentOpaqueIdentityValue(id) ? id : "")
+            || String(fallback.label || "").trim();
+          return {
+            id,
+            userId,
+            name,
+            email,
+            avatarUrl: canRenderAvatarImage(avatarUrl) ? avatarUrl : "",
+            teamId: String(source.teamId || source.team_id || fallback.teamId || "").trim(),
+            teamName: String(source.teamName || source.team_name || fallback.teamName || "").trim(),
+            identityKeys: getAgentIdentityKeyValues(source, fallback),
+          };
+        }
+        function hasAgentPersonIdentity(identity) {
+          if (!identity) {
+            return false;
+          }
+          const userId = String(identity.userId || "").trim();
+          const email = String(identity.email || "").trim();
+          const id = String(identity.id || "").trim();
+          if (userId || email || id) {
+            return true;
+          }
+          const name = String(identity.name || "").trim();
+          return Boolean(!isAgentPlaceholderIdentityName(name) && !isAgentOpaqueIdentityValue(name));
+        }
+        function mergeAgentPersonIdentities(primaryIdentity, secondaryIdentity) {
+          const primary = primaryIdentity && typeof primaryIdentity === "object" && !Array.isArray(primaryIdentity)
+            ? primaryIdentity
+            : {};
+          const secondary = secondaryIdentity && typeof secondaryIdentity === "object" && !Array.isArray(secondaryIdentity)
+            ? secondaryIdentity
+            : {};
+          const primaryEmail = String(primary.email || "").trim().toLowerCase();
+          const secondaryEmail = String(secondary.email || "").trim().toLowerCase();
+          const primaryName = !isAgentPlaceholderIdentityName(primary.name) && !isAgentOpaqueIdentityValue(primary.name)
+            ? (getTrustedDisplayName(primary.name, primaryEmail) || "")
+            : "";
+          const secondaryName = !isAgentPlaceholderIdentityName(secondary.name) && !isAgentOpaqueIdentityValue(secondary.name)
+            ? (getTrustedDisplayName(secondary.name, secondaryEmail || primaryEmail) || "")
+            : "";
+          return {
+            ...primary,
+            ...secondary,
+            id: String(primary.id || secondary.id || "").trim(),
+            userId: String(primary.userId || secondary.userId || "").trim(),
+            name: secondaryName || primaryName || secondaryEmail || primaryEmail || "",
+            email: secondaryEmail || primaryEmail,
+            avatarUrl: String(secondary.avatarUrl || primary.avatarUrl || "").trim(),
+            teamId: String(secondary.teamId || primary.teamId || "").trim(),
+            teamName: String(secondary.teamName || primary.teamName || "").trim(),
+            identityKeys: Array.from(new Set([
+              ...getAgentIdentityMatchKeys(primary, primary),
+              ...getAgentIdentityMatchKeys(secondary, secondary),
+            ])),
+          };
+        }
+        function readAgentOwnerIdentity(agentRecord) {
+          const metadata = getAgentMetadataRecord(agentRecord);
+          const nestedOwnerIdentity = normalizeAgentPersonIdentity(
+            metadata.owner || agentRecord?.owner || null
+          );
+          const directIdentity = normalizeAgentPersonIdentity({
+            userId: metadata.ownerUserId || metadata.owner_user_id || agentRecord?.ownerUserId || agentRecord?.owner_user_id || "",
+            id: metadata.ownerId || metadata.owner_id || agentRecord?.ownerId || agentRecord?.owner_id || "",
+            name: metadata.ownerName || metadata.owner_name || agentRecord?.ownerName || agentRecord?.owner_name || "",
+            email: metadata.ownerEmail || metadata.owner_email || agentRecord?.ownerEmail || agentRecord?.owner_email || "",
+            avatarUrl: metadata.ownerAvatarUrl || metadata.owner_avatar_url || agentRecord?.ownerAvatarUrl || agentRecord?.owner_avatar_url || "",
+          });
+          const ownerIdentity = mergeAgentPersonIdentities(directIdentity, nestedOwnerIdentity);
+          if (hasAgentPersonIdentity(ownerIdentity)) {
+            return ownerIdentity;
+          }
+          const nestedCreatorIdentity = normalizeAgentPersonIdentity(
+            metadata.creator || agentRecord?.creator || agentRecord?.createdBy || agentRecord?.created_by || null
+          );
+          const creatorIdentity = normalizeAgentPersonIdentity({
+            userId: metadata.creatorUserId || metadata.creator_user_id || agentRecord?.creatorUserId || agentRecord?.creator_user_id || agentRecord?.userId || "",
+            id: metadata.creatorId || metadata.creator_id || agentRecord?.creatorId || agentRecord?.creator_id || "",
+            name: metadata.creatorName || metadata.creator_name || agentRecord?.creatorName || agentRecord?.creator_name || "",
+            email: metadata.creatorEmail || metadata.creator_email || agentRecord?.creatorEmail || agentRecord?.creator_email || "",
+            avatarUrl: metadata.creatorAvatarUrl || metadata.creator_avatar_url || agentRecord?.creatorAvatarUrl || agentRecord?.creator_avatar_url || "",
+          });
+          const creatorOwnerIdentity = mergeAgentPersonIdentities(creatorIdentity, nestedCreatorIdentity);
+          if (hasAgentPersonIdentity(creatorOwnerIdentity)) {
+            return creatorOwnerIdentity;
+          }
+          const currentIdentity = normalizeAgentPersonIdentity({
+            userId: currentUserId,
+            name: currentUserName,
+            email: currentUserEmail,
+            avatarUrl: currentUserAvatarUrl,
+          });
+          return hasAgentPersonIdentity(currentIdentity)
+            ? currentIdentity
+            : { id: "", userId: "", name: "Owner", email: "", avatarUrl: "" };
+        }
+        const normalizedWorkspaceTeams = useMemo(() => (
+          (Array.isArray(workspaceTeams) ? workspaceTeams : [])
+            .map(normalizeAgentWorkspaceTeamOption)
+            .filter(Boolean)
+        ), [workspaceTeams]);
+        const agentSharedTeamIds = useMemo(() => getAgentSharedTeamIds(draftAgent), [draftAgent]);
+        const agentSharedTeamIdSet = useMemo(() => new Set(agentSharedTeamIds), [agentSharedTeamIds]);
+        const agentShareTeamById = useMemo(() => {
+          const next = new Map();
+          normalizedWorkspaceTeams.forEach((team) => {
+            if (team?.id) {
+              next.set(team.id, team);
+            }
+          });
+          return next;
+        }, [normalizedWorkspaceTeams]);
+        const availableAgentShareTeams = useMemo(() => (
+          normalizedWorkspaceTeams.filter((team) => ["admin", "owner"].includes(team.roleId || ""))
+        ), [normalizedWorkspaceTeams]);
+        const defaultAgentShareTeamId = useMemo(() => {
+          return (
+            availableAgentShareTeams.find((team) => !agentSharedTeamIdSet.has(team.id))?.id
+            || availableAgentShareTeams[0]?.id
+            || ""
+          );
+        }, [agentSharedTeamIdSet, availableAgentShareTeams]);
+        const agentOwnerIdentity = useMemo(() => readAgentOwnerIdentity(draftAgent), [
+          currentUserAvatarUrl,
+          currentUserEmail,
+          currentUserId,
+          currentUserName,
+          draftAgent,
+        ]);
+        const agentOwnerLookupTeamIds = useMemo(() => {
+          const explicitTeamIds = agentSharedTeamIds.filter(Boolean);
+          if (explicitTeamIds.length > 0) {
+            return explicitTeamIds;
+          }
+          return normalizedWorkspaceTeams.map((team) => team.id).filter(Boolean);
+        }, [agentSharedTeamIds, normalizedWorkspaceTeams]);
+        function getAgentOwnerCandidateKey(identity) {
+          const source = identity && typeof identity === "object" && !Array.isArray(identity) ? identity : {};
+          const identityKeys = getAgentIdentityMatchKeys(source, source);
+          return String(source.userId || source.email || source.id || identityKeys[0] || "").trim().toLowerCase();
+        }
+        const agentOwnerCandidateRows = useMemo(() => {
+          const candidatesByKey = new Map();
+          agentOwnerLookupTeamIds.forEach((teamId) => {
+            const team = agentShareTeamById.get(teamId) || { id: teamId, name: "Team" };
+            const members = Array.isArray(agentWorkspaceTeamMembersById[teamId])
+              ? agentWorkspaceTeamMembersById[teamId]
+              : [];
+            members.forEach((member) => {
+              const identity = normalizeAgentPersonIdentity(member, {
+                teamId,
+                teamName: team.name,
+              });
+              if (!hasAgentPersonIdentity(identity)) {
+                return;
+              }
+              const identityKeys = getAgentIdentityMatchKeys(member, identity);
+              const key = String(identity.userId || identity.email || identity.id || identityKeys[0] || "").trim().toLowerCase();
+              if (!key) {
+                return;
+              }
+              const existing = candidatesByKey.get(key);
+              if (existing) {
+                const teamNames = new Set(existing.teamNames || []);
+                if (team.name) {
+                  teamNames.add(team.name);
+                }
+                candidatesByKey.set(key, {
+                  ...existing,
+                  teamNames: Array.from(teamNames),
+                  identityKeys: Array.from(new Set([...(existing.identityKeys || []), ...identityKeys])),
+                });
+                return;
+              }
+              candidatesByKey.set(key, {
+                ...identity,
+                teamId,
+                teamNames: team.name ? [team.name] : [],
+                identityKeys,
+              });
+            });
+          });
+          return Array.from(candidatesByKey.values()).sort((left, right) =>
+            String(left.name || left.email || "").localeCompare(String(right.name || right.email || ""))
+          );
+        }, [agentOwnerLookupTeamIds, agentShareTeamById, agentWorkspaceTeamMembersById]);
+        const agentCurrentUserIdentity = useMemo(() => normalizeAgentPersonIdentity({
+          userId: currentUserId,
+          name: currentUserName,
+          email: currentUserEmail,
+          avatarUrl: currentUserAvatarUrl,
+        }), [currentUserAvatarUrl, currentUserEmail, currentUserId, currentUserName]);
+        const enrichedAgentOwnerCandidateRows = useMemo(() => (
+          agentOwnerCandidateRows.map((candidate) => {
+            const candidateKey = getAgentOwnerCandidateKey(candidate);
+            const profileIdentity = candidateKey ? agentOwnerCandidateProfileIdentitiesByKey[candidateKey] : null;
+            const candidateKeys = new Set(getAgentIdentityMatchKeys(candidate, candidate));
+            const currentUserMatches = getAgentIdentityMatchKeys(agentCurrentUserIdentity, agentCurrentUserIdentity)
+              .some((key) => candidateKeys.has(key));
+            return [
+              candidate,
+              currentUserMatches ? agentCurrentUserIdentity : null,
+              profileIdentity,
+              agentOwnerProfileIdentity && getAgentIdentityMatchKeys(agentOwnerProfileIdentity, agentOwnerProfileIdentity)
+                .some((key) => candidateKeys.has(key))
+                ? agentOwnerProfileIdentity
+                : null,
+            ].filter(Boolean).reduce((mergedIdentity, identity) => (
+              mergeAgentPersonIdentities(mergedIdentity, identity)
+            ), {});
+          })
+        ), [
+          agentCurrentUserIdentity,
+          agentOwnerCandidateProfileIdentitiesByKey,
+          agentOwnerCandidateRows,
+          agentOwnerProfileIdentity,
+        ]);
+        const resolvedAgentOwnerIdentity = useMemo(() => {
+          const baseIdentity = agentOwnerIdentity || {};
+          const baseKeys = new Set(getAgentIdentityMatchKeys(baseIdentity, baseIdentity));
+          const matchesBaseIdentity = (identity) => {
+            const identityKeys = getAgentIdentityMatchKeys(identity, identity);
+            return identityKeys.some((key) => baseKeys.has(key));
+          };
+          const matchedTeamMember = enrichedAgentOwnerCandidateRows.find(matchesBaseIdentity) || null;
+          const matchedOwnerProfile = agentOwnerProfileIdentity && matchesBaseIdentity(agentOwnerProfileIdentity)
+            ? agentOwnerProfileIdentity
+            : null;
+          const matchedCurrentUser = matchesBaseIdentity(agentCurrentUserIdentity) ? agentCurrentUserIdentity : null;
+          const resolvedIdentity = [
+            baseIdentity,
+            matchedCurrentUser,
+            matchedOwnerProfile,
+            matchedTeamMember,
+          ].filter(Boolean).reduce((mergedIdentity, identity) => (
+            mergeAgentPersonIdentities(mergedIdentity, identity)
+          ), {});
+          const resolvedName = !isAgentPlaceholderIdentityName(resolvedIdentity.name) && !isAgentOpaqueIdentityValue(resolvedIdentity.name)
+            ? (getTrustedDisplayName(resolvedIdentity.name, resolvedIdentity.email) || "")
+            : "";
+          const baseName = !isAgentPlaceholderIdentityName(baseIdentity.name) && !isAgentOpaqueIdentityValue(baseIdentity.name)
+            ? (getTrustedDisplayName(baseIdentity.name, baseIdentity.email) || "")
+            : "";
+          return {
+            ...baseIdentity,
+            ...resolvedIdentity,
+            id: baseIdentity.id || resolvedIdentity.id || "",
+            userId: resolvedIdentity.userId || baseIdentity.userId || "",
+            name: resolvedName || baseName || resolvedIdentity.email || baseIdentity.email || "Owner",
+            email: resolvedIdentity.email || baseIdentity.email || "",
+            avatarUrl: resolvedIdentity.avatarUrl || baseIdentity.avatarUrl || "",
+            identityKeys: Array.from(new Set([
+              ...getAgentIdentityMatchKeys(baseIdentity, baseIdentity),
+              ...getAgentIdentityMatchKeys(resolvedIdentity, resolvedIdentity),
+            ])),
+          };
+        }, [
+          agentCurrentUserIdentity,
+          enrichedAgentOwnerCandidateRows,
+          agentOwnerIdentity,
+          agentOwnerProfileIdentity,
+        ]);
+        const agentOwnerMissingTeamIds = useMemo(() => (
+          agentOwnerLookupTeamIds.filter((teamId) => !Object.prototype.hasOwnProperty.call(agentWorkspaceTeamMembersById, teamId))
+        ), [agentOwnerLookupTeamIds, agentWorkspaceTeamMembersById]);
         const normalizedFocusedAgentSelectionToken = String(focusedAgentSelectionToken || "").trim();
         const normalizedFocusedAgentId = String(focusedAgentId || "").trim();
         const hasPendingFocusedAgentSelection = Boolean(
@@ -101615,6 +106165,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           editorDirtyRef.current = false;
           setIsAgentInstructionsEditing(false);
           setAgentActionsPopoverOpen(false);
+          setAgentPublishMenuOpen(false);
           setAgentModelPopover("");
           setAgentVersionsSidebarOpen(false);
           setOpenAgentVersionMenuId("");
@@ -101652,7 +106203,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }
 
         function applyAgentMarkdownSelection(field, textareaRef, nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-          updateAgentField(field, nextValue);
+          if (field === "instructions" && textareaRef === agentInstructionsTextareaRef) {
+            updateAgentInstructionsValue(nextValue);
+          } else {
+            updateAgentField(field, nextValue);
+          }
           window.requestAnimationFrame(() => {
             const textarea = textareaRef.current;
             if (!textarea) {
@@ -101665,6 +106220,78 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
             resizeAgentDescriptionTextarea(textarea);
           });
+        }
+
+        function focusAgentInstructionsTextareaAtEnd(value) {
+          window.requestAnimationFrame(() => {
+            const textarea = agentInstructionsTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const nextCaret = String(value || "").length;
+            textarea.focus();
+            textarea.setSelectionRange(nextCaret, nextCaret);
+            resizeAgentDescriptionTextarea(textarea);
+          });
+        }
+
+        function updateAgentInstructionsValue(value, options = {}) {
+          if (isPlaygroundDefaultAgentConfigurationLocked(draftAgent)) {
+            return;
+          }
+          const nextValue = String(value ?? "");
+          const previousValue = String(draftAgent?.instructions || "");
+          if (previousValue === nextValue) {
+            return;
+          }
+          if (options.recordHistory !== false) {
+            setAgentInstructionsHistory((current) => ({
+              past: [...(Array.isArray(current.past) ? current.past : []), previousValue].slice(-80),
+              future: [],
+            }));
+          }
+          updateAgentField("instructions", nextValue);
+        }
+
+        function applyAgentInstructionsHistoryValue(value) {
+          updateAgentField("instructions", String(value ?? ""));
+          focusAgentInstructionsTextareaAtEnd(value);
+        }
+
+        function handleAgentInstructionsUndo() {
+          const historyPast = Array.isArray(agentInstructionsHistory.past) ? agentInstructionsHistory.past : [];
+          if (historyPast.length === 0 || isPlaygroundDefaultAgentConfigurationLocked(draftAgent)) {
+            return;
+          }
+          const currentValue = String(draftAgent?.instructions || "");
+          const previousValue = historyPast[historyPast.length - 1];
+          setAgentInstructionsHistory((current) => {
+            const past = Array.isArray(current.past) ? current.past : [];
+            const future = Array.isArray(current.future) ? current.future : [];
+            return {
+              past: past.slice(0, -1),
+              future: [currentValue, ...future].slice(0, 80),
+            };
+          });
+          applyAgentInstructionsHistoryValue(previousValue);
+        }
+
+        function handleAgentInstructionsRedo() {
+          const historyFuture = Array.isArray(agentInstructionsHistory.future) ? agentInstructionsHistory.future : [];
+          if (historyFuture.length === 0 || isPlaygroundDefaultAgentConfigurationLocked(draftAgent)) {
+            return;
+          }
+          const currentValue = String(draftAgent?.instructions || "");
+          const nextValue = historyFuture[0];
+          setAgentInstructionsHistory((current) => {
+            const past = Array.isArray(current.past) ? current.past : [];
+            const future = Array.isArray(current.future) ? current.future : [];
+            return {
+              past: [...past, currentValue].slice(-80),
+              future: future.slice(1),
+            };
+          });
+          applyAgentInstructionsHistoryValue(nextValue);
         }
 
         function buildWrappedAgentMarkdownEdit(value, selectionStart, selectionEnd, prefix, suffix = prefix) {
@@ -101718,7 +106345,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           };
         }
 
-        function buildAgentMarkdownListEdit(value, selectionStart, selectionEnd) {
+        function buildAgentMarkdownListEdit(value, selectionStart, selectionEnd, listType = "unordered") {
           const safeStart = Math.max(0, selectionStart);
           const safeEnd = Math.max(safeStart, selectionEnd);
           const lineStart = value.lastIndexOf("\\n", Math.max(0, safeStart - 1)) + 1;
@@ -101729,29 +106356,73 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const block = value.slice(lineStart, lineEnd);
           const lines = block.split("\\n");
           const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
-          const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => /^(\\s*)-\\s+/.test(line));
+          const isOrderedList = listType === "ordered";
+          const orderedListPattern = /^(\\s*)\\d+\\.\\s+/;
+          const unorderedListPattern = /^(\\s*)-\\s+/;
+          const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => (
+            isOrderedList ? orderedListPattern.test(line) : unorderedListPattern.test(line)
+          ));
+          let orderedIndex = 1;
           const nextLines = lines.map((line) => {
             if (!line.trim()) {
-              return shouldRemoveList ? line : "- ";
+              if (shouldRemoveList) {
+                return line;
+              }
+              return isOrderedList ? String(orderedIndex++) + ". " : "- ";
             }
             if (shouldRemoveList) {
-              return line.replace(/^(\\s*)-\\s+/, "$1");
+              return line.replace(isOrderedList ? orderedListPattern : unorderedListPattern, "$1");
             }
-            if (/^(\\s*)-\\s+/.test(line)) {
+            if (!isOrderedList && unorderedListPattern.test(line)) {
               return line;
             }
-            return line.replace(/^(\\s*)/, "$1- ");
+            if (isOrderedList && orderedListPattern.test(line)) {
+              orderedIndex += 1;
+              return line;
+            }
+            const cleanLine = line.replace(/^(\\s*)(?:-\\s+|\\d+\\.\\s+)/, "$1");
+            return cleanLine.replace(/^(\\s*)/, (_match, indent) => (
+              String(indent || "") + (isOrderedList ? String(orderedIndex++) + ". " : "- ")
+            ));
           });
           const nextBlock = nextLines.join("\\n");
           const nextValue = value.slice(0, lineStart) + nextBlock + value.slice(lineEnd);
           const collapsedSelection = safeStart === safeEnd;
+          const markerLength = isOrderedList ? 3 : 2;
           const nextCaretOffset = shouldRemoveList
-            ? Math.max(0, safeStart - lineStart - 2)
-            : safeStart - lineStart + 2;
+            ? Math.max(0, safeStart - lineStart - markerLength)
+            : safeStart - lineStart + markerLength;
           return {
             value: nextValue,
             selectionStart: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart,
             selectionEnd: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart + nextBlock.length,
+          };
+        }
+
+        function buildAgentMarkdownLinkEdit(value, selectionStart, selectionEnd) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          const existingLinkMatch = selectedText.match(/^\\[([^\\]]+)\\]\\(([^)]*)\\)$/);
+          if (existingLinkMatch) {
+            const unwrappedText = existingLinkMatch[1];
+            const nextValue = value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd);
+            return {
+              value: nextValue,
+              selectionStart: safeStart,
+              selectionEnd: safeStart + unwrappedText.length,
+            };
+          }
+
+          const label = selectedText || "link text";
+          const url = "url";
+          const markdownLink = "[" + label + "](" + url + ")";
+          const nextValue = value.slice(0, safeStart) + markdownLink + value.slice(safeEnd);
+          const urlStart = safeStart + label.length + 3;
+          return {
+            value: nextValue,
+            selectionStart: urlStart,
+            selectionEnd: urlStart + url.length,
           };
         }
 
@@ -101775,7 +106446,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           } else if (formatType === "underline") {
             edit = buildWrappedAgentMarkdownEdit(value, selectionStart, selectionEnd, "++");
           } else if (formatType === "list") {
-            edit = buildAgentMarkdownListEdit(value, selectionStart, selectionEnd);
+            edit = buildAgentMarkdownListEdit(value, selectionStart, selectionEnd, "unordered");
+          } else if (formatType === "ordered-list") {
+            edit = buildAgentMarkdownListEdit(value, selectionStart, selectionEnd, "ordered");
+          } else if (formatType === "code") {
+            edit = buildWrappedAgentMarkdownEdit(value, selectionStart, selectionEnd, String.fromCharCode(96));
+          } else if (formatType === "link") {
+            edit = buildAgentMarkdownLinkEdit(value, selectionStart, selectionEnd);
           }
 
           if (!edit) {
@@ -102581,11 +107258,19 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }
             return currentItems.every((currentThread, index) => {
               const nextThread = nextItems[index] || {};
+              const currentNormalizedThread = normalizeThreadItem(currentThread);
+              const nextNormalizedThread = normalizeThreadItem(nextThread);
               return String(currentThread?.id || currentThread?.threadId || "") === String(nextThread?.id || nextThread?.threadId || "")
-                && String(currentThread?.agentId || currentThread?.agent?.id || currentThread?.metadata?.agentId || "") === String(nextThread?.agentId || nextThread?.agent?.id || nextThread?.metadata?.agentId || "")
-                && String(currentThread?.createdAt || "") === String(nextThread?.createdAt || "")
-                && String(currentThread?.updatedAt || "") === String(nextThread?.updatedAt || "")
-                && String(currentThread?.status || "") === String(nextThread?.status || "")
+                && String(currentNormalizedThread.agentId || currentThread?.agent?.id || currentThread?.metadata?.agentId || "") === String(nextNormalizedThread.agentId || nextThread?.agent?.id || nextThread?.metadata?.agentId || "")
+                && String(currentNormalizedThread.title || "") === String(nextNormalizedThread.title || "")
+                && String(currentNormalizedThread.projectId || "") === String(nextNormalizedThread.projectId || "")
+                && String(currentNormalizedThread.projectName || "") === String(nextNormalizedThread.projectName || "")
+                && String(currentNormalizedThread.environmentId || "") === String(nextNormalizedThread.environmentId || "")
+                && String(currentNormalizedThread.environmentName || "") === String(nextNormalizedThread.environmentName || "")
+                && String(currentNormalizedThread.createdAt || "") === String(nextNormalizedThread.createdAt || "")
+                && String(currentNormalizedThread.updatedAt || "") === String(nextNormalizedThread.updatedAt || "")
+                && String(currentNormalizedThread.status || "") === String(nextNormalizedThread.status || "")
+                && Boolean(currentNormalizedThread.isPinned) === Boolean(nextNormalizedThread.isPinned)
                 && String(readSettingsComputeTokens(currentThread, "totalCT", "totalCost") || "") === String(readSettingsComputeTokens(nextThread, "totalCT", "totalCost") || "");
             });
           };
@@ -103555,6 +108240,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         useEffect(() => {
           setAgentDetailTab("general");
+          setAgentDetailThreadSearchQuery("");
+          setAgentDetailThreadSortMode("recent-desc");
+          setAgentDetailThreadFilterMode("all");
+          setAgentDetailThreadToolbarPopover("");
+          setAgentDetailVisibleThreadCount(5);
         }, [selectedAgentId]);
 
         useEffect(() => {
@@ -103766,6 +108456,23 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [draftAgent?.id, rawAgentProfilePhotoUrl]);
 
         useEffect(() => {
+          setAgentInstructionsHistory({
+            past: [],
+            future: [],
+          });
+        }, [draftAgent?.id]);
+
+        useEffect(() => {
+          agentWorkspaceTeamMembersRequestedRef.current = new Set();
+          agentOwnerProfileLookupKeyRef.current = "";
+          agentOwnerCandidateProfileLookupKeyRef.current = "";
+          setAgentOwnerProfileIdentity(null);
+          setAgentOwnerCandidateProfileIdentitiesByKey({});
+          setAgentOwnerPopoverOpen(false);
+          finishCloseAgentSendToTeamModal();
+        }, [draftAgent?.id]);
+
+        useEffect(() => {
           if (!agentProfileAvatarPickerOpen) {
             return undefined;
           }
@@ -103791,6 +108498,219 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             window.removeEventListener("keydown", handleAgentAvatarPickerEscape);
           };
         }, [agentProfileAvatarPickerOpen]);
+
+        useEffect(() => {
+          const normalizedTeamId = String(workspaceTeamMembersTeamId || "").trim();
+          if (!normalizedTeamId) {
+            return;
+          }
+          const memberRows = Array.isArray(workspaceTeamMembers) ? workspaceTeamMembers : [];
+          setAgentWorkspaceTeamMembersById((current) => {
+            if (current[normalizedTeamId] === memberRows) {
+              return current;
+            }
+            return {
+              ...current,
+              [normalizedTeamId]: memberRows,
+            };
+          });
+        }, [workspaceTeamMembers, workspaceTeamMembersTeamId]);
+
+        useEffect(() => {
+          if (!agentSendTeamModalOpen) {
+            return;
+          }
+          const selectedTeamStillAvailable = availableAgentShareTeams.some((team) => team.id === agentSendTeamPickerValue);
+          if (agentSendTeamPickerValue && selectedTeamStillAvailable) {
+            return;
+          }
+          setAgentSendTeamPickerValue(defaultAgentShareTeamId);
+        }, [agentSendTeamModalOpen, agentSendTeamPickerValue, availableAgentShareTeams, defaultAgentShareTeamId]);
+
+        useEffect(() => {
+          if (
+            !draftAgent?.id
+            || normalizedWorkspaceTeams.length > 0
+            || workspaceTeamsLoading
+            || workspaceTeamsRequiresPlan
+            || typeof onWorkspaceTeamsRequest !== "function"
+          ) {
+            return;
+          }
+          onWorkspaceTeamsRequest({});
+        }, [
+          draftAgent?.id,
+          normalizedWorkspaceTeams.length,
+          onWorkspaceTeamsRequest,
+          workspaceTeamsLoading,
+          workspaceTeamsRequiresPlan,
+        ]);
+
+        useEffect(() => {
+          if (!draftAgent?.id || !agentOwnerMissingTeamIds.length || workspaceTeamsRequiresPlan) {
+            return;
+          }
+          const missingTeamId = agentOwnerMissingTeamIds.find((teamId) => !agentWorkspaceTeamMembersRequestedRef.current.has(teamId));
+          if (!missingTeamId) {
+            return;
+          }
+          agentWorkspaceTeamMembersRequestedRef.current.add(missingTeamId);
+          void loadAgentWorkspaceTeamMembers(missingTeamId);
+        }, [
+          draftAgent?.id,
+          agentOwnerMissingTeamIds,
+          workspaceTeamsRequiresPlan,
+        ]);
+
+        useEffect(() => {
+          if (!draftAgent?.id || !hasAgentPersonIdentity(agentOwnerIdentity)) {
+            agentOwnerProfileLookupKeyRef.current = "";
+            setAgentOwnerProfileIdentity(null);
+            return undefined;
+          }
+          const ownerKeys = getAgentIdentityMatchKeys(agentOwnerIdentity, agentOwnerIdentity);
+          const ownerLookupKey = ownerKeys.join("|");
+          if (!ownerLookupKey || agentOwnerProfileLookupKeyRef.current === ownerLookupKey) {
+            return undefined;
+          }
+          agentOwnerProfileLookupKeyRef.current = ownerLookupKey;
+          let cancelled = false;
+          const ownerLookupRecord = {
+            ...agentOwnerIdentity,
+            id: agentOwnerIdentity.id || agentOwnerIdentity.userId || agentOwnerIdentity.email || "",
+            userId: agentOwnerIdentity.userId || "",
+            email: agentOwnerIdentity.email || "",
+          };
+          void (async () => {
+            const payload = await fetchAgentTeamMemberProfilePayload("", [ownerLookupRecord]);
+            if (cancelled) {
+              return;
+            }
+            const profileMap = buildAgentTeamMemberProfileMap(payload);
+            const matchingProfile = ownerKeys
+              .map((key) => profileMap.get(key))
+              .find(Boolean) || null;
+            const profileIdentity = normalizeAgentPersonIdentity(matchingProfile || null);
+            if (!hasAgentPersonIdentity(profileIdentity)) {
+              setAgentOwnerProfileIdentity(null);
+              return;
+            }
+            const mergedIdentity = mergeAgentPersonIdentities(agentOwnerIdentity, profileIdentity);
+            const mergedName = getTrustedDisplayName(mergedIdentity.name, mergedIdentity.email);
+            if (!mergedName && !mergedIdentity.avatarUrl) {
+              setAgentOwnerProfileIdentity(null);
+              return;
+            }
+            setAgentOwnerProfileIdentity(mergedIdentity);
+          })();
+          return () => {
+            cancelled = true;
+          };
+        }, [agentOwnerIdentity, draftAgent?.id]);
+
+        useEffect(() => {
+          if (!agentOwnerPopoverOpen || agentOwnerCandidateRows.length === 0) {
+            agentOwnerCandidateProfileLookupKeyRef.current = "";
+            setAgentOwnerCandidateProfileIdentitiesByKey({});
+            return undefined;
+          }
+          const lookupKey = agentOwnerCandidateRows
+            .map((candidate) => getAgentOwnerCandidateKey(candidate))
+            .filter(Boolean)
+            .sort()
+            .join("|");
+          if (!lookupKey || agentOwnerCandidateProfileLookupKeyRef.current === lookupKey) {
+            return undefined;
+          }
+          agentOwnerCandidateProfileLookupKeyRef.current = lookupKey;
+          let cancelled = false;
+          void (async () => {
+            const payload = await fetchAgentTeamMemberProfilePayload("", agentOwnerCandidateRows);
+            if (cancelled) {
+              return;
+            }
+            const profileMap = buildAgentTeamMemberProfileMap(payload);
+            const nextProfilesByKey = {};
+            agentOwnerCandidateRows.forEach((candidate) => {
+              const candidateKey = getAgentOwnerCandidateKey(candidate);
+              if (!candidateKey) {
+                return;
+              }
+              const matchingProfile = getAgentIdentityMatchKeys(candidate, candidate)
+                .map((key) => profileMap.get(key))
+                .find(Boolean) || null;
+              const profileIdentity = normalizeAgentPersonIdentity(matchingProfile || null);
+              if (!hasAgentPersonIdentity(profileIdentity)) {
+                return;
+              }
+              const mergedIdentity = mergeAgentPersonIdentities(candidate, profileIdentity);
+              if (!getTrustedDisplayName(mergedIdentity.name, mergedIdentity.email) && !mergedIdentity.avatarUrl) {
+                return;
+              }
+              nextProfilesByKey[candidateKey] = mergedIdentity;
+            });
+            setAgentOwnerCandidateProfileIdentitiesByKey(nextProfilesByKey);
+          })();
+          return () => {
+            cancelled = true;
+          };
+        }, [agentOwnerCandidateRows, agentOwnerPopoverOpen]);
+
+        useEffect(() => {
+          if (!agentOwnerPopoverOpen) {
+            return undefined;
+          }
+
+          function handleAgentOwnerPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !agentOwnerPopoverRef.current || agentOwnerPopoverRef.current.contains(target)) {
+              return;
+            }
+            setAgentOwnerPopoverOpen(false);
+          }
+
+          function handleAgentOwnerPopoverEscape(event) {
+            if (event.key === "Escape") {
+              setAgentOwnerPopoverOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleAgentOwnerPopoverPointerDown);
+          window.addEventListener("keydown", handleAgentOwnerPopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleAgentOwnerPopoverPointerDown);
+            window.removeEventListener("keydown", handleAgentOwnerPopoverEscape);
+          };
+        }, [agentOwnerPopoverOpen]);
+
+        useEffect(() => {
+          if (!agentSendTeamModalOpen) {
+            return undefined;
+          }
+
+          function handleAgentSendTeamModalEscape(event) {
+            if (event.key !== "Escape") {
+              return;
+            }
+            closeAgentSendToTeamModal();
+          }
+
+          window.addEventListener("keydown", handleAgentSendTeamModalEscape);
+          return () => window.removeEventListener("keydown", handleAgentSendTeamModalEscape);
+        }, [agentSendTeamModalOpen, agentSendTeamShareState.action]);
+
+        useEffect(() => {
+          return () => {
+            if (agentSendTeamModalCloseTimerRef.current) {
+              window.clearTimeout(agentSendTeamModalCloseTimerRef.current);
+              agentSendTeamModalCloseTimerRef.current = null;
+            }
+            if (agentSendTeamModalFrameRef.current) {
+              window.cancelAnimationFrame(agentSendTeamModalFrameRef.current);
+              agentSendTeamModalFrameRef.current = null;
+            }
+          };
+        }, []);
 
         useEffect(() => {
           if (!selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
@@ -103880,6 +108800,33 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             window.removeEventListener("keydown", handleAgentActionsPopoverEscape);
           };
         }, [agentActionsPopoverOpen]);
+
+        useEffect(() => {
+          if (!agentPublishMenuOpen) {
+            return undefined;
+          }
+
+          function handleAgentPublishMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !agentPublishMenuRef.current || agentPublishMenuRef.current.contains(target)) {
+              return;
+            }
+            setAgentPublishMenuOpen(false);
+          }
+
+          function handleAgentPublishMenuEscape(event) {
+            if (event.key === "Escape") {
+              setAgentPublishMenuOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleAgentPublishMenuPointerDown);
+          window.addEventListener("keydown", handleAgentPublishMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleAgentPublishMenuPointerDown);
+            window.removeEventListener("keydown", handleAgentPublishMenuEscape);
+          };
+        }, [agentPublishMenuOpen]);
 
         useEffect(() => {
           if (!agentRenameState || !agentRenameInputRef.current) {
@@ -104082,6 +109029,52 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
           void loadAgentsHomeThreads();
         }, [isHomeViewActive, loadAgentsHomeThreads, selectedAgentId]);
+
+        useEffect(() => {
+          const signal = threadMutationSignal && typeof threadMutationSignal === "object" && !Array.isArray(threadMutationSignal)
+            ? threadMutationSignal
+            : null;
+          const normalizedThreadId = String(signal?.threadId || signal?.threadRecord?.id || signal?.threadRecord?.threadId || "").trim();
+          if (!signal || !normalizedThreadId) {
+            return;
+          }
+
+          if (String(signal.action || "").trim() === "delete") {
+            setAgentsHomeThreadRecords((current) => {
+              const currentItems = Array.isArray(current) ? current : [];
+              const nextItems = currentItems.filter((thread) => (
+                String(thread?.id || thread?.threadId || "").trim() !== normalizedThreadId
+              ));
+              return nextItems.length === currentItems.length ? current : nextItems;
+            });
+            return;
+          }
+
+          const signalRecord = signal.threadRecord && typeof signal.threadRecord === "object" && !Array.isArray(signal.threadRecord)
+            ? signal.threadRecord
+            : null;
+          if (!signalRecord) {
+            void loadAgentsHomeThreads({ force: true });
+            return;
+          }
+
+          setAgentsHomeThreadRecords((current) => {
+            const currentItems = Array.isArray(current) ? current : [];
+            let didFind = false;
+            const nextItems = currentItems.map((thread) => {
+              const currentThreadId = String(thread?.id || thread?.threadId || "").trim();
+              if (currentThreadId !== normalizedThreadId) {
+                return thread;
+              }
+              didFind = true;
+              return {
+                ...(thread && typeof thread === "object" && !Array.isArray(thread) ? thread : {}),
+                ...signalRecord,
+              };
+            });
+            return didFind ? nextItems : [signalRecord, ...currentItems];
+          });
+        }, [loadAgentsHomeThreads, threadMutationSignal]);
 
 	        function handleAgentSelect(agentId) {
 	          if (draftAgent?.id && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID && editorDirtyRef.current) {
@@ -104928,7 +109921,105 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           });
         }
 
-        function EnvironmentsHomeResponsiveSvgShared({ frameClassName, frameHeight, svgHeight, fallbackWidth = 640, ariaLabel, children }) {
+        function renderAgentSendToTeamModal() {
+          if (!agentSendTeamModalOpen) {
+            return null;
+          }
+
+          const isSharingAgentToTeam = agentSendTeamShareState.action === "share";
+          const selectedTeamAlreadyShared = agentSharedTeamIdSet.has(String(agentSendTeamPickerValue || "").trim());
+          const hasManageableTeams = availableAgentShareTeams.length > 0;
+          const showTeamsLoading = workspaceTeamsLoading && !hasManageableTeams;
+          const selectedTeam = availableAgentShareTeams.find((team) => team.id === agentSendTeamPickerValue) || null;
+
+          return renderPlaygroundPlatformModal({
+            open: agentSendTeamModalOpen,
+            visible: agentSendTeamModalVisible,
+            closing: agentSendTeamModalClosing,
+            onClose: () => closeAgentSendToTeamModal(),
+            as: "form",
+            backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-send-team-modal-backdrop",
+            className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-send-team-modal",
+            ariaLabel: "Send agent to team",
+            surfaceProps: {
+              onSubmit: (event) => {
+                void handleAgentSendToTeamSubmit(event);
+              },
+            },
+            children: React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                  React.createElement("div", {
+                    className: "playground-content-title playground-tasks-project-modal-name-input",
+                    style: { display: "flex", alignItems: "center" },
+                  }, "Send to Team"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: () => closeAgentSendToTeamModal(),
+                    disabled: isSharingAgentToTeam,
+                    title: "Close",
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-issue-modal-body playground-agents-send-team-modal-body" },
+                showTeamsLoading
+                  ? React.createElement("div", { className: "playground-agents-send-team-empty" },
+                      React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                      React.createElement("span", null, "Loading teams...")
+                    )
+                  : workspaceTeamsRequiresPlan
+                    ? React.createElement("div", { className: "playground-agents-send-team-empty" }, "Teams are not available on this workspace plan.")
+                    : hasManageableTeams
+                      ? React.createElement("div", { className: "playground-agents-send-team-list", role: "radiogroup", "aria-label": "Teams" },
+                          availableAgentShareTeams.map((team) => {
+                            const isSelected = team.id === agentSendTeamPickerValue;
+                            const isShared = agentSharedTeamIdSet.has(team.id);
+                            return React.createElement("button", {
+                                key: team.id,
+                                type: "button",
+                                className: "playground-agents-send-team-option" + (isSelected ? " is-selected" : "") + (isShared ? " is-shared" : ""),
+                                onClick: () => setAgentSendTeamPickerValue(team.id),
+                                disabled: isSharingAgentToTeam,
+                                role: "radio",
+                                "aria-checked": isSelected ? "true" : "false",
+                              },
+                              React.createElement("span", { className: "playground-agents-send-team-option-icon", "aria-hidden": "true" },
+                                React.createElement(UsersRound, { width: 15, height: 15, strokeWidth: 1.85 })
+                              ),
+                              React.createElement("span", { className: "playground-agents-send-team-option-copy" },
+                                React.createElement("span", { className: "playground-agents-send-team-option-title" }, team.name),
+                                React.createElement("span", { className: "playground-agents-send-team-option-meta" }, isShared ? "Already shared" : team.roleLabel)
+                              ),
+                              isSelected
+                                ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            );
+                          })
+                        )
+                      : React.createElement("div", { className: "playground-agents-send-team-empty" }, "No teams are available yet.")
+              ),
+              agentSendTeamError
+                ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, agentSendTeamError)
+                : null,
+              React.createElement("div", { className: "playground-tasks-project-modal-actions playground-agents-send-team-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button",
+                  onClick: () => closeAgentSendToTeamModal(),
+                  disabled: isSharingAgentToTeam,
+                }, "Cancel"),
+                React.createElement("button", {
+                  type: "submit",
+                  className: "playground-environments-action-button is-primary",
+                  disabled: isSharingAgentToTeam || !selectedTeam || selectedTeamAlreadyShared,
+                }, isSharingAgentToTeam ? "Sharing..." : "Share")
+              )
+            )
+          });
+        }
+
+        function EnvironmentsHomeResponsiveSvgShared({ frameClassName, frameHeight, svgHeight, fallbackWidth = 640, ariaLabel, svgClassName, children }) {
           const frameRef = useRef(null);
           const [measuredWidth, setMeasuredWidth] = useState(0);
 
@@ -104964,7 +110055,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               style: frameHeight ? { height: String(frameHeight) + "px" } : undefined,
             },
             React.createElement("svg", {
-              className: "playground-settings-usage-chart-svg",
+              className: svgClassName || "playground-settings-usage-chart-svg",
               width: resolvedSvgWidth,
               height: resolvedSvgHeight,
               role: "img",
@@ -106711,6 +111802,416 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           onStartThreadWithAgent(normalizedAgentId);
         }
 
+        function requestAgentWorkspaceTeams(options = {}) {
+          if (workspaceTeamsRequiresPlan || workspaceTeamsLoading || typeof onWorkspaceTeamsRequest !== "function") {
+            return;
+          }
+          onWorkspaceTeamsRequest(options);
+        }
+
+        async function fetchAgentTeamMemberProfilePayload(teamId, members = []) {
+          const normalizedTeamId = String(teamId || "").trim();
+          const baseUrl = String(backendUrl || "").replace(/\\/+$/, "");
+          const memberPayload = Array.isArray(members) ? members : [];
+          if (!normalizedTeamId && memberPayload.length === 0) {
+            return null;
+          }
+          try {
+            const { response, data } = await fetchJsonWithTimeout(baseUrl + "/team-member-profiles/lookup", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                teamId: normalizedTeamId,
+                members: memberPayload,
+              }),
+            }, 8000);
+            if (response.ok) {
+              const profiles = Array.isArray(data?.profiles)
+                ? data.profiles
+                : Array.isArray(data?.data)
+                  ? data.data
+                  : [];
+              if (profiles.length > 0) {
+                return data;
+              }
+            }
+          } catch {}
+          if (!normalizedTeamId) {
+            return null;
+          }
+          const profilePaths = [
+            "/teams/" + encodeURIComponent(normalizedTeamId) + "/member-profiles",
+            "/teams/" + encodeURIComponent(normalizedTeamId) + "/members/profiles",
+          ];
+          for (const path of profilePaths) {
+            try {
+              const { response, data } = await fetchJsonWithTimeout(baseUrl + path, {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              }, 5000);
+              if (response.ok) {
+                return data;
+              }
+            } catch {}
+          }
+          return null;
+        }
+
+        async function loadAgentWorkspaceTeamMembers(teamId) {
+          const normalizedTeamId = String(teamId || "").trim();
+          if (!normalizedTeamId) {
+            return;
+          }
+          const baseUrl = String(backendUrl || "").replace(/\\/+$/, "");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(
+              baseUrl + "/teams/" + encodeURIComponent(normalizedTeamId) + "/members?includeProfiles=1&includeUsers=1&include=profile,user,account&expand=profile,user,account",
+              {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              },
+              15000
+            );
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load team members.");
+            }
+            const rawMembers = Array.isArray(data?.data) ? data.data : [];
+            const profilePayload = await fetchAgentTeamMemberProfilePayload(normalizedTeamId, rawMembers);
+            const mergedMembers = mergeAgentTeamMemberProfiles(rawMembers, data, profilePayload);
+            setAgentWorkspaceTeamMembersById((current) => ({
+              ...current,
+              [normalizedTeamId]: mergedMembers,
+            }));
+          } catch {
+            setAgentWorkspaceTeamMembersById((current) => (
+              Object.prototype.hasOwnProperty.call(current, normalizedTeamId)
+                ? current
+                : { ...current, [normalizedTeamId]: [] }
+            ));
+          }
+        }
+
+        function buildAgentOwnerRecord(ownerIdentity) {
+          const identity = normalizeAgentPersonIdentity(ownerIdentity);
+          return {
+            type: "user",
+            id: String(identity.id || identity.userId || identity.email || "").trim(),
+            userId: String(identity.userId || "").trim(),
+            name: String(identity.name || identity.email || "Owner").trim(),
+            email: String(identity.email || "").trim(),
+            avatarUrl: String(identity.avatarUrl || "").trim(),
+            photoUrl: String(identity.avatarUrl || "").trim(),
+          };
+        }
+
+        function applyAgentOwnerIdentity(agentRecord, ownerIdentity) {
+          const normalizedAgent = normalizePlaygroundAgentRecord(agentRecord || buildPlaygroundDefaultAgentDraft());
+          const metadata = {
+            ...getAgentMetadataRecord(normalizedAgent),
+          };
+          const owner = buildAgentOwnerRecord(ownerIdentity);
+          metadata.owner = owner;
+          metadata.ownerId = owner.id;
+          metadata.owner_id = owner.id;
+          metadata.ownerUserId = owner.userId;
+          metadata.owner_user_id = owner.userId;
+          metadata.ownerName = owner.name;
+          metadata.owner_name = owner.name;
+          metadata.ownerEmail = owner.email;
+          metadata.owner_email = owner.email;
+          metadata.ownerAvatarUrl = owner.avatarUrl;
+          metadata.owner_avatar_url = owner.avatarUrl;
+          return normalizePlaygroundAgentRecord({
+            ...normalizedAgent,
+            metadata,
+          });
+        }
+
+        function applyAgentSharedTeam(agentRecord, teamId) {
+          const normalizedTeamId = String(teamId || "").trim();
+          const normalizedAgent = normalizePlaygroundAgentRecord(agentRecord || buildPlaygroundDefaultAgentDraft());
+          if (!normalizedTeamId) {
+            return normalizedAgent;
+          }
+          const metadata = {
+            ...getAgentMetadataRecord(normalizedAgent),
+          };
+          const nextTeamIds = Array.from(new Set([
+            ...getAgentSharedTeamIds(normalizedAgent),
+            normalizedTeamId,
+          ]));
+          metadata.sharedTeamIds = nextTeamIds;
+          metadata.teamAccessIds = nextTeamIds;
+          return normalizePlaygroundAgentRecord({
+            ...normalizedAgent,
+            metadata,
+          });
+        }
+
+        function buildAgentTeamSharePayload(agentRecord, teamRecord) {
+          const normalizedAgent = normalizePlaygroundAgentRecord(agentRecord || buildPlaygroundDefaultAgentDraft());
+          const normalizedTeam = normalizeAgentWorkspaceTeamOption(teamRecord) || {};
+          const owner = buildAgentOwnerRecord(readAgentOwnerIdentity(normalizedAgent));
+          const profile = getPlaygroundAgentProfileMetadata(normalizedAgent.metadata) || {};
+          const agentSnapshot = {
+            id: String(normalizedAgent.id || "").trim(),
+            name: String(normalizedAgent.name || "Untitled Agent").trim(),
+            description: String(normalizedAgent.description || "").trim(),
+            model: String(normalizedAgent.model || "").trim(),
+            agentType: normalizedAgent.agentType === "team" ? "team" : "single",
+            profile,
+            owner,
+            ownerId: owner.id,
+            ownerUserId: owner.userId,
+            ownerName: owner.name,
+            ownerEmail: owner.email,
+            ownerAvatarUrl: owner.avatarUrl,
+          };
+          return {
+            resourceType: "agent",
+            resourceId: agentSnapshot.id,
+            accessLevel: "use",
+            ownerId: owner.id,
+            ownerUserId: owner.userId,
+            ownerName: owner.name,
+            ownerEmail: owner.email,
+            ownerAvatarUrl: owner.avatarUrl,
+            metadata: {
+              resourceType: "agent",
+              resourceKind: "agent",
+              sharedTeamId: normalizedTeam.id || "",
+              sharedTeamName: normalizedTeam.name || "",
+              owner,
+              ownerId: owner.id,
+              ownerUserId: owner.userId,
+              ownerName: owner.name,
+              ownerEmail: owner.email,
+              ownerAvatarUrl: owner.avatarUrl,
+              agent: agentSnapshot,
+            },
+          };
+        }
+
+        async function persistAgentDetailRecordImmediate(nextAgent, fallbackMessage = "Failed to save agent.") {
+          const previousAgent = draftAgent ? normalizePlaygroundAgentRecord(draftAgent) : null;
+          const normalizedNextAgent = normalizePlaygroundAgentRecord(nextAgent || previousAgent || buildPlaygroundDefaultAgentDraft());
+          if (!normalizedNextAgent?.id || normalizedNextAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
+            updateDraftAgent(normalizedNextAgent);
+            return normalizedNextAgent;
+          }
+          clearAgentAutosaveQueue();
+          setDraftAgent(normalizedNextAgent);
+          setAgentDetailsById((current) => ({
+            ...current,
+            [normalizedNextAgent.id]: normalizedNextAgent,
+          }));
+          setSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+          try {
+            const savedAgent = await persistAgentRecord(normalizedNextAgent);
+            const mergedSavedAgent = normalizePlaygroundAgentRecord({
+              ...normalizedNextAgent,
+              ...savedAgent,
+              metadata: {
+                ...getAgentMetadataRecord(normalizedNextAgent),
+                ...getAgentMetadataRecord(savedAgent),
+              },
+            });
+            editorDirtyRef.current = false;
+            setAgentDetailsById((current) => ({
+              ...current,
+              [mergedSavedAgent.id]: mergedSavedAgent,
+            }));
+            setAgentListMode(getPlaygroundAgentListMode(mergedSavedAgent));
+            setSelectedAgentId(mergedSavedAgent.id);
+            setDraftAgent(mergedSavedAgent);
+            setSaveState({
+              isSaving: false,
+              error: "",
+              message: "Saved",
+            });
+            if (onAgentMutated) {
+              await onAgentMutated();
+            }
+            return mergedSavedAgent;
+          } catch (error) {
+            if (previousAgent?.id) {
+              setAgentDetailsById((current) => ({
+                ...current,
+                [previousAgent.id]: previousAgent,
+              }));
+            }
+            setDraftAgent(previousAgent);
+            setSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : fallbackMessage,
+              message: "",
+            });
+            throw error;
+          }
+        }
+
+        function openAgentOwnerPopover() {
+          if (!draftAgent) {
+            return;
+          }
+          requestAgentWorkspaceTeams();
+          setAgentOwnerPopoverOpen((current) => !current);
+        }
+
+        function handleAgentOwnerSelect(ownerIdentity) {
+          if (!draftAgent) {
+            return;
+          }
+          setAgentOwnerPopoverOpen(false);
+          const nextAgent = applyAgentOwnerIdentity(draftAgent, ownerIdentity);
+          void persistAgentDetailRecordImmediate(nextAgent, "Failed to update agent owner.").catch(() => {});
+        }
+
+        function openAgentSendToTeamModal() {
+          if (!draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
+            return;
+          }
+          requestAgentWorkspaceTeams();
+          if (agentSendTeamModalCloseTimerRef.current) {
+            window.clearTimeout(agentSendTeamModalCloseTimerRef.current);
+            agentSendTeamModalCloseTimerRef.current = null;
+          }
+          if (agentSendTeamModalFrameRef.current) {
+            window.cancelAnimationFrame(agentSendTeamModalFrameRef.current);
+            agentSendTeamModalFrameRef.current = null;
+          }
+          setAgentSendTeamError("");
+          setAgentSendTeamPickerValue(defaultAgentShareTeamId);
+          setAgentSendTeamModalVisible(false);
+          setAgentSendTeamModalClosing(false);
+          setAgentSendTeamModalOpen(true);
+          agentSendTeamModalFrameRef.current = window.requestAnimationFrame(() => {
+            agentSendTeamModalFrameRef.current = window.requestAnimationFrame(() => {
+              agentSendTeamModalFrameRef.current = null;
+              setAgentSendTeamModalVisible(true);
+            });
+          });
+        }
+
+        function finishCloseAgentSendToTeamModal() {
+          if (agentSendTeamModalCloseTimerRef.current) {
+            window.clearTimeout(agentSendTeamModalCloseTimerRef.current);
+            agentSendTeamModalCloseTimerRef.current = null;
+          }
+          if (agentSendTeamModalFrameRef.current) {
+            window.cancelAnimationFrame(agentSendTeamModalFrameRef.current);
+            agentSendTeamModalFrameRef.current = null;
+          }
+          setAgentSendTeamModalVisible(false);
+          setAgentSendTeamModalClosing(false);
+          setAgentSendTeamModalOpen(false);
+          setAgentSendTeamPickerValue("");
+          setAgentSendTeamError("");
+          setAgentSendTeamShareState({
+            teamId: "",
+            action: "",
+            error: "",
+          });
+        }
+
+        function closeAgentSendToTeamModal(options = {}) {
+          if (!options.force && agentSendTeamShareState.action === "share") {
+            return;
+          }
+          if (options?.animate === false || (!agentSendTeamModalOpen && !agentSendTeamModalVisible && !agentSendTeamModalClosing)) {
+            finishCloseAgentSendToTeamModal();
+            return;
+          }
+          if (agentSendTeamModalClosing) {
+            return;
+          }
+          if (agentSendTeamModalFrameRef.current) {
+            window.cancelAnimationFrame(agentSendTeamModalFrameRef.current);
+            agentSendTeamModalFrameRef.current = null;
+          }
+          setAgentSendTeamModalVisible(false);
+          setAgentSendTeamModalClosing(true);
+          if (agentSendTeamModalCloseTimerRef.current) {
+            window.clearTimeout(agentSendTeamModalCloseTimerRef.current);
+          }
+          agentSendTeamModalCloseTimerRef.current = window.setTimeout(() => {
+            agentSendTeamModalCloseTimerRef.current = null;
+            finishCloseAgentSendToTeamModal();
+          }, 75);
+        }
+
+        async function handleAgentSendToTeamSubmit(event) {
+          event.preventDefault();
+          if (!draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
+            setAgentSendTeamError("Save this agent before sharing it with a team.");
+            return;
+          }
+          const normalizedTeamId = String(agentSendTeamPickerValue || "").trim();
+          if (!normalizedTeamId) {
+            setAgentSendTeamError("Choose a team first.");
+            return;
+          }
+          if (agentSharedTeamIdSet.has(normalizedTeamId)) {
+            setAgentSendTeamError("This agent is already shared with that team.");
+            return;
+          }
+          const selectedTeam = availableAgentShareTeams.find((team) => team.id === normalizedTeamId) || null;
+          if (!selectedTeam) {
+            setAgentSendTeamError("Choose a team you can manage.");
+            return;
+          }
+          setAgentSendTeamError("");
+          setAgentSendTeamShareState({
+            teamId: normalizedTeamId,
+            action: "share",
+            error: "",
+          });
+          try {
+            const payload = buildAgentTeamSharePayload(draftAgent, selectedTeam);
+            const { response, data } = await fetchJsonWithTimeout(backendUrl + "/teams/" + encodeURIComponent(normalizedTeamId) + "/resource-shares", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            }, 8000);
+            if (!response.ok && Number(response.status || 0) !== 409) {
+              throw new Error(data?.message || data?.error || "Failed to share agent with team.");
+            }
+            const nextAgent = applyAgentSharedTeam(draftAgent, normalizedTeamId);
+            await persistAgentDetailRecordImmediate(nextAgent, "Agent was shared, but local sharing metadata could not be saved.");
+            requestAgentWorkspaceTeams({
+              selectedTeamId: normalizedTeamId,
+              teamId: normalizedTeamId,
+            });
+            closeAgentSendToTeamModal({ force: true });
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to share agent with team.";
+            setAgentSendTeamError(message);
+            setAgentSendTeamShareState({
+              teamId: normalizedTeamId,
+              action: "",
+              error: message,
+            });
+          }
+        }
+
         function openAgentRenameDialog(agent) {
           if (!agent?.id || agent.id === PLAYGROUND_AGENT_DRAFT_ID || agent.isSystem) {
             return;
@@ -106855,6 +112356,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return savedAgent;
         }
 
+        function clearAgentAutosaveQueue() {
+          if (agentAutosaveTimerRef.current) {
+            window.clearTimeout(agentAutosaveTimerRef.current);
+            agentAutosaveTimerRef.current = 0;
+          }
+          agentAutosaveQueuedRef.current = null;
+        }
+
         async function handleAgentComposerSubmit(event) {
           event.preventDefault();
           const composerDraft = normalizePlaygroundAgentRecord(agentComposerDraft || buildPlaygroundDefaultAgentDraft());
@@ -106908,11 +112417,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return;
           }
 
-          if (agentAutosaveTimerRef.current) {
-            window.clearTimeout(agentAutosaveTimerRef.current);
-            agentAutosaveTimerRef.current = 0;
-          }
-          agentAutosaveQueuedRef.current = null;
+          clearAgentAutosaveQueue();
 
           setSaveState({
             isSaving: true,
@@ -107116,6 +112621,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         async function commitVersionedAgentRecord(nextAgent, options = {}) {
           const normalizedNextAgent = normalizePlaygroundAgentRecord(nextAgent);
           const loadingMessage = options.loadingMessage || "Saving agent version...";
+          clearAgentAutosaveQueue();
           setAgentVersionState({
             status: "loading",
             message: loadingMessage,
@@ -107187,6 +112693,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return;
           }
           setAgentActionsPopoverOpen(false);
+          setAgentPublishMenuOpen(false);
           setAgentAssistantOpen(false);
           setOpenAgentVersionMenuId("");
           setAgentVersionState((current) => current.status === "loading" ? current : {
@@ -107199,6 +112706,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         function closeAgentVersionsSidebar() {
           setAgentVersionsSidebarOpen(false);
+          setAgentPublishMenuOpen(false);
           setOpenAgentVersionMenuId("");
         }
 
@@ -107338,6 +112846,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }
 
         function handleRevertDraft() {
+          clearAgentAutosaveQueue();
           if (selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
             setDraftAgent(buildPlaygroundDefaultAgentDraft(draftAgent?.agentType === "team" ? "team" : "single"));
             resetEditorAuxiliaryState();
@@ -107833,11 +113342,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const teamDerivedModelMeta = selectedTeamOrchestrator
             ? getPlaygroundAgentModelMeta(selectedTeamOrchestrator.model, resolvedAgentModelOptions)
             : null;
-          const skillsSummary = enabledSkills.length > 0
-            ? enabledSkills
-                .map((skillId) => PLAYGROUND_AGENT_SKILL_OPTIONS.find((option) => option.id === skillId)?.label || skillId)
-                .join(", ")
-            : "No extra skills";
           const shouldShowAgentAnalytics = Boolean(
             draftAgent.id && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
           );
@@ -107898,7 +113402,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const timestamp = Date.parse(String(thread?.createdAt || thread?.updatedAt || ""));
             return Number.isFinite(timestamp) ? timestamp : null;
           };
-          const readAgentDetailThreadAgentId = (thread) => String(thread?.agentId || thread?.agent?.id || thread?.metadata?.agentId || "").trim();
+          const readAgentDetailThreadAgentId = (thread) => String(
+            thread?.agentId
+            || thread?.agent_id
+            || thread?.agent?.id
+            || thread?.metadata?.agentId
+            || thread?.metadata?.agent_id
+            || thread?.metadata?.runnerPlayground?.agentId
+            || thread?.metadata?.runnerPlayground?.agent_id
+            || thread?.metadata?.runnerPlayground?.taskPreview?.agentId
+            || thread?.metadata?.runnerPlayground?.taskPreview?.agent_id
+            || thread?.metadata?.runner_playground?.agentId
+            || thread?.metadata?.runner_playground?.agent_id
+            || thread?.metadata?.runner_playground?.taskPreview?.agentId
+            || thread?.metadata?.runner_playground?.taskPreview?.agent_id
+            || ""
+          ).trim();
           const readAgentDetailThreadTotalCT = (thread) => Math.max(0, Number(readSettingsComputeTokens(thread, "totalCT", "totalCost") || 0));
           const getAgentDetailPeriodStartMs = (period) => {
             const now = new Date();
@@ -107974,13 +113493,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }
             return sum + readAgentDetailThreadTotalCT(thread);
           }, 0));
-          const agentDetailRunCountValues = agentDetailCostBuckets.map((bucket) => agentDetailThreads.reduce((sum, thread) => {
-            const createdAtMs = readAgentDetailThreadCreatedAtMs(thread);
-            if (!Number.isFinite(createdAtMs) || createdAtMs < bucket.startMs || createdAtMs >= bucket.endMs) {
-              return sum;
-            }
-            return sum + 1;
-          }, 0));
           const hasAgentDetailCostData = agentDetailCostValues.some((value) => Math.max(0, Number(value || 0)) > 0);
           const totalAgentDetailCT = agentDetailThreads.reduce((sum, thread) => sum + readAgentDetailThreadTotalCT(thread), 0);
           const totalAgentDetailRuns = agentDetailThreads.length;
@@ -108002,6 +113514,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             { id: "success", value: formatPlaygroundServerRate(resolvedAgentAnalyticsSummary.successRate24h), label: "Success Rate (24h)" },
             { id: "last-used", value: lastAgentDetailThread ? formatPlaygroundFileDate(lastAgentDetailThread.updatedAt || lastAgentDetailThread.createdAt) : "Never", label: "Last Used" },
           ];
+          const agentDetailComputeSeries = [
+            {
+              id: "inference",
+              label: "LLM Inference",
+              color: "rgb(143,196,255)",
+              values: agentDetailCostValues,
+            },
+            {
+              id: "runtime",
+              label: "Computers & Resources",
+              color: "rgb(103,80,255)",
+              values: agentDetailCostValues.map(() => 0),
+            },
+          ];
+          const maxAgentDetailDailyCt = Math.max(...agentDetailCostValues.map((value) => Math.max(0, Number(value || 0))), 1);
           const renderAgentDetailTimescaleControl = () => React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
             React.createElement("select", {
               className: "playground-environments-home-comparison-timescale-select",
@@ -108014,6 +113541,134 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               React.createElement("option", { value: "month" }, "Monthly")
             )
           );
+          const renderAgentDetailProjectOverviewStackedChart = (config) => {
+            const labels = Array.isArray(config?.labels) ? config.labels : [];
+            const series = Array.isArray(config?.series)
+              ? config.series.filter((entry) => entry && Array.isArray(entry.values))
+              : [];
+            if (!labels.length || !series.length) {
+              return React.createElement("div", { className: "playground-project-overview-chart-empty" }, config?.emptyText || "No usage data in this period");
+            }
+
+            const frameHeight = 252;
+            const svgHeight = 252;
+            const marginTop = 12;
+            const marginRight = 14;
+            const marginBottom = 38;
+            const marginLeft = 58;
+            const totals = labels.map((_, index) =>
+              series.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
+            );
+            if (!totals.some((value) => value > 0)) {
+              return config?.emptyContent || React.createElement("div", { className: "playground-project-overview-chart-empty" }, config?.emptyText || "No usage data in this period");
+            }
+
+            const yMax = Math.max(1, Number(config?.yMax || Math.max(...totals, 1)));
+            const gridLineCount = 4;
+            const tickFormatter = typeof config?.tickFormatter === "function"
+              ? config.tickFormatter
+              : (value) => String(Math.round(value));
+            const labelStep = Math.max(1, Math.ceil(labels.length / 7));
+            const visibleLabelIndexes = (() => {
+              const next = [];
+              for (let index = 0; index < labels.length; index += labelStep) {
+                next.push(index);
+              }
+              const lastIndex = labels.length - 1;
+              if (lastIndex >= 0 && !next.includes(lastIndex)) {
+                if (next.length > 0 && lastIndex - next[next.length - 1] < 2) {
+                  next[next.length - 1] = lastIndex;
+                } else {
+                  next.push(lastIndex);
+                }
+              }
+              return new Set(next);
+            })();
+
+            return React.createElement(EnvironmentsHomeResponsiveSvgShared, {
+                frameClassName: "playground-project-overview-chart-shell",
+                frameHeight,
+                svgHeight,
+                fallbackWidth: 1200,
+                ariaLabel: config?.ariaLabel || "Agent compute usage chart",
+                svgClassName: "playground-project-overview-chart-svg",
+              }, ({ svgWidth, svgHeight: measuredSvgHeight }) => {
+                const plotWidth = svgWidth - marginLeft - marginRight;
+                const plotHeight = measuredSvgHeight - marginTop - marginBottom;
+                const slotWidth = plotWidth / Math.max(labels.length, 1);
+                const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
+                const baselineY = marginTop + plotHeight;
+
+                return React.createElement(React.Fragment, null,
+                  Array.from({ length: gridLineCount + 1 }).map((_, index) => {
+                    const y = marginTop + (plotHeight / gridLineCount) * index;
+                    const tickValue = yMax - (yMax / gridLineCount) * index;
+                    return React.createElement(React.Fragment, { key: "grid:" + index },
+                      React.createElement("line", {
+                        x1: marginLeft,
+                        y1: y,
+                        x2: svgWidth - marginRight,
+                        y2: y,
+                        stroke: "rgba(255,255,255,0.10)",
+                        strokeWidth: "1",
+                      }),
+                      React.createElement("text", {
+                        x: 0,
+                        y,
+                        textAnchor: "start",
+                        dominantBaseline: "middle",
+                        fill: "rgba(255,255,255,0.4)",
+                        fontSize: "10",
+                        fontFamily: "Inter, sans-serif",
+                        fontWeight: "400",
+                      }, tickFormatter(tickValue))
+                    );
+                  }),
+                  labels.map((label, index) => {
+                    const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
+                    const isFirstLabel = index === 0;
+                    const isLastLabel = index === labels.length - 1;
+                    const labelX = isFirstLabel
+                      ? marginLeft
+                      : isLastLabel
+                        ? svgWidth - marginRight
+                        : marginLeft + slotWidth * index + slotWidth / 2;
+                    let stackOffsetY = baselineY;
+                    return React.createElement(React.Fragment, { key: "stack:" + index },
+                      series.map((entry, seriesIndex) => {
+                        const rawValue = Math.max(0, Number(entry.values[index] || 0));
+                        if (rawValue <= 0) {
+                          return null;
+                        }
+                        const segmentHeight = (rawValue / yMax) * plotHeight;
+                        stackOffsetY -= segmentHeight;
+                        return React.createElement("rect", {
+                          key: "segment:" + seriesIndex,
+                          x,
+                          y: stackOffsetY,
+                          width: barWidth,
+                          height: Math.max(segmentHeight, 1),
+                          rx: "3",
+                          fill: entry.color || "rgba(255,255,255,0.8)",
+                        });
+                      }),
+                      visibleLabelIndexes.has(index)
+                        ? React.createElement("text", {
+                            x: labelX,
+                            y: measuredSvgHeight - 8,
+                            textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
+                            fill: "rgba(255,255,255,0.4)",
+                            fontSize: "10",
+                            fontFamily: "Inter, sans-serif",
+                            fontWeight: "400",
+                          }, label)
+                        : null
+                    );
+                  })
+                );
+              }
+            );
+          };
           function PlaygroundAgentDetailStackedUsageChart({
             ariaLabel,
             labels,
@@ -108251,34 +113906,76 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     )
             );
           }
-          const renderAgentDetailCostChart = () => React.createElement(PlaygroundAgentDetailStackedUsageChart, {
-            ariaLabel: "Compute token cost created by this agent",
-            labels: agentDetailCostBuckets.map((bucket) => String(bucket?.label || "")),
-            series: [
-              {
-                id: "agent-ct-cost",
-                label: "CT Cost",
-                color: "rgb(143,196,255)",
-                values: agentDetailCostValues,
+          const renderAgentDetailCostEmptyState = () => React.createElement("div", {
+              className: "playground-project-overview-chart-empty playground-auth-users-empty-state playground-configure-usage-empty-state",
+            },
+            React.createElement("img", {
+              className: "playground-auth-users-empty-state-image",
+              src: "/img/empty-state/no-agent-usage.avif",
+              alt: "",
+              "aria-hidden": "true",
+              draggable: "false",
+            }),
+            React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "No Agent Usage yet"),
+            React.createElement("div", { className: "playground-auth-users-empty-state-copy" },
+              "Agent usage appears here once this agent starts running and consuming compute tokens."
+            )
+          );
+          const renderAgentDetailCostChart = () => {
+            if (agentsHomeThreadsLoading) {
+              return React.createElement("div", {
+                  className: "playground-project-overview-chart-shell",
+                  style: { height: "252px" },
+                },
+                React.createElement("div", {
+                    className: "playground-overview-chart-loading",
+                    style: { position: "static", inset: "auto", height: "100%" },
+                    "aria-label": "Loading chart data",
+                  },
+                  React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
+                )
+              );
+            }
+            return renderAgentDetailProjectOverviewStackedChart({
+              labels: agentDetailCostBuckets.map((bucket) => String(bucket?.label || "")),
+              series: agentDetailComputeSeries,
+              yMax: maxAgentDetailDailyCt,
+              tickFormatter: formatSettingsComputeTokens,
+              ariaLabel: "Agent compute token usage by resource type",
+              emptyText: agentsHomeThreadsError || "No agent compute usage yet",
+              emptyContent: renderAgentDetailCostEmptyState(),
+            });
+          };
+          const renderAgentFactCopyButton = (fieldId, value, label) => {
+            const normalizedValue = String(value || "").trim();
+            const isCopied = agentDetailCopiedFact === fieldId;
+            return React.createElement("button", {
+                type: "button",
+                className: "playground-agents-detail-sidebar-copy-button",
+                title: isCopied ? "Copied" : "Copy " + label,
+                "aria-label": isCopied ? label + " copied" : "Copy " + label,
+                disabled: !normalizedValue,
+                onClick: async (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  if (!normalizedValue) {
+                    return;
+                  }
+                  const copied = await copyTextToClipboard(normalizedValue);
+                  if (!copied) {
+                    return;
+                  }
+                  setAgentDetailCopiedFact(fieldId);
+                  window.setTimeout(() => {
+                    setAgentDetailCopiedFact((current) => current === fieldId ? "" : current);
+                  }, 1400);
+                },
               },
-            ],
-            countSeries: [
-              {
-                id: "agent-ct-cost",
-                values: agentDetailRunCountValues,
-              },
-            ],
-            emptyText: agentsHomeThreadsLoading ? "Loading cost data..." : (agentsHomeThreadsError || "No cost data yet"),
-            emptyContent: agentsHomeThreadsLoading
-              ? null
-              : React.createElement("div", { className: "playground-settings-usage-chart-empty is-tall playground-auth-users-empty-state" },
-                  React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "No Agent Usage yet"),
-                  React.createElement("div", { className: "playground-auth-users-empty-state-copy" }, "Agent usage appears here once this agent starts running and consuming compute tokens.")
-                ),
-            title: "CT Cost Created by Agent",
-            isLoading: agentsHomeThreadsLoading,
-            timescaleControl: renderAgentDetailTimescaleControl(),
-          });
+              isCopied
+                ? React.createElement(Check, { width: 12, height: 12, strokeWidth: 1.6 })
+                : React.createElement(Copy, { width: 12, height: 12, strokeWidth: 1.45 })
+            );
+          };
           const renderAgentFactRow = (label, control) => React.createElement("div", { className: "playground-project-overview-sidebar-row", key: label },
             React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, label),
             React.createElement("div", { className: "playground-project-overview-sidebar-row-value is-editable" }, control)
@@ -108287,6 +113984,154 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             React.createElement("span", {
               className: "playground-environments-editor-fact-value" + (extraClassName ? " " + extraClassName : ""),
             }, value);
+          const renderAgentCopyableFactValue = (fieldId, value, label, extraClassName = "", displayValue = value) =>
+            React.createElement("span", { className: "playground-agents-detail-sidebar-copy-value" },
+              React.createElement("span", {
+                className: "playground-environments-editor-fact-value" + (extraClassName ? " " + extraClassName : ""),
+                title: displayValue,
+              }, displayValue),
+              renderAgentFactCopyButton(fieldId, value, label)
+            );
+          const renderAgentOwnerAvatar = (className, imageClassName, fallbackLabel, photoUrl) =>
+            React.createElement(AccountAvatar, {
+              className,
+              imageClassName,
+              fallbackLabel,
+              photoUrl,
+            });
+          const renderAgentOwnerRow = () => {
+            const ownerIdentityForDisplay = resolvedAgentOwnerIdentity || agentOwnerIdentity || {};
+            const ownerLabel = String(ownerIdentityForDisplay?.name || ownerIdentityForDisplay?.email || "Owner").trim();
+            const ownerEmail = String(ownerIdentityForDisplay?.email || "").trim();
+            const ownerDetail = ownerEmail && ownerLabel.toLowerCase() !== ownerEmail.toLowerCase()
+              ? ownerEmail
+              : "";
+            const ownerMenuIsLoading = agentOwnerPopoverOpen && agentOwnerMissingTeamIds.length > 0;
+            const currentOwnerKeys = new Set(getAgentIdentityMatchKeys(agentOwnerIdentity, agentOwnerIdentity));
+            return renderPlaygroundPlatformPopup({
+              open: agentOwnerPopoverOpen,
+              shellRef: agentOwnerPopoverRef,
+              shellClassName: "playground-agents-detail-owner-popup-shell",
+              menuClassName: "playground-agents-detail-owner-menu",
+              trigger: React.createElement("button", {
+                  key: "Owner",
+                  type: "button",
+                  className: "playground-project-overview-sidebar-row playground-agents-detail-sidebar-owner-row",
+                  onClick: openAgentOwnerPopover,
+                  "aria-label": "Choose agent owner",
+                  "aria-expanded": agentOwnerPopoverOpen ? "true" : "false",
+                },
+                React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, "Owner"),
+                React.createElement("div", { className: "playground-project-overview-sidebar-row-value playground-agents-detail-owner-value" },
+                  React.createElement("span", { className: "playground-team-member-cell playground-agents-detail-owner-member-cell" },
+                    renderAgentOwnerAvatar(
+                      "playground-team-member-avatar",
+                      "playground-team-member-avatar-image",
+                      getAccountInitials(ownerLabel),
+                      ownerIdentityForDisplay?.avatarUrl || ""
+                    ),
+                    React.createElement("span", { className: "playground-team-member-copy" },
+                      React.createElement("span", {
+                        className: "playground-team-table-title",
+                        title: ownerDetail ? ownerLabel + " · " + ownerDetail : ownerLabel,
+                      }, ownerLabel)
+                    )
+                  ),
+                  React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                )
+              ),
+              menuProps: {
+                role: "menu",
+                onClick: (event) => event.stopPropagation(),
+              },
+              children: React.createElement(React.Fragment, null,
+                agentOwnerLookupTeamIds.length === 0
+                  ? React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" }, "Loading team members...")
+                  : enrichedAgentOwnerCandidateRows.length > 0
+                    ? enrichedAgentOwnerCandidateRows.map((candidate) => {
+                        const candidateKeys = getAgentIdentityMatchKeys(candidate, candidate);
+                        const candidateKey = String(candidate.userId || candidate.email || candidate.id || candidateKeys[0] || "").trim().toLowerCase();
+                        const isSelected = candidateKeys.some((key) => currentOwnerKeys.has(key));
+                        const trustedCandidateName = getTrustedDisplayName(candidate.name, candidate.email);
+                        const candidateLabel = trustedCandidateName || candidate.email || "Team member";
+                        const candidateDetail = candidate.email && candidateLabel.toLowerCase() !== candidate.email.toLowerCase()
+                          ? candidate.email
+                          : (Array.isArray(candidate.teamNames) ? candidate.teamNames.join(", ") : "");
+                        return React.createElement("button", {
+                            key: candidateKey || candidateLabel,
+                            type: "button",
+                            className: "tb-popup-row playground-agents-detail-owner-option" + (isSelected ? " is-selected" : ""),
+                            role: "menuitem",
+                            onClick: () => handleAgentOwnerSelect(candidate),
+                          },
+                          renderAgentOwnerAvatar(
+                            "playground-agents-detail-owner-option-avatar",
+                            "playground-agents-detail-owner-option-avatar-image",
+                            getAccountInitials(candidateLabel),
+                            candidate.avatarUrl || ""
+                          ),
+                          React.createElement("span", { className: "playground-agents-detail-owner-option-copy" },
+                            React.createElement("span", null, candidateLabel),
+                            candidateDetail
+                              ? React.createElement("span", null, candidateDetail)
+                              : null
+                          ),
+                          isSelected
+                            ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 1.8 })
+                            : null
+                        );
+                      })
+                    : React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" },
+                        ownerMenuIsLoading ? "Loading team members..." : "No team members available."
+                      )
+              )
+            });
+          };
+          const draftAgentActiveVersion = getDraftAgentActiveVersion();
+          const draftAgentVersionMetadata = getAgentVersionMetadata();
+          const publishedAgentVersionNumber = Number(
+            draftAgentActiveVersion?.version
+            || draftAgentVersionMetadata.activeAgentVersionNumber
+            || draftAgentVersionMetadata.active_agent_version_number
+            || 0
+          );
+          const publishedAgentVersionLabel = publishedAgentVersionNumber > 0
+            ? String(publishedAgentVersionNumber) + ".0"
+            : "1.0";
+          const renderAgentPermissionRings = (permissionSet) => {
+            const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "agent");
+            return React.createElement("span", {
+                className: "playground-agents-detail-permission-rings",
+                "aria-hidden": "true",
+              },
+              PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
+                const ringAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
+                return React.createElement("span", {
+                    key: ring.id,
+                    className: "playground-agents-detail-permission-ring",
+                    title: ring.label + ": " + getPlaygroundPermissionAccessLabel(ringAccess),
+                  },
+                  renderPlaygroundPermissionMiniRingIcon(ring.id, ringAccess)
+                );
+              })
+            );
+          };
+          const renderAgentPermissionRow = () => {
+            const permissionSummary = getAgentPermissionSummary(draftAgent.permissionSet);
+            return React.createElement("button", {
+                key: "Permissions",
+                type: "button",
+                className: "playground-project-overview-sidebar-row playground-agents-detail-sidebar-permission-row",
+                onClick: () => setAgentDetailTab("permissions"),
+                title: "Permissions: " + permissionSummary,
+                "aria-label": "Open permissions tab. " + permissionSummary,
+              },
+              React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, "Permissions"),
+              React.createElement("div", { className: "playground-project-overview-sidebar-row-value playground-agents-detail-sidebar-permission-value" },
+                renderAgentPermissionRings(draftAgent.permissionSet)
+              )
+            );
+          };
           const renderAgentAnalyticsKpi = (label, value, tone) => React.createElement("div", {
               className: "playground-servers-analytics-kpi",
               key: label,
@@ -108399,11 +114244,140 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                React.createElement("span", null, "Back")
 	              )
 	            : null;
+          const canShowAgentDetailHeaderPublish = Boolean(
+            !agentCreationSetupOpen
+            && draftAgent?.id
+            && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
+            && !draftAgent.isSystem
+            && !draftAgent.isDefault
+            && !isDefaultAgentConfigurationLocked
+          );
+          const isAgentPublishControlDisabled = saveState.isSaving && agentVersionState.status !== "loading";
+          const areAgentPublishMenuActionsDisabled = saveState.isSaving || agentVersionState.status === "loading";
+          const renderAgentPublishSplitButton = () => renderPlaygroundPlatformPopup({
+            open: agentPublishMenuOpen,
+            shellRef: agentPublishMenuRef,
+            shellClassName: "playground-agents-detail-publish-split-shell",
+            menuClassName: "playground-agents-detail-publish-menu",
+            trigger: React.createElement("div", {
+                className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control"
+                  + (agentVersionsSidebarOpen ? " is-active" : "")
+                  + (isAgentPublishControlDisabled ? " is-disabled" : ""),
+              },
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-detail-publish-main",
+                  title: "Publish agent",
+                  "aria-label": "Publish agent",
+                  "aria-expanded": agentVersionsSidebarOpen ? "true" : "false",
+                  disabled: isAgentPublishControlDisabled,
+                  onClick: () => {
+                    setAgentPublishMenuOpen(false);
+                    toggleAgentVersionsSidebar();
+                  },
+                },
+                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Publish")
+              ),
+              React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-detail-publish-chevron",
+                  title: "Publish save options",
+                  "aria-label": "Publish save options",
+                  "aria-haspopup": "menu",
+                  "aria-expanded": agentPublishMenuOpen ? "true" : "false",
+                  disabled: isAgentPublishControlDisabled,
+                  onClick: (event) => {
+                    event.stopPropagation();
+                    setAgentPublishMenuOpen((current) => !current);
+                  },
+                },
+                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+              )
+            ),
+            menuProps: {
+                role: "menu",
+                onClick: (event) => event.stopPropagation(),
+            },
+            children: React.createElement(React.Fragment, null,
+              React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row",
+                  role: "menuitem",
+                  disabled: areAgentPublishMenuActionsDisabled || !draftAgent,
+                  onClick: () => {
+                    setAgentPublishMenuOpen(false);
+                    void handleSaveAgent();
+                  },
+                },
+                React.createElement(Save, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Save")
+                )
+              ),
+              React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row",
+                  role: "menuitem",
+                  disabled: areAgentPublishMenuActionsDisabled || !draftAgent,
+                  onClick: () => {
+                    setAgentPublishMenuOpen(false);
+                    void saveCurrentAgentVersion();
+                  },
+                },
+                React.createElement(GitBranchPlus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Save to new Version")
+                )
+              ),
+              React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row",
+                  role: "menuitem",
+                  disabled: areAgentPublishMenuActionsDisabled || !draftAgent,
+                  onClick: () => {
+                    setAgentPublishMenuOpen(false);
+                    handleRevertDraft();
+                  },
+                },
+                React.createElement(Undo2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Revert to last saved Version")
+                )
+              )
+            )
+          });
+          const renderAgentSidebarToggleButton = () => React.createElement("button", {
+              type: "button",
+              className: "playground-project-overview-sidebar-toggle",
+              onClick: () => setAgentDetailSidebarCollapsed((current) => !current),
+              title: agentDetailSidebarCollapsed ? "Show agent sidebar" : "Hide agent sidebar",
+              "aria-label": agentDetailSidebarCollapsed ? "Show agent sidebar" : "Hide agent sidebar",
+              "aria-pressed": agentDetailSidebarCollapsed ? "true" : "false",
+            },
+            React.createElement(PanelRight, {
+              width: 15,
+              height: 15,
+              strokeWidth: 1.8,
+            })
+          );
 
 	          const agentProfileSection = React.createElement("div", { className: "playground-agents-profile-section" },
 	            React.createElement("div", { className: "profile-editor-avatar-wrap playground-agents-profile-avatar-wrap" },
-              React.createElement("div", { className: "profile-editor-avatar playground-agents-profile-avatar" },
-                React.createElement("div", { className: "profile-editor-avatar-surface" },
+              React.createElement("div", {
+                  className: "profile-editor-avatar playground-agents-profile-avatar",
+                  ref: canEditAgentProfilePhoto && agentProfileAvatarPickerOpen ? agentProfileAvatarPickerRef : null,
+                },
+                React.createElement(canEditAgentProfilePhoto ? "button" : "div", canEditAgentProfilePhoto
+                  ? {
+                      type: "button",
+                      className: "profile-editor-avatar-surface playground-agents-detail-avatar-surface-button",
+                      onClick: () => setAgentProfileAvatarPickerOpen((current) => !current),
+                      "aria-label": "Choose agent profile picture",
+                      "aria-expanded": agentProfileAvatarPickerOpen ? "true" : "false",
+                    }
+                  : { className: "profile-editor-avatar-surface" },
                   agentProfilePhotoUrl
                     ? React.createElement("img", {
                         className: "profile-editor-avatar-image",
@@ -108416,15 +114390,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 canEditAgentProfilePhoto
                   ? React.createElement("div", {
                     className: "playground-agents-avatar-picker-shell playground-tasks-toolbar-popup-shell" + (agentProfileAvatarPickerOpen ? " is-open" : ""),
-                    ref: agentProfileAvatarPickerOpen ? agentProfileAvatarPickerRef : null,
                   },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "profile-editor-avatar-trigger",
-                      onClick: () => setAgentProfileAvatarPickerOpen((current) => !current),
-                      "aria-label": "Choose agent profile picture",
-                      "aria-expanded": agentProfileAvatarPickerOpen ? "true" : "false",
-                    }, React.createElement(Camera, { className: "profile-editor-camera-icon", strokeWidth: 1.9 })),
                     agentProfileAvatarPickerOpen
                       ? React.createElement("div", {
                           className: "tb-popup-menu playground-agents-avatar-picker-menu playground-tasks-toolbar-popup-menu-animate-down-in",
@@ -108454,46 +114420,37 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   : null
               )
             ),
-            React.createElement("div", { className: "playground-agents-profile-name-wrap" },
-              React.createElement("input", {
-                type: "text",
-                className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agents-profile-name-input",
-                value: draftAgent.name || "",
-                placeholder: isTeamAgent ? "Team" : "Agent",
-                "aria-label": isTeamAgent ? "Team name" : "Agent name",
-                title: draftAgent.name || (isTeamAgent ? "Team" : "Agent"),
-                onKeyDown: (event) => event.stopPropagation(),
-                onChange: (event) => updateAgentField("name", event.target.value),
-              })
+            React.createElement("div", { className: "playground-agents-profile-copy" },
+              React.createElement("div", { className: "playground-agents-profile-name-wrap" },
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agents-profile-name-input",
+                  value: draftAgent.name || "",
+                  placeholder: isTeamAgent ? "Team" : "Agent",
+                  "aria-label": isTeamAgent ? "Team name" : "Agent name",
+                  title: draftAgent.name || (isTeamAgent ? "Team" : "Agent"),
+                  onKeyDown: (event) => event.stopPropagation(),
+                  onChange: (event) => updateAgentField("name", event.target.value),
+                })
+              )
             ),
-            React.createElement("div", { className: "playground-agents-profile-email-group" },
-              React.createElement(Mail, { className: "playground-agents-profile-email-icon", strokeWidth: 1.8 }),
-              React.createElement("div", { className: "playground-agents-profile-email-field" }, agentEmailAddress || "No email address available")
-            ),
-            React.createElement("div", { className: "playground-agents-profile-actions" },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-agents-profile-action-button",
-                onClick: openForkedAgentComposer,
-                title: "Fork into a new agent",
-                "aria-label": "Fork into a new agent",
-              }, React.createElement(Split, { width: 14, height: 14, strokeWidth: 1.9 })),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-agents-profile-action-button is-primary",
-                onClick: handleAgentProfileNewThread,
-                title: "New Thread",
-                "aria-label": "New Thread",
-              }, React.createElement("span", null, "New Thread")),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-agents-profile-action-button",
-                onClick: openTeamComposerFromCurrentAgent,
-                title: "Create team from this agent",
-                "aria-label": "Create team from this agent",
-              }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
-            )
+            agentDetailSidebarCollapsed
+              ? React.createElement("div", { className: "playground-agents-detail-profile-actions" },
+                  canShowAgentDetailHeaderPublish
+                    ? renderAgentPublishSplitButton()
+                    : null,
+                  renderAgentSidebarToggleButton()
+                )
+              : null
           );
+          const agentDetailSidebarControls = !agentDetailSidebarCollapsed
+            ? React.createElement("div", { className: "playground-agents-detail-sidebar-controls" },
+                canShowAgentDetailHeaderPublish
+                  ? renderAgentPublishSplitButton()
+                  : null,
+                renderAgentSidebarToggleButton()
+              )
+            : null;
 
           const agentModelDetailRows = isTeamAgent
             ? React.createElement(React.Fragment, null,
@@ -108553,48 +114510,549 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   : null
               );
 
-          const agentUsageChartSection = React.createElement("div", { className: "playground-project-overview-chart-surface playground-agents-detail-chart-surface" },
-            React.createElement("div", { className: "playground-project-overview-chart-grid" },
-              React.createElement("section", {
-                  className: "playground-settings-usage-chart-card playground-project-overview-chart-card playground-agents-detail-chart-card"
-                    + (!hasAgentDetailCostData && !agentsHomeThreadsLoading ? " is-cost-empty" : ""),
+          const agentDetailPerformanceRangeOptions = [
+            { id: "5d", label: "5D", bucketCount: 5 },
+            { id: "1m", label: "1M", bucketCount: 30 },
+            { id: "6m", label: "6M", bucketCount: 180 },
+            { id: "1y", label: "1Y", bucketCount: 365 },
+          ];
+          const activeAgentDetailPerformanceRange = agentDetailPerformanceRangeOptions.find((option) => option.id === agentDetailPerformanceRange)
+            || agentDetailPerformanceRangeOptions[1];
+          const formatAgentDetailPerformanceInteger = (value) => {
+            const numericValue = Math.max(0, Math.round(Number(value || 0)));
+            return numericValue.toLocaleString("en-US");
+          };
+          const formatAgentDetailPerformanceAxisValue = (value) => {
+            const numericValue = Math.max(0, Number(value || 0));
+            if (numericValue >= 1000) {
+              return (numericValue / 1000).toFixed(numericValue >= 10000 ? 0 : 1).replace(/\.0$/, "") + "k";
+            }
+            return String(Math.round(numericValue));
+          };
+          const getAgentDetailLocalDayKey = (dateLike) => {
+            const date = dateLike instanceof Date ? new Date(dateLike) : new Date(dateLike);
+            if (Number.isNaN(date.getTime())) {
+              return "";
+            }
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return year + "-" + month + "-" + day;
+          };
+          const readAgentDetailThreadTimestampMs = (...values) => {
+            for (const value of values) {
+              const timestamp = Date.parse(String(value || ""));
+              if (Number.isFinite(timestamp)) {
+                return timestamp;
+              }
+            }
+            return null;
+          };
+          const getAgentDetailThreadStatus = (thread) => String(thread?.status || thread?.state || thread?.phase || "").trim().toLowerCase();
+          const isAgentDetailThreadCompleted = (thread) => {
+            const status = getAgentDetailThreadStatus(thread);
+            return status === "completed" || status === "complete" || status === "done" || status === "success" || status === "finished";
+          };
+          const isAgentDetailThreadStarted = (thread) => {
+            const status = getAgentDetailThreadStatus(thread);
+            return status !== "queued" && status !== "pending" && status !== "draft" && status !== "idle";
+          };
+          const buildAgentDetailPerformanceBuckets = (bucketCount) => {
+            const now = new Date();
+            const endDate = new Date(now);
+            endDate.setHours(0, 0, 0, 0);
+            return Array.from({ length: Math.max(1, Number(bucketCount || 30)) }, (_, index) => {
+              const date = new Date(endDate);
+              date.setDate(endDate.getDate() - (Math.max(1, Number(bucketCount || 30)) - 1 - index));
+              const startMs = date.getTime();
+              const endMs = startMs + 24 * 60 * 60 * 1000;
+              return {
+                key: getAgentDetailLocalDayKey(date),
+                label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+                startMs,
+                endMs,
+                runCount: 0,
+                completedCount: 0,
+                totalCT: 0,
+              };
+            });
+          };
+          const agentDetailPerformanceBuckets = buildAgentDetailPerformanceBuckets(activeAgentDetailPerformanceRange.bucketCount);
+          const agentDetailPerformanceStartMs = agentDetailPerformanceBuckets[0]?.startMs || 0;
+          const agentDetailPerformanceEndMs = agentDetailPerformanceBuckets[agentDetailPerformanceBuckets.length - 1]?.endMs || Date.now();
+          const agentDetailPerformanceThreads = (Array.isArray(agentsHomeThreadRecords) ? agentsHomeThreadRecords : [])
+            .filter((thread) => readAgentDetailThreadAgentId(thread) === String(draftAgent.id || "").trim())
+            .filter((thread) => {
+              const createdAtMs = readAgentDetailThreadCreatedAtMs(thread);
+              return Number.isFinite(createdAtMs) && createdAtMs >= agentDetailPerformanceStartMs && createdAtMs < agentDetailPerformanceEndMs;
+            });
+          agentDetailPerformanceBuckets.forEach((bucket) => {
+            let runCount = 0;
+            let completedCount = 0;
+            let totalCT = 0;
+            agentDetailPerformanceThreads.forEach((thread) => {
+              const createdAtMs = readAgentDetailThreadCreatedAtMs(thread);
+              if (!Number.isFinite(createdAtMs) || createdAtMs < bucket.startMs || createdAtMs >= bucket.endMs) {
+                return;
+              }
+              runCount += 1;
+              totalCT += readAgentDetailThreadTotalCT(thread);
+              if (isAgentDetailThreadCompleted(thread)) {
+                completedCount += 1;
+              }
+            });
+            bucket.runCount = runCount;
+            bucket.completedCount = completedCount;
+            bucket.totalCT = totalCT;
+          });
+          const buildAgentDetailPerformanceSeries = () => {
+            return [
+              { id: "runs", values: agentDetailPerformanceBuckets.map((bucket) => Math.max(0, Number(bucket?.runCount || 0))) },
+            ];
+          };
+          const agentDetailPerformanceSeries = buildAgentDetailPerformanceSeries();
+          const agentDetailPerformanceRunCount = agentDetailPerformanceThreads.length;
+          const agentDetailPerformanceCompletedCount = agentDetailPerformanceBuckets.reduce((sum, bucket) => sum + Math.max(0, Number(bucket?.completedCount || 0)), 0);
+          const agentDetailPerformanceCost = agentDetailPerformanceBuckets.reduce((sum, bucket) => sum + Math.max(0, Number(bucket?.totalCT || 0)), 0);
+          const agentDetailPerformanceAvgCost = agentDetailPerformanceRunCount > 0
+            ? agentDetailPerformanceCost / agentDetailPerformanceRunCount
+            : 0;
+          const agentDetailPerformanceSuccessRate = agentDetailPerformanceRunCount > 0
+            ? Math.round((agentDetailPerformanceCompletedCount / agentDetailPerformanceRunCount) * 100)
+            : 0;
+          const agentDetailPerformanceKpis = [
+            { id: "total-runs", label: "Total Runs", value: formatAgentDetailPerformanceInteger(agentDetailPerformanceRunCount) },
+            { id: "cost", label: "Cost", value: formatSettingsComputeTokens(agentDetailPerformanceCost) },
+            { id: "avg-ct", label: "Avg CT / Run", value: formatSettingsComputeTokens(agentDetailPerformanceAvgCost) },
+            { id: "success-rate", label: "Success Rate", value: String(agentDetailPerformanceSuccessRate) + "%" },
+          ];
+          const maxAgentDetailPerformanceValue = Math.max(
+            1,
+            ...agentDetailPerformanceSeries.flatMap((entry) => Array.isArray(entry.values) ? entry.values : [])
+              .map((value) => Math.max(0, Number(value || 0)))
+          );
+          const maxAgentDetailPerformanceDailyCt = Math.max(1, ...agentDetailPerformanceBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0))));
+          function PlaygroundAgentDetailPerformanceChart({ dailyCtBuckets, maxDailyCt, maxRunValue, series }) {
+            const canvasRef = useRef(null);
+            const chartRef = useRef(null);
+            const chartSignature = JSON.stringify({
+              buckets: dailyCtBuckets.map((bucket) => ({
+                key: bucket?.key || "",
+                label: bucket?.label || "",
+                runCount: Math.max(0, Number(bucket?.runCount || 0)),
+                totalCT: Math.max(0, Number(bucket?.totalCT || 0)),
+              })),
+              maxDailyCt,
+              maxRunValue,
+              series: series.map((entry) => ({
+                id: entry.id,
+                values: Array.isArray(entry.values) ? entry.values : [],
+              })),
+            });
+
+            useEffect(() => () => {
+              if (chartRef.current) {
+                chartRef.current.destroy();
+                chartRef.current = null;
+              }
+            }, []);
+
+            useEffect(() => {
+              const canvas = canvasRef.current;
+              if (!canvas || typeof Chart !== "function") {
+                return undefined;
+              }
+              const labels = dailyCtBuckets.map((bucket) => String(bucket?.label || ""));
+              const dailyCtValues = dailyCtBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0)));
+              const longRangeTickIndexes = (() => {
+                if (labels.length < 90) {
+                  return null;
+                }
+                const targetCount = labels.length >= 365 ? 7 : 6;
+                const indexes = new Set();
+                for (let tickIndex = 0; tickIndex < targetCount; tickIndex += 1) {
+                  indexes.add(Math.round(((labels.length - 1) * tickIndex) / Math.max(1, targetCount - 1)));
+                }
+                return indexes;
+              })();
+              const seriesById = series.reduce((map, entry) => {
+                map[entry.id] = Array.isArray(entry.values) ? entry.values : [];
+                return map;
+              }, {});
+              const makeVerticalGradient = (context, stops, fallback) => {
+                const chart = context?.chart;
+                const chartArea = chart?.chartArea;
+                const ctx = chart?.ctx;
+                if (!ctx || !chartArea) {
+                  return fallback;
+                }
+                const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                stops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
+                return gradient;
+              };
+              const hoverGuidePlugin = {
+                id: "agentDetailPerformanceHoverGuide",
+                afterDatasetsDraw: (chartInstance) => {
+                  const activeElements = chartInstance?.tooltip?.getActiveElements?.() || [];
+                  if (!activeElements.length) {
+                    return;
+                  }
+                  const activeIndex = activeElements[0]?.index;
+                  const activeElement = activeElements[0]?.element;
+                  const chartArea = chartInstance.chartArea;
+                  const ctx = chartInstance.ctx;
+                  if (!ctx || !chartArea || typeof activeIndex !== "number" || !activeElement) {
+                    return;
+                  }
+                  const x = activeElement.x;
+                  const label = String(chartInstance?.data?.labels?.[activeIndex] || "");
+                  if (!label) {
+                    return;
+                  }
+                  ctx.save();
+                  ctx.setLineDash([4, 4]);
+                  ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+                  ctx.lineWidth = 1;
+                  ctx.beginPath();
+                  ctx.moveTo(x, chartArea.top + 8);
+                  ctx.lineTo(x, chartArea.bottom);
+                  ctx.stroke();
+                  ctx.restore();
                 },
-                React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-agents-detail-chart-kpis" },
-                  agentDetailKpis.map((item) =>
-                    React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
-                      React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                        React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                    )
+              };
+              const edgeToEdgeChartAreaPlugin = {
+                id: "agentDetailPerformanceEdgeToEdgeChartArea",
+                beforeDatasetsDraw: (chartInstance) => {
+                  const ctx = chartInstance?.ctx;
+                  const chartArea = chartInstance?.chartArea;
+                  const runsScale = chartInstance?.scales?.runs;
+                  if (!ctx || !chartArea || !runsScale) {
+                    return;
+                  }
+                  const min = Number(runsScale.min || 0);
+                  const max = Number(runsScale.max || 0);
+                  if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) {
+                    return;
+                  }
+                  ctx.save();
+                  ctx.setLineDash([5, 8]);
+                  ctx.strokeStyle = "rgba(255, 255, 255, 0.055)";
+                  ctx.lineWidth = 1;
+                  for (let index = 1; index < 4; index += 1) {
+                    const value = min + ((max - min) * index) / 4;
+                    const y = runsScale.getPixelForValue(value);
+                    if (!Number.isFinite(y)) {
+                      continue;
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(chartArea.left, y);
+                    ctx.lineTo(chartArea.right, y);
+                    ctx.stroke();
+                  }
+                  ctx.restore();
+                },
+              };
+              const chartData = {
+                labels,
+                datasets: [
+                  {
+                    id: "dailyCT",
+                    type: "bar",
+                    label: "Cost",
+                    data: dailyCtValues,
+                    yAxisID: "ct",
+                    backgroundColor: (context) => makeVerticalGradient(context, [
+                      [0, "rgba(102, 166, 255, 0.82)"],
+                      [1, "rgba(91, 103, 230, 0.64)"],
+                    ], "rgba(95, 112, 230, 0.72)"),
+                    borderColor: "rgba(95, 112, 230, 0.75)",
+                    borderWidth: 0,
+                    borderRadius: 2,
+                    barPercentage: 0.72,
+                    categoryPercentage: 0.86,
+                    maxBarThickness: 10,
+                    order: 4,
+                  },
+                  {
+                    id: "runs",
+                    type: "line",
+                    label: "Runs",
+                    data: seriesById.runs || [],
+                    yAxisID: "runs",
+                    borderColor: "#7EFFFF",
+                    backgroundColor: (context) => makeVerticalGradient(context, [
+                      [0, "rgba(126, 255, 255, 0.2)"],
+                      [0.62, "rgba(126, 255, 255, 0.08)"],
+                      [1, "rgba(126, 255, 255, 0)"],
+                    ], "rgba(126, 255, 255, 0.08)"),
+                    borderWidth: 1.5,
+                    fill: false,
+                    pointBackgroundColor: "#7EFFFF",
+                    pointBorderColor: "#050505",
+                    pointBorderWidth: 2,
+                    pointRadius: (context) => context.dataIndex === (seriesById.runs || []).length - 1 ? 5 : 0,
+                    pointHoverRadius: 5,
+                    tension: 0.28,
+                    order: 2,
+                  },
+                ],
+              };
+              const chartOptions = {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                normalized: true,
+                interaction: {
+                  intersect: false,
+                  mode: "index",
+                },
+                layout: {
+                  padding: {
+                    top: 12,
+                    right: 4,
+                    bottom: 0,
+                    left: 0,
+                  },
+                },
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    enabled: true,
+                    backgroundColor: "rgba(8, 8, 8, 0.96)",
+                    borderColor: "rgba(255, 255, 255, 0.14)",
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    titleColor: "rgba(255, 255, 255, 0.94)",
+                    bodyColor: "rgba(255, 255, 255, 0.78)",
+                    padding: 10,
+                    callbacks: {
+                      label: (context) => {
+                        const datasetId = context.dataset?.id || "";
+                        const value = Math.max(0, Number(context.parsed?.y || 0));
+                        if (datasetId === "dailyCT") {
+                          return "Cost: " + formatSettingsComputeTokens(value);
+                        }
+                        return String(context.dataset?.label || "Runs") + ": " + formatAgentDetailPerformanceInteger(value);
+                      },
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    type: "category",
+                    bounds: "data",
+                    offset: false,
+                    grid: { display: false, offset: false, drawBorder: false },
+                    border: { display: false },
+                    ticks: {
+                      align: "inner",
+                      autoSkip: false,
+                      color: "rgba(255, 255, 255, 0.38)",
+                      font: {
+                        size: 11,
+                        weight: "400",
+                        family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+                      },
+                      maxRotation: 0,
+                      minRotation: 0,
+                      padding: 10,
+                      callback: (_value, index) => {
+                        const bucket = dailyCtBuckets[index];
+                        const key = String(bucket?.key || "");
+                        const date = key ? new Date(key + "T00:00:00") : null;
+                        if (longRangeTickIndexes) {
+                          return longRangeTickIndexes.has(index)
+                            ? (date && !Number.isNaN(date.getTime())
+                              ? date.toLocaleDateString("en-US", { month: "short" })
+                              : (labels[index] || ""))
+                            : "";
+                        }
+                        if (labels.length === 30) {
+                          return index === 0 || index === labels.length - 1 ? (labels[index] || "") : "";
+                        }
+                        if (labels.length <= 7) {
+                          return labels[index] || "";
+                        }
+                        if (date && !Number.isNaN(date.getTime()) && date.getDate() <= 2) {
+                          return date.toLocaleDateString("en-US", { month: "short" });
+                        }
+                        if (index === 0 || index === labels.length - 1) {
+                          return date && !Number.isNaN(date.getTime())
+                            ? date.toLocaleDateString("en-US", { month: "short" })
+                            : (labels[index] || "");
+                        }
+                        return "";
+                      },
+                    },
+                  },
+                  runs: {
+                    display: true,
+                    type: "linear",
+                    position: "left",
+                    min: 0,
+                    max: Math.max(1, Math.ceil(maxRunValue * 1.18)),
+                    ticks: {
+                      display: true,
+                      maxTicksLimit: 4,
+                      color: "rgba(255, 255, 255, 0.34)",
+                      padding: 8,
+                      font: {
+                        size: 11,
+                        weight: "400",
+                        family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+                      },
+                      callback: (value) => formatAgentDetailPerformanceInteger(value),
+                    },
+                    grid: {
+                      display: false,
+                      drawTicks: false,
+                    },
+                    border: { display: false },
+                  },
+                  ct: {
+                    display: false,
+                    type: "linear",
+                    position: "left",
+                    min: 0,
+                    max: Math.max(1, Math.ceil(maxDailyCt * 1.22)),
+                    ticks: {
+                      display: false,
+                      maxTicksLimit: 4,
+                      color: "rgba(255, 255, 255, 0.34)",
+                      padding: 8,
+                      font: {
+                        size: 11,
+                        weight: "400",
+                        family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+                      },
+                      callback: (value) => formatAgentDetailPerformanceAxisValue(value),
+                    },
+                    grid: { display: false, drawTicks: false },
+                    border: { display: false },
+                  },
+                },
+              };
+
+              if (chartRef.current) {
+                chartRef.current.data = chartData;
+                chartRef.current.options = chartOptions;
+                chartRef.current.update("none");
+                return undefined;
+              }
+
+              chartRef.current = new Chart(canvas, {
+                type: "bar",
+                data: chartData,
+                options: chartOptions,
+                plugins: [edgeToEdgeChartAreaPlugin, hoverGuidePlugin],
+              });
+              return undefined;
+            }, [chartSignature]);
+
+            return React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
+              React.createElement("canvas", {
+                ref: canvasRef,
+                className: "playground-project-overview-progress-combo-canvas playground-agents-detail-progress-combo-canvas",
+                role: "img",
+                "aria-label": "Agent analytics: runs and compute token usage",
+              })
+            );
+          }
+          const handleAgentDetailPerformanceChartDownload = () => {
+            if (typeof document === "undefined") {
+              return;
+            }
+            const canvas = document.querySelector(".playground-agents-detail-progress-combo-canvas");
+            if (!canvas || typeof canvas.toDataURL !== "function") {
+              return;
+            }
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png");
+            link.download = "agent-analytics.png";
+            link.click();
+          };
+          const agentUsageChartSection = React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card" },
+            React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
+              React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Analytics"),
+              React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
+                React.createElement("div", { className: "playground-project-overview-progress-combo-ranges", role: "group", "aria-label": "Performance range" },
+                  agentDetailPerformanceRangeOptions.map((option) =>
+                    React.createElement("button", {
+                      key: option.id,
+                      type: "button",
+                      className: "playground-project-overview-progress-combo-range" + (activeAgentDetailPerformanceRange.id === option.id ? " is-active" : ""),
+                      onClick: () => setAgentDetailPerformanceRange(option.id),
+                      "aria-pressed": activeAgentDetailPerformanceRange.id === option.id ? "true" : "false",
+                    }, option.label)
                   )
                 ),
-                shouldShowAgentAnalytics && agentAnalyticsError
-                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, agentAnalyticsError)
-                  : null,
-                shouldShowAgentAnalytics && isAgentAnalyticsLoading && !activeAgentAnalytics
-                  ? React.createElement("div", { className: "playground-files-state" }, "Loading activity...")
-                  : null,
-                renderAgentDetailCostChart()
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-project-overview-progress-combo-download",
+                  onClick: handleAgentDetailPerformanceChartDownload,
+                  title: "Download chart",
+                  "aria-label": "Download analytics chart",
+                }, React.createElement(Download, { width: 15, height: 15, strokeWidth: 1.8 }))
               )
+            ),
+            React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
+              agentDetailPerformanceKpis.map((item) =>
+                React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+                    React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
+                    React.createElement("span", null, item.label)
+                  ),
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
+                )
+              )
+            ),
+            React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
+              agentsHomeThreadsLoading
+                ? React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
+                    React.createElement("div", {
+                        className: "playground-overview-chart-loading",
+                        style: { position: "static", inset: "auto", height: "100%" },
+                        "aria-label": "Loading chart data",
+                      },
+                      React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
+                    )
+                  )
+                : React.createElement(PlaygroundAgentDetailPerformanceChart, {
+                    dailyCtBuckets: agentDetailPerformanceBuckets,
+                    maxDailyCt: maxAgentDetailPerformanceDailyCt,
+                    maxRunValue: maxAgentDetailPerformanceValue,
+                    series: agentDetailPerformanceSeries,
+                  })
             )
           );
 
           const agentPropertiesSidebar = React.createElement("aside", {
-              className: "playground-project-overview-sidebar playground-agents-detail-sidebar" + (agentModelPopover ? " is-popover-open" : ""),
+              className: "playground-project-overview-sidebar playground-agents-detail-sidebar"
+                + (agentModelPopover || agentOwnerPopoverOpen ? " is-popover-open" : ""),
               "aria-label": isTeamAgent ? "Team settings" : "Agent settings",
             },
-            React.createElement("section", { className: "playground-project-overview-sidebar-card" },
+            agentDetailSidebarControls,
+            React.createElement("section", {
+                className: "playground-project-overview-sidebar-card",
+              },
               React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
                 React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties")
               ),
               React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
+                renderAgentOwnerRow(),
                 agentModelDetailRows,
+                renderAgentFactRow("Email",
+                  renderAgentCopyableFactValue("email", agentEmailAddress, "email", "", agentEmailAddress || "No email address available")
+                ),
                 renderAgentFactRow("Agent ID",
+                  renderAgentCopyableFactValue("agent-id", draftAgent.id, "agent ID", "is-id", draftAgent.id || "Unsaved agent")
+                ),
+                renderAgentFactRow("Published Version",
                   React.createElement("span", {
-                    className: "playground-environments-editor-fact-value is-id",
-                    title: draftAgent.id || "Unsaved agent",
-                  }, draftAgent.id || "Unsaved agent")
+                    className: "playground-environments-editor-fact-value",
+                    title: publishedAgentVersionLabel,
+                  }, publishedAgentVersionLabel)
                 ),
                 renderAgentFactRow("Created",
                   React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftAgent.createdAt))
@@ -108602,18 +115060,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 renderAgentFactRow("Updated",
                   React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftAgent.updatedAt))
                 ),
-                renderAgentFactRow("Skills",
-                  React.createElement("span", {
-                    className: "playground-environments-editor-fact-value",
-                    title: skillsSummary,
-                  }, skillsSummary)
-                ),
-                renderAgentFactRow("Permissions",
-                  React.createElement("span", {
-                    className: "playground-environments-editor-fact-value",
-                    title: getAgentPermissionSummary(draftAgent.permissionSet),
-                  }, getAgentPermissionSummary(draftAgent.permissionSet))
-                ),
+                renderAgentPermissionRow(),
                 isTeamAgent
                   ? renderAgentFactRow("Orchestrator",
                       React.createElement("span", { className: "playground-environments-editor-fact-value" }, selectedTeamOrchestrator?.name || "Not selected")
@@ -108624,6 +115071,71 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                       React.createElement("span", { className: "playground-environments-editor-fact-value" }, String(selectedTeamSubagentIds.length))
                     )
                   : null
+              )
+            ),
+            React.createElement("section", { className: "playground-project-overview-sidebar-card playground-agents-detail-actions-card" },
+              React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Actions")
+              ),
+              React.createElement("div", { className: "playground-agents-detail-sidebar-actions" },
+                React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
+                    onClick: openAgentSendToTeamModal,
+                    disabled: !draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID,
+                  },
+                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
+                    React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.85 })
+                  ),
+                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Send to Team")
+                ),
+                React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
+                    onClick: openForkedAgentComposer,
+                  },
+                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
+                    React.createElement(Split, { width: 14, height: 14, strokeWidth: 1.85 })
+                  ),
+                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Copy Agent")
+                ),
+                React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
+                    onClick: () => {
+                      setAgentActionsPopoverOpen(false);
+                      if (agentAssistantOpen) {
+                        setAgentAssistantOpen(false);
+                        return;
+                      }
+                      openAgentAssistant(selectedAgentAssistantCommandType);
+                    },
+                  },
+                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
+                    React.createElement(ChartColumnIncreasing, { width: 14, height: 14, strokeWidth: 1.85 })
+                  ),
+                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Improve Instructions")
+                ),
+                React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
+                    onClick: openTeamComposerFromCurrentAgent,
+                  },
+                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
+                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.85 })
+                  ),
+                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Add to Agent Team")
+                ),
+                React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
+                    onClick: handleAgentProfileNewThread,
+                  },
+                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
+                    React.createElement(MessageCircle, { width: 14, height: 14, strokeWidth: 1.85 })
+                  ),
+                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Start Thread")
+                )
               )
             )
           );
@@ -108642,10 +115154,661 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             },
             agentPermissionsContent
           );
+          const agentDetailThreadSortOptions = [
+            { id: "recent-desc", label: "Recently Updated", description: "Show the newest thread activity first" },
+            { id: "created-desc", label: "Newest Created", description: "Show newly created threads first" },
+            { id: "title-asc", label: "Title (A-Z)", description: "Sort threads alphabetically" },
+          ];
+          const agentDetailThreadFilterOptions = [
+            { id: "all", label: "All Threads", description: "Show every agent thread" },
+            { id: "running", label: "Running", description: "Only show threads still in progress" },
+            { id: "permission", label: "Needs Permission", description: "Only show threads waiting for approval" },
+            { id: "completed", label: "Completed", description: "Only show finished threads" },
+            { id: "failed", label: "Failed", description: "Only show failed or cancelled threads" },
+          ];
+          const activeAgentDetailThreadSortOption = agentDetailThreadSortOptions.find((option) => option.id === agentDetailThreadSortMode) || agentDetailThreadSortOptions[0];
+          const activeAgentDetailThreadFilterOption = agentDetailThreadFilterOptions.find((option) => option.id === agentDetailThreadFilterMode) || agentDetailThreadFilterOptions[0];
+          const agentDetailThreadsAgentsById = allKnownAgents.reduce((map, agent) => {
+            if (agent?.id) {
+              map[agent.id] = agent;
+            }
+            return map;
+          }, {});
+          const agentDetailEnvironmentsById = (Array.isArray(environments) ? environments : []).reduce((map, environment) => {
+            const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environment);
+            if (normalizedEnvironment?.id) {
+              map[normalizedEnvironment.id] = normalizedEnvironment;
+            }
+            return map;
+          }, {});
+          const normalizedAgentDetailThreadSearch = String(agentDetailThreadSearchQuery || "").trim().toLowerCase();
+          const selectedAgentThreadId = String(draftAgent.id || "").trim();
+          const getAgentDetailThreadRecordObject = (value) =>
+            value && typeof value === "object" && !Array.isArray(value) ? value : {};
+          function getAgentDetailThreadMetadataParts(thread) {
+            const normalizedThread = getAgentDetailThreadRecordObject(thread);
+            const rawThread = getAgentDetailThreadRecordObject(normalizedThread.rawThread);
+            const metadata = getAgentDetailThreadRecordObject(rawThread.metadata || normalizedThread.metadata);
+            const runnerPlayground = getAgentDetailThreadRecordObject(metadata.runnerPlayground);
+            const runnerPlaygroundSnake = getAgentDetailThreadRecordObject(metadata.runner_playground);
+            const runner = Object.keys(runnerPlayground).length > 0 ? runnerPlayground : runnerPlaygroundSnake;
+            const taskPreview = getAgentDetailThreadRecordObject(runner.taskPreview || runner.task_preview);
+            const missionControl = getAgentDetailThreadRecordObject(runner.missionControl || runner.mission_control);
+            const agentAssistant = getAgentDetailThreadRecordObject(runner.agentAssistant || runner.agent_assistant);
+            const metronome = getAgentDetailThreadRecordObject(
+              metadata.metronome
+              || metadata.metronomeWorkflow
+              || metadata.metronome_workflow
+              || runner.metronome
+              || runner.metronomeWorkflow
+              || runner.metronome_workflow
+            );
+            const sourceRecord = getAgentDetailThreadRecordObject(rawThread.source || metadata.source || runner.source);
+            const triggerRecord = getAgentDetailThreadRecordObject(rawThread.trigger || metadata.trigger || runner.trigger);
+            return {
+              rawThread,
+              normalizedThread,
+              metadata,
+              runner,
+              taskPreview,
+              missionControl,
+              agentAssistant,
+              metronome,
+              sourceRecord,
+              triggerRecord,
+            };
+          }
+          function readAgentDetailThreadStringFromSources(sources, keys) {
+            for (const source of sources) {
+              if (!source || typeof source !== "object" || Array.isArray(source)) {
+                continue;
+              }
+              for (const key of keys) {
+                const value = source[key];
+                if (typeof value === "string" && value.trim()) {
+                  return value.trim();
+                }
+                if (typeof value === "number" && Number.isFinite(value)) {
+                  return String(value);
+                }
+              }
+            }
+            return "";
+          }
+          function formatAgentDetailThreadSourceLabel(value) {
+            const rawValue = String(value || "").trim();
+            const normalizedValue = rawValue.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+            if (!normalizedValue) {
+              return "";
+            }
+            if (normalizedValue.includes("mission_control")) return "Mission Control";
+            if (normalizedValue.includes("metronome") || normalizedValue.includes("workflow")) return "Metronome";
+            if (normalizedValue.includes("email") || normalizedValue.includes("gmail") || normalizedValue === "mail" || normalizedValue.includes("inbox")) return "Email";
+            if (normalizedValue.includes("slack")) return "Slack";
+            if (normalizedValue.includes("discord")) return "Discord";
+            if (normalizedValue.includes("telegram")) return "Telegram";
+            if (normalizedValue.includes("webhook")) return "Webhook";
+            if (normalizedValue.includes("api")) return "API";
+            if (normalizedValue.includes("schedule") || normalizedValue.includes("cron")) return "Schedule";
+            if (normalizedValue.includes("github")) return "GitHub";
+            if (normalizedValue.includes("gitlab")) return "GitLab";
+            if (
+              normalizedValue.includes("chat")
+              || normalizedValue.includes("thread")
+              || normalizedValue.includes("assistant")
+              || normalizedValue.includes("manual")
+              || normalizedValue.includes("composer")
+              || normalizedValue.includes("input")
+              || normalizedValue.includes("sidebar")
+              || normalizedValue.includes("private")
+              || normalizedValue === "runner_web_sdk"
+              || normalizedValue.includes("runner_web_sdk")
+              || normalizedValue.includes("runner_web")
+            ) {
+              return "Chat";
+            }
+            return normalizedValue
+              .split("_")
+              .filter(Boolean)
+              .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+              .join(" ");
+          }
+          function getAgentDetailThreadSourceLabel(thread) {
+            const parts = getAgentDetailThreadMetadataParts(thread);
+            const sourceSources = [
+              parts.rawThread,
+              parts.normalizedThread,
+              parts.metadata,
+              parts.runner,
+              parts.taskPreview,
+              parts.missionControl,
+              parts.agentAssistant,
+              parts.metronome,
+              parts.sourceRecord,
+              parts.triggerRecord,
+            ];
+            const metronomeCue = readAgentDetailThreadStringFromSources(sourceSources, [
+              "metronomeId",
+              "metronome_id",
+              "metronomeWorkflowId",
+              "metronome_workflow_id",
+              "workflowId",
+              "workflow_id",
+              "workflowRunId",
+              "workflow_run_id",
+            ]);
+            if (getThreadMetronomeMetadata(thread) || metronomeCue || Object.keys(parts.metronome).length > 0) {
+              return "Metronome";
+            }
+            const explicitSource = readAgentDetailThreadStringFromSources(sourceSources, [
+              "source",
+              "sourceType",
+              "source_type",
+              "triggerSource",
+              "trigger_source",
+              "trigger",
+              "triggerType",
+              "trigger_type",
+              "origin",
+              "originType",
+              "origin_type",
+              "channel",
+              "channelType",
+              "channel_type",
+              "connector",
+              "connectorType",
+              "connector_type",
+              "integration",
+              "provider",
+              "providerId",
+              "provider_id",
+              "resourceType",
+              "resource_type",
+              "runKind",
+              "run_kind",
+              "app",
+              "appId",
+              "app_id",
+              "type",
+              "kind",
+            ]);
+            return formatAgentDetailThreadSourceLabel(explicitSource) || "Chat";
+          }
+          function getAgentDetailThreadEnvironmentLabel(thread) {
+            const parts = getAgentDetailThreadMetadataParts(thread);
+            const taskPreview = getThreadTaskPreview(thread) || parts.taskPreview;
+            const missionControl = getThreadMissionControlMetadata(thread) || parts.missionControl;
+            const projectRecord = getAgentDetailThreadRecordObject(
+              parts.rawThread.project
+              || parts.metadata.project
+              || parts.runner.project
+              || taskPreview.project
+              || missionControl.project
+            );
+            const environmentRecord = getAgentDetailThreadRecordObject(
+              parts.rawThread.environment
+              || parts.rawThread.computer
+              || parts.metadata.environment
+              || parts.metadata.computer
+              || parts.runner.environment
+              || parts.runner.computer
+              || taskPreview.environment
+            );
+            const projectName = readAgentDetailThreadStringFromSources([projectRecord], [
+              "projectName",
+              "project_name",
+              "displayName",
+              "display_name",
+              "name",
+              "title",
+            ]) || readAgentDetailThreadStringFromSources([
+              taskPreview,
+              missionControl,
+              parts.rawThread,
+              parts.normalizedThread,
+              parts.metadata,
+              parts.runner,
+            ], [
+              "projectName",
+              "project_name",
+            ]);
+            if (projectName) {
+              return projectName;
+            }
+            const environmentId = readAgentDetailThreadStringFromSources([environmentRecord], [
+              "environmentId",
+              "environment_id",
+              "computerId",
+              "computer_id",
+              "id",
+            ]) || readAgentDetailThreadStringFromSources([
+              taskPreview,
+              parts.rawThread,
+              parts.normalizedThread,
+              parts.metadata,
+              parts.runner,
+            ], [
+              "environmentId",
+              "environment_id",
+              "computerId",
+              "computer_id",
+            ]);
+            const listedEnvironment = environmentId ? agentDetailEnvironmentsById[environmentId] || null : null;
+            const environmentName = readAgentDetailThreadStringFromSources([
+              environmentRecord,
+              listedEnvironment,
+            ], [
+              "environmentName",
+              "environment_name",
+              "computerName",
+              "computer_name",
+              "displayName",
+              "display_name",
+              "name",
+              "title",
+            ]) || readAgentDetailThreadStringFromSources([
+              taskPreview,
+              parts.rawThread,
+              parts.normalizedThread,
+              parts.metadata,
+              parts.runner,
+            ], [
+              "environmentName",
+              "environment_name",
+              "computerName",
+              "computer_name",
+            ]);
+            if (environmentName) {
+              return environmentName;
+            }
+            const projectId = readAgentDetailThreadStringFromSources([projectRecord], [
+              "projectId",
+              "project_id",
+              "id",
+            ]) || readAgentDetailThreadStringFromSources([
+              taskPreview,
+              missionControl,
+              parts.rawThread,
+              parts.normalizedThread,
+              parts.metadata,
+              parts.runner,
+            ], [
+              "projectId",
+              "project_id",
+            ]);
+            return projectId || environmentId || "Workspace";
+          }
+          function getAgentDetailThreadPersonLabel(identity) {
+            const source = identity && typeof identity === "object" && !Array.isArray(identity) ? identity : {};
+            const email = String(source.email || "").trim().toLowerCase();
+            const name = String(source.name || source.displayName || source.display_name || "").trim();
+            return getTrustedDisplayName(name, email)
+              || (email ? formatAccountDisplayName("", email, "") : "");
+          }
+          function findAgentDetailThreadPersonMatch(identity) {
+            const source = identity && typeof identity === "object" && !Array.isArray(identity) ? identity : {};
+            const keys = new Set(getAgentIdentityMatchKeys(source, source));
+            if (keys.size === 0) {
+              return null;
+            }
+            return [agentCurrentUserIdentity, ...enrichedAgentOwnerCandidateRows].find((candidate) =>
+              getAgentIdentityMatchKeys(candidate, candidate).some((key) => keys.has(key))
+            ) || null;
+          }
+          function resolveAgentDetailThreadPersonIdentity(record, fallback = {}) {
+            const identity = normalizeAgentPersonIdentity(record, fallback);
+            const matchingIdentity = findAgentDetailThreadPersonMatch(identity);
+            return matchingIdentity ? mergeAgentPersonIdentities(identity, matchingIdentity) : identity;
+          }
+          function getAgentDetailThreadTriggeredByIdentity(thread) {
+            const parts = getAgentDetailThreadMetadataParts(thread);
+            const identitySources = [
+              parts.rawThread.triggeredBy,
+              parts.rawThread.triggered_by,
+              parts.rawThread.createdBy,
+              parts.rawThread.created_by,
+              parts.rawThread.creator,
+              parts.rawThread.author,
+              parts.rawThread.user,
+              parts.rawThread.actor,
+              parts.rawThread.initiator,
+              parts.rawThread.requestedBy,
+              parts.rawThread.requested_by,
+              parts.metadata.triggeredBy,
+              parts.metadata.triggered_by,
+              parts.metadata.createdBy,
+              parts.metadata.created_by,
+              parts.metadata.creator,
+              parts.metadata.author,
+              parts.metadata.user,
+              parts.metadata.actor,
+              parts.metadata.initiator,
+              parts.metadata.requestedBy,
+              parts.metadata.requested_by,
+              parts.runner.triggeredBy,
+              parts.runner.triggered_by,
+              parts.runner.createdBy,
+              parts.runner.created_by,
+              parts.runner.creator,
+              parts.runner.author,
+              parts.runner.user,
+              parts.runner.actor,
+              parts.runner.initiator,
+              parts.runner.requestedBy,
+              parts.runner.requested_by,
+            ].filter((value) => value && typeof value === "object" && !Array.isArray(value));
+            for (const identitySource of identitySources) {
+              const resolvedIdentity = resolveAgentDetailThreadPersonIdentity(identitySource, identitySource);
+              const label = getAgentDetailThreadPersonLabel(resolvedIdentity);
+              if (label) {
+                return resolvedIdentity;
+              }
+            }
+            const directSources = [
+              parts.rawThread,
+              parts.metadata,
+              parts.runner,
+              parts.sourceRecord,
+              parts.triggerRecord,
+              parts.missionControl,
+              parts.agentAssistant,
+            ];
+            const displayName = readAgentDetailThreadStringFromSources(directSources, [
+              "triggeredByDisplayName",
+              "triggered_by_display_name",
+              "triggeredByName",
+              "triggered_by_name",
+              "createdByDisplayName",
+              "created_by_display_name",
+              "createdByName",
+              "created_by_name",
+              "creatorDisplayName",
+              "creator_display_name",
+              "creatorName",
+              "creator_name",
+              "authorName",
+              "author_name",
+              "userDisplayName",
+              "user_display_name",
+              "userName",
+              "user_name",
+              "requestedByName",
+              "requested_by_name",
+              "operatorName",
+              "operator_name",
+            ]);
+            const email = readAgentDetailThreadStringFromSources(directSources, [
+              "triggeredByEmail",
+              "triggered_by_email",
+              "createdByEmail",
+              "created_by_email",
+              "creatorEmail",
+              "creator_email",
+              "authorEmail",
+              "author_email",
+              "userEmail",
+              "user_email",
+              "requestedByEmail",
+              "requested_by_email",
+              "operatorEmail",
+              "operator_email",
+            ]);
+            const identityKey = readAgentDetailThreadStringFromSources(directSources, [
+              "triggeredByUserId",
+              "triggered_by_user_id",
+              "triggeredBy",
+              "triggered_by",
+              "createdByUserId",
+              "created_by_user_id",
+              "creatorUserId",
+              "creator_user_id",
+              "authorUserId",
+              "author_user_id",
+              "userId",
+              "user_id",
+              "requestedByUserId",
+              "requested_by_user_id",
+              "operatorUserId",
+              "operator_user_id",
+              "createdBy",
+              "created_by",
+              "creatorId",
+              "creator_id",
+            ]);
+            const keyIsEmail = identityKey.includes("@");
+            const resolvedIdentity = resolveAgentDetailThreadPersonIdentity({
+              name: displayName,
+              email: email || (keyIsEmail ? identityKey : ""),
+              userId: keyIsEmail ? "" : identityKey,
+              id: identityKey,
+            }, {
+              name: displayName,
+              email,
+              userId: keyIsEmail ? "" : identityKey,
+              id: identityKey,
+            });
+            return getAgentDetailThreadPersonLabel(resolvedIdentity) ? resolvedIdentity : null;
+          }
+          function getAgentDetailThreadTriggeredByLabel(thread) {
+            return getAgentDetailThreadPersonLabel(getAgentDetailThreadTriggeredByIdentity(thread)) || "-";
+          }
+          const agentDetailAllThreadRows = (Array.isArray(agentsHomeThreadRecords) ? agentsHomeThreadRecords : [])
+            .map((thread) => ({
+              ...normalizeThreadItem(thread),
+              rawThread: thread && typeof thread === "object" && !Array.isArray(thread) ? thread : null,
+            }))
+            .filter((thread) => {
+              const threadId = String(thread?.id || "").trim();
+              if (!threadId || !selectedAgentThreadId) {
+                return false;
+              }
+              return readAgentDetailThreadAgentId(thread) === selectedAgentThreadId;
+            });
+          const agentDetailFilteredThreads = agentDetailAllThreadRows
+            .filter((thread) => {
+              const status = resolveThreadDisplayStatus(thread?.status, thread?.completedAt || thread?.finishedAt || thread?.endedAt);
+              const normalizedStatus = String(status || "").trim().toLowerCase();
+              if (agentDetailThreadFilterMode === "running" && !isRunningThreadDisplayStatus(normalizedStatus)) {
+                return false;
+              }
+              if (agentDetailThreadFilterMode === "permission" && !isPendingPermissionThreadDisplayStatus(normalizedStatus)) {
+                return false;
+              }
+              if (agentDetailThreadFilterMode === "completed" && !isCompletedThreadStatus(normalizedStatus)) {
+                return false;
+              }
+              if (agentDetailThreadFilterMode === "failed" && !["failed", "cancelled", "canceled"].includes(normalizedStatus)) {
+                return false;
+              }
+              if (!normalizedAgentDetailThreadSearch) {
+                return true;
+              }
+              const threadParts = getSidebarThreadTitleParts(thread);
+              const safeThread = threadParts.safeThread || thread;
+              const threadActor = getPlaygroundThreadActorInfo(safeThread, agentDetailThreadsAgentsById, "No agent");
+              const taskPreview = getThreadTaskPreview(safeThread);
+              const haystack = [
+                threadParts.displayThreadTitle || safeThread?.title || "",
+                safeThread?.id || "",
+                threadParts.taskTicketNumber || "",
+                threadActor?.name || "",
+                status || "",
+                taskPreview?.runKind || "",
+                getAgentDetailThreadSourceLabel(thread),
+                getAgentDetailThreadEnvironmentLabel(thread),
+                getAgentDetailThreadTriggeredByLabel(thread),
+                formatThreadSearchTimestamp(resolveThreadSortTimestamp(safeThread)) || "",
+              ].join(" ").toLowerCase();
+              return haystack.includes(normalizedAgentDetailThreadSearch);
+            })
+            .sort((left, right) => {
+              if (agentDetailThreadSortMode === "title-asc") {
+                return String(getSidebarThreadTitleParts(left).displayThreadTitle || left?.title || "")
+                  .localeCompare(String(getSidebarThreadTitleParts(right).displayThreadTitle || right?.title || ""));
+              }
+              if (agentDetailThreadSortMode === "created-desc") {
+                const leftCreatedAt = Date.parse(String(left?.createdAt || ""));
+                const rightCreatedAt = Date.parse(String(right?.createdAt || ""));
+                const leftValue = Number.isFinite(leftCreatedAt) ? leftCreatedAt : 0;
+                const rightValue = Number.isFinite(rightCreatedAt) ? rightCreatedAt : 0;
+                return rightValue - leftValue;
+              }
+              return compareThreadsByRecent(left, right);
+            });
+          const visibleAgentDetailThreads = agentDetailFilteredThreads.slice(0, Math.max(5, Number(agentDetailVisibleThreadCount) || 5));
+          const hasMoreAgentDetailThreads = agentDetailFilteredThreads.length > visibleAgentDetailThreads.length;
+          const hasAgentDetailThreadListFilters = Boolean(
+            normalizedAgentDetailThreadSearch
+            || agentDetailThreadFilterMode !== "all"
+          );
+          function renderAgentDetailThreadToolbarOption({ option, active, onClick }) {
+            return React.createElement("button", {
+                key: option.id,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select" + (active ? " selected" : ""),
+                onClick,
+              },
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                active
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, option.label),
+                option.description
+                  ? React.createElement("span", null, option.description)
+                  : null
+              )
+            );
+          }
+          const agentDetailThreadTableRowOptions = {
+            getSourceLabel: getAgentDetailThreadSourceLabel,
+            getEnvironmentLabel: getAgentDetailThreadEnvironmentLabel,
+            getTriggeredByLabel: (thread) => getAgentDetailThreadPersonLabel(getAgentDetailThreadTriggeredByIdentity(thread)) || "-",
+            getTriggeredByAvatarUrl: (thread) => {
+              const identity = getAgentDetailThreadTriggeredByIdentity(thread);
+              return normalizeSessionPhotoUrl(identity?.avatarUrl || identity?.photoURL || "");
+            },
+            getDateLabel: (thread, safeThread) => formatThreadSearchTimestamp(resolveThreadSortTimestamp(safeThread)) || "—",
+            onOpenThread: (threadId, safeThread) => {
+              handleAgentsHomeThreadOpen(threadId, { threadRecord: safeThread });
+            },
+            onThreadActions: (event, threadId, safeThread) => {
+              if (typeof onThreadActionMenuOpen === "function") {
+                onThreadActionMenuOpen(event, threadId, safeThread);
+                return;
+              }
+              handleAgentsHomeThreadOpen(threadId, { threadRecord: safeThread });
+            },
+          };
+          const agentThreadsSection = React.createElement("section", {
+              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section",
+              key: "threads",
+              "data-section-id": "threads",
+            },
+            React.createElement("div", { className: "playground-plugins-section-header" },
+              React.createElement("div", { className: "playground-plugins-section-copy" },
+                React.createElement("h3", { className: "playground-plugins-section-title" }, "Threads")
+              )
+            ),
+            React.createElement("div", { className: "playground-plugins-search-row" },
+              React.createElement("div", { className: "playground-plugins-search-shell" },
+                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("input", {
+                  type: "search",
+                  value: agentDetailThreadSearchQuery,
+                  onChange: (event) => {
+                    setAgentDetailThreadSearchQuery(event.target.value);
+                    setAgentDetailVisibleThreadCount(5);
+                  },
+                  className: "playground-plugins-search",
+                  placeholder: "Search threads",
+                  "aria-label": "Search agent threads",
+                })
+              ),
+              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-sort" + (agentDetailThreadToolbarPopover === "sort" || agentDetailThreadSortMode !== "recent-desc" ? " is-active" : ""),
+                    onClick: () => setAgentDetailThreadToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                    title: activeAgentDetailThreadSortOption.label,
+                  },
+                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Sort")
+                  ),
+                  agentDetailThreadToolbarPopover === "sort"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        agentDetailThreadSortOptions.map((option) =>
+                          renderAgentDetailThreadToolbarOption({
+                            option,
+                            active: agentDetailThreadSortMode === option.id,
+                            onClick: () => {
+                              setAgentDetailThreadSortMode(option.id);
+                              setAgentDetailThreadToolbarPopover("");
+                              setAgentDetailVisibleThreadCount(5);
+                            },
+                          })
+                        )
+                      )
+                    : null
+                ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-filter" + (agentDetailThreadToolbarPopover === "filter" || agentDetailThreadFilterMode !== "all" ? " is-active" : ""),
+                    onClick: () => setAgentDetailThreadToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                    title: activeAgentDetailThreadFilterOption.label,
+                  },
+                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Filter")
+                  ),
+                  agentDetailThreadToolbarPopover === "filter"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        agentDetailThreadFilterOptions.map((option) =>
+                          renderAgentDetailThreadToolbarOption({
+                            option,
+                            active: agentDetailThreadFilterMode === option.id,
+                            onClick: () => {
+                              setAgentDetailThreadFilterMode(option.id);
+                              setAgentDetailThreadToolbarPopover("");
+                              setAgentDetailVisibleThreadCount(5);
+                            },
+                          })
+                        )
+                      )
+                    : null
+                )
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-control-button playground-project-overview-toolbar-action",
+                onClick: () => setAgentDetailVisibleThreadCount((current) => current + 10),
+                disabled: !hasMoreAgentDetailThreads,
+                style: !hasMoreAgentDetailThreads ? { opacity: 0.5 } : undefined,
+              },
+                React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Show more")
+              )
+            ),
+            agentsHomeThreadsError
+              ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, agentsHomeThreadsError)
+              : agentDetailFilteredThreads.length > 0
+                ? renderPlaygroundThreadOverviewTable({
+                    threads: visibleAgentDetailThreads,
+                    rowOptions: agentDetailThreadTableRowOptions,
+                  })
+                : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                    agentsHomeThreadsLoading
+                      ? "Loading threads..."
+                      : (hasAgentDetailThreadListFilters ? "No matching agent threads." : "No agent threads yet.")
+                  )
+          );
           const agentDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs" },
             React.createElement("div", { className: "playground-project-overview-chart-tabs" },
               [
                 { id: "general", label: "General" },
+                { id: "threads", label: "Threads" },
                 { id: "permissions", label: "Permissions" },
               ].map((tab) =>
                 React.createElement("button", {
@@ -108726,27 +115889,88 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               )
             : null;
 
-          const instructionsSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
+          const canUndoAgentInstructions = Array.isArray(agentInstructionsHistory.past) && agentInstructionsHistory.past.length > 0;
+          const canRedoAgentInstructions = Array.isArray(agentInstructionsHistory.future) && agentInstructionsHistory.future.length > 0;
+          const renderAgentInstructionsToolbarButton = (action) =>
+            React.createElement("button", {
+              key: action.id,
+              type: "button",
+              className: "playground-tasks-detail-format-button",
+              title: action.label,
+              "aria-label": action.label,
+              disabled: Boolean(action.disabled),
+              onMouseDown: (event) => event.preventDefault(),
+              onClick: action.onClick,
+            }, React.createElement(action.icon, {
+              width: 14,
+              height: 14,
+              strokeWidth: action.strokeWidth || 1.8,
+            }));
+          const agentInstructionsTextFormatActions = [
+            { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
+            { id: "italic", label: "Italic", icon: Italic },
+            { id: "underline", label: "Underline", icon: Underline },
+          ];
+          const agentInstructionsListFormatActions = [
+            { id: "list", label: "List", icon: List },
+            { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
+          ];
+          const agentInstructionsInsertFormatActions = [
+            { id: "code", label: "Code", icon: CodeXml },
+            { id: "link", label: "Link", icon: Link2 },
+          ];
+          const instructionsSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section" },
             React.createElement("div", { className: "playground-tasks-detail-section-header" },
               React.createElement("div", { className: "playground-tasks-detail-section-title" }, isTeamAgent ? "Team Instructions" : "Instructions"),
               isDefaultAgentConfigurationLocked
                 ? null
                 : React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                    [
-                      { id: "bold", label: "Bold", icon: Bold },
-                      { id: "italic", label: "Italic", icon: Italic },
-                      { id: "underline", label: "Underline", icon: Underline },
-                      { id: "list", label: "List", icon: List },
-                    ].map((action) =>
-                      React.createElement("button", {
-                        key: action.id,
-                        type: "button",
-                        className: "playground-tasks-detail-format-button",
-                        title: action.label,
-                        "aria-label": action.label,
-                        onMouseDown: (event) => event.preventDefault(),
+                    renderAgentInstructionsToolbarButton({
+                      id: "undo",
+                      label: "Undo",
+                      icon: Undo2,
+                      disabled: !canUndoAgentInstructions,
+                      onClick: handleAgentInstructionsUndo,
+                    }),
+                    renderAgentInstructionsToolbarButton({
+                      id: "redo",
+                      label: "Redo",
+                      icon: Redo2,
+                      disabled: !canRedoAgentInstructions,
+                      onClick: handleAgentInstructionsRedo,
+                    }),
+                    React.createElement("span", {
+                      key: "history-divider",
+                      className: "playground-agents-detail-instructions-toolbar-divider",
+                      "aria-hidden": "true",
+                    }),
+                    agentInstructionsTextFormatActions.map((action) =>
+                      renderAgentInstructionsToolbarButton({
+                        ...action,
                         onClick: () => handleAgentMarkdownFormat("instructions", agentInstructionsTextareaRef, action.id),
-                      }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                      })
+                    ),
+                    React.createElement("span", {
+                      key: "list-divider-start",
+                      className: "playground-agents-detail-instructions-toolbar-divider",
+                      "aria-hidden": "true",
+                    }),
+                    agentInstructionsListFormatActions.map((action) =>
+                      renderAgentInstructionsToolbarButton({
+                        ...action,
+                        onClick: () => handleAgentMarkdownFormat("instructions", agentInstructionsTextareaRef, action.id),
+                      })
+                    ),
+                    React.createElement("span", {
+                      key: "list-divider-end",
+                      className: "playground-agents-detail-instructions-toolbar-divider",
+                      "aria-hidden": "true",
+                    }),
+                    agentInstructionsInsertFormatActions.map((action) =>
+                      renderAgentInstructionsToolbarButton({
+                        ...action,
+                        onClick: () => handleAgentMarkdownFormat("instructions", agentInstructionsTextareaRef, action.id),
+                      })
                     )
                   )
             ),
@@ -108779,7 +116003,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                       setIsAgentInstructionsEditing(true);
                     },
                     onChange: (event) => {
-                      updateAgentField("instructions", event.target.value);
+                      updateAgentInstructionsValue(event.target.value);
                       resizeAgentDescriptionTextarea(event.currentTarget);
                     },
                     onBlur: () => {
@@ -108789,14 +116013,23 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             )
           );
 
-          const agentGeneralSection = React.createElement("div", { className: "playground-project-overview-layout playground-agents-detail-overview-layout" },
+          const agentDetailActiveSection = agentDetailTab === "permissions"
+            ? agentPermissionsSection
+            : agentDetailTab === "threads"
+              ? agentThreadsSection
+              : React.createElement(React.Fragment, null,
+                  agentUsageChartSection,
+                  isTeamAgent
+                    ? renderEditorSection("team", "Team Setup", "", teamSection, null, false)
+                    : null,
+                  instructionsSection
+                );
+          const agentDetailWorkspaceSection = React.createElement("div", {
+              className: "playground-project-overview-layout playground-agents-detail-overview-layout" + (agentDetailSidebarCollapsed ? " is-sidebar-collapsed" : ""),
+            },
             React.createElement("div", { className: "playground-project-overview-main playground-agents-detail-overview-main" },
               agentDetailTabs,
-              agentUsageChartSection,
-              isTeamAgent
-                ? renderEditorSection("team", "Team Setup", "", teamSection, null, false)
-                : null,
-              instructionsSection
+              agentDetailActiveSection
             ),
             agentPropertiesSidebar
           );
@@ -108810,7 +116043,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
           return React.createElement("div", { className: agentDetailMainClassName, ref: agentDetailMainRef, style: agentDetailMainStyle },
             React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-              React.createElement("div", { className: "playground-agents-detail-content" + (agentDetailTab === "general" ? " is-agent-overview-general" : "") },
+              React.createElement("div", { className: "playground-agents-detail-content" + ((agentDetailTab === "general" || agentDetailTab === "permissions" || agentDetailTab === "threads") ? " is-agent-overview-general" : "") },
                 saveState.error
                   ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, saveState.error)
                   : saveState.message
@@ -108818,9 +116051,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                  : null,
 	                agentResourceDetailBackButton,
 	                agentProfileSection,
-                agentDetailTab === "permissions"
-                  ? React.createElement(React.Fragment, null, agentDetailTabs, agentPermissionsSection)
-                  : agentGeneralSection
+                agentDetailWorkspaceSection
               )
             )
           );
@@ -108938,20 +116169,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                         : null
                     )
 	                  : null,
-                canShowAgentVersions
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-metronome-create-button playground-metronome-publish-button" + (agentVersionsSidebarOpen ? " is-active" : ""),
-                      onClick: toggleAgentVersionsSidebar,
-                      title: "Publish agent",
-                      "aria-label": "Publish agent",
-                      "aria-expanded": agentVersionsSidebarOpen ? "true" : "false",
-                      disabled: saveState.isSaving && agentVersionState.status !== "loading",
-                    },
-                      React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Publish")
-                    )
-                  : !agentCreationSetupOpen
+                shouldShowAgentsHome && !agentCreationSetupOpen
                   ? React.createElement("button", {
                   type: "button",
                   className: "playground-top-nav-private-chat-button",
@@ -109821,6 +117039,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             renderAgentComposerDialog(),
             renderAgentCreationPermissionModal(),
             renderAgentModelPickerDialog(),
+            renderAgentSendToTeamModal(),
             renderAgentUpgradeModal()
           );
         }
@@ -110095,6 +117314,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           renderAgentComposerDialog(),
           renderAgentCreationPermissionModal(),
           renderAgentModelPickerDialog(),
+          renderAgentSendToTeamModal(),
           renderAgentVersionsSidebarPortal(),
           renderAgentUpgradeModal()
         );
@@ -115814,7 +123034,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!normalizedProjectId || !normalizedEnvironmentId || !normalizedPath) {
             return "";
           }
-          return normalizedProjectId + "\u0000" + normalizedEnvironmentId + "\u0000" + normalizedPath;
+          return normalizedProjectId + "::" + normalizedEnvironmentId + "::" + normalizedPath;
         }
 
         function normalizeProjectOverviewDeletedFileKeys(...sources) {
@@ -117918,7 +125138,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               targetEnvironmentId,
               repoReference.repoFullName,
               repoReference.branch || "main",
-            ].join("\u0000");
+            ].join("::");
             const existingPromise = projectGithubPreparationPromisesRef.current.get(preparationKey);
             if (existingPromise) {
               await existingPromise;
@@ -143525,6 +150745,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
       }
 
       const PLAYGROUND_PLATFORM_NAVIGATION_STATE_KEY = "__runnerPlatformNavigation";
+      const PLAYGROUND_GUARDRAILS_STORAGE_KEY = "runner_demo_guardrail_sets";
       const PLAYGROUND_PLATFORM_NAVIGATION_HISTORY_LIMIT = 200;
       const PLAYGROUND_PLATFORM_NAVIGATION_RESTORE_SUPPRESSION_MS = 1800;
       const PLAYGROUND_PLATFORM_NAVIGATION_FIELDS = [
@@ -143555,12 +150776,89 @@ ${PROJECT_OVERVIEW_SCRIPT}
         "modelsTab",
         "templateType",
         "templateId",
+        "guardrailId",
         "developSection",
         "imagineView",
         "mediaMode",
         "filterMode",
         "sortMode",
       ];
+
+      function createPlaygroundGuardrailId(prefix = "guardrail") {
+        return prefix + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+      }
+
+      function createPlaygroundGuardrailPromptDraft(overrides = {}) {
+        const nowIso = new Date().toISOString();
+        return {
+          id: String(overrides.id || "").trim() || createPlaygroundGuardrailId("prompt"),
+          title: String(overrides.title || "").trim() || "Instruction",
+          prompt: String(overrides.prompt || ""),
+          enabled: overrides.enabled === false ? false : true,
+          createdAt: String(overrides.createdAt || nowIso),
+          updatedAt: String(overrides.updatedAt || nowIso),
+        };
+      }
+
+      function normalizePlaygroundGuardrailSet(record) {
+        const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
+        const nowIso = new Date().toISOString();
+        const prompts = Array.isArray(source.prompts)
+          ? source.prompts.map((prompt) => createPlaygroundGuardrailPromptDraft(prompt))
+          : [];
+        return {
+          id: String(source.id || "").trim() || createPlaygroundGuardrailId("guardrail"),
+          name: String(source.name || source.title || "").trim() || "Untitled Guardrail Set",
+          description: String(source.description || ""),
+          enabled: source.enabled === false ? false : true,
+          prompts,
+          createdAt: String(source.createdAt || nowIso),
+          updatedAt: String(source.updatedAt || nowIso),
+        };
+      }
+
+      function createPlaygroundGuardrailSetDraft(overrides = {}) {
+        const nowIso = new Date().toISOString();
+        return normalizePlaygroundGuardrailSet({
+          id: createPlaygroundGuardrailId("guardrail"),
+          name: "New Guardrail Set",
+          description: "Invisible prompt adaptations applied to agents that include this set.",
+          prompts: [createPlaygroundGuardrailPromptDraft({
+            title: "System boundary",
+            prompt: "",
+            createdAt: nowIso,
+            updatedAt: nowIso,
+          })],
+          createdAt: nowIso,
+          updatedAt: nowIso,
+          ...overrides,
+        });
+      }
+
+      function readPlaygroundGuardrailSetsFromStorage() {
+        if (typeof window === "undefined" || !window.localStorage) {
+          return [];
+        }
+        try {
+          const parsed = JSON.parse(window.localStorage.getItem(PLAYGROUND_GUARDRAILS_STORAGE_KEY) || "[]");
+          return Array.isArray(parsed)
+            ? parsed.map(normalizePlaygroundGuardrailSet)
+            : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function writePlaygroundGuardrailSetsToStorage(sets) {
+        if (typeof window === "undefined" || !window.localStorage) {
+          return;
+        }
+        try {
+          window.localStorage.setItem(PLAYGROUND_GUARDRAILS_STORAGE_KEY, JSON.stringify(Array.isArray(sets) ? sets : []));
+        } catch {
+          // Ignore storage write failures; the in-memory editor should remain usable.
+        }
+      }
 
       function createPlaygroundPlatformNavigationToken() {
         return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -143769,6 +151067,22 @@ ${PROJECT_OVERVIEW_SCRIPT}
           threadId: "",
           action: "",
         });
+        const [threadMutationSignal, setThreadMutationSignal] = useState(null);
+
+        function emitThreadMutationSignal(action, threadId, threadRecord = null) {
+          const normalizedThreadId = String(threadId || threadRecord?.id || threadRecord?.threadId || "").trim();
+          if (!normalizedThreadId) {
+            return;
+          }
+          setThreadMutationSignal({
+            token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+            action: String(action || "").trim(),
+            threadId: normalizedThreadId,
+            threadRecord: threadRecord && typeof threadRecord === "object" && !Array.isArray(threadRecord)
+              ? threadRecord
+              : null,
+          });
+        }
         const [upstreamUrl, setUpstreamUrl] = useState(() => {
           try {
             return localStorage.getItem("runner_demo_upstream")
@@ -144098,6 +151412,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [pluginsOverviewSort, setPluginsOverviewSort] = useState("name");
         const [pluginsOverviewToolbarPopover, setPluginsOverviewToolbarPopover] = useState("");
         const [toolsView, setToolsView] = useState("plugins");
+        const [tagDetailConfigsById, setTagDetailConfigsById] = useState({});
+        const [tagDetailLoadingId, setTagDetailLoadingId] = useState("");
+        const [tagDetailSaveStateById, setTagDetailSaveStateById] = useState({});
+        const [tagDetailPerformanceRange, setTagDetailPerformanceRange] = useState("1m");
+        const [tagDetailPropertyPopover, setTagDetailPropertyPopover] = useState("");
+        const [tagDefaultEnvironmentMode, setTagDefaultEnvironmentMode] = useState("computers");
+        const [tagDetailSidebarCollapsed, setTagDetailSidebarCollapsed] = useState(false);
+        const [tagInstructionsEditingId, setTagInstructionsEditingId] = useState("");
+        const [tagInstructionsHistoryById, setTagInstructionsHistoryById] = useState({});
+        const tagDetailPropertyPopoverRef = useRef(null);
+        const tagInstructionsTextareaRef = useRef(null);
+        const tagDetailAutosaveTimersRef = useRef({});
         const [toolsSkillsOpenRequest, setToolsSkillsOpenRequest] = useState(null);
         const [resourcesView, setResourcesView] = useState("agents");
         const [resourcesServerKind, setResourcesServerKind] = useState("");
@@ -144116,6 +151442,17 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [resourceTemplateNotice, setResourceTemplateNotice] = useState("");
         const [resourceTemplateSlideIndex, setResourceTemplateSlideIndex] = useState(0);
         const [resourceTemplateToolbarPopover, setResourceTemplateToolbarPopover] = useState("");
+        const guardrailsToolbarRef = useRef(null);
+        const [guardrailSets, setGuardrailSets] = useState(() => readPlaygroundGuardrailSetsFromStorage());
+        const [selectedGuardrailSetId, setSelectedGuardrailSetId] = useState(() => {
+          const storedSets = readPlaygroundGuardrailSetsFromStorage();
+          return storedSets[0]?.id || "";
+        });
+        const [guardrailsSearchQuery, setGuardrailsSearchQuery] = useState("");
+        const [guardrailsFilter, setGuardrailsFilter] = useState("all");
+        const [guardrailsSort, setGuardrailsSort] = useState("updated");
+        const [guardrailsPageMode, setGuardrailsPageMode] = useState("overview");
+        const [guardrailsToolbarPopover, setGuardrailsToolbarPopover] = useState("");
         const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
         const [projectOverviewResourceSearchQuery, setProjectOverviewResourceSearchQuery] = useState("");
         const [projectOverviewResourceViewMode, setProjectOverviewResourceViewMode] = useState("list");
@@ -144126,6 +151463,29 @@ ${PROJECT_OVERVIEW_SCRIPT}
             ? modelsPageAgentModelOptions
             : PLAYGROUND_AGENT_MODEL_OPTIONS
         ), [modelsPageAgentModelOptions]);
+        useEffect(() => {
+          writePlaygroundGuardrailSetsToStorage(guardrailSets);
+        }, [guardrailSets]);
+        useEffect(() => {
+          if (selectedGuardrailSetId && guardrailSets.some((set) => set.id === selectedGuardrailSetId)) {
+            return;
+          }
+          setSelectedGuardrailSetId(guardrailSets[0]?.id || "");
+        }, [guardrailSets, selectedGuardrailSetId]);
+        useEffect(() => {
+          if (!guardrailsToolbarPopover) return undefined;
+
+          function handleGuardrailsToolbarPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !guardrailsToolbarRef.current || guardrailsToolbarRef.current.contains(target)) {
+              return;
+            }
+            setGuardrailsToolbarPopover("");
+          }
+
+          document.addEventListener("mousedown", handleGuardrailsToolbarPointerDown);
+          return () => document.removeEventListener("mousedown", handleGuardrailsToolbarPointerDown);
+        }, [guardrailsToolbarPopover]);
         const [configureHomeTab, setConfigureHomeTab] = useState("overview");
         const [configureUsageChartTab, setConfigureUsageChartTab] = useState("agents");
         const [configureAnalyticsMenuOpen, setConfigureAnalyticsMenuOpen] = useState(false);
@@ -148556,7 +155916,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function openPluginsPage() {
           setAccountMenuOpen(false);
           setSidebarWorkspaceMode("configure");
-          setToolsView("plugins");
+          setToolsView("tags");
+          setSelectedPluginId("discord");
           setActivePage("tools");
         }
 
@@ -154172,7 +161533,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setSettingsDiscordSuccess(discordSuccess);
           setSettingsDiscordError(discordError);
           setSidebarWorkspaceMode("configure");
-          setToolsView("plugins");
+          setToolsView("tags");
+          setSelectedPluginId("discord");
           setActivePage("tools");
           if (discordSuccess) {
             window.dispatchEvent(new CustomEvent("integrations-updated"));
@@ -154189,7 +161551,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         useEffect(() => {
           if (activePage === "settings" && (settingsSection === "integrations" || settingsSection === "webhooks")) {
-            const nextToolsView = settingsSection === "webhooks" ? "actions" : "plugins";
+            const nextToolsView = settingsSection === "webhooks" ? "actions" : "tags";
             setSidebarWorkspaceMode(getSidebarModeForToolsView(nextToolsView));
             setToolsView(nextToolsView);
             setActivePage("tools");
@@ -154197,7 +161559,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }, [activePage, settingsSection]);
 
         useEffect(() => {
-          if (activePage !== "tools" || toolsView !== "plugins") {
+          if (activePage !== "tools" || (toolsView !== "plugins" && toolsView !== "tags")) {
             setSelectedPluginId("");
             setPluginsSearchQuery("");
             setPluginsNavPopover("");
@@ -154210,7 +161572,34 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setPluginDetailCapabilityOutgoingIndex(null);
           setPluginDetailCapabilityDirection(0);
           setPluginDetailCapabilityTransitionKey(0);
+          setTagDetailPropertyPopover("");
         }, [selectedPluginId]);
+
+        useEffect(() => () => {
+          Object.values(tagDetailAutosaveTimersRef.current || {}).forEach((timer) => {
+            if (timer) {
+              window.clearTimeout(timer);
+            }
+          });
+          tagDetailAutosaveTimersRef.current = {};
+        }, []);
+
+        useEffect(() => {
+          if (activePage !== "tools" || toolsView !== "tags" || !selectedPluginId) {
+            return;
+          }
+          void loadTagDetailConfig(selectedPluginId);
+        }, [activePage, toolsView, selectedPluginId, hasSessionAuth]);
+
+        useEffect(() => {
+          if (!tagInstructionsEditingId || typeof window === "undefined") {
+            return undefined;
+          }
+          const frameId = window.requestAnimationFrame(() => {
+            resizeTagInstructionsTextarea(tagInstructionsTextareaRef.current);
+          });
+          return () => window.cancelAnimationFrame(frameId);
+        }, [tagInstructionsEditingId, tagDetailConfigsById]);
 
         useEffect(() => {
           if (activePage === "tools" && toolsView === "skills") {
@@ -154223,16 +161612,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }, [activePage, toolsView]);
 
         useEffect(() => {
-          if (activePage !== "tools" || toolsView !== "plugins") {
+          if (activePage !== "tools" || (toolsView !== "plugins" && toolsView !== "tags")) {
+            return;
+          }
+          if (selectedPluginId) {
             return;
           }
 
+          const heroSlideCount = toolsView === "tags" ? 3 : 4;
           const intervalId = window.setInterval(() => {
-            setPluginsHeroSlideIndex((current) => (current + 1) % 3);
+            setPluginsHeroSlideIndex((current) => (current + 1) % heroSlideCount);
           }, 3200);
 
           return () => window.clearInterval(intervalId);
-        }, [activePage, toolsView]);
+        }, [activePage, toolsView, selectedPluginId]);
 
         useEffect(() => {
           if (pluginsHeroSlideIndex === pluginsHeroDisplayIndex) {
@@ -157018,10 +164411,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (!thread?.id) return;
           setThreadActionMenuState(null);
           setThreadNavMenuOpen(false);
-          setThreadRenameState({
-            threadId: thread.id,
-            originalTitle: thread.title || "Untitled thread",
-          });
+	          setThreadRenameState({
+	            threadId: thread.id,
+	            originalTitle: thread.title || "Untitled thread",
+	            threadRecord: thread && typeof thread === "object" ? thread : null,
+	          });
           setThreadRenameValue(thread.title || "");
           setThreadRenameError("");
         }
@@ -157138,6 +164532,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
               projectId: typeof threadResponseRecord?.projectId === "string"
                 ? threadResponseRecord.projectId.trim()
                 : normalizedProjectId,
+              projectName: normalizedProjectId
+                ? (
+                    typeof threadResponseRecord?.projectName === "string" && threadResponseRecord.projectName.trim()
+                      ? threadResponseRecord.projectName.trim()
+                      : String(nextProjectName || originalThread?.projectName || "").trim()
+                  )
+                : "",
               metadata: threadResponseRecord?.metadata && typeof threadResponseRecord.metadata === "object"
                 ? threadResponseRecord.metadata
                 : originalThread?.metadata,
@@ -157175,6 +164576,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               setLatestInteractedProjectId(normalizedProjectId);
             }
 
+            emitThreadMutationSignal("project", normalizedThreadId, normalizedUpdatedThread);
             await refreshThreads();
           } finally {
             setThreadMutationState({
@@ -157221,11 +164623,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
           };
         }
 
-        async function handleThreadPinToggle(threadId) {
-          const targetThread = baseThreadItems.find((thread) => thread.id === threadId);
-          if (!targetThread) {
-            return;
-          }
+	        async function handleThreadPinToggle(threadId) {
+	          const targetThread = baseThreadItems.find((thread) => thread.id === threadId)
+	            || (
+	              threadActionMenuState?.threadId === threadId && threadActionMenuState.threadRecord
+	                ? normalizeThreadItem(threadActionMenuState.threadRecord)
+	                : null
+	            );
+	          if (!targetThread) {
+	            return;
+	          }
 
           const nextPinned = !targetThread.isPinned;
           const nextMetadata = buildThreadPinnedMetadata(targetThread, nextPinned);
@@ -157267,6 +164674,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               }
               return current.map((thread) => (thread.id === threadId ? normalizedUpdatedThread : thread));
             });
+            emitThreadMutationSignal("pin", threadId, normalizedUpdatedThread);
             setThreadActionMenuState(null);
             void refreshThreads();
           } catch (error) {
@@ -157320,7 +164728,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }
 
             const threadRecord = getThreadResponseRecord(data);
-            const originalThread = baseThreadItems.find((thread) => thread.id === threadRenameState.threadId) || null;
+	            const originalThread = baseThreadItems.find((thread) => thread.id === threadRenameState.threadId)
+	              || (threadRenameState.threadRecord ? normalizeThreadItem(threadRenameState.threadRecord) : null);
             const normalizedUpdatedThread = normalizeThreadItem({
               ...(originalThread || {}),
               ...threadRecord,
@@ -157345,6 +164754,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setThreadRenameState(null);
             setThreadRenameValue("");
             setThreadRenameError("");
+            emitThreadMutationSignal("rename", threadRenameState.threadId, normalizedUpdatedThread);
             void refreshThreads();
           } catch (error) {
             setThreadRenameError(error instanceof Error ? error.message : "Failed to rename thread.");
@@ -157416,6 +164826,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }
 
             setRealThreads((current) => current.filter((thread) => thread.id !== threadId));
+            emitThreadMutationSignal("delete", threadId, null);
 
             if (currentThreadId === threadId) {
               handleNewThread();
@@ -157617,7 +165028,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         function openToolsView(nextView, options = {}) {
-          const normalizedView = nextView === "actions" ? "actions" : nextView === "skills" ? "skills" : "plugins";
+          const normalizedView = nextView === "actions"
+            ? "actions"
+            : nextView === "skills"
+              ? "skills"
+              : nextView === "tags"
+                ? "tags"
+                : "plugins";
           setAccountMenuOpen(false);
           setProfileEditorOpen(false);
           setToolsView(normalizedView);
@@ -157660,6 +165077,24 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setModelsPageToolbarPopover("");
           setActivePage("models");
           void loadModelsPageAgentModelCatalog();
+        }
+
+        function openGuardrailsPage(options = {}) {
+          setAccountMenuOpen(false);
+          setProfileEditorOpen(false);
+          if (!options.preserveSidebarMode) {
+            setSidebarWorkspaceMode("configure");
+          }
+          setResourcesHeaderState({
+            mode: "overview",
+            title: "",
+          });
+          setGuardrailsToolbarPopover("");
+          if (options.guardrailId) {
+            setSelectedGuardrailSetId(String(options.guardrailId || "").trim());
+          }
+          setGuardrailsPageMode(options.mode === "detail" || options.guardrailId ? "detail" : "overview");
+          setActivePage("guardrails");
         }
 
         function openResourceTemplatesPage(options = {}) {
@@ -157715,7 +165150,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               || activePage === "resource-templates"
               || activePage === "inference"
               || (isResourcesPage && (activeResourcesView === "agents" || activeResourcesView === "computers"))
-              || (activePage === "tools" && (toolsView === "plugins" || toolsView === "skills"));
+              || (activePage === "tools" && (toolsView === "plugins" || toolsView === "tags" || toolsView === "skills"));
           }
           return activePage === "develop"
             || (isResourcesPage && activeResourcesView === "servers")
@@ -157746,6 +165181,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function handleOpenPluginsShortcut() {
           openToolsView("plugins");
+        }
+
+        function handleOpenTagsShortcut() {
+          openToolsView("tags");
         }
 
         function handleOpenSkillsShortcut() {
@@ -159723,6 +167162,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ? [{ label: "Disconnect OneDrive", onClick: () => { void handleOneDriveAuthDisconnect(); }, tone: "destructive" }]
                 : [{ label: "Connect OneDrive", onClick: () => { void handleOneDriveAuthConnect(); }, tone: "primary" }],
             },
+          ];
+        }
+
+        function buildTagsCatalog() {
+          return [
             {
               id: "discord",
               label: "Discord",
@@ -159841,6 +167285,1719 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            description: feature.description,
 	          }));
 	        }
+
+        function getDefaultTagEnvironmentRecord() {
+          return (Array.isArray(runtimeEnvironments) ? runtimeEnvironments : []).find((environment) => environment?.isDefault)
+            || (Array.isArray(runtimeEnvironments) ? runtimeEnvironments : [])[0]
+            || null;
+        }
+
+        function getTagProjectEnvironmentId(project) {
+          if (!project) {
+            return "";
+          }
+          const directDefaultEnvironmentId = String(project.defaultEnvironmentId || "").trim();
+          if (directDefaultEnvironmentId) {
+            return directDefaultEnvironmentId;
+          }
+          const directEnvironmentId = String(project.environmentId || "").trim();
+          if (directEnvironmentId) {
+            return directEnvironmentId;
+          }
+          const metadata = project.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+            ? project.metadata
+            : null;
+          const metadataDefaultEnvironmentId = metadata ? String(metadata.defaultEnvironmentId || "").trim() : "";
+          if (metadataDefaultEnvironmentId) {
+            return metadataDefaultEnvironmentId;
+          }
+          return metadata ? String(metadata.environmentId || "").trim() : "";
+        }
+
+        function createDefaultTagDetailConfig(tagId) {
+          const normalizedTagId = String(tagId || "").trim().toLowerCase();
+          const defaultEnvironment = getDefaultTagEnvironmentRecord();
+          return {
+            tagId: normalizedTagId,
+            linked: false,
+            verified: false,
+            connectedIdentity: "",
+            defaultEnvironmentId: defaultEnvironment?.id || "default",
+            defaultEnvironmentName: defaultEnvironment?.name || "Default",
+            defaultProjectId: "",
+            defaultProjectName: "",
+            instructions: "",
+            permissionSet: createPlaygroundFullAccessPermissionSet("agent"),
+            updatedAt: "",
+          };
+        }
+
+        function normalizeTagDetailConfig(tagId, value) {
+          const fallback = createDefaultTagDetailConfig(tagId);
+          const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+          const permissionSetSource = source.permissionSet && typeof source.permissionSet === "object" && !Array.isArray(source.permissionSet)
+            ? source.permissionSet
+            : fallback.permissionSet;
+          return {
+            ...fallback,
+            ...source,
+            tagId: String(source.tagId || tagId || fallback.tagId).trim().toLowerCase(),
+            linked: Boolean(source.linked),
+            verified: Boolean(source.verified),
+            connectedIdentity: String(source.connectedIdentity || source.email || ""),
+            defaultEnvironmentId: String(source.defaultEnvironmentId || fallback.defaultEnvironmentId || ""),
+            defaultEnvironmentName: String(source.defaultEnvironmentName || fallback.defaultEnvironmentName || ""),
+            defaultProjectId: String(source.defaultProjectId || ""),
+            defaultProjectName: String(source.defaultProjectName || ""),
+            defaultAgentId: String(source.defaultAgentId || ""),
+            defaultAgentName: String(source.defaultAgentName || ""),
+            instructions: String(source.instructions || ""),
+            permissionSet: normalizePlaygroundPermissionSet(permissionSetSource, "agent"),
+            updatedAt: String(source.updatedAt || ""),
+          };
+        }
+
+        function getCurrentTagDetailConfig(tagId) {
+          const normalizedTagId = String(tagId || "").trim().toLowerCase();
+          return normalizeTagDetailConfig(normalizedTagId, tagDetailConfigsById[normalizedTagId]);
+        }
+
+        function getTagDetailSaveState(tagId) {
+          return tagDetailSaveStateById[String(tagId || "").trim().toLowerCase()] || { status: "idle", error: "" };
+        }
+
+        function setTagDetailSaveState(tagId, nextState) {
+          const normalizedTagId = String(tagId || "").trim().toLowerCase();
+          setTagDetailSaveStateById((current) => ({
+            ...current,
+            [normalizedTagId]: {
+              ...(current[normalizedTagId] || { status: "idle", error: "" }),
+              ...nextState,
+            },
+          }));
+        }
+
+        async function saveTagDetailConfig(tagId, config) {
+          const normalizedTagId = String(tagId || "").trim().toLowerCase();
+          if (!normalizedTagId || !hasSessionAuth) {
+            return;
+          }
+          setTagDetailSaveState(normalizedTagId, { status: "saving", error: "" });
+          try {
+            const response = await fetch("/api/aios/user/tags/" + encodeURIComponent(normalizedTagId), {
+              method: "PATCH",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                instructions: config.instructions || "",
+                defaultEnvironmentId: config.defaultEnvironmentId || "",
+                defaultEnvironmentName: config.defaultEnvironmentName || "",
+                defaultProjectId: config.defaultProjectId || "",
+                defaultProjectName: config.defaultProjectName || "",
+                defaultAgentId: config.defaultAgentId || "",
+                defaultAgentName: config.defaultAgentName || "",
+                permissionSet: normalizePlaygroundPermissionSet(config.permissionSet, "agent"),
+              }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.error || data?.message || "Failed to save tag settings.");
+            }
+            const normalized = normalizeTagDetailConfig(normalizedTagId, data);
+            setTagDetailConfigsById((current) => ({
+              ...current,
+              [normalizedTagId]: normalized,
+            }));
+            setTagDetailSaveState(normalizedTagId, { status: "saved", error: "" });
+            window.setTimeout(() => {
+              setTagDetailSaveStateById((current) => {
+                const currentState = current[normalizedTagId];
+                if (!currentState || currentState.status !== "saved") {
+                  return current;
+                }
+                return {
+                  ...current,
+                  [normalizedTagId]: { status: "idle", error: "" },
+                };
+              });
+            }, 1600);
+          } catch (error) {
+            setTagDetailSaveState(normalizedTagId, {
+              status: "error",
+              error: error instanceof Error ? error.message : "Failed to save tag settings.",
+            });
+          }
+        }
+
+        function queueTagDetailConfigSave(tagId, nextConfig) {
+          const normalizedTagId = String(tagId || "").trim().toLowerCase();
+          if (!normalizedTagId || typeof window === "undefined") {
+            return;
+          }
+          const currentTimer = tagDetailAutosaveTimersRef.current[normalizedTagId];
+          if (currentTimer) {
+            window.clearTimeout(currentTimer);
+          }
+          tagDetailAutosaveTimersRef.current[normalizedTagId] = window.setTimeout(() => {
+            delete tagDetailAutosaveTimersRef.current[normalizedTagId];
+            void saveTagDetailConfig(normalizedTagId, nextConfig);
+          }, 650);
+        }
+
+        function commitTagDetailConfig(tagId, nextConfig, options = {}) {
+          const normalizedTagId = String(tagId || "").trim().toLowerCase();
+          if (!normalizedTagId) {
+            return;
+          }
+          const normalized = normalizeTagDetailConfig(normalizedTagId, nextConfig);
+          setTagDetailConfigsById((current) => ({
+            ...current,
+            [normalizedTagId]: normalized,
+          }));
+          if (options.save !== false) {
+            queueTagDetailConfigSave(normalizedTagId, normalized);
+          }
+        }
+
+        function updateTagDetailConfig(tagId, updater, options = {}) {
+          const normalizedTagId = String(tagId || "").trim().toLowerCase();
+          if (!normalizedTagId) {
+            return;
+          }
+          const currentConfig = getCurrentTagDetailConfig(normalizedTagId);
+          const nextConfig = typeof updater === "function"
+            ? updater(currentConfig)
+            : { ...currentConfig, ...(updater || {}) };
+          commitTagDetailConfig(normalizedTagId, nextConfig, options);
+        }
+
+        async function loadTagDetailConfig(tagId, options = {}) {
+          const normalizedTagId = String(tagId || "").trim().toLowerCase();
+          if (!normalizedTagId) {
+            return null;
+          }
+          if (!options.force && tagDetailConfigsById[normalizedTagId]) {
+            return tagDetailConfigsById[normalizedTagId];
+          }
+          if (!hasSessionAuth) {
+            const fallback = createDefaultTagDetailConfig(normalizedTagId);
+            setTagDetailConfigsById((current) => ({
+              ...current,
+              [normalizedTagId]: fallback,
+            }));
+            return fallback;
+          }
+          setTagDetailLoadingId(normalizedTagId);
+          try {
+            const response = await fetch("/api/aios/user/tags/" + encodeURIComponent(normalizedTagId), {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.error || data?.message || "Failed to load tag settings.");
+            }
+            const normalized = normalizeTagDetailConfig(normalizedTagId, data);
+            setTagDetailConfigsById((current) => ({
+              ...current,
+              [normalizedTagId]: normalized,
+            }));
+            return normalized;
+          } catch (error) {
+            setTagDetailSaveState(normalizedTagId, {
+              status: "error",
+              error: error instanceof Error ? error.message : "Failed to load tag settings.",
+            });
+            const fallback = createDefaultTagDetailConfig(normalizedTagId);
+            setTagDetailConfigsById((current) => ({
+              ...current,
+              [normalizedTagId]: current[normalizedTagId] || fallback,
+            }));
+            return null;
+          } finally {
+            setTagDetailLoadingId((current) => current === normalizedTagId ? "" : current);
+          }
+        }
+
+        function updateTagPermissionRingAccess(tagId, ringId, access) {
+          const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "");
+          if (!normalizedRingId) {
+            return;
+          }
+          const nextAccess = normalizePlaygroundPermissionAccess(access);
+          updateTagDetailConfig(tagId, (current) => {
+            const currentPermissionSet = normalizePlaygroundPermissionSet(current.permissionSet, "agent");
+            const currentRings = currentPermissionSet.rings || createPlaygroundDefaultPermissionRings();
+            const currentRingPolicy = currentRings[normalizedRingId] || {
+              defaultAccess: getPlaygroundPermissionRingDefinition(normalizedRingId).defaultAccess,
+            };
+            return {
+              ...current,
+              permissionSet: {
+                ...currentPermissionSet,
+                version: 1,
+                subjectType: "agent",
+                rings: {
+                  ...currentRings,
+                  [normalizedRingId]: {
+                    ...currentRingPolicy,
+                    defaultAccess: nextAccess,
+                  },
+                },
+              },
+            };
+          });
+        }
+
+        function updateTagPermissionActionRing(tagId, actionId, ringId) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition) {
+            return;
+          }
+          const nextRingId = normalizePlaygroundPermissionRingId(ringId, actionDefinition.ringId);
+          updateTagDetailConfig(tagId, (current) => {
+            const currentPermissionSet = normalizePlaygroundPermissionSet(current.permissionSet, "agent");
+            const currentActions = currentPermissionSet.actions || createPlaygroundDefaultPermissionActions();
+            const currentActionPolicy = currentActions[actionDefinition.id] || {
+              ringId: actionDefinition.ringId,
+            };
+            const explicitAccess = getPlaygroundPermissionActionExplicitAccess(currentPermissionSet, actionDefinition);
+            return {
+              ...current,
+              permissionSet: {
+                ...currentPermissionSet,
+                version: 1,
+                subjectType: "agent",
+                actions: {
+                  ...currentActions,
+                  [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
+                    currentPermissionSet,
+                    actionDefinition,
+                    currentActionPolicy,
+                    explicitAccess,
+                    nextRingId
+                  ),
+                },
+              },
+            };
+          });
+        }
+
+        function updateTagPermissionActionAccess(tagId, actionId, access) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition) {
+            return;
+          }
+          const shouldInherit = !String(access || "").trim();
+          const nextAccess = shouldInherit ? "" : normalizePlaygroundPermissionAccess(access);
+          updateTagDetailConfig(tagId, (current) => {
+            const currentPermissionSet = normalizePlaygroundPermissionSet(current.permissionSet, "agent");
+            const currentActions = currentPermissionSet.actions || createPlaygroundDefaultPermissionActions();
+            const currentActionPolicy = currentActions[actionDefinition.id] || {
+              ringId: actionDefinition.ringId,
+            };
+            return {
+              ...current,
+              permissionSet: {
+                ...currentPermissionSet,
+                version: 1,
+                subjectType: "agent",
+                actions: {
+                  ...currentActions,
+                  [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
+                    currentPermissionSet,
+                    actionDefinition,
+                    currentActionPolicy,
+                    shouldInherit ? "" : nextAccess
+                  ),
+                },
+              },
+            };
+          });
+        }
+
+        function updateTagInstructionsValue(tagId, value, options = {}) {
+          const normalizedTagId = String(tagId || "").trim().toLowerCase();
+          const nextValue = String(value ?? "");
+          const currentConfig = getCurrentTagDetailConfig(normalizedTagId);
+          const previousValue = String(currentConfig.instructions || "");
+          if (previousValue === nextValue) {
+            return;
+          }
+          if (options.recordHistory !== false) {
+            setTagInstructionsHistoryById((current) => {
+              const history = current[normalizedTagId] || { past: [], future: [] };
+              return {
+                ...current,
+                [normalizedTagId]: {
+                  past: [...(Array.isArray(history.past) ? history.past : []), previousValue].slice(-80),
+                  future: [],
+                },
+              };
+            });
+          }
+          updateTagDetailConfig(normalizedTagId, { instructions: nextValue });
+        }
+
+        function resizeTagInstructionsTextarea(textarea) {
+          if (!textarea) {
+            return;
+          }
+          const computedStyles = window.getComputedStyle(textarea);
+          const lineHeight = Number.parseFloat(computedStyles.lineHeight) || 21;
+          const paddingTop = Number.parseFloat(computedStyles.paddingTop) || 0;
+          const paddingBottom = Number.parseFloat(computedStyles.paddingBottom) || 0;
+          const borderTopWidth = Number.parseFloat(computedStyles.borderTopWidth) || 0;
+          const borderBottomWidth = Number.parseFloat(computedStyles.borderBottomWidth) || 0;
+          const singleLineHeight = Math.ceil(lineHeight + paddingTop + paddingBottom + borderTopWidth + borderBottomWidth);
+          textarea.style.height = "auto";
+          const nextHeight = String(textarea.value || "").trim()
+            ? Math.max(singleLineHeight, textarea.scrollHeight)
+            : singleLineHeight;
+          textarea.style.height = nextHeight + "px";
+        }
+
+        function buildTagWrappedMarkdownEdit(value, selectionStart, selectionEnd, prefix, suffix = prefix) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          if (safeStart !== safeEnd) {
+            if (
+              selectedText.startsWith(prefix)
+              && selectedText.endsWith(suffix)
+              && selectedText.length >= prefix.length + suffix.length
+            ) {
+              const unwrappedText = selectedText.slice(prefix.length, selectedText.length - suffix.length);
+              const nextValue = value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd);
+              return {
+                value: nextValue,
+                selectionStart: safeStart,
+                selectionEnd: safeStart + unwrappedText.length,
+              };
+            }
+            const wrappedText = prefix + selectedText + suffix;
+            const nextValue = value.slice(0, safeStart) + wrappedText + value.slice(safeEnd);
+            return {
+              value: nextValue,
+              selectionStart: safeStart + prefix.length,
+              selectionEnd: safeStart + prefix.length + selectedText.length,
+            };
+          }
+          const insertedText = prefix + suffix;
+          const nextValue = value.slice(0, safeStart) + insertedText + value.slice(safeEnd);
+          return {
+            value: nextValue,
+            selectionStart: safeStart + prefix.length,
+            selectionEnd: safeStart + prefix.length,
+          };
+        }
+
+        function buildTagListMarkdownEdit(value, selectionStart, selectionEnd, listType = "unordered") {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const lineStart = value.lastIndexOf("\\n", Math.max(0, safeStart - 1)) + 1;
+          let lineEnd = value.indexOf("\\n", safeEnd);
+          if (lineEnd === -1) {
+            lineEnd = value.length;
+          }
+          const block = value.slice(lineStart, lineEnd);
+          const lines = block.split("\\n");
+          const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+          const isOrderedList = listType === "ordered";
+          const orderedListPattern = /^(\\s*)\\d+\\.\\s+/;
+          const unorderedListPattern = /^(\\s*)-\\s+/;
+          const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => (
+            isOrderedList ? orderedListPattern.test(line) : unorderedListPattern.test(line)
+          ));
+          let orderedIndex = 1;
+          const nextLines = lines.map((line) => {
+            if (!line.trim()) {
+              if (shouldRemoveList) {
+                return line;
+              }
+              return isOrderedList ? String(orderedIndex++) + ". " : "- ";
+            }
+            if (shouldRemoveList) {
+              return line.replace(isOrderedList ? orderedListPattern : unorderedListPattern, "$1");
+            }
+            const cleanLine = line.replace(/^(\\s*)(?:-\\s+|\\d+\\.\\s+)/, "$1");
+            return cleanLine.replace(/^(\\s*)/, (_match, indent) => (
+              String(indent || "") + (isOrderedList ? String(orderedIndex++) + ". " : "- ")
+            ));
+          });
+          const nextBlock = nextLines.join("\\n");
+          const nextValue = value.slice(0, lineStart) + nextBlock + value.slice(lineEnd);
+          const markerLength = isOrderedList ? 3 : 2;
+          const collapsedSelection = safeStart === safeEnd;
+          const nextCaretOffset = shouldRemoveList
+            ? Math.max(0, safeStart - lineStart - markerLength)
+            : safeStart - lineStart + markerLength;
+          return {
+            value: nextValue,
+            selectionStart: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart,
+            selectionEnd: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart + nextBlock.length,
+          };
+        }
+
+        function buildTagLinkMarkdownEdit(value, selectionStart, selectionEnd) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          const existingLinkMatch = selectedText.match(/^\\[([^\\]]+)\\]\\(([^)]*)\\)$/);
+          if (existingLinkMatch) {
+            const unwrappedText = existingLinkMatch[1];
+            const nextValue = value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd);
+            return {
+              value: nextValue,
+              selectionStart: safeStart,
+              selectionEnd: safeStart + unwrappedText.length,
+            };
+          }
+          const label = selectedText || "link text";
+          const url = "url";
+          const markdownLink = "[" + label + "](" + url + ")";
+          const nextValue = value.slice(0, safeStart) + markdownLink + value.slice(safeEnd);
+          const urlStart = safeStart + label.length + 3;
+          return {
+            value: nextValue,
+            selectionStart: urlStart,
+            selectionEnd: urlStart + url.length,
+          };
+        }
+
+        function applyTagMarkdownSelection(tagId, textareaRef, nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateTagInstructionsValue(tagId, nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = textareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeTagInstructionsTextarea(textarea);
+          });
+        }
+
+        function handleTagMarkdownFormat(tagId, textareaRef, formatType) {
+          const textarea = textareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const currentConfig = getCurrentTagDetailConfig(tagId);
+          const value = String(currentConfig.instructions || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildTagWrappedMarkdownEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildTagWrappedMarkdownEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildTagWrappedMarkdownEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTagListMarkdownEdit(value, selectionStart, selectionEnd, "unordered");
+          } else if (formatType === "ordered-list") {
+            edit = buildTagListMarkdownEdit(value, selectionStart, selectionEnd, "ordered");
+          } else if (formatType === "code") {
+            edit = buildTagWrappedMarkdownEdit(value, selectionStart, selectionEnd, String.fromCharCode(96));
+          } else if (formatType === "link") {
+            edit = buildTagLinkMarkdownEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+          applyTagMarkdownSelection(tagId, textareaRef, edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
+        function renderTagDetailBody(selectedTag) {
+          if (!selectedTag) {
+            return null;
+          }
+
+          const tagId = String(selectedTag.id || "").trim().toLowerCase();
+          const tagConfig = getCurrentTagDetailConfig(tagId);
+          const tagSaveState = getTagDetailSaveState(tagId);
+          const tagManifest = getPluginIntegrationManifest(tagId);
+          const isTagLoading = tagDetailLoadingId === tagId;
+          const normalizedPermissionSet = normalizePlaygroundPermissionSet(tagConfig.permissionSet, "agent");
+          const getLinkLabel = (url) => {
+            const value = String(url || "").trim();
+            if (!value) {
+              return "";
+            }
+            try {
+              const parsed = new URL(value);
+              return (parsed.hostname + parsed.pathname).replace(/\\/+$/, "");
+            } catch (_error) {
+              return value.replace(/^https?:\\/\\//i, "").replace(/\\/+$/, "");
+            }
+          };
+          const renderFeatureIcon = (feature) => {
+            const iconKey = String(feature?.iconKey || "").trim().toLowerCase();
+            const Icon = iconKey === "app"
+              ? Grid3x3
+              : iconKey === "workflow" || iconKey === "flow"
+                ? Webhook
+                : iconKey === "channel"
+                  ? MessageSquare
+                  : Layers;
+            return React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.8 });
+          };
+          const renderTagProfileLogo = () => {
+            if (selectedTag.logoUrl) {
+              return React.createElement("img", {
+                className: "profile-editor-avatar-image",
+                src: selectedTag.logoUrl,
+                alt: selectedTag.label || "Tag",
+                draggable: "false",
+              });
+            }
+            const Icon = selectedTag.icon || Tag;
+            return React.createElement(Icon, { width: 23, height: 23, strokeWidth: 1.8 });
+          };
+          const tagHeaderButtonClass = "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button playground-plugin-detail-connect-button";
+          const getTagConnectionButtonState = () => {
+            if (tagId === "email") {
+              return settingsEmailStatus?.linked && settingsEmailStatus?.verified
+                ? {
+                    label: settingsIsUnlinkingEmail ? "Disconnecting..." : "Disconnect",
+                    tone: "destructive",
+                    disabled: settingsIsUnlinkingEmail,
+                    onClick: () => { void handleSettingsUnlinkEmail(); },
+                  }
+                : {
+                    label: "Connect",
+                    tone: "primary",
+                    disabled: false,
+                    onClick: () => setPluginDetailTab("tutorial"),
+                  };
+            }
+            if (tagId === "telegram") {
+              return settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
+                ? {
+                    label: settingsIsUnlinkingTelegram ? "Disconnecting..." : "Disconnect",
+                    tone: "destructive",
+                    disabled: settingsIsUnlinkingTelegram,
+                    onClick: () => { void handleSettingsUnlinkTelegram(); },
+                  }
+                : {
+                    label: "Connect",
+                    tone: "primary",
+                    disabled: false,
+                    onClick: () => setPluginDetailTab("tutorial"),
+                  };
+            }
+            if (tagId === "discord") {
+              return settingsDiscordStatus?.linked && settingsDiscordStatus?.verified
+                ? {
+                    label: settingsIsUnlinkingDiscord ? "Disconnecting..." : "Disconnect",
+                    tone: "destructive",
+                    disabled: settingsIsUnlinkingDiscord,
+                    onClick: () => { void handleSettingsUnlinkDiscord(); },
+                  }
+                : {
+                    label: settingsIsLinkingDiscord ? "Connecting..." : "Connect",
+                    tone: "primary",
+                    disabled: settingsIsLinkingDiscord,
+                    onClick: () => { void handleSettingsLinkDiscord(); },
+                  };
+            }
+            return null;
+          };
+          const renderTagConnectionButton = () => {
+            const buttonState = getTagConnectionButtonState();
+            if (!buttonState) {
+              return null;
+            }
+            return React.createElement("button", {
+              type: "button",
+              className: tagHeaderButtonClass + (buttonState.tone === "destructive" ? " is-destructive" : ""),
+              onClick: buttonState.onClick,
+              disabled: buttonState.disabled,
+            }, React.createElement("span", null, buttonState.label));
+          };
+          const renderTagSidebarToggleButton = () => React.createElement("button", {
+              type: "button",
+              className: "playground-project-overview-sidebar-toggle",
+              onClick: () => setTagDetailSidebarCollapsed((current) => !current),
+              title: tagDetailSidebarCollapsed ? "Show tag sidebar" : "Hide tag sidebar",
+              "aria-label": tagDetailSidebarCollapsed ? "Show tag sidebar" : "Hide tag sidebar",
+              "aria-pressed": tagDetailSidebarCollapsed ? "true" : "false",
+            },
+            React.createElement(PanelRight, {
+              width: 15,
+              height: 15,
+              strokeWidth: 1.8,
+            })
+          );
+          const renderTagControlRow = (className) =>
+            React.createElement("div", { className },
+              renderTagConnectionButton(),
+              renderTagSidebarToggleButton()
+            );
+          const tagDetailBackButton = React.createElement("button", {
+              type: "button",
+              className: "playground-resource-detail-back-button",
+              onClick: () => setSelectedPluginId(""),
+              "aria-label": "Back to Tags",
+            },
+            React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }),
+            React.createElement("span", null, "Back")
+          );
+          const tagProfileSection = React.createElement("div", { className: "playground-agents-profile-section playground-tags-detail-profile-section" },
+            React.createElement("div", { className: "profile-editor-avatar-wrap playground-agents-profile-avatar-wrap" },
+              React.createElement("div", { className: "profile-editor-avatar playground-agents-profile-avatar playground-tags-detail-profile-avatar" },
+                React.createElement("div", { className: "profile-editor-avatar-surface playground-tags-detail-avatar-surface" },
+                  renderTagProfileLogo()
+                )
+              )
+            ),
+            React.createElement("div", { className: "playground-agents-profile-copy" },
+              React.createElement("div", { className: "playground-agents-profile-name-wrap" },
+                React.createElement("h1", {
+                  className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agents-profile-name-input playground-tags-detail-profile-title",
+                  title: selectedTag.label || "Tag",
+                }, selectedTag.label || "Tag")
+              )
+            ),
+            tagDetailSidebarCollapsed
+              ? renderTagControlRow("playground-agents-detail-profile-actions playground-tags-detail-profile-actions")
+              : null
+          );
+          const tagDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-plugin-detail-tabs" },
+            React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-project-overview-chart-tab" + (pluginDetailTab === "general" ? " is-active" : ""),
+                onClick: () => setPluginDetailTab("general"),
+                "aria-pressed": pluginDetailTab === "general" ? "true" : "false",
+              }, "General"),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-project-overview-chart-tab" + (pluginDetailTab === "permissions" ? " is-active" : ""),
+                onClick: () => setPluginDetailTab("permissions"),
+                "aria-pressed": pluginDetailTab === "permissions" ? "true" : "false",
+              }, "Permissions"),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-project-overview-chart-tab" + (pluginDetailTab === "tutorial" ? " is-active" : ""),
+                onClick: () => setPluginDetailTab("tutorial"),
+                "aria-pressed": pluginDetailTab === "tutorial" ? "true" : "false",
+              }, "Setup")
+            )
+          );
+          const readThreadMetadata = (thread) => (
+            thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
+              ? thread.metadata
+              : {}
+          );
+          const readTagThreadCreatedAtMs = (thread) => {
+            const timestamp = Date.parse(String(thread?.createdAt || thread?.updatedAt || ""));
+            return Number.isFinite(timestamp) ? timestamp : null;
+          };
+          const readTagThreadTotalCT = (thread) => Math.max(0, Number(readSettingsComputeTokens(thread, "totalCT", "totalCost") || 0));
+          const getTagThreadStatus = (thread) => String(thread?.status || thread?.state || thread?.phase || "").trim().toLowerCase();
+          const isTagThreadCompleted = (thread) => {
+            const status = getTagThreadStatus(thread);
+            return status === "completed" || status === "complete" || status === "done" || status === "success" || status === "finished";
+          };
+          const isThreadForTag = (thread) => {
+            const metadata = readThreadMetadata(thread);
+            const emailMetadata = metadata.email && typeof metadata.email === "object" && !Array.isArray(metadata.email)
+              ? metadata.email
+              : null;
+            const sourceValues = [
+              thread?.source,
+              thread?.channel,
+              thread?.appId,
+              metadata.source,
+              metadata.channel,
+              metadata.appId,
+              metadata.tagId,
+              metadata.integration,
+            ].map((value) => String(value || "").trim().toLowerCase()).filter(Boolean);
+            if (tagId === "email") {
+              return sourceValues.some((value) => value === "email" || value === "mail")
+                || Boolean(emailMetadata)
+                || Boolean(metadata.replyToEmail || metadata.emailFrom || metadata.fromEmail);
+            }
+            if (tagId === "discord") {
+              return sourceValues.includes("discord")
+                || Boolean(metadata.discord || metadata.discordChannelId || metadata.discordUserId);
+            }
+            if (tagId === "telegram") {
+              return sourceValues.includes("telegram")
+                || Boolean(metadata.telegram || metadata.telegramChatId || metadata.telegramUserId);
+            }
+            return sourceValues.includes(tagId);
+          };
+          const tagDetailPerformanceRangeOptions = [
+            { id: "5d", label: "5D", bucketCount: 5 },
+            { id: "1m", label: "1M", bucketCount: 30 },
+            { id: "6m", label: "6M", bucketCount: 180 },
+            { id: "1y", label: "1Y", bucketCount: 365 },
+          ];
+          const activeTagPerformanceRange = tagDetailPerformanceRangeOptions.find((option) => option.id === tagDetailPerformanceRange)
+            || tagDetailPerformanceRangeOptions[1];
+          const formatTagPerformanceInteger = (value) => Math.max(0, Math.round(Number(value || 0))).toLocaleString("en-US");
+          const getTagLocalDayKey = (dateLike) => {
+            const date = dateLike instanceof Date ? new Date(dateLike) : new Date(dateLike);
+            if (Number.isNaN(date.getTime())) {
+              return "";
+            }
+            return [
+              date.getFullYear(),
+              String(date.getMonth() + 1).padStart(2, "0"),
+              String(date.getDate()).padStart(2, "0"),
+            ].join("-");
+          };
+          const tagPerformanceBuckets = (() => {
+            const now = new Date();
+            const endDate = new Date(now);
+            endDate.setHours(0, 0, 0, 0);
+            return Array.from({ length: Math.max(1, Number(activeTagPerformanceRange.bucketCount || 30)) }, (_, index) => {
+              const date = new Date(endDate);
+              date.setDate(endDate.getDate() - (Math.max(1, Number(activeTagPerformanceRange.bucketCount || 30)) - 1 - index));
+              const startMs = date.getTime();
+              return {
+                key: getTagLocalDayKey(date),
+                label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+                startMs,
+                endMs: startMs + 24 * 60 * 60 * 1000,
+                runCount: 0,
+                completedCount: 0,
+                totalCT: 0,
+              };
+            });
+          })();
+          const tagPerformanceStartMs = tagPerformanceBuckets[0]?.startMs || 0;
+          const tagPerformanceEndMs = tagPerformanceBuckets[tagPerformanceBuckets.length - 1]?.endMs || Date.now();
+          const tagThreads = (Array.isArray(realThreads) ? realThreads : [])
+            .filter(isThreadForTag)
+            .filter((thread) => {
+              const createdAtMs = readTagThreadCreatedAtMs(thread);
+              return Number.isFinite(createdAtMs) && createdAtMs >= tagPerformanceStartMs && createdAtMs < tagPerformanceEndMs;
+            });
+          tagPerformanceBuckets.forEach((bucket) => {
+            tagThreads.forEach((thread) => {
+              const createdAtMs = readTagThreadCreatedAtMs(thread);
+              if (!Number.isFinite(createdAtMs) || createdAtMs < bucket.startMs || createdAtMs >= bucket.endMs) {
+                return;
+              }
+              bucket.runCount += 1;
+              bucket.totalCT += readTagThreadTotalCT(thread);
+              if (isTagThreadCompleted(thread)) {
+                bucket.completedCount += 1;
+              }
+            });
+          });
+          const tagRunCount = tagThreads.length;
+          const tagCompletedCount = tagPerformanceBuckets.reduce((sum, bucket) => sum + Math.max(0, Number(bucket.completedCount || 0)), 0);
+          const tagTotalCT = tagPerformanceBuckets.reduce((sum, bucket) => sum + Math.max(0, Number(bucket.totalCT || 0)), 0);
+          const tagAvgCT = tagRunCount > 0 ? tagTotalCT / tagRunCount : 0;
+          const tagSuccessRate = tagRunCount > 0 ? Math.round((tagCompletedCount / tagRunCount) * 100) : 0;
+          const tagPerformanceKpis = [
+            { id: "total-runs", label: "Total Threads", value: formatTagPerformanceInteger(tagRunCount) },
+            { id: "cost", label: "Cost", value: formatSettingsComputeTokens(tagTotalCT) },
+            { id: "avg-ct", label: "Avg CT / Thread", value: formatSettingsComputeTokens(tagAvgCT) },
+            { id: "success-rate", label: "Success Rate", value: String(tagSuccessRate) + "%" },
+          ];
+          const tagPerformanceSeries = [
+            { id: "runs", values: tagPerformanceBuckets.map((bucket) => Math.max(0, Number(bucket.runCount || 0))) },
+          ];
+          const maxTagRunValue = Math.max(1, ...tagPerformanceSeries.flatMap((entry) => entry.values || []));
+          const maxTagDailyCt = Math.max(1, ...tagPerformanceBuckets.map((bucket) => Math.max(0, Number(bucket.totalCT || 0))));
+
+          function PlaygroundTagDetailPerformanceChart({ dailyCtBuckets, maxDailyCt, maxRunValue, series }) {
+            const canvasRef = useRef(null);
+            const chartRef = useRef(null);
+            const chartSignature = JSON.stringify({
+              buckets: dailyCtBuckets.map((bucket) => ({
+                key: bucket.key,
+                runCount: bucket.runCount,
+                totalCT: bucket.totalCT,
+              })),
+              maxDailyCt,
+              maxRunValue,
+              series,
+            });
+
+            useEffect(() => () => {
+              if (chartRef.current) {
+                chartRef.current.destroy();
+                chartRef.current = null;
+              }
+            }, []);
+
+            useEffect(() => {
+              const canvas = canvasRef.current;
+              if (!canvas || typeof Chart !== "function") {
+                return undefined;
+              }
+              const labels = dailyCtBuckets.map((bucket) => String(bucket.label || ""));
+              const dailyCtValues = dailyCtBuckets.map((bucket) => Math.max(0, Number(bucket.totalCT || 0)));
+              const longRangeTickIndexes = (() => {
+                if (labels.length < 90) {
+                  return null;
+                }
+                const targetCount = labels.length >= 365 ? 7 : 6;
+                const indexes = new Set();
+                for (let tickIndex = 0; tickIndex < targetCount; tickIndex += 1) {
+                  indexes.add(Math.round(((labels.length - 1) * tickIndex) / Math.max(1, targetCount - 1)));
+                }
+                return indexes;
+              })();
+              const seriesById = series.reduce((map, entry) => {
+                map[entry.id] = Array.isArray(entry.values) ? entry.values : [];
+                return map;
+              }, {});
+              const makeVerticalGradient = (context, stops, fallback) => {
+                const chart = context?.chart;
+                const chartArea = chart?.chartArea;
+                const ctx = chart?.ctx;
+                if (!ctx || !chartArea) {
+                  return fallback;
+                }
+                const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                stops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
+                return gradient;
+              };
+              const chartData = {
+                labels,
+                datasets: [
+                  {
+                    id: "dailyCT",
+                    type: "bar",
+                    label: "Cost",
+                    data: dailyCtValues,
+                    yAxisID: "ct",
+                    backgroundColor: (context) => makeVerticalGradient(context, [
+                      [0, "rgba(102, 166, 255, 0.82)"],
+                      [1, "rgba(91, 103, 230, 0.64)"],
+                    ], "rgba(95, 112, 230, 0.72)"),
+                    borderWidth: 0,
+                    borderRadius: 2,
+                    barPercentage: 0.72,
+                    categoryPercentage: 0.86,
+                    maxBarThickness: 10,
+                    order: 4,
+                  },
+                  {
+                    id: "runs",
+                    type: "line",
+                    label: "Threads",
+                    data: seriesById.runs || [],
+                    yAxisID: "runs",
+                    borderColor: "#7EFFFF",
+                    backgroundColor: "rgba(126, 255, 255, 0.08)",
+                    borderWidth: 1.5,
+                    fill: false,
+                    pointBackgroundColor: "#7EFFFF",
+                    pointBorderColor: "#050505",
+                    pointBorderWidth: 2,
+                    pointRadius: (context) => context.dataIndex === (seriesById.runs || []).length - 1 ? 5 : 0,
+                    pointHoverRadius: 5,
+                    tension: 0.28,
+                    order: 2,
+                  },
+                ],
+              };
+              const chartOptions = {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                normalized: true,
+                interaction: { intersect: false, mode: "index" },
+                layout: { padding: { top: 12, right: 4, bottom: 0, left: 0 } },
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    enabled: true,
+                    backgroundColor: "rgba(8, 8, 8, 0.96)",
+                    borderColor: "rgba(255, 255, 255, 0.14)",
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    titleColor: "rgba(255, 255, 255, 0.94)",
+                    bodyColor: "rgba(255, 255, 255, 0.78)",
+                    padding: 10,
+                    callbacks: {
+                      label: (context) => {
+                        const datasetId = context.dataset?.id || "";
+                        const value = Math.max(0, Number(context.parsed?.y || 0));
+                        return datasetId === "dailyCT"
+                          ? "Cost: " + formatSettingsComputeTokens(value)
+                          : "Threads: " + formatTagPerformanceInteger(value);
+                      },
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    type: "category",
+                    bounds: "data",
+                    offset: false,
+                    grid: { display: false, offset: false, drawBorder: false },
+                    border: { display: false },
+                    ticks: {
+                      align: "inner",
+                      autoSkip: false,
+                      color: "rgba(255, 255, 255, 0.38)",
+                      font: { size: 11, weight: "400", family: "Inter, ui-sans-serif, system-ui, sans-serif" },
+                      maxRotation: 0,
+                      minRotation: 0,
+                      padding: 10,
+                      callback: (_value, index) => {
+                        const bucket = dailyCtBuckets[index];
+                        const key = String(bucket?.key || "");
+                        const date = key ? new Date(key + "T00:00:00") : null;
+                        if (longRangeTickIndexes) {
+                          return longRangeTickIndexes.has(index)
+                            ? (date && !Number.isNaN(date.getTime())
+                              ? date.toLocaleDateString("en-US", { month: "short" })
+                              : (labels[index] || ""))
+                            : "";
+                        }
+                        if (labels.length === 30) {
+                          return index === 0 || index === labels.length - 1 ? (labels[index] || "") : "";
+                        }
+                        if (labels.length <= 7) {
+                          return labels[index] || "";
+                        }
+                        if (date && !Number.isNaN(date.getTime()) && date.getDate() <= 2) {
+                          return date.toLocaleDateString("en-US", { month: "short" });
+                        }
+                        return index === 0 || index === labels.length - 1 ? (labels[index] || "") : "";
+                      },
+                    },
+                  },
+                  runs: {
+                    display: true,
+                    type: "linear",
+                    position: "left",
+                    min: 0,
+                    max: Math.max(1, Math.ceil(maxRunValue * 1.18)),
+                    ticks: {
+                      display: true,
+                      maxTicksLimit: 4,
+                      color: "rgba(255, 255, 255, 0.34)",
+                      padding: 8,
+                      font: { size: 11, weight: "400", family: "Inter, ui-sans-serif, system-ui, sans-serif" },
+                      callback: (value) => formatTagPerformanceInteger(value),
+                    },
+                    grid: { display: false, drawTicks: false },
+                    border: { display: false },
+                  },
+                  ct: {
+                    display: false,
+                    type: "linear",
+                    position: "left",
+                    min: 0,
+                    max: Math.max(1, Math.ceil(maxDailyCt * 1.22)),
+                    grid: { display: false, drawTicks: false },
+                    border: { display: false },
+                  },
+                },
+              };
+              if (chartRef.current) {
+                chartRef.current.data = chartData;
+                chartRef.current.options = chartOptions;
+                chartRef.current.update("none");
+                return undefined;
+              }
+              chartRef.current = new Chart(canvas, {
+                type: "bar",
+                data: chartData,
+                options: chartOptions,
+              });
+              return undefined;
+            }, [chartSignature]);
+
+            return React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
+              React.createElement("canvas", {
+                ref: canvasRef,
+                className: "playground-project-overview-progress-combo-canvas playground-agents-detail-progress-combo-canvas playground-tags-detail-progress-combo-canvas",
+                role: "img",
+                "aria-label": selectedTag.label + " analytics: threads and compute token usage",
+              })
+            );
+          }
+
+          const handleTagChartDownload = () => {
+            if (typeof document === "undefined") {
+              return;
+            }
+            const canvas = document.querySelector(".playground-tags-detail-progress-combo-canvas");
+            if (!canvas || typeof canvas.toDataURL !== "function") {
+              return;
+            }
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png");
+            link.download = tagId + "-tag-analytics.png";
+            link.click();
+          };
+          const analyticsSection = React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card" },
+            React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
+              React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Analytics"),
+              React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
+                React.createElement("div", { className: "playground-project-overview-progress-combo-ranges", role: "group", "aria-label": "Performance range" },
+                  tagDetailPerformanceRangeOptions.map((option) =>
+                    React.createElement("button", {
+                      key: option.id,
+                      type: "button",
+                      className: "playground-project-overview-progress-combo-range" + (activeTagPerformanceRange.id === option.id ? " is-active" : ""),
+                      onClick: () => setTagDetailPerformanceRange(option.id),
+                      "aria-pressed": activeTagPerformanceRange.id === option.id ? "true" : "false",
+                    }, option.label)
+                  )
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-project-overview-progress-combo-download",
+                  onClick: handleTagChartDownload,
+                  title: "Download chart",
+                  "aria-label": "Download analytics chart",
+                }, React.createElement(Download, { width: 15, height: 15, strokeWidth: 1.8 }))
+              )
+            ),
+            React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
+              tagPerformanceKpis.map((item) =>
+                React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+                    React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
+                    React.createElement("span", null, item.label)
+                  ),
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
+                )
+              )
+            ),
+            React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
+              isThreadsLoading
+                ? React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
+                    React.createElement("div", {
+                        className: "playground-overview-chart-loading",
+                        style: { position: "static", inset: "auto", height: "100%" },
+                        "aria-label": "Loading chart data",
+                      },
+                      React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
+                    )
+                  )
+                : React.createElement(PlaygroundTagDetailPerformanceChart, {
+                    dailyCtBuckets: tagPerformanceBuckets,
+                    maxDailyCt: maxTagDailyCt,
+                    maxRunValue: maxTagRunValue,
+                    series: tagPerformanceSeries,
+                  })
+            )
+          );
+
+          const history = tagInstructionsHistoryById[tagId] || { past: [], future: [] };
+          const canUndoInstructions = Array.isArray(history.past) && history.past.length > 0;
+          const canRedoInstructions = Array.isArray(history.future) && history.future.length > 0;
+          const focusInstructionsTextareaAtEnd = (value) => {
+            window.requestAnimationFrame(() => {
+              const textarea = tagInstructionsTextareaRef.current;
+              if (!textarea) {
+                return;
+              }
+              const nextCaret = String(value || "").length;
+              textarea.focus();
+              textarea.setSelectionRange(nextCaret, nextCaret);
+              resizeTagInstructionsTextarea(textarea);
+            });
+          };
+          const applyInstructionsHistoryValue = (value) => {
+            updateTagInstructionsValue(tagId, String(value ?? ""), { recordHistory: false });
+            focusInstructionsTextareaAtEnd(value);
+          };
+          const handleInstructionsUndo = () => {
+            if (!canUndoInstructions) {
+              return;
+            }
+            const currentValue = String(tagConfig.instructions || "");
+            const previousValue = history.past[history.past.length - 1];
+            setTagInstructionsHistoryById((current) => {
+              const currentHistory = current[tagId] || { past: [], future: [] };
+              return {
+                ...current,
+                [tagId]: {
+                  past: (Array.isArray(currentHistory.past) ? currentHistory.past : []).slice(0, -1),
+                  future: [currentValue, ...(Array.isArray(currentHistory.future) ? currentHistory.future : [])].slice(0, 80),
+                },
+              };
+            });
+            applyInstructionsHistoryValue(previousValue);
+          };
+          const handleInstructionsRedo = () => {
+            if (!canRedoInstructions) {
+              return;
+            }
+            const currentValue = String(tagConfig.instructions || "");
+            const nextValue = history.future[0];
+            setTagInstructionsHistoryById((current) => {
+              const currentHistory = current[tagId] || { past: [], future: [] };
+              return {
+                ...current,
+                [tagId]: {
+                  past: [...(Array.isArray(currentHistory.past) ? currentHistory.past : []), currentValue].slice(-80),
+                  future: (Array.isArray(currentHistory.future) ? currentHistory.future : []).slice(1),
+                },
+              };
+            });
+            applyInstructionsHistoryValue(nextValue);
+          };
+          const renderInstructionsToolbarButton = (action) =>
+            React.createElement("button", {
+              key: action.id,
+              type: "button",
+              className: "playground-tasks-detail-format-button",
+              title: action.label,
+              "aria-label": action.label,
+              disabled: Boolean(action.disabled),
+              onMouseDown: (event) => event.preventDefault(),
+              onClick: action.onClick,
+            }, React.createElement(action.icon, {
+              width: 14,
+              height: 14,
+              strokeWidth: action.strokeWidth || 1.8,
+            }));
+          const formatActionGroups = [
+            [
+              { id: "undo", label: "Undo", icon: Undo2, disabled: !canUndoInstructions, onClick: handleInstructionsUndo },
+              { id: "redo", label: "Redo", icon: Redo2, disabled: !canRedoInstructions, onClick: handleInstructionsRedo },
+            ],
+            [
+              { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
+              { id: "italic", label: "Italic", icon: Italic },
+              { id: "underline", label: "Underline", icon: Underline },
+            ],
+            [
+              { id: "list", label: "List", icon: List },
+              { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
+            ],
+            [
+              { id: "code", label: "Code", icon: CodeXml },
+              { id: "link", label: "Link", icon: Link2 },
+            ],
+          ];
+          const instructionsSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section" },
+            React.createElement("div", { className: "playground-tasks-detail-section-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Instructions"),
+              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                formatActionGroups.flatMap((group, groupIndex) => [
+                  groupIndex > 0
+                    ? React.createElement("span", {
+                        key: "divider:" + groupIndex,
+                        className: "playground-agents-detail-instructions-toolbar-divider",
+                        "aria-hidden": "true",
+                      })
+                    : null,
+                  ...group.map((action) => renderInstructionsToolbarButton({
+                    ...action,
+                    onClick: action.onClick || (() => handleTagMarkdownFormat(tagId, tagInstructionsTextareaRef, action.id)),
+                  })),
+                ])
+              )
+            ),
+            React.createElement("div", {
+                className: "playground-tasks-detail-description-editor"
+                  + (tagInstructionsEditingId === tagId ? " is-editing" : " is-preview"),
+              },
+              tagInstructionsEditingId !== tagId
+                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                    String(tagConfig.instructions || "").trim()
+                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                          content: tagConfig.instructions,
+                          className: "playground-tasks-detail-description-preview tb-message-markdown",
+                        })
+                      : React.createElement("div", {
+                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                        }, "Add custom instructions that will be sent to the agent every time a thread is invoked from this tag.")
+                  )
+                : null,
+              React.createElement("textarea", {
+                ref: tagInstructionsTextareaRef,
+                className: "playground-tasks-detail-description-input " + (tagInstructionsEditingId === tagId ? "is-editing" : "is-preview"),
+                rows: 1,
+                placeholder: tagInstructionsEditingId === tagId ? "Add custom instructions that will be sent to the agent every time a thread is invoked from this tag." : "",
+                value: tagConfig.instructions || "",
+                onFocus: () => {
+                  setTagInstructionsEditingId(tagId);
+                },
+                onChange: (event) => {
+                  updateTagInstructionsValue(tagId, event.target.value);
+                  resizeTagInstructionsTextarea(event.currentTarget);
+                },
+                onBlur: () => {
+                  setTagInstructionsEditingId("");
+                },
+              })
+            ),
+            tagSaveState.status === "saving" || tagSaveState.status === "saved" || tagSaveState.error
+              ? React.createElement("div", { className: "playground-environments-muted" },
+                  tagSaveState.error || (tagSaveState.status === "saving" ? "Saving..." : "Saved")
+                )
+              : null
+          );
+
+          const renderTagPermissionRings = () =>
+            React.createElement("span", { className: "playground-agents-detail-permission-rings", "aria-hidden": "true" },
+              PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
+                const ringAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
+                return React.createElement("span", {
+                    key: ring.id,
+                    className: "playground-agents-detail-permission-ring",
+                    title: ring.label + ": " + getPlaygroundPermissionAccessLabel(ringAccess),
+                  },
+                  renderPlaygroundPermissionMiniRingIcon(ring.id, ringAccess)
+                );
+              })
+            );
+          const renderSidebarValue = (value) =>
+            React.createElement("span", {
+              className: "playground-environments-editor-fact-value",
+              title: String(value || ""),
+            }, value || "Not set");
+          const renderSidebarRow = (label, valueNode, props = {}) =>
+            React.createElement(props.asButton ? "button" : "div", {
+                key: label,
+                type: props.asButton ? "button" : undefined,
+                className: "playground-project-overview-sidebar-row" + (props.className ? " " + props.className : ""),
+                onClick: props.onClick,
+              },
+              React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, props.labelNode || label),
+              React.createElement("div", {
+                className: "playground-project-overview-sidebar-row-value"
+                  + (props.editable ? " is-editable" : "")
+                  + (props.valueClassName ? " " + props.valueClassName : ""),
+              }, valueNode)
+            );
+          const defaultEnvironmentOptions = Array.isArray(runtimeEnvironments) ? runtimeEnvironments : [];
+          const defaultProjectOptions = Array.isArray(runnerWorkspaceProjects) ? runnerWorkspaceProjects : [];
+          const environmentNameById = new Map(defaultEnvironmentOptions.map((environment) => [
+            environment?.id,
+            environment?.name || environment?.id || "",
+          ]));
+          const hasSelectedDefaultEnvironment = defaultEnvironmentOptions.some((environment) => environment?.id === tagConfig.defaultEnvironmentId);
+          const defaultEnvironmentChoices = [
+            !hasSelectedDefaultEnvironment && tagConfig.defaultEnvironmentId
+              ? {
+                  id: tagConfig.defaultEnvironmentId,
+                  name: tagConfig.defaultEnvironmentName || tagConfig.defaultEnvironmentId,
+                  description: "Saved computer",
+                }
+              : null,
+            ...defaultEnvironmentOptions.map((environment) => ({
+              id: environment.id,
+              name: environment.name || environment.id,
+              description: environment.isDefault ? "Default computer" : "Computer",
+            })),
+          ].filter((environment) => environment && environment.id);
+          const hasSelectedDefaultProject = defaultProjectOptions.some((project) => project?.id === tagConfig.defaultProjectId);
+          const defaultProjectChoices = [
+            !hasSelectedDefaultProject && tagConfig.defaultProjectId
+              ? {
+                  id: tagConfig.defaultProjectId,
+                  name: tagConfig.defaultProjectName || tagConfig.defaultProjectId,
+                  description: "Saved project",
+                  defaultEnvironmentId: tagConfig.defaultEnvironmentId || "",
+                }
+              : null,
+            ...defaultProjectOptions.map((project) => ({
+              ...project,
+              id: project.id,
+              name: project.name || project.id,
+              description: project.description || "Project",
+              defaultEnvironmentId: getTagProjectEnvironmentId(project),
+            })),
+          ].filter((project) => project && project.id);
+          const selectedDefaultEnvironment = defaultEnvironmentChoices.find((environment) => environment.id === tagConfig.defaultEnvironmentId) || null;
+          const selectedDefaultProject = defaultProjectChoices.find((project) => project.id === tagConfig.defaultProjectId) || null;
+          const defaultEnvironmentLabel = selectedDefaultProject?.name
+            || selectedDefaultEnvironment?.name
+            || tagConfig.defaultProjectName
+            || tagConfig.defaultEnvironmentName
+            || tagConfig.defaultEnvironmentId
+            || "Select environment";
+          const DefaultEnvironmentIcon = selectedDefaultProject ? Rocket : Monitor;
+          const defaultEnvironmentPopoverOpen = tagDetailPropertyPopover === "environment";
+          const currentTagDefaultEnvironmentMode = tagDefaultEnvironmentMode === "projects" ? "projects" : "computers";
+          const defaultEnvironmentHelpText = "This is the default computer or project chosen for new threads triggered from this tag. It defines where the agent should work.";
+          const defaultEnvironmentLabelNode = React.createElement("span", { className: "playground-tags-detail-label-with-help" },
+            React.createElement("span", null, "Environment"),
+            React.createElement("span", {
+                className: "playground-tags-default-environment-help",
+                tabIndex: 0,
+                "aria-label": defaultEnvironmentHelpText,
+              },
+              React.createElement(CircleHelp, { width: 12, height: 12, strokeWidth: 1.8 }),
+              React.createElement("span", {
+                className: "playground-tags-default-environment-tooltip",
+                role: "tooltip",
+              }, defaultEnvironmentHelpText)
+            )
+          );
+          const defaultEnvironmentSelect = renderPlaygroundPlatformPopup({
+            open: defaultEnvironmentPopoverOpen,
+            shellRef: defaultEnvironmentPopoverOpen ? tagDetailPropertyPopoverRef : null,
+            shellClassName: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup playground-tags-detail-computer-popup playground-tags-detail-environment-popup",
+            menuClassName: "tb-popup-menu-inline tb-popup-menu-inline-right tb-popup-menu-inline-workspace playground-tags-detail-environment-menu",
+            trigger: React.createElement("button", {
+                type: "button",
+                className: "playground-environments-runtime-value-button playground-agents-model-picker-trigger" + (selectedDefaultEnvironment || selectedDefaultProject ? "" : " is-empty"),
+                onClick: () => {
+                  setTagDefaultEnvironmentMode(tagConfig.defaultProjectId ? "projects" : "computers");
+                  setTagDetailPropertyPopover((current) => current === "environment" ? "" : "environment");
+                },
+                title: defaultEnvironmentLabel,
+                "aria-label": "Environment: " + defaultEnvironmentLabel,
+                "aria-expanded": defaultEnvironmentPopoverOpen ? "true" : "false",
+              },
+              React.createElement("span", { className: "playground-agents-model-picker-trigger-copy" },
+                React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
+                  React.createElement(DefaultEnvironmentIcon, { width: 14, height: 14, strokeWidth: 1.8 })
+                ),
+                React.createElement("span", { className: "playground-agents-model-picker-trigger-labels" },
+                  React.createElement("span", { className: "playground-environments-runtime-value-label" }, defaultEnvironmentLabel)
+                )
+              ),
+              React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+            ),
+            children: React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
+                React.createElement("div", { className: "tb-popup-nav" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "tb-popup-nav-button" + (currentTagDefaultEnvironmentMode === "computers" ? " active" : ""),
+                    onClick: () => setTagDefaultEnvironmentMode("computers"),
+                  }, "Computers"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "tb-popup-nav-button" + (currentTagDefaultEnvironmentMode === "projects" ? " active" : ""),
+                    onClick: () => setTagDefaultEnvironmentMode("projects"),
+                  }, "Projects")
+                )
+              ),
+              React.createElement("div", { className: "tb-popup-menu-inline-body tb-popup-menu-inline-body-agent tb-popup-menu-inline-body-workspace" },
+                currentTagDefaultEnvironmentMode === "projects"
+                  ? (
+                      defaultProjectChoices.length > 0
+                        ? defaultProjectChoices.map((project) => {
+                            const projectEnvironmentId = getTagProjectEnvironmentId(project) || String(project.defaultEnvironmentId || "").trim();
+                            const projectEnvironmentName = environmentNameById.get(projectEnvironmentId) || project.defaultEnvironmentName || projectEnvironmentId;
+                            const isSelectedProject = Boolean(tagConfig.defaultProjectId) && project.id === tagConfig.defaultProjectId;
+                            return React.createElement("button", {
+                                key: project.id,
+                                type: "button",
+                                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent tb-popup-row-workspace" + (isSelectedProject ? " selected" : ""),
+                                onClick: () => {
+                                  if (!projectEnvironmentId) {
+                                    return;
+                                  }
+                                  updateTagDetailConfig(tagId, {
+                                    defaultEnvironmentId: projectEnvironmentId,
+                                    defaultEnvironmentName: projectEnvironmentName || projectEnvironmentId,
+                                    defaultProjectId: project.id,
+                                    defaultProjectName: project.name || project.id,
+                                  });
+                                  setTagDetailPropertyPopover("");
+                                },
+                                disabled: !projectEnvironmentId,
+                                title: !projectEnvironmentId ? "This project has no linked computer." : project.name || project.id,
+                              },
+                              React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.75 }),
+                              React.createElement("span", { className: "tb-popup-label" }, project.name || project.id),
+                              React.createElement("span", { className: "tb-popup-check-slot" },
+                                isSelectedProject
+                                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                  : null
+                              )
+                            );
+                          })
+                        : React.createElement("div", { className: "tb-popup-menu-inline-empty" },
+                            React.createElement("div", { className: "tb-popup-empty-state" }, "No projects available.")
+                          )
+                    )
+                  : (
+                      defaultEnvironmentChoices.length > 0
+                        ? defaultEnvironmentChoices.map((environment) => {
+                            const isSelectedEnvironment = !tagConfig.defaultProjectId && environment.id === tagConfig.defaultEnvironmentId;
+                            return React.createElement("button", {
+                                key: environment.id,
+                                type: "button",
+                                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent tb-popup-row-workspace" + (isSelectedEnvironment ? " selected" : ""),
+                                onClick: () => {
+                                  updateTagDetailConfig(tagId, {
+                                    defaultEnvironmentId: environment.id,
+                                    defaultEnvironmentName: environment.name || environment.id,
+                                    defaultProjectId: "",
+                                    defaultProjectName: "",
+                                  });
+                                  setTagDetailPropertyPopover("");
+                                },
+                              },
+                              React.createElement(Monitor, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.75 }),
+                              React.createElement("span", { className: "tb-popup-label" }, environment.name || environment.id),
+                              React.createElement("span", { className: "tb-popup-check-slot" },
+                                isSelectedEnvironment
+                                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                  : null
+                              )
+                            );
+                          })
+                        : React.createElement("div", { className: "tb-popup-menu-inline-empty" },
+                            React.createElement("div", { className: "tb-popup-empty-state" }, "No computers available.")
+                          )
+                    )
+              )
+            ),
+          });
+          const sidebar = React.createElement("aside", {
+              className: "playground-project-overview-sidebar playground-agents-detail-sidebar",
+              "aria-label": selectedTag.label + " settings",
+            },
+            !tagDetailSidebarCollapsed
+              ? renderTagControlRow("playground-agents-detail-sidebar-controls playground-tags-detail-sidebar-controls")
+              : null,
+            React.createElement("section", {
+                className: "playground-project-overview-sidebar-card playground-tags-detail-properties-card" + (defaultEnvironmentPopoverOpen ? " is-computer-popup-open is-environment-popup-open" : ""),
+              },
+              React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties")
+              ),
+              React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
+                renderSidebarRow("Connected Identity", renderSidebarValue(tagConfig.connectedIdentity || selectedTag.statusCopy || "Not connected")),
+                renderSidebarRow("Environment", defaultEnvironmentSelect, {
+                  editable: true,
+                  labelNode: defaultEnvironmentLabelNode,
+                }),
+                renderSidebarRow("Permissions", renderTagPermissionRings(), {
+                  asButton: true,
+                  className: "playground-agents-detail-sidebar-permission-row",
+                  valueClassName: "playground-agents-detail-sidebar-permission-value",
+                  onClick: () => setPluginDetailTab("permissions"),
+                })
+              )
+            ),
+            React.createElement("section", { className: "playground-project-overview-sidebar-card playground-tags-detail-included-actions-card" },
+              React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Included Actions")
+              ),
+              React.createElement("div", { className: "playground-tags-detail-sidebar-actions" },
+                (selectedTag.features || []).map((feature) =>
+                  React.createElement("div", { key: feature.id, className: "playground-tags-detail-sidebar-action" },
+                    React.createElement("span", { className: "playground-plugin-detail-feature-icon playground-tags-detail-sidebar-action-icon" }, renderFeatureIcon(feature)),
+                    React.createElement("div", { className: "playground-plugin-detail-feature-copy playground-tags-detail-sidebar-action-copy" },
+                      React.createElement("div", { className: "playground-plugin-detail-feature-title-row" },
+                        React.createElement("span", { className: "playground-plugin-detail-feature-title" }, feature.title)
+                      ),
+                      feature.description
+                        ? React.createElement("div", { className: "playground-plugin-detail-feature-description" }, feature.description)
+                        : null
+                    )
+                  )
+                )
+              )
+            ),
+            React.createElement("section", { className: "playground-project-overview-sidebar-card" },
+              React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Provider Information")
+              ),
+              React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
+                [
+                  { label: "Website", href: selectedTag.websiteUrl },
+                  { label: "Terms", href: selectedTag.termsUrl },
+                  { label: "Privacy", href: selectedTag.privacyUrl },
+                ].map((row) =>
+                  renderSidebarRow(
+                    row.label,
+                    row.href
+                      ? React.createElement("a", {
+                          className: "playground-plugin-detail-info-link",
+                          href: row.href,
+                          target: "_blank",
+                          rel: "noreferrer",
+                        },
+                          React.createElement("span", { className: "playground-plugin-detail-info-link-text" }, getLinkLabel(row.href)),
+                          React.createElement(ExternalLink, { width: 12, height: 12, strokeWidth: 1.8 })
+                        )
+                      : renderSidebarValue("Not available"),
+                    { valueClassName: "playground-tags-detail-provider-value" }
+                  )
+                )
+              )
+            )
+          );
+
+          const tagPermissionsSection = React.createElement("section", {
+              className: "playground-agents-permissions-section",
+              key: "permissions",
+              "data-section-id": "permissions",
+            },
+            renderPlaygroundPermissionPanel(normalizedPermissionSet, {
+              subjectType: "agent",
+              onRingAccessChange: (ringId, access) => updateTagPermissionRingAccess(tagId, ringId, access),
+              onActionRingChange: (actionId, ringId) => updateTagPermissionActionRing(tagId, actionId, ringId),
+              onActionAccessChange: (actionId, access) => updateTagPermissionActionAccess(tagId, actionId, access),
+            })
+          );
+
+          const setupContent = (() => {
+            if (tagId === "email") {
+              const emailSetup = settingsEmailLoading
+                ? React.createElement("div", { className: "playground-settings-integration-loading" },
+                    React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                  )
+                : settingsEmailStatus?.linked && settingsEmailStatus?.verified
+                  ? React.createElement("div", { className: "playground-settings-integration-notice is-success" }, "Email is linked and ready to receive tasks.")
+                  : settingsShowEmailVerificationInput || (settingsEmailStatus?.linked && !settingsEmailStatus?.verified)
+                    ? React.createElement(React.Fragment, null,
+                        React.createElement("div", { className: "playground-settings-integration-notice is-warning" }, "A verification code has been sent to your email. Enter it below to complete linking."),
+                        React.createElement("div", { className: "playground-settings-integration-form-row" },
+                          React.createElement("input", {
+                            type: "text",
+                            value: settingsEmailVerificationCodeInput,
+                            onChange: (event) => setSettingsEmailVerificationCodeInput(event.target.value),
+                            placeholder: "Enter 6-digit code",
+                            maxLength: 6,
+                            className: "playground-settings-integration-input is-code",
+                          }),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-plugin-modal-button is-primary",
+                            onClick: () => {
+                              void handleSettingsVerifyEmailCode();
+                            },
+                            disabled: settingsIsVerifyingEmail || !settingsEmailVerificationCodeInput,
+                          }, settingsIsVerifyingEmail ? "Verifying..." : "Verify")
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-plugin-modal-button",
+                          onClick: () => {
+                            void handleSettingsCancelEmailVerification();
+                          },
+                        }, "Cancel")
+                      )
+                    : React.createElement("div", { className: "playground-settings-integration-form-row" },
+                        React.createElement("input", {
+                          type: "email",
+                          value: settingsEmailInput,
+                          onChange: (event) => setSettingsEmailInput(event.target.value),
+                          placeholder: "you@example.com",
+                          className: "playground-settings-integration-input is-email",
+                        }),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-plugin-modal-button is-primary",
+                          onClick: () => {
+                            void handleSettingsLinkEmail();
+                          },
+                          disabled: settingsIsLinkingEmail || !settingsEmailInput,
+                        }, settingsIsLinkingEmail ? "Linking..." : "Link Email")
+                      );
+              return React.createElement(React.Fragment, null,
+                emailSetup,
+                renderSettingsIntegrationMessage("error", settingsEmailError),
+                renderSettingsIntegrationMessage("success", settingsEmailSuccess)
+              );
+            }
+            if (tagId === "telegram") {
+              return React.createElement(React.Fragment, null,
+                settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
+                  ? React.createElement("div", { className: "playground-settings-integration-notice is-success" }, "Telegram is linked and ready to receive tasks.")
+                  : React.createElement(React.Fragment, null,
+                      React.createElement("ul", { className: "playground-plugin-modal-list" },
+                        React.createElement("li", null, "Open Telegram and search for @aios_agent_bot."),
+                        React.createElement("li", null, "Send /link to the bot."),
+                        React.createElement("li", null, "Enter the verification code below.")
+                      ),
+                      React.createElement("div", { className: "playground-settings-integration-form-row" },
+                        React.createElement("input", {
+                          type: "text",
+                          value: settingsTelegramVerificationCode,
+                          onChange: (event) => setSettingsTelegramVerificationCode(event.target.value),
+                          placeholder: "Enter verification code",
+                          className: "playground-settings-integration-input",
+                          maxLength: 6,
+                        }),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-plugin-modal-button is-primary",
+                          onClick: () => {
+                            void handleSettingsVerifyTelegramCode();
+                          },
+                          disabled: settingsIsVerifyingTelegram || !settingsTelegramVerificationCode.trim(),
+                        }, settingsIsVerifyingTelegram ? "Verifying..." : "Verify")
+                      )
+                    ),
+                renderSettingsIntegrationMessage("error", settingsTelegramError),
+                renderSettingsIntegrationMessage("success", settingsTelegramSuccess)
+              );
+            }
+            return React.createElement(React.Fragment, null,
+              selectedTag.connected
+                ? React.createElement("div", { className: "playground-settings-integration-notice is-success" }, selectedTag.label + " is connected and ready to receive tasks.")
+                : React.createElement("div", { className: "playground-settings-integration-notice" }, "Connect " + selectedTag.label + " to receive external requests."),
+              renderSettingsIntegrationMessage("error", settingsDiscordError),
+              renderSettingsIntegrationMessage("success", settingsDiscordSuccess)
+            );
+          })();
+          const setupSection = React.createElement("div", { className: "playground-plugin-detail-tutorial" },
+            React.createElement("section", { className: "playground-plugin-detail-section" },
+              React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Setup"),
+              React.createElement("div", { className: "playground-plugin-detail-tutorial-grid" },
+                [
+                  { id: "connect", title: "1. Connect " + selectedTag.label, copy: "Link the external identity that can start or continue work through this tag." },
+                  { id: "route", title: "2. Choose defaults", copy: "Select the default computer and permissions that should apply to incoming requests." },
+                  { id: "use", title: "3. Send a request", copy: tagManifest.workflowDescription || "Start work from the external service and ACP will route it into an agent thread." },
+                ].map((step) =>
+                  React.createElement("div", { key: step.id, className: "playground-plugin-detail-surface playground-plugin-detail-tutorial-card" },
+                    React.createElement("div", { className: "playground-plugin-detail-tutorial-title" }, step.title),
+                    React.createElement("div", { className: "playground-plugin-detail-tutorial-copy" }, step.copy)
+                  )
+                )
+              )
+            ),
+            React.createElement("section", { className: "playground-plugin-detail-section playground-plugin-detail-setup" },
+              React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Connection"),
+              setupContent
+            )
+          );
+          const activeSection = pluginDetailTab === "permissions"
+            ? tagPermissionsSection
+            : pluginDetailTab === "tutorial"
+              ? setupSection
+              : React.createElement(React.Fragment, null,
+                  analyticsSection,
+                  instructionsSection
+                );
+
+          return React.createElement(React.Fragment, null,
+            tagDetailBackButton,
+            tagProfileSection,
+            React.createElement("div", {
+                className: "playground-project-overview-layout playground-agents-detail-overview-layout" + (tagDetailSidebarCollapsed ? " is-sidebar-collapsed" : ""),
+              },
+              React.createElement("div", { className: "playground-project-overview-main playground-agents-detail-overview-main" },
+                tagDetailTabs,
+                isTagLoading
+                  ? React.createElement("div", { className: "playground-settings-loading-state" },
+                      React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                    )
+                  : null,
+                activeSection
+              ),
+              sidebar
+            ),
+          );
+        }
 
         function renderPluginDetailBody(selectedPlugin) {
           if (!selectedPlugin) {
@@ -160781,52 +169938,63 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         function renderPluginsPageNav() {
-          const pluginsCatalog = toolsView === "plugins" ? buildPluginsCatalog() : [];
-          const selectedPlugin = toolsView === "plugins"
-            ? pluginsCatalog.find((plugin) => plugin.id === selectedPluginId) || null
+          const isTagsView = toolsView === "tags";
+          const currentToolsCatalog = toolsView === "plugins"
+            ? buildPluginsCatalog()
+            : isTagsView
+              ? buildTagsCatalog()
+              : [];
+          const selectedPlugin = toolsView === "plugins" || isTagsView
+            ? currentToolsCatalog.find((plugin) => plugin.id === selectedPluginId) || null
             : null;
           const handleDisconnectAllPlugins = async () => {
-            const hasConnectedPlugin = Boolean(
-              githubStatus?.connected
-              || gmailStatus?.connected
-              || googleDriveStatus?.connected
-              || oneDriveStatus?.connected
-              || notionStatus?.connected
-              || (settingsEmailStatus?.linked && settingsEmailStatus?.verified)
-              || (settingsDiscordStatus?.linked && settingsDiscordStatus?.verified)
-              || (settingsTelegramStatus?.linked && settingsTelegramStatus?.verified)
-            );
+            const hasConnectedPlugin = isTagsView
+              ? Boolean(
+                  (settingsEmailStatus?.linked && settingsEmailStatus?.verified)
+                  || (settingsDiscordStatus?.linked && settingsDiscordStatus?.verified)
+                  || (settingsTelegramStatus?.linked && settingsTelegramStatus?.verified)
+                )
+              : Boolean(
+                  githubStatus?.connected
+                  || gmailStatus?.connected
+                  || googleDriveStatus?.connected
+                  || oneDriveStatus?.connected
+                  || notionStatus?.connected
+                );
             if (!hasConnectedPlugin) {
               setPluginsNavPopover("");
               return;
             }
-            if (!window.confirm("Disconnect all connected plugins from this account?")) {
+            if (!window.confirm("Disconnect all connected " + (isTagsView ? "tags" : "plugins") + " from this account?")) {
               return;
             }
             setPluginsNavPopover("");
-            if (githubStatus?.connected) {
-              await handleGithubAuthDisconnect();
-            }
-            if (googleDriveStatus?.connected) {
-              await handleGoogleDriveAuthDisconnect();
-            }
-            if (gmailStatus?.connected) {
-              await handleGmailAuthDisconnect();
-            }
-            if (oneDriveStatus?.connected) {
-              await handleOneDriveAuthDisconnect();
-            }
-            if (notionStatus?.connected) {
-              await handleNotionAuthDisconnect();
-            }
-            if (settingsEmailStatus?.linked && settingsEmailStatus?.verified) {
-              await handleSettingsUnlinkEmail();
-            }
-            if (settingsDiscordStatus?.linked && settingsDiscordStatus?.verified) {
-              await handleSettingsUnlinkDiscord();
-            }
-            if (settingsTelegramStatus?.linked && settingsTelegramStatus?.verified) {
-              await handleSettingsUnlinkTelegram();
+            if (isTagsView) {
+              if (settingsEmailStatus?.linked && settingsEmailStatus?.verified) {
+                await handleSettingsUnlinkEmail();
+              }
+              if (settingsDiscordStatus?.linked && settingsDiscordStatus?.verified) {
+                await handleSettingsUnlinkDiscord();
+              }
+              if (settingsTelegramStatus?.linked && settingsTelegramStatus?.verified) {
+                await handleSettingsUnlinkTelegram();
+              }
+            } else {
+              if (githubStatus?.connected) {
+                await handleGithubAuthDisconnect();
+              }
+              if (googleDriveStatus?.connected) {
+                await handleGoogleDriveAuthDisconnect();
+              }
+              if (gmailStatus?.connected) {
+                await handleGmailAuthDisconnect();
+              }
+              if (oneDriveStatus?.connected) {
+                await handleOneDriveAuthDisconnect();
+              }
+              if (notionStatus?.connected) {
+                await handleNotionAuthDisconnect();
+              }
             }
           };
 
@@ -160847,10 +170015,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const isPluginsView = toolsView === "plugins";
           const isSkillsView = toolsView === "skills";
           const isActionsView = toolsView === "actions";
-          const isPluginsDetailView = isPluginsView && Boolean(selectedPlugin);
+          const isPluginsDetailView = (isPluginsView || isTagsView) && Boolean(selectedPlugin);
           const isSkillsDetailView = isSkillsView && toolsSkillsHeaderState.mode === "detail";
-          const hasMenu = (isPluginsView && !isPluginsDetailView) || isActionsView;
-          const toolsOverviewTitle = isActionsView ? "Actions" : isSkillsView ? "Skills" : "Plugins";
+          const hasMenu = ((isPluginsView || isTagsView) && !isPluginsDetailView) || isActionsView;
+          const toolsOverviewTitle = isActionsView ? "Actions" : isSkillsView ? "Skills" : isTagsView ? "Tags" : "Plugins";
           const toolsWorkspaceRoot = isActionsView ? "Develop" : "Configure";
 
           return renderUnifiedTopNav({
@@ -160914,7 +170082,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       ? React.createElement("div", {
                           className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
                         },
-                          isPluginsView
+                          isPluginsView || isTagsView
                             ? React.createElement("button", {
                                 type: "button",
                                 className: "tb-popup-row",
@@ -160924,7 +170092,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               },
                                 React.createElement(Unlink, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                                 React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                  React.createElement("span", null, "Disconnect all plugins")
+                                  React.createElement("span", null, "Disconnect all " + (isTagsView ? "tags" : "plugins"))
                                 )
                               )
                             : React.createElement("button", {
@@ -160977,11 +170145,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
             );
           }
 
-          const pluginsCatalog = buildPluginsCatalog();
+          const isTagsView = toolsView === "tags";
+          const pluginsCatalog = isTagsView ? buildTagsCatalog() : buildPluginsCatalog();
           const pluginsOverviewFilterOptions = [
-            { id: "all", label: "All Plugins", description: "Show connected and disconnected plugins together" },
-            { id: "connected", label: "Connected", description: "Only show plugins currently linked to this account" },
-            { id: "disconnected", label: "Not Connected", description: "Only show plugins that still need setup" },
+            { id: "all", label: isTagsView ? "All Tags" : "All Plugins", description: "Show connected and disconnected " + (isTagsView ? "tags" : "plugins") + " together" },
+            { id: "connected", label: "Connected", description: "Only show " + (isTagsView ? "tags" : "plugins") + " currently linked to this account" },
+            { id: "disconnected", label: "Not Connected", description: "Only show " + (isTagsView ? "tags" : "plugins") + " that still need setup" },
           ];
           const pluginsOverviewSortOptions = [
             { id: "name", label: "Name (A-Z)" },
@@ -160992,7 +170161,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             const pluginCategoryKey = String(plugin?.category || "").trim().toLowerCase() === "channels"
               ? "channel"
               : "workspace";
-            if (pluginsOverviewCategory !== "all" && pluginCategoryKey !== pluginsOverviewCategory) {
+            if (!isTagsView && pluginsOverviewCategory !== "all" && pluginCategoryKey !== pluginsOverviewCategory) {
               return false;
             }
             if (pluginsOverviewFilter === "connected" && !plugin.connected) {
@@ -161016,36 +170185,83 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return String(left?.label || "").localeCompare(String(right?.label || ""));
           });
           const selectedPlugin = pluginsCatalog.find((plugin) => plugin.id === selectedPluginId) || null;
-          const featuredPlugins = [
-            {
-              id: "google-drive",
-              label: "Google Drive",
-              logoUrl: PLAYGROUND_GOOGLE_DRIVE_LOGO_URL,
-              copy: "Review new files from a shared folder",
-            },
-            {
-              id: "github",
-              label: "GitHub",
-              logoUrl: PLAYGROUND_GITHUB_LOGO_URL,
-              copy: "Triages PRs, CI, and milestones",
-            },
-            {
-              id: "gmail",
-              label: "Gmail",
-              logoUrl: PLAYGROUND_GMAIL_LOGO_URL,
-              copy: "Reads inbox context and drafts replies",
-            },
-            {
-              id: "notion",
-              label: "Notion",
-              logoUrl: PLAYGROUND_NOTION_LOGO_URL,
-              copy: "Draft specs and sync project notes",
-            },
-          ];
+          const featuredPlugins = isTagsView
+            ? [
+                {
+                  id: "email",
+                  label: "Email",
+                  icon: Mail,
+                  copy: "Starts and continues threads from an inbox",
+                },
+                {
+                  id: "discord",
+                  label: "Discord",
+                  logoUrl: "/img/logos/discord.svg",
+                  copy: "Runs agents from slash commands",
+                },
+                {
+                  id: "telegram",
+                  label: "Telegram",
+                  logoUrl: "/img/logos/telegram.svg",
+                  copy: "Runs agents through the ACP bot",
+                },
+              ]
+            : [
+                {
+                  id: "google-drive",
+                  label: "Google Drive",
+                  logoUrl: PLAYGROUND_GOOGLE_DRIVE_LOGO_URL,
+                  copy: "Review new files from a shared folder",
+                },
+                {
+                  id: "github",
+                  label: "GitHub",
+                  logoUrl: PLAYGROUND_GITHUB_LOGO_URL,
+                  copy: "Triages PRs, CI, and milestones",
+                },
+                {
+                  id: "gmail",
+                  label: "Gmail",
+                  logoUrl: PLAYGROUND_GMAIL_LOGO_URL,
+                  copy: "Reads inbox context and drafts replies",
+                },
+                {
+                  id: "notion",
+                  label: "Notion",
+                  logoUrl: PLAYGROUND_NOTION_LOGO_URL,
+                  copy: "Draft specs and sync project notes",
+                },
+              ];
           const activeFeaturedPlugin = featuredPlugins[pluginsHeroDisplayIndex % featuredPlugins.length] || featuredPlugins[0];
           const outgoingFeaturedPlugin = pluginsHeroOutgoingIndex === null
             ? null
             : featuredPlugins[pluginsHeroOutgoingIndex % featuredPlugins.length] || null;
+          const renderFeaturedPluginLogo = (plugin) => {
+            if (!plugin) {
+              return null;
+            }
+            if (plugin.logoUrl) {
+              return React.createElement("img", {
+                src: plugin.logoUrl,
+                alt: plugin.label,
+                className: plugin.id === "github" ? "is-github-hero" : "",
+              });
+            }
+            const Icon = plugin.icon || Cable;
+            return React.createElement("span", {
+                style: {
+                  width: "16px",
+                  height: "16px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#111",
+                  flex: "0 0 auto",
+                },
+              },
+              React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.8 })
+            );
+          };
 
           if (selectedPlugin) {
             const pluginHeaderButtonClass = "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button playground-plugin-detail-connect-button";
@@ -161099,9 +170315,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
               }, label);
             })();
 
+            if (isTagsView) {
+              return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page" },
+                React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+                  React.createElement("div", { className: "playground-plugin-detail-page playground-plugin-detail-content playground-agents-detail-content playground-tags-detail-content is-agent-overview-general" },
+                    renderTagDetailBody(selectedPlugin)
+                  )
+                )
+              );
+            }
+
             return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page" },
               React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                  React.createElement("div", { className: "playground-plugin-detail-page playground-plugin-detail-content" },
+                  React.createElement("div", { className: "playground-plugin-detail-page playground-plugin-detail-content" + (isTagsView ? " playground-agents-detail-content is-agent-overview-general" : "") },
                   React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-plugin-detail-title-row" },
                     React.createElement("div", { className: "playground-plugin-detail-title-main" },
                       React.createElement("div", { className: "playground-plugin-detail-header-icon-shell" }, renderPluginRowLogo(selectedPlugin)),
@@ -161132,10 +170358,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         className: "playground-project-overview-chart-tab" + (pluginDetailTab === "tutorial" ? " is-active" : ""),
                         onClick: () => setPluginDetailTab("tutorial"),
                         "aria-pressed": pluginDetailTab === "tutorial" ? "true" : "false",
-                      }, "Tutorial")
+                      }, isTagsView ? "Setup" : "Tutorial")
                       )
                   ),
-                  renderPluginDetailBody(selectedPlugin)
+                  isTagsView
+                    ? renderTagDetailBody(selectedPlugin)
+                    : renderPluginDetailBody(selectedPlugin)
                 )
               )
             );
@@ -161144,17 +170372,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail" },
             React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
               React.createElement("div", { className: "playground-plugins-page" },
-                React.createElement("h2", { className: "playground-plugins-hero-heading playground-tools-overview-heading" }, "Integrate ACP into your Daily work"),
+                React.createElement("h2", { className: "playground-plugins-hero-heading playground-tools-overview-heading" },
+                  isTagsView ? "Trigger agents from external channels" : "Integrate ACP into your Daily work"
+                ),
                 React.createElement("section", { className: "playground-plugins-hero-slider" },
                   React.createElement("div", { className: "playground-plugins-hero-slide" },
                     React.createElement("div", { className: "playground-plugins-hero-pill-stack" },
                       outgoingFeaturedPlugin
                         ? React.createElement("div", { className: "playground-plugins-hero-pill is-outgoing" },
-                            React.createElement("img", {
-                              src: outgoingFeaturedPlugin.logoUrl,
-                              alt: outgoingFeaturedPlugin.label,
-                              className: outgoingFeaturedPlugin.id === "github" ? "is-github-hero" : "",
-                            }),
+                            renderFeaturedPluginLogo(outgoingFeaturedPlugin),
                             React.createElement("span", null, outgoingFeaturedPlugin.label),
                             React.createElement("span", { style: { color: "rgba(17,17,17,0.72)" } }, outgoingFeaturedPlugin.copy)
                           )
@@ -161163,11 +170389,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           key: activeFeaturedPlugin.id + ":" + pluginsHeroTransitionKey,
                           className: "playground-plugins-hero-pill is-incoming",
                         },
-                        React.createElement("img", {
-                          src: activeFeaturedPlugin.logoUrl,
-                          alt: activeFeaturedPlugin.label,
-                          className: activeFeaturedPlugin.id === "github" ? "is-github-hero" : "",
-                        }),
+                        renderFeaturedPluginLogo(activeFeaturedPlugin),
                         React.createElement("span", null, activeFeaturedPlugin.label),
                         React.createElement("span", { style: { color: "rgba(17,17,17,0.72)" } }, activeFeaturedPlugin.copy)
                       )
@@ -161199,7 +170421,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 React.createElement("section", { className: "playground-plugins-section" },
                   React.createElement("div", { className: "playground-plugins-section-header" },
                     React.createElement("div", { className: "playground-plugins-section-copy" },
-                      React.createElement("h3", { className: "playground-plugins-section-title" }, "Plugins")
+                      React.createElement("h3", { className: "playground-plugins-section-title" }, isTagsView ? "Tags" : "Plugins")
                     )
                   ),
                   React.createElement("div", { className: "playground-plugins-search-row", ref: pluginsOverviewToolbarRef },
@@ -161284,31 +170506,33 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           : null
                       )
                     ),
-                    React.createElement("div", { className: "playground-agents-list-switch-row playground-plugins-toolbar-switch" },
-                      React.createElement("div", { className: "content-mode-switch playground-agents-list-switch" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "content-mode-button" + (pluginsOverviewCategory === "all" ? " is-active" : ""),
-                          onClick: () => setPluginsOverviewCategory("all"),
-                          "aria-pressed": pluginsOverviewCategory === "all",
-                        }, "All"),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "content-mode-button" + (pluginsOverviewCategory === "channel" ? " is-active" : ""),
-                          onClick: () => setPluginsOverviewCategory("channel"),
-                          "aria-pressed": pluginsOverviewCategory === "channel",
-                        }, "Channel"),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "content-mode-button" + (pluginsOverviewCategory === "workspace" ? " is-active" : ""),
-                          onClick: () => setPluginsOverviewCategory("workspace"),
-                          "aria-pressed": pluginsOverviewCategory === "workspace",
-                        }, "Integration")
-                      )
-                    )
+                    isTagsView
+                      ? null
+                      : React.createElement("div", { className: "playground-agents-list-switch-row playground-plugins-toolbar-switch" },
+                          React.createElement("div", { className: "content-mode-switch playground-agents-list-switch" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "content-mode-button" + (pluginsOverviewCategory === "all" ? " is-active" : ""),
+                              onClick: () => setPluginsOverviewCategory("all"),
+                              "aria-pressed": pluginsOverviewCategory === "all",
+                            }, "All"),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "content-mode-button" + (pluginsOverviewCategory === "channel" ? " is-active" : ""),
+                              onClick: () => setPluginsOverviewCategory("channel"),
+                              "aria-pressed": pluginsOverviewCategory === "channel",
+                            }, "Channel"),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "content-mode-button" + (pluginsOverviewCategory === "workspace" ? " is-active" : ""),
+                              onClick: () => setPluginsOverviewCategory("workspace"),
+                              "aria-pressed": pluginsOverviewCategory === "workspace",
+                            }, "Integration")
+                          )
+                        )
                   ),
                   sortedPlugins.length === 0
-                    ? React.createElement("div", { className: "playground-plugins-empty" }, "No plugins match your search.")
+                    ? React.createElement("div", { className: "playground-plugins-empty" }, "No " + (isTagsView ? "tags" : "plugins") + " match your search.")
                     : React.createElement("div", { className: "playground-plugins-grid" },
                         sortedPlugins.map((plugin) =>
                           React.createElement("button", {
@@ -167839,7 +177063,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return;
           }
 
-          const targetStillExists = baseThreadItems.some((thread) => thread.id === threadActionMenuState.threadId);
+	          const fallbackThreadId = String(threadActionMenuState.threadRecord?.id || "").trim();
+	          const targetStillExists = baseThreadItems.some((thread) => thread.id === threadActionMenuState.threadId)
+	            || (fallbackThreadId && fallbackThreadId === threadActionMenuState.threadId);
           if (!targetStillExists) {
             setThreadActionMenuState(null);
             return;
@@ -168068,7 +177294,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return;
           }
 
-          const targetStillExists = baseThreadItems.some((thread) => thread.id === threadRenameState.threadId);
+	          const fallbackThreadId = String(threadRenameState.threadRecord?.id || "").trim();
+	          const targetStillExists = baseThreadItems.some((thread) => thread.id === threadRenameState.threadId)
+	            || (fallbackThreadId && fallbackThreadId === threadRenameState.threadId);
           if (!targetStillExists) {
             setThreadRenameState(null);
             setThreadRenameValue("");
@@ -168101,7 +177329,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return;
           }
 
-          const targetStillExists = baseThreadItems.some((thread) => thread.id === threadProjectPickerState.threadId);
+	          const fallbackThreadId = String(threadProjectPickerState.threadRecord?.id || "").trim();
+	          const targetStillExists = baseThreadItems.some((thread) => thread.id === threadProjectPickerState.threadId)
+	            || (fallbackThreadId && fallbackThreadId === threadProjectPickerState.threadId);
           if (!targetStillExists) {
             setThreadProjectPickerState(null);
             setThreadProjectPickerValue("");
@@ -168356,7 +177586,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : resourcesView;
         const activeResourcesServerKind = activeResourcesView === "servers" ? resourcesServerKind : "";
         const isResourcesPage = activePage === "resources" || activePage === "agents" || activePage === "environments";
-        const isAgentVersionsDrawerOpen = isResourcesPage && activeResourcesView === "agents" && isAgentVersionsDetailOpen;
+        const isAgentVersionsDrawerOpen = isResourcesPage
+          && (activeResourcesView === "agents" || activeResourcesView === "computers")
+          && isAgentVersionsDetailOpen;
         const platformNavigationHistoryRef = useRef([]);
         const platformNavigationInitializedRef = useRef(false);
         const platformNavigationLastKeyRef = useRef("");
@@ -168419,9 +177651,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (activePage === "tools" || activePage === "plugins" || activePage === "skills") {
             return {
               page: "tools",
-              mode: selectedPluginId || toolsSkillsHeaderState.mode === "detail" ? "detail" : "overview",
+              mode: ((toolsView === "plugins" || toolsView === "tags") && selectedPluginId) || (toolsView === "skills" && toolsSkillsHeaderState.mode === "detail") ? "detail" : "overview",
               toolsView,
-              pluginId: toolsView === "plugins" ? selectedPluginId : "",
+              pluginId: toolsView === "plugins" || toolsView === "tags" ? selectedPluginId : "",
               skillId: toolsView === "skills" ? toolsSkillsHeaderState.skillId : "",
             };
           }
@@ -168468,6 +177700,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
             };
           }
 
+          if (activePage === "guardrails") {
+            return {
+              page: "guardrails",
+              mode: guardrailsPageMode === "detail" ? "detail" : "overview",
+              guardrailId: selectedGuardrailSetId,
+            };
+          }
+
           if (activePage === "resource-templates") {
             return {
               page: "resource-templates",
@@ -168504,6 +177744,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           filesPageTopNav?.contentMode,
           filesPageTopNav?.environmentId,
           filesPageTopNav?.path,
+          guardrailsPageMode,
           imagineActiveView,
           imagineFilterMode,
           imagineMediaMode,
@@ -168520,6 +177761,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           resourceTemplateSelectedId,
           resourceTemplateTypeFilter,
           selectedPluginId,
+          selectedGuardrailSetId,
           settingsSection,
           tasksHeaderState.detailMode,
           tasksHeaderState.mode,
@@ -168654,9 +177896,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
               ? "actions"
               : entry.toolsView === "skills"
                 ? "skills"
+                : entry.toolsView === "tags"
+                  ? "tags"
                 : "plugins";
-            openToolsView(nextToolsView, entry.skillId ? { skillId: entry.skillId } : {});
-            if (nextToolsView === "plugins") {
+            openToolsView(nextToolsView, nextToolsView === "skills" && entry.skillId ? { skillId: entry.skillId } : {});
+            if (nextToolsView === "plugins" || nextToolsView === "tags") {
               setSelectedPluginId(entry.pluginId || "");
             } else if (nextToolsView === "skills" && !entry.skillId) {
               setToolsSkillsBackRequestToken((current) => current + 1);
@@ -168708,6 +177952,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (entry.page === "models") {
             setModelsPageTab(normalizePlaygroundManagedModelsTab(entry.modelsTab));
             openModelsPage();
+            return;
+          }
+
+          if (entry.page === "guardrails") {
+            openGuardrailsPage({
+              mode: entry.mode === "detail" ? "detail" : "overview",
+              guardrailId: entry.guardrailId || "",
+            });
             return;
           }
 
@@ -173852,6 +183104,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
+        function renderGuardrailsPageNav() {
+          const activeGuardrailSet = (Array.isArray(guardrailSets) ? guardrailSets : [])
+            .find((set) => set?.id === selectedGuardrailSetId);
+          const guardrailsPathItems = [{ label: "Configure" }, { label: "Guardrails" }];
+          if (guardrailsPageMode === "detail" && activeGuardrailSet?.name) {
+            guardrailsPathItems.push({ label: activeGuardrailSet.name });
+          }
+          return renderUnifiedTopNav({
+            className: "playground-configure-navbar playground-models-navbar",
+            pathItems: guardrailsPathItems,
+          });
+        }
+
         function renderInferencePageNav() {
           return renderUnifiedTopNav({
             className: "playground-configure-navbar playground-models-navbar",
@@ -175214,6 +184479,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   agents: realAgents,
                   environments: runtimeEnvironments,
                   skills: demoSkills,
+                  currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
+                  currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",
+                  currentUserEmail: hasSessionAuth ? accountEmail : "",
+                  currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+                  workspaceTeams: teamPageTeams,
+                  workspaceTeamMembers: teamPageMembers,
+                  workspaceTeamMembersTeamId: teamPageSelectedTeamId,
+                  workspaceTeamsLoading: teamPageLoading,
+                  workspaceTeamsRequiresPlan: teamPageRequiresPlan,
+                  onWorkspaceTeamsRequest: (options = {}) => {
+                    const requestedTeamId = String(options?.selectedTeamId || options?.teamId || "").trim();
+                    void loadTeamPageData({ selectedTeamId: requestedTeamId });
+                  },
                   initialAgentId: resolvedPreferredAgentId || "",
                   preferredEnvironmentId: resolvedEnvironmentId || "",
                   preferredAgentId: resolvedPreferredAgentId || "",
@@ -175240,11 +184518,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     setCurrentThreadId(normalizedThreadId);
                     void refreshThreads();
                   },
-                  onThreadOpen: (threadId, options = {}) => {
-                    const normalizedThreadId = String(threadId || "").trim();
-                    if (!normalizedThreadId) {
-                      return;
-                    }
+	                  onThreadOpen: (threadId, options = {}) => {
+	                    const normalizedThreadId = String(threadId || "").trim();
+	                    if (!normalizedThreadId) {
+	                      return;
+	                    }
                     if (options?.threadRecord?.id) {
                       upsertRealThreadRecord(options.threadRecord);
                     }
@@ -175260,13 +184538,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     setContentMode(requestedContentMode);
                     setThreadListMode("threads");
                     setChangesNavigationTarget(null);
-                    setRunnerRenderKey((current) => current + 1);
-                    void refreshThreads(undefined, normalizedThreadId);
-                  },
-                  onThreadStarted: (threadId, options = {}) => {
-                    const normalizedThreadId = String(threadId || "").trim();
-                    if (!normalizedThreadId) {
-                      return;
+	                    setRunnerRenderKey((current) => current + 1);
+	                    void refreshThreads(undefined, normalizedThreadId);
+	                  },
+	                  onThreadActionMenuOpen: openThreadActionMenu,
+                  threadMutationSignal,
+	                  onThreadStarted: (threadId, options = {}) => {
+	                    const normalizedThreadId = String(threadId || "").trim();
+	                    if (!normalizedThreadId) {
+	                      return;
                     }
                     setThreadAgentSelectionOverride(null);
                     if (options?.taskPreview?.taskId) {
@@ -175409,6 +184689,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 onEnvironmentMutated: async () => {
                   await refreshEnvironments();
                 },
+                workspaceTeams: teamPageTeams,
+                workspaceTeamsLoading: teamPageLoading,
+                workspaceTeamsRequiresPlan: teamPageRequiresPlan,
+                onWorkspaceTeamsRequest: (options = {}) => {
+                  const requestedTeamId = String(options?.selectedTeamId || options?.teamId || "").trim();
+                  void loadTeamPageData({ selectedTeamId: requestedTeamId });
+                },
                 embeddedInResources: true,
                 embeddedResourcesView: activeResourcesView === "servers" ? "servers" : "computers",
                 embeddedServerKind: activeResourcesView === "servers" ? activeResourcesServerKind : "",
@@ -175417,6 +184704,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 navigationTargetResourceId: resourcesNavigationTarget.resourceId,
                 resourceTemplatePreviewResources,
                 topNavActionsPortalId: "playground-resources-nav-actions",
+                versionsDrawerPortalId: "playground-agent-versions-drawer-root",
+                onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
                 onResourcesHeaderChange: setResourcesHeaderState,
                 backRequestToken: resourcesBackRequestToken,
                 resourceBillingPreferences: settingsBillingPreferences,
@@ -175459,6 +184748,464 @@ ${PROJECT_OVERVIEW_SCRIPT}
             pricingUrl: ${JSON.stringify(aiosOrigin + "/pricing")},
             onOpenSkillSettings: (skillId) => openToolsView("skills", { skillId, preserveSidebarMode: true }),
           });
+        }
+
+        function renderGuardrailsPage() {
+          const safeGuardrailSets = Array.isArray(guardrailSets) ? guardrailSets : [];
+          const normalizedQuery = String(guardrailsSearchQuery || "").trim().toLowerCase();
+          const getPromptCount = (set) => Array.isArray(set?.prompts) ? set.prompts.length : 0;
+          const getEnabledPromptCount = (set) => (Array.isArray(set?.prompts) ? set.prompts : [])
+            .filter((prompt) => prompt?.enabled !== false)
+            .length;
+          const formatGuardrailDate = (value) => {
+            const date = new Date(value || "");
+            if (Number.isNaN(date.getTime())) return "Never";
+            return date.toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+          };
+          const filteredGuardrailSets = safeGuardrailSets
+            .filter((set) => {
+              if (guardrailsFilter === "enabled" && set?.enabled === false) return false;
+              if (guardrailsFilter === "disabled" && set?.enabled !== false) return false;
+              if (!normalizedQuery) return true;
+              const promptText = (Array.isArray(set?.prompts) ? set.prompts : [])
+                .map((prompt) => [prompt?.title, prompt?.prompt].filter(Boolean).join(" "))
+                .join(" ");
+              const haystack = [
+                set?.name,
+                set?.description,
+                promptText,
+              ].filter(Boolean).join(" ").toLowerCase();
+              return haystack.includes(normalizedQuery);
+            })
+            .sort((left, right) => {
+              if (guardrailsSort === "name") {
+                return String(left?.name || "").localeCompare(String(right?.name || ""));
+              }
+              if (guardrailsSort === "prompts") {
+                return getPromptCount(right) - getPromptCount(left);
+              }
+              const rightTime = new Date(right?.updatedAt || right?.createdAt || 0).getTime() || 0;
+              const leftTime = new Date(left?.updatedAt || left?.createdAt || 0).getTime() || 0;
+              return rightTime - leftTime;
+            });
+          const selectedGuardrailSet = safeGuardrailSets.find((set) => set?.id === selectedGuardrailSetId)
+            || safeGuardrailSets[0]
+            || null;
+          const selectedGuardrailPrompts = Array.isArray(selectedGuardrailSet?.prompts)
+            ? selectedGuardrailSet.prompts
+            : [];
+
+          function createGuardrailSet() {
+            const nextSet = createPlaygroundGuardrailSetDraft({
+              name: "Guardrail Set " + (safeGuardrailSets.length + 1),
+              description: "",
+            });
+            setGuardrailSets((current) => [nextSet, ...(Array.isArray(current) ? current : [])]);
+            setSelectedGuardrailSetId(nextSet.id);
+            setGuardrailsPageMode("detail");
+            setGuardrailsToolbarPopover("");
+          }
+
+          function selectGuardrailSet(setId) {
+            setSelectedGuardrailSetId(setId);
+            setGuardrailsPageMode("detail");
+            setGuardrailsToolbarPopover("");
+          }
+
+          function returnToGuardrailsOverview() {
+            setGuardrailsPageMode("overview");
+            setGuardrailsToolbarPopover("");
+          }
+
+          function updateGuardrailSet(setId, updater) {
+            const normalizedSetId = String(setId || "").trim();
+            if (!normalizedSetId) return;
+            setGuardrailSets((current) => (Array.isArray(current) ? current : []).map((set) => {
+              if (set?.id !== normalizedSetId) return set;
+              const updatedSet = typeof updater === "function" ? updater(set) : { ...set, ...updater };
+              return {
+                ...set,
+                ...updatedSet,
+                id: set.id,
+                prompts: Array.isArray(updatedSet?.prompts) ? updatedSet.prompts : (Array.isArray(set.prompts) ? set.prompts : []),
+                updatedAt: new Date().toISOString(),
+              };
+            }));
+          }
+
+          function deleteGuardrailSet(setId) {
+            const normalizedSetId = String(setId || "").trim();
+            if (!normalizedSetId) return;
+            const targetSet = safeGuardrailSets.find((set) => set?.id === normalizedSetId);
+            const confirmed = typeof window === "undefined" || window.confirm("Delete " + (targetSet?.name || "this guardrail set") + "?");
+            if (!confirmed) return;
+            setGuardrailSets((current) => (Array.isArray(current) ? current : []).filter((set) => set?.id !== normalizedSetId));
+            if (selectedGuardrailSetId === normalizedSetId) {
+              const fallbackSet = safeGuardrailSets.find((set) => set?.id !== normalizedSetId);
+              setSelectedGuardrailSetId(fallbackSet?.id || "");
+              if (guardrailsPageMode === "detail") {
+                setGuardrailsPageMode("overview");
+              }
+            }
+          }
+
+          function addGuardrailPrompt(setId) {
+            updateGuardrailSet(setId, (set) => {
+              const prompts = Array.isArray(set.prompts) ? set.prompts : [];
+              return {
+                ...set,
+                prompts: [
+                  ...prompts,
+                  createPlaygroundGuardrailPromptDraft({
+                    title: "Instruction " + (prompts.length + 1),
+                  }),
+                ],
+              };
+            });
+          }
+
+          function updateGuardrailPrompt(setId, promptId, patch) {
+            updateGuardrailSet(setId, (set) => ({
+              ...set,
+              prompts: (Array.isArray(set.prompts) ? set.prompts : []).map((prompt) => (
+                prompt?.id === promptId
+                  ? {
+                      ...prompt,
+                      ...patch,
+                      id: prompt.id,
+                      updatedAt: new Date().toISOString(),
+                    }
+                  : prompt
+              )),
+            }));
+          }
+
+          function deleteGuardrailPrompt(setId, promptId) {
+            updateGuardrailSet(setId, (set) => ({
+              ...set,
+              prompts: (Array.isArray(set.prompts) ? set.prompts : []).filter((prompt) => prompt?.id !== promptId),
+            }));
+          }
+
+          function handleGuardrailSetKeyDown(event, setId) {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            selectGuardrailSet(setId);
+          }
+
+          const filterOptions = [
+            { id: "all", label: "All" },
+            { id: "enabled", label: "Active" },
+            { id: "disabled", label: "Paused" },
+          ];
+          const sortOptions = [
+            { id: "updated", label: "Updated" },
+            { id: "name", label: "Name" },
+            { id: "prompts", label: "Prompts" },
+          ];
+
+          function renderGuardrailsToolbarMenu(kind) {
+            const options = kind === "sort" ? sortOptions : filterOptions;
+            const activeValue = kind === "sort" ? guardrailsSort : guardrailsFilter;
+            return React.createElement("div", {
+              className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide playground-files-toolbar-menu-align-right playground-guardrails-toolbar-menu",
+            },
+              React.createElement("div", { className: "playground-files-toolbar-menu-title" }, kind === "sort" ? "Sort by" : "Filter"),
+              options.map((option) =>
+                React.createElement("button", {
+                  key: option.id,
+                  type: "button",
+                  className: "playground-files-toolbar-menu-item" + (activeValue === option.id ? " is-active" : ""),
+                  onClick: () => {
+                    if (kind === "sort") {
+                      setGuardrailsSort(option.id);
+                    } else {
+                      setGuardrailsFilter(option.id);
+                    }
+                    setGuardrailsToolbarPopover("");
+                  },
+                },
+                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, activeValue === option.id ? "•" : ""),
+                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                    React.createElement("span", null, option.label)
+                  )
+                )
+              )
+            );
+          }
+
+          function renderGuardrailStatusPill(set) {
+            const enabled = set?.enabled !== false;
+            return React.createElement("span", { className: "playground-guardrails-status-pill" + (enabled ? " is-active" : " is-paused") },
+              React.createElement("span", { className: "playground-guardrails-status-dot", "aria-hidden": "true" }),
+              enabled ? "Active" : "Paused"
+            );
+          }
+
+          function renderGuardrailsTable() {
+            return React.createElement("div", { className: "playground-guardrails-table-shell" },
+              React.createElement("div", { className: "playground-guardrails-table" },
+                React.createElement("div", { className: "playground-guardrails-table-header" },
+                  React.createElement("span", null, "Set"),
+                  React.createElement("span", null, "Prompts"),
+                  React.createElement("span", null, "Status"),
+                  React.createElement("span", null, "Updated"),
+                  React.createElement("span", null, "")
+                ),
+                filteredGuardrailSets.map((set) => {
+                  const selected = selectedGuardrailSet?.id === set?.id;
+                  const enabledPrompts = getEnabledPromptCount(set);
+                  const totalPrompts = getPromptCount(set);
+                  return React.createElement("div", {
+                    key: set.id,
+                    role: "button",
+                    tabIndex: 0,
+                    className: "playground-guardrails-table-row" + (selected ? " is-selected" : ""),
+                    onClick: () => selectGuardrailSet(set.id),
+                    onKeyDown: (event) => handleGuardrailSetKeyDown(event, set.id),
+                  },
+                    React.createElement("div", { className: "playground-guardrails-set-cell" },
+                      React.createElement("span", { className: "playground-guardrails-set-icon" },
+                        React.createElement(Shield, { width: 14, height: 14, strokeWidth: 1.8 })
+                      ),
+                      React.createElement("div", { className: "playground-guardrails-set-copy" },
+                        React.createElement("span", { className: "playground-guardrails-set-title" }, set.name || "Untitled Guardrail Set"),
+                        set.description
+                          ? React.createElement("span", { className: "playground-guardrails-set-description" }, set.description)
+                          : null
+                      )
+                    ),
+                    React.createElement("span", { className: "playground-guardrails-table-muted" }, enabledPrompts + " / " + totalPrompts),
+                    renderGuardrailStatusPill(set),
+                    React.createElement("span", { className: "playground-guardrails-table-muted" }, formatGuardrailDate(set.updatedAt || set.createdAt)),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-guardrails-row-action",
+                      onClick: (event) => {
+                        event.stopPropagation();
+                        deleteGuardrailSet(set.id);
+                      },
+                      "aria-label": "Delete guardrail set",
+                    }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  );
+                })
+              )
+            );
+          }
+
+          const listContent = filteredGuardrailSets.length === 0
+            ? React.createElement("div", { className: "playground-guardrails-empty" },
+                React.createElement("div", { className: "playground-guardrails-empty-icon" },
+                  React.createElement(Shield, { width: 18, height: 18, strokeWidth: 1.8 })
+                ),
+                React.createElement("div", { className: "playground-guardrails-empty-title" }, "No guardrails found"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-library-new-button playground-guardrails-empty-button",
+                  onClick: createGuardrailSet,
+                },
+                  React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "New Set")
+                )
+              )
+            : renderGuardrailsTable();
+          const isGuardrailsDetailPage = guardrailsPageMode === "detail" && selectedGuardrailSet;
+          const guardrailsPageTitle = isGuardrailsDetailPage
+            ? (selectedGuardrailSet.name || "Untitled Guardrail Set")
+            : "Guardrails";
+
+          return React.createElement("section", { className: "playground-files-page playground-guardrails-page" },
+            React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" },
+              React.createElement("section", { className: "playground-files-browser playground-guardrails-browser" },
+                React.createElement("div", { className: "playground-files-browser-header playground-guardrails-browser-header" },
+                  React.createElement("div", { className: "playground-files-library-header playground-guardrails-library-header" },
+                    React.createElement("div", { className: "playground-files-library-title-row" },
+                      React.createElement("h1", { className: "playground-files-library-title" },
+                        isGuardrailsDetailPage
+                          ? React.createElement("span", { className: "playground-guardrails-title-with-back" },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-files-nav-button playground-guardrails-back-button",
+                                onClick: returnToGuardrailsOverview,
+                                "aria-label": "Back to guardrails",
+                              }, React.createElement(ChevronLeft, { width: 14, height: 14, strokeWidth: 1.8 })),
+                              React.createElement("span", null, guardrailsPageTitle)
+                            )
+                          : guardrailsPageTitle
+                      ),
+                      isGuardrailsDetailPage
+                        ? React.createElement("div", { className: "playground-guardrails-detail-actions" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-files-library-new-button",
+                              onClick: () => addGuardrailPrompt(selectedGuardrailSet.id),
+                            },
+                              React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
+                              React.createElement("span", null, "Prompt")
+                            ),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-files-library-icon-button",
+                              onClick: () => deleteGuardrailSet(selectedGuardrailSet.id),
+                              "aria-label": "Delete guardrail set",
+                            }, React.createElement(Trash2, { width: 15, height: 15, strokeWidth: 1.8 }))
+                          )
+                        : React.createElement("div", { className: "playground-files-library-actions" },
+                            React.createElement("div", { className: "playground-files-library-search-anchor" },
+                              React.createElement("label", { className: "playground-files-library-search" },
+                                React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
+                                React.createElement("input", {
+                                  type: "text",
+                                  className: "playground-files-library-search-input",
+                                  placeholder: "Search guardrails",
+                                  value: guardrailsSearchQuery,
+                                  onChange: (event) => setGuardrailsSearchQuery(event.target.value),
+                                })
+                              )
+                            ),
+                            React.createElement("div", { className: "playground-files-library-new-anchor" },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-files-library-new-button",
+                                onClick: createGuardrailSet,
+                              },
+                                React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
+                                React.createElement("span", null, "New Set")
+                              )
+                            )
+                          )
+                    ),
+                    isGuardrailsDetailPage
+                      ? null
+                      : React.createElement("div", { className: "playground-files-library-nav-row", ref: guardrailsToolbarRef },
+                          React.createElement("div", { className: "playground-files-library-tabs content-mode-switch playground-guardrails-library-tabs" },
+                            filterOptions.map((option) =>
+                              React.createElement("button", {
+                                key: option.id,
+                                type: "button",
+                                className: "playground-files-library-tab" + (guardrailsFilter === option.id ? " is-active" : ""),
+                                onClick: () => {
+                                  setGuardrailsFilter(option.id);
+                                  setGuardrailsToolbarPopover("");
+                                },
+                              }, option.label)
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-files-library-controls" },
+                            React.createElement("div", { className: "playground-files-library-control-anchor" },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-files-library-icon-button" + (guardrailsToolbarPopover === "sort" || guardrailsSort !== "updated" ? " is-active" : ""),
+                                onClick: () => setGuardrailsToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                                title: "Sort guardrails",
+                                "aria-label": "Sort guardrails",
+                              }, React.createElement(ArrowUpDown, { width: 19, height: 19, strokeWidth: 1.8 })),
+                              guardrailsToolbarPopover === "sort" ? renderGuardrailsToolbarMenu("sort") : null
+                            ),
+                            React.createElement("div", { className: "playground-files-library-control-anchor" },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-files-library-icon-button" + (guardrailsToolbarPopover === "filter" || guardrailsFilter !== "all" ? " is-active" : ""),
+                                onClick: () => setGuardrailsToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                                title: "Filter guardrails",
+                                "aria-label": "Filter guardrails",
+                              }, React.createElement(SlidersHorizontal, { width: 19, height: 19, strokeWidth: 1.8 })),
+                              guardrailsToolbarPopover === "filter" ? renderGuardrailsToolbarMenu("filter") : null
+                            )
+                          )
+                        )
+                  )
+                ),
+                React.createElement("div", { className: "playground-files-browser-body playground-guardrails-browser-body" },
+                  isGuardrailsDetailPage
+                    ? React.createElement("div", { className: "playground-guardrails-detail" },
+                        React.createElement("div", { className: "playground-guardrails-editor" },
+                          React.createElement("div", { className: "playground-guardrails-editor-header" },
+                            React.createElement("div", { className: "playground-guardrails-editor-title-row" },
+                              React.createElement("span", { className: "playground-guardrails-set-icon" },
+                                React.createElement(Shield, { width: 14, height: 14, strokeWidth: 1.8 })
+                              ),
+                              React.createElement("span", null, "Guardrail Set")
+                            ),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-guardrails-toggle" + (selectedGuardrailSet.enabled === false ? "" : " is-active"),
+                              onClick: () => updateGuardrailSet(selectedGuardrailSet.id, { enabled: selectedGuardrailSet.enabled === false }),
+                              "aria-label": selectedGuardrailSet.enabled === false ? "Enable guardrail set" : "Pause guardrail set",
+                            },
+                              React.createElement("span", { className: "playground-guardrails-toggle-knob" })
+                            )
+                          ),
+                          React.createElement("label", { className: "playground-guardrails-field" },
+                            React.createElement("span", null, "Name"),
+                            React.createElement("input", {
+                              type: "text",
+                              className: "playground-guardrails-input",
+                              value: selectedGuardrailSet.name || "",
+                              onChange: (event) => updateGuardrailSet(selectedGuardrailSet.id, { name: event.target.value }),
+                            })
+                          ),
+                          React.createElement("label", { className: "playground-guardrails-field" },
+                            React.createElement("span", null, "Description"),
+                            React.createElement("textarea", {
+                              className: "playground-guardrails-textarea is-description",
+                              value: selectedGuardrailSet.description || "",
+                              onChange: (event) => updateGuardrailSet(selectedGuardrailSet.id, { description: event.target.value }),
+                            })
+                          ),
+                          React.createElement("div", { className: "playground-guardrails-prompts-header" },
+                            React.createElement("div", { className: "playground-guardrails-prompts-title" },
+                              React.createElement(EyeOff, { width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("span", null, "Invisible Prompts")
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-guardrails-prompts-list" },
+                            selectedGuardrailPrompts.length === 0
+                              ? React.createElement("div", { className: "playground-guardrails-prompt-empty" }, "No prompts in this set.")
+                              : selectedGuardrailPrompts.map((prompt) =>
+                                  React.createElement("div", { key: prompt.id, className: "playground-guardrails-prompt-card" },
+                                    React.createElement("div", { className: "playground-guardrails-prompt-top" },
+                                      React.createElement("input", {
+                                        type: "text",
+                                        className: "playground-guardrails-prompt-title-input",
+                                        value: prompt.title || "",
+                                        onChange: (event) => updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { title: event.target.value }),
+                                      }),
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "playground-guardrails-prompt-enable" + (prompt.enabled === false ? "" : " is-active"),
+                                        onClick: () => updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { enabled: prompt.enabled === false }),
+                                        "aria-label": prompt.enabled === false ? "Enable prompt" : "Disable prompt",
+                                      }, prompt.enabled === false ? "Paused" : "Active"),
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "playground-guardrails-prompt-delete",
+                                        onClick: () => deleteGuardrailPrompt(selectedGuardrailSet.id, prompt.id),
+                                        "aria-label": "Delete prompt",
+                                      }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                                    ),
+                                    React.createElement("textarea", {
+                                      className: "playground-guardrails-textarea is-prompt",
+                                      value: prompt.prompt || "",
+                                      placeholder: "Prompt text",
+                                      onChange: (event) => updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { prompt: event.target.value }),
+                                    })
+                                  )
+                                )
+                          )
+                        )
+                      )
+                    : React.createElement("div", { className: "playground-guardrails-layout" },
+                        React.createElement("div", { className: "playground-guardrails-list-panel" }, listContent)
+                      )
+                )
+              )
+            )
+          );
         }
 
         function getPlaygroundResourceTemplateMetronomePreviewWorkflowId(templateId) {
@@ -177252,6 +186999,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 onClick: () => openResourcesView("computers"),
               },
               {
+                id: "tags",
+                label: "Tags",
+                Icon: Tag,
+                active: activePage === "tools" && toolsView === "tags",
+                onClick: handleOpenTagsShortcut,
+              },
+              {
                 id: "plugins",
                 label: "Plugins",
                 Icon: Cable,
@@ -177264,6 +187018,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 Icon: Layers,
                 active: activePage === "tools" && toolsView === "skills",
                 onClick: handleOpenSkillsShortcut,
+              },
+              {
+                id: "configure-governance-label",
+                type: "subtitle",
+                label: "Governance",
+              },
+              {
+                id: "guardrails",
+                label: "Guardrails",
+                Icon: Shield,
+                active: activePage === "guardrails",
+                onClick: () => openGuardrailsPage(),
               },
               {
                 id: "configure-infrastructure-label",
@@ -177828,6 +187594,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      ? renderConfigureHomeNav()
 	                    : activePage === "models"
 	                      ? renderModelsPageNav()
+	                    : activePage === "guardrails"
+	                      ? renderGuardrailsPageNav()
 	                    : activePage === "resource-templates"
 	                      ? renderResourceTemplatesPageNav()
 	                    : activePage === "inference"
@@ -178110,7 +187878,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             : null
                         )
                       ),
-	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isAgentVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (activePage === "files" ? " is-files-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
+	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isAgentVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (activePage === "files" || activePage === "guardrails" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
 	                    activePage === "settings"
 	                      ? renderSettingsPage()
 	                      : activePage === "team"
@@ -178128,6 +187896,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      : activePage === "models"
 	                        ? hasRealAccess
 	                          ? renderModelsPage()
+	                          : hasDemoAccess
+	                            ? renderDemoFeaturePage("resources")
+	                            : renderAuthGate()
+	                      : activePage === "guardrails"
+	                        ? hasRealAccess
+	                          ? renderGuardrailsPage()
 	                          : hasDemoAccess
 	                            ? renderDemoFeaturePage("resources")
 	                            : renderAuthGate()
@@ -179036,7 +188810,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       })
                     : null
                   ,
-                  isResourcesPage && activeResourcesView === "agents"
+                  isResourcesPage && (activeResourcesView === "agents" || activeResourcesView === "computers")
                     ? React.createElement("aside", {
                         id: "playground-agent-versions-drawer-root",
                         className: "playground-metronome-node-drawer playground-agent-versions-node-drawer" + (isAgentVersionsDrawerOpen ? " is-open" : ""),
@@ -187913,6 +197687,17 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "DELETE" && url.pathname === "/api/aios/user/email") {
     void proxyAiosJsonRequest(req, res, "/api/user/email", "DELETE");
+    return;
+  }
+
+  const aiosUserTagMatch = url.pathname.match(/^\/api\/aios\/user\/tags\/([^/]+)$/);
+  if ((req.method === "GET" || req.method === "PATCH") && aiosUserTagMatch) {
+    void proxyAiosJsonRequest(
+      req,
+      res,
+      `/api/user/tags/${encodeURIComponent(decodeURIComponent(aiosUserTagMatch[1]))}`,
+      req.method,
+    );
     return;
   }
 

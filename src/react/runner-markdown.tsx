@@ -292,16 +292,18 @@ function formatRunnerMarkdownImageUrl(value: string): string {
 }
 
 function normalizeRunnerMarkdownContent(content: string): string {
-  return String(content || "").replace(/<img\b([^>]*)\/?>/gi, (match, rawAttributes) => {
-    const attributes = parseRunnerMarkdownHtmlAttributes(String(rawAttributes || ""));
-    const src = attributes.src || "";
-    if (!src.trim()) {
-      return match;
-    }
-    const alt = escapeRunnerMarkdownImageAlt(attributes.alt || attributes.title || "Image");
-    const imageUrl = formatRunnerMarkdownImageUrl(src);
-    return imageUrl ? `![${alt || "Image"}](${imageUrl})` : match;
-  });
+  return String(content || "")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<img\b([^>]*)\/?>/gi, (match, rawAttributes) => {
+      const attributes = parseRunnerMarkdownHtmlAttributes(String(rawAttributes || ""));
+      const src = attributes.src || "";
+      if (!src.trim()) {
+        return match;
+      }
+      const alt = escapeRunnerMarkdownImageAlt(attributes.alt || attributes.title || "Image");
+      const imageUrl = formatRunnerMarkdownImageUrl(src);
+      return imageUrl ? `![${alt || "Image"}](${imageUrl})` : match;
+    });
 }
 
 function getRunnerMarkdownWorkspaceDirectory(value?: string | null): string {

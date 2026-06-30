@@ -4129,12 +4129,15 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         display: flex;
         flex-direction: column;
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
       }
 
       .playground-project-overview-threads-table-header,
       .playground-project-overview-threads-table-row {
         display: grid;
-        grid-template-columns: minmax(0, 2.2fr) minmax(120px, 1fr) minmax(84px, 0.7fr) minmax(112px, 0.8fr) 28px;
+        grid-template-columns: minmax(0, 2fr) minmax(86px, 0.62fr) minmax(0, 1.08fr) minmax(0, 1.2fr) minmax(82px, 0.62fr) 28px;
         align-items: center;
         gap: 16px;
       }
@@ -4171,10 +4174,23 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-thread-cell.is-date,
-      .playground-project-overview-thread-cell.is-task {
+      .playground-project-overview-thread-cell.is-task,
+      .playground-project-overview-thread-cell.is-source,
+      .playground-project-overview-thread-cell.is-environment,
+      .playground-project-overview-thread-cell.is-triggered-by {
         font-size: 12px;
         line-height: 1.45;
-        color: rgba(255, 255, 255, 0.56);
+        color: rgba(255, 255, 255, 0.62);
+        overflow: visible;
+        text-overflow: clip;
+      }
+
+      .playground-project-overview-thread-cell.is-source {
+        color: rgba(255, 255, 255, 0.74);
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-thread-cell.is-date {
         white-space: nowrap;
       }
 
@@ -8248,123 +8264,576 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
-          function renderOverviewThreadRow(thread) {
-            const { safeThread, taskTicketNumber, displayThreadTitle } = typeof getSidebarThreadTitleParts === "function"
-              ? getSidebarThreadTitleParts(thread)
-              : {
-                  safeThread: thread,
-                  taskTicketNumber: "",
-                  displayThreadTitle: thread?.title || "Untitled thread",
-                };
-            const threadId = String(safeThread?.id || thread?.id || "").trim();
-            const threadTaskPreview = typeof getThreadTaskPreview === "function"
-              ? getThreadTaskPreview(safeThread)
-              : null;
-            const threadTaskId = String(threadTaskPreview?.taskId || safeThread?.taskId || "").trim();
-            const threadActor = typeof getPlaygroundThreadActorInfo === "function"
-              ? getPlaygroundThreadActorInfo(safeThread, agentsById, "No agent")
-              : {
-                  id: String(safeThread?.agentId || "").trim(),
-                  name: String(safeThread?.agentId || "").trim() || "No agent",
-                };
-            const threadAgentId = String(threadActor?.id || "").trim();
-            const threadAgent = threadAgentId && agentsById && agentsById[threadAgentId]
-              ? agentsById[threadAgentId]
-              : null;
-            const threadAgentName = String(threadActor?.name || "").trim() || "No agent";
-            const threadAgentPhotoUrl = threadAgent
-              ? normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(threadAgent))
-              : normalizeSessionPhotoUrl(
-                  threadActor?.photoUrl
-                  || safeThread?.agentPhotoUrl
-                  || safeThread?.agent_photo_url
-                  || safeThread?.agentAvatarUrl
-                  || safeThread?.agent_avatar_url
-                  || ""
-                );
-            const threadDateLabel = typeof formatThreadSearchTimestamp === "function"
-              ? (formatThreadSearchTimestamp(typeof resolveThreadSortTimestamp === "function" ? resolveThreadSortTimestamp(safeThread) : (safeThread?.updatedAt || safeThread?.createdAt || "")) || "—")
-              : (formatRelativeThreadTime(safeThread?.updatedAt || safeThread?.createdAt) || "—");
-            const canManageThread = Boolean(threadId);
-
-            return React.createElement("div", {
-                key: threadId || displayThreadTitle,
-                className: "playground-project-overview-threads-table-row",
-                role: "button",
-                tabIndex: 0,
-                onClick: () => {
-                  if (!threadId) {
-                    return;
-                  }
-                  if (typeof upsertRealThreadRecord === "function") {
-                    upsertRealThreadRecord(safeThread);
-                  }
-                  if (typeof onThreadOpen === "function") {
-                    onThreadOpen(threadId, { threadRecord: safeThread });
-                  } else if (typeof handleThreadSelect === "function") {
-                    handleThreadSelect(threadId);
-                  }
-                },
-                onKeyDown: (event) => {
-                  if ((event.key === "Enter" || event.key === " ") && threadId) {
-                    event.preventDefault();
-                    if (typeof upsertRealThreadRecord === "function") {
-                      upsertRealThreadRecord(safeThread);
-                    }
-                    if (typeof onThreadOpen === "function") {
-                      onThreadOpen(threadId, { threadRecord: safeThread });
-                    } else if (typeof handleThreadSelect === "function") {
-                      handleThreadSelect(threadId);
-                    }
-                  }
-                },
-              },
-              React.createElement("div", { className: "playground-project-overview-thread-cell" },
-                React.createElement("div", { className: "playground-plugin-row-title" }, displayThreadTitle || "Untitled thread")
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell" },
-                React.createElement("div", { className: "playground-project-overview-thread-assignee" },
-                  threadAgentName && threadAgentName !== "No agent" && typeof renderAgentNameAvatar === "function"
-                    ? renderAgentNameAvatar(threadAgentName, "playground-project-overview-agent-avatar", threadAgentPhotoUrl)
-                    : null,
-                  React.createElement("div", { className: "playground-project-overview-thread-agent" }, threadAgentName)
-                )
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-task" },
-                threadTaskId
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-project-overview-file-task-button",
-                      onClick: (event) => {
-                        event.stopPropagation();
-                        typeof handleSelectTask === "function" && handleSelectTask(threadTaskId);
-                      },
-                    }, taskTicketNumber || "—")
-                  : (taskTicketNumber || "—")
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, threadDateLabel),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
-                canManageThread
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-project-overview-thread-menu-button",
-                      "aria-label": "Thread actions",
-                      onClick: (event) => {
-                        event.stopPropagation();
-                        if (typeof onThreadOptionsOpen === "function") {
-                          onThreadOptionsOpen(event, threadId, { threadRecord: safeThread });
-                        } else {
-                          if (typeof upsertRealThreadRecord === "function") {
-                            upsertRealThreadRecord(safeThread);
-                          }
-                          typeof openThreadActionMenu === "function" && openThreadActionMenu(event, threadId, safeThread);
-                        }
-                      },
-                    }, React.createElement(Ellipsis, { width: 15, height: 15, strokeWidth: 1.8 }))
-                  : null
-              )
-            );
+          function getProjectOverviewThreadRecordObject(value) {
+            return value && typeof value === "object" && !Array.isArray(value) ? value : {};
           }
+
+          function getProjectOverviewThreadMetadataParts(thread) {
+            const normalizedThread = getProjectOverviewThreadRecordObject(thread);
+            const rawThread = getProjectOverviewThreadRecordObject(normalizedThread.rawThread);
+            const metadata = getProjectOverviewThreadRecordObject(rawThread.metadata || normalizedThread.metadata);
+            const runnerPlayground = getProjectOverviewThreadRecordObject(metadata.runnerPlayground);
+            const runnerPlaygroundSnake = getProjectOverviewThreadRecordObject(metadata.runner_playground);
+            const runner = Object.keys(runnerPlayground).length > 0 ? runnerPlayground : runnerPlaygroundSnake;
+            const taskPreview = getProjectOverviewThreadRecordObject(runner.taskPreview || runner.task_preview);
+            const missionControl = getProjectOverviewThreadRecordObject(runner.missionControl || runner.mission_control);
+            const agentAssistant = getProjectOverviewThreadRecordObject(runner.agentAssistant || runner.agent_assistant);
+            const metronome = getProjectOverviewThreadRecordObject(
+              metadata.metronome
+              || metadata.metronomeWorkflow
+              || metadata.metronome_workflow
+              || runner.metronome
+              || runner.metronomeWorkflow
+              || runner.metronome_workflow
+            );
+            const sourceRecord = getProjectOverviewThreadRecordObject(rawThread.source || metadata.source || runner.source);
+            const triggerRecord = getProjectOverviewThreadRecordObject(rawThread.trigger || metadata.trigger || runner.trigger);
+            return {
+              rawThread,
+              normalizedThread,
+              metadata,
+              runner,
+              taskPreview,
+              missionControl,
+              agentAssistant,
+              metronome,
+              sourceRecord,
+              triggerRecord,
+            };
+          }
+
+          function readProjectOverviewThreadStringFromSources(sources, keys) {
+            for (const source of sources) {
+              if (!source || typeof source !== "object" || Array.isArray(source)) {
+                continue;
+              }
+              for (const key of keys) {
+                const value = source[key];
+                if (typeof value === "string" && value.trim()) {
+                  return value.trim();
+                }
+                if (typeof value === "number" && Number.isFinite(value)) {
+                  return String(value);
+                }
+              }
+            }
+            return "";
+          }
+
+          function formatProjectOverviewThreadSourceLabel(value) {
+            const rawValue = String(value || "").trim();
+            const normalizedValue = rawValue.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+            if (!normalizedValue) {
+              return "";
+            }
+            if (normalizedValue.includes("mission_control")) return "Mission Control";
+            if (normalizedValue.includes("metronome") || normalizedValue.includes("workflow")) return "Metronome";
+            if (normalizedValue.includes("email") || normalizedValue.includes("gmail") || normalizedValue === "mail" || normalizedValue.includes("inbox")) return "Email";
+            if (normalizedValue.includes("slack")) return "Slack";
+            if (normalizedValue.includes("discord")) return "Discord";
+            if (normalizedValue.includes("telegram")) return "Telegram";
+            if (normalizedValue.includes("webhook")) return "Webhook";
+            if (normalizedValue.includes("api")) return "API";
+            if (normalizedValue.includes("schedule") || normalizedValue.includes("cron")) return "Schedule";
+            if (normalizedValue.includes("github")) return "GitHub";
+            if (normalizedValue.includes("gitlab")) return "GitLab";
+            if (
+              normalizedValue.includes("chat")
+              || normalizedValue.includes("thread")
+              || normalizedValue.includes("assistant")
+              || normalizedValue.includes("manual")
+              || normalizedValue.includes("composer")
+              || normalizedValue.includes("input")
+              || normalizedValue.includes("sidebar")
+              || normalizedValue.includes("private")
+              || normalizedValue === "runner_web_sdk"
+              || normalizedValue.includes("runner_web_sdk")
+              || normalizedValue.includes("runner_web")
+            ) {
+              return "Chat";
+            }
+            return normalizedValue
+              .split("_")
+              .filter(Boolean)
+              .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+              .join(" ");
+          }
+
+          function getProjectOverviewThreadSourceLabel(thread) {
+            const parts = getProjectOverviewThreadMetadataParts(thread);
+            const sourceSources = [
+              parts.rawThread,
+              parts.normalizedThread,
+              parts.metadata,
+              parts.runner,
+              parts.taskPreview,
+              parts.missionControl,
+              parts.agentAssistant,
+              parts.metronome,
+              parts.sourceRecord,
+              parts.triggerRecord,
+            ];
+            const metronomeCue = readProjectOverviewThreadStringFromSources(sourceSources, [
+              "metronomeId",
+              "metronome_id",
+              "metronomeWorkflowId",
+              "metronome_workflow_id",
+              "workflowId",
+              "workflow_id",
+              "workflowRunId",
+              "workflow_run_id",
+            ]);
+            if ((typeof getThreadMetronomeMetadata === "function" && getThreadMetronomeMetadata(thread)) || metronomeCue || Object.keys(parts.metronome).length > 0) {
+              return "Metronome";
+            }
+            const explicitSource = readProjectOverviewThreadStringFromSources(sourceSources, [
+              "source",
+              "sourceType",
+              "source_type",
+              "triggerSource",
+              "trigger_source",
+              "trigger",
+              "triggerType",
+              "trigger_type",
+              "origin",
+              "originType",
+              "origin_type",
+              "channel",
+              "channelType",
+              "channel_type",
+              "connector",
+              "connectorType",
+              "connector_type",
+              "integration",
+              "provider",
+              "providerId",
+              "provider_id",
+              "resourceType",
+              "resource_type",
+              "runKind",
+              "run_kind",
+              "app",
+              "appId",
+              "app_id",
+              "type",
+              "kind",
+            ]);
+            return formatProjectOverviewThreadSourceLabel(explicitSource) || "Chat";
+          }
+
+          function getProjectOverviewThreadEnvironmentLabel(thread) {
+            const parts = getProjectOverviewThreadMetadataParts(thread);
+            const taskPreview = typeof getThreadTaskPreview === "function" ? (getThreadTaskPreview(thread) || parts.taskPreview) : parts.taskPreview;
+            const missionControl = typeof getThreadMissionControlMetadata === "function" ? (getThreadMissionControlMetadata(thread) || parts.missionControl) : parts.missionControl;
+            const projectRecord = getProjectOverviewThreadRecordObject(
+              parts.rawThread.project
+              || parts.metadata.project
+              || parts.runner.project
+              || taskPreview.project
+              || missionControl.project
+            );
+            const environmentRecord = getProjectOverviewThreadRecordObject(
+              parts.rawThread.environment
+              || parts.rawThread.computer
+              || parts.metadata.environment
+              || parts.metadata.computer
+              || parts.runner.environment
+              || parts.runner.computer
+              || taskPreview.environment
+            );
+            const projectName = readProjectOverviewThreadStringFromSources([projectRecord], [
+              "projectName",
+              "project_name",
+              "displayName",
+              "display_name",
+              "name",
+              "title",
+            ]) || readProjectOverviewThreadStringFromSources([
+              taskPreview,
+              missionControl,
+              parts.rawThread,
+              parts.normalizedThread,
+              parts.metadata,
+              parts.runner,
+            ], [
+              "projectName",
+              "project_name",
+            ]);
+            if (projectName) {
+              return projectName;
+            }
+            const environmentId = readProjectOverviewThreadStringFromSources([environmentRecord], [
+              "environmentId",
+              "environment_id",
+              "computerId",
+              "computer_id",
+              "id",
+            ]) || readProjectOverviewThreadStringFromSources([
+              taskPreview,
+              parts.rawThread,
+              parts.normalizedThread,
+              parts.metadata,
+              parts.runner,
+            ], [
+              "environmentId",
+              "environment_id",
+              "computerId",
+              "computer_id",
+            ]);
+            const listedEnvironment = environmentId && environmentsById ? environmentsById[environmentId] || null : null;
+            const environmentName = readProjectOverviewThreadStringFromSources([
+              environmentRecord,
+              listedEnvironment,
+            ], [
+              "environmentName",
+              "environment_name",
+              "computerName",
+              "computer_name",
+              "displayName",
+              "display_name",
+              "name",
+              "title",
+            ]) || readProjectOverviewThreadStringFromSources([
+              taskPreview,
+              parts.rawThread,
+              parts.normalizedThread,
+              parts.metadata,
+              parts.runner,
+            ], [
+              "environmentName",
+              "environment_name",
+              "computerName",
+              "computer_name",
+            ]);
+            if (environmentName) {
+              return environmentName;
+            }
+            const projectId = readProjectOverviewThreadStringFromSources([projectRecord], [
+              "projectId",
+              "project_id",
+              "id",
+            ]) || readProjectOverviewThreadStringFromSources([
+              taskPreview,
+              missionControl,
+              parts.rawThread,
+              parts.normalizedThread,
+              parts.metadata,
+              parts.runner,
+            ], [
+              "projectId",
+              "project_id",
+            ]);
+            return projectId || environmentId || String(selectedProject?.name || selectedProject?.title || "").trim() || "Workspace";
+          }
+
+          function getProjectOverviewThreadIdentitySources(value) {
+            const source = getProjectOverviewThreadRecordObject(value);
+            return [
+              source,
+              getProjectOverviewThreadRecordObject(source.user),
+              getProjectOverviewThreadRecordObject(source.profile),
+              getProjectOverviewThreadRecordObject(source.account),
+              getProjectOverviewThreadRecordObject(source.identity),
+              getProjectOverviewThreadRecordObject(source.member),
+            ].filter((entry) => Object.keys(entry).length > 0);
+          }
+
+          function normalizeProjectOverviewThreadPersonIdentity(record, fallback = {}) {
+            const sources = [
+              ...getProjectOverviewThreadIdentitySources(record),
+              getProjectOverviewThreadRecordObject(fallback),
+            ];
+            const email = readProjectOverviewThreadStringFromSources(sources, [
+              "email",
+              "emailAddress",
+              "email_address",
+              "mail",
+              "userEmail",
+              "user_email",
+            ]).toLowerCase();
+            const name = readProjectOverviewThreadStringFromSources(sources, [
+              "displayName",
+              "display_name",
+              "name",
+              "fullName",
+              "full_name",
+              "label",
+              "userName",
+              "user_name",
+            ]);
+            const userId = readProjectOverviewThreadStringFromSources(sources, [
+              "userId",
+              "user_id",
+              "uid",
+              "firebaseUid",
+              "firebase_uid",
+              "accountId",
+              "account_id",
+              "id",
+            ]);
+            const avatarUrl = readProjectOverviewThreadStringFromSources(sources, [
+              "avatarUrl",
+              "avatarURL",
+              "avatar_url",
+              "photoURL",
+              "photoUrl",
+              "photo_url",
+              "picture",
+              "imageUrl",
+              "image_url",
+              "profileImageUrl",
+              "profile_image_url",
+            ]);
+            return {
+              name,
+              email,
+              userId,
+              id: userId,
+              avatarUrl: typeof normalizeSessionPhotoUrl === "function" ? normalizeSessionPhotoUrl(avatarUrl) : avatarUrl,
+            };
+          }
+
+          function getProjectOverviewThreadPersonMatchKeys(identity) {
+            const source = getProjectOverviewThreadRecordObject(identity);
+            return [
+              String(source.email || "").trim().toLowerCase(),
+              String(source.userId || "").trim(),
+              String(source.id || "").trim(),
+            ].filter(Boolean);
+          }
+
+          const projectOverviewThreadPersonCandidates = [
+            normalizeProjectOverviewThreadPersonIdentity({
+              name: currentUserName,
+              email: currentUserEmail,
+              userId: currentUserId,
+              avatarUrl: currentUserAvatarUrl,
+            }),
+            ...projectOverviewSharedTeamMemberRows.map((member) => normalizeProjectOverviewThreadPersonIdentity(member)),
+          ].filter((identity) => getProjectOverviewThreadPersonMatchKeys(identity).length > 0 || String(identity.name || "").trim());
+
+          function findProjectOverviewThreadPersonMatch(identity) {
+            const keys = new Set(getProjectOverviewThreadPersonMatchKeys(identity));
+            if (keys.size === 0) {
+              return null;
+            }
+            return projectOverviewThreadPersonCandidates.find((candidate) =>
+              getProjectOverviewThreadPersonMatchKeys(candidate).some((key) => keys.has(key))
+            ) || null;
+          }
+
+          function resolveProjectOverviewThreadPersonIdentity(record, fallback = {}) {
+            const identity = normalizeProjectOverviewThreadPersonIdentity(record, fallback);
+            const matchingIdentity = findProjectOverviewThreadPersonMatch(identity);
+            if (!matchingIdentity) {
+              return identity;
+            }
+            return {
+              ...identity,
+              name: identity.name || matchingIdentity.name || "",
+              email: identity.email || matchingIdentity.email || "",
+              userId: identity.userId || matchingIdentity.userId || "",
+              id: identity.id || matchingIdentity.id || "",
+              avatarUrl: identity.avatarUrl || matchingIdentity.avatarUrl || "",
+            };
+          }
+
+          function getProjectOverviewThreadPersonLabel(identity) {
+            const source = getProjectOverviewThreadRecordObject(identity);
+            const email = String(source.email || "").trim().toLowerCase();
+            const name = String(source.name || source.displayName || source.display_name || "").trim();
+            return (typeof getTrustedDisplayName === "function" ? getTrustedDisplayName(name, email) : name)
+              || (email && typeof formatAccountDisplayName === "function" ? formatAccountDisplayName("", email, "") : "")
+              || name
+              || String(source.userId || source.id || "").trim();
+          }
+
+          function getProjectOverviewThreadTriggeredByIdentity(thread) {
+            const parts = getProjectOverviewThreadMetadataParts(thread);
+            const identitySources = [
+              parts.rawThread.triggeredBy,
+              parts.rawThread.triggered_by,
+              parts.rawThread.createdBy,
+              parts.rawThread.created_by,
+              parts.rawThread.creator,
+              parts.rawThread.author,
+              parts.rawThread.user,
+              parts.rawThread.actor,
+              parts.rawThread.initiator,
+              parts.rawThread.requestedBy,
+              parts.rawThread.requested_by,
+              parts.metadata.triggeredBy,
+              parts.metadata.triggered_by,
+              parts.metadata.createdBy,
+              parts.metadata.created_by,
+              parts.metadata.creator,
+              parts.metadata.author,
+              parts.metadata.user,
+              parts.metadata.actor,
+              parts.metadata.initiator,
+              parts.metadata.requestedBy,
+              parts.metadata.requested_by,
+              parts.runner.triggeredBy,
+              parts.runner.triggered_by,
+              parts.runner.createdBy,
+              parts.runner.created_by,
+              parts.runner.creator,
+              parts.runner.author,
+              parts.runner.user,
+              parts.runner.actor,
+              parts.runner.initiator,
+              parts.runner.requestedBy,
+              parts.runner.requested_by,
+            ].filter((value) => value && typeof value === "object" && !Array.isArray(value));
+            for (const identitySource of identitySources) {
+              const resolvedIdentity = resolveProjectOverviewThreadPersonIdentity(identitySource, identitySource);
+              if (getProjectOverviewThreadPersonLabel(resolvedIdentity)) {
+                return resolvedIdentity;
+              }
+            }
+            const directSources = [
+              parts.rawThread,
+              parts.metadata,
+              parts.runner,
+              parts.sourceRecord,
+              parts.triggerRecord,
+              parts.missionControl,
+              parts.agentAssistant,
+            ];
+            const displayName = readProjectOverviewThreadStringFromSources(directSources, [
+              "triggeredByDisplayName",
+              "triggered_by_display_name",
+              "triggeredByName",
+              "triggered_by_name",
+              "createdByDisplayName",
+              "created_by_display_name",
+              "createdByName",
+              "created_by_name",
+              "creatorDisplayName",
+              "creator_display_name",
+              "creatorName",
+              "creator_name",
+              "authorName",
+              "author_name",
+              "userDisplayName",
+              "user_display_name",
+              "userName",
+              "user_name",
+              "requestedByName",
+              "requested_by_name",
+              "operatorName",
+              "operator_name",
+            ]);
+            const email = readProjectOverviewThreadStringFromSources(directSources, [
+              "triggeredByEmail",
+              "triggered_by_email",
+              "createdByEmail",
+              "created_by_email",
+              "creatorEmail",
+              "creator_email",
+              "authorEmail",
+              "author_email",
+              "userEmail",
+              "user_email",
+              "requestedByEmail",
+              "requested_by_email",
+              "operatorEmail",
+              "operator_email",
+            ]);
+            const avatarUrl = readProjectOverviewThreadStringFromSources(directSources, [
+              "triggeredByAvatarUrl",
+              "triggered_by_avatar_url",
+              "createdByAvatarUrl",
+              "created_by_avatar_url",
+              "creatorAvatarUrl",
+              "creator_avatar_url",
+              "authorAvatarUrl",
+              "author_avatar_url",
+              "userAvatarUrl",
+              "user_avatar_url",
+              "photoURL",
+              "photoUrl",
+              "photo_url",
+              "avatarUrl",
+              "avatar_url",
+            ]);
+            const identityKey = readProjectOverviewThreadStringFromSources(directSources, [
+              "triggeredByUserId",
+              "triggered_by_user_id",
+              "triggeredBy",
+              "triggered_by",
+              "createdByUserId",
+              "created_by_user_id",
+              "creatorUserId",
+              "creator_user_id",
+              "authorUserId",
+              "author_user_id",
+              "userId",
+              "user_id",
+              "requestedByUserId",
+              "requested_by_user_id",
+              "operatorUserId",
+              "operator_user_id",
+              "createdBy",
+              "created_by",
+              "creatorId",
+              "creator_id",
+            ]);
+            const keyIsEmail = identityKey.includes("@");
+            const resolvedIdentity = resolveProjectOverviewThreadPersonIdentity({
+              name: displayName,
+              email: email || (keyIsEmail ? identityKey : ""),
+              userId: keyIsEmail ? "" : identityKey,
+              id: identityKey,
+              avatarUrl,
+            }, {
+              name: displayName,
+              email,
+              userId: keyIsEmail ? "" : identityKey,
+              id: identityKey,
+              avatarUrl,
+            });
+            return getProjectOverviewThreadPersonLabel(resolvedIdentity) ? resolvedIdentity : null;
+          }
+
+          const projectOverviewThreadTableRowOptions = {
+            getSourceLabel: getProjectOverviewThreadSourceLabel,
+            getEnvironmentLabel: getProjectOverviewThreadEnvironmentLabel,
+            getTriggeredByLabel: (thread) => getProjectOverviewThreadPersonLabel(getProjectOverviewThreadTriggeredByIdentity(thread)) || "-",
+            getTriggeredByAvatarUrl: (thread) => {
+              const identity = getProjectOverviewThreadTriggeredByIdentity(thread);
+              return identity?.avatarUrl || identity?.photoURL || "";
+            },
+            getDateLabel: (thread, safeThread) => (
+              (typeof formatThreadSearchTimestamp === "function"
+                ? formatThreadSearchTimestamp(typeof resolveThreadSortTimestamp === "function" ? resolveThreadSortTimestamp(safeThread) : (safeThread?.updatedAt || safeThread?.createdAt || ""))
+                : "")
+              || (typeof formatRelativeThreadTime === "function" ? formatRelativeThreadTime(safeThread?.updatedAt || safeThread?.createdAt) : "")
+              || "—"
+            ),
+            onOpenThread: (threadId, safeThread) => {
+              if (typeof upsertRealThreadRecord === "function") {
+                upsertRealThreadRecord(safeThread);
+              }
+              if (typeof onThreadOpen === "function") {
+                onThreadOpen(threadId, { threadRecord: safeThread });
+              } else if (typeof handleThreadSelect === "function") {
+                handleThreadSelect(threadId);
+              }
+            },
+            onThreadActions: (event, threadId, safeThread) => {
+              if (typeof onThreadOptionsOpen === "function") {
+                onThreadOptionsOpen(event, threadId, { threadRecord: safeThread });
+                return;
+              }
+              if (typeof upsertRealThreadRecord === "function") {
+                upsertRealThreadRecord(safeThread);
+              }
+              if (typeof openThreadActionMenu === "function") {
+                openThreadActionMenu(event, threadId, safeThread);
+              }
+            },
+          };
 
           function renderOverviewResourceRow(resource) {
             return React.createElement("div", {
@@ -8685,18 +9154,10 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 )
               ),
               projectOverviewFilteredThreads.length > 0
-                ? React.createElement("div", { className: "playground-project-overview-threads-table" },
-                    React.createElement("div", { className: "playground-project-overview-threads-table-header" },
-                      React.createElement("div", null, "Title"),
-                      React.createElement("div", null, "Assignee"),
-                      React.createElement("div", null, "Task"),
-                      React.createElement("div", null, "Date"),
-                      React.createElement("div", null)
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-thread-list" },
-                      visibleProjectThreads.map((thread) => renderOverviewThreadRow(thread))
-                    )
-                  )
+                ? renderPlaygroundThreadOverviewTable({
+                    threads: visibleProjectThreads,
+                    rowOptions: projectOverviewThreadTableRowOptions,
+                  })
                 : React.createElement("div", { className: "playground-tasks-secondary-copy" },
                     hasProjectOverviewThreadListFilters ? "No matching project threads." : "No project threads yet."
                   )
