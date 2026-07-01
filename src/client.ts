@@ -2,6 +2,7 @@ import { RunnerEventNormalizer } from "./normalize-event.js";
 import { iterateSseData } from "./sse.js";
 import {
   RawRunnerEvent,
+  RunnerAgentRecord,
   RunnerApiRequestOptions,
   RunnerEnvironmentForkResult,
   RunnerEnvironmentSnapshotInitializeResult,
@@ -10,6 +11,9 @@ import {
   RunnerEnvironmentSnapshotFileResult,
   RunnerExecuteOptions,
   RunnerExecuteResult,
+  RunnerGuardrailSet,
+  RunnerGuardrailSetCreateInput,
+  RunnerGuardrailSetUpdateInput,
   RunnerLog,
   RunnerRunRequest,
   RunnerThreadForkResult,
@@ -460,6 +464,155 @@ export class RunnerClient {
     });
   }
 
+  async listGuardrails(options: RunnerApiRequestOptions): Promise<RunnerGuardrailSet[]> {
+    const url = this.buildApiUrl(options.backendUrl, "/guardrails");
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: options.headers,
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerGuardrailSet>(payload, ["guardrails", "sets"]);
+  }
+
+  async getGuardrail(
+    options: RunnerApiRequestOptions & {
+      guardrailId: string;
+    },
+  ): Promise<RunnerGuardrailSet> {
+    const url = this.buildApiUrl(options.backendUrl, `/guardrails/${encodeURIComponent(options.guardrailId)}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: options.headers,
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readObjectResponse<RunnerGuardrailSet>(payload, ["guardrail", "set"]);
+  }
+
+  async createGuardrail(
+    options: RunnerApiRequestOptions & {
+      guardrail: RunnerGuardrailSetCreateInput;
+    },
+  ): Promise<RunnerGuardrailSet> {
+    const url = this.buildApiUrl(options.backendUrl, "/guardrails");
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.guardrail),
+    });
+    return this.readObjectResponse<RunnerGuardrailSet>(payload, ["guardrail", "set"]);
+  }
+
+  async updateGuardrail(
+    options: RunnerApiRequestOptions & {
+      guardrailId: string;
+      guardrail: RunnerGuardrailSetUpdateInput;
+    },
+  ): Promise<RunnerGuardrailSet> {
+    const url = this.buildApiUrl(options.backendUrl, `/guardrails/${encodeURIComponent(options.guardrailId)}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "PATCH",
+      headers: this.withJsonContentType(options.headers),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.guardrail),
+    });
+    return this.readObjectResponse<RunnerGuardrailSet>(payload, ["guardrail", "set"]);
+  }
+
+  async deleteGuardrail(
+    options: RunnerApiRequestOptions & {
+      guardrailId: string;
+    },
+  ): Promise<void> {
+    const url = this.buildApiUrl(options.backendUrl, `/guardrails/${encodeURIComponent(options.guardrailId)}`);
+    await this.requestJsonOrEmpty<unknown>(url, {
+      method: "DELETE",
+      headers: options.headers,
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async listAgentGuardrails(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+    },
+  ): Promise<RunnerGuardrailSet[]> {
+    const url = this.buildApiUrl(options.backendUrl, `/agents/${encodeURIComponent(options.agentId)}/guardrails`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: options.headers,
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerGuardrailSet>(payload, ["guardrails", "sets"]);
+  }
+
+  async setAgentGuardrails(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      guardrailSetIds: string[];
+      guardrails?: RunnerGuardrailSet[];
+    },
+  ): Promise<RunnerAgentRecord> {
+    const url = this.buildApiUrl(options.backendUrl, `/agents/${encodeURIComponent(options.agentId)}/guardrails`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "PUT",
+      headers: this.withJsonContentType(options.headers),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({
+        guardrailSetIds: options.guardrailSetIds,
+        guardrail_set_ids: options.guardrailSetIds,
+        ...(options.guardrails ? { guardrails: options.guardrails } : {}),
+      }),
+    });
+    return this.readObjectResponse<RunnerAgentRecord>(payload, ["agent"]);
+  }
+
+  async addAgentGuardrail(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      guardrailId: string;
+    },
+  ): Promise<RunnerAgentRecord> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/agents/${encodeURIComponent(options.agentId)}/guardrails/${encodeURIComponent(options.guardrailId)}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "PUT",
+      headers: this.withJsonContentType(options.headers),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<RunnerAgentRecord>(payload, ["agent"]);
+  }
+
+  async removeAgentGuardrail(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      guardrailId: string;
+    },
+  ): Promise<RunnerAgentRecord | null> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/agents/${encodeURIComponent(options.agentId)}/guardrails/${encodeURIComponent(options.guardrailId)}`,
+    );
+    const payload = await this.requestJsonOrEmpty<unknown>(url, {
+      method: "DELETE",
+      headers: options.headers,
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return payload ? this.readObjectResponse<RunnerAgentRecord>(payload, ["agent"]) : null;
+  }
+
   private async resolveRunRequest(options: RunnerExecuteOptions): Promise<RunnerRunRequest> {
     let runRequest = options.run;
     if (!options.prepare) {
@@ -590,5 +743,54 @@ export class RunnerClient {
       throw new Error(await this.readResponseErrorMessage(response, "Runner API request failed"));
     }
     return response.json() as Promise<T>;
+  }
+
+  private async requestJsonOrEmpty<T>(url: string, init: RequestInit): Promise<T | null> {
+    const response = await this.fetchImpl(url, init);
+    if (!response.ok) {
+      throw new Error(await this.readResponseErrorMessage(response, "Runner API request failed"));
+    }
+    const text = await response.text().catch(() => "");
+    if (!text.trim()) {
+      return null;
+    }
+    return JSON.parse(text) as T;
+  }
+
+  private readListResponse<T>(payload: unknown, collectionKeys: string[] = []): T[] {
+    if (Array.isArray(payload)) {
+      return payload as T[];
+    }
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      return [];
+    }
+    const record = payload as Record<string, unknown>;
+    if (Array.isArray(record.data)) {
+      return record.data as T[];
+    }
+    if (Array.isArray(record.items)) {
+      return record.items as T[];
+    }
+    for (const key of collectionKeys) {
+      if (Array.isArray(record[key])) {
+        return record[key] as T[];
+      }
+    }
+    return [];
+  }
+
+  private readObjectResponse<T>(payload: unknown, objectKeys: string[] = []): T {
+    if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+      const record = payload as Record<string, unknown>;
+      if (record.data && typeof record.data === "object" && !Array.isArray(record.data)) {
+        return record.data as T;
+      }
+      for (const key of objectKeys) {
+        if (record[key] && typeof record[key] === "object" && !Array.isArray(record[key])) {
+          return record[key] as T;
+        }
+      }
+    }
+    return payload as T;
   }
 }

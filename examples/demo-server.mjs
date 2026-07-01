@@ -21162,7 +21162,7 @@ const html = `<!doctype html>
       }
 
       .playground-guardrails-library-tabs .playground-files-library-tab {
-        min-width: 68px;
+        min-width: 94px;
       }
 
       .playground-guardrails-toolbar-menu {
@@ -21221,7 +21221,7 @@ const html = `<!doctype html>
       .playground-guardrails-table-header,
       .playground-guardrails-table-row {
         display: grid;
-        grid-template-columns: minmax(240px, 1.45fr) 92px 96px 112px 32px;
+        grid-template-columns: minmax(240px, 1.45fr) 86px 92px 112px 32px;
         align-items: center;
         gap: 12px;
       }
@@ -21237,7 +21237,7 @@ const html = `<!doctype html>
 
       .playground-guardrails-table-row {
         min-height: 62px;
-        padding: 0 10px;
+        padding: 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         color: rgba(255, 255, 255, 0.9);
         cursor: pointer;
@@ -21246,26 +21246,13 @@ const html = `<!doctype html>
 
       .playground-guardrails-table-row:hover,
       .playground-guardrails-table-row.is-selected {
-        background: rgba(255, 255, 255, 0.05);
+        background: transparent;
       }
 
       .playground-guardrails-set-cell {
         min-width: 0;
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-      }
-
-      .playground-guardrails-set-icon {
-        width: 26px;
-        height: 26px;
-        flex: 0 0 26px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.86);
       }
 
       .playground-guardrails-set-copy {
@@ -21298,33 +21285,22 @@ const html = `<!doctype html>
         text-overflow: ellipsis;
       }
 
-      .playground-guardrails-status-pill {
-        width: fit-content;
+      .playground-guardrails-kind-pill {
         min-width: 0;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        color: rgba(255, 255, 255, 0.68);
+        justify-content: flex-start;
+        color: rgba(255, 255, 255, 0.62);
         font-size: 12px;
-        line-height: 1;
+        line-height: 1.35;
         font-weight: 400;
+        white-space: nowrap;
       }
 
-      .playground-guardrails-status-dot {
-        width: 7px;
-        height: 7px;
-        flex: 0 0 7px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.34);
-      }
-
-      .playground-guardrails-status-pill.is-active .playground-guardrails-status-dot {
-        background: #54e5a6;
-        box-shadow: 0 0 0 3px rgba(84, 229, 166, 0.12);
-      }
-
-      .playground-guardrails-status-pill.is-paused .playground-guardrails-status-dot {
-        background: rgba(255, 255, 255, 0.34);
+      .playground-guardrails-row-action-placeholder {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
       }
 
       .playground-guardrails-row-action,
@@ -21374,92 +21350,72 @@ const html = `<!doctype html>
         display: none;
       }
 
-      .playground-guardrails-title-with-back {
-        min-width: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .playground-guardrails-back-button.playground-files-nav-button {
-        width: 24px;
-        height: 24px;
-        background: transparent;
-      }
-
       .playground-guardrails-detail-actions {
         display: inline-flex;
         align-items: center;
         gap: 10px;
       }
 
-      .playground-guardrails-editor-header,
-      .playground-guardrails-prompts-header,
-      .playground-guardrails-prompt-top {
+      .playground-guardrails-readonly-pill {
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .playground-guardrails-detail-title-row {
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-guardrails-detail-title {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .playground-guardrails-title-input {
+        width: 100%;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        letter-spacing: inherit;
+        outline: none;
+        box-shadow: none;
+      }
+
+      .playground-guardrails-title-input:disabled,
+      .playground-guardrails-prompt-title-input:read-only,
+      .playground-guardrails-prompt-body-input:read-only,
+      .playground-guardrails-description-input:read-only {
+        opacity: 1;
+        cursor: default;
+      }
+
+      .playground-guardrails-prompts-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
       }
 
-      .playground-guardrails-editor-title-row,
       .playground-guardrails-prompts-title {
         min-width: 0;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
         color: rgba(255, 255, 255, 0.92);
         font-size: 13px;
         font-weight: 500;
       }
 
-      .playground-guardrails-toggle {
-        width: 38px;
-        height: 22px;
-        flex: 0 0 auto;
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 2px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        cursor: pointer;
-        transition: background 160ms ease, border-color 160ms ease;
-      }
-
-      .playground-guardrails-toggle.is-active {
-        justify-content: flex-end;
-        border-color: rgba(84, 229, 166, 0.28);
-        background: rgba(84, 229, 166, 0.18);
-      }
-
-      .playground-guardrails-toggle-knob {
-        width: 16px;
-        height: 16px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.72);
-      }
-
-      .playground-guardrails-toggle.is-active .playground-guardrails-toggle-knob {
-        background: #54e5a6;
-      }
-
-      .playground-guardrails-field {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 7px;
-      }
-
-      .playground-guardrails-field > span {
-        color: rgba(255, 255, 255, 0.52);
-        font-size: 11px;
-        font-weight: 500;
-      }
-
-      .playground-guardrails-input,
-      .playground-guardrails-textarea,
       .playground-guardrails-prompt-title-input {
         width: 100%;
         min-width: 0;
@@ -21474,27 +21430,11 @@ const html = `<!doctype html>
         box-sizing: border-box;
       }
 
-      .playground-guardrails-input,
       .playground-guardrails-prompt-title-input {
         height: 34px;
         padding: 0 11px;
       }
 
-      .playground-guardrails-textarea {
-        resize: none;
-        padding: 10px 11px;
-      }
-
-      .playground-guardrails-textarea.is-description {
-        min-height: 74px;
-      }
-
-      .playground-guardrails-textarea.is-prompt {
-        min-height: 118px;
-      }
-
-      .playground-guardrails-input:focus,
-      .playground-guardrails-textarea:focus,
       .playground-guardrails-prompt-title-input:focus {
         border-color: rgba(255, 255, 255, 0.18);
         background: rgba(255, 255, 255, 0.07);
@@ -21518,13 +21458,30 @@ const html = `<!doctype html>
         color: #fff;
       }
 
+      .playground-guardrails-description-section.playground-agents-detail-instructions-section {
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+
+      .playground-guardrails-description-section .playground-tasks-detail-section-header {
+        background: #000;
+      }
+
+      .playground-guardrails-description-section .playground-tasks-detail-description-input {
+        min-height: 72px;
+      }
+
+      .playground-guardrails-description-section .playground-tasks-detail-format-actions {
+        flex-wrap: nowrap;
+      }
+
       .playground-guardrails-prompts-list {
         min-height: 0;
         flex: 1 1 auto;
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        overflow: auto;
+        gap: 8px;
+        overflow: visible;
       }
 
       .playground-guardrails-prompts-list::-webkit-scrollbar,
@@ -21532,34 +21489,73 @@ const html = `<!doctype html>
         display: none;
       }
 
-      .playground-guardrails-prompt-card {
-        display: flex;
+      .playground-guardrails-prompt-row.playground-tasks-backlog-item {
+        min-height: 70px;
+        cursor: default;
+      }
+
+      .playground-guardrails-prompt-row .playground-tasks-backlog-item-content {
+        width: 100%;
+        align-items: flex-start;
+      }
+
+      .playground-guardrails-prompt-row .playground-tasks-backlog-leading {
+        align-items: flex-start;
+      }
+
+      .playground-guardrails-prompt-row .playground-tasks-backlog-main {
         flex-direction: column;
-        gap: 10px;
-        padding: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.05);
+        align-items: stretch;
+        gap: 6px;
+      }
+
+      .playground-guardrails-prompt-row .playground-tasks-backlog-meta {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        min-height: 28px;
+      }
+
+      .playground-guardrails-prompt-row .playground-guardrails-prompt-title-input,
+      .playground-guardrails-prompt-body-input {
+        width: 100%;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.92);
+        font-family: inherit;
+        outline: none;
+        box-sizing: border-box;
+      }
+
+      .playground-guardrails-prompt-row .playground-guardrails-prompt-title-input {
+        height: auto;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .playground-guardrails-prompt-body-input {
+        min-height: 38px;
+        resize: none;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-guardrails-prompt-row .playground-guardrails-prompt-title-input:focus,
+      .playground-guardrails-prompt-body-input:focus {
+        border: 0;
+        background: transparent;
       }
 
       .playground-guardrails-prompt-title-input {
         flex: 1 1 auto;
-      }
-
-      .playground-guardrails-prompt-enable {
-        height: 26px;
-        flex: 0 0 auto;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.42);
-        font-size: 11px;
-        font-weight: 400;
-        cursor: pointer;
-      }
-
-      .playground-guardrails-prompt-enable.is-active {
-        color: #54e5a6;
       }
 
       .playground-guardrails-empty,
@@ -44573,6 +44569,76 @@ ${METRONOME_PAGE_CSS}
         text-overflow: clip;
       }
 
+      .playground-agents-detail-guardrails-section .playground-plugins-section-header {
+        align-items: center;
+      }
+
+      .playground-agents-detail-guardrails-section .playground-plugins-toolbar-controls {
+        margin-left: auto;
+      }
+
+      .playground-agents-detail-guardrails-section .playground-project-overview-threads-table-header,
+      .playground-agents-detail-guardrails-section .playground-project-overview-threads-table-row {
+        grid-template-columns: minmax(0, 1.45fr) minmax(80px, 0.5fr) minmax(0, 1.65fr) minmax(92px, 0.52fr) 28px;
+      }
+
+      .playground-agents-detail-guardrails-section .playground-project-overview-threads-table {
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .playground-agents-detail-guardrail-resource-title {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .playground-agents-detail-guardrail-icon {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        border: 1px solid rgba(84, 229, 166, 0.58);
+        color: #54e5a6;
+        background: transparent;
+        box-shadow: inset 0 0 0 2px rgba(84, 229, 166, 0.12);
+      }
+
+      .playground-agents-detail-guardrails-section .playground-project-overview-thread-cell.is-prompts,
+      .playground-agents-detail-guardrails-section .playground-project-overview-thread-cell.is-description {
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-agents-detail-guardrails-section .playground-project-overview-thread-cell.is-prompts,
+      .playground-agents-detail-guardrails-section .playground-project-overview-thread-cell.is-date {
+        white-space: nowrap;
+      }
+
+      .playground-agents-detail-guardrail-import-shell .playground-tasks-toolbar-popup-menu {
+        left: auto;
+        right: 0;
+        transform-origin: top right;
+      }
+
+      .playground-agents-detail-guardrail-import-menu {
+        min-width: 260px;
+        max-width: 340px;
+      }
+
+      .playground-agents-detail-guardrail-import-menu .tb-popup-empty-state {
+        padding: 10px 12px;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
       .playground-project-overview-progress-combo-card {
         margin-top: -7px;
       }
@@ -44914,8 +44980,59 @@ ${METRONOME_PAGE_CSS}
         padding-top: 0;
       }
 
+      .playground-computer-api-config-row {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 12px;
+      }
+
+      .playground-computer-api-config-label {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.54);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-computer-api-agent-select-popup.playground-agents-model-select-popup,
+      .playground-agent-api-environment-select-popup.playground-agents-model-select-popup {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: inline-flex;
+        justify-content: flex-end;
+        z-index: 80;
+      }
+
+      .playground-computer-api-agent-select-popup.playground-agents-model-select-popup .playground-environments-runtime-value-button,
+      .playground-agent-api-environment-select-popup.playground-agents-model-select-popup .playground-environments-runtime-value-button {
+        width: min(320px, 100%);
+      }
+
+      .playground-computer-api-agent-select-popup .playground-tasks-toolbar-popup-menu,
+      .playground-agent-api-environment-select-popup .playground-tasks-toolbar-popup-menu {
+        right: 0;
+        left: auto;
+        width: min(320px, calc(100vw - 64px));
+      }
+
+      .playground-computer-api-agent-select-popup .tb-popup-row,
+      .playground-agent-api-environment-select-popup .tb-popup-row {
+        min-width: 0;
+      }
+
       .playground-computer-api-card.playground-server-invoke-card {
         margin: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.5);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-computer-api-card.playground-server-invoke-card::before {
+        content: none;
+        display: none;
       }
 
       .playground-computer-api-header.playground-server-invoke-header {
@@ -44926,11 +45043,18 @@ ${METRONOME_PAGE_CSS}
         flex: 0 0 auto;
       }
 
+      .playground-computer-api-code-editor.playground-server-invoke-code-editor {
+        min-height: 240px;
+        max-height: min(460px, calc(100vh - 300px));
+        background: rgba(0, 0, 0, 0.5);
+      }
+
       .playground-computer-api-code.playground-server-invoke-code-fallback {
         min-height: 240px;
         max-height: min(460px, calc(100vh - 260px));
         overflow: auto;
         margin: 0;
+        background: rgba(0, 0, 0, 0.5);
         white-space: pre;
       }
 
@@ -45600,6 +45724,16 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-detail-tabs.playground-agents-overview-tabs {
         margin: -4px 0 0;
+      }
+
+      .playground-computer-detail-filebase-tab.playground-project-overview-chart-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .playground-computer-detail-filebase-tab.playground-project-overview-chart-tab svg {
+        flex: 0 0 auto;
       }
 
       .playground-agents-detail-metrics.playground-environments-home-metrics {
@@ -57213,6 +57347,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           binary: "Claude Code CLI",
           reasoningEffort: "medium",
           enabledSkills: ["frontend_design"],
+          guardrailSetIds: [],
           deepResearchModel: defaultDeepResearchModel,
           permissionSet: createPlaygroundFullAccessPermissionSet("agent"),
           agentType: kind === "team" ? "team" : "single",
@@ -59871,6 +60006,129 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           : null;
       }
 
+      function normalizePlaygroundGuardrailSetIds(value) {
+        const source = Array.isArray(value)
+          ? value
+          : typeof value === "string" && value.includes(",")
+            ? value.split(",")
+            : value !== undefined && value !== null
+              ? [value]
+              : [];
+        const seen = new Set();
+        const result = [];
+        source.forEach((item) => {
+          const normalizedId = typeof item === "object" && item && !Array.isArray(item)
+            ? String(item.id || item.guardrailSetId || item.guardrail_set_id || item.setId || item.set_id || "").trim()
+            : String(item || "").trim();
+          if (!normalizedId || seen.has(normalizedId)) {
+            return;
+          }
+          seen.add(normalizedId);
+          result.push(normalizedId);
+        });
+        return result;
+      }
+
+      function getPlaygroundAgentGuardrailSetIds(agent) {
+        const source = agent && typeof agent === "object" && !Array.isArray(agent) ? agent : {};
+        const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+          ? source.metadata
+          : {};
+        const metadataGuardrails = metadata.guardrailSetIds || metadata.guardrail_set_ids || metadata.guardrails;
+        const directGuardrails = source.guardrailSetIds || source.guardrail_set_ids || source.guardrails;
+        const directIds = normalizePlaygroundGuardrailSetIds(directGuardrails);
+        if (directIds.length > 0 || Array.isArray(directGuardrails)) {
+          return directIds;
+        }
+        return normalizePlaygroundGuardrailSetIds(metadataGuardrails);
+      }
+
+      function normalizePlaygroundAgentGuardrailSnapshots(value) {
+        const source = Array.isArray(value) ? value : [];
+        return source
+          .filter((item) => item && typeof item === "object" && !Array.isArray(item))
+          .map((set) => normalizePlaygroundGuardrailSet(set))
+          .filter((set) => set?.id);
+      }
+
+      function getPlaygroundAgentGuardrailSnapshots(agent) {
+        const source = agent && typeof agent === "object" && !Array.isArray(agent) ? agent : {};
+        const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+          ? source.metadata
+          : {};
+        return normalizePlaygroundAgentGuardrailSnapshots(source.guardrails).length > 0
+          ? normalizePlaygroundAgentGuardrailSnapshots(source.guardrails)
+          : normalizePlaygroundAgentGuardrailSnapshots(metadata.guardrails);
+      }
+
+      function normalizePlaygroundPromptAdaptations(value) {
+        const source = Array.isArray(value) ? value : [];
+        return source
+          .filter((item) => item && typeof item === "object" && !Array.isArray(item))
+          .map((item) => ({
+            id: String(item.id || item.promptId || item.prompt_id || "").trim(),
+            title: String(item.title || item.name || "Guardrail").trim(),
+            content: String(item.content || item.prompt || item.text || ""),
+            prompt: String(item.prompt || item.content || item.text || ""),
+            guardrailSetId: String(item.guardrailSetId || item.guardrail_set_id || item.setId || item.set_id || "").trim(),
+            guardrailSetName: String(item.guardrailSetName || item.guardrail_set_name || item.setName || item.set_name || "").trim(),
+            source: String(item.source || "guardrail").trim() || "guardrail",
+          }))
+          .filter((item) => item.id && item.content.trim());
+      }
+
+      function buildPlaygroundGuardrailPromptAdaptations(guardrailSets) {
+        const adaptations = [];
+        const seen = new Set();
+        (Array.isArray(guardrailSets) ? guardrailSets : []).forEach((set) => {
+          const normalizedSet = normalizePlaygroundGuardrailSet(set);
+          (Array.isArray(normalizedSet.prompts) ? normalizedSet.prompts : []).forEach((prompt, promptIndex) => {
+            const promptContent = String(prompt?.prompt || "").trim();
+            if (!promptContent) {
+              return;
+            }
+            const promptId = String(prompt?.id || "").trim() || (normalizedSet.id + "_prompt_" + promptIndex);
+            const adaptationId = normalizedSet.id + ":" + promptId;
+            if (seen.has(adaptationId)) {
+              return;
+            }
+            seen.add(adaptationId);
+            adaptations.push({
+              id: adaptationId,
+              title: String(prompt?.title || normalizedSet.name || "Guardrail").trim(),
+              content: promptContent,
+              prompt: promptContent,
+              guardrailSetId: normalizedSet.id,
+              guardrailSetName: normalizedSet.name,
+              source: "guardrail",
+            });
+          });
+        });
+        return adaptations;
+      }
+
+      function buildPlaygroundAgentGuardrailBundle(agent, availableGuardrailSets) {
+        const guardrailSetIds = getPlaygroundAgentGuardrailSetIds(agent);
+        const availableById = new Map(
+          (Array.isArray(availableGuardrailSets) ? availableGuardrailSets : [])
+            .map((set) => normalizePlaygroundGuardrailSet(set))
+            .filter((set) => set?.id)
+            .map((set) => [set.id, set])
+        );
+        const existingSnapshots = getPlaygroundAgentGuardrailSnapshots(agent);
+        const existingById = new Map(existingSnapshots.map((set) => [set.id, set]));
+        const guardrails = guardrailSetIds
+          .map((setId) => availableById.get(setId) || existingById.get(setId) || null)
+          .filter(Boolean)
+          .map((set) => normalizePlaygroundGuardrailSet(set));
+        const promptAdaptations = buildPlaygroundGuardrailPromptAdaptations(guardrails);
+        return {
+          guardrailSetIds,
+          guardrails,
+          promptAdaptations,
+        };
+      }
+
       function normalizePlaygroundAgentRecord(agent) {
         if (!agent || typeof agent !== "object") {
           return buildPlaygroundDefaultAgentDraft();
@@ -59886,6 +60144,25 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         const enabledSkills = Array.isArray(agent.enabledSkills)
           ? agent.enabledSkills.map((value) => String(value || "").trim()).filter(Boolean)
           : [];
+        const guardrailSetIds = getPlaygroundAgentGuardrailSetIds(agent);
+        const guardrails = getPlaygroundAgentGuardrailSnapshots(agent);
+        const metadata = agent.metadata && typeof agent.metadata === "object" && !Array.isArray(agent.metadata)
+          ? agent.metadata
+          : {};
+        const promptAdaptations = normalizePlaygroundPromptAdaptations(
+          agent.promptAdaptations
+          || agent.promptAdaptions
+          || agent.invisiblePromptAdaptations
+          || agent.invisiblePromptAdaptions
+          || metadata.promptAdaptations
+          || metadata.prompt_adaptations
+          || metadata.promptAdaptions
+          || metadata.prompt_adaptions
+          || metadata.invisiblePromptAdaptations
+          || metadata.invisible_prompt_adaptations
+          || metadata.invisiblePromptAdaptions
+          || metadata.invisible_prompt_adaptions
+        );
         const deepResearchModel = PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.some((option) => option.id === agent.deepResearchModel)
           ? agent.deepResearchModel
           : draft.deepResearchModel;
@@ -59904,6 +60181,10 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           binary: typeof agent.binary === "string" && agent.binary.trim() ? agent.binary : draft.binary,
           reasoningEffort,
           enabledSkills,
+          guardrailSetIds,
+          guardrails,
+          promptAdaptations,
+          invisiblePromptAdaptations: promptAdaptations,
           deepResearchModel,
           agentType: teamMetadata ? "team" : "single",
           teamOrchestratorAgentId: teamMetadata?.team?.orchestratorAgentId || "",
@@ -59916,8 +60197,8 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           isDefault: Boolean(agent.isDefault) || isDefaultByPattern,
           isSystem: Boolean(agent.isSystem) || isDefaultByPattern,
           permissionSet: normalizePlaygroundPermissionSet(agent.permissionSet, "agent"),
-          metadata: agent.metadata && typeof agent.metadata === "object" && !Array.isArray(agent.metadata)
-            ? agent.metadata
+          metadata: Object.keys(metadata).length > 0
+            ? metadata
             : null,
         };
       }
@@ -59960,6 +60241,30 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           : Array.isArray(snapshot.enabledSkills)
             ? snapshot.enabledSkills
             : [];
+        const guardrailSetIds = getPlaygroundAgentGuardrailSetIds({
+          ...snapshot,
+          ...version,
+          metadata: version.metadata || snapshot.metadata,
+        });
+        const guardrails = getPlaygroundAgentGuardrailSnapshots({
+          ...snapshot,
+          ...version,
+          metadata: version.metadata || snapshot.metadata,
+        });
+        const promptAdaptations = normalizePlaygroundPromptAdaptations(
+          version.promptAdaptations
+          || version.promptAdaptions
+          || version.invisiblePromptAdaptations
+          || version.invisiblePromptAdaptions
+          || snapshot.promptAdaptations
+          || snapshot.promptAdaptions
+          || snapshot.invisiblePromptAdaptations
+          || snapshot.invisiblePromptAdaptions
+          || version.metadata?.promptAdaptations
+          || version.metadata?.promptAdaptions
+          || snapshot.metadata?.promptAdaptations
+          || snapshot.metadata?.promptAdaptions
+        );
         const teamSubagentIds = Array.isArray(version.teamSubagentIds)
           ? version.teamSubagentIds
           : Array.isArray(snapshot.teamSubagentIds)
@@ -59985,6 +60290,10 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
               ? snapshot.reasoningEffort
               : "medium",
           enabledSkills: enabledSkills.map((value) => String(value || "").trim()).filter(Boolean),
+          guardrailSetIds,
+          guardrails,
+          promptAdaptations,
+          invisiblePromptAdaptations: promptAdaptations,
           deepResearchModel: PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.some((option) => option.id === version.deepResearchModel)
             ? version.deepResearchModel
             : PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.some((option) => option.id === snapshot.deepResearchModel)
@@ -60057,6 +60366,10 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             ? normalizedAgent.reasoningEffort
             : "medium",
           enabledSkills: normalizePlaygroundEnabledSkillIds(normalizedAgent.enabledSkills),
+          guardrailSetIds: normalizePlaygroundGuardrailSetIds(normalizedAgent.guardrailSetIds),
+          guardrails: getPlaygroundAgentGuardrailSnapshots(normalizedAgent),
+          promptAdaptations: normalizePlaygroundPromptAdaptations(normalizedAgent.promptAdaptations || normalizedAgent.invisiblePromptAdaptations),
+          invisiblePromptAdaptations: normalizePlaygroundPromptAdaptations(normalizedAgent.promptAdaptations || normalizedAgent.invisiblePromptAdaptations),
           deepResearchModel: PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.some((option) => option.id === normalizedAgent.deepResearchModel)
             ? normalizedAgent.deepResearchModel
             : null,
@@ -60087,6 +60400,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           name: snapshot.name,
           model: snapshot.model,
           enabledSkills: snapshot.enabledSkills,
+          guardrailSetIds: snapshot.guardrailSetIds,
           permissionSet: snapshot.permissionSet,
           snapshot,
         }, nextVersion - 1);
@@ -60146,6 +60460,10 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           binary: snapshot.binary || baseAgent.binary,
           reasoningEffort: snapshot.reasoningEffort || baseAgent.reasoningEffort,
           enabledSkills: Array.isArray(snapshot.enabledSkills) ? snapshot.enabledSkills : baseAgent.enabledSkills,
+          guardrailSetIds: Array.isArray(snapshot.guardrailSetIds) ? snapshot.guardrailSetIds : baseAgent.guardrailSetIds,
+          guardrails: Array.isArray(snapshot.guardrails) ? snapshot.guardrails : baseAgent.guardrails,
+          promptAdaptations: Array.isArray(snapshot.promptAdaptations) ? snapshot.promptAdaptations : baseAgent.promptAdaptations,
+          invisiblePromptAdaptations: Array.isArray(snapshot.invisiblePromptAdaptations) ? snapshot.invisiblePromptAdaptations : baseAgent.invisiblePromptAdaptations,
           deepResearchModel: snapshot.deepResearchModel || baseAgent.deepResearchModel,
           permissionSet: snapshot.permissionSet || baseAgent.permissionSet,
           agentType: snapshot.agentType === "team" ? "team" : baseAgent.agentType,
@@ -74403,6 +74721,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               setProjectFilterScope(requestedProjectId);
               setProjectFilterScopeLabel(requestedProjectLabel);
               setFilesEnvironmentMenuMode("projects");
+            } else {
+              setProjectFilterScope("");
+              setProjectFilterScopeLabel("");
+              setFilesEnvironmentMenuMode("computers");
             }
             setSelectedEnvironmentId(requestedEnvironmentId);
             if (typeof onEnvironmentChange === "function") {
@@ -74423,6 +74745,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 setProjectFilterScope(requestedProjectId);
                 setProjectFilterScopeLabel(requestedProjectLabel);
                 setFilesEnvironmentMenuMode("projects");
+              } else if (requestedEnvironmentId) {
+                setProjectFilterScope("");
+                setProjectFilterScopeLabel("");
+                setFilesEnvironmentMenuMode("computers");
               }
               setContentMode(requestedContentMode);
               if (requestedContentMode === "changes") {
@@ -81096,6 +81422,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         onThreadRegistered,
         onThreadOpen,
         onThreadStarted,
+        onOpenFilesPage,
         threadRecords = [],
         embeddedInResources = false,
         embeddedResourcesView = "computers",
@@ -81337,7 +81664,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [environmentApiModalVisible, setEnvironmentApiModalVisible] = useState(false);
         const [environmentApiModalClosing, setEnvironmentApiModalClosing] = useState(false);
         const [environmentApiSnippetTab, setEnvironmentApiSnippetTab] = useState("curl");
+        const [environmentApiAgentId, setEnvironmentApiAgentId] = useState("");
         const [copiedEnvironmentApiSnippet, setCopiedEnvironmentApiSnippet] = useState("");
+        const [environmentDetailCopiedFact, setEnvironmentDetailCopiedFact] = useState("");
         const [environmentRenameState, setEnvironmentRenameState] = useState(null);
         const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
         const [environmentRenameError, setEnvironmentRenameError] = useState("");
@@ -82004,6 +82333,46 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             || orderedEnvironments.find((environment) => environment.id === selectedEnvironmentId)
             || null;
         }, [environmentDetailsById, orderedEnvironments, selectedEnvironmentId]);
+
+        const environmentApiAgentOptions = useMemo(() => {
+          const seen = new Set();
+          return ensurePlaygroundComposerDefaultChoices(Array.isArray(agents) ? agents : [])
+            .map((agent) => buildPlaygroundRunnerAgentOption(agent, preferredAgentId && String(agent?.id || "").trim() === String(preferredAgentId || "").trim() ? { isDefault: true } : {}))
+            .filter((agent) => {
+              const id = String(agent?.id || "").trim();
+              if (!id || seen.has(id) || getPlaygroundAgentListMode(agent) !== "agents") {
+                return false;
+              }
+              seen.add(id);
+              return true;
+            })
+            .sort((left, right) => {
+              if (Boolean(left?.isDefault) !== Boolean(right?.isDefault)) {
+                return left?.isDefault ? -1 : 1;
+              }
+              return String(left?.name || left?.id || "").localeCompare(String(right?.name || right?.id || ""));
+            });
+        }, [agents, preferredAgentId]);
+
+        const environmentApiDefaultAgentId = useMemo(() => {
+          const normalizedPreferredAgentId = String(preferredAgentId || "").trim();
+          if (normalizedPreferredAgentId && environmentApiAgentOptions.some((agent) => agent.id === normalizedPreferredAgentId)) {
+            return normalizedPreferredAgentId;
+          }
+          return String(
+            environmentApiAgentOptions.find((agent) => agent?.isDefault && getPlaygroundAgentListMode(agent) === "agents")?.id
+            || environmentApiAgentOptions.find((agent) => getPlaygroundAgentListMode(agent) === "agents")?.id
+            || environmentApiAgentOptions[0]?.id
+            || "agent_assistant"
+          ).trim();
+        }, [environmentApiAgentOptions, preferredAgentId]);
+
+        const selectedEnvironmentApiAgent = useMemo(() => {
+          const normalizedAgentId = String(environmentApiAgentId || "").trim();
+          return environmentApiAgentOptions.find((agent) => String(agent?.id || "").trim() === normalizedAgentId)
+            || environmentApiAgentOptions.find((agent) => String(agent?.id || "").trim() === environmentApiDefaultAgentId)
+            || null;
+        }, [environmentApiAgentId, environmentApiAgentOptions, environmentApiDefaultAgentId]);
 
         function normalizeEnvironmentWorkspaceTeamOption(team) {
           const source = team && typeof team === "object" && !Array.isArray(team) ? team : {};
@@ -85642,6 +86011,54 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           window.addEventListener("keydown", handleEnvironmentApiModalEscape);
           return () => window.removeEventListener("keydown", handleEnvironmentApiModalEscape);
         }, [environmentApiModalOpen, environmentApiModalClosing]);
+
+        useEffect(() => {
+          if (!environmentApiModalOpen) {
+            return;
+          }
+          const normalizedAgentId = String(environmentApiAgentId || "").trim();
+          if (!normalizedAgentId || !environmentApiAgentOptions.some((agent) => String(agent?.id || "").trim() === normalizedAgentId)) {
+            setEnvironmentApiAgentId(environmentApiDefaultAgentId);
+          }
+        }, [environmentApiAgentId, environmentApiAgentOptions, environmentApiDefaultAgentId, environmentApiModalOpen]);
+
+        useEffect(() => {
+          if (!environmentApiModalOpen || serverPreviewEditorModule || serverPreviewEditorModuleError) {
+            return undefined;
+          }
+
+          let cancelled = false;
+
+          void loadPlaygroundCodeEditorModule()
+            .then((module) => {
+              if (cancelled) {
+                return;
+              }
+              if (!module) {
+                setServerPreviewEditorModuleError("Failed to load editor.");
+                return;
+              }
+              setServerPreviewEditorModule(module);
+              setServerPreviewEditorModuleError("");
+              void module.loader?.init?.()
+                .then((monaco) => {
+                  if (!cancelled) {
+                    ensurePlaygroundCodeEditorTheme(monaco);
+                  }
+                })
+                .catch(() => {});
+            })
+            .catch((error) => {
+              if (cancelled) {
+                return;
+              }
+              setServerPreviewEditorModuleError(error instanceof Error ? error.message : "Failed to load editor.");
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [environmentApiModalOpen, serverPreviewEditorModule, serverPreviewEditorModuleError]);
 
         useEffect(() => {
           if (!serverActionsPopoverOpen) return undefined;
@@ -91465,6 +91882,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             environmentApiModalFrameRef.current = null;
           }
           setCopiedEnvironmentApiSnippet("");
+          setEnvironmentApiAgentId((current) => {
+            const normalizedCurrent = String(current || "").trim();
+            return normalizedCurrent && environmentApiAgentOptions.some((agent) => String(agent?.id || "").trim() === normalizedCurrent)
+              ? normalizedCurrent
+              : environmentApiDefaultAgentId;
+          });
           setEnvironmentApiModalVisible(false);
           setEnvironmentApiModalClosing(false);
           setEnvironmentApiModalOpen(true);
@@ -91514,10 +91937,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }, 75);
         }
 
-        function buildEnvironmentApiSnippets(environmentRecord = draftEnvironment) {
+        function buildEnvironmentApiSnippets(environmentRecord = draftEnvironment, agentId = environmentApiAgentId) {
           const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environmentRecord || buildPlaygroundDefaultEnvironmentDraft());
           const apiOrigin = ${JSON.stringify(defaultUpstreamOrigin)};
           const environmentId = String(normalizedEnvironment.id || "computer_id").trim() || "computer_id";
+          const normalizedAgentId = String(agentId || environmentApiDefaultAgentId || "agent_assistant").trim() || "agent_assistant";
           const payload = {
             title: "Run on " + (normalizedEnvironment.name || "Computer"),
             messages: [
@@ -91526,6 +91950,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 content: "Use this computer to inspect the project and summarize the current state.",
               },
             ],
+            agentId: normalizedAgentId,
             environmentId,
           };
           const payloadJson = JSON.stringify(payload, null, 2);
@@ -91733,6 +92158,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             ? String(Math.round(memoryGb))
             : memoryGb.toFixed(1).replace(/\\.0$/, "");
           return cpuLabel + " vCPU · " + memoryLabel + " GB RAM";
+        }
+
+        function formatPlaygroundEnvironmentProfileMemory(profile) {
+          const memoryGb = Number(profile?.memoryMb || 0) / 1024;
+          if (!Number.isFinite(memoryGb) || memoryGb <= 0) {
+            return "Not set";
+          }
+          const memoryLabel = Math.abs(memoryGb - Math.round(memoryGb)) < 0.001
+            ? String(Math.round(memoryGb))
+            : memoryGb.toFixed(1).replace(/\\.0$/, "");
+          return memoryLabel + " GB";
         }
 
         function formatPlaygroundEnvironmentProfileHourlyPrice(profile) {
@@ -100583,6 +101019,44 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               className: "playground-environments-editor-fact-value" + (className ? " " + className : ""),
               title: String(value || ""),
             }, value || "Not set");
+          const renderEnvironmentFactCopyButton = (fieldId, value, label) => {
+            const normalizedValue = String(value || "").trim();
+            const isCopied = environmentDetailCopiedFact === fieldId;
+            return React.createElement("button", {
+                type: "button",
+                className: "playground-agents-detail-sidebar-copy-button",
+                title: isCopied ? "Copied" : "Copy " + label,
+                "aria-label": isCopied ? label + " copied" : "Copy " + label,
+                disabled: !normalizedValue,
+                onClick: async (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  if (!normalizedValue) {
+                    return;
+                  }
+                  const copied = await copyTextToClipboard(normalizedValue);
+                  if (!copied) {
+                    return;
+                  }
+                  setEnvironmentDetailCopiedFact(fieldId);
+                  window.setTimeout(() => {
+                    setEnvironmentDetailCopiedFact((current) => current === fieldId ? "" : current);
+                  }, 1400);
+                },
+              },
+              isCopied
+                ? React.createElement(Check, { width: 12, height: 12, strokeWidth: 1.6 })
+                : React.createElement(Copy, { width: 12, height: 12, strokeWidth: 1.45 })
+            );
+          };
+          const renderEnvironmentCopyableSidebarValue = (fieldId, value, label, className = "", displayValue = value) =>
+            React.createElement("span", { className: "playground-agents-detail-sidebar-copy-value" },
+              React.createElement("span", {
+                className: "playground-environments-editor-fact-value" + (className ? " " + className : ""),
+                title: String(displayValue || ""),
+              }, displayValue || "Not set"),
+              renderEnvironmentFactCopyButton(fieldId, value, label)
+            );
           const renderEnvironmentSidebarRow = (label, valueNode, props = {}) =>
             React.createElement(props.asButton ? "button" : "div", {
                 key: label,
@@ -100695,10 +101169,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 renderEnvironmentSidebarRow("Rate",
                   renderEnvironmentSidebarValue(formatPlaygroundEnvironmentProfileRate(activeEnvironmentComputeProfile))
                 ),
-                renderEnvironmentSidebarRow("Computer ID", renderEnvironmentSidebarValue(draftEnvironment.id || "Unsaved computer", "is-id")),
+                renderEnvironmentSidebarRow("RAM",
+                  renderEnvironmentSidebarValue(formatPlaygroundEnvironmentProfileMemory(activeEnvironmentComputeProfile))
+                ),
+                renderEnvironmentSidebarRow("Computer ID",
+                  renderEnvironmentCopyableSidebarValue("computer-id", draftEnvironment.id, "computer ID", "is-id", draftEnvironment.id || "Unsaved computer")
+                ),
                 renderEnvironmentSidebarRow("Created", renderEnvironmentSidebarValue(formatPlaygroundFileDate(draftEnvironment.createdAt))),
                 renderEnvironmentSidebarRow("Updated", renderEnvironmentSidebarValue(formatPlaygroundFileDate(draftEnvironment.updatedAt))),
-                renderEnvironmentSidebarRow("Storage", renderEnvironmentSidebarValue(storageDisplay)),
                 renderEnvironmentSidebarRow("Resources", renderEnvironmentSidebarValue(formatPlaygroundEnvironmentProfileResources(activeEnvironmentComputeProfile))),
                 renderEnvironmentSidebarRow("Internet",
                   React.createElement("button", {
@@ -100767,6 +101245,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               )
             )
           );
+          const openEnvironmentFilebase = () => {
+            const normalizedEnvironmentId = String(draftEnvironment?.id || "").trim();
+            if (!normalizedEnvironmentId || normalizedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+              return;
+            }
+            if (typeof onOpenFilesPage !== "function") {
+              return;
+            }
+            onOpenFilesPage({
+              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              environmentId: normalizedEnvironmentId,
+              contentMode: "files",
+              path: "",
+              isFolder: true,
+            });
+          };
           const normalizedEnvironmentDetailTab = environmentDetailTab === "advanced" ? "advanced" : "general";
           const environmentDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-computer-detail-tabs" },
             React.createElement("div", { className: "playground-project-overview-chart-tabs" },
@@ -100783,6 +101277,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   },
                   tab.label
                 )
+              ),
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-project-overview-chart-tab playground-computer-detail-filebase-tab",
+                  onClick: openEnvironmentFilebase,
+                  disabled: !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID || typeof onOpenFilesPage !== "function",
+                  title: "Open Filebase",
+                  "aria-label": "Open Filebase for this computer",
+                },
+                React.createElement("span", null, "Filebase"),
+                React.createElement(ExternalLink, { width: 12, height: 12, strokeWidth: 1.8 })
               )
             )
           );
@@ -101228,8 +101733,125 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               { id: "python", label: "Python" },
               { id: "javascript", label: "JavaScript" },
             ];
-            const snippets = buildEnvironmentApiSnippets(draftEnvironment);
+            const effectiveEnvironmentApiAgentId = String(
+              selectedEnvironmentApiAgent?.id
+              || environmentApiAgentId
+              || environmentApiDefaultAgentId
+              || "agent_assistant"
+            ).trim() || "agent_assistant";
+            const snippets = buildEnvironmentApiSnippets(draftEnvironment, effectiveEnvironmentApiAgentId);
             const activeSnippet = snippets[environmentApiSnippetTab] || snippets.curl;
+            const activeSnippetLanguage = ({
+              curl: "shell",
+              python: "python",
+              javascript: "javascript",
+            })[environmentApiSnippetTab] || "shell";
+            const activeSnippetExtension = ({
+              curl: "sh",
+              python: "py",
+              javascript: "js",
+            })[environmentApiSnippetTab] || "sh";
+            const activeSnippetLineCount = String(activeSnippet || "").split(/\\n/).length || 1;
+            const activeSnippetCodeHeight = Math.min(460, Math.max(240, activeSnippetLineCount * 20 + 24)) + "px";
+            const environmentApiSnippetSlug = String((draftEnvironment?.id || "computer") + "-" + effectiveEnvironmentApiAgentId + "-" + environmentApiSnippetTab)
+              .replace(/[^A-Za-z0-9_.:-]+/g, "_")
+              .slice(0, 96);
+            const EnvironmentApiEditorComponent = serverPreviewEditorModule?.default || null;
+            const environmentApiCodePreview = EnvironmentApiEditorComponent
+              ? React.createElement("div", {
+                  className: "playground-server-invoke-code-editor playground-code-preview-editor-shell playground-computer-api-code-editor",
+                  style: { "--playground-server-invoke-code-height": activeSnippetCodeHeight },
+                },
+                  React.createElement(EnvironmentApiEditorComponent, {
+                    path: "computer-api-" + environmentApiSnippetSlug + "." + activeSnippetExtension,
+                    height: activeSnippetCodeHeight,
+                    language: activeSnippetLanguage,
+                    theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+                    value: activeSnippet,
+                    beforeMount: ensurePlaygroundCodeEditorTheme,
+                    options: {
+                      automaticLayout: true,
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      smoothScrolling: true,
+                      readOnly: true,
+                      fontSize: 12,
+                      lineHeight: 20,
+                      tabSize: 2,
+                      insertSpaces: true,
+                      renderLineHighlight: "none",
+                      lineNumbersMinChars: 3,
+                      overviewRulerBorder: false,
+                      hideCursorInOverviewRuler: true,
+                      wordWrap: "on",
+                      padding: { top: 12, bottom: 12 },
+                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                    },
+                  })
+                )
+              : !serverPreviewEditorModuleError
+                ? React.createElement("div", {
+                    className: "playground-code-preview-state playground-server-invoke-code-editor playground-computer-api-code-editor",
+                    style: { "--playground-server-invoke-code-height": activeSnippetCodeHeight },
+                  },
+                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                    React.createElement("span", null, "Loading editor...")
+                  )
+                : React.createElement("pre", {
+                    className: "playground-server-invoke-code-fallback playground-computer-api-code",
+                    style: { minHeight: activeSnippetCodeHeight },
+                  },
+                    React.createElement("code", null, activeSnippet)
+                  );
+            const environmentApiAgentPopoverOpen = environmentRuntimePopover === "api-agent";
+            const environmentApiAgentLabel = selectedEnvironmentApiAgent?.name || selectedEnvironmentApiAgent?.label || effectiveEnvironmentApiAgentId || "Agent";
+            const environmentApiAgentSelector = React.createElement("div", {
+                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup playground-computer-api-agent-select-popup" + (environmentApiAgentPopoverOpen ? " is-open" : ""),
+                ref: environmentApiAgentPopoverOpen ? environmentRuntimePopoverRef : null,
+              },
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-runtime-value-button playground-agents-model-picker-trigger",
+                  onClick: () => setEnvironmentRuntimePopover((current) => current === "api-agent" ? "" : "api-agent"),
+                  title: environmentApiAgentLabel,
+                  "aria-label": "Agent: " + environmentApiAgentLabel,
+                  "aria-expanded": environmentApiAgentPopoverOpen ? "true" : "false",
+                },
+                React.createElement("span", { className: "playground-agents-model-picker-trigger-copy" },
+                  React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
+                    React.createElement(Bot, { width: 14, height: 14, strokeWidth: 1.8 })
+                  ),
+                  React.createElement("span", { className: "playground-agents-model-picker-trigger-labels" },
+                    React.createElement("span", { className: "playground-environments-runtime-value-label" }, environmentApiAgentLabel)
+                  )
+                ),
+                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+              ),
+              environmentApiAgentPopoverOpen
+                ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                    environmentApiAgentOptions.map((agent) => {
+                      const agentId = String(agent?.id || "").trim();
+                      const isSelected = agentId === effectiveEnvironmentApiAgentId;
+                      return React.createElement("button", {
+                          key: agentId,
+                          type: "button",
+                          className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
+                          onClick: () => {
+                            setEnvironmentApiAgentId(agentId);
+                            setEnvironmentRuntimePopover("");
+                          },
+                        },
+                        React.createElement("span", { className: "tb-popup-check-slot" },
+                          isSelected
+                            ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                            : null
+                        ),
+                        React.createElement("span", null, agent?.name || agentId)
+                      );
+                    })
+                  )
+                : null
+            );
             const modal = renderPlaygroundPlatformModal({
               open: environmentApiModalOpen,
               visible: environmentApiModalVisible,
@@ -101254,6 +101876,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-issue-modal-body playground-computer-api-modal-body" },
+                  React.createElement("div", { className: "playground-computer-api-config-row" },
+                    React.createElement("div", { className: "playground-computer-api-config-label" }, "Agent"),
+                    environmentApiAgentSelector
+                  ),
                   React.createElement("div", { className: "playground-server-invoke-card playground-computer-api-card" },
                     React.createElement("div", { className: "playground-server-invoke-header playground-computer-api-header" },
                       React.createElement("div", { className: "playground-server-invoke-tabs", role: "tablist", "aria-label": "Computer API examples" },
@@ -101278,9 +101904,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                         ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.9 })
                         : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.9 }))
                     ),
-                    React.createElement("pre", { className: "playground-server-invoke-code-fallback playground-computer-api-code" },
-                      React.createElement("code", null, activeSnippet)
-                    )
+                    environmentApiCodePreview
                   )
                 )
               )
@@ -104824,6 +105448,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         workspaceTeamMembersTeamId = "",
         workspaceTeamsLoading = false,
         workspaceTeamsRequiresPlan = false,
+        guardrailSets = [],
         onWorkspaceTeamsRequest,
         initialAgentId,
         preferredEnvironmentId = "",
@@ -104869,6 +105494,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentOwnerPopoverRef = useRef(null);
         const agentSendTeamModalCloseTimerRef = useRef(null);
         const agentSendTeamModalFrameRef = useRef(null);
+        const agentApiModalCloseTimerRef = useRef(null);
+        const agentApiModalFrameRef = useRef(null);
+        const agentApiEnvironmentPopoverRef = useRef(null);
         const agentWorkspaceTeamMembersRequestedRef = useRef(new Set());
         const agentOwnerProfileLookupKeyRef = useRef("");
         const agentOwnerCandidateProfileLookupKeyRef = useRef("");
@@ -104921,6 +105549,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentDetailThreadFilterMode, setAgentDetailThreadFilterMode] = useState("all");
         const [agentDetailThreadToolbarPopover, setAgentDetailThreadToolbarPopover] = useState("");
         const [agentDetailVisibleThreadCount, setAgentDetailVisibleThreadCount] = useState(5);
+        const [agentGuardrailSearchQuery, setAgentGuardrailSearchQuery] = useState("");
+        const [agentGuardrailImportPopoverOpen, setAgentGuardrailImportPopoverOpen] = useState(false);
         const [selectedAgentsObservabilityThreadId, setSelectedAgentsObservabilityThreadId] = useState("");
         const [agentsObservabilityThreadDetailsById, setAgentsObservabilityThreadDetailsById] = useState({});
         const [loadingAgentId, setLoadingAgentId] = useState("");
@@ -104974,6 +105604,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           action: "",
           error: "",
         });
+        const [agentApiModalOpen, setAgentApiModalOpen] = useState(false);
+        const [agentApiModalVisible, setAgentApiModalVisible] = useState(false);
+        const [agentApiModalClosing, setAgentApiModalClosing] = useState(false);
+        const [agentApiSnippetTab, setAgentApiSnippetTab] = useState("curl");
+        const [agentApiEnvironmentId, setAgentApiEnvironmentId] = useState("");
+        const [copiedAgentApiSnippet, setCopiedAgentApiSnippet] = useState("");
+        const [agentApiEditorModule, setAgentApiEditorModule] = useState(null);
+        const [agentApiEditorModuleError, setAgentApiEditorModuleError] = useState("");
         const [agentRenameState, setAgentRenameState] = useState(null);
         const [agentRenameValue, setAgentRenameValue] = useState("");
         const [agentRenameError, setAgentRenameError] = useState("");
@@ -105281,6 +105919,45 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             || orderedAgents.find((agent) => agent.id === selectedAgentId)
             || null;
         }, [agentDetailsById, orderedAgents, selectedAgentId]);
+
+        const orderedAgentApiEnvironments = useMemo(() => {
+          const seen = new Set();
+          return (Array.isArray(environments) ? environments : [])
+            .map((environment) => normalizePlaygroundEnvironmentRecord(environment))
+            .filter((environment) => {
+              const id = String(environment?.id || "").trim();
+              if (!id || seen.has(id) || id === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+                return false;
+              }
+              seen.add(id);
+              return true;
+            })
+            .sort((left, right) => {
+              if (Boolean(left?.isDefault) !== Boolean(right?.isDefault)) {
+                return left?.isDefault ? -1 : 1;
+              }
+              return String(left?.name || "").localeCompare(String(right?.name || ""));
+            });
+        }, [environments]);
+
+        const agentApiDefaultEnvironmentId = useMemo(() => {
+          const normalizedPreferredEnvironmentId = String(preferredEnvironmentId || "").trim();
+          if (normalizedPreferredEnvironmentId && orderedAgentApiEnvironments.some((environment) => environment.id === normalizedPreferredEnvironmentId)) {
+            return normalizedPreferredEnvironmentId;
+          }
+          return String(
+            orderedAgentApiEnvironments.find((environment) => environment?.isDefault)?.id
+            || orderedAgentApiEnvironments[0]?.id
+            || "computer_id"
+          ).trim();
+        }, [orderedAgentApiEnvironments, preferredEnvironmentId]);
+
+        const selectedAgentApiEnvironment = useMemo(() => {
+          const normalizedEnvironmentId = String(agentApiEnvironmentId || "").trim();
+          return orderedAgentApiEnvironments.find((environment) => String(environment?.id || "").trim() === normalizedEnvironmentId)
+            || orderedAgentApiEnvironments.find((environment) => String(environment?.id || "").trim() === agentApiDefaultEnvironmentId)
+            || null;
+        }, [agentApiDefaultEnvironmentId, agentApiEnvironmentId, orderedAgentApiEnvironments]);
 
         const filteredOrderedAgents = useMemo(() => {
           return orderedAgents.filter((agent) => (
@@ -106169,6 +106846,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setAgentModelPopover("");
           setAgentVersionsSidebarOpen(false);
           setOpenAgentVersionMenuId("");
+          setAgentApiModalOpen(false);
+          setAgentApiModalVisible(false);
+          setAgentApiModalClosing(false);
+          setCopiedAgentApiSnippet("");
           setAgentVersionState({
             status: "idle",
             message: "",
@@ -108700,6 +109381,96 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [agentSendTeamModalOpen, agentSendTeamShareState.action]);
 
         useEffect(() => {
+          if (!agentApiModalOpen && !agentApiModalClosing) {
+            return undefined;
+          }
+
+          function handleAgentApiModalEscape(event) {
+            if (event.key === "Escape") {
+              closeAgentApiModal();
+            }
+          }
+
+          window.addEventListener("keydown", handleAgentApiModalEscape);
+          return () => window.removeEventListener("keydown", handleAgentApiModalEscape);
+        }, [agentApiModalOpen, agentApiModalClosing]);
+
+        useEffect(() => {
+          if (!agentApiModalOpen) {
+            return;
+          }
+          const normalizedEnvironmentId = String(agentApiEnvironmentId || "").trim();
+          if (!normalizedEnvironmentId || !orderedAgentApiEnvironments.some((environment) => String(environment?.id || "").trim() === normalizedEnvironmentId)) {
+            setAgentApiEnvironmentId(agentApiDefaultEnvironmentId);
+          }
+        }, [agentApiDefaultEnvironmentId, agentApiEnvironmentId, agentApiModalOpen, orderedAgentApiEnvironments]);
+
+        useEffect(() => {
+          if (!agentApiModalOpen || agentApiEditorModule || agentApiEditorModuleError) {
+            return undefined;
+          }
+
+          let cancelled = false;
+
+          void loadPlaygroundCodeEditorModule()
+            .then((module) => {
+              if (cancelled) {
+                return;
+              }
+              if (!module) {
+                setAgentApiEditorModuleError("Failed to load editor.");
+                return;
+              }
+              setAgentApiEditorModule(module);
+              setAgentApiEditorModuleError("");
+              void module.loader?.init?.()
+                .then((monaco) => {
+                  if (!cancelled) {
+                    ensurePlaygroundCodeEditorTheme(monaco);
+                  }
+                })
+                .catch(() => {});
+            })
+            .catch((error) => {
+              if (cancelled) {
+                return;
+              }
+              setAgentApiEditorModuleError(error instanceof Error ? error.message : "Failed to load editor.");
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [agentApiEditorModule, agentApiEditorModuleError, agentApiModalOpen]);
+
+        useEffect(() => {
+          if (agentModelPopover !== "api-environment") {
+            return undefined;
+          }
+
+          function handleAgentApiEnvironmentPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !agentApiEnvironmentPopoverRef.current || agentApiEnvironmentPopoverRef.current.contains(target)) {
+              return;
+            }
+            setAgentModelPopover("");
+          }
+
+          function handleAgentApiEnvironmentEscape(event) {
+            if (event.key === "Escape") {
+              setAgentModelPopover("");
+            }
+          }
+
+          document.addEventListener("mousedown", handleAgentApiEnvironmentPointerDown);
+          window.addEventListener("keydown", handleAgentApiEnvironmentEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleAgentApiEnvironmentPointerDown);
+            window.removeEventListener("keydown", handleAgentApiEnvironmentEscape);
+          };
+        }, [agentModelPopover]);
+
+        useEffect(() => {
           return () => {
             if (agentSendTeamModalCloseTimerRef.current) {
               window.clearTimeout(agentSendTeamModalCloseTimerRef.current);
@@ -108708,6 +109479,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             if (agentSendTeamModalFrameRef.current) {
               window.cancelAnimationFrame(agentSendTeamModalFrameRef.current);
               agentSendTeamModalFrameRef.current = null;
+            }
+            if (agentApiModalCloseTimerRef.current) {
+              window.clearTimeout(agentApiModalCloseTimerRef.current);
+              agentApiModalCloseTimerRef.current = null;
+            }
+            if (agentApiModalFrameRef.current) {
+              window.cancelAnimationFrame(agentApiModalFrameRef.current);
+              agentApiModalFrameRef.current = null;
             }
           };
         }, []);
@@ -108984,7 +109763,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [agentComposerModelPopover]);
 
         useEffect(() => {
-          if (!agentModelPopover) {
+          if (!agentModelPopover || agentModelPopover === "api-environment") {
             return undefined;
           }
 
@@ -110014,6 +110793,196 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   className: "playground-environments-action-button is-primary",
                   disabled: isSharingAgentToTeam || !selectedTeam || selectedTeamAlreadyShared,
                 }, isSharingAgentToTeam ? "Sharing..." : "Share")
+              )
+            )
+          });
+        }
+
+        function renderAgentApiModal() {
+          if (!agentApiModalOpen) {
+            return null;
+          }
+          const snippetTabs = [
+            { id: "curl", label: "cURL" },
+            { id: "python", label: "Python" },
+            { id: "javascript", label: "JavaScript" },
+          ];
+          const effectiveAgentApiEnvironmentId = String(
+            selectedAgentApiEnvironment?.id
+            || agentApiEnvironmentId
+            || agentApiDefaultEnvironmentId
+            || "computer_id"
+          ).trim() || "computer_id";
+          const snippets = buildAgentApiSnippets(draftAgent, effectiveAgentApiEnvironmentId);
+          const activeSnippet = snippets[agentApiSnippetTab] || snippets.curl;
+          const activeSnippetLanguage = ({
+            curl: "shell",
+            python: "python",
+            javascript: "javascript",
+          })[agentApiSnippetTab] || "shell";
+          const activeSnippetExtension = ({
+            curl: "sh",
+            python: "py",
+            javascript: "js",
+          })[agentApiSnippetTab] || "sh";
+          const activeSnippetLineCount = String(activeSnippet || "").split(/\\n/).length || 1;
+          const activeSnippetCodeHeight = Math.min(460, Math.max(240, activeSnippetLineCount * 20 + 24)) + "px";
+          const agentApiSnippetSlug = String((draftAgent?.id || "agent") + "-" + effectiveAgentApiEnvironmentId + "-" + agentApiSnippetTab)
+            .replace(/[^A-Za-z0-9_.:-]+/g, "_")
+            .slice(0, 96);
+          const AgentApiEditorComponent = agentApiEditorModule?.default || null;
+          const agentApiCodePreview = AgentApiEditorComponent
+            ? React.createElement("div", {
+                className: "playground-server-invoke-code-editor playground-code-preview-editor-shell playground-computer-api-code-editor",
+                style: { "--playground-server-invoke-code-height": activeSnippetCodeHeight },
+              },
+                React.createElement(AgentApiEditorComponent, {
+                  path: "agent-api-" + agentApiSnippetSlug + "." + activeSnippetExtension,
+                  height: activeSnippetCodeHeight,
+                  language: activeSnippetLanguage,
+                  theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+                  value: activeSnippet,
+                  beforeMount: ensurePlaygroundCodeEditorTheme,
+                  options: {
+                    automaticLayout: true,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    smoothScrolling: true,
+                    readOnly: true,
+                    fontSize: 12,
+                    lineHeight: 20,
+                    tabSize: 2,
+                    insertSpaces: true,
+                    renderLineHighlight: "none",
+                    lineNumbersMinChars: 3,
+                    overviewRulerBorder: false,
+                    hideCursorInOverviewRuler: true,
+                    wordWrap: "on",
+                    padding: { top: 12, bottom: 12 },
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                  },
+                })
+              )
+            : !agentApiEditorModuleError
+              ? React.createElement("div", {
+                  className: "playground-code-preview-state playground-server-invoke-code-editor playground-computer-api-code-editor",
+                  style: { "--playground-server-invoke-code-height": activeSnippetCodeHeight },
+                },
+                  React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                  React.createElement("span", null, "Loading editor...")
+                )
+              : React.createElement("pre", {
+                  className: "playground-server-invoke-code-fallback playground-computer-api-code",
+                  style: { minHeight: activeSnippetCodeHeight },
+                },
+                  React.createElement("code", null, activeSnippet)
+                );
+          const agentApiEnvironmentPopoverOpen = agentModelPopover === "api-environment";
+          const agentApiEnvironmentLabel = selectedAgentApiEnvironment?.name || selectedAgentApiEnvironment?.label || effectiveAgentApiEnvironmentId || "Computer";
+          const agentApiEnvironmentSelector = React.createElement("div", {
+              className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup playground-agent-api-environment-select-popup" + (agentApiEnvironmentPopoverOpen ? " is-open" : ""),
+              ref: agentApiEnvironmentPopoverOpen ? agentApiEnvironmentPopoverRef : null,
+            },
+            React.createElement("button", {
+                type: "button",
+                className: "playground-environments-runtime-value-button playground-agents-model-picker-trigger",
+                onClick: () => setAgentModelPopover((current) => current === "api-environment" ? "" : "api-environment"),
+                title: agentApiEnvironmentLabel,
+                "aria-label": "Computer: " + agentApiEnvironmentLabel,
+                "aria-expanded": agentApiEnvironmentPopoverOpen ? "true" : "false",
+              },
+              React.createElement("span", { className: "playground-agents-model-picker-trigger-copy" },
+                React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
+                  React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.8 })
+                ),
+                React.createElement("span", { className: "playground-agents-model-picker-trigger-labels" },
+                  React.createElement("span", { className: "playground-environments-runtime-value-label" }, agentApiEnvironmentLabel)
+                )
+              ),
+              React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+            ),
+            agentApiEnvironmentPopoverOpen
+              ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                  orderedAgentApiEnvironments.length > 0
+                    ? orderedAgentApiEnvironments.map((environment) => {
+                        const environmentId = String(environment?.id || "").trim();
+                        const isSelected = environmentId === effectiveAgentApiEnvironmentId;
+                        return React.createElement("button", {
+                            key: environmentId,
+                            type: "button",
+                            className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
+                            onClick: () => {
+                              setAgentApiEnvironmentId(environmentId);
+                              setAgentModelPopover("");
+                            },
+                          },
+                          React.createElement("span", { className: "tb-popup-check-slot" },
+                            isSelected
+                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                              : null
+                          ),
+                          React.createElement("span", null, environment?.name || environmentId)
+                        );
+                      })
+                    : React.createElement("div", { className: "tb-popup-row is-disabled" }, "No computers available")
+                )
+              : null
+          );
+
+          return renderPlaygroundPlatformModal({
+            open: agentApiModalOpen,
+            visible: agentApiModalVisible,
+            closing: agentApiModalClosing,
+            onClose: () => closeAgentApiModal(),
+            backdropClassName: "playground-tasks-project-issue-backdrop playground-computer-api-modal-backdrop",
+            className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-computer-api-modal playground-agent-api-modal",
+            ariaLabel: "Use agent via API",
+            children: React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                  React.createElement("div", {
+                    className: "playground-content-title playground-tasks-project-modal-name-input",
+                    style: { display: "flex", alignItems: "center" },
+                  }, "Use via API"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: () => closeAgentApiModal(),
+                    title: "Close",
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-issue-modal-body playground-computer-api-modal-body" },
+                React.createElement("div", { className: "playground-computer-api-config-row" },
+                  React.createElement("div", { className: "playground-computer-api-config-label" }, "Computer"),
+                  agentApiEnvironmentSelector
+                ),
+                React.createElement("div", { className: "playground-server-invoke-card playground-computer-api-card" },
+                  React.createElement("div", { className: "playground-server-invoke-header playground-computer-api-header" },
+                    React.createElement("div", { className: "playground-server-invoke-tabs", role: "tablist", "aria-label": "Agent API examples" },
+                      snippetTabs.map((tab) =>
+                        React.createElement("button", {
+                          key: tab.id,
+                          type: "button",
+                          role: "tab",
+                          className: "playground-server-invoke-tab" + (agentApiSnippetTab === tab.id ? " is-active" : ""),
+                          "aria-selected": agentApiSnippetTab === tab.id ? "true" : "false",
+                          onClick: () => setAgentApiSnippetTab(tab.id),
+                        }, tab.label)
+                      )
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-computer-api-copy-button",
+                      onClick: () => void copyAgentApiSnippet(agentApiSnippetTab, activeSnippet),
+                      title: "Copy code",
+                      "aria-label": "Copy code",
+                    }, copiedAgentApiSnippet === agentApiSnippetTab
+                      ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.9 })
+                      : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.9 }))
+                  ),
+                  agentApiCodePreview
+                )
               )
             )
           });
@@ -111734,6 +112703,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               enabledSkills: isPlaygroundTeamAgent(normalizedCurrentAgent)
                 ? []
                 : (Array.isArray(normalizedCurrentAgent.enabledSkills) ? [...normalizedCurrentAgent.enabledSkills] : []),
+              guardrailSetIds: normalizePlaygroundGuardrailSetIds(normalizedCurrentAgent.guardrailSetIds),
               deepResearchModel: normalizedCurrentAgent.deepResearchModel || buildPlaygroundDefaultAgentDraft("single").deepResearchModel,
               permissionSet: normalizePlaygroundPermissionSet(normalizedCurrentAgent.permissionSet, "agent"),
               metadata: sanitizedMetadata,
@@ -111763,6 +112733,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               enabledSkills: isTeamCopy
                 ? []
                 : (Array.isArray(normalizedAgent.enabledSkills) ? [...normalizedAgent.enabledSkills] : []),
+              guardrailSetIds: normalizePlaygroundGuardrailSetIds(normalizedAgent.guardrailSetIds),
               deepResearchModel: isTeamCopy
                 ? null
                 : (normalizedAgent.deepResearchModel || buildPlaygroundDefaultAgentDraft("single").deepResearchModel),
@@ -112153,6 +113124,148 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }, 75);
         }
 
+        function openAgentApiModal() {
+          if (!draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
+            return;
+          }
+          if (agentApiModalCloseTimerRef.current) {
+            window.clearTimeout(agentApiModalCloseTimerRef.current);
+            agentApiModalCloseTimerRef.current = null;
+          }
+          if (agentApiModalFrameRef.current) {
+            window.cancelAnimationFrame(agentApiModalFrameRef.current);
+            agentApiModalFrameRef.current = null;
+          }
+          setCopiedAgentApiSnippet("");
+          setAgentApiEnvironmentId((current) => {
+            const normalizedCurrent = String(current || "").trim();
+            return normalizedCurrent && orderedAgentApiEnvironments.some((environment) => String(environment?.id || "").trim() === normalizedCurrent)
+              ? normalizedCurrent
+              : agentApiDefaultEnvironmentId;
+          });
+          setAgentApiModalVisible(false);
+          setAgentApiModalClosing(false);
+          setAgentApiModalOpen(true);
+          agentApiModalFrameRef.current = window.requestAnimationFrame(() => {
+            agentApiModalFrameRef.current = window.requestAnimationFrame(() => {
+              agentApiModalFrameRef.current = null;
+              setAgentApiModalVisible(true);
+            });
+          });
+        }
+
+        function finishCloseAgentApiModal() {
+          if (agentApiModalCloseTimerRef.current) {
+            window.clearTimeout(agentApiModalCloseTimerRef.current);
+            agentApiModalCloseTimerRef.current = null;
+          }
+          if (agentApiModalFrameRef.current) {
+            window.cancelAnimationFrame(agentApiModalFrameRef.current);
+            agentApiModalFrameRef.current = null;
+          }
+          setAgentApiModalVisible(false);
+          setAgentApiModalClosing(false);
+          setAgentApiModalOpen(false);
+          setCopiedAgentApiSnippet("");
+          setAgentModelPopover("");
+        }
+
+        function closeAgentApiModal(options = {}) {
+          if (options?.animate === false || (!agentApiModalOpen && !agentApiModalVisible && !agentApiModalClosing)) {
+            finishCloseAgentApiModal();
+            return;
+          }
+          if (agentApiModalClosing) {
+            return;
+          }
+          if (agentApiModalFrameRef.current) {
+            window.cancelAnimationFrame(agentApiModalFrameRef.current);
+            agentApiModalFrameRef.current = null;
+          }
+          setAgentApiModalVisible(false);
+          setAgentApiModalClosing(true);
+          if (agentApiModalCloseTimerRef.current) {
+            window.clearTimeout(agentApiModalCloseTimerRef.current);
+          }
+          agentApiModalCloseTimerRef.current = window.setTimeout(() => {
+            agentApiModalCloseTimerRef.current = null;
+            finishCloseAgentApiModal();
+          }, 75);
+        }
+
+        function buildAgentApiSnippets(agentRecord = draftAgent, environmentId = agentApiEnvironmentId) {
+          const normalizedAgent = normalizePlaygroundAgentRecord(agentRecord || buildPlaygroundDefaultAgentDraft());
+          const apiOrigin = ${JSON.stringify(defaultUpstreamOrigin)};
+          const agentId = String(normalizedAgent.id || "agent_id").trim() || "agent_id";
+          const normalizedEnvironmentId = String(environmentId || agentApiDefaultEnvironmentId || "computer_id").trim() || "computer_id";
+          const payload = {
+            title: "Run " + (normalizedAgent.name || "Agent"),
+            messages: [
+              {
+                role: "user",
+                content: "Use this agent and computer to inspect the project and summarize the current state.",
+              },
+            ],
+            agentId,
+            environmentId: normalizedEnvironmentId,
+          };
+          const payloadJson = JSON.stringify(payload, null, 2);
+          return {
+            curl: [
+              "curl -sS -X POST '" + apiOrigin + "/threads' \\\\",
+              "  -H \\\"Authorization: Bearer $COMPUTER_AGENTS_API_KEY\\\" \\\\",
+              "  -H 'Content-Type: application/json' \\\\",
+              "  --data '" + payloadJson.replace(/'/g, "'\\\\''") + "'",
+            ].join("\\n"),
+            python: [
+              "import os",
+              "import requests",
+              "",
+              "api_key = os.environ['COMPUTER_AGENTS_API_KEY']",
+              "response = requests.post(",
+              "    '" + apiOrigin + "/threads',",
+              "    headers={",
+              "        'Authorization': f'Bearer {api_key}',",
+              "        'Content-Type': 'application/json',",
+              "    },",
+              "    json=" + JSON.stringify(payload, null, 4).replace(/true/g, "True").replace(/false/g, "False").replace(/null/g, "None") + ",",
+              ")",
+              "response.raise_for_status()",
+              "print(response.json())",
+            ].join("\\n"),
+            javascript: [
+              "const apiKey = process.env.COMPUTER_AGENTS_API_KEY;",
+              "",
+              "const response = await fetch('" + apiOrigin + "/threads', {",
+              "  method: 'POST',",
+              "  headers: {",
+              "    Authorization: 'Bearer ' + apiKey,",
+              "    'Content-Type': 'application/json',",
+              "  },",
+              "  body: JSON.stringify(" + payloadJson.replace(/\\n/g, "\\n  ") + "),",
+              "});",
+              "",
+              "if (!response.ok) {",
+              "  throw new Error(await response.text());",
+              "}",
+              "",
+              "console.log(await response.json());",
+            ].join("\\n"),
+          };
+        }
+
+        async function copyAgentApiSnippet(snippetKey, snippetValue) {
+          try {
+            await navigator.clipboard?.writeText(String(snippetValue || ""));
+            setCopiedAgentApiSnippet(snippetKey);
+            window.setTimeout(() => {
+              setCopiedAgentApiSnippet((current) => current === snippetKey ? "" : current);
+            }, 1400);
+          } catch {
+            setCopiedAgentApiSnippet("");
+          }
+        }
+
         async function handleAgentSendToTeamSubmit(event) {
           event.preventDefault();
           if (!draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
@@ -112231,6 +113344,40 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             ? { ...agent.metadata }
             : {};
           const profileMetadata = buildPlaygroundAgentProfileMetadata(agent);
+          const guardrailBundle = buildPlaygroundAgentGuardrailBundle(agent, guardrailSets);
+          const guardrailSetIds = guardrailBundle.guardrailSetIds;
+          if (guardrailSetIds.length > 0) {
+            currentMetadata.guardrailSetIds = guardrailSetIds;
+            currentMetadata.guardrail_set_ids = guardrailSetIds;
+            currentMetadata.guardrails = guardrailBundle.guardrails;
+            currentMetadata.promptAdaptations = guardrailBundle.promptAdaptations;
+            currentMetadata.prompt_adaptations = guardrailBundle.promptAdaptations;
+            currentMetadata.promptAdaptions = guardrailBundle.promptAdaptations;
+            currentMetadata.prompt_adaptions = guardrailBundle.promptAdaptations;
+            currentMetadata.invisiblePromptAdaptations = guardrailBundle.promptAdaptations;
+            currentMetadata.invisible_prompt_adaptations = guardrailBundle.promptAdaptations;
+            currentMetadata.invisiblePromptAdaptions = guardrailBundle.promptAdaptations;
+            currentMetadata.invisible_prompt_adaptions = guardrailBundle.promptAdaptations;
+            currentMetadata.runnerGuardrails = {
+              version: 1,
+              guardrailSetIds,
+              guardrails: guardrailBundle.guardrails,
+              promptAdaptations: guardrailBundle.promptAdaptations,
+            };
+          } else {
+            delete currentMetadata.guardrailSetIds;
+            delete currentMetadata.guardrail_set_ids;
+            delete currentMetadata.guardrails;
+            delete currentMetadata.promptAdaptations;
+            delete currentMetadata.prompt_adaptations;
+            delete currentMetadata.promptAdaptions;
+            delete currentMetadata.prompt_adaptions;
+            delete currentMetadata.invisiblePromptAdaptations;
+            delete currentMetadata.invisible_prompt_adaptations;
+            delete currentMetadata.invisiblePromptAdaptions;
+            delete currentMetadata.invisible_prompt_adaptions;
+            delete currentMetadata.runnerGuardrails;
+          }
           if (agentType !== "team") {
             delete currentMetadata.kind;
             delete currentMetadata.executionMode;
@@ -112263,6 +113410,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const isTeamAgent = agent?.agentType === "team";
           const orchestratorAgentId = metadata?.team?.orchestratorAgentId || "";
           const orchestratorAgent = orchestratorAgentId ? availableTeamMemberAgentsById[orchestratorAgentId] : null;
+          const guardrailBundle = buildPlaygroundAgentGuardrailBundle(agent, guardrailSets);
 
           return {
             name: String(agent?.name || "").trim() || (isTeamAgent ? "New Team" : "New Agent"),
@@ -112291,6 +113439,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               ? agent.deepResearchModel
               : null,
             permissionSet: normalizePlaygroundPermissionSet(agent?.permissionSet, "agent"),
+            guardrailSetIds: guardrailBundle.guardrailSetIds,
+            guardrail_set_ids: guardrailBundle.guardrailSetIds,
+            guardrails: guardrailBundle.guardrails,
+            promptAdaptations: guardrailBundle.promptAdaptations,
+            prompt_adaptations: guardrailBundle.promptAdaptations,
+            promptAdaptions: guardrailBundle.promptAdaptations,
+            prompt_adaptions: guardrailBundle.promptAdaptations,
+            invisiblePromptAdaptations: guardrailBundle.promptAdaptations,
+            invisible_prompt_adaptations: guardrailBundle.promptAdaptations,
+            invisiblePromptAdaptions: guardrailBundle.promptAdaptations,
+            invisible_prompt_adaptions: guardrailBundle.promptAdaptations,
             metadata,
           };
         }
@@ -112344,10 +113503,55 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             throw new Error(data?.message || data?.error || "Failed to save agent.");
           }
 
-          const savedAgent = getPlaygroundAgentResponseRecord(data) || normalizePlaygroundAgentRecord({
+          const requestedGuardrailBundle = buildPlaygroundAgentGuardrailBundle(agentRecord, guardrailSets);
+          const requestedGuardrailSetIds = requestedGuardrailBundle.guardrailSetIds;
+          const responseAgent = getPlaygroundAgentResponseRecord(data) || normalizePlaygroundAgentRecord({
             ...agentRecord,
             ...payload,
             updatedAt: new Date().toISOString(),
+          });
+          const responseMetadata = {
+            ...getAgentMetadataRecord(responseAgent),
+          };
+          if (requestedGuardrailSetIds.length > 0) {
+            responseMetadata.guardrailSetIds = requestedGuardrailSetIds;
+            responseMetadata.guardrail_set_ids = requestedGuardrailSetIds;
+            responseMetadata.guardrails = requestedGuardrailBundle.guardrails;
+            responseMetadata.promptAdaptations = requestedGuardrailBundle.promptAdaptations;
+            responseMetadata.prompt_adaptations = requestedGuardrailBundle.promptAdaptations;
+            responseMetadata.promptAdaptions = requestedGuardrailBundle.promptAdaptations;
+            responseMetadata.prompt_adaptions = requestedGuardrailBundle.promptAdaptations;
+            responseMetadata.invisiblePromptAdaptations = requestedGuardrailBundle.promptAdaptations;
+            responseMetadata.invisible_prompt_adaptations = requestedGuardrailBundle.promptAdaptations;
+            responseMetadata.invisiblePromptAdaptions = requestedGuardrailBundle.promptAdaptations;
+            responseMetadata.invisible_prompt_adaptions = requestedGuardrailBundle.promptAdaptations;
+            responseMetadata.runnerGuardrails = {
+              version: 1,
+              guardrailSetIds: requestedGuardrailSetIds,
+              guardrails: requestedGuardrailBundle.guardrails,
+              promptAdaptations: requestedGuardrailBundle.promptAdaptations,
+            };
+          } else {
+            delete responseMetadata.guardrailSetIds;
+            delete responseMetadata.guardrail_set_ids;
+            delete responseMetadata.guardrails;
+            delete responseMetadata.promptAdaptations;
+            delete responseMetadata.prompt_adaptations;
+            delete responseMetadata.promptAdaptions;
+            delete responseMetadata.prompt_adaptions;
+            delete responseMetadata.invisiblePromptAdaptations;
+            delete responseMetadata.invisible_prompt_adaptations;
+            delete responseMetadata.invisiblePromptAdaptions;
+            delete responseMetadata.invisible_prompt_adaptions;
+            delete responseMetadata.runnerGuardrails;
+          }
+          const savedAgent = normalizePlaygroundAgentRecord({
+            ...responseAgent,
+            guardrailSetIds: requestedGuardrailSetIds,
+            guardrails: requestedGuardrailBundle.guardrails,
+            promptAdaptations: requestedGuardrailBundle.promptAdaptations,
+            invisiblePromptAdaptations: requestedGuardrailBundle.promptAdaptations,
+            metadata: Object.keys(responseMetadata).length > 0 ? responseMetadata : null,
           });
           if (!savedAgent?.id) {
             throw new Error("Agent save failed.");
@@ -115092,6 +116296,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 React.createElement("button", {
                     type: "button",
                     className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
+                    onClick: openAgentApiModal,
+                    disabled: !draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID,
+                  },
+                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
+                    React.createElement(Code, { width: 14, height: 14, strokeWidth: 1.85 })
+                  ),
+                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Use via API")
+                ),
+                React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
                     onClick: openForkedAgentComposer,
                   },
                   React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
@@ -115153,6 +116368,195 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               "data-section-id": "permissions",
             },
             agentPermissionsContent
+          );
+          const availableAgentGuardrailSets = (Array.isArray(guardrailSets) ? guardrailSets : [])
+            .map((set) => normalizePlaygroundGuardrailSet(set))
+            .filter((set) => set?.id);
+          const agentGuardrailSetIds = normalizePlaygroundGuardrailSetIds(draftAgent.guardrailSetIds);
+          const agentGuardrailSetIdLookup = new Set(agentGuardrailSetIds);
+          const importedAgentGuardrailSets = agentGuardrailSetIds
+            .map((setId) => availableAgentGuardrailSets.find((set) => set.id === setId) || null)
+            .filter(Boolean);
+          const importableAgentGuardrailSets = availableAgentGuardrailSets.filter((set) => !agentGuardrailSetIdLookup.has(set.id));
+          const normalizedAgentGuardrailSearch = String(agentGuardrailSearchQuery || "").trim().toLowerCase();
+          const visibleAgentGuardrailSets = importedAgentGuardrailSets.filter((set) => {
+            if (!normalizedAgentGuardrailSearch) {
+              return true;
+            }
+            const promptText = (Array.isArray(set.prompts) ? set.prompts : [])
+              .map((prompt) => [prompt?.title, prompt?.prompt].filter(Boolean).join(" "))
+              .join(" ");
+            return [
+              set.name,
+              set.description,
+              promptText,
+            ].filter(Boolean).join(" ").toLowerCase().includes(normalizedAgentGuardrailSearch);
+          });
+          function formatAgentGuardrailDate(value) {
+            const date = new Date(value || "");
+            if (Number.isNaN(date.getTime())) {
+              return "—";
+            }
+            return date.toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+          }
+          function toggleAgentGuardrailSet(setId) {
+            if (isDefaultAgentConfigurationLocked) {
+              return;
+            }
+            const normalizedSetId = String(setId || "").trim();
+            if (!normalizedSetId) {
+              return;
+            }
+            const currentIds = normalizePlaygroundGuardrailSetIds(draftAgent.guardrailSetIds);
+            const nextIds = currentIds.includes(normalizedSetId)
+              ? currentIds.filter((id) => id !== normalizedSetId)
+              : [...currentIds, normalizedSetId];
+            updateAgentField("guardrailSetIds", nextIds);
+            if (draftAgent?.id && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID) {
+              const nextAgent = normalizePlaygroundAgentRecord({
+                ...draftAgent,
+                guardrailSetIds: nextIds,
+              });
+              void persistAgentDetailRecordImmediate(nextAgent, "Failed to update agent guardrails.").catch(() => {});
+            }
+          }
+          function renderAgentGuardrailImportMenu() {
+            return React.createElement("div", {
+                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in playground-agents-detail-guardrail-import-menu",
+              },
+              importableAgentGuardrailSets.length === 0
+                ? React.createElement("div", { className: "tb-popup-empty-state" },
+                    availableAgentGuardrailSets.length === 0
+                      ? "Create guardrail sets in Configure > Guardrails first."
+                      : "All guardrail sets are already on this agent."
+                  )
+                : importableAgentGuardrailSets.map((set) => {
+                    const promptCount = Array.isArray(set.prompts) ? set.prompts.length : 0;
+                    const promptLabel = promptCount + " " + (promptCount === 1 ? "prompt" : "prompts");
+                    return React.createElement("button", {
+                        key: set.id,
+                        type: "button",
+                        className: "tb-popup-row tb-popup-row-select",
+                        onClick: () => {
+                          toggleAgentGuardrailSet(set.id);
+                          setAgentGuardrailImportPopoverOpen(false);
+                        },
+                      },
+                      React.createElement("span", { className: "tb-popup-check-slot" },
+                        React.createElement(Plus, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                      ),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, set.name || "Untitled Guardrail Set"),
+                        React.createElement("span", null, promptLabel)
+                      )
+                    );
+                  })
+            );
+          }
+          function renderAgentGuardrailTable() {
+            return React.createElement("div", { className: "playground-project-overview-threads-table playground-agents-detail-guardrails-table" },
+              React.createElement("div", { className: "playground-project-overview-threads-table-header" },
+                React.createElement("div", null, "Name"),
+                React.createElement("div", null, "Prompts"),
+                React.createElement("div", null, "Description"),
+                React.createElement("div", null, "Updated"),
+                React.createElement("div", null)
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-list" },
+                visibleAgentGuardrailSets.map((set) => {
+                  const promptCount = Array.isArray(set.prompts) ? set.prompts.length : 0;
+                  const promptLabel = promptCount + " " + (promptCount === 1 ? "prompt" : "prompts");
+                  const dateLabel = formatAgentGuardrailDate(set.updatedAt || set.createdAt);
+                  const description = String(set.description || "").trim() || "—";
+                  return React.createElement("div", {
+                      key: set.id,
+                      className: "playground-project-overview-threads-table-row playground-agents-detail-guardrail-table-row",
+                    },
+                    React.createElement("div", { className: "playground-project-overview-thread-cell" },
+                      React.createElement("div", { className: "playground-agents-detail-guardrail-resource-title" },
+                        React.createElement("span", { className: "playground-agents-detail-guardrail-icon", "aria-hidden": "true" },
+                          React.createElement(Shield, { width: 10, height: 10, strokeWidth: 1.8 })
+                        ),
+                        React.createElement("div", { className: "playground-plugin-row-title" }, set.name || "Untitled Guardrail Set")
+                      )
+                    ),
+                    React.createElement("div", {
+                      className: "playground-project-overview-thread-cell is-prompts",
+                      title: promptLabel,
+                    }, promptLabel),
+                    React.createElement("div", {
+                      className: "playground-project-overview-thread-cell is-description",
+                      title: description,
+                    }, description),
+                    React.createElement("div", {
+                      className: "playground-project-overview-thread-cell is-date",
+                      title: dateLabel,
+                    }, dateLabel),
+                    React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-project-overview-thread-menu-button",
+                        onClick: () => toggleAgentGuardrailSet(set.id),
+                        disabled: Boolean(isDefaultAgentConfigurationLocked),
+                        "aria-label": "Remove guardrail",
+                        title: "Remove guardrail",
+                      }, React.createElement(X, { width: 15, height: 15, strokeWidth: 1.8 }))
+                    )
+                  );
+                })
+              )
+            );
+          }
+          const agentGuardrailsSection = React.createElement("section", {
+              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-guardrails-section",
+              key: "guardrails",
+              "data-section-id": "guardrails",
+            },
+            React.createElement("div", { className: "playground-plugins-section-header" },
+              React.createElement("div", { className: "playground-plugins-section-copy" },
+                React.createElement("h3", { className: "playground-plugins-section-title" }, "Guardrails")
+              )
+            ),
+            React.createElement("div", { className: "playground-plugins-search-row" },
+              React.createElement("div", { className: "playground-plugins-search-shell" },
+                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("input", {
+                  type: "search",
+                  value: agentGuardrailSearchQuery,
+                  onChange: (event) => setAgentGuardrailSearchQuery(event.target.value),
+                  className: "playground-plugins-search",
+                  placeholder: "Search guardrails",
+                  "aria-label": "Search agent guardrails",
+                })
+              ),
+              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell playground-agents-detail-guardrail-import-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button playground-project-overview-toolbar-action",
+                    onClick: () => setAgentGuardrailImportPopoverOpen((current) => !current),
+                    disabled: Boolean(isDefaultAgentConfigurationLocked),
+                    title: "Add guardrail",
+                    "aria-label": "Add guardrail",
+                  },
+                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Add")
+                  ),
+                  agentGuardrailImportPopoverOpen ? renderAgentGuardrailImportMenu() : null
+                )
+              )
+            ),
+            visibleAgentGuardrailSets.length > 0
+              ? renderAgentGuardrailTable()
+              : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                  normalizedAgentGuardrailSearch
+                    ? "No matching guardrails on this agent."
+                    : "No guardrails imported yet."
+                )
           );
           const agentDetailThreadSortOptions = [
             { id: "recent-desc", label: "Recently Updated", description: "Show the newest thread activity first" },
@@ -115809,6 +117213,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               [
                 { id: "general", label: "General" },
                 { id: "threads", label: "Threads" },
+                { id: "guardrails", label: "Guardrails" },
                 { id: "permissions", label: "Permissions" },
               ].map((tab) =>
                 React.createElement("button", {
@@ -116015,6 +117420,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
           const agentDetailActiveSection = agentDetailTab === "permissions"
             ? agentPermissionsSection
+            : agentDetailTab === "guardrails"
+              ? agentGuardrailsSection
             : agentDetailTab === "threads"
               ? agentThreadsSection
               : React.createElement(React.Fragment, null,
@@ -116043,12 +117450,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
           return React.createElement("div", { className: agentDetailMainClassName, ref: agentDetailMainRef, style: agentDetailMainStyle },
             React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-              React.createElement("div", { className: "playground-agents-detail-content" + ((agentDetailTab === "general" || agentDetailTab === "permissions" || agentDetailTab === "threads") ? " is-agent-overview-general" : "") },
+              React.createElement("div", { className: "playground-agents-detail-content" + ((agentDetailTab === "general" || agentDetailTab === "permissions" || agentDetailTab === "threads" || agentDetailTab === "guardrails") ? " is-agent-overview-general" : "") },
                 saveState.error
                   ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, saveState.error)
-                  : saveState.message
-                    ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, saveState.message)
-	                  : null,
+                  : null,
 	                agentResourceDetailBackButton,
 	                agentProfileSection,
                 agentDetailWorkspaceSection
@@ -116550,14 +117955,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   )
                 )
               ),
-              agentVersionState.status === "loading"
-                ? React.createElement("div", { className: "playground-metronome-publish-state" }, agentVersionState.message || "Saving agent version...")
-                : null,
               agentVersionState.status === "error"
                 ? React.createElement("div", { className: "playground-metronome-publish-state is-error" }, agentVersionState.error || "Failed to update agent versions.")
-                : null,
-              agentVersionState.status === "success"
-                ? React.createElement("div", { className: "playground-metronome-publish-state is-success" }, agentVersionState.message || "Saved")
                 : null,
               React.createElement("div", { className: "playground-metronome-publish-list" }, renderAgentVersionRows())
             ),
@@ -117040,6 +118439,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             renderAgentCreationPermissionModal(),
             renderAgentModelPickerDialog(),
             renderAgentSendToTeamModal(),
+            renderAgentApiModal(),
             renderAgentUpgradeModal()
           );
         }
@@ -117315,6 +118715,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           renderAgentCreationPermissionModal(),
           renderAgentModelPickerDialog(),
           renderAgentSendToTeamModal(),
+          renderAgentApiModal(),
           renderAgentVersionsSidebarPortal(),
           renderAgentUpgradeModal()
         );
@@ -150746,6 +152147,107 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
       const PLAYGROUND_PLATFORM_NAVIGATION_STATE_KEY = "__runnerPlatformNavigation";
       const PLAYGROUND_GUARDRAILS_STORAGE_KEY = "runner_demo_guardrail_sets";
+      const PLAYGROUND_DEFAULT_GUARDRAIL_SETS = [
+        {
+          id: "default_guardrail_operational_safety",
+          name: "Operational Safety",
+          description: "Keeps agents from taking irreversible or high-risk actions without explicit confirmation.",
+          source: "default",
+          isDefault: true,
+          readOnly: true,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          prompts: [
+            {
+              id: "default_guardrail_operational_safety_confirm",
+              title: "Require explicit confirmation",
+              prompt: "Before deleting, overwriting, publishing, billing, sending external messages, changing permissions, or running irreversible operations, state the exact action, expected impact, and ask for explicit user confirmation. If the user already gave explicit approval for that exact action in the current thread, proceed without asking again.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "default_guardrail_operational_safety_reversible",
+              title: "Prefer reversible changes",
+              prompt: "When multiple approaches are possible, choose the reversible or low-blast-radius path first. Preserve existing user work, avoid broad refactors, and do not reset, discard, or overwrite user-created state unless the user explicitly asks.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "default_guardrail_operational_safety_uncertainty",
+              title: "Surface uncertainty and blockers",
+              prompt: "If required context is missing or a requested action could create material risk, ask a concise clarifying question or explain the blocker before proceeding. Do not invent credentials, approvals, system state, legal facts, financial facts, or medical facts.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        },
+        {
+          id: "default_guardrail_data_privacy",
+          name: "Data Privacy & Secrets",
+          description: "Protects credentials, personal data, and confidential workspace content.",
+          source: "default",
+          isDefault: true,
+          readOnly: true,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          prompts: [
+            {
+              id: "default_guardrail_data_privacy_secrets",
+              title: "Never expose secrets",
+              prompt: "Never print, summarize, log, transmit, or store secrets such as API keys, access tokens, passwords, private keys, session cookies, or recovery codes. If secret material appears in context, treat it as sensitive and refer to it only generically.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "default_guardrail_data_privacy_minimize",
+              title: "Minimize personal data",
+              prompt: "Use the minimum personal or customer data needed for the task. Avoid copying personal data into prompts, comments, tickets, logs, or external tools unless it is necessary and allowed by the user request.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "default_guardrail_data_privacy_external",
+              title: "Check external sharing",
+              prompt: "Before sending workspace data to an external service, repository, email, chat, or public location, verify that the destination is intended and that the content does not include secrets or unnecessary sensitive information.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        },
+        {
+          id: "default_guardrail_quality_accountability",
+          name: "Quality & Accountability",
+          description: "Keeps agent outputs verifiable, scoped, and production-oriented.",
+          source: "default",
+          isDefault: true,
+          readOnly: true,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          prompts: [
+            {
+              id: "default_guardrail_quality_accountability_verify",
+              title: "Verify before finalizing",
+              prompt: "Before marking work complete, run the relevant checks that are available for the task. If checks cannot be run, say exactly what was not verified and why.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "default_guardrail_quality_accountability_scope",
+              title: "Keep scope tight",
+              prompt: "Stay within the user's requested scope and the surrounding system conventions. Do not make unrelated rewrites, cosmetic churn, or speculative changes unless they are required to safely complete the task.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "default_guardrail_quality_accountability_audit",
+              title: "Make outcomes auditable",
+              prompt: "When reporting results, name the concrete files, records, workflows, or resources changed and summarize the verification performed. Mention residual risks or follow-up work only when they are actionable.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        },
+      ];
       const PLAYGROUND_PLATFORM_NAVIGATION_HISTORY_LIMIT = 200;
       const PLAYGROUND_PLATFORM_NAVIGATION_RESTORE_SUPPRESSION_MS = 1800;
       const PLAYGROUND_PLATFORM_NAVIGATION_FIELDS = [
@@ -150790,31 +152292,61 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
       function createPlaygroundGuardrailPromptDraft(overrides = {}) {
         const nowIso = new Date().toISOString();
+        const rawTitle = typeof overrides.title === "string" ? overrides.title : "";
         return {
           id: String(overrides.id || "").trim() || createPlaygroundGuardrailId("prompt"),
-          title: String(overrides.title || "").trim() || "Instruction",
+          title: rawTitle.length > 0 ? rawTitle : "Instruction",
           prompt: String(overrides.prompt || ""),
-          enabled: overrides.enabled === false ? false : true,
           createdAt: String(overrides.createdAt || nowIso),
           updatedAt: String(overrides.updatedAt || nowIso),
         };
       }
 
+      function isPlaygroundDefaultGuardrailSet(record) {
+        if (!record || typeof record !== "object" || Array.isArray(record)) {
+          return false;
+        }
+        const source = String(record.source || "").trim().toLowerCase();
+        const id = String(record.id || "").trim();
+        return Boolean(record.isDefault || record.readOnly || record.readonly || source === "default" || id.startsWith("default_guardrail_"));
+      }
+
       function normalizePlaygroundGuardrailSet(record) {
         const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
         const nowIso = new Date().toISOString();
+        const isDefaultSet = isPlaygroundDefaultGuardrailSet(source);
+        const rawName = typeof source.name === "string"
+          ? source.name
+          : typeof source.title === "string"
+            ? source.title
+            : "";
         const prompts = Array.isArray(source.prompts)
           ? source.prompts.map((prompt) => createPlaygroundGuardrailPromptDraft(prompt))
           : [];
         return {
           id: String(source.id || "").trim() || createPlaygroundGuardrailId("guardrail"),
-          name: String(source.name || source.title || "").trim() || "Untitled Guardrail Set",
+          name: rawName.length > 0 ? rawName : "Untitled Guardrail Set",
           description: String(source.description || ""),
-          enabled: source.enabled === false ? false : true,
           prompts,
           createdAt: String(source.createdAt || nowIso),
           updatedAt: String(source.updatedAt || nowIso),
+          source: isDefaultSet ? "default" : "custom",
+          isDefault: isDefaultSet,
+          readOnly: isDefaultSet,
         };
+      }
+
+      function getPlaygroundDefaultGuardrailSets() {
+        return PLAYGROUND_DEFAULT_GUARDRAIL_SETS.map((set) => normalizePlaygroundGuardrailSet(set));
+      }
+
+      function getPlaygroundAllGuardrailSets(customSets) {
+        const defaultSets = getPlaygroundDefaultGuardrailSets();
+        const defaultIds = new Set(defaultSets.map((set) => set.id));
+        const normalizedCustomSets = (Array.isArray(customSets) ? customSets : [])
+          .map((set) => normalizePlaygroundGuardrailSet({ ...set, source: "custom", isDefault: false, readOnly: false, readonly: false }))
+          .filter((set) => set?.id && !defaultIds.has(set.id));
+        return [...defaultSets, ...normalizedCustomSets];
       }
 
       function createPlaygroundGuardrailSetDraft(overrides = {}) {
@@ -150842,7 +152374,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
         try {
           const parsed = JSON.parse(window.localStorage.getItem(PLAYGROUND_GUARDRAILS_STORAGE_KEY) || "[]");
           return Array.isArray(parsed)
-            ? parsed.map(normalizePlaygroundGuardrailSet)
+            ? parsed
+                .map((set) => normalizePlaygroundGuardrailSet({ ...set, source: "custom", isDefault: false, readOnly: false, readonly: false }))
+                .filter((set) => !isPlaygroundDefaultGuardrailSet(set))
             : [];
         } catch {
           return [];
@@ -150854,7 +152388,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return;
         }
         try {
-          window.localStorage.setItem(PLAYGROUND_GUARDRAILS_STORAGE_KEY, JSON.stringify(Array.isArray(sets) ? sets : []));
+          const customSets = (Array.isArray(sets) ? sets : []).filter((set) => !isPlaygroundDefaultGuardrailSet(set));
+          window.localStorage.setItem(PLAYGROUND_GUARDRAILS_STORAGE_KEY, JSON.stringify(customSets));
         } catch {
           // Ignore storage write failures; the in-memory editor should remain usable.
         }
@@ -151443,16 +152978,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [resourceTemplateSlideIndex, setResourceTemplateSlideIndex] = useState(0);
         const [resourceTemplateToolbarPopover, setResourceTemplateToolbarPopover] = useState("");
         const guardrailsToolbarRef = useRef(null);
+        const guardrailsDescriptionTextareaRef = useRef(null);
         const [guardrailSets, setGuardrailSets] = useState(() => readPlaygroundGuardrailSetsFromStorage());
         const [selectedGuardrailSetId, setSelectedGuardrailSetId] = useState(() => {
           const storedSets = readPlaygroundGuardrailSetsFromStorage();
-          return storedSets[0]?.id || "";
+          const availableSets = getPlaygroundAllGuardrailSets(storedSets);
+          return availableSets[0]?.id || "";
         });
         const [guardrailsSearchQuery, setGuardrailsSearchQuery] = useState("");
-        const [guardrailsFilter, setGuardrailsFilter] = useState("all");
         const [guardrailsSort, setGuardrailsSort] = useState("updated");
+        const [guardrailsSetFilter, setGuardrailsSetFilter] = useState("all");
         const [guardrailsPageMode, setGuardrailsPageMode] = useState("overview");
         const [guardrailsToolbarPopover, setGuardrailsToolbarPopover] = useState("");
+        const allGuardrailSets = useMemo(() => getPlaygroundAllGuardrailSets(guardrailSets), [guardrailSets]);
         const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
         const [projectOverviewResourceSearchQuery, setProjectOverviewResourceSearchQuery] = useState("");
         const [projectOverviewResourceViewMode, setProjectOverviewResourceViewMode] = useState("list");
@@ -151463,15 +153001,165 @@ ${PROJECT_OVERVIEW_SCRIPT}
             ? modelsPageAgentModelOptions
             : PLAYGROUND_AGENT_MODEL_OPTIONS
         ), [modelsPageAgentModelOptions]);
+        function resizeGuardrailsDescriptionTextarea(textarea) {
+          if (!textarea) return;
+          const computedStyles = window.getComputedStyle(textarea);
+          const lineHeight = Number.parseFloat(computedStyles.lineHeight) || 21;
+          const paddingTop = Number.parseFloat(computedStyles.paddingTop) || 0;
+          const paddingBottom = Number.parseFloat(computedStyles.paddingBottom) || 0;
+          const borderTopWidth = Number.parseFloat(computedStyles.borderTopWidth) || 0;
+          const borderBottomWidth = Number.parseFloat(computedStyles.borderBottomWidth) || 0;
+          const singleLineHeight = Math.ceil(lineHeight + paddingTop + paddingBottom + borderTopWidth + borderBottomWidth);
+          textarea.style.height = "auto";
+          const nextHeight = String(textarea.value || "").trim()
+            ? Math.max(singleLineHeight, textarea.scrollHeight)
+            : singleLineHeight;
+          textarea.style.height = nextHeight + "px";
+        }
+        function buildGuardrailsWrappedMarkdownEdit(value, selectionStart, selectionEnd, prefix, suffix = prefix) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          if (safeStart !== safeEnd) {
+            if (
+              selectedText.startsWith(prefix)
+              && selectedText.endsWith(suffix)
+              && selectedText.length >= prefix.length + suffix.length
+            ) {
+              const unwrappedText = selectedText.slice(prefix.length, selectedText.length - suffix.length);
+              const nextValue = value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd);
+              return {
+                value: nextValue,
+                selectionStart: safeStart,
+                selectionEnd: safeStart + unwrappedText.length,
+              };
+            }
+
+            const surroundingPrefix = value.slice(Math.max(0, safeStart - prefix.length), safeStart);
+            const surroundingSuffix = value.slice(safeEnd, safeEnd + suffix.length);
+            if (surroundingPrefix === prefix && surroundingSuffix === suffix) {
+              const nextValue =
+                value.slice(0, safeStart - prefix.length)
+                + selectedText
+                + value.slice(safeEnd + suffix.length);
+              return {
+                value: nextValue,
+                selectionStart: safeStart - prefix.length,
+                selectionEnd: safeStart - prefix.length + selectedText.length,
+              };
+            }
+
+            const wrappedText = prefix + selectedText + suffix;
+            const nextValue = value.slice(0, safeStart) + wrappedText + value.slice(safeEnd);
+            return {
+              value: nextValue,
+              selectionStart: safeStart + prefix.length,
+              selectionEnd: safeStart + prefix.length + selectedText.length,
+            };
+          }
+
+          const insertedText = prefix + suffix;
+          const nextValue = value.slice(0, safeStart) + insertedText + value.slice(safeEnd);
+          return {
+            value: nextValue,
+            selectionStart: safeStart + prefix.length,
+            selectionEnd: safeStart + prefix.length,
+          };
+        }
+        function buildGuardrailsMarkdownListEdit(value, selectionStart, selectionEnd, listType = "unordered") {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const lineStart = value.lastIndexOf("\\n", Math.max(0, safeStart - 1)) + 1;
+          let lineEnd = value.indexOf("\\n", safeEnd);
+          if (lineEnd === -1) {
+            lineEnd = value.length;
+          }
+          const block = value.slice(lineStart, lineEnd);
+          const lines = block.split("\\n");
+          const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+          const isOrderedList = listType === "ordered";
+          const orderedListPattern = /^(\\s*)\\d+\\.\\s+/;
+          const unorderedListPattern = /^(\\s*)-\\s+/;
+          const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => (
+            isOrderedList ? orderedListPattern.test(line) : unorderedListPattern.test(line)
+          ));
+          let orderedIndex = 1;
+          const nextLines = lines.map((line) => {
+            if (!line.trim()) {
+              if (shouldRemoveList) {
+                return line;
+              }
+              return isOrderedList ? String(orderedIndex++) + ". " : "- ";
+            }
+            if (shouldRemoveList) {
+              return line.replace(isOrderedList ? orderedListPattern : unorderedListPattern, "$1");
+            }
+            if (!isOrderedList && unorderedListPattern.test(line)) {
+              return line;
+            }
+            if (isOrderedList && orderedListPattern.test(line)) {
+              orderedIndex += 1;
+              return line;
+            }
+            const cleanLine = line.replace(/^(\\s*)(?:-\\s+|\\d+\\.\\s+)/, "$1");
+            return cleanLine.replace(/^(\\s*)/, (_match, indent) => (
+              String(indent || "") + (isOrderedList ? String(orderedIndex++) + ". " : "- ")
+            ));
+          });
+          const nextBlock = nextLines.join("\\n");
+          const nextValue = value.slice(0, lineStart) + nextBlock + value.slice(lineEnd);
+          const collapsedSelection = safeStart === safeEnd;
+          const markerLength = isOrderedList ? 3 : 2;
+          const nextCaretOffset = shouldRemoveList
+            ? Math.max(0, safeStart - lineStart - markerLength)
+            : safeStart - lineStart + markerLength;
+          return {
+            value: nextValue,
+            selectionStart: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart,
+            selectionEnd: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart + nextBlock.length,
+          };
+        }
+        function buildGuardrailsMarkdownLinkEdit(value, selectionStart, selectionEnd) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          const existingLinkMatch = selectedText.match(/^\\[([^\\]]+)\\]\\(([^)]*)\\)$/);
+          if (existingLinkMatch) {
+            const unwrappedText = existingLinkMatch[1];
+            const nextValue = value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd);
+            return {
+              value: nextValue,
+              selectionStart: safeStart,
+              selectionEnd: safeStart + unwrappedText.length,
+            };
+          }
+
+          const label = selectedText || "link text";
+          const url = "url";
+          const markdownLink = "[" + label + "](" + url + ")";
+          const nextValue = value.slice(0, safeStart) + markdownLink + value.slice(safeEnd);
+          const urlStart = safeStart + label.length + 3;
+          return {
+            value: nextValue,
+            selectionStart: urlStart,
+            selectionEnd: urlStart + url.length,
+          };
+        }
         useEffect(() => {
           writePlaygroundGuardrailSetsToStorage(guardrailSets);
         }, [guardrailSets]);
         useEffect(() => {
-          if (selectedGuardrailSetId && guardrailSets.some((set) => set.id === selectedGuardrailSetId)) {
+          if (selectedGuardrailSetId && allGuardrailSets.some((set) => set.id === selectedGuardrailSetId)) {
             return;
           }
-          setSelectedGuardrailSetId(guardrailSets[0]?.id || "");
-        }, [guardrailSets, selectedGuardrailSetId]);
+          setSelectedGuardrailSetId(allGuardrailSets[0]?.id || "");
+        }, [allGuardrailSets, selectedGuardrailSetId]);
+        useLayoutEffect(() => {
+          if (guardrailsPageMode !== "detail") {
+            return;
+          }
+          resizeGuardrailsDescriptionTextarea(guardrailsDescriptionTextareaRef.current);
+        }, [allGuardrailSets, guardrailsPageMode, selectedGuardrailSetId]);
         useEffect(() => {
           if (!guardrailsToolbarPopover) return undefined;
 
@@ -183105,7 +184793,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         function renderGuardrailsPageNav() {
-          const activeGuardrailSet = (Array.isArray(guardrailSets) ? guardrailSets : [])
+          const activeGuardrailSet = (Array.isArray(allGuardrailSets) ? allGuardrailSets : [])
             .find((set) => set?.id === selectedGuardrailSetId);
           const guardrailsPathItems = [{ label: "Configure" }, { label: "Guardrails" }];
           if (guardrailsPageMode === "detail" && activeGuardrailSet?.name) {
@@ -184488,6 +186176,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   workspaceTeamMembersTeamId: teamPageSelectedTeamId,
                   workspaceTeamsLoading: teamPageLoading,
                   workspaceTeamsRequiresPlan: teamPageRequiresPlan,
+                  guardrailSets: allGuardrailSets,
                   onWorkspaceTeamsRequest: (options = {}) => {
                     const requestedTeamId = String(options?.selectedTeamId || options?.teamId || "").trim();
                     void loadTeamPageData({ selectedTeamId: requestedTeamId });
@@ -184685,6 +186374,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   setRunnerRenderKey((current) => current + 1);
                   void refreshThreads();
                 },
+                onOpenFilesPage: (request) => {
+                  const normalizedEnvironmentId = String(request?.environmentId || "").trim();
+                  if (normalizedEnvironmentId) {
+                    setEnvironmentId(normalizedEnvironmentId);
+                  }
+                  setFilesPageNavigationRequest(request || null);
+                  setActivePage("files");
+                },
                 threadRecords: realThreads,
                 onEnvironmentMutated: async () => {
                   await refreshEnvironments();
@@ -184751,12 +186448,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         function renderGuardrailsPage() {
-          const safeGuardrailSets = Array.isArray(guardrailSets) ? guardrailSets : [];
+          const safeGuardrailSets = Array.isArray(allGuardrailSets) ? allGuardrailSets : [];
+          const customGuardrailSets = Array.isArray(guardrailSets) ? guardrailSets : [];
           const normalizedQuery = String(guardrailsSearchQuery || "").trim().toLowerCase();
           const getPromptCount = (set) => Array.isArray(set?.prompts) ? set.prompts.length : 0;
-          const getEnabledPromptCount = (set) => (Array.isArray(set?.prompts) ? set.prompts : [])
-            .filter((prompt) => prompt?.enabled !== false)
-            .length;
+          const isGuardrailSetReadonly = (set) => isPlaygroundDefaultGuardrailSet(set);
           const formatGuardrailDate = (value) => {
             const date = new Date(value || "");
             if (Number.isNaN(date.getTime())) return "Never";
@@ -184768,8 +186464,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           };
           const filteredGuardrailSets = safeGuardrailSets
             .filter((set) => {
-              if (guardrailsFilter === "enabled" && set?.enabled === false) return false;
-              if (guardrailsFilter === "disabled" && set?.enabled !== false) return false;
+              const isDefaultSet = isGuardrailSetReadonly(set);
+              if (guardrailsSetFilter === "default" && !isDefaultSet) return false;
+              if (guardrailsSetFilter === "custom" && isDefaultSet) return false;
               if (!normalizedQuery) return true;
               const promptText = (Array.isArray(set?.prompts) ? set.prompts : [])
                 .map((prompt) => [prompt?.title, prompt?.prompt].filter(Boolean).join(" "))
@@ -184795,17 +186492,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const selectedGuardrailSet = safeGuardrailSets.find((set) => set?.id === selectedGuardrailSetId)
             || safeGuardrailSets[0]
             || null;
+          const selectedGuardrailSetReadonly = isGuardrailSetReadonly(selectedGuardrailSet);
           const selectedGuardrailPrompts = Array.isArray(selectedGuardrailSet?.prompts)
             ? selectedGuardrailSet.prompts
             : [];
 
           function createGuardrailSet() {
             const nextSet = createPlaygroundGuardrailSetDraft({
-              name: "Guardrail Set " + (safeGuardrailSets.length + 1),
+              name: "Guardrail Set " + (customGuardrailSets.length + 1),
               description: "",
             });
             setGuardrailSets((current) => [nextSet, ...(Array.isArray(current) ? current : [])]);
             setSelectedGuardrailSetId(nextSet.id);
+            setGuardrailsSetFilter("custom");
             setGuardrailsPageMode("detail");
             setGuardrailsToolbarPopover("");
           }
@@ -184824,6 +186523,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           function updateGuardrailSet(setId, updater) {
             const normalizedSetId = String(setId || "").trim();
             if (!normalizedSetId) return;
+            const targetSet = safeGuardrailSets.find((set) => set?.id === normalizedSetId);
+            if (isGuardrailSetReadonly(targetSet)) return;
             setGuardrailSets((current) => (Array.isArray(current) ? current : []).map((set) => {
               if (set?.id !== normalizedSetId) return set;
               const updatedSet = typeof updater === "function" ? updater(set) : { ...set, ...updater };
@@ -184841,6 +186542,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             const normalizedSetId = String(setId || "").trim();
             if (!normalizedSetId) return;
             const targetSet = safeGuardrailSets.find((set) => set?.id === normalizedSetId);
+            if (isGuardrailSetReadonly(targetSet)) return;
             const confirmed = typeof window === "undefined" || window.confirm("Delete " + (targetSet?.name || "this guardrail set") + "?");
             if (!confirmed) return;
             setGuardrailSets((current) => (Array.isArray(current) ? current : []).filter((set) => set?.id !== normalizedSetId));
@@ -184897,35 +186599,30 @@ ${PROJECT_OVERVIEW_SCRIPT}
             selectGuardrailSet(setId);
           }
 
-          const filterOptions = [
-            { id: "all", label: "All" },
-            { id: "enabled", label: "Active" },
-            { id: "disabled", label: "Paused" },
-          ];
           const sortOptions = [
             { id: "updated", label: "Updated" },
             { id: "name", label: "Name" },
             { id: "prompts", label: "Prompts" },
           ];
+          const guardrailsSetFilterOptions = [
+            { id: "all", label: "All Sets" },
+            { id: "default", label: "Default Sets" },
+            { id: "custom", label: "Custom Sets" },
+          ];
 
-          function renderGuardrailsToolbarMenu(kind) {
-            const options = kind === "sort" ? sortOptions : filterOptions;
-            const activeValue = kind === "sort" ? guardrailsSort : guardrailsFilter;
+          function renderGuardrailsToolbarMenu() {
+            const activeValue = guardrailsSort;
             return React.createElement("div", {
               className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide playground-files-toolbar-menu-align-right playground-guardrails-toolbar-menu",
             },
-              React.createElement("div", { className: "playground-files-toolbar-menu-title" }, kind === "sort" ? "Sort by" : "Filter"),
-              options.map((option) =>
+              React.createElement("div", { className: "playground-files-toolbar-menu-title" }, "Sort by"),
+              sortOptions.map((option) =>
                 React.createElement("button", {
                   key: option.id,
                   type: "button",
                   className: "playground-files-toolbar-menu-item" + (activeValue === option.id ? " is-active" : ""),
                   onClick: () => {
-                    if (kind === "sort") {
-                      setGuardrailsSort(option.id);
-                    } else {
-                      setGuardrailsFilter(option.id);
-                    }
+                    setGuardrailsSort(option.id);
                     setGuardrailsToolbarPopover("");
                   },
                 },
@@ -184938,28 +186635,21 @@ ${PROJECT_OVERVIEW_SCRIPT}
             );
           }
 
-          function renderGuardrailStatusPill(set) {
-            const enabled = set?.enabled !== false;
-            return React.createElement("span", { className: "playground-guardrails-status-pill" + (enabled ? " is-active" : " is-paused") },
-              React.createElement("span", { className: "playground-guardrails-status-dot", "aria-hidden": "true" }),
-              enabled ? "Active" : "Paused"
-            );
-          }
-
           function renderGuardrailsTable() {
             return React.createElement("div", { className: "playground-guardrails-table-shell" },
               React.createElement("div", { className: "playground-guardrails-table" },
                 React.createElement("div", { className: "playground-guardrails-table-header" },
                   React.createElement("span", null, "Set"),
+                  React.createElement("span", null, "Type"),
                   React.createElement("span", null, "Prompts"),
-                  React.createElement("span", null, "Status"),
                   React.createElement("span", null, "Updated"),
                   React.createElement("span", null, "")
                 ),
                 filteredGuardrailSets.map((set) => {
                   const selected = selectedGuardrailSet?.id === set?.id;
-                  const enabledPrompts = getEnabledPromptCount(set);
+                  const isDefaultSet = isGuardrailSetReadonly(set);
                   const totalPrompts = getPromptCount(set);
+                  const promptLabel = totalPrompts + " " + (totalPrompts === 1 ? "prompt" : "prompts");
                   return React.createElement("div", {
                     key: set.id,
                     role: "button",
@@ -184969,28 +186659,29 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     onKeyDown: (event) => handleGuardrailSetKeyDown(event, set.id),
                   },
                     React.createElement("div", { className: "playground-guardrails-set-cell" },
-                      React.createElement("span", { className: "playground-guardrails-set-icon" },
-                        React.createElement(Shield, { width: 14, height: 14, strokeWidth: 1.8 })
-                      ),
                       React.createElement("div", { className: "playground-guardrails-set-copy" },
                         React.createElement("span", { className: "playground-guardrails-set-title" }, set.name || "Untitled Guardrail Set"),
                         set.description
                           ? React.createElement("span", { className: "playground-guardrails-set-description" }, set.description)
                           : null
-                      )
+                        )
                     ),
-                    React.createElement("span", { className: "playground-guardrails-table-muted" }, enabledPrompts + " / " + totalPrompts),
-                    renderGuardrailStatusPill(set),
+                    React.createElement("span", { className: "playground-guardrails-kind-pill" + (isDefaultSet ? " is-default" : " is-custom") },
+                      isDefaultSet ? "Default" : "Custom"
+                    ),
+                    React.createElement("span", { className: "playground-guardrails-table-muted" }, promptLabel),
                     React.createElement("span", { className: "playground-guardrails-table-muted" }, formatGuardrailDate(set.updatedAt || set.createdAt)),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-guardrails-row-action",
-                      onClick: (event) => {
-                        event.stopPropagation();
-                        deleteGuardrailSet(set.id);
-                      },
-                      "aria-label": "Delete guardrail set",
-                    }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                    isDefaultSet
+                      ? React.createElement("span", { className: "playground-guardrails-row-action-placeholder", "aria-hidden": "true" })
+                      : React.createElement("button", {
+                          type: "button",
+                          className: "playground-guardrails-row-action",
+                          onClick: (event) => {
+                            event.stopPropagation();
+                            deleteGuardrailSet(set.id);
+                          },
+                          "aria-label": "Delete guardrail set",
+                        }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
                   );
                 })
               )
@@ -185017,43 +186708,120 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const guardrailsPageTitle = isGuardrailsDetailPage
             ? (selectedGuardrailSet.name || "Untitled Guardrail Set")
             : "Guardrails";
+          function applyGuardrailDescriptionMarkdownFormat(formatType) {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) {
+              return;
+            }
+            const textarea = guardrailsDescriptionTextareaRef.current;
+            const value = String(selectedGuardrailSet.description || "");
+            const selectionStart = textarea && typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+            const selectionEnd = textarea && typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+            let edit = null;
+            if (formatType === "bold") {
+              edit = buildGuardrailsWrappedMarkdownEdit(value, selectionStart, selectionEnd, "**");
+            } else if (formatType === "italic") {
+              edit = buildGuardrailsWrappedMarkdownEdit(value, selectionStart, selectionEnd, "*");
+            } else if (formatType === "underline") {
+              edit = buildGuardrailsWrappedMarkdownEdit(value, selectionStart, selectionEnd, "++");
+            } else if (formatType === "list") {
+              edit = buildGuardrailsMarkdownListEdit(value, selectionStart, selectionEnd, "unordered");
+            } else if (formatType === "ordered-list") {
+              edit = buildGuardrailsMarkdownListEdit(value, selectionStart, selectionEnd, "ordered");
+            } else if (formatType === "code") {
+              edit = buildGuardrailsWrappedMarkdownEdit(value, selectionStart, selectionEnd, String.fromCharCode(96));
+            } else if (formatType === "link") {
+              edit = buildGuardrailsMarkdownLinkEdit(value, selectionStart, selectionEnd);
+            }
+            if (!edit) {
+              return;
+            }
+            updateGuardrailSet(selectedGuardrailSet.id, { description: edit.value });
+            window.requestAnimationFrame(() => {
+              const nextTextarea = guardrailsDescriptionTextareaRef.current;
+              if (!nextTextarea) {
+                return;
+              }
+              const maxLength = edit.value.length;
+              const safeSelectionStart = Math.max(0, Math.min(edit.selectionStart, maxLength));
+              const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(edit.selectionEnd, maxLength));
+              nextTextarea.focus();
+              nextTextarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+              resizeGuardrailsDescriptionTextarea(nextTextarea);
+            });
+          }
+          const renderGuardrailDescriptionToolbarButton = (action) =>
+            React.createElement("button", {
+              key: action.id,
+              type: "button",
+              className: "playground-tasks-detail-format-button",
+              title: action.label,
+              "aria-label": action.label,
+              onMouseDown: (event) => event.preventDefault(),
+              onClick: () => applyGuardrailDescriptionMarkdownFormat(action.id),
+              disabled: selectedGuardrailSetReadonly,
+            }, React.createElement(action.icon, {
+              width: 14,
+              height: 14,
+              strokeWidth: action.strokeWidth || 1.8,
+            }));
+          const guardrailDescriptionTextFormatActions = [
+            { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
+            { id: "italic", label: "Italic", icon: Italic },
+            { id: "underline", label: "Underline", icon: Underline },
+          ];
+          const guardrailDescriptionListFormatActions = [
+            { id: "list", label: "List", icon: List },
+            { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
+          ];
+          const guardrailDescriptionInsertFormatActions = [
+            { id: "code", label: "Code", icon: CodeXml },
+            { id: "link", label: "Link", icon: Link2 },
+          ];
 
           return React.createElement("section", { className: "playground-files-page playground-guardrails-page" },
             React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" },
               React.createElement("section", { className: "playground-files-browser playground-guardrails-browser" },
                 React.createElement("div", { className: "playground-files-browser-header playground-guardrails-browser-header" },
                   React.createElement("div", { className: "playground-files-library-header playground-guardrails-library-header" },
-                    React.createElement("div", { className: "playground-files-library-title-row" },
-                      React.createElement("h1", { className: "playground-files-library-title" },
+                    isGuardrailsDetailPage
+                      ? React.createElement("button", {
+                          type: "button",
+                          className: "playground-resource-detail-back-button playground-guardrails-detail-back-button",
+                          onClick: returnToGuardrailsOverview,
+                          "aria-label": "Back to guardrails",
+                        },
+                          React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }),
+                          React.createElement("span", null, "Back")
+                        )
+                      : null,
+                    React.createElement("div", { className: "playground-files-library-title-row" + (isGuardrailsDetailPage ? " playground-guardrails-detail-title-row" : "") },
+                      React.createElement("h1", { className: "playground-files-library-title" + (isGuardrailsDetailPage ? " playground-guardrails-detail-title" : "") },
                         isGuardrailsDetailPage
-                          ? React.createElement("span", { className: "playground-guardrails-title-with-back" },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-files-nav-button playground-guardrails-back-button",
-                                onClick: returnToGuardrailsOverview,
-                                "aria-label": "Back to guardrails",
-                              }, React.createElement(ChevronLeft, { width: 14, height: 14, strokeWidth: 1.8 })),
-                              React.createElement("span", null, guardrailsPageTitle)
-                            )
+                          ? React.createElement("input", {
+                              type: "text",
+                              className: "playground-guardrails-title-input",
+                              value: selectedGuardrailSet.name || "",
+                              placeholder: "Untitled Guardrail Set",
+                              readOnly: selectedGuardrailSetReadonly,
+                              disabled: selectedGuardrailSetReadonly,
+                              onChange: (event) => updateGuardrailSet(selectedGuardrailSet.id, { name: event.target.value }),
+                              "aria-label": "Guardrail set name",
+                            })
                           : guardrailsPageTitle
                       ),
                       isGuardrailsDetailPage
-                        ? React.createElement("div", { className: "playground-guardrails-detail-actions" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-library-new-button",
-                              onClick: () => addGuardrailPrompt(selectedGuardrailSet.id),
-                            },
-                              React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
-                              React.createElement("span", null, "Prompt")
-                            ),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-library-icon-button",
-                              onClick: () => deleteGuardrailSet(selectedGuardrailSet.id),
-                              "aria-label": "Delete guardrail set",
-                            }, React.createElement(Trash2, { width: 15, height: 15, strokeWidth: 1.8 }))
-                          )
+                        ? selectedGuardrailSetReadonly
+                          ? React.createElement("div", { className: "playground-guardrails-detail-actions" },
+                              React.createElement("span", { className: "playground-guardrails-readonly-pill" }, "Default Set")
+                            )
+                          : React.createElement("div", { className: "playground-guardrails-detail-actions" },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-files-library-icon-button",
+                                onClick: () => deleteGuardrailSet(selectedGuardrailSet.id),
+                                "aria-label": "Delete guardrail set",
+                              }, React.createElement(Trash2, { width: 15, height: 15, strokeWidth: 1.8 }))
+                            )
                         : React.createElement("div", { className: "playground-files-library-actions" },
                             React.createElement("div", { className: "playground-files-library-search-anchor" },
                               React.createElement("label", { className: "playground-files-library-search" },
@@ -185082,14 +186850,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     isGuardrailsDetailPage
                       ? null
                       : React.createElement("div", { className: "playground-files-library-nav-row", ref: guardrailsToolbarRef },
-                          React.createElement("div", { className: "playground-files-library-tabs content-mode-switch playground-guardrails-library-tabs" },
-                            filterOptions.map((option) =>
+                          React.createElement("div", { className: "playground-files-library-tabs content-mode-switch playground-guardrails-library-tabs", role: "tablist", "aria-label": "Guardrail set scope" },
+                            guardrailsSetFilterOptions.map((option) =>
                               React.createElement("button", {
                                 key: option.id,
                                 type: "button",
-                                className: "playground-files-library-tab" + (guardrailsFilter === option.id ? " is-active" : ""),
+                                role: "tab",
+                                "aria-selected": guardrailsSetFilter === option.id ? "true" : "false",
+                                className: "playground-files-library-tab" + (guardrailsSetFilter === option.id ? " is-active" : ""),
                                 onClick: () => {
-                                  setGuardrailsFilter(option.id);
+                                  setGuardrailsSetFilter(option.id);
                                   setGuardrailsToolbarPopover("");
                                 },
                               }, option.label)
@@ -185104,17 +186874,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 title: "Sort guardrails",
                                 "aria-label": "Sort guardrails",
                               }, React.createElement(ArrowUpDown, { width: 19, height: 19, strokeWidth: 1.8 })),
-                              guardrailsToolbarPopover === "sort" ? renderGuardrailsToolbarMenu("sort") : null
-                            ),
-                            React.createElement("div", { className: "playground-files-library-control-anchor" },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-files-library-icon-button" + (guardrailsToolbarPopover === "filter" || guardrailsFilter !== "all" ? " is-active" : ""),
-                                onClick: () => setGuardrailsToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                                title: "Filter guardrails",
-                                "aria-label": "Filter guardrails",
-                              }, React.createElement(SlidersHorizontal, { width: 19, height: 19, strokeWidth: 1.8 })),
-                              guardrailsToolbarPopover === "filter" ? renderGuardrailsToolbarMenu("filter") : null
+                              guardrailsToolbarPopover === "sort" ? renderGuardrailsToolbarMenu() : null
                             )
                           )
                         )
@@ -185124,76 +186884,96 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   isGuardrailsDetailPage
                     ? React.createElement("div", { className: "playground-guardrails-detail" },
                         React.createElement("div", { className: "playground-guardrails-editor" },
-                          React.createElement("div", { className: "playground-guardrails-editor-header" },
-                            React.createElement("div", { className: "playground-guardrails-editor-title-row" },
-                              React.createElement("span", { className: "playground-guardrails-set-icon" },
-                                React.createElement(Shield, { width: 14, height: 14, strokeWidth: 1.8 })
-                              ),
-                              React.createElement("span", null, "Guardrail Set")
+                          React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-guardrails-description-section" },
+                            React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                                guardrailDescriptionTextFormatActions.map((action) =>
+                                  renderGuardrailDescriptionToolbarButton(action)
+                                ),
+                                React.createElement("span", {
+                                  key: "list-divider-start",
+                                  className: "playground-agents-detail-instructions-toolbar-divider",
+                                  "aria-hidden": "true",
+                                }),
+                                guardrailDescriptionListFormatActions.map((action) =>
+                                  renderGuardrailDescriptionToolbarButton(action)
+                                ),
+                                React.createElement("span", {
+                                  key: "list-divider-end",
+                                  className: "playground-agents-detail-instructions-toolbar-divider",
+                                  "aria-hidden": "true",
+                                }),
+                                guardrailDescriptionInsertFormatActions.map((action) =>
+                                  renderGuardrailDescriptionToolbarButton(action)
+                                )
+                              )
                             ),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-guardrails-toggle" + (selectedGuardrailSet.enabled === false ? "" : " is-active"),
-                              onClick: () => updateGuardrailSet(selectedGuardrailSet.id, { enabled: selectedGuardrailSet.enabled === false }),
-                              "aria-label": selectedGuardrailSet.enabled === false ? "Enable guardrail set" : "Pause guardrail set",
-                            },
-                              React.createElement("span", { className: "playground-guardrails-toggle-knob" })
-                            )
-                          ),
-                          React.createElement("label", { className: "playground-guardrails-field" },
-                            React.createElement("span", null, "Name"),
-                            React.createElement("input", {
-                              type: "text",
-                              className: "playground-guardrails-input",
-                              value: selectedGuardrailSet.name || "",
-                              onChange: (event) => updateGuardrailSet(selectedGuardrailSet.id, { name: event.target.value }),
-                            })
-                          ),
-                          React.createElement("label", { className: "playground-guardrails-field" },
-                            React.createElement("span", null, "Description"),
+                            React.createElement("div", { className: "playground-tasks-detail-description-editor is-editing" },
                             React.createElement("textarea", {
-                              className: "playground-guardrails-textarea is-description",
+                              ref: guardrailsDescriptionTextareaRef,
+                              className: "playground-tasks-detail-description-input is-editing playground-guardrails-description-input",
+                              rows: 1,
+                              placeholder: "Add Description here",
                               value: selectedGuardrailSet.description || "",
-                              onChange: (event) => updateGuardrailSet(selectedGuardrailSet.id, { description: event.target.value }),
+                              readOnly: selectedGuardrailSetReadonly,
+                              onChange: (event) => {
+                                updateGuardrailSet(selectedGuardrailSet.id, { description: event.target.value });
+                                resizeGuardrailsDescriptionTextarea(event.currentTarget);
+                              },
                             })
+                            )
                           ),
                           React.createElement("div", { className: "playground-guardrails-prompts-header" },
                             React.createElement("div", { className: "playground-guardrails-prompts-title" },
-                              React.createElement(EyeOff, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("span", null, "Invisible Prompts")
-                            )
+                              React.createElement("span", null, "Prompts")
+                            ),
+                            selectedGuardrailSetReadonly
+                              ? null
+                              : React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-files-library-new-button playground-guardrails-prompt-add-button",
+                                  onClick: () => addGuardrailPrompt(selectedGuardrailSet.id),
+                                },
+                                  React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
+                                  React.createElement("span", null, "Prompt")
+                                )
                           ),
                           React.createElement("div", { className: "playground-guardrails-prompts-list" },
                             selectedGuardrailPrompts.length === 0
                               ? React.createElement("div", { className: "playground-guardrails-prompt-empty" }, "No prompts in this set.")
                               : selectedGuardrailPrompts.map((prompt) =>
-                                  React.createElement("div", { key: prompt.id, className: "playground-guardrails-prompt-card" },
-                                    React.createElement("div", { className: "playground-guardrails-prompt-top" },
-                                      React.createElement("input", {
-                                        type: "text",
-                                        className: "playground-guardrails-prompt-title-input",
-                                        value: prompt.title || "",
-                                        onChange: (event) => updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { title: event.target.value }),
-                                      }),
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "playground-guardrails-prompt-enable" + (prompt.enabled === false ? "" : " is-active"),
-                                        onClick: () => updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { enabled: prompt.enabled === false }),
-                                        "aria-label": prompt.enabled === false ? "Enable prompt" : "Disable prompt",
-                                      }, prompt.enabled === false ? "Paused" : "Active"),
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "playground-guardrails-prompt-delete",
-                                        onClick: () => deleteGuardrailPrompt(selectedGuardrailSet.id, prompt.id),
-                                        "aria-label": "Delete prompt",
-                                      }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                                  React.createElement("div", { key: prompt.id, className: "playground-tasks-backlog-item playground-guardrails-prompt-row" },
+                                    React.createElement("div", { className: "playground-tasks-backlog-item-content" },
+                                      React.createElement("div", { className: "playground-tasks-backlog-leading" },
+                                        React.createElement("div", { className: "playground-tasks-backlog-main" },
+                                          React.createElement("input", {
+                                            type: "text",
+                                            className: "playground-guardrails-prompt-title-input",
+                                            value: prompt.title || "",
+                                            readOnly: selectedGuardrailSetReadonly,
+                                            onChange: (event) => updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { title: event.target.value }),
+                                          }),
+                                          React.createElement("textarea", {
+                                            className: "playground-guardrails-prompt-body-input",
+                                            value: prompt.prompt || "",
+                                            placeholder: "Prompt text",
+                                            readOnly: selectedGuardrailSetReadonly,
+                                            onChange: (event) => updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { prompt: event.target.value }),
+                                          })
+                                        )
+                                      ),
+                                      React.createElement("div", { className: "playground-tasks-backlog-meta" },
+                                        selectedGuardrailSetReadonly
+                                          ? null
+                                          : React.createElement("button", {
+                                              type: "button",
+                                              className: "playground-guardrails-prompt-delete",
+                                              onClick: () => deleteGuardrailPrompt(selectedGuardrailSet.id, prompt.id),
+                                              "aria-label": "Delete prompt",
+                                            }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                                      )
                                     ),
-                                    React.createElement("textarea", {
-                                      className: "playground-guardrails-textarea is-prompt",
-                                      value: prompt.prompt || "",
-                                      placeholder: "Prompt text",
-                                      onChange: (event) => updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { prompt: event.target.value }),
-                                    })
                                   )
                                 )
                           )
@@ -189268,6 +191048,243 @@ async function fetchAiosTaskApi(req, upstreamPath, init = {}) {
   return fetchAiosApi(req, apiTargetPath, init);
 }
 
+function normalizeProxyGuardrailSetIds(value) {
+  const source = Array.isArray(value)
+    ? value
+    : typeof value === "string" && value.includes(",")
+      ? value.split(",")
+      : value !== undefined && value !== null
+        ? [value]
+        : [];
+  const seen = new Set();
+  const result = [];
+  source.forEach((item) => {
+    const id = item && typeof item === "object" && !Array.isArray(item)
+      ? String(item.id || item.guardrailSetId || item.guardrail_set_id || item.setId || item.set_id || "").trim()
+      : String(item || "").trim();
+    if (!id || seen.has(id)) {
+      return;
+    }
+    seen.add(id);
+    result.push(id);
+  });
+  return result;
+}
+
+function normalizeProxyGuardrailPrompts(value) {
+  return (Array.isArray(value) ? value : [])
+    .filter((prompt) => prompt && typeof prompt === "object" && !Array.isArray(prompt))
+    .map((prompt, index) => ({
+      id: String(prompt.id || prompt.promptId || prompt.prompt_id || `prompt_${index + 1}`).trim(),
+      title: String(prompt.title || prompt.name || "Guardrail").trim(),
+      prompt: String(prompt.prompt || prompt.content || prompt.text || ""),
+      createdAt: typeof prompt.createdAt === "string" ? prompt.createdAt : undefined,
+      updatedAt: typeof prompt.updatedAt === "string" ? prompt.updatedAt : undefined,
+    }))
+    .filter((prompt) => prompt.prompt.trim());
+}
+
+function normalizeProxyGuardrailSets(value) {
+  return (Array.isArray(value) ? value : [])
+    .filter((set) => set && typeof set === "object" && !Array.isArray(set))
+    .map((set, index) => ({
+      id: String(set.id || set.guardrailSetId || set.guardrail_set_id || `guardrail_${index + 1}`).trim(),
+      name: String(set.name || set.title || "Guardrail Set").trim(),
+      description: String(set.description || ""),
+      source: String(set.source || (set.isDefault || set.readOnly ? "default" : "custom")).trim(),
+      isDefault: Boolean(set.isDefault || set.readOnly || set.readonly || String(set.source || "").toLowerCase() === "default"),
+      readOnly: Boolean(set.readOnly || set.readonly || set.isDefault || String(set.source || "").toLowerCase() === "default"),
+      createdAt: typeof set.createdAt === "string" ? set.createdAt : undefined,
+      updatedAt: typeof set.updatedAt === "string" ? set.updatedAt : undefined,
+      prompts: normalizeProxyGuardrailPrompts(set.prompts),
+    }))
+    .filter((set) => set.id && set.prompts.length > 0);
+}
+
+function normalizeProxyPromptAdaptations(value) {
+  return (Array.isArray(value) ? value : [])
+    .filter((item) => item && typeof item === "object" && !Array.isArray(item))
+    .map((item, index) => {
+      const content = String(item.content || item.prompt || item.text || "").trim();
+      return {
+        id: String(item.id || item.promptId || item.prompt_id || `guardrail_prompt_${index + 1}`).trim(),
+        title: String(item.title || item.name || "Guardrail").trim(),
+        content,
+        prompt: content,
+        guardrailSetId: String(item.guardrailSetId || item.guardrail_set_id || item.setId || item.set_id || "").trim(),
+        guardrailSetName: String(item.guardrailSetName || item.guardrail_set_name || item.setName || item.set_name || "").trim(),
+        source: String(item.source || "guardrail").trim() || "guardrail",
+      };
+    })
+    .filter((item) => item.id && item.content);
+}
+
+function buildProxyPromptAdaptationsFromGuardrails(guardrails) {
+  const seen = new Set();
+  const adaptations = [];
+  (Array.isArray(guardrails) ? guardrails : []).forEach((set) => {
+    (Array.isArray(set.prompts) ? set.prompts : []).forEach((prompt, index) => {
+      const content = String(prompt.prompt || "").trim();
+      if (!content) {
+        return;
+      }
+      const promptId = String(prompt.id || `prompt_${index + 1}`).trim();
+      const id = `${set.id}:${promptId}`;
+      if (seen.has(id)) {
+        return;
+      }
+      seen.add(id);
+      adaptations.push({
+        id,
+        title: String(prompt.title || set.name || "Guardrail").trim(),
+        content,
+        prompt: content,
+        guardrailSetId: set.id,
+        guardrailSetName: set.name,
+        source: "guardrail",
+      });
+    });
+  });
+  return adaptations;
+}
+
+function extractProxyAgentGuardrailPayload(agent) {
+  const source = agent && typeof agent === "object" && !Array.isArray(agent) ? agent : {};
+  const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+    ? source.metadata
+    : {};
+  const runnerGuardrails = metadata.runnerGuardrails && typeof metadata.runnerGuardrails === "object" && !Array.isArray(metadata.runnerGuardrails)
+    ? metadata.runnerGuardrails
+    : {};
+  const guardrails = normalizeProxyGuardrailSets(source.guardrails).length > 0
+    ? normalizeProxyGuardrailSets(source.guardrails)
+    : normalizeProxyGuardrailSets(metadata.guardrails).length > 0
+      ? normalizeProxyGuardrailSets(metadata.guardrails)
+      : normalizeProxyGuardrailSets(runnerGuardrails.guardrails);
+  const promptAdaptations = normalizeProxyPromptAdaptations(source.promptAdaptations || source.invisiblePromptAdaptations).length > 0
+    ? normalizeProxyPromptAdaptations(source.promptAdaptations || source.invisiblePromptAdaptations)
+    : normalizeProxyPromptAdaptations(
+        metadata.promptAdaptations
+        || metadata.prompt_adaptations
+        || metadata.invisiblePromptAdaptations
+        || metadata.invisible_prompt_adaptations
+        || metadata.invisiblePromptAdaptions
+        || metadata.invisible_prompt_adaptions
+        || runnerGuardrails.promptAdaptations
+      );
+  const guardrailSetIds = normalizeProxyGuardrailSetIds(
+    source.guardrailSetIds
+    || source.guardrail_set_ids
+    || metadata.guardrailSetIds
+    || metadata.guardrail_set_ids
+    || runnerGuardrails.guardrailSetIds
+    || guardrails
+  );
+  const resolvedPromptAdaptations = promptAdaptations.length > 0
+    ? promptAdaptations
+    : buildProxyPromptAdaptationsFromGuardrails(guardrails);
+  return {
+    guardrailSetIds,
+    guardrails,
+    promptAdaptations: resolvedPromptAdaptations,
+  };
+}
+
+function getProxyAgentRecordFromResponse(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return null;
+  }
+  return data.agent || data.data || data.item || data;
+}
+
+async function fetchProxyAgentRecordForThreadGuardrails(req, upstreamUrl, apiKey, agentId) {
+  const normalizedAgentId = String(agentId || "").trim();
+  if (!normalizedAgentId) {
+    return null;
+  }
+  const encodedAgentId = encodeURIComponent(normalizedAgentId);
+  let response = null;
+  if (apiKey) {
+    response = await fetch(`${upstreamUrl}/agents/${encodedAgentId}`, {
+      method: "GET",
+      headers: {
+        "X-API-Key": apiKey,
+      },
+    });
+  } else if (hasAiosSession(req)) {
+    response = await fetchAiosCloud(req, `/agents/${encodedAgentId}`, { method: "GET" });
+    if (response.status === 404) {
+      response = await fetchAiosApi(req, `/api/agents/${encodedAgentId}`, { method: "GET" });
+    }
+  }
+  if (!response || !response.ok) {
+    return null;
+  }
+  const text = await response.text().catch(() => "");
+  if (!text.trim()) {
+    return null;
+  }
+  try {
+    return getProxyAgentRecordFromResponse(JSON.parse(text));
+  } catch {
+    return null;
+  }
+}
+
+async function enrichThreadPayloadWithAgentGuardrails(req, upstreamUrl, apiKey, payload) {
+  const source = payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
+  const agentId = String(source.agentId || source.agent_id || "").trim();
+  if (!agentId) {
+    return payload;
+  }
+  try {
+    const agent = await fetchProxyAgentRecordForThreadGuardrails(req, upstreamUrl, apiKey, agentId);
+    const guardrailPayload = extractProxyAgentGuardrailPayload(agent);
+    if (guardrailPayload.guardrailSetIds.length === 0 && guardrailPayload.promptAdaptations.length === 0) {
+      return payload;
+    }
+    const currentMetadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+      ? { ...source.metadata }
+      : {};
+    const metadataGuardrailBundle = {
+      version: 1,
+      guardrailSetIds: guardrailPayload.guardrailSetIds,
+      guardrails: guardrailPayload.guardrails,
+      promptAdaptations: guardrailPayload.promptAdaptations,
+    };
+    return {
+      ...source,
+      guardrailSetIds: Array.isArray(source.guardrailSetIds) ? source.guardrailSetIds : guardrailPayload.guardrailSetIds,
+      guardrail_set_ids: Array.isArray(source.guardrail_set_ids) ? source.guardrail_set_ids : guardrailPayload.guardrailSetIds,
+      guardrails: Array.isArray(source.guardrails) ? source.guardrails : guardrailPayload.guardrails,
+      promptAdaptations: Array.isArray(source.promptAdaptations) ? source.promptAdaptations : guardrailPayload.promptAdaptations,
+      prompt_adaptations: Array.isArray(source.prompt_adaptations) ? source.prompt_adaptations : guardrailPayload.promptAdaptations,
+      invisiblePromptAdaptations: Array.isArray(source.invisiblePromptAdaptations) ? source.invisiblePromptAdaptations : guardrailPayload.promptAdaptations,
+      invisible_prompt_adaptations: Array.isArray(source.invisible_prompt_adaptations) ? source.invisible_prompt_adaptations : guardrailPayload.promptAdaptations,
+      invisiblePromptAdaptions: Array.isArray(source.invisiblePromptAdaptions) ? source.invisiblePromptAdaptions : guardrailPayload.promptAdaptations,
+      invisible_prompt_adaptions: Array.isArray(source.invisible_prompt_adaptions) ? source.invisible_prompt_adaptions : guardrailPayload.promptAdaptations,
+      metadata: {
+        ...currentMetadata,
+        guardrailSetIds: Array.isArray(currentMetadata.guardrailSetIds) ? currentMetadata.guardrailSetIds : guardrailPayload.guardrailSetIds,
+        guardrail_set_ids: Array.isArray(currentMetadata.guardrail_set_ids) ? currentMetadata.guardrail_set_ids : guardrailPayload.guardrailSetIds,
+        guardrails: Array.isArray(currentMetadata.guardrails) ? currentMetadata.guardrails : guardrailPayload.guardrails,
+        promptAdaptations: Array.isArray(currentMetadata.promptAdaptations) ? currentMetadata.promptAdaptations : guardrailPayload.promptAdaptations,
+        prompt_adaptations: Array.isArray(currentMetadata.prompt_adaptations) ? currentMetadata.prompt_adaptations : guardrailPayload.promptAdaptations,
+        invisiblePromptAdaptations: Array.isArray(currentMetadata.invisiblePromptAdaptations) ? currentMetadata.invisiblePromptAdaptations : guardrailPayload.promptAdaptations,
+        invisible_prompt_adaptations: Array.isArray(currentMetadata.invisible_prompt_adaptations) ? currentMetadata.invisible_prompt_adaptations : guardrailPayload.promptAdaptations,
+        invisiblePromptAdaptions: Array.isArray(currentMetadata.invisiblePromptAdaptions) ? currentMetadata.invisiblePromptAdaptions : guardrailPayload.promptAdaptations,
+        invisible_prompt_adaptions: Array.isArray(currentMetadata.invisible_prompt_adaptions) ? currentMetadata.invisible_prompt_adaptions : guardrailPayload.promptAdaptations,
+        runnerGuardrails: currentMetadata.runnerGuardrails && typeof currentMetadata.runnerGuardrails === "object"
+          ? currentMetadata.runnerGuardrails
+          : metadataGuardrailBundle,
+      },
+    };
+  } catch (error) {
+    console.warn("[demo-server] Failed to enrich thread payload with agent guardrails", error);
+    return payload;
+  }
+}
+
 async function proxyCreateThread(req, res) {
   try {
     const body = await readRequestBody(req);
@@ -189285,6 +191302,7 @@ async function proxyCreateThread(req, res) {
           agentId: body.agentId,
           metadata: body.metadata,
         };
+    const enrichedPayload = await enrichThreadPayloadWithAgentGuardrails(req, upstreamUrl, apiKey, payload);
 
     let upstream;
     if (apiKey) {
@@ -189294,7 +191312,7 @@ async function proxyCreateThread(req, res) {
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(enrichedPayload),
       });
     } else if (hasAiosSession(req)) {
       upstream = await fetchAiosApi(req, "/api/threads", {
@@ -189302,7 +191320,7 @@ async function proxyCreateThread(req, res) {
         headers: {
           "content-type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(enrichedPayload),
       });
     } else {
       return sendJson(res, 401, {
@@ -189337,7 +191355,7 @@ async function proxyThreadMessages(req, res, threadId) {
     const apiKey = readOptionalApiKey(req, body);
     const visibleContent = body.content || body.task;
     const executionContent = typeof body.executionContent === "string" ? body.executionContent : "";
-    const shouldUseExecutionContentForUpstream = isAgentAssistantPresetExecutionContent(executionContent);
+    const shouldUseExecutionContentForUpstream = body.useExecutionContentForUpstream === true || isAgentAssistantPresetExecutionContent(executionContent);
 
     const payload = {
       content: shouldUseExecutionContentForUpstream ? executionContent : visibleContent,
@@ -198856,6 +200874,42 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === "GET" && (url.pathname === "/api/real/guardrails" || url.pathname === "/api/real/guardrail-sets")) {
+    void proxyUpstreamGet(req, res, "/guardrails");
+    return;
+  }
+
+  if (req.method === "POST" && (url.pathname === "/api/real/guardrails" || url.pathname === "/api/real/guardrail-sets")) {
+    void proxyUpstreamJsonRequest(req, res, "/guardrails", "POST");
+    return;
+  }
+
+  const guardrailDetailMatch = url.pathname.match(/^\/api\/real\/(?:guardrails|guardrail-sets)\/([^/]+)$/);
+  if (req.method === "GET" && guardrailDetailMatch) {
+    void proxyUpstreamGet(req, res, `/guardrails/${encodeURIComponent(decodeURIComponent(guardrailDetailMatch[1]))}`);
+    return;
+  }
+
+  if ((req.method === "PATCH" || req.method === "PUT") && guardrailDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/guardrails/${encodeURIComponent(decodeURIComponent(guardrailDetailMatch[1]))}`,
+      "PATCH",
+    );
+    return;
+  }
+
+  if (req.method === "DELETE" && guardrailDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/guardrails/${encodeURIComponent(decodeURIComponent(guardrailDetailMatch[1]))}`,
+      "DELETE",
+    );
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/api/real/billing/budget") {
     void proxyUpstreamGet(req, res, "/billing/budget");
     return;
@@ -199190,6 +201244,33 @@ const server = http.createServer((req, res) => {
   const agentAnalyticsMatch = url.pathname.match(/^\/api\/real\/agents\/([^/]+)\/analytics$/);
   if (req.method === "GET" && agentAnalyticsMatch) {
     void proxyUpstreamGet(req, res, `/agents/${encodeURIComponent(decodeURIComponent(agentAnalyticsMatch[1]))}/analytics`);
+    return;
+  }
+
+  const agentGuardrailsMatch = url.pathname.match(/^\/api\/real\/agents\/([^/]+)\/guardrails$/);
+  if (req.method === "GET" && agentGuardrailsMatch) {
+    void proxyUpstreamGet(req, res, `/agents/${encodeURIComponent(decodeURIComponent(agentGuardrailsMatch[1]))}/guardrails`);
+    return;
+  }
+
+  if ((req.method === "POST" || req.method === "PUT" || req.method === "PATCH") && agentGuardrailsMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/agents/${encodeURIComponent(decodeURIComponent(agentGuardrailsMatch[1]))}/guardrails`,
+      req.method,
+    );
+    return;
+  }
+
+  const agentGuardrailDetailMatch = url.pathname.match(/^\/api\/real\/agents\/([^/]+)\/guardrails\/([^/]+)$/);
+  if ((req.method === "POST" || req.method === "PUT" || req.method === "DELETE") && agentGuardrailDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/agents/${encodeURIComponent(decodeURIComponent(agentGuardrailDetailMatch[1]))}/guardrails/${encodeURIComponent(decodeURIComponent(agentGuardrailDetailMatch[2]))}`,
+      req.method,
+    );
     return;
   }
 

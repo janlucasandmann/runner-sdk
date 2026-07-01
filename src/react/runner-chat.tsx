@@ -1294,6 +1294,112 @@ function getRecordObject(record: Record<string, unknown> | null | undefined, key
   return null;
 }
 
+function addRunnerGuardrailText(texts: string[], seen: Set<string>, value: unknown): void {
+  const text = typeof value === "string" ? value.trim() : "";
+  if (!text || seen.has(text)) {
+    return;
+  }
+  seen.add(text);
+  texts.push(text);
+}
+
+function collectRunnerPromptAdaptationTexts(texts: string[], seen: Set<string>, value: unknown): void {
+  if (!Array.isArray(value)) {
+    return;
+  }
+  value.forEach((item) => {
+    if (typeof item === "string") {
+      addRunnerGuardrailText(texts, seen, item);
+      return;
+    }
+    const record = normalizeRecordObject(item);
+    if (!record) {
+      return;
+    }
+    addRunnerGuardrailText(texts, seen, getRecordString(record, ["content", "prompt", "text", "instruction", "instructions"]));
+  });
+}
+
+function collectRunnerGuardrailSetTexts(texts: string[], seen: Set<string>, value: unknown): void {
+  if (!Array.isArray(value)) {
+    return;
+  }
+  value.forEach((item) => {
+    const record = normalizeRecordObject(item);
+    if (!record) {
+      return;
+    }
+    addRunnerGuardrailText(texts, seen, getRecordString(record, ["prompt", "content", "text", "instruction", "instructions"]));
+    getRecordArray(record, ["prompts", "promptAdaptations", "prompt_adaptations", "invisiblePromptAdaptations", "invisible_prompt_adaptations"])
+      .forEach((prompt) => {
+        if (typeof prompt === "string") {
+          addRunnerGuardrailText(texts, seen, prompt);
+          return;
+        }
+        const promptRecord = normalizeRecordObject(prompt);
+        if (!promptRecord) {
+          return;
+        }
+        addRunnerGuardrailText(texts, seen, getRecordString(promptRecord, ["prompt", "content", "text", "instruction", "instructions"]));
+      });
+  });
+}
+
+function getRunnerAgentGuardrailTexts(option: RunnerChatOption | null | undefined): string[] {
+  if (!option) {
+    return [];
+  }
+
+  const candidate = option as RunnerAgentOptionRecord;
+  const metadata = normalizeRecordObject(candidate.metadata);
+  const runnerGuardrails = getRecordObject(metadata, ["runnerGuardrails", "runner_guardrails"]);
+  const texts: string[] = [];
+  const seen = new Set<string>();
+  const adaptationKeys = [
+    "promptAdaptations",
+    "prompt_adaptations",
+    "promptAdaptions",
+    "prompt_adaptions",
+    "invisiblePromptAdaptations",
+    "invisible_prompt_adaptations",
+    "invisiblePromptAdaptions",
+    "invisible_prompt_adaptions",
+  ];
+
+  [
+    candidate.promptAdaptations,
+    candidate.prompt_adaptations,
+    candidate.promptAdaptions,
+    candidate.prompt_adaptions,
+    candidate.invisiblePromptAdaptations,
+    candidate.invisible_prompt_adaptations,
+    candidate.invisiblePromptAdaptions,
+    candidate.invisible_prompt_adaptions,
+    ...adaptationKeys.map((key) => metadata?.[key]),
+    ...adaptationKeys.map((key) => runnerGuardrails?.[key]),
+  ].forEach((value) => collectRunnerPromptAdaptationTexts(texts, seen, value));
+
+  [
+    candidate.guardrails,
+    metadata?.guardrails,
+    runnerGuardrails?.guardrails,
+  ].forEach((value) => collectRunnerGuardrailSetTexts(texts, seen, value));
+
+  return texts;
+}
+
+function buildRunnerAgentGuardrailsHiddenPrompt(option: RunnerChatOption | null | undefined): string {
+  const guardrailTexts = getRunnerAgentGuardrailTexts(option);
+  if (guardrailTexts.length === 0) {
+    return "";
+  }
+  return [
+    "Invisible guardrails for the selected agent:",
+    "Follow these guardrails for every response in this thread unless a higher-priority system or safety instruction conflicts with them.",
+    guardrailTexts.map((text, index) => `Guardrail ${index + 1}:\n${text}`).join("\n\n"),
+  ].join("\n\n");
+}
+
 function normalizeRunnerAdCreationSettings(value?: Partial<RunnerAdCreationSettings> | null): RunnerAdCreationSettings {
   const style = RUNNER_AD_STYLE_OPTIONS.some((option) => option.id === value?.style)
     ? value?.style
@@ -2226,6 +2332,17 @@ type RunnerAgentOptionRecord = RunnerChatOption & {
   photoURL?: string | null;
   avatarUrl?: string | null;
   avatarURL?: string | null;
+  guardrails?: unknown;
+  guardrailSetIds?: unknown;
+  guardrail_set_ids?: unknown;
+  promptAdaptations?: unknown;
+  prompt_adaptations?: unknown;
+  promptAdaptions?: unknown;
+  prompt_adaptions?: unknown;
+  invisiblePromptAdaptations?: unknown;
+  invisible_prompt_adaptations?: unknown;
+  invisiblePromptAdaptions?: unknown;
+  invisible_prompt_adaptions?: unknown;
   profile?: unknown;
   metadata?: unknown;
 };
@@ -13481,11 +13598,12 @@ export function RunnerChat({
 
     const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
     headers.set("Content-Type", "application/json");
+    const agentGuardrailsHiddenPromptText = buildRunnerAgentGuardrailsHiddenPrompt(selectedAgent);
     const hiddenSystemPromptText = hiddenSystemPrompt.trim();
     const executionPrompt =
-      hiddenSystemPromptText && prompt
-        ? `${hiddenSystemPromptText}\n\n${prompt}`
-        : hiddenSystemPromptText || prompt;
+      [agentGuardrailsHiddenPromptText, hiddenSystemPromptText, prompt]
+        .filter((part) => typeof part === "string" && part.trim().length > 0)
+        .join("\n\n");
 
     try {
       const response = await fetch(`${normalizedBackendUrl}/threads/${encodeURIComponent(resolvedThreadId)}/context/actions/btw/stream`, {
@@ -13633,6 +13751,7 @@ export function RunnerChat({
       displayPromptOverride?: string | null;
     }
   ) {
+    const agentGuardrailsHiddenPromptText = buildRunnerAgentGuardrailsHiddenPrompt(selectedAgent);
     const hiddenSystemPromptText = hiddenSystemPrompt.trim();
     const resourceCreationHiddenPromptText = options?.resourceCreationCommand
       ? String(resourceCreationCommandHiddenPrompt?.(options.resourceCreationCommand.action) || "").trim()
@@ -13659,7 +13778,7 @@ export function RunnerChat({
       ? buildRunnerAdCreationHiddenPrompt(options.adCreationCommand)
       : "";
     const executionTaskText =
-      [hiddenSystemPromptText, resourceCreationHiddenPromptText, agentCreationHiddenPromptText, skillCreationHiddenPromptText, slideCreationHiddenPromptText, researchCreationHiddenPromptText, scrapeCreationHiddenPromptText, parseCreationHiddenPromptText, adCreationHiddenPromptText, taskText]
+      [agentGuardrailsHiddenPromptText, hiddenSystemPromptText, resourceCreationHiddenPromptText, agentCreationHiddenPromptText, skillCreationHiddenPromptText, slideCreationHiddenPromptText, researchCreationHiddenPromptText, scrapeCreationHiddenPromptText, parseCreationHiddenPromptText, adCreationHiddenPromptText, taskText]
         .filter((part) => typeof part === "string" && part.trim().length > 0)
         .join("\n\n");
     const visibleTaskText =
@@ -13912,6 +14031,7 @@ export function RunnerChat({
             content: visibleTaskText || taskText,
             reasoningEffort: runReasoningEffort,
             ...(executionTaskText !== (visibleTaskText || taskText) ? { executionContent: executionTaskText } : {}),
+            ...(agentGuardrailsHiddenPromptText ? { useExecutionContentForUpstream: true } : {}),
             ...(options?.slideCreationCommand || options?.researchCreationCommand || options?.scrapeCreationCommand || options?.parseCreationCommand || options?.adCreationCommand
               ? {
                   messageMetadata: {

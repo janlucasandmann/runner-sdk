@@ -259,6 +259,65 @@ export interface RunnerApiRequestOptions {
   signal?: AbortSignal;
 }
 
+export interface RunnerGuardrailPrompt {
+  id?: string;
+  title: string;
+  prompt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface RunnerGuardrailSet {
+  id: string;
+  name: string;
+  description?: string;
+  prompts: RunnerGuardrailPrompt[];
+  source?: "default" | "custom" | string;
+  isDefault?: boolean;
+  readOnly?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface RunnerGuardrailSetCreateInput {
+  name: string;
+  description?: string;
+  prompts?: RunnerGuardrailPrompt[];
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface RunnerGuardrailSetUpdateInput {
+  name?: string;
+  description?: string;
+  prompts?: RunnerGuardrailPrompt[];
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface RunnerGuardrailPromptAdaptation {
+  id: string;
+  title: string;
+  content: string;
+  prompt: string;
+  guardrailSetId: string;
+  guardrailSetName: string;
+  source?: "guardrail" | string;
+}
+
+export interface RunnerAgentRecord {
+  id: string;
+  name?: string;
+  instructions?: string;
+  model?: string;
+  guardrailSetIds?: string[];
+  guardrails?: RunnerGuardrailSet[];
+  promptAdaptations?: RunnerGuardrailPromptAdaptation[];
+  invisiblePromptAdaptations?: RunnerGuardrailPromptAdaptation[];
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
 export interface RunnerThreadStep {
   id: string;
   threadId: string;
