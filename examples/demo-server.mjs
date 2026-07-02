@@ -19,6 +19,7 @@ import { RESOURCE_TEMPLATE_CATALOG, RESOURCE_TEMPLATE_TYPES } from "./demo-resou
 import { RESOURCE_TEMPLATES_PAGE_CSS, RESOURCE_TEMPLATES_PAGE_SCRIPT } from "./demo-resource-templates-page.mjs";
 import { VERSION_SIDEBAR_SCRIPT } from "./demo-version-sidebar.mjs";
 import { PLAYGROUND_EVALUATIONS_CSS, PLAYGROUND_EVALUATIONS_SCRIPT } from "./playground-evaluations-page.mjs";
+import { createPlaygroundEvaluationsRuntime } from "./playground-evaluations-runtime.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44445,24 +44446,35 @@ ${METRONOME_PAGE_CSS}
         background: rgba(255, 255, 255, 0.18);
       }
 
-      .playground-agents-detail-publish-split-shell .playground-agents-detail-publish-menu {
-        top: calc(100% + 8px);
-        right: 0;
-        left: auto;
-        width: 236px;
-        min-width: 236px;
-        max-height: min(260px, calc(100vh - 160px));
-        transform-origin: top right;
-      }
+	      .playground-agents-detail-publish-split-shell .playground-agents-detail-publish-menu {
+	        top: calc(100% + 8px);
+	        right: 0;
+	        left: auto;
+	        width: 268px;
+	        min-width: 268px;
+	        max-height: min(260px, calc(100vh - 160px));
+	        transform-origin: top right;
+	      }
 
-      .playground-agents-detail-publish-menu .tb-popup-row {
-        padding: 10px 14px;
-      }
+	      .playground-agents-detail-publish-menu .tb-popup-row {
+	        padding: 10px 14px;
+	      }
 
-      .playground-agents-detail-publish-menu .tb-popup-row:disabled {
-        cursor: not-allowed;
-        color: rgba(255, 255, 255, 0.42);
-      }
+	      .playground-agents-detail-publish-menu .playground-agents-detail-publish-menu-shortcut {
+	        margin-left: auto;
+	        flex: 0 0 auto;
+	        color: rgba(255, 255, 255, 0.42);
+	        font-size: 10px;
+	        font-weight: 400;
+	        line-height: 1;
+	        letter-spacing: 0;
+	        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	      }
+
+	      .playground-agents-detail-publish-menu .tb-popup-row:disabled {
+	        cursor: not-allowed;
+	        color: rgba(255, 255, 255, 0.42);
+	      }
 
       .playground-agents-detail-publish-menu .tb-popup-row:disabled:hover {
         background: transparent;
@@ -59290,11 +59302,15 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         );
         const normalizedSnapshot = {
           name: String(version.name || snapshot.name || "").trim(),
-          description: typeof version.description === "string"
-            ? version.description
-            : typeof snapshot.description === "string"
-              ? snapshot.description
-              : "",
+	          description: typeof snapshot.description === "string"
+	            ? snapshot.description
+	            : typeof version.agentDescription === "string"
+	              ? version.agentDescription
+	              : typeof version.agent_description === "string"
+	                ? version.agent_description
+	                : typeof version.description === "string"
+	                  ? version.description
+	                  : "",
           runtimes,
           packageVersions: { ...runtimes },
           packages: normalizePlaygroundPackages(version.packages || snapshot.packages),
@@ -60429,11 +60445,13 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             : [];
         const normalizedSnapshot = {
           name: String(version.name || snapshot.name || "").trim(),
-          description: typeof version.description === "string"
-            ? version.description
-            : typeof snapshot.description === "string"
-              ? snapshot.description
-              : "",
+          description: typeof snapshot.description === "string"
+            ? snapshot.description
+            : typeof version.agentDescription === "string"
+              ? version.agentDescription
+              : typeof version.agent_description === "string"
+                ? version.agent_description
+                : "",
           model: getPlaygroundAgentModelMeta(typeof version.model === "string" ? version.model : snapshot.model || "").id,
           instructions: typeof version.instructions === "string"
             ? version.instructions
@@ -105638,6 +105656,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
         const selectedAgentIdRef = useRef(initialAgentId || "");
+        const lastInitializedAgentSelectionRef = useRef("");
         const lastAppliedCreateAgentRequestTokenRef = useRef("");
         const agentAutosaveTimerRef = useRef(0);
         const agentAutosaveQueuedRef = useRef(null);
@@ -105651,6 +105670,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentActionsPopoverRef = useRef(null);
         const agentPublishMenuRef = useRef(null);
         const agentOwnerPopoverRef = useRef(null);
+        const agentVersionDescriptionTextareaRef = useRef(null);
+        const agentVersionModalCloseTimerRef = useRef(null);
+        const agentVersionModalFrameRef = useRef(null);
+        const agentDetailSidebarCollapsedBeforeVersionsRef = useRef(null);
+        const agentInitialVersionSeededRef = useRef(new Set());
+        const agentVersionBaselineRef = useRef({ key: "", signature: "" });
+        const agentVersionDraftTouchedRef = useRef(false);
         const agentSendTeamModalCloseTimerRef = useRef(null);
         const agentSendTeamModalFrameRef = useRef(null);
         const agentApiModalCloseTimerRef = useRef(null);
@@ -105789,6 +105815,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentAssistantCommandRequest, setAgentAssistantCommandRequest] = useState(null);
         const [agentAssistantThreadByAgentId, setAgentAssistantThreadByAgentId] = useState({});
         const [agentPublishMenuOpen, setAgentPublishMenuOpen] = useState(false);
+        const [agentVersionsHeaderMenuOpen, setAgentVersionsHeaderMenuOpen] = useState(false);
         const [agentCreationSetupOpen, setAgentCreationSetupOpen] = useState(false);
         const [agentCreationSetupError, setAgentCreationSetupError] = useState("");
         const [agentCreationSetupSubmitting, setAgentCreationSetupSubmitting] = useState(false);
@@ -105805,6 +105832,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           message: "",
           error: "",
         });
+        const [agentVersionModal, setAgentVersionModal] = useState(null);
+        const [agentVersionModalVisible, setAgentVersionModalVisible] = useState(false);
+        const [agentVersionModalClosing, setAgentVersionModalClosing] = useState(false);
+        const [agentVersionNameDraft, setAgentVersionNameDraft] = useState("");
+        const [agentVersionDescriptionDraft, setAgentVersionDescriptionDraft] = useState("");
+        const [isAgentVersionDescriptionEditing, setIsAgentVersionDescriptionEditing] = useState(false);
         const [openAgentVersionMenuId, setOpenAgentVersionMenuId] = useState("");
         const [agentUpgradeModalOpen, setAgentUpgradeModalOpen] = useState(false);
         const [agentUpgradeCheckoutLoading, setAgentUpgradeCheckoutLoading] = useState(false);
@@ -105916,9 +105949,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   error: "",
                   message: "",
                 });
-                if (onAgentMutated) {
-                  await onAgentMutated();
-                }
+	            if (onAgentMutated) {
+	              void Promise.resolve(onAgentMutated()).catch((error) => {
+	                console.warn("[agents] Failed to refresh agents after version update", error);
+	              });
+	            }
               } catch (error) {
                 editorDirtyRef.current = true;
                 setSaveState({
@@ -106973,6 +107008,24 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [agentVersionsSidebarOpen, onVersionsSidebarOpenChange]);
 
         useEffect(() => {
+          if (agentVersionsSidebarOpen) {
+            if (agentDetailSidebarCollapsedBeforeVersionsRef.current === null) {
+              agentDetailSidebarCollapsedBeforeVersionsRef.current = Boolean(agentDetailSidebarCollapsed);
+            }
+            if (!agentDetailSidebarCollapsed) {
+              setAgentDetailSidebarCollapsed(true);
+            }
+            return;
+          }
+
+          if (agentDetailSidebarCollapsedBeforeVersionsRef.current !== null) {
+            const shouldRestoreCollapsed = Boolean(agentDetailSidebarCollapsedBeforeVersionsRef.current);
+            agentDetailSidebarCollapsedBeforeVersionsRef.current = null;
+            setAgentDetailSidebarCollapsed(shouldRestoreCollapsed);
+          }
+        }, [agentVersionsSidebarOpen, agentDetailSidebarCollapsed]);
+
+        useEffect(() => {
           if (!embeddedInResources || typeof onResourcesHeaderChange !== "function") {
             return;
           }
@@ -107003,8 +107056,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setIsAgentInstructionsEditing(false);
           setAgentActionsPopoverOpen(false);
           setAgentPublishMenuOpen(false);
+          setAgentVersionsHeaderMenuOpen(false);
           setAgentModelPopover("");
           setAgentVersionsSidebarOpen(false);
+          finishCloseAgentVersionModal();
           setOpenAgentVersionMenuId("");
           setAgentApiModalOpen(false);
           setAgentApiModalVisible(false);
@@ -107303,12 +107358,53 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           applyAgentMarkdownSelection(field, textareaRef, edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
+        function applyAgentVersionDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          setAgentVersionDescriptionDraft(nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = agentVersionDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeAgentDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleAgentVersionDescriptionFormat(formatType) {
+          const textarea = agentVersionDescriptionTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(agentVersionDescriptionDraft || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+          if (formatType === "bold") {
+            edit = buildWrappedAgentMarkdownEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedAgentMarkdownEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedAgentMarkdownEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildAgentMarkdownListEdit(value, selectionStart, selectionEnd, "unordered");
+          }
+          if (!edit) {
+            return;
+          }
+          applyAgentVersionDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
         function updateDraftAgent(updater) {
           setDraftAgent((current) => {
             const base = current || normalizePlaygroundAgentRecord(selectedAgentSnapshot || buildPlaygroundDefaultAgentDraft());
             return typeof updater === "function" ? updater(base) : updater;
           });
           editorDirtyRef.current = true;
+          agentVersionDraftTouchedRef.current = true;
           setSaveState((current) => ({
             ...current,
             error: "",
@@ -108012,13 +108108,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               throw new Error("Agent response was empty.");
             }
 
-            setAgentDetailsById((current) => ({
-              ...current,
-              [agentId]: normalized,
-            }));
-            if (selectedAgentIdRef.current === agentId && !editorDirtyRef.current) {
-              setDraftAgent(normalized);
-            }
+	            setAgentDetailsById((current) => ({
+	              ...current,
+	              [agentId]: normalized,
+	            }));
+	            if (selectedAgentIdRef.current === agentId && !editorDirtyRef.current) {
+	              rememberAgentVersionBaseline(normalized);
+	              setDraftAgent(normalized);
+	            }
           } catch (error) {
             if (selectedAgentIdRef.current === agentId) {
               setSaveState((current) => ({
@@ -108259,7 +108356,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setAgentRenameState(null);
           setAgentRenameValue("");
           setAgentRenameError("");
+          setAgentVersionsHeaderMenuOpen(false);
           setAgentVersionsSidebarOpen(false);
+          finishCloseAgentVersionModal();
           setOpenAgentVersionMenuId("");
           setAgentVersionState({
             status: "idle",
@@ -108577,12 +108676,23 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         async function persistAgentCreationSetupDraft() {
           const setupDraft = normalizePlaygroundAgentRecord(draftAgent || buildPlaygroundDefaultAgentDraft("single"));
           const nextName = String(setupDraft.name || "").trim().replace(/\\s+/g, " ") || "New Agent";
-          const savedAgent = await persistAgentRecord({
+          const creationDraft = normalizePlaygroundAgentRecord({
             ...setupDraft,
             id: PLAYGROUND_AGENT_DRAFT_ID,
             name: nextName,
             agentType: "single",
           });
+          const initialVersion = createPlaygroundAgentVersion(creationDraft, [], { status: "active" });
+          const versionedCreationDraft = createPlaygroundAgentWithVersionList(creationDraft, [initialVersion], initialVersion.id);
+          const persistedAgent = await persistAgentRecord(versionedCreationDraft);
+          const savedAgent = readPlaygroundAgentVersions(persistedAgent).length > 0
+            ? persistedAgent
+            : normalizePlaygroundAgentRecord({
+                ...versionedCreationDraft,
+                ...persistedAgent,
+                metadata: getAgentMetadataRecord(versionedCreationDraft),
+                publishedAt: versionedCreationDraft.publishedAt || persistedAgent.publishedAt || "",
+              });
 
           editorDirtyRef.current = false;
           setAgentDetailsById((current) => ({
@@ -109245,24 +109355,38 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [agentsOverviewHomeTab, loadAgentsObservabilityThreadDetails, selectedAgentsObservabilityThreadId]);
 
         useEffect(() => {
-          if (!selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
-            if (selectedAgentId !== PLAYGROUND_AGENT_DRAFT_ID) {
+          const normalizedSelectedAgentId = String(selectedAgentId || "").trim();
+          const isNewAgentSelection = lastInitializedAgentSelectionRef.current !== normalizedSelectedAgentId;
+          if (!normalizedSelectedAgentId || normalizedSelectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
+            if (isNewAgentSelection) {
+              lastInitializedAgentSelectionRef.current = normalizedSelectedAgentId;
+            }
+            if (normalizedSelectedAgentId !== PLAYGROUND_AGENT_DRAFT_ID && isNewAgentSelection) {
               setDraftAgent(null);
               resetEditorAuxiliaryState();
             }
             return;
           }
 
-          const seedAgent = agentDetailsById[selectedAgentId]
-            || orderedAgents.find((agent) => agent.id === selectedAgentId)
+          const seedAgent = agentDetailsById[normalizedSelectedAgentId]
+            || orderedAgents.find((agent) => agent.id === normalizedSelectedAgentId)
             || null;
 
-          resetEditorAuxiliaryState();
-          if (seedAgent?.isSystem || seedAgent?.isDefault) {
-            setAgentAssistantOpen(false);
+          if (isNewAgentSelection) {
+            lastInitializedAgentSelectionRef.current = normalizedSelectedAgentId;
+            resetEditorAuxiliaryState();
           }
-          setDraftAgent(seedAgent ? normalizePlaygroundAgentRecord(seedAgent) : null);
-          void loadAgentDetails(selectedAgentId);
+		          if (seedAgent?.isSystem || seedAgent?.isDefault) {
+		            setAgentAssistantOpen(false);
+		          }
+		          const normalizedSeedAgent = seedAgent ? normalizePlaygroundAgentRecord(seedAgent) : null;
+		          if (normalizedSeedAgent) {
+		            rememberAgentVersionBaseline(normalizedSeedAgent);
+		          }
+		          if (isNewAgentSelection || !editorDirtyRef.current) {
+		            setDraftAgent(normalizedSeedAgent);
+		          }
+		          void loadAgentDetails(normalizedSelectedAgentId);
         }, [loadAgentDetails, orderedAgents, selectedAgentId]);
 
         useEffect(() => {
@@ -109282,6 +109406,47 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             void flushQueuedAgentAutosave();
           }, 700);
         }, [draftAgent]);
+
+        useEffect(() => {
+          if (
+            !draftAgent?.id
+            || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID
+            || draftAgent.isSystem
+            || draftAgent.isDefault
+            || agentCreationSetupOpen
+            || loadingAgentId === draftAgent.id
+            || saveState.isSaving
+            || agentVersionState.status === "loading"
+          ) {
+            return;
+          }
+          if (readPlaygroundAgentVersions(draftAgent).length > 0) {
+            return;
+          }
+          const seedKey = String(draftAgent.id || "").trim();
+          if (!seedKey || agentInitialVersionSeededRef.current.has(seedKey)) {
+            return;
+          }
+          agentInitialVersionSeededRef.current.add(seedKey);
+          const initialVersion = createPlaygroundAgentVersion(draftAgent, [], { status: "active" });
+          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, [initialVersion], initialVersion.id);
+          setDraftAgent(nextAgent);
+          setAgentDetailsById((current) => ({
+            ...current,
+            [nextAgent.id]: nextAgent,
+          }));
+          void commitVersionedAgentRecord(nextAgent, {
+            loadingMessage: "Initializing agent version...",
+            successMessage: "Version initialized",
+            errorMessage: "Failed to initialize agent version.",
+          });
+        }, [
+          agentCreationSetupOpen,
+          agentVersionState.status,
+          draftAgent,
+          loadingAgentId,
+          saveState.isSaving,
+        ]);
 
         useEffect(() => {
           return () => {
@@ -109655,6 +109820,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             if (agentApiModalFrameRef.current) {
               window.cancelAnimationFrame(agentApiModalFrameRef.current);
               agentApiModalFrameRef.current = null;
+            }
+            if (agentVersionModalCloseTimerRef.current) {
+              window.clearTimeout(agentVersionModalCloseTimerRef.current);
+              agentVersionModalCloseTimerRef.current = null;
+            }
+            if (agentVersionModalFrameRef.current) {
+              window.cancelAnimationFrame(agentVersionModalFrameRef.current);
+              agentVersionModalFrameRef.current = null;
             }
           };
         }, []);
@@ -110040,7 +110213,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setAgentCreationPermissionModalOpen(false);
           setAgentCreationInstructionRunRequest(null);
           setAgentCreationInstructionContext(null);
+          setAgentVersionsHeaderMenuOpen(false);
           setAgentVersionsSidebarOpen(false);
+          finishCloseAgentVersionModal();
           setOpenAgentVersionMenuId("");
           setAgentVersionState({
             status: "idle",
@@ -110120,7 +110295,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	          if (draftAgent && !canUseAgentOnCurrentPlan(draftAgent)) {
 	            return;
 	          }
+	          setAgentVersionsHeaderMenuOpen(false);
 	          setAgentVersionsSidebarOpen(false);
+	          finishCloseAgentVersionModal();
 	          setOpenAgentVersionMenuId("");
 	          setAgentAssistantOpen(true);
 	          setAgentAssistantCommandRequest(null);
@@ -110222,7 +110399,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const visiblePrompt = getAgentAssistantPresetActionLabel(normalizedActionType);
             const executionPrompt = buildAgentAssistantPresetPrompt(normalizedActionType, targetAgent);
             rememberAgentAssistantThread(targetAgentId, threadId);
+            setAgentVersionsHeaderMenuOpen(false);
             setAgentVersionsSidebarOpen(false);
+            finishCloseAgentVersionModal();
             setOpenAgentVersionMenuId("");
             setAgentAssistantOpen(true);
             setAgentCreationInstructionContext({
@@ -113169,13 +113348,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               },
             });
             editorDirtyRef.current = false;
-            setAgentDetailsById((current) => ({
-              ...current,
-              [mergedSavedAgent.id]: mergedSavedAgent,
-            }));
-            setAgentListMode(getPlaygroundAgentListMode(mergedSavedAgent));
-            setSelectedAgentId(mergedSavedAgent.id);
-            setDraftAgent(mergedSavedAgent);
+	            setAgentDetailsById((current) => ({
+	              ...current,
+	              [mergedSavedAgent.id]: mergedSavedAgent,
+	            }));
+	            setAgentListMode(getPlaygroundAgentListMode(mergedSavedAgent));
+	            setSelectedAgentId(mergedSavedAgent.id);
+	            rememberAgentVersionBaseline(mergedSavedAgent, { force: true });
+	            setDraftAgent(mergedSavedAgent);
             setSaveState({
               isSaving: false,
               error: "",
@@ -113754,10 +113934,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           });
 
           try {
-            const savedAgent = await persistAgentRecord({
+            const creationDraft = normalizePlaygroundAgentRecord({
               ...composerDraft,
               name: nextName,
             });
+            const initialVersion = createPlaygroundAgentVersion(creationDraft, [], { status: "active" });
+            const versionedCreationDraft = createPlaygroundAgentWithVersionList(creationDraft, [initialVersion], initialVersion.id);
+            const persistedAgent = await persistAgentRecord(versionedCreationDraft);
+            const savedAgent = readPlaygroundAgentVersions(persistedAgent).length > 0
+              ? persistedAgent
+              : normalizePlaygroundAgentRecord({
+                  ...versionedCreationDraft,
+                  ...persistedAgent,
+                  metadata: getAgentMetadataRecord(versionedCreationDraft),
+                  publishedAt: versionedCreationDraft.publishedAt || persistedAgent.publishedAt || "",
+                });
             setAgentDetailsById((current) => ({
               ...current,
               [savedAgent.id]: savedAgent,
@@ -113977,17 +114168,219 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             : {};
         }
 
-        function readDraftAgentVersions() {
-          return readPlaygroundAgentVersions(draftAgent);
+        function readDraftAgentVersions(agentRecord = draftAgent) {
+          return readPlaygroundAgentVersions(agentRecord);
         }
 
-        function getDraftAgentActiveVersion() {
-          const versions = readDraftAgentVersions();
-          const metadata = getAgentVersionMetadata();
+        function getDraftAgentActiveVersion(agentRecord = draftAgent) {
+          const versions = readDraftAgentVersions(agentRecord);
+          const metadata = getAgentVersionMetadata(agentRecord);
           const activeId = String(metadata.activeAgentVersionId || metadata.active_agent_version_id || "").trim();
           return versions.find((version) => version.id === activeId)
             || versions.find((version) => version.status === "active")
             || null;
+        }
+
+        function getDraftAgentSelectedVersion(agentRecord = draftAgent) {
+          const versions = readDraftAgentVersions(agentRecord);
+          const metadata = getAgentVersionMetadata(agentRecord);
+          const activeVersion = getDraftAgentActiveVersion(agentRecord);
+          const selectedId = String(
+            metadata.restoredFromAgentVersionId
+            || metadata.restored_from_agent_version_id
+            || activeVersion?.id
+            || ""
+          ).trim();
+          return versions.find((version) => version.id === selectedId)
+            || activeVersion
+            || versions[0]
+            || null;
+        }
+
+        function stringifyAgentVersionComparableValue(value) {
+          if (value === null || typeof value !== "object") {
+            return JSON.stringify(value);
+          }
+          if (Array.isArray(value)) {
+            return "[" + value.map((entry) => stringifyAgentVersionComparableValue(entry)).join(",") + "]";
+          }
+          return "{" + Object.keys(value).sort().map((key) => (
+            JSON.stringify(key) + ":" + stringifyAgentVersionComparableValue(value[key])
+          )).join(",") + "}";
+        }
+
+        function normalizeAgentVersionComparableList(value) {
+          return (Array.isArray(value) ? value : [])
+            .map((entry) => String(entry || "").trim())
+            .filter(Boolean)
+            .sort((left, right) => left.localeCompare(right));
+        }
+
+        function normalizeAgentVersionComparablePromptAdaptations(value) {
+          return normalizePlaygroundPromptAdaptations(value)
+            .map((entry) => ({
+              id: entry.id,
+              title: entry.title,
+              content: entry.content,
+              guardrailSetId: entry.guardrailSetId,
+              source: entry.source,
+            }))
+            .sort((left, right) => (
+              String(left.guardrailSetId || "").localeCompare(String(right.guardrailSetId || ""))
+              || String(left.id || "").localeCompare(String(right.id || ""))
+              || String(left.content || "").localeCompare(String(right.content || ""))
+            ));
+        }
+
+        function buildAgentVersionComparableSnapshot(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundAgentVersion({ snapshot }).snapshot;
+          return {
+            name: normalizedSnapshot.name,
+            description: normalizedSnapshot.description,
+            model: normalizedSnapshot.model,
+            instructions: normalizedSnapshot.instructions,
+            binary: normalizedSnapshot.binary,
+            reasoningEffort: normalizedSnapshot.reasoningEffort,
+            enabledSkills: normalizeAgentVersionComparableList(normalizedSnapshot.enabledSkills),
+            guardrailSetIds: normalizeAgentVersionComparableList(normalizedSnapshot.guardrailSetIds),
+            promptAdaptations: normalizeAgentVersionComparablePromptAdaptations(
+              normalizedSnapshot.promptAdaptations || normalizedSnapshot.invisiblePromptAdaptations
+            ),
+            deepResearchModel: normalizedSnapshot.deepResearchModel || null,
+            permissionSet: normalizePlaygroundPermissionSet(normalizedSnapshot.permissionSet, "agent"),
+            agentType: normalizedSnapshot.agentType === "team" ? "team" : "single",
+            teamOrchestratorAgentId: String(normalizedSnapshot.teamOrchestratorAgentId || "").trim(),
+            teamSubagentIds: normalizeAgentVersionComparableList(normalizedSnapshot.teamSubagentIds),
+            teamExecutionMode: normalizedSnapshot.agentType === "team" ? PLAYGROUND_AGENT_TEAM_EXECUTION_MODE : "",
+          };
+        }
+
+        function getAgentVersionSnapshotSignature(snapshot) {
+          return stringifyAgentVersionComparableValue(buildAgentVersionComparableSnapshot(snapshot));
+        }
+
+        function getDraftAgentCurrentSnapshotSignature() {
+          return stringifyAgentVersionComparableValue(buildAgentVersionComparableSnapshot(buildPlaygroundAgentVersionSnapshot(draftAgent)));
+        }
+
+        function getAgentVersionCurrentSnapshotSignature(agentRecord = draftAgent) {
+          return stringifyAgentVersionComparableValue(buildAgentVersionComparableSnapshot(buildPlaygroundAgentVersionSnapshot(agentRecord)));
+        }
+
+        function getAgentVersionBaselineKey(agentRecord = draftAgent) {
+          const normalizedAgentId = String(agentRecord?.id || "").trim();
+          if (!normalizedAgentId) {
+            return "";
+          }
+          const selectedVersion = getDraftAgentSelectedVersion(agentRecord);
+          const selectedVersionId = String(selectedVersion?.id || "").trim();
+          return normalizedAgentId + "::" + selectedVersionId;
+        }
+
+        function rememberAgentVersionBaseline(agentRecord = draftAgent, options = {}) {
+          if (!agentRecord) {
+            return;
+          }
+          const baselineKey = getAgentVersionBaselineKey(agentRecord);
+          if (!baselineKey) {
+            return;
+          }
+          if (!options.force && agentVersionBaselineRef.current?.key === baselineKey && agentVersionBaselineRef.current?.signature) {
+            return;
+          }
+          agentVersionDraftTouchedRef.current = false;
+          agentVersionBaselineRef.current = {
+            key: baselineKey,
+            signature: getAgentVersionCurrentSnapshotSignature(agentRecord),
+          };
+        }
+
+        function hasDraftAgentVersionChanges() {
+          if (!draftAgent) {
+            return false;
+          }
+          if (!agentVersionDraftTouchedRef.current) {
+            return false;
+          }
+          const currentBaselineKey = getAgentVersionBaselineKey(draftAgent);
+          const baseline = agentVersionBaselineRef.current || {};
+          if (baseline.key && baseline.key === currentBaselineKey && baseline.signature) {
+            return getAgentVersionCurrentSnapshotSignature(draftAgent) !== baseline.signature;
+          }
+          const selectedVersion = getDraftAgentSelectedVersion();
+          if (!selectedVersion) {
+            return true;
+          }
+          return getDraftAgentCurrentSnapshotSignature() !== getAgentVersionSnapshotSignature(selectedVersion.snapshot);
+        }
+
+        function isDraftAgentSelectedVersionPublished() {
+          const selectedVersion = getDraftAgentSelectedVersion();
+          return Boolean(selectedVersion && selectedVersion.status === "active");
+        }
+
+        function canPublishDraftAgentSelectedVersion() {
+          const selectedVersion = getDraftAgentSelectedVersion();
+          return Boolean(selectedVersion && !hasDraftAgentVersionChanges() && selectedVersion.status !== "active");
+        }
+
+        function getAgentVersionPrimaryActionKind() {
+          return canPublishDraftAgentSelectedVersion() ? "publish" : "save";
+        }
+
+        function getAgentVersionPopupActions(options = {}) {
+          const includeVersionHistory = options.includeVersionHistory !== false;
+          const agentVersionPrimaryActionKind = getAgentVersionPrimaryActionKind();
+          const agentVersionHasChanges = hasDraftAgentVersionChanges();
+          const agentVersionCanPublish = canPublishDraftAgentSelectedVersion();
+          const actions = [
+            agentVersionPrimaryActionKind === "publish"
+              ? {
+                  id: "publish",
+                  label: "Publish",
+                  Icon: Rocket,
+                  shortcut: "⌘P",
+                  disabled: !agentVersionCanPublish,
+                  onClick: publishCurrentAgentVersion,
+                }
+              : {
+                  id: "save",
+                  label: "Save",
+                  Icon: Save,
+                  shortcut: "⌘S",
+                  disabled: !agentVersionHasChanges,
+                  onClick: saveCurrentAgentVersion,
+                },
+            {
+              id: "save-new-version",
+              label: "Save to new Version",
+              Icon: GitBranchPlus,
+              shortcut: "⇧⌘S",
+              disabled: !agentVersionHasChanges,
+              onClick: () => openCreateAgentVersionModal(),
+            },
+            {
+              id: "revert",
+              label: "Revert to last saved Version",
+              Icon: Undo2,
+              disabled: !agentVersionHasChanges,
+              onClick: handleRevertDraft,
+            },
+          ];
+          if (includeVersionHistory) {
+            actions.push({
+              id: "version-history",
+              label: "Version history",
+              Icon: History,
+              disabled: false,
+              onClick: () => {
+                setAgentPublishMenuOpen(false);
+                setAgentVersionsHeaderMenuOpen(false);
+                setAgentVersionsSidebarOpen(true);
+              },
+            });
+          }
+          return actions;
         }
 
         async function commitVersionedAgentRecord(nextAgent, options = {}) {
@@ -114066,6 +114459,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
           setAgentActionsPopoverOpen(false);
           setAgentPublishMenuOpen(false);
+          setAgentVersionsHeaderMenuOpen(false);
           setAgentAssistantOpen(false);
           setOpenAgentVersionMenuId("");
           setAgentVersionState((current) => current.status === "loading" ? current : {
@@ -114079,7 +114473,28 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         function closeAgentVersionsSidebar() {
           setAgentVersionsSidebarOpen(false);
           setAgentPublishMenuOpen(false);
+          setAgentVersionsHeaderMenuOpen(false);
+          finishCloseAgentVersionModal();
           setOpenAgentVersionMenuId("");
+        }
+
+        function buildUpdatedAgentVersionFromDraft(version, options = {}) {
+          const now = new Date().toISOString();
+          const normalizedVersion = normalizePlaygroundAgentVersion(version || {});
+          const snapshot = buildPlaygroundAgentVersionSnapshot(draftAgent);
+          const nextStatus = String(options.status || "saved").trim().toLowerCase() === "active" ? "active" : "saved";
+          return normalizePlaygroundAgentVersion({
+            ...normalizedVersion,
+            status: nextStatus,
+            updatedAt: now,
+            publishedAt: nextStatus === "active" ? now : "",
+            name: snapshot.name,
+            model: snapshot.model,
+            enabledSkills: snapshot.enabledSkills,
+            guardrailSetIds: snapshot.guardrailSetIds,
+            permissionSet: snapshot.permissionSet,
+            snapshot,
+          }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
         }
 
         async function saveCurrentAgentVersion() {
@@ -114087,29 +114502,247 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return;
           }
           const versions = readDraftAgentVersions();
-          const newVersion = createPlaygroundAgentVersion(draftAgent, versions, { status: "saved" });
-          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, [newVersion, ...versions], newVersion.id);
+          const selectedVersion = getDraftAgentSelectedVersion();
+          const nextVersion = selectedVersion
+            ? buildUpdatedAgentVersionFromDraft(selectedVersion, { status: "saved" })
+            : createPlaygroundAgentVersion(draftAgent, versions, { status: "saved" });
+          const nextVersions = selectedVersion
+            ? normalizePlaygroundAgentVersions(versions.map((version) => (
+                version.id === selectedVersion.id
+                  ? nextVersion
+                  : version
+              )))
+            : normalizePlaygroundAgentVersions([nextVersion, ...versions]);
+          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, nextVersions, nextVersion.id);
           await commitVersionedAgentRecord(nextAgent, {
-            loadingMessage: "Saving agent version...",
-            successMessage: "Version saved",
-            errorMessage: "Failed to save agent version.",
+            loadingMessage: "Saving current version...",
+            successMessage: "Current version saved",
+            errorMessage: "Failed to save current version.",
           });
+        }
+
+        function cancelAgentVersionModalAnimation() {
+          if (agentVersionModalCloseTimerRef.current) {
+            window.clearTimeout(agentVersionModalCloseTimerRef.current);
+            agentVersionModalCloseTimerRef.current = null;
+          }
+          if (agentVersionModalFrameRef.current) {
+            window.cancelAnimationFrame(agentVersionModalFrameRef.current);
+            agentVersionModalFrameRef.current = null;
+          }
+        }
+
+        function finishCloseAgentVersionModal() {
+          cancelAgentVersionModalAnimation();
+          setAgentVersionModal(null);
+          setAgentVersionModalVisible(false);
+          setAgentVersionModalClosing(false);
+          setAgentVersionNameDraft("");
+          setAgentVersionDescriptionDraft("");
+          setIsAgentVersionDescriptionEditing(false);
+        }
+
+        function openAgentVersionModal(nextModal, draft = {}) {
+          if (!draftAgent || agentVersionState.status === "loading" || saveState.isSaving) {
+            return;
+          }
+          cancelAgentVersionModalAnimation();
+          setAgentPublishMenuOpen(false);
+          setAgentVersionsHeaderMenuOpen(false);
+          setOpenAgentVersionMenuId("");
+          setAgentVersionState((current) => current.status === "loading" ? current : {
+            status: "idle",
+            message: "",
+            error: "",
+          });
+          setAgentVersionNameDraft(String(draft.name || "").trim());
+          setAgentVersionDescriptionDraft(String(draft.description || ""));
+          setIsAgentVersionDescriptionEditing(false);
+          setAgentVersionModal(nextModal);
+          setAgentVersionModalClosing(false);
+          setAgentVersionModalVisible(false);
+          agentVersionModalFrameRef.current = window.requestAnimationFrame(() => {
+            agentVersionModalFrameRef.current = window.requestAnimationFrame(() => {
+              agentVersionModalFrameRef.current = null;
+              setAgentVersionModalVisible(true);
+            });
+          });
+        }
+
+        function openCreateAgentVersionModal(options = {}) {
+          if (!draftAgent || agentVersionState.status === "loading" || saveState.isSaving) {
+            return;
+          }
+          const forceNewVersion = Boolean(options.force);
+          if (!forceNewVersion && !hasDraftAgentVersionChanges()) {
+            return;
+          }
+          const versions = readDraftAgentVersions();
+          const nextVersion = versions.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), 0) + 1;
+          openAgentVersionModal(
+            { mode: "create", force: forceNewVersion },
+            {
+              name: "Version " + nextVersion,
+              description: "",
+            }
+          );
+        }
+
+        function openEditAgentVersionModal(versionId) {
+          if (!draftAgent || agentVersionState.status === "loading" || saveState.isSaving) {
+            return;
+          }
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftAgentVersions();
+          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
+          if (!targetVersion) {
+            return;
+          }
+          openAgentVersionModal(
+            { mode: "edit", versionId: targetVersion.id },
+            {
+              name: String(targetVersion.label || ("Version " + targetVersion.version)).trim(),
+              description: String(targetVersion.description || ""),
+            }
+          );
+        }
+
+        function closeAgentVersionModal(options = {}) {
+          if (saveState.isSaving || agentVersionState.status === "loading") {
+            return;
+          }
+          if (options.animate === false) {
+            finishCloseAgentVersionModal();
+            return;
+          }
+          if (!agentVersionModal || agentVersionModalClosing) {
+            return;
+          }
+          cancelAgentVersionModalAnimation();
+          setAgentVersionModalVisible(false);
+          setAgentVersionModalClosing(true);
+          agentVersionModalCloseTimerRef.current = window.setTimeout(() => {
+            agentVersionModalCloseTimerRef.current = null;
+            finishCloseAgentVersionModal();
+          }, typeof PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS === "number" ? PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS : 75);
+        }
+
+        async function saveAgentToNewVersion(options = {}) {
+          if (!draftAgent || agentVersionState.status === "loading") {
+            return null;
+          }
+          const forceNewVersion = Boolean(options.force);
+          if (!forceNewVersion && !hasDraftAgentVersionChanges()) {
+            return null;
+          }
+          const versions = readDraftAgentVersions();
+          const newVersion = createPlaygroundAgentVersion(draftAgent, versions, {
+            status: "saved",
+            label: options.label,
+            description: options.description,
+          });
+          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, [newVersion, ...versions], newVersion.id);
+          return await commitVersionedAgentRecord(nextAgent, {
+            loadingMessage: "Saving new version...",
+            successMessage: "New version saved",
+            errorMessage: "Failed to save new version.",
+          });
+        }
+
+        async function updateAgentVersionDetails(versionId, versionDetails = {}) {
+          if (!draftAgent || agentVersionState.status === "loading") {
+            return null;
+          }
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftAgentVersions();
+          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
+          if (!targetVersion) {
+            return null;
+          }
+          const now = new Date().toISOString();
+          const nextLabel = String(versionDetails.label || "").trim() || String(targetVersion.label || ("Version " + targetVersion.version)).trim();
+          const nextDescription = String(versionDetails.description || "").trim();
+          const nextVersions = normalizePlaygroundAgentVersions(versions.map((version) => (
+            version.id === targetVersion.id
+              ? {
+                  ...version,
+                  label: nextLabel,
+                  description: nextDescription,
+                  updatedAt: now,
+                  updated_at: now,
+                }
+              : version
+          )));
+          const metadata = getAgentVersionMetadata();
+          const selectedVersionId = String(
+            metadata.restoredFromAgentVersionId
+            || metadata.restored_from_agent_version_id
+            || metadata.activeAgentVersionId
+            || metadata.active_agent_version_id
+            || targetVersion.id
+            || ""
+          ).trim();
+          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, nextVersions, selectedVersionId);
+          return await commitVersionedAgentRecord(nextAgent, {
+            loadingMessage: "Saving version details...",
+            successMessage: "Version details saved",
+            errorMessage: "Failed to save version details.",
+          });
+        }
+
+        async function commitAgentVersionModal() {
+          if (!agentVersionModal || saveState.isSaving || agentVersionState.status === "loading") {
+            return;
+          }
+          const label = String(agentVersionNameDraft || "").trim() || "Version";
+          const description = String(agentVersionDescriptionDraft || "").trim();
+          const savedAgent = agentVersionModal.mode === "edit"
+            ? await updateAgentVersionDetails(agentVersionModal.versionId, { label, description })
+            : await saveAgentToNewVersion({
+                force: Boolean(agentVersionModal.force),
+                label,
+                description,
+              });
+          if (savedAgent) {
+            closeAgentVersionModal();
+          }
         }
 
         async function publishCurrentAgentVersion() {
           if (!draftAgent || agentVersionState.status === "loading") {
             return;
           }
+          if (hasDraftAgentVersionChanges()) {
+            setAgentVersionState({
+              status: "error",
+              message: "",
+              error: "Save the current version before publishing.",
+            });
+            return;
+          }
           const versions = readDraftAgentVersions();
-          const supersededVersions = versions.map((version) => (
-            version.status === "active" ? { ...version, status: "superseded" } : version
-          ));
-          const publishedVersion = createPlaygroundAgentVersion(draftAgent, supersededVersions, { status: "active" });
-          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, [publishedVersion, ...supersededVersions], publishedVersion.id);
+          const selectedVersion = getDraftAgentSelectedVersion();
+          if (!selectedVersion) {
+            return;
+          }
+          const now = new Date().toISOString();
+          const nextVersions = normalizePlaygroundAgentVersions(versions.map((version) => {
+            if (version.id === selectedVersion.id) {
+              return {
+                ...version,
+                status: "active",
+                publishedAt: now,
+                updatedAt: now,
+              };
+            }
+            return version.status === "active" ? { ...version, status: "superseded" } : version;
+          }));
+          const publishedVersion = nextVersions.find((version) => version.id === selectedVersion.id) || selectedVersion;
+          const nextAgent = createPlaygroundAgentFromVersionSnapshot(draftAgent, publishedVersion, nextVersions, publishedVersion.id);
           await commitVersionedAgentRecord(nextAgent, {
-            loadingMessage: "Publishing agent...",
+            loadingMessage: "Publishing current version...",
             successMessage: "Published",
-            errorMessage: "Failed to publish agent.",
+            errorMessage: "Failed to publish current version.",
           });
         }
 
@@ -114217,11 +114850,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           });
         }
 
-        function handleRevertDraft() {
+        async function handleRevertDraft() {
           clearAgentAutosaveQueue();
           if (selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
             setDraftAgent(buildPlaygroundDefaultAgentDraft(draftAgent?.agentType === "team" ? "team" : "single"));
             resetEditorAuxiliaryState();
+            return;
+          }
+          const versions = readDraftAgentVersions();
+          const selectedVersion = getDraftAgentSelectedVersion();
+          if (selectedVersion) {
+            const nextAgent = createPlaygroundAgentFromVersionSnapshot(draftAgent, selectedVersion, versions, selectedVersion.id);
+            await commitVersionedAgentRecord(nextAgent, {
+              loadingMessage: "Reverting agent...",
+              successMessage: "Reverted",
+              errorMessage: "Failed to revert agent.",
+            });
             return;
           }
           const nextDraft = selectedAgentSnapshot ? normalizePlaygroundAgentRecord(selectedAgentSnapshot) : null;
@@ -115624,42 +116268,45 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             && !draftAgent.isDefault
             && !isDefaultAgentConfigurationLocked
           );
-          const isAgentPublishControlDisabled = saveState.isSaving && agentVersionState.status !== "loading";
-          const areAgentPublishMenuActionsDisabled = saveState.isSaving || agentVersionState.status === "loading";
+		          const isAgentVersionControlBusy = saveState.isSaving || agentVersionState.status === "loading";
+		          const isAgentPublishControlDisabled = Boolean(!draftAgent || isAgentVersionControlBusy);
+		          const isAgentPublishMenuDisabled = Boolean(!draftAgent || isAgentVersionControlBusy);
+	          const agentVersionPopupActions = getAgentVersionPopupActions();
           const renderAgentPublishSplitButton = () => renderPlaygroundPlatformPopup({
             open: agentPublishMenuOpen,
             shellRef: agentPublishMenuRef,
             shellClassName: "playground-agents-detail-publish-split-shell",
             menuClassName: "playground-agents-detail-publish-menu",
-            trigger: React.createElement("div", {
-                className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control"
-                  + (agentVersionsSidebarOpen ? " is-active" : "")
-                  + (isAgentPublishControlDisabled ? " is-disabled" : ""),
-              },
-              React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-detail-publish-main",
-                  title: "Publish agent",
-                  "aria-label": "Publish agent",
-                  "aria-expanded": agentVersionsSidebarOpen ? "true" : "false",
-                  disabled: isAgentPublishControlDisabled,
-                  onClick: () => {
-                    setAgentPublishMenuOpen(false);
-                    toggleAgentVersionsSidebar();
-                  },
-                },
-                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Publish")
-              ),
+	            trigger: React.createElement("div", {
+	                className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control"
+	                  + (agentVersionsSidebarOpen ? " is-active" : "")
+	                  + (isAgentPublishControlDisabled ? " is-disabled" : ""),
+	              },
+	              React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-agents-detail-publish-main",
+	                  title: "Open agent versions",
+	                  "aria-label": "Open agent versions",
+	                  "aria-expanded": agentVersionsSidebarOpen ? "true" : "false",
+		                  disabled: isAgentPublishControlDisabled,
+		                  onClick: () => {
+		                    setAgentPublishMenuOpen(false);
+		                    setAgentVersionsHeaderMenuOpen(false);
+		                    setAgentVersionsSidebarOpen(true);
+		                  },
+	                },
+	                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                React.createElement("span", null, "Publish")
+	              ),
               React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
               React.createElement("button", {
                   type: "button",
                   className: "playground-agents-detail-publish-chevron",
-                  title: "Publish save options",
-                  "aria-label": "Publish save options",
+                  title: "Version save options",
+                  "aria-label": "Version save options",
                   "aria-haspopup": "menu",
                   "aria-expanded": agentPublishMenuOpen ? "true" : "false",
-                  disabled: isAgentPublishControlDisabled,
+                  disabled: isAgentPublishMenuDisabled,
                   onClick: (event) => {
                     event.stopPropagation();
                     setAgentPublishMenuOpen((current) => !current);
@@ -115673,51 +116320,28 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 onClick: (event) => event.stopPropagation(),
             },
             children: React.createElement(React.Fragment, null,
-              React.createElement("button", {
-                  type: "button",
-                  className: "tb-popup-row",
-                  role: "menuitem",
-                  disabled: areAgentPublishMenuActionsDisabled || !draftAgent,
+              agentVersionPopupActions.map((action) => React.createElement("button", {
+                  key: action.label,
+	                  type: "button",
+	                  className: "tb-popup-row",
+	                  role: "menuitem",
+                  disabled: isAgentPublishMenuDisabled || action.disabled,
                   onClick: () => {
                     setAgentPublishMenuOpen(false);
-                    void handleSaveAgent();
+                    void action.onClick();
                   },
                 },
-                React.createElement(Save, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Save")
-                )
-              ),
-              React.createElement("button", {
-                  type: "button",
-                  className: "tb-popup-row",
-                  role: "menuitem",
-                  disabled: areAgentPublishMenuActionsDisabled || !draftAgent,
-                  onClick: () => {
-                    setAgentPublishMenuOpen(false);
-                    void saveCurrentAgentVersion();
-                  },
-                },
-                React.createElement(GitBranchPlus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Save to new Version")
-                )
-              ),
-              React.createElement("button", {
-                  type: "button",
-                  className: "tb-popup-row",
-                  role: "menuitem",
-                  disabled: areAgentPublishMenuActionsDisabled || !draftAgent,
-                  onClick: () => {
-                    setAgentPublishMenuOpen(false);
-                    handleRevertDraft();
-                  },
-                },
-                React.createElement(Undo2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Revert to last saved Version")
-                )
-              )
+	                React.createElement(action.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                  React.createElement("span", null, action.label)
+	                ),
+	                action.shortcut
+	                  ? React.createElement("span", {
+	                      className: "playground-agents-detail-publish-menu-shortcut",
+	                      "aria-hidden": "true",
+	                    }, action.shortcut)
+	                  : null
+	              ))
             )
           });
           const renderAgentSidebarToggleButton = () => React.createElement("button", {
@@ -117616,15 +118240,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             ? { "--playground-agent-detail-bg-image": "url(" + JSON.stringify(agentDetailBackgroundImageUrl) + ")" }
             : undefined;
 
-          return React.createElement("div", { className: agentDetailMainClassName, ref: agentDetailMainRef, style: agentDetailMainStyle },
-            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-              React.createElement("div", { className: "playground-agents-detail-content" + ((agentDetailTab === "general" || agentDetailTab === "permissions" || agentDetailTab === "threads" || agentDetailTab === "guardrails") ? " is-agent-overview-general" : "") },
-                saveState.error
-                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, saveState.error)
-                  : null,
-	                agentResourceDetailBackButton,
-	                agentProfileSection,
-                agentDetailWorkspaceSection
+	          return React.createElement("div", { className: agentDetailMainClassName, ref: agentDetailMainRef, style: agentDetailMainStyle },
+	            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+	              React.createElement("div", { className: "playground-agents-detail-content" + ((agentDetailTab === "general" || agentDetailTab === "permissions" || agentDetailTab === "threads" || agentDetailTab === "guardrails") ? " is-agent-overview-general" : "") },
+		                agentResourceDetailBackButton,
+		                agentProfileSection,
+	                agentDetailWorkspaceSection
               )
             )
           );
@@ -117671,7 +118292,51 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           && !draftAgent.isDefault
           && !isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
         );
-        const agentsTopNavActions = topNavActionsContainer
+        useEffect(() => {
+          if (!canShowAgentVersions) {
+            return undefined;
+          }
+
+          function handleAgentVersionKeyboardShortcut(event) {
+            const isCommandShortcut = Boolean(event.metaKey || event.ctrlKey);
+            if (!isCommandShortcut || event.altKey) {
+              return;
+            }
+            const key = String(event.key || "").toLowerCase();
+            if (key !== "s" && key !== "p") {
+              return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+	            if (saveState.isSaving || agentVersionState.status === "loading") {
+	              return;
+	            }
+	            if (agentVersionModal) {
+	              return;
+	            }
+
+		            if (key === "s" && event.shiftKey) {
+		              openCreateAgentVersionModal();
+		              return;
+		            }
+
+            if (key === "s") {
+              if (getAgentVersionPrimaryActionKind() === "save" && hasDraftAgentVersionChanges()) {
+                void saveCurrentAgentVersion();
+              }
+              return;
+            }
+
+            if (key === "p" && !event.shiftKey && canPublishDraftAgentSelectedVersion()) {
+              void publishCurrentAgentVersion();
+            }
+          }
+
+          window.addEventListener("keydown", handleAgentVersionKeyboardShortcut, true);
+          return () => window.removeEventListener("keydown", handleAgentVersionKeyboardShortcut, true);
+        }, [canShowAgentVersions, draftAgent, saveState.isSaving, agentVersionState.status, agentVersionModal]);
+        const agentsTopNavActions = topNavActionsContainer && !agentVersionsSidebarOpen
           ? createPortal(
               React.createElement(React.Fragment, null,
                 canShowAgentActions
@@ -117693,28 +118358,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                            className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
 	                            onClick: (event) => event.stopPropagation(),
 	                          },
-	                            canShowAgentAssistant
-	                              ? React.createElement("button", {
-	                                  type: "button",
-	                                  className: "tb-popup-row",
-	                                  onClick: () => {
-	                                    setAgentActionsPopoverOpen(false);
-	                                    if (agentAssistantOpen) {
-	                                      setAgentAssistantOpen(false);
-	                                      return;
-	                                    }
-	                                    openAgentAssistant(selectedAgentAssistantCommandType);
-	                                  },
-	                                },
-	                                  React.createElement(MessageCircle, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                                    React.createElement("span", null, "Improve")
-	                                  )
-	                                )
-	                              : null,
-	                            React.createElement("button", {
-	                              type: "button",
-	                              className: "tb-popup-row",
+		                            React.createElement("button", {
+		                              type: "button",
+		                              className: "tb-popup-row",
 	                              onClick: () => {
                                 setAgentActionsPopoverOpen(false);
                                 openAgentRenameDialog(draftAgent);
@@ -117957,6 +118603,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           ).trim();
           return React.createElement(PlaygroundVersionSidebar, {
             open: agentVersionsSidebarOpen,
+            title: "Publish Agent",
             versions,
             activeVersionId,
             selectedVersionId,
@@ -117964,28 +118611,46 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             busy: agentVersionState.status === "loading",
             openMenuId: openAgentVersionMenuId,
             onOpenMenuIdChange: setOpenAgentVersionMenuId,
+            headerMenuOpen: agentVersionsHeaderMenuOpen,
+            headerMenuActions: getAgentVersionPopupActions({ includeVersionHistory: false }),
+            headerMenuDisabled: saveState.isSaving || agentVersionState.status === "loading",
+            onHeaderMenuOpenChange: setAgentVersionsHeaderMenuOpen,
             onClose: closeAgentVersionsSidebar,
-            onSaveVersion: () => void saveCurrentAgentVersion(),
-            onPublishCurrent: () => void publishCurrentAgentVersion(),
-            onUnpublishActive: activeVersion ? () => void unpublishActiveAgentVersion() : null,
+            onSaveVersion: () => openCreateAgentVersionModal({ force: true }),
             onRestoreVersion: (versionId) => void restoreAgentVersion(versionId),
             onPublishVersion: (versionId) => void publishAgentVersion(versionId),
             onDeleteVersion: (versionId) => void deleteAgentVersion(versionId),
+            getRowMenuItems: (version) => [
+              {
+                id: "edit",
+                label: "Edit version",
+                icon: SquarePen,
+                onClick: () => openEditAgentVersionModal(version.id),
+              },
+              {
+                id: "restore",
+                label: "Restore version",
+                icon: RotateCcw,
+                onClick: () => void restoreAgentVersion(version.id),
+              },
+              {
+                id: "delete",
+                label: "Delete version",
+                icon: Trash2,
+                danger: true,
+                onClick: () => void deleteAgentVersion(version.id),
+              },
+            ],
             emptyCopy: "Create a version to track instructions, model, permissions, skills, and team setup.",
             unpublishLabel: "Unpublish agent",
             getVersionTitle: (version) => String(version.label || ("Version " + version.version)).trim(),
-            getVersionDescription: (version) => String(version.description || "").trim(),
+            getVersionDescription: () => "",
             getVersionMeta: (version) => {
               const modelMeta = getPlaygroundAgentModelMeta(version.model || version.snapshot?.model || draftAgent?.model || "", resolvedAgentModelOptions);
-              const skillCount = Number(version.skillCount || version.snapshot?.enabledSkills?.length || 0) || 0;
               return (version.publishedAt ? "Published " : "Saved ")
                 + formatAgentVersionTimestamp(version.publishedAt || version.createdAt)
                 + " · "
-                + (modelMeta?.label || version.model || "Model")
-                + " · "
-                + skillCount
-                + " skill"
-                + (skillCount === 1 ? "" : "s");
+                + (modelMeta?.label || version.model || "Model");
             },
           });
         }
@@ -118006,6 +118671,146 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             },
             sidebar
           );
+        }
+
+        function renderAgentVersionModal() {
+          if (!agentVersionModal) {
+            return null;
+          }
+          const isBusy = saveState.isSaving || agentVersionState.status === "loading";
+          const isEditMode = agentVersionModal.mode === "edit";
+          const trimmedVersionName = String(agentVersionNameDraft || "").trim();
+
+          function renderAgentVersionDescriptionField() {
+            return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-tasks-issue-description-editor playground-agents-version-description-editor" },
+              React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                  [
+                    { id: "bold", label: "Bold", icon: Bold },
+                    { id: "italic", label: "Italic", icon: Italic },
+                    { id: "underline", label: "Underline", icon: Underline },
+                    { id: "list", label: "List", icon: List },
+                  ].map((action) =>
+                    React.createElement("button", {
+                      key: action.id,
+                      type: "button",
+                      className: "playground-tasks-detail-format-button",
+                      title: action.label,
+                      "aria-label": action.label,
+                      disabled: isBusy,
+                      onMouseDown: (event) => event.preventDefault(),
+                      onClick: () => handleAgentVersionDescriptionFormat(action.id),
+                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isAgentVersionDescriptionEditing ? " is-editing" : " is-preview") },
+                !isAgentVersionDescriptionEditing
+                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                      String(agentVersionDescriptionDraft || "").trim()
+                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                            content: agentVersionDescriptionDraft,
+                            className: "playground-tasks-detail-description-preview tb-message-markdown",
+                          })
+                        : React.createElement("div", {
+                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                          }, "Describe what changed in this version.")
+                    )
+                  : null,
+                React.createElement("textarea", {
+                  ref: agentVersionDescriptionTextareaRef,
+                  className: "playground-tasks-detail-description-input " + (isAgentVersionDescriptionEditing ? "is-editing" : "is-preview"),
+                  rows: 1,
+                  placeholder: isAgentVersionDescriptionEditing ? "Describe what changed in this version." : "",
+                  value: agentVersionDescriptionDraft || "",
+                  disabled: isBusy,
+                  onFocus: (event) => {
+                    setIsAgentVersionDescriptionEditing(true);
+                    resizeAgentDescriptionTextarea(event.currentTarget);
+                  },
+                  onChange: (event) => {
+                    setAgentVersionDescriptionDraft(event.target.value);
+                    resizeAgentDescriptionTextarea(event.currentTarget);
+                  },
+                  onBlur: () => setIsAgentVersionDescriptionEditing(false),
+                  onKeyDown: (event) => {
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      closeAgentVersionModal();
+                    }
+                  },
+                })
+              )
+            );
+          }
+
+          return renderPlaygroundPlatformModal({
+            open: Boolean(agentVersionModal),
+            visible: agentVersionModalVisible,
+            closing: agentVersionModalClosing,
+            onClose: () => closeAgentVersionModal(),
+            as: "form",
+            backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-version-modal-backdrop",
+            className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-version-modal",
+            ariaLabel: isEditMode ? "Edit agent version" : "New agent version",
+            surfaceProps: {
+              onSubmit: (event) => {
+                event.preventDefault();
+                void commitAgentVersionModal();
+              },
+              onKeyDown: (event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  closeAgentVersionModal();
+                }
+              },
+            },
+            children: React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                    React.createElement(isEditMode ? SquarePen : GitBranchPlus, { width: 18, height: 18, strokeWidth: 1.9 })
+                  ),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-tasks-project-modal-name-input playground-tasks-issue-modal-title-input",
+                    value: agentVersionNameDraft,
+                    placeholder: "Version name",
+                    autoFocus: true,
+                    disabled: isBusy,
+                    onChange: (event) => setAgentVersionNameDraft(event.target.value),
+                  })
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                  onClick: () => closeAgentVersionModal(),
+                  title: "Close",
+                  disabled: isBusy,
+                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+              ),
+              React.createElement("div", { className: "playground-tasks-issue-modal-body" },
+                renderAgentVersionDescriptionField(),
+                agentVersionState.status === "error" && agentVersionState.error
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, agentVersionState.error)
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button",
+                  onClick: () => closeAgentVersionModal(),
+                  disabled: isBusy,
+                }, "Cancel"),
+                React.createElement("button", {
+                  type: "submit",
+                  className: "playground-environments-action-button is-primary",
+                  disabled: isBusy || !trimmedVersionName,
+                }, isBusy ? (isEditMode ? "Saving..." : "Creating...") : (isEditMode ? "Save Version" : "Create Version"))
+              )
+            )
+          });
         }
 
         function renderEmbeddedAgentsOverviewSection() {
@@ -118437,8 +119242,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     renderAgentAssistantPanel()
                   )
                 ),
-            renderAgentVersionsSidebarPortal(),
-            renderAgentListActionMenu(),
+	            renderAgentVersionsSidebarPortal(),
+	            renderAgentVersionModal(),
+	            renderAgentListActionMenu(),
             renderAgentRenameModal(),
             renderAgentComposerDialog(),
             renderAgentCreationPermissionModal(),
@@ -118721,8 +119527,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           renderAgentModelPickerDialog(),
           renderAgentSendToTeamModal(),
           renderAgentApiModal(),
-          renderAgentVersionsSidebarPortal(),
-          renderAgentUpgradeModal()
+	          renderAgentVersionsSidebarPortal(),
+	          renderAgentVersionModal(),
+	          renderAgentUpgradeModal()
         );
       }
 
@@ -153198,12 +154005,31 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return storedSets[0]?.id || "";
         });
         const [selectedEvaluationRunId, setSelectedEvaluationRunId] = useState("");
+        const [selectedEvaluationCaseId, setSelectedEvaluationCaseId] = useState("");
         const [evaluationsPageMode, setEvaluationsPageMode] = useState("overview");
         const [evaluationDetailTab, setEvaluationDetailTab] = useState("general");
         const [evaluationsSearchQuery, setEvaluationsSearchQuery] = useState("");
+        const [evaluationRunsSearchQuery, setEvaluationRunsSearchQuery] = useState("");
+        const [evaluationRunsSortMode, setEvaluationRunsSortMode] = useState("recent-desc");
+        const [evaluationRunsFilterMode, setEvaluationRunsFilterMode] = useState("all");
+        const [evaluationRunsToolbarPopover, setEvaluationRunsToolbarPopover] = useState("");
+        const [evaluationRunsVisibleCount, setEvaluationRunsVisibleCount] = useState(5);
         const [evaluationCreateModalOpen, setEvaluationCreateModalOpen] = useState(false);
         const [evaluationCreateForm, setEvaluationCreateForm] = useState({
           name: "",
+          targetAgentId: "",
+          environmentId: "",
+          passThreshold: "80",
+          evaluatorType: "exact",
+          evaluatorAgentId: "",
+          evaluatorCode: "",
+        });
+        const [evaluationRunModalOpen, setEvaluationRunModalOpen] = useState(false);
+        const [evaluationRunForm, setEvaluationRunForm] = useState({
+          setId: "",
+          name: "",
+          targetAgentId: "",
+          environmentKey: "",
           evaluatorType: "exact",
           evaluatorAgentId: "",
           evaluatorCode: "",
@@ -164935,9 +165761,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setRealThreads((current) => {
               const focusedThreadId = normalizedPreserveThreadId || currentThreadId;
               const currentById = new Map((Array.isArray(current) ? current : []).map((thread) => [thread.id, thread]));
-              const fetchedThreads = normalizedFetchedThreads.map((thread) => (
-                preserveActiveThreadStatusForStaleCompletion(currentById.get(thread.id), thread, focusedThreadId)
-              ));
+              const fetchedThreads = normalizedFetchedThreads.map((thread) => {
+                const existingThread = currentById.get(thread.id);
+                const shouldPreserveEvaluationMetadata = existingThread && isEvaluationThreadRecord(existingThread) && !isEvaluationThreadRecord(thread);
+                const mergedThread = shouldPreserveEvaluationMetadata
+                  ? normalizeThreadItem({
+                      ...thread,
+                      hidden: true,
+                      sidebarHidden: true,
+                      metadata: existingThread.metadata,
+                    })
+                  : thread;
+                return preserveActiveThreadStatusForStaleCompletion(existingThread, mergedThread, focusedThreadId);
+              });
               const fetchedIds = new Set(fetchedThreads.map((thread) => thread.id));
               const optimisticThreads = (Array.isArray(current) ? current : []).filter((thread) => {
                 const normalizedThreadId = String(thread?.id || "").trim();
@@ -179966,6 +180802,22 @@ ${PROJECT_OVERVIEW_SCRIPT}
           ])
         ), []);
 
+        const evaluationThreadIds = useMemo(() => {
+          const ids = new Set();
+          (Array.isArray(evaluationSets) ? evaluationSets : []).forEach((set) => {
+            const normalizedSet = normalizePlaygroundEvaluationSet(set);
+            normalizedSet.runs.forEach((run) => {
+              run.cases.forEach((caseItem) => {
+                const threadId = String(caseItem.threadId || "").trim();
+                const evaluatorThreadId = String(caseItem.evaluatorThreadId || "").trim();
+                if (threadId) ids.add(threadId);
+                if (evaluatorThreadId) ids.add(evaluatorThreadId);
+              });
+            });
+          });
+          return ids;
+        }, [evaluationSets]);
+
         const baseThreadItems = useMemo(() => {
           if (hasDemoAccess) {
             if (!currentThreadId) {
@@ -179982,6 +180834,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const threads = realThreads.filter((thread) => {
             const normalizedThreadId = String(thread?.id || "").trim();
             return !privateThreadIdsRef.current.has(normalizedThreadId)
+              && !evaluationThreadIds.has(normalizedThreadId)
               && !isPrivateThreadRecord(thread)
               && !isAbsorbedMetronomeTriggerThread(thread)
               && !isEvaluationThreadRecord(thread);
@@ -179999,6 +180852,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return threads;
           }
 
+          if (evaluationThreadIds.has(String(currentThreadId || "").trim())) {
+            return threads;
+          }
+
+          const currentRealThread = realThreads.find((thread) => String(thread?.id || "").trim() === String(currentThreadId || "").trim()) || null;
+          if (currentRealThread && isEvaluationThreadRecord(currentRealThread)) {
+            return threads;
+          }
+
           return [
             normalizeThreadItem({
               id: currentThreadId,
@@ -180008,7 +180870,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }),
             ...threads,
           ];
-        }, [absorbedMetronomeTriggerThreadIds, currentThreadId, demoThreadCatalog, hasDemoAccess, hasRealAccess, privateThreadIds, realThreads]);
+        }, [absorbedMetronomeTriggerThreadIds, currentThreadId, demoThreadCatalog, evaluationThreadIds, hasDemoAccess, hasRealAccess, privateThreadIds, realThreads]);
 
         const activeSidebarThreadId = useMemo(() => {
           return activePage === "thread" ? currentThreadId : "";
@@ -180336,11 +181198,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (hasRealAccess) {
             return realThreads.filter((thread) => {
               const normalizedThreadId = String(thread?.id || "").trim();
-              return thread.isScheduled && !privateThreadIdsRef.current.has(normalizedThreadId) && !isPrivateThreadRecord(thread) && !isEvaluationThreadRecord(thread);
+              return thread.isScheduled && !privateThreadIdsRef.current.has(normalizedThreadId) && !evaluationThreadIds.has(normalizedThreadId) && !isPrivateThreadRecord(thread) && !isEvaluationThreadRecord(thread);
             });
           }
           return [];
-        }, [hasDemoAccess, hasRealAccess, privateThreadIds, realThreads]);
+        }, [evaluationThreadIds, hasDemoAccess, hasRealAccess, privateThreadIds, realThreads]);
 
         const recentThreadItems = useMemo(() => {
           return baseThreadItems.filter((thread) => !thread.isPinned);
@@ -186232,6 +187094,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             .find((set) => set?.id === selectedEvaluationSetId);
           const activeEvaluationRun = activeEvaluationSet?.runs?.find((run) => run?.id === selectedEvaluationRunId);
           const evaluationsPathItems = [{ label: "Configure" }, { label: "Evaluations" }];
+          const showEvaluationSetActions = evaluationsPageMode === "detail" && Boolean(activeEvaluationSet?.id);
           if ((evaluationsPageMode === "detail" || evaluationsPageMode === "run") && activeEvaluationSet?.name) {
             evaluationsPathItems.push({ label: activeEvaluationSet.name });
           }
@@ -186241,6 +187104,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return renderUnifiedTopNav({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: evaluationsPathItems,
+            includeSearchDivider: showEvaluationSetActions,
+            extraActions: showEvaluationSetActions
+              ? React.createElement("div", {
+                  id: "playground-evaluations-nav-actions",
+                  className: "playground-evaluations-nav-actions",
+                })
+              : null,
           });
         }
 
@@ -188662,13 +189532,42 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function renderEvaluationsPage() {
           return renderPlaygroundEvaluationsPage({
+            backendUrl: proxyBackendBase,
+            requestHeaders,
             agents: runtimeAgents,
+            environments: runtimeEnvironments,
+            projects: runnerWorkspaceProjects,
+            defaultAgentId: resolvedComposerAgentId || resolvedPreferredAgentId || "",
+            defaultEnvironmentId: resolvedEnvironmentId || environmentId || "",
+            evaluationRunModalOpen,
+            setEvaluationRunModalOpen,
+            evaluationRunForm,
+            setEvaluationRunForm,
+            evaluationRunsSearchQuery,
+            setEvaluationRunsSearchQuery,
+            evaluationRunsSortMode,
+            setEvaluationRunsSortMode,
+            evaluationRunsFilterMode,
+            setEvaluationRunsFilterMode,
+            evaluationRunsToolbarPopover,
+            setEvaluationRunsToolbarPopover,
+            evaluationRunsVisibleCount,
+            setEvaluationRunsVisibleCount,
+            onOpenThread: handleThreadSelect,
+            onEvaluationThreadStarted: (threadRecord) => {
+              if (threadRecord?.id) {
+                upsertRealThreadRecord(threadRecord);
+              }
+              void refreshThreads(undefined, String(threadRecord?.id || "").trim(), { silent: true });
+            },
             evaluationSets,
             setEvaluationSets,
             selectedEvaluationSetId,
             setSelectedEvaluationSetId,
             selectedEvaluationRunId,
             setSelectedEvaluationRunId,
+            selectedEvaluationCaseId,
+            setSelectedEvaluationCaseId,
             evaluationsPageMode,
             setEvaluationsPageMode,
             evaluationDetailTab,
@@ -188685,6 +189584,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setEvaluationJsonlImportValue,
             evaluationJsonlImportError,
             setEvaluationJsonlImportError,
+            topNavActionsPortalId: "playground-evaluations-nav-actions",
           });
         }
 
@@ -201195,6 +202095,17 @@ async function handleProductUsageSummaryPageRequest(req, res) {
   }
 }
 
+const playgroundEvaluationsRuntime = createPlaygroundEvaluationsRuntime({
+  sendJson,
+  readRequestBody,
+  parseUpstreamUrl,
+  readOptionalApiKey,
+  withProxyOrganizationHeader,
+  hasAiosSession,
+  fetchAiosApi,
+  enrichThreadPayloadWithAgentGuardrails,
+});
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url || "/", `http://localhost:${port}`);
 
@@ -201820,6 +202731,10 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "POST" && url.pathname === "/api/aios/onedrive/disconnect") {
     void proxyAiosJsonRequest(req, res, "/api/onedrive/disconnect", "POST");
+    return;
+  }
+
+  if (playgroundEvaluationsRuntime.handleRequest(req, res, url)) {
     return;
   }
 

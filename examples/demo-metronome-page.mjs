@@ -1380,9 +1380,11 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-publish-sidebar-section-title {
-        margin: 18px 0 8px;
+        margin: 0 0 8px;
+        padding-top: 24px;
         padding-bottom: 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 0;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1419,13 +1421,103 @@ export const METRONOME_PAGE_CSS = String.raw`
         margin: 0 0 12px;
       }
 
+      .playground-metronome-publish-sidebar-header-menu-shell.playground-tasks-toolbar-popup-shell {
+        z-index: 91;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .playground-metronome-publish-sidebar-header-menu {
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        width: 268px;
+        min-width: 268px;
+        max-height: min(260px, calc(100vh - 160px));
+        transform-origin: top right;
+      }
+
+      .playground-metronome-publish-sidebar-header-menu .tb-popup-row {
+        padding: 10px 14px;
+      }
+
+      .playground-metronome-publish-sidebar-header-menu .playground-metronome-publish-sidebar-header-menu-shortcut {
+        margin-left: auto;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 1;
+        letter-spacing: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .playground-metronome-publish-sidebar-header-menu .tb-popup-row:disabled {
+        cursor: not-allowed;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-metronome-publish-sidebar-header-menu .tb-popup-row:disabled:hover {
+        background: transparent;
+      }
+
+      .playground-metronome-publish-sidebar .playground-metronome-publish-list-container {
+        position: relative;
+        overflow: visible;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        background: transparent;
+        border: 0;
+        padding: 12px;
+        border-radius: 10px;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
+      }
+
+      .playground-metronome-publish-sidebar .playground-metronome-publish-list-container::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.15),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.07),
+          rgba(255, 255, 255, 0.3)
+        );
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+      }
+
+      .playground-metronome-publish-sidebar .playground-metronome-publish-list-container > * {
+        position: relative;
+        z-index: 1;
+      }
+
       .playground-metronome-publish-sidebar .playground-metronome-publish-list {
         padding-top: 0;
       }
 
       .playground-metronome-publish-sidebar .playground-metronome-publish-row,
       .playground-metronome-publish-sidebar .playground-metronome-publish-empty {
-        padding: 13px 0;
+        min-height: 58px;
+        padding: 8px 0;
+      }
+
+      .playground-metronome-publish-sidebar .playground-metronome-publish-row:first-child,
+      .playground-metronome-publish-sidebar .playground-metronome-publish-empty:first-child {
+        padding-top: 0;
+      }
+
+      .playground-metronome-publish-sidebar .playground-metronome-publish-row:last-child,
+      .playground-metronome-publish-sidebar .playground-metronome-publish-empty:last-child {
+        padding-bottom: 0;
       }
 
       .playground-metronome-deployment-history-title-line {

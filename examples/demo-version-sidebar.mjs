@@ -10,6 +10,13 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
         const onOpenMenuIdChange = typeof props.onOpenMenuIdChange === "function"
           ? props.onOpenMenuIdChange
           : () => {};
+        const headerMenuRef = React.useRef(null);
+        const headerMenuActions = (Array.isArray(props.headerMenuActions) ? props.headerMenuActions : [])
+          .filter((action) => action && typeof action.onClick === "function");
+        const headerMenuOpen = Boolean(props.headerMenuOpen && headerMenuActions.length);
+        const onHeaderMenuOpenChange = typeof props.onHeaderMenuOpenChange === "function"
+          ? props.onHeaderMenuOpenChange
+          : () => {};
         const onSelectVersion = typeof props.onSelectVersion === "function"
           ? props.onSelectVersion
           : (typeof props.onRestoreVersion === "function" ? props.onRestoreVersion : null);
@@ -58,6 +65,35 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
               }
               return items;
             };
+        const hasFooterActions = typeof props.onPublishCurrent === "function"
+          || typeof props.onUnpublishActive === "function";
+
+        React.useEffect(() => {
+          if (!headerMenuOpen) {
+            return undefined;
+          }
+
+          function handleHeaderMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !headerMenuRef.current || headerMenuRef.current.contains(target)) {
+              return;
+            }
+            onHeaderMenuOpenChange(false);
+          }
+
+          function handleHeaderMenuEscape(event) {
+            if (event.key === "Escape") {
+              onHeaderMenuOpenChange(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleHeaderMenuPointerDown);
+          window.addEventListener("keydown", handleHeaderMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleHeaderMenuPointerDown);
+            window.removeEventListener("keydown", handleHeaderMenuEscape);
+          };
+        }, [headerMenuOpen]);
 
         const renderStateContent = () => {
           if (props.stateContent) {
@@ -210,22 +246,83 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
           );
         };
 
+        const renderHeaderMenu = () => {
+          if (!headerMenuActions.length || typeof renderPlaygroundPlatformPopup !== "function") {
+            return null;
+          }
+          const headerMenuDisabled = Boolean(props.headerMenuDisabled) || isBusy;
+          return renderPlaygroundPlatformPopup({
+            open: headerMenuOpen,
+            shellRef: headerMenuRef,
+            shellClassName: "playground-metronome-publish-sidebar-header-menu-shell",
+            menuClassName: "playground-agents-detail-publish-menu playground-metronome-publish-sidebar-header-menu",
+            trigger: React.createElement("button", {
+                type: "button",
+                className: "playground-files-header-icon-button is-plain playground-metronome-publish-sidebar-header-menu-trigger" + (headerMenuOpen ? " is-open" : ""),
+                disabled: headerMenuDisabled,
+                onClick: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onHeaderMenuOpenChange(!headerMenuOpen);
+                },
+                "aria-label": props.headerMenuLabel || "Version actions",
+                "aria-haspopup": "menu",
+                "aria-expanded": headerMenuOpen ? "true" : "false",
+              },
+              React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.9 })
+            ),
+            menuProps: {
+              role: "menu",
+              onClick: (event) => event.stopPropagation(),
+            },
+            children: React.createElement(React.Fragment, null,
+              headerMenuActions.map((action) => {
+                const Icon = action.Icon || action.icon || SquarePen;
+                const isActionDisabled = headerMenuDisabled || Boolean(action.disabled);
+                return React.createElement("button", {
+                    key: action.id || action.label,
+                    type: "button",
+                    className: "tb-popup-row" + (action.danger ? " is-danger" : ""),
+                    role: "menuitem",
+                    disabled: isActionDisabled,
+                    onClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      if (isActionDisabled) {
+                        return;
+                      }
+                      onHeaderMenuOpenChange(false);
+                      void action.onClick();
+                    },
+                  },
+                  React.createElement(Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                    React.createElement("span", null, action.label || "Action")
+                  ),
+                  action.shortcut
+                    ? React.createElement("span", {
+                        className: "playground-agents-detail-publish-menu-shortcut playground-metronome-publish-sidebar-header-menu-shortcut",
+                        "aria-hidden": "true",
+                      }, action.shortcut)
+                    : null
+                );
+              })
+            )
+          });
+        };
+
         return React.createElement("aside", {
             className,
             "aria-hidden": props.open === false ? "true" : "false",
           },
           React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-metronome-inspector-header" },
             React.createElement("div", { className: "playground-tasks-detail-navbar-title playground-metronome-inspector-navbar-title" },
-              React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
-                React.createElement("span", { className: "playground-metronome-inspector-node-kind is-icon", "aria-label": title },
-                  React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.9 })
-                )
-              ),
               React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
                 React.createElement("div", { className: "playground-content-title playground-tasks-detail-navbar-title-input playground-metronome-inspector-title-input" }, title)
               )
             ),
             React.createElement("div", { className: "playground-content-nav-center" }),
+            renderHeaderMenu(),
             React.createElement("button", {
               type: "button",
               className: "playground-files-header-icon-button is-plain playground-metronome-inspector-close",
@@ -252,34 +349,38 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
               )
             ),
             renderStateContent(),
-            React.createElement("div", { className: "playground-metronome-publish-list" },
-              versions.length ? versions.map(renderVersionRow) : renderEmptyState()
+            React.createElement("div", { className: "playground-metronome-publish-list-container" },
+              React.createElement("div", { className: "playground-metronome-publish-list" },
+                versions.length ? versions.map(renderVersionRow) : renderEmptyState()
+              )
             )
           ),
-          React.createElement("div", { className: "playground-metronome-publish-sidebar-actions" },
-            typeof props.onPublishCurrent === "function"
-              ? React.createElement("button", {
-                  type: "button",
-                  className: "playground-metronome-primary-button playground-metronome-publish-new-button",
-                  disabled: isBusy,
-                  onClick: props.onPublishCurrent,
-                },
-                  React.createElement(Rocket, { width: 13, height: 13, strokeWidth: 1.8 }),
-                  React.createElement("span", null, isBusy ? (props.busyPublishCurrentLabel || "Publishing...") : (props.publishCurrentLabel || "Publish current editor"))
-                )
-              : null,
-            typeof props.onUnpublishActive === "function"
-              ? React.createElement("button", {
-                  type: "button",
-                  className: "playground-metronome-secondary-button playground-metronome-publish-new-button",
-                  disabled: isBusy,
-                  onClick: props.onUnpublishActive,
-                },
-                  React.createElement(PauseCircle, { width: 13, height: 13, strokeWidth: 1.8 }),
-                  React.createElement("span", null, isBusy ? (props.busyUnpublishLabel || "Working...") : (props.unpublishLabel || "Unpublish"))
-                )
-              : null
-          )
+          hasFooterActions
+            ? React.createElement("div", { className: "playground-metronome-publish-sidebar-actions" },
+                typeof props.onPublishCurrent === "function"
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-metronome-primary-button playground-metronome-publish-new-button",
+                      disabled: isBusy,
+                      onClick: props.onPublishCurrent,
+                    },
+                      React.createElement(Rocket, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, isBusy ? (props.busyPublishCurrentLabel || "Publishing...") : (props.publishCurrentLabel || "Publish current editor"))
+                    )
+                  : null,
+                typeof props.onUnpublishActive === "function"
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-metronome-secondary-button playground-metronome-publish-new-button",
+                      disabled: isBusy,
+                      onClick: props.onUnpublishActive,
+                    },
+                      React.createElement(PauseCircle, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, isBusy ? (props.busyUnpublishLabel || "Working...") : (props.unpublishLabel || "Unpublish"))
+                    )
+                  : null
+              )
+            : null
         );
       }
 `;
