@@ -17,6 +17,8 @@ import { PLATFORM_UI_PRIMITIVES_CSS, PLATFORM_UI_PRIMITIVES_SCRIPT } from "./dem
 import { PROJECT_TYPE_ALIASES, PROJECT_TYPE_REGISTRY } from "./demo-project-types.mjs";
 import { RESOURCE_TEMPLATE_CATALOG, RESOURCE_TEMPLATE_TYPES } from "./demo-resource-templates.mjs";
 import { RESOURCE_TEMPLATES_PAGE_CSS, RESOURCE_TEMPLATES_PAGE_SCRIPT } from "./demo-resource-templates-page.mjs";
+import { VERSION_SIDEBAR_SCRIPT } from "./demo-version-sidebar.mjs";
+import { PLAYGROUND_EVALUATIONS_CSS, PLAYGROUND_EVALUATIONS_SCRIPT } from "./playground-evaluations-page.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -2174,7 +2176,7 @@ const html = `<!doctype html>
         flex-direction: column;
         gap: 10px;
         margin-top: auto;
-        padding: 12px 0 5px;
+        padding: 12px 0;
       }
 
       .sidebar-footer .status-indicator-stack {
@@ -2357,6 +2359,127 @@ const html = `<!doctype html>
       .sidebar-plan-action:disabled {
         cursor: default;
         opacity: 0.58;
+      }
+
+      .sidebar-organization-card {
+        width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 28px;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0 12px 12px;
+        color: rgba(255, 255, 255, 0.94);
+        box-sizing: border-box;
+      }
+
+      .sidebar-organization-main {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .sidebar-organization-main:disabled {
+        cursor: default;
+        opacity: 0.7;
+      }
+
+      .sidebar-organization-avatar {
+        position: relative;
+        overflow: hidden;
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .sidebar-organization-avatar-image {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      .sidebar-organization-avatar-fallback {
+        width: 100%;
+        height: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .sidebar-organization-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .sidebar-organization-name,
+      .sidebar-organization-plan {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .sidebar-organization-name {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .sidebar-organization-plan {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 1.2;
+      }
+
+      .sidebar-organization-menu-button {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.58);
+        cursor: pointer;
+        transition: color 160ms ease, background-color 160ms ease;
+      }
+
+      .sidebar-organization-menu-button:hover,
+      .sidebar-organization-menu-button.is-open {
+        color: rgba(255, 255, 255, 0.94);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .sidebar-organization-menu-icon {
+        width: 16px;
+        height: 16px;
       }
 
       .sidebar-rail-plan {
@@ -6197,32 +6320,6 @@ const html = `<!doctype html>
         justify-content: flex-start;
         gap: 8px;
         text-align: center;
-      }
-
-      .playground-thread-welcome-plan {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.72);
-        font-family: Georgia, serif;
-        font-size: 14px;
-        font-style: italic;
-        line-height: 1.2;
-      }
-
-      .playground-thread-welcome-plan-offer {
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: #66a6ff;
-        font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 1.2;
-        cursor: pointer;
-      }
-
-      .playground-thread-welcome-plan-offer:hover {
-        color: #7cb3ff;
       }
 
       .playground-thread-welcome-title {
@@ -21173,6 +21270,16 @@ const html = `<!doctype html>
         overflow: hidden;
       }
 
+      .playground-guardrails-shell.has-guardrail-versions {
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 360px) 0;
+        gap: 12px;
+      }
+
+      .playground-guardrails-versions-sidebar {
+        min-width: 0;
+        width: 100%;
+      }
+
       .playground-files-page .playground-guardrails-browser-body {
         display: flex;
         flex-direction: column;
@@ -21600,6 +21707,8 @@ const html = `<!doctype html>
       .playground-guardrails-empty-button {
         margin-top: 2px;
       }
+
+${PLAYGROUND_EVALUATIONS_CSS}
 
       .playground-files-action-error {
         font-size: 12px;
@@ -51130,7 +51239,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -51691,6 +51800,8 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       const PLAYGROUND_INTEGRATION_REDIRECT_STATE_KEY = "runner_demo_integration_redirect_v1";
       const PLAYGROUND_CONNECTOR_BROWSER_RESTORE_STATE_KEY = "runner_demo_connector_browser_restore_v1";
       const PLAYGROUND_PROJECT_COMPOSER_CONNECTOR_RESTORE_STATE_KEY = "runner_demo_project_composer_connector_restore_v1";
+      const PLAYGROUND_ACTIVE_ORGANIZATION_STORAGE_KEY = "runner_demo_active_organization_id_v1";
+      const PLAYGROUND_ORGANIZATION_HEADER = "x-computer-agents-organization";
       const PLAYGROUND_CONNECTOR_BROWSER_RESTORE_QUERY_PARAMS = [
         "connectorProvider",
         "connectorMode",
@@ -52100,6 +52211,27 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         };
       }
 
+      function normalizeOrganizationInvitationNotificationRecord(value) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          return null;
+        }
+        const id = String(value.id || value.invitationId || "").trim();
+        if (!id) {
+          return null;
+        }
+        const organizationName = String(value.organizationName || value.organization_name || "Organization").trim() || "Organization";
+        return {
+          id,
+          organizationId: String(value.organizationId || value.organization_id || "").trim(),
+          organizationName,
+          role: String(value.role || "member").trim() || "member",
+          invitedByName: String(value.invitedByName || value.invited_by_name || "").trim(),
+          invitedByEmail: String(value.invitedByEmail || value.invited_by_email || "").trim(),
+          createdAt: value.createdAt || value.created_at || "",
+          expiresAt: value.expiresAt || value.expires_at || "",
+        };
+      }
+
       function readCachedIntegrationStatuses() {
         try {
           const raw = localStorage.getItem(INTEGRATION_STATUS_STORAGE_KEY);
@@ -52135,6 +52267,31 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             delete cachedStatuses[id];
           }
           localStorage.setItem(INTEGRATION_STATUS_STORAGE_KEY, JSON.stringify(cachedStatuses));
+        } catch {}
+      }
+
+      function readPlaygroundActiveOrganizationId() {
+        if (typeof window === "undefined" || !window.localStorage) {
+          return "";
+        }
+        try {
+          return String(window.localStorage.getItem(PLAYGROUND_ACTIVE_ORGANIZATION_STORAGE_KEY) || "").trim();
+        } catch {
+          return "";
+        }
+      }
+
+      function writePlaygroundActiveOrganizationId(organizationId) {
+        if (typeof window === "undefined" || !window.localStorage) {
+          return;
+        }
+        const normalizedOrganizationId = String(organizationId || "").trim();
+        try {
+          if (normalizedOrganizationId) {
+            window.localStorage.setItem(PLAYGROUND_ACTIVE_ORGANIZATION_STORAGE_KEY, normalizedOrganizationId);
+          } else {
+            window.localStorage.removeItem(PLAYGROUND_ACTIVE_ORGANIZATION_STORAGE_KEY);
+          }
         } catch {}
       }
 
@@ -73998,9 +74155,11 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 ${ENVIRONMENT_CHANGES_SCRIPT}
 ${IMAGINE_TEMPLATE_PAGE_SCRIPT}
 ${IMAGINE_PAGE_SCRIPT}
+${VERSION_SIDEBAR_SCRIPT}
 ${METRONOME_PAGE_SCRIPT}
 ${MODELS_PAGE_SCRIPT}
 ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
+${PLAYGROUND_EVALUATIONS_SCRIPT}
 ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
       function getPlaygroundImageMaskViewportRect(containerWidth, containerHeight, naturalWidth, naturalHeight) {
@@ -105497,6 +105656,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentApiModalCloseTimerRef = useRef(null);
         const agentApiModalFrameRef = useRef(null);
         const agentApiEnvironmentPopoverRef = useRef(null);
+        const agentWorkspaceTeamsRequestedRef = useRef(false);
         const agentWorkspaceTeamMembersRequestedRef = useRef(new Set());
         const agentOwnerProfileLookupKeyRef = useRef("");
         const agentOwnerCandidateProfileLookupKeyRef = useRef("");
@@ -109154,6 +109314,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [draftAgent?.id]);
 
         useEffect(() => {
+          agentWorkspaceTeamsRequestedRef.current = false;
+          agentWorkspaceTeamMembersRequestedRef.current = new Set();
+          setAgentWorkspaceTeamMembersById({});
+        }, [requestHeaders]);
+
+        useEffect(() => {
           if (!agentProfileAvatarPickerOpen) {
             return undefined;
           }
@@ -109212,12 +109378,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (
             !draftAgent?.id
             || normalizedWorkspaceTeams.length > 0
+            || agentWorkspaceTeamsRequestedRef.current
             || workspaceTeamsLoading
             || workspaceTeamsRequiresPlan
             || typeof onWorkspaceTeamsRequest !== "function"
           ) {
             return;
           }
+          agentWorkspaceTeamsRequestedRef.current = true;
           onWorkspaceTeamsRequest({});
         }, [
           draftAgent?.id,
@@ -117773,7 +117941,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           );
         }
 
-        function renderAgentVersionRows() {
+        function renderAgentVersionsSidebar() {
+          if (!canShowAgentVersions || !agentVersionsSidebarOpen) {
+            return null;
+          }
           const versions = readDraftAgentVersions();
           const metadata = getAgentVersionMetadata();
           const activeVersion = getDraftAgentActiveVersion();
@@ -117784,205 +117955,39 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             || activeVersionId
             || ""
           ).trim();
-          const isBusy = agentVersionState.status === "loading";
-
-          if (!versions.length) {
-            return React.createElement("div", { className: "playground-metronome-publish-empty-state" },
-              React.createElement("div", { className: "playground-metronome-publish-empty-card" },
-                React.createElement("img", {
-                  className: "playground-metronome-publish-empty-image",
-                  src: "/img/empty-state/metronome.webp",
-                  alt: "",
-                  "aria-hidden": "true",
-                }),
-                React.createElement("h3", { className: "playground-metronome-publish-empty-title" }, "No saved versions yet"),
-                React.createElement("p", { className: "playground-metronome-publish-empty-copy" },
-                  "Create a version to track instructions, model, permissions, skills, and team setup."
-                )
-              )
-            );
-          }
-
-          return versions.map((version) => {
-            const isActiveVersion = version.id === activeVersionId || version.status === "active";
-            const isSelectedVersion = version.id === selectedVersionId;
-            const versionTitle = String(version.label || ("Version " + version.version)).trim();
-            const versionDescription = String(version.description || "").trim();
-            const modelMeta = getPlaygroundAgentModelMeta(version.model || version.snapshot?.model || draftAgent?.model || "", resolvedAgentModelOptions);
-            const skillCount = Number(version.skillCount || version.snapshot?.enabledSkills?.length || 0) || 0;
-            return React.createElement("div", {
-              key: version.id,
-              className: "playground-metronome-publish-row"
-                + (isActiveVersion ? " is-active" : "")
-                + (isSelectedVersion ? " is-selected" : ""),
+          return React.createElement(PlaygroundVersionSidebar, {
+            open: agentVersionsSidebarOpen,
+            versions,
+            activeVersionId,
+            selectedVersionId,
+            state: agentVersionState,
+            busy: agentVersionState.status === "loading",
+            openMenuId: openAgentVersionMenuId,
+            onOpenMenuIdChange: setOpenAgentVersionMenuId,
+            onClose: closeAgentVersionsSidebar,
+            onSaveVersion: () => void saveCurrentAgentVersion(),
+            onPublishCurrent: () => void publishCurrentAgentVersion(),
+            onUnpublishActive: activeVersion ? () => void unpublishActiveAgentVersion() : null,
+            onRestoreVersion: (versionId) => void restoreAgentVersion(versionId),
+            onPublishVersion: (versionId) => void publishAgentVersion(versionId),
+            onDeleteVersion: (versionId) => void deleteAgentVersion(versionId),
+            emptyCopy: "Create a version to track instructions, model, permissions, skills, and team setup.",
+            unpublishLabel: "Unpublish agent",
+            getVersionTitle: (version) => String(version.label || ("Version " + version.version)).trim(),
+            getVersionDescription: (version) => String(version.description || "").trim(),
+            getVersionMeta: (version) => {
+              const modelMeta = getPlaygroundAgentModelMeta(version.model || version.snapshot?.model || draftAgent?.model || "", resolvedAgentModelOptions);
+              const skillCount = Number(version.skillCount || version.snapshot?.enabledSkills?.length || 0) || 0;
+              return (version.publishedAt ? "Published " : "Saved ")
+                + formatAgentVersionTimestamp(version.publishedAt || version.createdAt)
+                + " · "
+                + (modelMeta?.label || version.model || "Model")
+                + " · "
+                + skillCount
+                + " skill"
+                + (skillCount === 1 ? "" : "s");
             },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-metronome-publish-row-checkbox" + (isSelectedVersion ? " is-selected" : ""),
-                disabled: isBusy || isSelectedVersion,
-                onClick: () => void restoreAgentVersion(version.id),
-                "aria-label": "Display agent version " + version.version,
-                "aria-pressed": isSelectedVersion ? "true" : "false",
-              },
-                isSelectedVersion
-                  ? React.createElement(Check, { width: 16, height: 16, strokeWidth: 2.5 })
-                  : null
-              ),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-metronome-publish-row-main",
-                disabled: isBusy || isSelectedVersion,
-                onClick: () => void restoreAgentVersion(version.id),
-              },
-                React.createElement("div", { className: "playground-metronome-publish-row-title" },
-                  React.createElement("span", null, versionTitle),
-                  isActiveVersion
-                    ? React.createElement("span", { className: "playground-metronome-publish-active-chip" },
-                        React.createElement(Check, { width: 11, height: 11, strokeWidth: 2 }),
-                        React.createElement("span", null, "Published")
-                      )
-                    : null
-                ),
-                versionDescription
-                  ? React.createElement("div", { className: "playground-metronome-publish-row-description" }, versionDescription)
-                  : null,
-                React.createElement("div", { className: "playground-metronome-publish-row-copy playground-metronome-publish-row-meta" },
-                  (version.publishedAt ? "Published " : "Saved ")
-                  + formatAgentVersionTimestamp(version.publishedAt || version.createdAt)
-                  + " · "
-                  + (modelMeta?.label || version.model || "Model")
-                  + " · "
-                  + skillCount
-                  + " skill"
-                  + (skillCount === 1 ? "" : "s")
-                )
-              ),
-              React.createElement("div", { className: "playground-metronome-publish-row-actions" },
-                isActiveVersion
-                  ? null
-                  : React.createElement("button", {
-                      type: "button",
-                      className: "playground-metronome-secondary-button playground-metronome-publish-row-action",
-                      disabled: isBusy,
-                      onClick: () => void publishAgentVersion(version.id),
-                    },
-                      React.createElement(Rocket, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Publish")
-                    ),
-                React.createElement("span", { className: "playground-metronome-publish-row-menu-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-metronome-publish-row-menu-trigger" + (openAgentVersionMenuId === version.id ? " is-open" : ""),
-                    disabled: isBusy,
-                    onClick: (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      setOpenAgentVersionMenuId((current) => current === version.id ? "" : version.id);
-                    },
-                    "aria-label": "Agent version options",
-                    "aria-expanded": openAgentVersionMenuId === version.id ? "true" : "false",
-                  }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
-                  openAgentVersionMenuId === version.id
-                    ? React.createElement("div", {
-                        className: "playground-metronome-publish-row-menu",
-                        role: "menu",
-                      },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-metronome-publish-row-menu-item",
-                          onClick: () => void restoreAgentVersion(version.id),
-                        },
-                          React.createElement(RotateCcw, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "Restore version")
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-metronome-publish-row-menu-item is-danger",
-                          onClick: () => void deleteAgentVersion(version.id),
-                        },
-                          React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "Delete version")
-                        )
-                      )
-                    : null
-                )
-              )
-            );
           });
-        }
-
-        function renderAgentVersionsSidebar() {
-          if (!canShowAgentVersions || !agentVersionsSidebarOpen) {
-            return null;
-          }
-          const isBusy = agentVersionState.status === "loading";
-          const activeVersion = getDraftAgentActiveVersion();
-          return React.createElement("aside", {
-              className: "playground-agents-versions-sidebar playground-metronome-node-inspector playground-metronome-publish-sidebar",
-              "aria-hidden": agentVersionsSidebarOpen ? "false" : "true",
-            },
-            React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-metronome-inspector-header" },
-              React.createElement("div", { className: "playground-tasks-detail-navbar-title playground-metronome-inspector-navbar-title" },
-                React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
-                  React.createElement("span", { className: "playground-metronome-inspector-node-kind is-icon", "aria-label": "Versions" },
-                    React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.9 })
-                  )
-                ),
-                React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
-                  React.createElement("div", { className: "playground-content-title playground-tasks-detail-navbar-title-input playground-metronome-inspector-title-input" }, "Versions")
-                )
-              ),
-              React.createElement("div", { className: "playground-content-nav-center" }),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-files-header-icon-button is-plain playground-metronome-inspector-close",
-                onClick: closeAgentVersionsSidebar,
-                "aria-label": "Close versions",
-              }, React.createElement(X, { width: 15, height: 15, strokeWidth: 1.9 }))
-            ),
-            React.createElement("div", { className: "playground-metronome-inspector-body" },
-              React.createElement("div", { className: "playground-metronome-publish-sidebar-section-title" },
-                React.createElement("span", { className: "playground-metronome-publish-sidebar-section-title-text" }, "Saved versions"),
-                React.createElement("span", { className: "playground-metronome-publish-title-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-metronome-publish-version-button",
-                    disabled: isBusy,
-                    onClick: () => void saveCurrentAgentVersion(),
-                  },
-                    React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Version")
-                  )
-                )
-              ),
-              agentVersionState.status === "error"
-                ? React.createElement("div", { className: "playground-metronome-publish-state is-error" }, agentVersionState.error || "Failed to update agent versions.")
-                : null,
-              React.createElement("div", { className: "playground-metronome-publish-list" }, renderAgentVersionRows())
-            ),
-            React.createElement("div", { className: "playground-metronome-publish-sidebar-actions" },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-metronome-primary-button playground-metronome-publish-new-button",
-                disabled: isBusy,
-                onClick: () => void publishCurrentAgentVersion(),
-              },
-                React.createElement(Rocket, { width: 13, height: 13, strokeWidth: 1.8 }),
-                React.createElement("span", null, isBusy ? "Publishing..." : "Publish current editor")
-              ),
-              activeVersion
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "playground-metronome-secondary-button playground-metronome-publish-new-button",
-                    disabled: isBusy,
-                    onClick: () => void unpublishActiveAgentVersion(),
-                  },
-                    React.createElement(PauseCircle, { width: 13, height: 13, strokeWidth: 1.8 }),
-                    React.createElement("span", null, isBusy ? "Working..." : "Unpublish agent")
-                  )
-                : null
-            )
-          );
         }
 
         function renderAgentVersionsSidebarPortal() {
@@ -152275,10 +152280,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
         "teamId",
         "teamTab",
         "teamRoleId",
+        "organizationId",
         "modelsTab",
         "templateType",
         "templateId",
         "guardrailId",
+        "evaluationId",
+        "evaluationRunId",
         "developSection",
         "imagineView",
         "mediaMode",
@@ -152315,6 +152323,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
         const nowIso = new Date().toISOString();
         const isDefaultSet = isPlaygroundDefaultGuardrailSet(source);
+        const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+          ? { ...source.metadata }
+          : {};
         const rawName = typeof source.name === "string"
           ? source.name
           : typeof source.title === "string"
@@ -152330,6 +152341,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           prompts,
           createdAt: String(source.createdAt || nowIso),
           updatedAt: String(source.updatedAt || nowIso),
+          publishedAt: String(source.publishedAt || source.published_at || metadata.publishedAt || metadata.published_at || ""),
+          metadata: Object.keys(metadata).length > 0 ? metadata : null,
           source: isDefaultSet ? "default" : "custom",
           isDefault: isDefaultSet,
           readOnly: isDefaultSet,
@@ -152365,6 +152378,189 @@ ${PROJECT_OVERVIEW_SCRIPT}
           updatedAt: nowIso,
           ...overrides,
         });
+      }
+
+      function stripPlaygroundGuardrailVersionMetadata(metadata) {
+        const source = metadata && typeof metadata === "object" && !Array.isArray(metadata)
+          ? { ...metadata }
+          : {};
+        delete source.guardrailVersions;
+        delete source.guardrail_versions;
+        delete source.versions;
+        delete source.activeGuardrailVersionId;
+        delete source.active_guardrail_version_id;
+        delete source.activeGuardrailVersionNumber;
+        delete source.active_guardrail_version_number;
+        delete source.restoredFromGuardrailVersionId;
+        delete source.restored_from_guardrail_version_id;
+        delete source.restoredFromGuardrailVersionNumber;
+        delete source.restored_from_guardrail_version_number;
+        delete source.publishedAt;
+        delete source.published_at;
+        delete source.unpublishedAt;
+        delete source.unpublished_at;
+        return source;
+      }
+
+      function createPlaygroundGuardrailVersionId() {
+        return "guardrail_version_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+      }
+
+      function buildPlaygroundGuardrailVersionSnapshot(set) {
+        const normalizedSet = normalizePlaygroundGuardrailSet(set || createPlaygroundGuardrailSetDraft());
+        return {
+          name: String(normalizedSet.name || "").trim() || "Untitled Guardrail Set",
+          description: typeof normalizedSet.description === "string" ? normalizedSet.description : "",
+          prompts: Array.isArray(normalizedSet.prompts)
+            ? normalizedSet.prompts.map((prompt) => createPlaygroundGuardrailPromptDraft(prompt))
+            : [],
+          metadata: stripPlaygroundGuardrailVersionMetadata(normalizedSet.metadata),
+        };
+      }
+
+      function normalizePlaygroundGuardrailVersion(rawVersion, fallbackIndex = 0) {
+        const version = rawVersion && typeof rawVersion === "object" && !Array.isArray(rawVersion) ? rawVersion : {};
+        const snapshot = version.snapshot && typeof version.snapshot === "object" && !Array.isArray(version.snapshot)
+          ? version.snapshot
+          : {};
+        const createdAt = String(version.createdAt || version.created_at || version.publishedAt || version.published_at || new Date().toISOString()).trim();
+        const id = String(version.id || version.versionId || version.version_id || ("guardrail_version_" + (fallbackIndex + 1))).trim();
+        const versionNumber = Number(version.version || version.versionNumber || version.version_number || 0) || (fallbackIndex + 1);
+        const rawStatus = String(version.status || "").trim().toLowerCase();
+        const status = ["active", "saved", "superseded", "unpublished"].includes(rawStatus) ? rawStatus : "saved";
+        const promptSource = Array.isArray(version.prompts)
+          ? version.prompts
+          : Array.isArray(snapshot.prompts)
+            ? snapshot.prompts
+            : [];
+        const normalizedSnapshot = {
+          name: String(version.name || snapshot.name || "").trim(),
+          description: typeof version.description === "string"
+            ? version.description
+            : typeof snapshot.description === "string"
+              ? snapshot.description
+              : "",
+          prompts: promptSource.map((prompt) => createPlaygroundGuardrailPromptDraft(prompt)),
+          metadata: stripPlaygroundGuardrailVersionMetadata(snapshot.metadata),
+        };
+        return {
+          id,
+          version: versionNumber,
+          label: String(version.label || version.name || ("Version " + versionNumber)).trim(),
+          description: String(version.description || version.summary || "").trim(),
+          status,
+          createdAt,
+          updatedAt: String(version.updatedAt || version.updated_at || "").trim(),
+          publishedAt: String(version.publishedAt || version.published_at || "").trim(),
+          name: normalizedSnapshot.name,
+          promptCount: normalizedSnapshot.prompts.length,
+          snapshot: normalizedSnapshot,
+        };
+      }
+
+      function normalizePlaygroundGuardrailVersions(value) {
+        const rawItems = Array.isArray(value) ? value : [];
+        return rawItems
+          .map((version, index) => normalizePlaygroundGuardrailVersion(version, index))
+          .filter((version) => version.id)
+          .sort((a, b) => {
+            const versionDelta = Number(b.version || 0) - Number(a.version || 0);
+            if (versionDelta) return versionDelta;
+            return new Date(b.publishedAt || b.createdAt || 0).getTime() - new Date(a.publishedAt || a.createdAt || 0).getTime();
+          });
+      }
+
+      function readPlaygroundGuardrailVersions(set) {
+        const metadata = set?.metadata && typeof set.metadata === "object" && !Array.isArray(set.metadata)
+          ? set.metadata
+          : {};
+        return normalizePlaygroundGuardrailVersions(
+          set?.guardrailVersions
+          || set?.versions
+          || metadata.guardrailVersions
+          || metadata.guardrail_versions
+          || metadata.versions
+          || []
+        );
+      }
+
+      function createPlaygroundGuardrailVersion(set, existingVersions = [], options = {}) {
+        const now = new Date().toISOString();
+        const normalizedExisting = normalizePlaygroundGuardrailVersions(existingVersions);
+        const nextVersion = normalizedExisting.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), 0) + 1;
+        const requestedStatus = String(options?.status || "saved").trim().toLowerCase();
+        const status = requestedStatus === "active" ? "active" : "saved";
+        const snapshot = buildPlaygroundGuardrailVersionSnapshot(set);
+        return normalizePlaygroundGuardrailVersion({
+          id: createPlaygroundGuardrailVersionId(),
+          version: nextVersion,
+          label: String(options?.label || ("Version " + nextVersion)).trim(),
+          description: String(options?.description || "").trim(),
+          status,
+          createdAt: now,
+          publishedAt: status === "active" ? now : "",
+          name: snapshot.name,
+          prompts: snapshot.prompts,
+          snapshot,
+        }, nextVersion - 1);
+      }
+
+      function createPlaygroundGuardrailWithVersionList(set, versions, preferredSelectedId = "") {
+        const baseSet = normalizePlaygroundGuardrailSet(set || createPlaygroundGuardrailSetDraft());
+        const normalizedVersions = normalizePlaygroundGuardrailVersions(versions);
+        const metadata = baseSet.metadata && typeof baseSet.metadata === "object" && !Array.isArray(baseSet.metadata)
+          ? { ...baseSet.metadata }
+          : {};
+        const previousSelectedId = String(metadata.restoredFromGuardrailVersionId || metadata.restored_from_guardrail_version_id || metadata.activeGuardrailVersionId || metadata.active_guardrail_version_id || "").trim();
+        const selectedVersion = normalizedVersions.find((version) => version.id === String(preferredSelectedId || "").trim())
+          || normalizedVersions.find((version) => version.id === previousSelectedId)
+          || normalizedVersions.find((version) => version.status === "active")
+          || normalizedVersions[0]
+          || null;
+        const activeVersion = normalizedVersions.find((version) => version.status === "active")
+          || normalizedVersions.find((version) => version.id === String(metadata.activeGuardrailVersionId || metadata.active_guardrail_version_id || "").trim())
+          || null;
+        metadata.guardrailVersions = normalizedVersions;
+        metadata.guardrail_versions = normalizedVersions;
+        metadata.activeGuardrailVersionId = activeVersion?.id || "";
+        metadata.active_guardrail_version_id = activeVersion?.id || "";
+        metadata.activeGuardrailVersionNumber = activeVersion?.version || 0;
+        metadata.active_guardrail_version_number = activeVersion?.version || 0;
+        metadata.restoredFromGuardrailVersionId = selectedVersion?.id || "";
+        metadata.restored_from_guardrail_version_id = selectedVersion?.id || "";
+        metadata.restoredFromGuardrailVersionNumber = selectedVersion?.version || 0;
+        metadata.restored_from_guardrail_version_number = selectedVersion?.version || 0;
+        if (activeVersion?.publishedAt) {
+          metadata.publishedAt = activeVersion.publishedAt;
+          metadata.published_at = activeVersion.publishedAt;
+        } else {
+          delete metadata.publishedAt;
+          delete metadata.published_at;
+        }
+        return normalizePlaygroundGuardrailSet({
+          ...baseSet,
+          metadata,
+          publishedAt: activeVersion?.publishedAt || "",
+        });
+      }
+
+      function createPlaygroundGuardrailFromVersionSnapshot(set, version, versions, preferredSelectedId = "") {
+        const baseSet = normalizePlaygroundGuardrailSet(set || createPlaygroundGuardrailSetDraft());
+        const normalizedVersion = normalizePlaygroundGuardrailVersion(version || {});
+        const snapshot = normalizedVersion.snapshot || {};
+        const baseMetadata = stripPlaygroundGuardrailVersionMetadata(baseSet.metadata);
+        const snapshotMetadata = stripPlaygroundGuardrailVersionMetadata(snapshot.metadata);
+        const nextSet = normalizePlaygroundGuardrailSet({
+          ...baseSet,
+          name: snapshot.name || baseSet.name,
+          description: typeof snapshot.description === "string" ? snapshot.description : baseSet.description,
+          prompts: Array.isArray(snapshot.prompts) ? snapshot.prompts : baseSet.prompts,
+          metadata: {
+            ...baseMetadata,
+            ...snapshotMetadata,
+          },
+        });
+        return createPlaygroundGuardrailWithVersionList(nextSet, versions, preferredSelectedId || normalizedVersion.id);
       }
 
       function readPlaygroundGuardrailSetsFromStorage() {
@@ -152855,6 +153051,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [readProductNotificationIds, setReadProductNotificationIds] = useState([]);
         const [teamInvitationNotifications, setTeamInvitationNotifications] = useState([]);
         const [readTeamInvitationNotificationIds, setReadTeamInvitationNotificationIds] = useState([]);
+        const [organizationInvitationNotifications, setOrganizationInvitationNotifications] = useState([]);
+        const [readOrganizationInvitationNotificationIds, setReadOrganizationInvitationNotificationIds] = useState([]);
         const [permissionNotifications, setPermissionNotifications] = useState([]);
 	        const [readPermissionNotificationIds, setReadPermissionNotificationIds] = useState(() => (
 	          readStoredNotificationIds(PLAYGROUND_PERMISSION_NOTIFICATION_READ_STORAGE_KEY, "session")
@@ -152990,7 +153188,29 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [guardrailsSetFilter, setGuardrailsSetFilter] = useState("all");
         const [guardrailsPageMode, setGuardrailsPageMode] = useState("overview");
         const [guardrailsToolbarPopover, setGuardrailsToolbarPopover] = useState("");
+        const [guardrailVersionsSidebarOpen, setGuardrailVersionsSidebarOpen] = useState(false);
+        const [guardrailVersionState, setGuardrailVersionState] = useState({ status: "idle", message: "", error: "" });
+        const [openGuardrailVersionMenuId, setOpenGuardrailVersionMenuId] = useState("");
         const allGuardrailSets = useMemo(() => getPlaygroundAllGuardrailSets(guardrailSets), [guardrailSets]);
+        const [evaluationSets, setEvaluationSets] = useState(() => readPlaygroundEvaluationSetsFromStorage());
+        const [selectedEvaluationSetId, setSelectedEvaluationSetId] = useState(() => {
+          const storedSets = readPlaygroundEvaluationSetsFromStorage();
+          return storedSets[0]?.id || "";
+        });
+        const [selectedEvaluationRunId, setSelectedEvaluationRunId] = useState("");
+        const [evaluationsPageMode, setEvaluationsPageMode] = useState("overview");
+        const [evaluationDetailTab, setEvaluationDetailTab] = useState("general");
+        const [evaluationsSearchQuery, setEvaluationsSearchQuery] = useState("");
+        const [evaluationCreateModalOpen, setEvaluationCreateModalOpen] = useState(false);
+        const [evaluationCreateForm, setEvaluationCreateForm] = useState({
+          name: "",
+          evaluatorType: "exact",
+          evaluatorAgentId: "",
+          evaluatorCode: "",
+        });
+        const [evaluationJsonlImportOpen, setEvaluationJsonlImportOpen] = useState(false);
+        const [evaluationJsonlImportValue, setEvaluationJsonlImportValue] = useState("");
+        const [evaluationJsonlImportError, setEvaluationJsonlImportError] = useState("");
         const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
         const [projectOverviewResourceSearchQuery, setProjectOverviewResourceSearchQuery] = useState("");
         const [projectOverviewResourceViewMode, setProjectOverviewResourceViewMode] = useState("list");
@@ -153149,11 +153369,24 @@ ${PROJECT_OVERVIEW_SCRIPT}
           writePlaygroundGuardrailSetsToStorage(guardrailSets);
         }, [guardrailSets]);
         useEffect(() => {
+          writePlaygroundEvaluationSetsToStorage(evaluationSets);
+        }, [evaluationSets]);
+        useEffect(() => {
           if (selectedGuardrailSetId && allGuardrailSets.some((set) => set.id === selectedGuardrailSetId)) {
             return;
           }
           setSelectedGuardrailSetId(allGuardrailSets[0]?.id || "");
         }, [allGuardrailSets, selectedGuardrailSetId]);
+        useEffect(() => {
+          if (selectedEvaluationSetId && evaluationSets.some((set) => set.id === selectedEvaluationSetId)) {
+            return;
+          }
+          setSelectedEvaluationSetId(evaluationSets[0]?.id || "");
+          setSelectedEvaluationRunId("");
+          if (evaluationsPageMode !== "overview") {
+            setEvaluationsPageMode(evaluationSets[0]?.id ? "detail" : "overview");
+          }
+        }, [evaluationSets, evaluationsPageMode, selectedEvaluationSetId]);
         useLayoutEffect(() => {
           if (guardrailsPageMode !== "detail") {
             return;
@@ -153208,6 +153441,25 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [teamPageShares, setTeamPageShares] = useState([]);
         const [teamPageProjectResourceIndexes, setTeamPageProjectResourceIndexes] = useState({});
         const [teamPageMetronomeWorkflows, setTeamPageMetronomeWorkflows] = useState([]);
+	        const organizationPageRef = useRef(null);
+	        const organizationPageLoadAbortControllerRef = useRef(null);
+	        const organizationPageLoadSequenceRef = useRef(0);
+	        const [activeOrganizationId, setActiveOrganizationId] = useState(() => readPlaygroundActiveOrganizationId());
+	        const activeOrganizationResourceScopeKeyRef = useRef(String(activeOrganizationId || "").trim() || "__personal__");
+	        const [organizationPageLoading, setOrganizationPageLoading] = useState(false);
+        const [organizationPageError, setOrganizationPageError] = useState("");
+        const [organizationPageOrganizations, setOrganizationPageOrganizations] = useState([]);
+        const [organizationPageSelectedOrganizationId, setOrganizationPageSelectedOrganizationId] = useState("");
+        const [organizationPageMembers, setOrganizationPageMembers] = useState([]);
+        const [organizationPageInvitations, setOrganizationPageInvitations] = useState([]);
+        const [organizationPageCreateName, setOrganizationPageCreateName] = useState("");
+        const [organizationPageCreateModalOpen, setOrganizationPageCreateModalOpen] = useState(false);
+        const [organizationPageRenameModalOpen, setOrganizationPageRenameModalOpen] = useState(false);
+        const [organizationPageRenameName, setOrganizationPageRenameName] = useState("");
+        const [organizationPageInviteModalOpen, setOrganizationPageInviteModalOpen] = useState(false);
+        const [organizationPageInviteEmail, setOrganizationPageInviteEmail] = useState("");
+        const [organizationPageInviteRole, setOrganizationPageInviteRole] = useState("member");
+        const [organizationPageActionId, setOrganizationPageActionId] = useState("");
         const [teamPageCreateName, setTeamPageCreateName] = useState("");
         const [teamPageCreateModalOpen, setTeamPageCreateModalOpen] = useState(false);
         const [teamPageCreateInviteEmails, setTeamPageCreateInviteEmails] = useState("");
@@ -153680,14 +153932,46 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const trimmed = String(upstreamUrl || "").trim();
           return trimmed || ${JSON.stringify(defaultUpstreamOrigin)};
         }, [upstreamUrl]);
-        const authRequestHeaders = useMemo(() => ({
+        const baseAuthRequestHeaders = useMemo(() => ({
           ...(effectiveApiKey ? { "X-API-Key": effectiveApiKey } : {}),
           "X-Runner-Upstream-Url": resolvedUpstreamUrl,
         }), [effectiveApiKey, resolvedUpstreamUrl]);
+        const authRequestHeaders = useMemo(() => ({
+          ...baseAuthRequestHeaders,
+          ...(String(activeOrganizationId || "").trim()
+            ? { [PLAYGROUND_ORGANIZATION_HEADER]: String(activeOrganizationId || "").trim() }
+            : {}),
+        }), [activeOrganizationId, baseAuthRequestHeaders]);
         const requestHeaders = useMemo(() => {
           return authRequestHeaders;
         }, [authRequestHeaders]);
-        useEffect(() => {
+	        useEffect(() => {
+	          writePlaygroundActiveOrganizationId(activeOrganizationId);
+	        }, [activeOrganizationId]);
+	        useEffect(() => {
+	          const nextScopeKey = String(activeOrganizationId || "").trim() || "__personal__";
+	          if (activeOrganizationResourceScopeKeyRef.current === nextScopeKey) {
+	            return;
+	          }
+	          activeOrganizationResourceScopeKeyRef.current = nextScopeKey;
+	          setEnvironmentId("");
+	          setPreferredAgentId("");
+	          setCurrentThreadId("");
+	          setRealThreads([]);
+	          setRealThreadsHasMore(false);
+	          setRealAgents([]);
+	          setRealEnvironments([]);
+	          setRealProjects([]);
+	          setSettingsTriggers([]);
+	          setSettingsSelectedTriggerId("");
+	          setSettingsTriggerForm((current) => ({
+	            ...current,
+	            environmentId: "",
+	            agentId: "",
+	          }));
+	          setTeamPageMetronomeWorkflows([]);
+	        }, [activeOrganizationId]);
+	        useEffect(() => {
           const canLoadTeamMetronomeWorkflows = !isDemoMode && hasSessionAuth;
           if (!canLoadTeamMetronomeWorkflows || teamPageActiveTab !== "resources") {
             setTeamPageMetronomeWorkflows([]);
@@ -154307,8 +154591,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
             ? "Welcome to ACP."
             : buildWelcomeGreeting(sessionState.displayName, sessionState.email || "")
         ), [hasDemoAccess, sessionState.displayName, sessionState.email]);
-        const initialThreadPlanLabel = hasShellAccess && accountTierId ? accountTier + " Plan" : "";
-        const isInitialThreadOnFreePlan = hasShellAccess && accountTierId === "free";
         const showInitialThreadWelcome = activePage === "thread" && hasShellAccess && !currentThreadId;
         const isCurrentPrivateThread = privateThreadIds.includes(String(currentThreadId || "").trim());
         const canFetchNotificationCenter =
@@ -154451,6 +154733,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          const readPermissions = new Set(readPermissionNotificationIds);
 	          const readHumanTasks = new Set(readHumanTaskNotificationIds);
 	          const readTeamInvitations = new Set(readTeamInvitationNotificationIds);
+	          const readOrganizationInvitations = new Set(readOrganizationInvitationNotificationIds);
 	          const items = [];
 
           permissionNotificationItems.forEach((notification) => {
@@ -154493,6 +154776,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
             });
           });
 
+	          organizationInvitationNotifications.forEach((invitation) => {
+            const id = String(invitation?.id || "").trim();
+            if (!id || readOrganizationInvitations.has(id)) {
+              return;
+            }
+            items.push({
+              ...invitation,
+              id,
+              kind: "organization_invitation",
+            });
+          });
+
 	          productNotifications.forEach((notification) => {
             const id = typeof notification?.id === "string" ? notification.id.trim() : "";
             if (!id || readProducts.has(id)) {
@@ -154512,8 +154807,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          hasSessionAuth,
 	          humanTaskNotificationItems,
 	          permissionNotificationItems,
+	          organizationInvitationNotifications,
 	          productNotifications,
 	          readHumanTaskNotificationIds,
+	          readOrganizationInvitationNotificationIds,
 	          readPermissionNotificationIds,
           readProductNotificationIds,
           readTeamInvitationNotificationIds,
@@ -154563,6 +154860,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             item?.toolName,
             item?.reason,
             item?.teamName,
+            item?.organizationName,
           ].map((value) => String(value || "").toLowerCase()).join(" ");
         }
 
@@ -154571,6 +154869,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const readPermissions = new Set(readPermissionNotificationIds);
           const readHumanTasks = new Set(readHumanTaskNotificationIds);
           const readTeamInvitations = new Set(readTeamInvitationNotificationIds);
+          const readOrganizationInvitations = new Set(readOrganizationInvitationNotificationIds);
           const items = [];
 
           permissionNotificationItems.forEach((notification) => {
@@ -154644,6 +154943,29 @@ ${PROJECT_OVERVIEW_SCRIPT}
             });
           });
 
+          organizationInvitationNotifications.forEach((invitation) => {
+            const id = String(invitation?.id || "").trim();
+            if (!id) {
+              return;
+            }
+            items.push({
+              ...invitation,
+              id,
+              kind: "organization_invitation",
+              kindLabel: "Organization",
+              label: "Organization invitation",
+              text: invitation.organizationName || "Organization",
+              meta: [
+                invitation.role ? ("Role: " + invitation.role) : "",
+                invitation.invitedByEmail ? ("From " + invitation.invitedByEmail) : "",
+                invitation.createdAt ? formatThreadSearchTimestamp(invitation.createdAt) : "",
+              ].filter(Boolean).join(" · "),
+              statusLabel: readOrganizationInvitations.has(id) ? "Seen" : "Needs decision",
+              unread: !readOrganizationInvitations.has(id),
+              createdAt: invitation.createdAt || "",
+            });
+          });
+
           productNotifications.forEach((notification) => {
             const id = typeof notification?.id === "string" ? notification.id.trim() : "";
             if (!id) {
@@ -154674,9 +154996,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
           emailVerificationNotificationDismissed,
           hasSessionAuth,
           humanTaskNotificationItems,
+          organizationInvitationNotifications,
           permissionNotificationItems,
           productNotifications,
           readHumanTaskNotificationIds,
+          readOrganizationInvitationNotificationIds,
           readPermissionNotificationIds,
           readProductNotificationIds,
           readTeamInvitationNotificationIds,
@@ -154700,6 +155024,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return false;
             }
             if (notificationsPageFilter === "team" && item.kind !== "team_invitation") {
+              return false;
+            }
+            if (notificationsPageFilter === "organization" && item.kind !== "organization_invitation") {
               return false;
             }
             if (notificationsPageFilter === "product" && item.kind !== "product" && item.kind !== "email_verification") {
@@ -154991,6 +155318,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (!canFetchNotificationCenter) {
             setProductNotifications([]);
             setTeamInvitationNotifications([]);
+            setOrganizationInvitationNotifications([]);
             return;
           }
 
@@ -155008,6 +155336,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 if (!cancelled) {
                   setProductNotifications([]);
                   setTeamInvitationNotifications([]);
+                  setOrganizationInvitationNotifications([]);
                 }
                 return;
               }
@@ -155023,14 +155352,35 @@ ${PROJECT_OVERVIEW_SCRIPT}
               const normalizedTeamInvitations = teamInvitationItems
                 .map(normalizeTeamInvitationNotificationRecord)
                 .filter(Boolean);
+              let normalizedOrganizationInvitations = [];
+              try {
+                const { response: organizationInvitationsResponse, data: organizationInvitationsData } = await fetchJsonWithTimeout(proxyBackendBase + "/organizations/invitations/pending", {
+                  method: "GET",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: baseAuthRequestHeaders,
+                }, 2500);
+                if (organizationInvitationsResponse.ok) {
+                  const organizationInvitationItems = Array.isArray(organizationInvitationsData?.data)
+                    ? organizationInvitationsData.data
+                    : Array.isArray(organizationInvitationsData?.invitations)
+                      ? organizationInvitationsData.invitations
+                      : [];
+                  normalizedOrganizationInvitations = organizationInvitationItems
+                    .map(normalizeOrganizationInvitationNotificationRecord)
+                    .filter(Boolean);
+                }
+              } catch {}
               if (!cancelled) {
                 setProductNotifications(normalizedItems);
                 setTeamInvitationNotifications(normalizedTeamInvitations);
+                setOrganizationInvitationNotifications(normalizedOrganizationInvitations);
               }
             } catch {
               if (!cancelled) {
                 setProductNotifications([]);
                 setTeamInvitationNotifications([]);
+                setOrganizationInvitationNotifications([]);
               }
             }
           };
@@ -155041,7 +155391,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             cancelled = true;
             window.clearInterval(intervalId);
           };
-        }, [canFetchNotificationCenter, notificationsOpen, proxyBackendBase, requestHeaders]);
+        }, [baseAuthRequestHeaders, canFetchNotificationCenter, notificationsOpen, proxyBackendBase, requestHeaders]);
 
         useEffect(() => {
           if (!canFetchNotificationCenter) {
@@ -155776,6 +156126,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setActivePage("team");
         }
 
+        function openOrganizationPage() {
+          setAccountMenuOpen(false);
+          setNotificationsOpen(false);
+          setProfileEditorOpen(false);
+          setSidebarWorkspaceMode("configure");
+          setActivePage("organization");
+        }
+
         function openNotificationsPage() {
           setAccountMenuOpen(false);
           setNotificationsOpen(false);
@@ -156123,6 +156481,421 @@ ${PROJECT_OVERVIEW_SCRIPT}
             } catch {}
           }
           return null;
+        }
+
+        function getOrganizationPageApiErrorMessage(data, fallback = "Failed to load organizations.") {
+          const rawMessage = String(data?.message || data?.error || fallback || "").trim();
+          const normalizedMessage = rawMessage.toLowerCase();
+          if (
+            normalizedMessage.includes("<!doctype html")
+            || normalizedMessage.includes("<html")
+            || ["get", "post", "patch", "put", "delete"].some((method) =>
+              normalizedMessage.includes("cannot " + method + " /organizations")
+            )
+          ) {
+            return "Organization API is not available on this backend yet. Redeploy the backend, then refresh this page.";
+          }
+          if (
+            normalizedMessage.includes("signal is aborted")
+            || normalizedMessage.includes("aborted without reason")
+            || normalizedMessage.includes("aborterror")
+          ) {
+            return "The organization data request was interrupted. Refresh the organization page to try again.";
+          }
+          if (normalizedMessage.includes("timeouterror") || normalizedMessage.includes("request timed out")) {
+            return "Organization data is taking longer than expected to load. Refresh the organization page to try again.";
+          }
+          return rawMessage || fallback;
+        }
+
+        function normalizeOrganizationPageRecord(organization) {
+          const source = organization && typeof organization === "object" && !Array.isArray(organization) ? organization : {};
+          const membership = source.membership && typeof source.membership === "object" && !Array.isArray(source.membership)
+            ? source.membership
+            : {};
+          return {
+            ...source,
+            id: String(source.id || source.organizationId || source.organization_id || "").trim(),
+            name: String(source.name || source.title || source.slug || "Organization").trim(),
+            type: String(source.type || "company").trim().toLowerCase() || "company",
+            role: (() => {
+              const role = String(source.role || source.currentUserRole || source.viewerRole || membership.role || "member").trim().toLowerCase();
+              return ["owner", "admin", "billing", "developer", "member", "viewer"].includes(role) ? role : "member";
+            })(),
+            membership,
+          };
+        }
+
+        function getOrganizationPagePersonalOrganization(organizations) {
+          const list = Array.isArray(organizations) ? organizations : [];
+          return list.find((organization) => String(organization?.type || "").toLowerCase() === "personal")
+            || list.find((organization) => String(organization?.ownerUserId || "") === String(sessionState.userId || ""))
+            || list[0]
+            || null;
+        }
+
+        function getOrganizationPageDisplayName(organization) {
+          const normalizedOrganization = normalizeOrganizationPageRecord(organization);
+          const name = normalizedOrganization.name || "Organization";
+          if (normalizedOrganization.type === "personal" && name.trim().toLowerCase() === "personal") {
+            return "Personal Organization";
+          }
+          return name;
+        }
+
+        function isOrganizationPageActiveOrganization(organization) {
+          const organizationId = String(organization?.id || "").trim();
+          if (!organizationId) {
+            return false;
+          }
+          const explicitActiveOrganizationId = String(activeOrganizationId || "").trim();
+          if (explicitActiveOrganizationId) {
+            return organizationId === explicitActiveOrganizationId;
+          }
+          return organizationId === String(getOrganizationPagePersonalOrganization(organizationPageOrganizations)?.id || "").trim();
+        }
+
+        function setActiveOrganizationFromRecord(organization) {
+          const normalizedOrganization = normalizeOrganizationPageRecord(organization);
+          if (!normalizedOrganization.id) {
+            return;
+          }
+          setActiveOrganizationId(normalizedOrganization.type === "personal" ? "" : normalizedOrganization.id);
+        }
+
+        function getComposerOrganizationOptions() {
+          const organizations = Array.isArray(organizationPageOrganizations) ? organizationPageOrganizations : [];
+          if (!organizations.length) {
+            return [{ id: "__personal_workspace__", name: "Personal Workspace", description: "Workspace", isDefault: true }];
+          }
+          return organizations
+            .map((organization) => {
+              const normalizedOrganization = normalizeOrganizationPageRecord(organization);
+              if (!normalizedOrganization.id) {
+                return null;
+              }
+              return {
+                id: normalizedOrganization.id,
+                name: getOrganizationPageDisplayName(normalizedOrganization),
+                description: normalizedOrganization.type === "personal" ? "Personal Organization" : "Company",
+                isDefault: isOrganizationPageActiveOrganization(normalizedOrganization),
+              };
+            })
+            .filter(Boolean);
+        }
+
+        function getActiveComposerOrganizationId() {
+          const organizations = Array.isArray(organizationPageOrganizations) ? organizationPageOrganizations : [];
+          const activeOrganization = organizations.find((organization) => isOrganizationPageActiveOrganization(organization))
+            || getOrganizationPagePersonalOrganization(organizations);
+          return String(activeOrganization?.id || "__personal_workspace__").trim();
+        }
+
+        function readOrganizationPageAvatarUrl(organization) {
+          const source = organization && typeof organization === "object" && !Array.isArray(organization) ? organization : {};
+          const directAvatarUrl = String(
+            source.avatarUrl
+            || source.avatarURL
+            || source.photoUrl
+            || source.photoURL
+            || source.logoUrl
+            || source.logoURL
+            || source.imageUrl
+            || source.imageURL
+            || source.picture
+            || ""
+          ).trim();
+          if (directAvatarUrl) {
+            return directAvatarUrl;
+          }
+          const nestedProfile = source.profile && typeof source.profile === "object" && !Array.isArray(source.profile)
+            ? source.profile
+            : {};
+          const nestedBrand = source.brand && typeof source.brand === "object" && !Array.isArray(source.brand)
+            ? source.brand
+            : {};
+          return String(
+            nestedProfile.avatarUrl
+            || nestedProfile.photoUrl
+            || nestedBrand.logoUrl
+            || nestedBrand.avatarUrl
+            || ""
+          ).trim();
+        }
+
+        function getActiveSidebarOrganizationDisplay() {
+          const organizations = Array.isArray(organizationPageOrganizations) ? organizationPageOrganizations : [];
+          const activeOrganization = organizations.find((organization) => isOrganizationPageActiveOrganization(organization))
+            || getOrganizationPagePersonalOrganization(organizations);
+          const normalizedOrganization = activeOrganization ? normalizeOrganizationPageRecord(activeOrganization) : null;
+          const name = hasShellAccess
+            ? (normalizedOrganization ? getOrganizationPageDisplayName(normalizedOrganization) : "Personal Organization")
+            : "Sign in";
+          const avatarUrl = normalizeSessionPhotoUrl(
+            readOrganizationPageAvatarUrl(activeOrganization)
+            || accountAvatarUrl
+          );
+          return {
+            name,
+            initials: getAccountInitials(name),
+            avatarUrl: canRenderAvatarImage(avatarUrl) ? avatarUrl : "",
+          };
+        }
+
+        function handleComposerOrganizationChange(organizationId) {
+          const normalizedOrganizationId = String(organizationId || "").trim();
+          const organization = (Array.isArray(organizationPageOrganizations) ? organizationPageOrganizations : [])
+            .find((entry) => String(entry?.id || "").trim() === normalizedOrganizationId);
+          if (!organization) {
+            return;
+          }
+          setActiveOrganizationFromRecord(organization);
+        }
+
+        async function loadOrganizationPageData(options = {}) {
+          if (!hasRealAccess) {
+            if (organizationPageLoadAbortControllerRef.current) {
+              organizationPageLoadAbortControllerRef.current.abort(createFetchAbortReason("AbortError", "Organization page access changed."));
+              organizationPageLoadAbortControllerRef.current = null;
+            }
+            setOrganizationPageOrganizations([]);
+            setOrganizationPageMembers([]);
+            setOrganizationPageInvitations([]);
+            return;
+          }
+          if (organizationPageLoadAbortControllerRef.current) {
+            organizationPageLoadAbortControllerRef.current.abort(createFetchAbortReason("AbortError", "A newer organization page load started."));
+          }
+          const loadAbortController = new AbortController();
+          organizationPageLoadAbortControllerRef.current = loadAbortController;
+          const loadSequenceId = organizationPageLoadSequenceRef.current + 1;
+          organizationPageLoadSequenceRef.current = loadSequenceId;
+          const isCurrentLoad = () => (
+            organizationPageLoadSequenceRef.current === loadSequenceId
+            && organizationPageLoadAbortControllerRef.current === loadAbortController
+          );
+          const hasSelectedOrganizationIdOverride = options
+            && typeof options === "object"
+            && Object.prototype.hasOwnProperty.call(options, "selectedOrganizationId");
+          const requestedOrganizationId = String(hasSelectedOrganizationIdOverride ? options.selectedOrganizationId : organizationPageSelectedOrganizationId || "").trim();
+          const isSilent = options?.silent === true;
+          const listOnly = options?.listOnly === true;
+          if (!isSilent) {
+            setOrganizationPageLoading(true);
+          }
+          setOrganizationPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/organizations", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              signal: loadAbortController.signal,
+              headers: baseAuthRequestHeaders,
+            }, 12000);
+            if (!isCurrentLoad()) {
+              return;
+            }
+            if (!response.ok) {
+              throw new Error(getOrganizationPageApiErrorMessage(data));
+            }
+            const organizations = (Array.isArray(data?.data) ? data.data : Array.isArray(data?.organizations) ? data.organizations : [])
+              .map((organization) => normalizeOrganizationPageRecord(organization))
+              .filter((organization) => organization.id);
+            setOrganizationPageOrganizations(organizations);
+            if (activeOrganizationId && !organizations.some((organization) => organization.id === activeOrganizationId)) {
+              setActiveOrganizationId("");
+            }
+            const selectedOrganization = requestedOrganizationId
+              ? organizations.find((organization) => organization.id === requestedOrganizationId) || null
+              : null;
+            const selectedOrganizationId = selectedOrganization?.id || "";
+            setOrganizationPageSelectedOrganizationId(selectedOrganizationId);
+            if (!selectedOrganizationId || listOnly) {
+              setOrganizationPageMembers([]);
+              setOrganizationPageInvitations([]);
+              return;
+            }
+            const [membersResult, invitationsResult] = await Promise.allSettled([
+              fetchJsonWithTimeout(proxyBackendBase + "/organizations/" + encodeURIComponent(selectedOrganizationId) + "/members", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                signal: loadAbortController.signal,
+                headers: baseAuthRequestHeaders,
+              }, 12000),
+              fetchJsonWithTimeout(proxyBackendBase + "/organizations/" + encodeURIComponent(selectedOrganizationId) + "/invitations", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                signal: loadAbortController.signal,
+                headers: baseAuthRequestHeaders,
+              }, 10000),
+            ]);
+            if (!isCurrentLoad()) {
+              return;
+            }
+            if (membersResult.status === "rejected") {
+              throw membersResult.reason;
+            }
+            if (!membersResult.value.response.ok) {
+              throw new Error(getOrganizationPageApiErrorMessage(membersResult.value.data, "Failed to load organization members."));
+            }
+            setOrganizationPageMembers(Array.isArray(membersResult.value.data?.data) ? membersResult.value.data.data : []);
+            setOrganizationPageInvitations(
+              invitationsResult.status === "fulfilled"
+              && invitationsResult.value.response.ok
+              && Array.isArray(invitationsResult.value.data?.data)
+                ? invitationsResult.value.data.data
+                : []
+            );
+          } catch (error) {
+            if (!isCurrentLoad() || loadAbortController.signal.aborted) {
+              return;
+            }
+            setOrganizationPageError(getOrganizationPageApiErrorMessage({
+              message: error instanceof Error ? error.message : "",
+            }, isFetchAbortError(error)
+              ? "Organization data is taking longer than expected to load. Refresh the organization page to try again."
+              : "Failed to load organizations."));
+          } finally {
+            if (isCurrentLoad()) {
+              if (!isSilent) {
+                setOrganizationPageLoading(false);
+              }
+              organizationPageLoadAbortControllerRef.current = null;
+            }
+          }
+        }
+
+        async function handleCreateOrganization() {
+          const name = String(organizationPageCreateName || "").trim();
+          if (!name) {
+            return;
+          }
+          setOrganizationPageActionId("create-organization");
+          setOrganizationPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/organizations", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...baseAuthRequestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name }),
+            }, 10000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create organization.");
+            }
+            const organization = normalizeOrganizationPageRecord(data?.data || data?.organization || data);
+            setOrganizationPageCreateName("");
+            setOrganizationPageCreateModalOpen(false);
+            if (organization.id) {
+              setActiveOrganizationFromRecord(organization);
+              setOrganizationPageSelectedOrganizationId(organization.id);
+            }
+            await loadOrganizationPageData({ selectedOrganizationId: organization.id || "" });
+          } catch (error) {
+            setOrganizationPageError(error instanceof Error ? error.message : "Failed to create organization.");
+          } finally {
+            setOrganizationPageActionId("");
+          }
+        }
+
+        async function handleRenameOrganization() {
+          const organizationId = String(organizationPageSelectedOrganizationId || "").trim();
+          const name = String(organizationPageRenameName || "").trim();
+          if (!organizationId || !name) {
+            return;
+          }
+          setOrganizationPageActionId("rename-organization");
+          setOrganizationPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/organizations/" + encodeURIComponent(organizationId), {
+              method: "PATCH",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...baseAuthRequestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name }),
+            }, 10000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to rename organization.");
+            }
+            setOrganizationPageRenameModalOpen(false);
+            setOrganizationPageRenameName("");
+            await loadOrganizationPageData({ selectedOrganizationId: organizationId });
+          } catch (error) {
+            setOrganizationPageError(error instanceof Error ? error.message : "Failed to rename organization.");
+          } finally {
+            setOrganizationPageActionId("");
+          }
+        }
+
+        async function handleSendOrganizationInvite() {
+          const organizationId = String(organizationPageSelectedOrganizationId || "").trim();
+          const email = String(organizationPageInviteEmail || "").trim();
+          if (!organizationId || !email) {
+            return;
+          }
+          setOrganizationPageActionId("invite-organization");
+          setOrganizationPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/organizations/" + encodeURIComponent(organizationId) + "/invitations", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...baseAuthRequestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email, role: organizationPageInviteRole || "member" }),
+            }, 10000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to invite organization member.");
+            }
+            setOrganizationPageInviteEmail("");
+            setOrganizationPageInviteRole("member");
+            setOrganizationPageInviteModalOpen(false);
+            await loadOrganizationPageData({ selectedOrganizationId: organizationId });
+          } catch (error) {
+            setOrganizationPageError(error instanceof Error ? error.message : "Failed to invite organization member.");
+          } finally {
+            setOrganizationPageActionId("");
+          }
+        }
+
+        async function handleRevokeOrganizationInvitation(invitationId) {
+          const organizationId = String(organizationPageSelectedOrganizationId || "").trim();
+          const normalizedInvitationId = String(invitationId || "").trim();
+          if (!organizationId || !normalizedInvitationId) {
+            return;
+          }
+          setOrganizationPageActionId("revoke-organization-invite:" + normalizedInvitationId);
+          setOrganizationPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/organizations/" + encodeURIComponent(organizationId) + "/invitations/" + encodeURIComponent(normalizedInvitationId) + "/revoke", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...baseAuthRequestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: "{}",
+            }, 10000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to revoke organization invitation.");
+            }
+            await loadOrganizationPageData({ selectedOrganizationId: organizationId });
+          } catch (error) {
+            setOrganizationPageError(error instanceof Error ? error.message : "Failed to revoke organization invitation.");
+          } finally {
+            setOrganizationPageActionId("");
+          }
         }
 
         async function loadTeamPageData(options = {}) {
@@ -157529,10 +158302,31 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         useEffect(() => {
-          if ((activePage === "settings" || activePage === "team") && sidebarWorkspaceMode !== "configure") {
+          if ((activePage === "settings" || activePage === "team" || activePage === "organization") && sidebarWorkspaceMode !== "configure") {
             setSidebarWorkspaceMode("configure");
           }
         }, [activePage, sidebarWorkspaceMode]);
+
+        useEffect(() => {
+          if (!hasRealAccess) {
+            setOrganizationPageOrganizations([]);
+            setOrganizationPageMembers([]);
+            setOrganizationPageInvitations([]);
+            return;
+          }
+          void loadOrganizationPageData({
+            selectedOrganizationId: activePage === "organization" ? organizationPageSelectedOrganizationId : "",
+            silent: activePage !== "organization",
+            listOnly: activePage !== "organization",
+          });
+        }, [activePage, baseAuthRequestHeaders, hasRealAccess, organizationPageSelectedOrganizationId, proxyBackendBase]);
+
+        useEffect(() => () => {
+          if (organizationPageLoadAbortControllerRef.current) {
+            organizationPageLoadAbortControllerRef.current.abort(createFetchAbortReason("AbortError", "Organization page unmounted."));
+            organizationPageLoadAbortControllerRef.current = null;
+          }
+        }, []);
 
         useEffect(() => {
           if (activePage !== "team" || !hasRealAccess) {
@@ -166785,6 +167579,34 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setActivePage("guardrails");
         }
 
+        function openEvaluationsPage(options = {}) {
+          setAccountMenuOpen(false);
+          setProfileEditorOpen(false);
+          if (!options.preserveSidebarMode) {
+            setSidebarWorkspaceMode("configure");
+          }
+          setResourcesHeaderState({
+            mode: "overview",
+            title: "",
+          });
+          const requestedEvaluationId = String(options.evaluationId || "").trim();
+          const requestedRunId = String(options.evaluationRunId || "").trim();
+          if (requestedEvaluationId) {
+            setSelectedEvaluationSetId(requestedEvaluationId);
+          }
+          if (requestedRunId) {
+            setSelectedEvaluationRunId(requestedRunId);
+          }
+          setEvaluationsPageMode(
+            options.mode === "run" || requestedRunId
+              ? "run"
+              : options.mode === "detail" || requestedEvaluationId
+                ? "detail"
+                : "overview"
+          );
+          setActivePage("evaluations");
+        }
+
         function openResourceTemplatesPage(options = {}) {
           setAccountMenuOpen(false);
           setProfileEditorOpen(false);
@@ -166837,6 +167659,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               || activePage === "models"
               || activePage === "resource-templates"
               || activePage === "inference"
+              || activePage === "organization"
               || (isResourcesPage && (activeResourcesView === "agents" || activeResourcesView === "computers"))
               || (activePage === "tools" && (toolsView === "plugins" || toolsView === "tags" || toolsView === "skills"));
           }
@@ -175900,6 +176723,450 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          );
         }
 
+        function renderOrganizationPage() {
+          const formatDate = (value) => {
+            if (!value) return "";
+            try {
+              return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value));
+            } catch {
+              return String(value || "");
+            }
+          };
+          const selectedOrganization = organizationPageOrganizations.find((organization) => organization.id === organizationPageSelectedOrganizationId) || null;
+          const activeOrganization = organizationPageOrganizations.find((organization) => isOrganizationPageActiveOrganization(organization))
+            || getOrganizationPagePersonalOrganization(organizationPageOrganizations);
+          const organizationRoleOptions = [
+            { id: "admin", label: "Admin" },
+            { id: "billing", label: "Billing" },
+            { id: "developer", label: "Developer" },
+            { id: "member", label: "Member" },
+            { id: "viewer", label: "Viewer" },
+          ];
+          const organizationRoleIds = ["owner", ...organizationRoleOptions.map((role) => role.id)];
+          const normalizeOrganizationRoleId = (role, fallback = "member") => {
+            const normalized = String(role || "").trim().toLowerCase();
+            return organizationRoleIds.includes(normalized) ? normalized : fallback;
+          };
+          const currentRoleId = normalizeOrganizationRoleId(selectedOrganization?.membership?.role || selectedOrganization?.role, "member");
+          const canManageOrganization = Boolean(selectedOrganization)
+            && (
+              currentRoleId === "owner"
+              || currentRoleId === "admin"
+              || String(selectedOrganization?.ownerUserId || "") === String(sessionState.userId || "")
+            );
+          const canInviteOrganization = canManageOrganization && String(selectedOrganization?.type || "").toLowerCase() !== "personal";
+          const renderEmpty = (text) => React.createElement("div", { className: "playground-team-empty" }, text);
+          const renderOrganizationActionButton = (label, onClick, options = {}) => React.createElement("button", {
+            type: "button",
+            className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-team-action-button" + (options.primary ? " is-primary" : ""),
+            onClick,
+            disabled: Boolean(options.disabled),
+          }, options.icon || null, label);
+          const formatRole = (role) => {
+            const normalized = normalizeOrganizationRoleId(role, "member");
+            if (normalized === "owner") return "Owner";
+            return organizationRoleOptions.find((option) => option.id === normalized)?.label || "Member";
+          };
+          const renderOrganizationRoleSelect = (props) => React.createElement("select", {
+            className: "playground-team-select",
+            ...props,
+            value: normalizeOrganizationRoleId(props?.value, "member"),
+          }, organizationRoleOptions.map((option) =>
+            React.createElement("option", { key: option.id, value: option.id }, option.label)
+          ));
+          const formatOrganizationType = (type) => String(type || "").trim().toLowerCase() === "personal" ? "Personal" : "Company";
+          const openOrganizationDetail = (organizationId) => {
+            const normalizedOrganizationId = String(organizationId || "").trim();
+            if (!normalizedOrganizationId) return;
+            setOrganizationPageSelectedOrganizationId(normalizedOrganizationId);
+            setOrganizationPageMembers([]);
+            setOrganizationPageInvitations([]);
+          };
+          const renderOrganizationCreateModal = () => organizationPageCreateModalOpen
+            ? React.createElement("div", {
+                className: "playground-team-modal-backdrop",
+                onMouseDown: (event) => {
+                  if (event.target === event.currentTarget && organizationPageActionId !== "create-organization") {
+                    setOrganizationPageCreateModalOpen(false);
+                  }
+                },
+              },
+                React.createElement("div", { className: "playground-team-modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "organization-create-modal-title" },
+                  React.createElement("div", { className: "playground-team-modal-header" },
+                    React.createElement("div", null,
+                      React.createElement("h2", { id: "organization-create-modal-title", className: "playground-team-modal-title" }, "Create organization"),
+                      React.createElement("p", { className: "playground-team-modal-subtitle" }, "Create a company workspace for shared agents, computers, projects, resources, and usage.")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-team-modal-close",
+                      onClick: () => setOrganizationPageCreateModalOpen(false),
+                      disabled: organizationPageActionId === "create-organization",
+                      "aria-label": "Close create organization modal",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-team-modal-form" },
+                    React.createElement("div", { className: "playground-team-modal-field" },
+                      React.createElement("label", { className: "playground-team-modal-label", htmlFor: "organization-create-name" }, "Organization name"),
+                      React.createElement("input", {
+                        id: "organization-create-name",
+                        className: "playground-team-input",
+                        value: organizationPageCreateName,
+                        onChange: (event) => setOrganizationPageCreateName(event.target.value),
+                        placeholder: "Acme Inc.",
+                        disabled: organizationPageActionId === "create-organization",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-team-modal-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button",
+                        onClick: () => setOrganizationPageCreateModalOpen(false),
+                        disabled: organizationPageActionId === "create-organization",
+                      }, "Cancel"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button is-primary",
+                        onClick: handleCreateOrganization,
+                        disabled: organizationPageActionId === "create-organization" || !String(organizationPageCreateName || "").trim(),
+                      }, organizationPageActionId === "create-organization" ? "Creating..." : "Create organization")
+                    )
+                  )
+                )
+              )
+            : null;
+          const renderOrganizationRenameModal = () => organizationPageRenameModalOpen
+            ? React.createElement("div", {
+                className: "playground-team-modal-backdrop",
+                onMouseDown: (event) => {
+                  if (event.target === event.currentTarget && organizationPageActionId !== "rename-organization") {
+                    setOrganizationPageRenameModalOpen(false);
+                  }
+                },
+              },
+                React.createElement("div", { className: "playground-team-modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "organization-rename-modal-title" },
+                  React.createElement("div", { className: "playground-team-modal-header" },
+                    React.createElement("div", null,
+                      React.createElement("h2", { id: "organization-rename-modal-title", className: "playground-team-modal-title" }, "Edit organization"),
+                      React.createElement("p", { className: "playground-team-modal-subtitle" }, "Rename this workspace for everyone in the organization.")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-team-modal-close",
+                      onClick: () => setOrganizationPageRenameModalOpen(false),
+                      disabled: organizationPageActionId === "rename-organization",
+                      "aria-label": "Close edit organization modal",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-team-modal-form" },
+                    React.createElement("div", { className: "playground-team-modal-field" },
+                      React.createElement("label", { className: "playground-team-modal-label", htmlFor: "organization-rename-name" }, "Organization name"),
+                      React.createElement("input", {
+                        id: "organization-rename-name",
+                        className: "playground-team-input",
+                        value: organizationPageRenameName,
+                        onChange: (event) => setOrganizationPageRenameName(event.target.value),
+                        placeholder: "Acme Inc.",
+                        disabled: organizationPageActionId === "rename-organization",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-team-modal-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button",
+                        onClick: () => setOrganizationPageRenameModalOpen(false),
+                        disabled: organizationPageActionId === "rename-organization",
+                      }, "Cancel"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button is-primary",
+                        onClick: handleRenameOrganization,
+                        disabled: organizationPageActionId === "rename-organization" || !String(organizationPageRenameName || "").trim(),
+                      }, organizationPageActionId === "rename-organization" ? "Saving..." : "Save changes")
+                    )
+                  )
+                )
+              )
+            : null;
+          const renderOrganizationInviteModal = () => organizationPageInviteModalOpen
+            ? React.createElement("div", {
+                className: "playground-team-modal-backdrop",
+                onMouseDown: (event) => {
+                  if (event.target === event.currentTarget && organizationPageActionId !== "invite-organization") {
+                    setOrganizationPageInviteModalOpen(false);
+                  }
+                },
+              },
+                React.createElement("div", { className: "playground-team-modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "organization-invite-modal-title" },
+                  React.createElement("div", { className: "playground-team-modal-header" },
+                    React.createElement("div", null,
+                      React.createElement("h2", { id: "organization-invite-modal-title", className: "playground-team-modal-title" }, "Invite member"),
+                      React.createElement("p", { className: "playground-team-modal-subtitle" }, "Send an invitation and choose the organization role for this person.")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-team-modal-close",
+                      onClick: () => setOrganizationPageInviteModalOpen(false),
+                      disabled: organizationPageActionId === "invite-organization",
+                      "aria-label": "Close invite organization member modal",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-team-modal-form" },
+                    React.createElement("div", { className: "playground-team-modal-field" },
+                      React.createElement("label", { className: "playground-team-modal-label", htmlFor: "organization-invite-email" }, "Email"),
+                      React.createElement("input", {
+                        id: "organization-invite-email",
+                        className: "playground-team-input",
+                        type: "email",
+                        value: organizationPageInviteEmail,
+                        onChange: (event) => setOrganizationPageInviteEmail(event.target.value),
+                        placeholder: "name@company.com",
+                        disabled: organizationPageActionId === "invite-organization",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-team-modal-field" },
+                      React.createElement("label", { className: "playground-team-modal-label" }, "Role"),
+                      renderOrganizationRoleSelect({
+                        value: organizationPageInviteRole,
+                        onChange: (event) => setOrganizationPageInviteRole(event.target.value),
+                        disabled: organizationPageActionId === "invite-organization",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-team-modal-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button",
+                        onClick: () => setOrganizationPageInviteModalOpen(false),
+                        disabled: organizationPageActionId === "invite-organization",
+                      }, "Cancel"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-team-button is-primary",
+                        onClick: handleSendOrganizationInvite,
+                        disabled: organizationPageActionId === "invite-organization" || !String(organizationPageInviteEmail || "").trim(),
+                      }, organizationPageActionId === "invite-organization" ? "Sending..." : "Send invite")
+                    )
+                  )
+                )
+              )
+            : null;
+          const getMemberDisplayName = (member) => {
+            const memberUserId = String(member?.userId || member?.user_id || member?.uid || "").trim();
+            if (memberUserId && memberUserId === String(sessionState.userId || "").trim()) {
+              return getTrustedDisplayName(accountName, accountEmail || sessionState.email || "") || "Me";
+            }
+            const email = readTeamPageIdentityEmail(member);
+            const displayName = readTeamPageIdentityDisplayName(member);
+            return getTrustedDisplayName(displayName, email) || email || memberUserId || "Organization member";
+          };
+          const renderMemberIdentity = (member) => {
+            const displayName = getMemberDisplayName(member);
+            const memberUserId = String(member?.userId || member?.user_id || member?.uid || "").trim();
+            const email = readTeamPageIdentityEmail(member);
+            const detail = email && displayName.toLowerCase() !== email.toLowerCase()
+              ? email
+              : (memberUserId && memberUserId !== displayName ? memberUserId : "");
+            const avatarUrl = normalizeSessionPhotoUrl(
+              readTeamPageIdentityAvatarUrl(member)
+              || (memberUserId === String(sessionState.userId || "").trim() ? accountAvatarUrl : "")
+            );
+            return React.createElement("div", { className: "playground-team-member-cell" },
+              renderAccountAvatar(
+                "playground-team-member-avatar",
+                "playground-team-member-avatar-image",
+                getAccountInitials(displayName),
+                canRenderAvatarImage(avatarUrl) ? avatarUrl : ""
+              ),
+              React.createElement("div", { className: "playground-team-member-copy" },
+                React.createElement("div", { className: "playground-team-table-title" }, displayName),
+                detail ? React.createElement("div", { className: "playground-team-table-meta" }, detail) : null
+              )
+            );
+          };
+          const renderOverview = () => React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-team-page-header" },
+              React.createElement("div", null,
+                React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-team-page-title" }, "Organization")
+              ),
+              renderOrganizationActionButton("Create organization", () => setOrganizationPageCreateModalOpen(true), {
+                icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+              })
+            ),
+            organizationPageError ? React.createElement("div", { className: "playground-team-error" }, organizationPageError) : null,
+            activeOrganization ? React.createElement("div", { className: "playground-team-detail-meta" }, "Current workspace: " + (activeOrganization.name || "Organization")) : null,
+            React.createElement("div", { className: "playground-team-overview-layout" },
+              React.createElement("div", { className: "playground-team-table-panel" },
+                organizationPageOrganizations.length > 0
+                  ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
+                      React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table" },
+                        React.createElement("colgroup", null,
+                          React.createElement("col", { className: "playground-team-table-col-main" }),
+                          React.createElement("col", { className: "playground-team-table-col-role" }),
+                          React.createElement("col", { className: "playground-team-table-col-meta" }),
+                          React.createElement("col", { className: "playground-team-table-col-actions" })
+                        ),
+                        React.createElement("thead", null,
+                          React.createElement("tr", null,
+                            React.createElement("th", null, "Organization"),
+                            React.createElement("th", null, "Role"),
+                            React.createElement("th", null, "Type"),
+                            React.createElement("th", { className: "is-actions" }, "")
+                          )
+                        ),
+                        React.createElement("tbody", null,
+                          organizationPageOrganizations.map((organization) => {
+                            const isActive = isOrganizationPageActiveOrganization(organization);
+                            return React.createElement("tr", {
+                              key: organization.id,
+                              className: "is-clickable",
+                              tabIndex: 0,
+                              onClick: () => openOrganizationDetail(organization.id),
+                              onKeyDown: (event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  openOrganizationDetail(organization.id);
+                                }
+                              },
+                            },
+                              React.createElement("td", null,
+                                React.createElement("div", { className: "playground-team-table-title" }, organization.name || "Organization"),
+                                React.createElement("div", { className: "playground-team-table-meta" }, isActive ? "Current workspace" : "Available workspace")
+                              ),
+                              React.createElement("td", { className: "playground-auth-users-cell" }, formatRole(organization.role)),
+                              React.createElement("td", { className: "playground-auth-users-cell" }, formatOrganizationType(organization.type)),
+                              React.createElement("td", { className: "is-actions" }, isActive
+                                ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
+                                : React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 }))
+                            );
+                          })
+                        )
+                      )
+                    )
+                  : renderEmpty(organizationPageLoading ? "Loading organizations..." : "No organizations yet.")
+              )
+            ),
+            renderOrganizationCreateModal()
+          );
+          const renderInvitationIdentity = (invitation) => {
+            const email = String(invitation?.email || invitation?.emailNormalized || invitation?.email_normalized || "").trim();
+            return React.createElement("div", { className: "playground-team-member-cell" },
+              renderAccountAvatar(
+                "playground-team-member-avatar",
+                "playground-team-member-avatar-image",
+                getAccountInitials(email || "Invite"),
+                ""
+              ),
+              React.createElement("div", { className: "playground-team-member-copy" },
+                React.createElement("div", { className: "playground-team-table-title" }, email || "Pending invitation"),
+                React.createElement("div", { className: "playground-team-table-meta" }, "Invitation pending")
+              )
+            );
+          };
+          const renderMembers = () => {
+            const memberRows = (Array.isArray(organizationPageMembers) ? organizationPageMembers : [])
+              .map((member) => ({ kind: "member", id: String(member?.id || member?.userId || member?.user_id || ""), item: member }));
+            const invitationRows = (Array.isArray(organizationPageInvitations) ? organizationPageInvitations : [])
+              .filter((invitation) => String(invitation?.status || "").toLowerCase() === "pending")
+              .map((invitation) => ({ kind: "invitation", id: String(invitation?.id || ""), item: invitation }));
+            const rows = [...memberRows, ...invitationRows].filter((row) => row.id);
+            return React.createElement("div", { className: "playground-team-detail-panel" },
+              rows.length > 0
+                ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
+                    React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table playground-team-members-table" },
+                      React.createElement("colgroup", null,
+                        React.createElement("col", { className: "playground-team-table-col-main" }),
+                        React.createElement("col", { className: "playground-team-table-col-role" }),
+                        React.createElement("col", { className: "playground-team-table-col-meta" }),
+                        React.createElement("col", { className: "playground-team-table-col-joined" }),
+                        React.createElement("col", { className: "playground-team-table-col-actions" })
+                      ),
+                      React.createElement("thead", null,
+                        React.createElement("tr", null,
+                          React.createElement("th", null, "User"),
+                          React.createElement("th", null, "Role"),
+                          React.createElement("th", null, "Status"),
+                          React.createElement("th", null, "Joined"),
+                          React.createElement("th", { className: "is-actions" }, "")
+                        )
+                      ),
+                      React.createElement("tbody", null,
+                        rows.map((row) => {
+                          const isInvitation = row.kind === "invitation";
+                          const item = row.item;
+                          const revokeActionId = "revoke-organization-invite:" + row.id;
+                          return React.createElement("tr", { key: row.kind + ":" + row.id },
+                            React.createElement("td", null, isInvitation ? renderInvitationIdentity(item) : renderMemberIdentity(item)),
+                            React.createElement("td", null, React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, formatRole(item?.role))),
+                            React.createElement("td", { className: "playground-auth-users-cell" }, isInvitation ? "Pending" : (item?.status || "active")),
+                            React.createElement("td", { className: "playground-auth-users-cell" }, isInvitation
+                              ? (formatDate(item?.createdAt || item?.created_at) || "-")
+                              : (formatDate(item?.joinedAt || item?.joined_at || item?.createdAt || item?.created_at) || "-")),
+                            React.createElement("td", { className: "is-actions" },
+                              isInvitation && canManageOrganization
+                                ? React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-team-button",
+                                    onClick: () => handleRevokeOrganizationInvitation(row.id),
+                                    disabled: organizationPageActionId === revokeActionId,
+                                  }, organizationPageActionId === revokeActionId ? "Revoking..." : "Revoke")
+                                : null
+                            )
+                          );
+                        })
+                      )
+                    )
+                  )
+                : renderEmpty(organizationPageLoading ? "Loading members..." : "No organization members yet.")
+            );
+          };
+
+          return React.createElement("div", { className: "playground-team-page", ref: organizationPageRef },
+            React.createElement("div", { className: "playground-team-shell" },
+              selectedOrganization
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-resource-detail-back-button playground-team-back-button",
+                      onClick: () => {
+                        setOrganizationPageSelectedOrganizationId("");
+                        setOrganizationPageMembers([]);
+                        setOrganizationPageInvitations([]);
+                      },
+                    }, React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }), "Organization"),
+                    React.createElement("div", { className: "playground-team-detail-header" },
+                      React.createElement("div", null,
+                        React.createElement("h1", { className: "playground-team-detail-title" }, selectedOrganization.name || "Organization"),
+                        React.createElement("div", { className: "playground-team-detail-meta" }, formatOrganizationType(selectedOrganization.type) + " workspace")
+                      ),
+                      React.createElement("div", { className: "playground-team-detail-actions" },
+                        isOrganizationPageActiveOrganization(selectedOrganization)
+                          ? React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, "Current")
+                          : renderOrganizationActionButton("Set active", () => setActiveOrganizationFromRecord(selectedOrganization), {
+                              icon: React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            }),
+                        canManageOrganization
+                          ? renderOrganizationActionButton("Edit", () => {
+                              setOrganizationPageRenameName(selectedOrganization.name || "");
+                              setOrganizationPageRenameModalOpen(true);
+                            }, { icon: React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }) })
+                          : null,
+                        canInviteOrganization
+                          ? renderOrganizationActionButton("Invite member", () => setOrganizationPageInviteModalOpen(true), {
+                              icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            })
+                          : null
+                      )
+                    ),
+                    organizationPageError ? React.createElement("div", { className: "playground-team-error" }, organizationPageError) : null,
+                    renderMembers(),
+                    renderOrganizationRenameModal(),
+                    renderOrganizationInviteModal()
+                  )
+                : renderOverview()
+            )
+          );
+        }
+
         function renderTeamPage() {
           const accessOptions = [
             { value: "use", label: "Use", description: "Can use this resource." },
@@ -178716,7 +179983,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             const normalizedThreadId = String(thread?.id || "").trim();
             return !privateThreadIdsRef.current.has(normalizedThreadId)
               && !isPrivateThreadRecord(thread)
-              && !isAbsorbedMetronomeTriggerThread(thread);
+              && !isAbsorbedMetronomeTriggerThread(thread)
+              && !isEvaluationThreadRecord(thread);
           });
 
           if (!currentThreadId || threads.some((thread) => thread.id === currentThreadId)) {
@@ -179068,7 +180336,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (hasRealAccess) {
             return realThreads.filter((thread) => {
               const normalizedThreadId = String(thread?.id || "").trim();
-              return thread.isScheduled && !privateThreadIdsRef.current.has(normalizedThreadId) && !isPrivateThreadRecord(thread);
+              return thread.isScheduled && !privateThreadIdsRef.current.has(normalizedThreadId) && !isPrivateThreadRecord(thread) && !isEvaluationThreadRecord(thread);
             });
           }
           return [];
@@ -179371,6 +180639,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
             };
           }
 
+          if (activePage === "organization") {
+            return {
+              page: "organization",
+              organizationId: organizationPageSelectedOrganizationId,
+            };
+          }
+
           if (activePage === "imagine") {
             return {
               page: "imagine",
@@ -179393,6 +180668,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
               page: "guardrails",
               mode: guardrailsPageMode === "detail" ? "detail" : "overview",
               guardrailId: selectedGuardrailSetId,
+            };
+          }
+
+          if (activePage === "evaluations") {
+            return {
+              page: "evaluations",
+              mode: evaluationsPageMode === "run" ? "run" : evaluationsPageMode === "detail" ? "detail" : "overview",
+              evaluationId: selectedEvaluationSetId,
+              evaluationRunId: selectedEvaluationRunId,
             };
           }
 
@@ -179429,6 +180713,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           currentThreadId,
           developHomeSection,
           environmentId,
+          evaluationsPageMode,
           filesPageTopNav?.contentMode,
           filesPageTopNav?.environmentId,
           filesPageTopNav?.path,
@@ -179443,6 +180728,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           metronomeTopNavState?.mode,
           metronomeTopNavState?.workflowId,
           modelsPageTab,
+          organizationPageSelectedOrganizationId,
           resourcesHeaderState.mode,
           resourcesHeaderState.resourceId,
           resourcesHeaderState.resourceType,
@@ -179450,6 +180736,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           resourceTemplateTypeFilter,
           selectedPluginId,
           selectedGuardrailSetId,
+          selectedEvaluationRunId,
+          selectedEvaluationSetId,
           settingsSection,
           tasksHeaderState.detailMode,
           tasksHeaderState.mode,
@@ -179624,6 +180912,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return;
           }
 
+          if (entry.page === "organization") {
+            openOrganizationPage();
+            setOrganizationPageSelectedOrganizationId(String(entry.organizationId || "").trim());
+            return;
+          }
+
           if (entry.page === "imagine") {
             setImagineActiveView(
               entry.imagineView === "my-templates" || entry.imagineView === "favourites" || entry.imagineView === "create-template"
@@ -179647,6 +180941,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
             openGuardrailsPage({
               mode: entry.mode === "detail" ? "detail" : "overview",
               guardrailId: entry.guardrailId || "",
+            });
+            return;
+          }
+
+          if (entry.page === "evaluations") {
+            openEvaluationsPage({
+              mode: entry.mode === "run" ? "run" : entry.mode === "detail" ? "detail" : "overview",
+              evaluationId: entry.evaluationId || "",
+              evaluationRunId: entry.evaluationRunId || "",
             });
             return;
           }
@@ -179799,6 +181102,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
           if (activePage === "resource-templates") {
             return "Templates";
+          }
+          if (activePage === "organization") {
+            return "Organization";
           }
           if (activePage === "develop") {
             return "Developers";
@@ -182311,21 +183617,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           const welcomeIntro = React.createElement("div", { className: "playground-thread-welcome playground-thread-welcome-intro" },
             React.createElement("div", { className: "playground-thread-welcome-copy" },
-              initialThreadPlanLabel
-                ? React.createElement("p", { className: "playground-thread-welcome-plan" },
-                    initialThreadPlanLabel,
-                    isInitialThreadOnFreePlan ? " " : null,
-                    isInitialThreadOnFreePlan
-                      ? React.createElement("button", {
-                          type: "button",
-                          className: "playground-thread-welcome-plan-offer",
-                          onClick: () => {
-                            void handleSettingsSubscribe("individual");
-                          },
-                        }, "- Get 14 Days for Free")
-                      : null
-                  )
-                : null,
               React.createElement("h1", { className: "playground-thread-welcome-title" }, initialThreadGreeting)
             )
           );
@@ -184274,6 +185565,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          const teamInvitationIds = notificationItems
 	            .filter((item) => item.kind === "team_invitation" && item.id)
 	            .map((item) => item.id);
+	          const organizationInvitationIds = notificationItems
+	            .filter((item) => item.kind === "organization_invitation" && item.id)
+	            .map((item) => item.id);
 
           if (productIds.length > 0) {
             setReadProductNotificationIds((current) => {
@@ -184302,6 +185596,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          if (teamInvitationIds.length > 0) {
 	            setReadTeamInvitationNotificationIds((current) => (
               Array.from(new Set([...current, ...teamInvitationIds]))
+	            ));
+	          }
+
+	          if (organizationInvitationIds.length > 0) {
+	            setReadOrganizationInvitationNotificationIds((current) => (
+              Array.from(new Set([...current, ...organizationInvitationIds]))
 	            ));
 	          }
 
@@ -184376,6 +185676,56 @@ ${PROJECT_OVERVIEW_SCRIPT}
             window.alert(error instanceof Error ? error.message : "Failed to update team invitation.");
           } finally {
             setTeamPageActionId("");
+          }
+        }
+
+        async function handleOrganizationInvitationDecision(item, action) {
+          const invitationId = String(item?.id || "").trim();
+          const normalizedAction = action === "accept" ? "accept" : "decline";
+          if (!invitationId) {
+            return;
+          }
+          if (normalizedAction === "accept") {
+            const confirmed = window.confirm("Join " + (item.organizationName || "this organization") + "?");
+            if (!confirmed) {
+              return;
+            }
+          }
+          setOrganizationPageActionId(invitationId + ":" + normalizedAction);
+          try {
+            const { response, data } = await fetchJsonWithTimeout(
+              proxyBackendBase + "/organizations/invitations/" + encodeURIComponent(invitationId) + "/" + normalizedAction,
+              {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  ...baseAuthRequestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: "{}",
+              },
+              8000
+            );
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to update organization invitation.");
+            }
+            setOrganizationInvitationNotifications((current) => current.filter((invitation) => invitation.id !== invitationId));
+            setReadOrganizationInvitationNotificationIds((current) => Array.from(new Set([...current, invitationId])));
+            setNotificationsOpen(false);
+            if (normalizedAction === "accept") {
+              const organizationId = String(data?.organizationId || data?.data?.organizationId || item.organizationId || "").trim();
+              openOrganizationPage();
+              if (organizationId) {
+                setActiveOrganizationId(organizationId);
+                setOrganizationPageSelectedOrganizationId(organizationId);
+                void loadOrganizationPageData({ selectedOrganizationId: organizationId });
+              }
+            }
+          } catch (error) {
+            window.alert(error instanceof Error ? error.message : "Failed to update organization invitation.");
+          } finally {
+            setOrganizationPageActionId("");
           }
         }
 
@@ -184482,6 +185832,43 @@ ${PROJECT_OVERVIEW_SCRIPT}
             );
           }
 
+          if (item.kind === "organization_invitation") {
+            const metaText = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "";
+            const isAccepting = organizationPageActionId === item.id + ":accept";
+            const isDeclining = organizationPageActionId === item.id + ":decline";
+            return React.createElement("div", {
+              key: item.id,
+              className: "notification-menu-item notification-menu-team-invitation",
+            },
+              React.createElement(Building2, { className: "notification-menu-icon", strokeWidth: 1.8 }),
+              React.createElement("div", { className: "notification-menu-copy" },
+                React.createElement("div", { className: "notification-menu-label" }, "Organization invitation"),
+                React.createElement("div", { className: "notification-menu-text" }, item.organizationName || "Organization"),
+                React.createElement("div", { className: "notification-menu-meta" },
+                  [
+                    item.role ? ("Role: " + item.role) : "",
+                    item.invitedByEmail ? ("From " + item.invitedByEmail) : "",
+                    metaText,
+                  ].filter(Boolean).join(" · ")
+                ),
+                React.createElement("div", { className: "notification-menu-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "notification-menu-action-button is-primary",
+                    onClick: () => handleOrganizationInvitationDecision(item, "accept"),
+                    disabled: Boolean(organizationPageActionId),
+                  }, isAccepting ? "Accepting..." : "Accept"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "notification-menu-action-button",
+                    onClick: () => handleOrganizationInvitationDecision(item, "decline"),
+                    disabled: Boolean(organizationPageActionId),
+                  }, isDeclining ? "Declining..." : "Decline")
+                )
+              )
+            );
+          }
+
           const metaText = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "";
           return React.createElement("div", {
             key: item.id,
@@ -184539,6 +185926,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (item.kind === "permission") return AlertCircle;
           if (item.kind === "human_task") return ListTodo;
           if (item.kind === "team_invitation") return UsersRound;
+          if (item.kind === "organization_invitation") return Building2;
           if (item.kind === "email_verification") return Mail;
           return Bell;
         }
@@ -184559,6 +185947,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
             openTeamPage();
             return;
           }
+          if (item.kind === "organization_invitation") {
+            openOrganizationPage();
+            if (item.organizationId) {
+              setOrganizationPageSelectedOrganizationId(String(item.organizationId || "").trim());
+            }
+            return;
+          }
           if (item.kind === "email_verification") {
             handleOpenEmailVerificationSettings();
           }
@@ -184575,6 +185970,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             { id: "permission", label: "Permission requests" },
             { id: "tasks", label: "Tasks" },
             { id: "team", label: "Teams" },
+            { id: "organization", label: "Organizations" },
             { id: "product", label: "Product" },
           ];
           const sortOptions = [
@@ -184696,7 +186092,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       React.createElement("tbody", null,
                         visibleNotificationPageItems.map((item) => {
                           const Icon = getNotificationPageIcon(item);
-                          const canOpen = item.kind === "permission" || item.kind === "human_task" || item.kind === "team_invitation" || item.kind === "email_verification";
+                          const canOpen = item.kind === "permission" || item.kind === "human_task" || item.kind === "team_invitation" || item.kind === "organization_invitation" || item.kind === "email_verification";
                           const timeLabel = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "—";
                           return React.createElement("tr", {
                               key: item.kind + ":" + item.id,
@@ -184745,6 +186141,24 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                       disabled: Boolean(teamPageActionId),
                                     }, "Decline")
                                   )
+                                : item.kind === "organization_invitation"
+                                  ? React.createElement("div", {
+                                      className: "playground-notifications-row-actions",
+                                      onClick: (event) => event.stopPropagation(),
+                                    },
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "notification-menu-action-button is-primary",
+                                        onClick: () => handleOrganizationInvitationDecision(item, "accept"),
+                                        disabled: Boolean(organizationPageActionId),
+                                      }, "Accept"),
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "notification-menu-action-button",
+                                        onClick: () => handleOrganizationInvitationDecision(item, "decline"),
+                                        disabled: Boolean(organizationPageActionId),
+                                      }, "Decline")
+                                    )
                                 : canOpen
                                   ? React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 })
                                   : null
@@ -184768,6 +186182,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return renderUnifiedTopNav({
             className: "playground-settings-top-navbar",
             pathItems: [{ label: "Configure" }, { label: "Teams" }],
+          });
+        }
+
+        function renderOrganizationPageNav() {
+          return renderUnifiedTopNav({
+            className: "playground-settings-top-navbar",
+            pathItems: [{ label: "Configure" }, { label: "Organization" }],
           });
         }
 
@@ -184802,6 +186223,24 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return renderUnifiedTopNav({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: guardrailsPathItems,
+          });
+        }
+
+        function renderEvaluationsPageNav() {
+          const activeEvaluationSet = (Array.isArray(evaluationSets) ? evaluationSets : [])
+            .map((set) => normalizePlaygroundEvaluationSet(set))
+            .find((set) => set?.id === selectedEvaluationSetId);
+          const activeEvaluationRun = activeEvaluationSet?.runs?.find((run) => run?.id === selectedEvaluationRunId);
+          const evaluationsPathItems = [{ label: "Configure" }, { label: "Evaluations" }];
+          if ((evaluationsPageMode === "detail" || evaluationsPageMode === "run") && activeEvaluationSet?.name) {
+            evaluationsPathItems.push({ label: activeEvaluationSet.name });
+          }
+          if (evaluationsPageMode === "run" && activeEvaluationRun?.label) {
+            evaluationsPathItems.push({ label: activeEvaluationRun.label });
+          }
+          return renderUnifiedTopNav({
+            className: "playground-configure-navbar playground-models-navbar",
+            pathItems: evaluationsPathItems,
           });
         }
 
@@ -186462,6 +187901,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
               year: "numeric",
             });
           };
+          const formatGuardrailVersionTimestamp = (value) => {
+            const date = new Date(value || "");
+            if (Number.isNaN(date.getTime())) return "Just now";
+            return date.toLocaleString(undefined, {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+          };
           const filteredGuardrailSets = safeGuardrailSets
             .filter((set) => {
               const isDefaultSet = isGuardrailSetReadonly(set);
@@ -186513,11 +187962,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setSelectedGuardrailSetId(setId);
             setGuardrailsPageMode("detail");
             setGuardrailsToolbarPopover("");
+            setGuardrailVersionsSidebarOpen(false);
+            setOpenGuardrailVersionMenuId("");
           }
 
           function returnToGuardrailsOverview() {
             setGuardrailsPageMode("overview");
             setGuardrailsToolbarPopover("");
+            setGuardrailVersionsSidebarOpen(false);
+            setOpenGuardrailVersionMenuId("");
           }
 
           function updateGuardrailSet(setId, updater) {
@@ -186549,10 +188002,216 @@ ${PROJECT_OVERVIEW_SCRIPT}
             if (selectedGuardrailSetId === normalizedSetId) {
               const fallbackSet = safeGuardrailSets.find((set) => set?.id !== normalizedSetId);
               setSelectedGuardrailSetId(fallbackSet?.id || "");
+              setGuardrailVersionsSidebarOpen(false);
+              setOpenGuardrailVersionMenuId("");
               if (guardrailsPageMode === "detail") {
                 setGuardrailsPageMode("overview");
               }
             }
+          }
+
+          function getGuardrailVersionMetadata(set = selectedGuardrailSet) {
+            return set?.metadata && typeof set.metadata === "object" && !Array.isArray(set.metadata)
+              ? set.metadata
+              : {};
+          }
+
+          function readSelectedGuardrailVersions() {
+            return readPlaygroundGuardrailVersions(selectedGuardrailSet);
+          }
+
+          function getSelectedGuardrailActiveVersion() {
+            const metadata = getGuardrailVersionMetadata();
+            const activeVersionId = String(metadata.activeGuardrailVersionId || metadata.active_guardrail_version_id || "").trim();
+            return readSelectedGuardrailVersions().find((version) => version.id === activeVersionId || version.status === "active") || null;
+          }
+
+          function commitVersionedGuardrailSet(nextSet, options = {}) {
+            const normalizedSet = normalizePlaygroundGuardrailSet(nextSet);
+            if (!normalizedSet?.id || isGuardrailSetReadonly(normalizedSet)) {
+              return;
+            }
+            setGuardrailVersionState({
+              status: "loading",
+              message: options.loadingMessage || "Updating guardrail versions...",
+              error: "",
+            });
+            try {
+              setGuardrailSets((current) => (Array.isArray(current) ? current : []).map((set) => (
+                set?.id === normalizedSet.id ? normalizedSet : set
+              )));
+              setOpenGuardrailVersionMenuId("");
+              setGuardrailVersionState({
+                status: "success",
+                message: options.successMessage || "Guardrail versions updated.",
+                error: "",
+              });
+              window.setTimeout(() => {
+                setGuardrailVersionState((current) => current.status === "success" ? { status: "idle", message: "", error: "" } : current);
+              }, 1400);
+            } catch (error) {
+              setGuardrailVersionState({
+                status: "error",
+                message: "",
+                error: error?.message || options.errorMessage || "Failed to update guardrail versions.",
+              });
+            }
+          }
+
+          function saveCurrentGuardrailVersion() {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
+            const versions = readSelectedGuardrailVersions();
+            const nextVersion = createPlaygroundGuardrailVersion(selectedGuardrailSet, versions, { status: "saved" });
+            const nextSet = createPlaygroundGuardrailWithVersionList(selectedGuardrailSet, [nextVersion, ...versions], nextVersion.id);
+            commitVersionedGuardrailSet(nextSet, {
+              loadingMessage: "Saving guardrail version...",
+              successMessage: "Guardrail version saved.",
+              errorMessage: "Failed to save guardrail version.",
+            });
+          }
+
+          function publishCurrentGuardrailVersion() {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
+            const versions = readSelectedGuardrailVersions().map((version) => (
+              version.status === "active"
+                ? { ...version, status: "superseded" }
+                : version
+            ));
+            const nextVersion = createPlaygroundGuardrailVersion(selectedGuardrailSet, versions, { status: "active" });
+            const nextSet = createPlaygroundGuardrailWithVersionList(selectedGuardrailSet, [nextVersion, ...versions], nextVersion.id);
+            commitVersionedGuardrailSet(nextSet, {
+              loadingMessage: "Publishing guardrail version...",
+              successMessage: "Guardrail version published.",
+              errorMessage: "Failed to publish guardrail version.",
+            });
+          }
+
+          function restoreGuardrailVersion(versionId) {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
+            const versions = readSelectedGuardrailVersions();
+            const targetVersion = versions.find((version) => version.id === String(versionId || "").trim());
+            if (!targetVersion) return;
+            const nextSet = createPlaygroundGuardrailFromVersionSnapshot(selectedGuardrailSet, targetVersion, versions, targetVersion.id);
+            commitVersionedGuardrailSet(nextSet, {
+              loadingMessage: "Restoring guardrail version...",
+              successMessage: "Guardrail version restored.",
+              errorMessage: "Failed to restore guardrail version.",
+            });
+          }
+
+          function publishGuardrailVersion(versionId) {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
+            const normalizedVersionId = String(versionId || "").trim();
+            const versions = readSelectedGuardrailVersions();
+            const targetVersion = versions.find((version) => version.id === normalizedVersionId);
+            if (!targetVersion) return;
+            const now = new Date().toISOString();
+            const nextVersions = versions.map((version) => {
+              if (version.id === normalizedVersionId) {
+                return {
+                  ...version,
+                  status: "active",
+                  publishedAt: version.publishedAt || now,
+                };
+              }
+              return version.status === "active"
+                ? { ...version, status: "superseded" }
+                : version;
+            });
+            const activeVersion = nextVersions.find((version) => version.id === normalizedVersionId) || targetVersion;
+            const nextSet = createPlaygroundGuardrailFromVersionSnapshot(selectedGuardrailSet, activeVersion, nextVersions, activeVersion.id);
+            commitVersionedGuardrailSet(nextSet, {
+              loadingMessage: "Publishing guardrail version...",
+              successMessage: "Guardrail version published.",
+              errorMessage: "Failed to publish guardrail version.",
+            });
+          }
+
+          function deleteGuardrailVersion(versionId) {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) return;
+            const versions = readSelectedGuardrailVersions();
+            const targetVersion = versions.find((version) => version.id === normalizedVersionId);
+            if (!targetVersion) return;
+            const confirmed = typeof window === "undefined" || window.confirm("Delete " + (targetVersion.label || "this version") + "?");
+            if (!confirmed) return;
+            const nextVersions = versions.filter((version) => version.id !== normalizedVersionId);
+            const nextSet = createPlaygroundGuardrailWithVersionList(selectedGuardrailSet, nextVersions);
+            commitVersionedGuardrailSet(nextSet, {
+              loadingMessage: "Deleting guardrail version...",
+              successMessage: "Guardrail version deleted.",
+              errorMessage: "Failed to delete guardrail version.",
+            });
+          }
+
+          function unpublishActiveGuardrailVersion() {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
+            const activeVersion = getSelectedGuardrailActiveVersion();
+            if (!activeVersion) return;
+            const confirmed = typeof window === "undefined" || window.confirm("Unpublish this guardrail set?");
+            if (!confirmed) return;
+            const versions = readSelectedGuardrailVersions().map((version) => (
+              version.id === activeVersion.id
+                ? { ...version, status: "unpublished", publishedAt: "" }
+                : version
+            ));
+            const nextSet = createPlaygroundGuardrailWithVersionList(selectedGuardrailSet, versions);
+            commitVersionedGuardrailSet(nextSet, {
+              loadingMessage: "Unpublishing guardrail set...",
+              successMessage: "Guardrail set unpublished.",
+              errorMessage: "Failed to unpublish guardrail set.",
+            });
+          }
+
+          function renderGuardrailVersionsSidebar() {
+            if (!isGuardrailsDetailPage || selectedGuardrailSetReadonly || !guardrailVersionsSidebarOpen) {
+              return null;
+            }
+            const versions = readSelectedGuardrailVersions();
+            const metadata = getGuardrailVersionMetadata();
+            const activeVersion = getSelectedGuardrailActiveVersion();
+            const activeVersionId = String(activeVersion?.id || metadata.activeGuardrailVersionId || metadata.active_guardrail_version_id || "").trim();
+            const selectedVersionId = String(
+              metadata.restoredFromGuardrailVersionId
+              || metadata.restored_from_guardrail_version_id
+              || activeVersionId
+              || ""
+            ).trim();
+            return React.createElement(PlaygroundVersionSidebar, {
+              className: "playground-guardrails-versions-sidebar",
+              open: guardrailVersionsSidebarOpen,
+              versions,
+              activeVersionId,
+              selectedVersionId,
+              state: guardrailVersionState,
+              busy: guardrailVersionState.status === "loading",
+              openMenuId: openGuardrailVersionMenuId,
+              onOpenMenuIdChange: setOpenGuardrailVersionMenuId,
+              onClose: () => {
+                setGuardrailVersionsSidebarOpen(false);
+                setOpenGuardrailVersionMenuId("");
+              },
+              onSaveVersion: () => saveCurrentGuardrailVersion(),
+              onPublishCurrent: () => publishCurrentGuardrailVersion(),
+              onUnpublishActive: activeVersion ? () => unpublishActiveGuardrailVersion() : null,
+              onSelectVersion: (versionId) => restoreGuardrailVersion(versionId),
+              onPublishVersion: (versionId) => publishGuardrailVersion(versionId),
+              onDeleteVersion: (versionId) => deleteGuardrailVersion(versionId),
+              emptyCopy: "Create a version to track guardrail prompts and description changes.",
+              unpublishLabel: "Unpublish guardrail set",
+              getVersionTitle: (version) => String(version.label || ("Version " + version.version)).trim(),
+              getVersionDescription: (version) => String(version.description || "").trim(),
+              getVersionMeta: (version) => {
+                const promptCount = Number(version.promptCount || version.snapshot?.prompts?.length || 0) || 0;
+                return (version.publishedAt ? "Published " : "Saved ")
+                  + formatGuardrailVersionTimestamp(version.publishedAt || version.createdAt)
+                  + " · "
+                  + promptCount
+                  + " prompt"
+                  + (promptCount === 1 ? "" : "s");
+              },
+            });
           }
 
           function addGuardrailPrompt(setId) {
@@ -186779,7 +188438,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           ];
 
           return React.createElement("section", { className: "playground-files-page playground-guardrails-page" },
-            React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" },
+            React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" + (guardrailVersionsSidebarOpen && isGuardrailsDetailPage && !selectedGuardrailSetReadonly ? " has-guardrail-versions" : "") },
               React.createElement("section", { className: "playground-files-browser playground-guardrails-browser" },
                 React.createElement("div", { className: "playground-files-browser-header playground-guardrails-browser-header" },
                   React.createElement("div", { className: "playground-files-library-header playground-guardrails-library-header" },
@@ -186815,6 +188474,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               React.createElement("span", { className: "playground-guardrails-readonly-pill" }, "Default Set")
                             )
                           : React.createElement("div", { className: "playground-guardrails-detail-actions" },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-metronome-create-button playground-metronome-publish-button playground-guardrails-publish-button" + (guardrailVersionsSidebarOpen ? " is-active" : ""),
+                                onClick: () => {
+                                  setOpenGuardrailVersionMenuId("");
+                                  setGuardrailVersionsSidebarOpen((current) => !current);
+                                },
+                                "aria-expanded": guardrailVersionsSidebarOpen ? "true" : "false",
+                              },
+                                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("span", null, "Publish")
+                              ),
                               React.createElement("button", {
                                 type: "button",
                                 className: "playground-files-library-icon-button",
@@ -186984,8 +188655,37 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       )
                 )
               )
+              , renderGuardrailVersionsSidebar()
             )
           );
+        }
+
+        function renderEvaluationsPage() {
+          return renderPlaygroundEvaluationsPage({
+            agents: runtimeAgents,
+            evaluationSets,
+            setEvaluationSets,
+            selectedEvaluationSetId,
+            setSelectedEvaluationSetId,
+            selectedEvaluationRunId,
+            setSelectedEvaluationRunId,
+            evaluationsPageMode,
+            setEvaluationsPageMode,
+            evaluationDetailTab,
+            setEvaluationDetailTab,
+            evaluationsSearchQuery,
+            setEvaluationsSearchQuery,
+            evaluationCreateModalOpen,
+            setEvaluationCreateModalOpen,
+            evaluationCreateForm,
+            setEvaluationCreateForm,
+            evaluationJsonlImportOpen,
+            setEvaluationJsonlImportOpen,
+            evaluationJsonlImportValue,
+            setEvaluationJsonlImportValue,
+            evaluationJsonlImportError,
+            setEvaluationJsonlImportError,
+          });
         }
 
         function getPlaygroundResourceTemplateMetronomePreviewWorkflowId(templateId) {
@@ -188760,6 +190460,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 onClick: () => openTeamPage(),
               },
               {
+                id: "organization",
+                label: "Organization",
+                Icon: Building2,
+                active: activePage === "organization",
+                onClick: () => openOrganizationPage(),
+              },
+              {
                 id: "configure-resources-label",
                 type: "subtitle",
                 label: "Resources",
@@ -188803,6 +190510,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 id: "configure-governance-label",
                 type: "subtitle",
                 label: "Governance",
+              },
+              {
+                id: "evaluations",
+                label: "Evaluations",
+                Icon: ChartColumnIncreasing,
+                active: activePage === "evaluations",
+                onClick: () => openEvaluationsPage(),
               },
               {
                 id: "guardrails",
@@ -188953,6 +190667,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const shouldShowSidebarThreadSection = shouldRenderSidebarThreads && (isThreadsLoading || pinnedThreadItems.length > 0 || baseThreadItems.length > 0);
           const sidebarNavigationItems = getSidebarNavigationItems();
           const sidebarFooterNavigationItems = getSidebarFooterNavigationItems();
+          const sidebarOrganizationDisplay = getActiveSidebarOrganizationDisplay();
           return React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-sidebar-top" },
               React.createElement("button", {
@@ -189019,15 +190734,28 @@ ${PROJECT_OVERVIEW_SCRIPT}
             React.createElement("div", { className: "sidebar-footer" },
               renderStatusIndicators(),
               sidebarFooterNavigationItems.map(renderSidebarNavigationButton),
-              React.createElement("div", { className: "sidebar-plan-card", "aria-label": "Current plan" },
-                React.createElement("span", { className: "sidebar-plan-name" }, sidebarPlanName),
+              React.createElement("div", { className: "sidebar-organization-card", "aria-label": "Current organization and plan" },
                 React.createElement("button", {
                   type: "button",
-                  className: "sidebar-plan-action" + (!sidebarPlanIsPaid ? " is-upgrade" : ""),
+                  className: "sidebar-organization-main",
                   onClick: handleSidebarPlanAction,
                   disabled: settingsCheckoutLoading && !sidebarPlanIsPaid,
+                  title: sidebarOrganizationDisplay.name + " · " + sidebarPlanName,
                 },
-                  React.createElement("span", null, settingsCheckoutLoading && !sidebarPlanIsPaid ? "Loading..." : sidebarPlanActionLabel)
+                  React.createElement("span", { className: "sidebar-organization-copy" },
+                    React.createElement("span", { className: "sidebar-organization-name" }, sidebarOrganizationDisplay.name),
+                    React.createElement("span", { className: "sidebar-organization-plan" }, sidebarPlanName)
+                  )
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-organization-menu-button" + (accountMenuOpen && accountMenuPlacement === "sidebar" ? " is-open" : ""),
+                  onClick: () => toggleAccountMenuFrom("sidebar"),
+                  "aria-label": "Open account menu",
+                  "aria-expanded": accountMenuOpen && accountMenuPlacement === "sidebar" ? "true" : "false",
+                  title: "Account menu",
+                },
+                  React.createElement(EllipsisVertical, { className: "sidebar-organization-menu-icon", strokeWidth: 1.8 })
                 )
               )
             )
@@ -189376,6 +191104,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      ? renderModelsPageNav()
 	                    : activePage === "guardrails"
 	                      ? renderGuardrailsPageNav()
+	                    : activePage === "evaluations"
+	                      ? renderEvaluationsPageNav()
 	                    : activePage === "resource-templates"
 	                      ? renderResourceTemplatesPageNav()
 	                    : activePage === "inference"
@@ -189388,6 +191118,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      ? renderSettingsPageNav()
 	                    : activePage === "team"
 	                      ? renderTeamPageNav()
+	                    : activePage === "organization"
+	                      ? renderOrganizationPageNav()
 	                    : showInitialThreadWelcome
 	                      ? renderInitialThreadWelcomeNav()
 	                    : activePage === "tasks"
@@ -189658,12 +191390,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             : null
                         )
                       ),
-	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isAgentVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (activePage === "files" || activePage === "guardrails" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
+	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isAgentVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (activePage === "files" || activePage === "guardrails" || activePage === "evaluations" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
 	                    activePage === "settings"
 	                      ? renderSettingsPage()
 	                      : activePage === "team"
 	                        ? hasRealAccess
 	                          ? renderTeamPage()
+	                          : hasDemoAccess
+	                            ? renderDemoFeaturePage("team")
+	                            : renderAuthGate()
+	                      : activePage === "organization"
+	                        ? hasRealAccess
+	                          ? renderOrganizationPage()
 	                          : hasDemoAccess
 	                            ? renderDemoFeaturePage("team")
 	                            : renderAuthGate()
@@ -189682,6 +191420,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      : activePage === "guardrails"
 	                        ? hasRealAccess
 	                          ? renderGuardrailsPage()
+	                          : hasDemoAccess
+	                            ? renderDemoFeaturePage("resources")
+	                            : renderAuthGate()
+	                      : activePage === "evaluations"
+	                        ? hasRealAccess
+	                          ? renderEvaluationsPage()
 	                          : hasDemoAccess
 	                            ? renderDemoFeaturePage("resources")
 	                            : renderAuthGate()
@@ -190250,6 +191994,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     emptyStateAfterComposer: showInitialThreadWelcome ? renderInitialThreadWelcome("after") : undefined,
                                     composerProjectTasks: showInitialThreadWelcome ? welcomeComposerTaskPreviews : undefined,
                                     selectedComposerProjectTask: showInitialThreadWelcome ? selectedWelcomeComposerTaskPreview : null,
+                                    composerPlanTierId: settingsCurrentTierId || accountTierId || "free",
+                                    composerOrganizations: getComposerOrganizationOptions(),
+                                    composerOrganizationId: getActiveComposerOrganizationId(),
+                                    onComposerOrganizationChange: handleComposerOrganizationChange,
                                     showComposerCreateAgentAction: showWelcomeComposerCreateAgentAction && !isFreeComposerAgentPlan,
                                     onComposerCreateAgentClick: showInitialThreadWelcome && !isFreeComposerAgentPlan ? openAgentCreationInResources : undefined,
                                     onComposerProjectTaskChange: showInitialThreadWelcome
@@ -190982,6 +192730,23 @@ function readOptionalApiKey(req, body) {
   return (headerApiKey || bodyApiKey || "").trim();
 }
 
+function readOptionalOrganizationId(req, body) {
+  const headerOrganizationId = String(readHeader(req, "x-computer-agents-organization") || "").trim();
+  const bodyOrganizationId = body && typeof body.organizationId === "string" ? body.organizationId.trim() : "";
+  return (headerOrganizationId || bodyOrganizationId || "").trim();
+}
+
+function withProxyOrganizationHeader(req, body, headers) {
+  const organizationId = readOptionalOrganizationId(req, body || {});
+  if (!organizationId) {
+    return headers;
+  }
+  return {
+    ...headers,
+    "X-Computer-Agents-Organization": organizationId,
+  };
+}
+
 function parseApiKey(req, body) {
   const apiKey = readOptionalApiKey(req, body);
   if (!apiKey) throw new Error("API key is required");
@@ -191002,11 +192767,11 @@ function buildAiosCloudTarget(req, upstreamPath) {
 
 async function fetchAiosCloud(req, upstreamPath, init = {}) {
   const targetUrl = buildAiosCloudTarget(req, upstreamPath);
-  const headers = {
+  const headers = withProxyOrganizationHeader(req, {}, {
     cookie: req.headers.cookie || "",
     authorization: req.headers.authorization || "",
     ...(init.headers || {}),
-  };
+  });
   if (shouldForwardLocalCloudApiOverride && !headers["x-runner-upstream-url"]) {
     headers["x-runner-upstream-url"] = defaultUpstreamOrigin;
   }
@@ -191021,11 +192786,11 @@ async function fetchAiosCloud(req, upstreamPath, init = {}) {
 
 async function fetchAiosApi(req, apiPath, init = {}) {
   const targetUrl = new URL(`${aiosOrigin}${apiPath}`);
-  const headers = {
+  const headers = withProxyOrganizationHeader(req, {}, {
     cookie: req.headers.cookie || "",
     authorization: req.headers.authorization || "",
     ...(init.headers || {}),
-  };
+  });
 
   return fetch(targetUrl.toString(), {
     method: init.method || "GET",
@@ -191207,9 +192972,9 @@ async function fetchProxyAgentRecordForThreadGuardrails(req, upstreamUrl, apiKey
   if (apiKey) {
     response = await fetch(`${upstreamUrl}/agents/${encodedAgentId}`, {
       method: "GET",
-      headers: {
+      headers: withProxyOrganizationHeader(req, {}, {
         "X-API-Key": apiKey,
-      },
+      }),
     });
   } else if (hasAiosSession(req)) {
     response = await fetchAiosCloud(req, `/agents/${encodedAgentId}`, { method: "GET" });
@@ -191308,10 +193073,10 @@ async function proxyCreateThread(req, res) {
     if (apiKey) {
       upstream = await fetch(`${upstreamUrl}/threads`, {
         method: "POST",
-        headers: {
+        headers: withProxyOrganizationHeader(req, body, {
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
-        },
+        }),
         body: JSON.stringify(enrichedPayload),
       });
     } else if (hasAiosSession(req)) {
@@ -191380,10 +193145,10 @@ async function proxyThreadMessages(req, res, threadId) {
       });
       upstream = await fetch(`${upstreamUrl}/threads/${encodeURIComponent(threadId)}/messages`, {
         method: "POST",
-        headers: {
+        headers: withProxyOrganizationHeader(req, body, {
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
-        },
+        }),
         body: JSON.stringify(payload),
       });
     } else if (hasAiosSession(req)) {
@@ -191653,9 +193418,9 @@ async function resolveProjectTaskByTicketNumber(req, { apiKey, upstreamUrl, proj
   if (apiKey) {
     upstream = await fetch(`${upstreamUrl}${taskPath}`, {
       method: "GET",
-      headers: {
+      headers: withProxyOrganizationHeader(req, {}, {
         "X-API-Key": apiKey,
-      },
+      }),
     });
   } else {
     upstream = await fetchAiosTaskApi(req, taskPath, {
@@ -191746,10 +193511,10 @@ async function proxyTaskStartThread(req, res, taskId) {
       if (apiKey) {
         const response = await fetch(`${upstreamUrl}${path}`, {
           method,
-          headers: {
+          headers: withProxyOrganizationHeader(req, payload, {
             "Content-Type": "application/json",
             "X-API-Key": apiKey,
-          },
+          }),
           body: payload === undefined ? undefined : JSON.stringify(payload),
         });
         return fetchJsonResponse(response, `Task API request failed for ${path}.`);
@@ -191768,10 +193533,10 @@ async function proxyTaskStartThread(req, res, taskId) {
       if (apiKey) {
         const response = await fetch(`${upstreamUrl}${path}`, {
           method,
-          headers: {
+          headers: withProxyOrganizationHeader(req, payload, {
             "Content-Type": "application/json",
             "X-API-Key": apiKey,
-          },
+          }),
           body: payload === undefined ? undefined : JSON.stringify(payload),
         });
         return fetchJsonResponse(response, `Cloud API request failed for ${path}.`);
@@ -192127,10 +193892,10 @@ async function proxyTaskBacklogCreateTaskMessage(req, res, projectId, threadId, 
       upstreamTarget.search = requestUrl.search;
       upstream = await fetch(upstreamTarget.toString(), {
         method: "POST",
-        headers: {
+        headers: withProxyOrganizationHeader(req, body, {
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
-        },
+        }),
         body: JSON.stringify(upstreamPayload),
       });
     } else {
@@ -192384,9 +194149,9 @@ async function fetchUpstreamOverviewJson(req, upstreamPath) {
     const upstreamTarget = new URL(`${upstreamUrl}${upstreamPath}`);
     const upstream = await fetch(upstreamTarget.toString(), {
       method: "GET",
-      headers: {
+      headers: withProxyOrganizationHeader(req, {}, {
         "X-API-Key": apiKey,
-      },
+      }),
     });
     const text = await upstream.text().catch(() => "");
     let parsed = {};
@@ -192405,10 +194170,10 @@ async function fetchUpstreamOverviewJson(req, upstreamPath) {
     targetUrl.search = queryString ? `?${queryString}` : "";
     const upstream = await fetch(targetUrl.toString(), {
       method: "GET",
-      headers: {
+      headers: withProxyOrganizationHeader(req, {}, {
         cookie: req.headers.cookie || "",
         authorization: req.headers.authorization || "",
-      },
+      }),
     });
     const text = await upstream.text().catch(() => "");
     let parsed = {};
@@ -192673,9 +194438,9 @@ async function proxyUpstreamGet(req, res, upstreamPath, options = {}) {
       upstreamTarget.search = requestUrl.search;
       upstream = await fetch(upstreamTarget.toString(), {
         method: "GET",
-        headers: {
+        headers: withProxyOrganizationHeader(req, {}, {
           "X-API-Key": apiKey,
-        },
+        }),
       });
     } else if (hasAiosSession(req)) {
       upstream = await fetchAiosCloud(req, upstreamPath + requestUrl.search, {
@@ -194304,10 +196069,10 @@ async function proxyUpstreamTaskJsonRequest(req, res, upstreamPath, method) {
       upstreamTarget.search = requestUrl.search;
       upstream = await fetch(upstreamTarget.toString(), {
         method,
-        headers: {
+        headers: withProxyOrganizationHeader(req, body, {
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
-        },
+        }),
         body: body === undefined ? undefined : JSON.stringify(body),
       });
     } else if (hasAiosSession(req)) {
@@ -194418,9 +196183,9 @@ async function proxyThreadMessagesGet(req, res, threadId) {
       upstreamTarget.search = requestUrl.search;
       upstream = await fetch(upstreamTarget.toString(), {
         method: "GET",
-        headers: {
+        headers: withProxyOrganizationHeader(req, {}, {
           "X-API-Key": apiKey,
-        },
+        }),
       });
     } else if (hasAiosSession(req)) {
       upstream = await fetchAiosCloud(req, upstreamPathWithSearch, {
@@ -194473,10 +196238,10 @@ async function proxyUpstreamJsonRequest(req, res, upstreamPath, method) {
       upstreamTarget.search = requestUrl.search;
       upstream = await fetch(upstreamTarget.toString(), {
         method,
-        headers: {
+        headers: withProxyOrganizationHeader(req, body, {
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
-        },
+        }),
         signal: controller.signal,
         body: body === undefined ? undefined : JSON.stringify(body),
       });
@@ -194529,10 +196294,10 @@ async function fetchUpstreamJsonForProxy(req, upstreamPath, method, body) {
     upstreamTarget.search = requestUrl.search;
     upstream = await fetch(upstreamTarget.toString(), {
       method,
-      headers: {
+      headers: withProxyOrganizationHeader(req, body, {
         "Content-Type": "application/json",
         "X-API-Key": apiKey,
-      },
+      }),
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } else if (hasAiosSession(req)) {
@@ -194573,19 +196338,19 @@ async function fetchUpstreamJsonForProxyExactPath(req, upstreamPath, method = "G
     const upstreamTarget = new URL(`${upstreamUrl}${normalizedPath}`);
     upstream = await fetch(upstreamTarget.toString(), {
       method,
-      headers: {
+      headers: withProxyOrganizationHeader(req, body, {
         "Content-Type": "application/json",
         "X-API-Key": apiKey,
-      },
+      }),
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } else if (hasAiosSession(req)) {
     const targetUrl = new URL(`${aiosOrigin}/api/playground/cloud${normalizedPath}`);
-    const headers = {
+    const headers = withProxyOrganizationHeader(req, body || {}, {
       cookie: req.headers.cookie || "",
       authorization: req.headers.authorization || "",
       "content-type": "application/json",
-    };
+    });
     if (shouldForwardLocalCloudApiOverride && !headers["x-runner-upstream-url"]) {
       headers["x-runner-upstream-url"] = defaultUpstreamOrigin;
     }
@@ -195052,10 +196817,10 @@ async function proxyEnvironmentStart(req, res, environmentId) {
     if (apiKey) {
       upstreamPromise = fetch(`${upstreamUrl}${upstreamPath}`, {
         method: "POST",
-        headers: {
+        headers: withProxyOrganizationHeader(req, body, {
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
-        },
+        }),
         body: JSON.stringify(body),
       });
     } else if (hasAiosSession(req)) {
@@ -195139,10 +196904,10 @@ async function proxyEnvironmentGuiSession(req, res, environmentId) {
     if (apiKey) {
       upstream = await fetch(`${upstreamUrl}/environments/${encodeURIComponent(environmentId)}/gui/session`, {
         method: "POST",
-        headers: {
+        headers: withProxyOrganizationHeader(req, body, {
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
-        },
+        }),
         body: JSON.stringify(body || {}),
       });
     } else if (hasAiosSession(req)) {
@@ -195204,10 +196969,10 @@ async function proxyUpstreamRawRequest(req, res, upstreamPath, method) {
       upstreamTarget.search = requestUrl.search;
       upstream = await fetch(upstreamTarget.toString(), {
         method,
-        headers: {
+        headers: withProxyOrganizationHeader(req, {}, {
           "Content-Type": contentType,
           "X-API-Key": apiKey,
-        },
+        }),
         body: rawBody,
       });
     } else if (hasAiosSession(req)) {
@@ -195255,10 +197020,10 @@ async function proxyUpstreamStreamRequest(req, res, upstreamPath, method) {
       upstreamTarget.search = requestUrl.search;
       upstream = await fetch(upstreamTarget.toString(), {
         method,
-        headers: {
+        headers: withProxyOrganizationHeader(req, body, {
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
-        },
+        }),
         body: body === undefined ? undefined : JSON.stringify(body),
       });
     } else if (hasAiosSession(req)) {
@@ -195359,9 +197124,9 @@ async function proxyUpstreamBinaryGet(req, res, upstreamPath, options = {}) {
       upstreamTarget.search = requestUrl.search;
       upstream = await fetch(upstreamTarget.toString(), {
         method: "GET",
-        headers: {
+        headers: withProxyOrganizationHeader(req, {}, {
           "X-API-Key": apiKey,
-        },
+        }),
       });
     } else if (hasAiosSession(req)) {
       upstream = await fetchAiosCloud(req, upstreamPath, {
@@ -195472,9 +197237,9 @@ async function proxyEnvironmentHtmlPreview(req, res, environmentId, filePath) {
       upstreamTarget.search = requestUrl.search;
       upstream = await fetch(upstreamTarget.toString(), {
         method: "GET",
-        headers: {
+        headers: withProxyOrganizationHeader(req, {}, {
           "X-API-Key": apiKey,
-        },
+        }),
       });
     } else if (hasAiosSession(req)) {
       upstream = await fetchAiosCloud(req, upstreamPath, {
@@ -195566,9 +197331,9 @@ async function proxyThreadStepHtmlPreview(req, res, threadId, stepId, filePath) 
       upstreamTarget.search = upstreamSearch.toString();
       upstream = await fetch(upstreamTarget.toString(), {
         method: "GET",
-        headers: {
+        headers: withProxyOrganizationHeader(req, {}, {
           "X-API-Key": apiKey,
-        },
+        }),
       });
     } else if (hasAiosSession(req)) {
       upstream = await fetchAiosCloud(req, `${upstreamPath}?${upstreamSearch.toString()}`, {
@@ -195905,11 +197670,11 @@ async function proxyPlaygroundCustomSkills(req, res) {
       const aiosTarget = new URL(`${aiosOrigin}/api/projects/${encodeURIComponent(aiosProjectId)}/skills`);
       const aiosResponse = await fetch(aiosTarget.toString(), {
         method: "GET",
-        headers: {
+        headers: withProxyOrganizationHeader(req, {}, {
           cookie,
           authorization,
           ...(apiKey ? { "x-api-key": apiKey } : {}),
-        },
+        }),
       });
       const aiosText = await aiosResponse.text();
       let aiosParsed = {};
@@ -195959,9 +197724,9 @@ async function proxyPlaygroundCustomSkills(req, res) {
     const upstreamTarget = new URL(`${normalizeBackendUrl(upstreamHeader || defaultUpstreamOrigin)}/v1/skills`);
     const upstreamResponse = await fetch(upstreamTarget.toString(), {
       method: "GET",
-      headers: {
+      headers: withProxyOrganizationHeader(req, {}, {
         "X-API-Key": resolvedApiKey,
-      },
+      }),
     });
     const upstreamText = await upstreamResponse.text();
     let upstreamParsed = {};
@@ -199879,6 +201644,19 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "POST" && url.pathname === "/api/real/team-member-profiles/lookup") {
     void proxyTeamMemberProfileLookup(req, res);
+    return;
+  }
+
+  const organizationsProxyMatch = url.pathname.match(/^\/api\/real\/organizations(?:\/(.*))?$/);
+  if (organizationsProxyMatch && ["GET", "POST", "PATCH", "PUT", "DELETE"].includes(req.method || "")) {
+    const suffix = organizationsProxyMatch[1]
+      ? "/" + organizationsProxyMatch[1].split("/").map((segment) => encodeURIComponent(decodeURIComponent(segment))).join("/")
+      : "";
+    if (req.method === "GET") {
+      void proxyUpstreamGet(req, res, "/organizations" + suffix + (url.search || ""));
+    } else {
+      void proxyUpstreamJsonRequest(req, res, "/organizations" + suffix, req.method);
+    }
     return;
   }
 

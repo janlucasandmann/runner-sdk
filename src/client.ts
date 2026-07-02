@@ -27,6 +27,8 @@ import {
 
 type FetchLike = typeof fetch;
 
+const ORGANIZATION_HEADER = "x-computer-agents-organization";
+
 export class RunnerClient {
   private readonly fetchImpl: FetchLike;
 
@@ -44,7 +46,7 @@ export class RunnerClient {
     const runRequest = await this.resolveRunRequest(options);
     const response = await this.fetchImpl(runRequest.url, {
       method: runRequest.method ?? "POST",
-      headers: runRequest.headers,
+      headers: this.withOrganizationHeader(runRequest.headers, runRequest.organizationId ?? options.organizationId),
       body: JSON.stringify(runRequest.body),
       credentials: runRequest.credentials,
       signal: options.signal,
@@ -133,7 +135,7 @@ export class RunnerClient {
     );
     const payload = await this.requestJson<{ data?: RunnerThreadStep[] }>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -156,7 +158,7 @@ export class RunnerClient {
     );
     const payload = await this.requestJson<{ data?: RunnerLog[]; logs?: RunnerLog[] }>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -178,7 +180,7 @@ export class RunnerClient {
     );
     return this.requestJson<RunnerThreadStepDiffResult>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -199,7 +201,7 @@ export class RunnerClient {
     );
     const payload = await this.requestJson<{ data?: RunnerSnapshotFileEntry[] }>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -220,7 +222,7 @@ export class RunnerClient {
     );
     return this.requestJson<RunnerThreadStepFileResult>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -243,7 +245,7 @@ export class RunnerClient {
     );
     return this.requestJson<RunnerThreadFileHistoryResult>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -264,7 +266,7 @@ export class RunnerClient {
     );
     return this.requestJson<RunnerThreadForkResult>(url, {
       method: "POST",
-      headers: this.withJsonContentType(options.headers),
+      headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
       body: JSON.stringify({
@@ -293,7 +295,7 @@ export class RunnerClient {
     );
     return this.requestJson<RunnerThreadForkResult>(url, {
       method: "POST",
-      headers: this.withJsonContentType(options.headers),
+      headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
       body: JSON.stringify({
@@ -324,7 +326,7 @@ export class RunnerClient {
     );
     return this.requestJson<RunnerThreadRevertResult>(url, {
       method: "POST",
-      headers: this.withJsonContentType(options.headers),
+      headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
       body: JSON.stringify({
@@ -352,7 +354,7 @@ export class RunnerClient {
     );
     const payload = await this.requestJson<{ data?: RunnerEnvironmentSnapshot[] }>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -374,7 +376,7 @@ export class RunnerClient {
     );
     return this.requestJson<RunnerEnvironmentSnapshotDiffResult>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -395,7 +397,7 @@ export class RunnerClient {
     );
     const payload = await this.requestJson<{ data?: RunnerSnapshotFileEntry[] }>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -416,7 +418,7 @@ export class RunnerClient {
     );
     return this.requestJson<RunnerEnvironmentSnapshotFileResult>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -433,7 +435,7 @@ export class RunnerClient {
     );
     return this.requestJson<RunnerEnvironmentSnapshotInitializeResult>(url, {
       method: "POST",
-      headers: this.withJsonContentType(options.headers),
+      headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
       body: JSON.stringify({}),
@@ -454,7 +456,7 @@ export class RunnerClient {
     );
     return this.requestJson<RunnerEnvironmentForkResult>(url, {
       method: "POST",
-      headers: this.withJsonContentType(options.headers),
+      headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
       body: JSON.stringify({
@@ -468,7 +470,7 @@ export class RunnerClient {
     const url = this.buildApiUrl(options.backendUrl, "/guardrails");
     const payload = await this.requestJson<unknown>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -483,7 +485,7 @@ export class RunnerClient {
     const url = this.buildApiUrl(options.backendUrl, `/guardrails/${encodeURIComponent(options.guardrailId)}`);
     const payload = await this.requestJson<unknown>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -498,7 +500,7 @@ export class RunnerClient {
     const url = this.buildApiUrl(options.backendUrl, "/guardrails");
     const payload = await this.requestJson<unknown>(url, {
       method: "POST",
-      headers: this.withJsonContentType(options.headers),
+      headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
       body: JSON.stringify(options.guardrail),
@@ -515,7 +517,7 @@ export class RunnerClient {
     const url = this.buildApiUrl(options.backendUrl, `/guardrails/${encodeURIComponent(options.guardrailId)}`);
     const payload = await this.requestJson<unknown>(url, {
       method: "PATCH",
-      headers: this.withJsonContentType(options.headers),
+      headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
       body: JSON.stringify(options.guardrail),
@@ -531,7 +533,7 @@ export class RunnerClient {
     const url = this.buildApiUrl(options.backendUrl, `/guardrails/${encodeURIComponent(options.guardrailId)}`);
     await this.requestJsonOrEmpty<unknown>(url, {
       method: "DELETE",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -545,7 +547,7 @@ export class RunnerClient {
     const url = this.buildApiUrl(options.backendUrl, `/agents/${encodeURIComponent(options.agentId)}/guardrails`);
     const payload = await this.requestJson<unknown>(url, {
       method: "GET",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -562,7 +564,7 @@ export class RunnerClient {
     const url = this.buildApiUrl(options.backendUrl, `/agents/${encodeURIComponent(options.agentId)}/guardrails`);
     const payload = await this.requestJson<unknown>(url, {
       method: "PUT",
-      headers: this.withJsonContentType(options.headers),
+      headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
       body: JSON.stringify({
@@ -586,7 +588,7 @@ export class RunnerClient {
     );
     const payload = await this.requestJson<unknown>(url, {
       method: "PUT",
-      headers: this.withJsonContentType(options.headers),
+      headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
       body: JSON.stringify({}),
@@ -606,7 +608,7 @@ export class RunnerClient {
     );
     const payload = await this.requestJsonOrEmpty<unknown>(url, {
       method: "DELETE",
-      headers: options.headers,
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
     });
@@ -621,7 +623,7 @@ export class RunnerClient {
 
     const prepareResponse = await this.fetchImpl(options.prepare.url, {
       method: options.prepare.method ?? "POST",
-      headers: options.prepare.headers,
+      headers: this.withOrganizationHeader(options.prepare.headers, options.prepare.organizationId ?? options.organizationId),
       body: JSON.stringify(options.prepare.body),
       credentials: options.prepare.credentials,
       signal: options.signal,
@@ -702,8 +704,17 @@ export class RunnerClient {
     return `${normalizedBaseUrl}${path}`;
   }
 
-  private withJsonContentType(headers?: HeadersInit): HeadersInit {
+  private withOrganizationHeader(headers?: HeadersInit, organizationId?: string | null): Headers {
     const normalized = new Headers(headers ?? {});
+    const safeOrganizationId = typeof organizationId === "string" ? organizationId.trim() : "";
+    if (safeOrganizationId && !normalized.has(ORGANIZATION_HEADER)) {
+      normalized.set(ORGANIZATION_HEADER, safeOrganizationId);
+    }
+    return normalized;
+  }
+
+  private withJsonContentType(headers?: HeadersInit, organizationId?: string | null): HeadersInit {
+    const normalized = this.withOrganizationHeader(headers, organizationId);
     if (!normalized.has("Content-Type")) {
       normalized.set("Content-Type", "application/json");
     }

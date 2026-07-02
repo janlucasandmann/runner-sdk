@@ -6,6 +6,7 @@ import {
   Bot as LucideBot,
   Brain as LucideBrain,
   Braces as LucideBraces,
+  Building2 as LucideBuilding2,
   Calendar as LucideCalendar,
   Check as LucideCheck,
   ChevronDown as LucideChevronDown,
@@ -52,12 +53,14 @@ import {
   Shield as LucideShield,
   Split as LucideSplit,
   Sparkles as LucideSparkles,
+  Star as LucideStar,
   Telescope as LucideTelescope,
   Terminal as LucideTerminal,
   TextQuote as LucideTextQuote,
   ThumbsDown as LucideThumbsDown,
   ThumbsUp as LucideThumbsUp,
   Upload as LucideUpload,
+  UsersRound as LucideUsersRound,
   Video as LucideVideo,
   Wand2 as LucideWand2,
   X as LucideX,
@@ -2961,8 +2964,12 @@ export interface RunnerChatProps {
   threadMissionControlPreview?: RunnerMissionControlPreview | null;
   composerProjectTasks?: RunnerTaskPreview[];
   selectedComposerProjectTask?: RunnerTaskPreview | null;
+  composerPlanTierId?: string | null;
+  composerOrganizations?: RunnerChatOption[];
+  composerOrganizationId?: string | null;
   showComposerCreateAgentAction?: boolean;
   onComposerCreateAgentClick?: () => void;
+  onComposerOrganizationChange?: (organizationId: string) => void;
   onComposerProjectTaskChange?: (preview: RunnerTaskPreview | null) => void;
   onComposerProjectTaskSubmit?: (payload: RunnerChatProjectTaskSubmitPayload) => Promise<boolean | void> | boolean | void;
   activeTaskPreviewId?: string | null;
@@ -3167,6 +3174,7 @@ type InputPopupId =
   | "agent"
   | "agent-reasoning"
   | "environment"
+  | "organization"
   | "github"
   | "notion"
   | "google-drive"
@@ -3176,7 +3184,7 @@ type InputPopupId =
 
 type SpeechClientMessage = { type: "audio"; data: string } | { type: "activity-start" | "activity-end" };
 
-type MainPopupRenderId = "main" | "context" | "agent" | "environment";
+type MainPopupRenderId = "main" | "context" | "agent" | "environment" | "organization";
 type SidePopupRenderId = Exclude<InputPopupId, MainPopupRenderId>;
 type PopupAnimationPhase = "idle" | "enter" | "exit";
 type SidePopupExitDirection = "left" | "down";
@@ -3363,18 +3371,18 @@ function renderComposerPopupPortal(content: ReactNode, style: CSSProperties | nu
   );
 }
 
-function isPlusPopupId(popup: InputPopupId | null): popup is Exclude<InputPopupId, "context" | "agent" | "agent-reasoning" | "environment"> {
+function isPlusPopupId(popup: InputPopupId | null): popup is Exclude<InputPopupId, "context" | "agent" | "agent-reasoning" | "environment" | "organization"> {
   return popup === "main" || popup === "skills" || popup === "github" || popup === "notion" || popup === "google-drive" || popup === "one-drive" || popup === "schedule" || popup === "attach-files";
 }
 
 function getMainPopupRenderId(popup: InputPopupId | null): MainPopupRenderId | null {
   if (popup === "agent-reasoning") return "agent";
-  if (popup === "context" || popup === "agent" || popup === "environment") return popup;
+  if (popup === "context" || popup === "agent" || popup === "environment" || popup === "organization") return popup;
   return isPlusPopupId(popup) ? "main" : null;
 }
 
 function getSidePopupRenderId(popup: InputPopupId | null): SidePopupRenderId | null {
-  if (!popup || popup === "main" || popup === "context" || popup === "agent" || popup === "environment") {
+  if (!popup || popup === "main" || popup === "context" || popup === "agent" || popup === "environment" || popup === "organization") {
     return null;
   }
   return popup;
@@ -10507,6 +10515,36 @@ function defaultAttachmentFromFile(file: File): RunnerAttachment {
   };
 }
 
+type RunnerComposerPlanTier = "free" | "pro" | "team" | "enterprise";
+
+function normalizeRunnerComposerPlanTier(value: unknown): RunnerComposerPlanTier {
+  const normalized = String(value || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (normalized === "enterprise" || normalized === "enterprise_plan" || normalized === "organization" || normalized === "org") {
+    return "enterprise";
+  }
+  if (normalized === "team" || normalized === "team_plan" || normalized === "business") {
+    return "team";
+  }
+  if (normalized === "pro" || normalized === "pro_plan" || normalized === "individual" || normalized === "individual_plan" || normalized === "paid") {
+    return "pro";
+  }
+  return "free";
+}
+
+function getRunnerComposerPlanDisplay(tierId: unknown): { label: string; Icon: typeof LucideStar } {
+  switch (normalizeRunnerComposerPlanTier(tierId)) {
+    case "enterprise":
+      return { label: "Enterprise Plan", Icon: LucideStar };
+    case "team":
+      return { label: "Team Plan", Icon: LucideUsersRound };
+    case "pro":
+      return { label: "Pro Plan", Icon: LucideStar };
+    case "free":
+    default:
+      return { label: "Upgrade to Pro", Icon: LucideStar };
+  }
+}
+
 const LOGS_AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 24;
 const LOGS_AUTO_SCROLL_SETTLE_FRAME_COUNT = 3;
 const REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS = 900;
@@ -10579,6 +10617,10 @@ export function RunnerChat({
   threadTaskPreview = null,
   threadMissionControlPreview = null,
   selectedComposerProjectTask = null,
+  composerPlanTierId = "free",
+  composerOrganizations = [],
+  composerOrganizationId = null,
+  onComposerOrganizationChange,
   onComposerProjectTaskSubmit,
   activeTaskPreviewId = null,
   onTaskPreviewClick,
@@ -10616,7 +10658,6 @@ export function RunnerChat({
   skillCreationCommand = null,
   skillCreationCommandHiddenPrompt,
   onSkillCreationCommandChange,
-  onOpenPluginsOverview,
   onOpenPlansBudget,
   onBacklogMissionControlSubmit,
   followUpActions = [],
@@ -10627,7 +10668,6 @@ export function RunnerChat({
   const [composerQuotedSelection, setComposerQuotedSelection] = useState<RunnerQuotedSelection | null>(null);
   const [renderedComposerQuotedSelection, setRenderedComposerQuotedSelection] = useState<RunnerQuotedSelection | null>(null);
   const [isComposerQuotedSelectionVisible, setIsComposerQuotedSelectionVisible] = useState(false);
-  const [projectTasksPopupOpen, setProjectTasksPopupOpen] = useState(false);
   const [localThreadId, setLocalThreadId] = useState<string | null>(threadId ?? null);
   const [attachments, setAttachments] = useState<LocalAttachment[]>([]);
   const [previewedDocumentAttachment, setPreviewedDocumentAttachment] = useState<RunnerTurnAttachment | null>(null);
@@ -10805,7 +10845,6 @@ export function RunnerChat({
   const [adCreationSettings, setAdCreationSettings] = useState<RunnerAdCreationSettings>(RUNNER_AD_CREATION_DEFAULT_SETTINGS);
   const [stagedBacklogSubtaskCommand, setStagedBacklogSubtaskCommand] = useState<StagedBacklogSubtaskCommand | null>(null);
   const [stagedBacklogMissionControlCommand, setStagedBacklogMissionControlCommand] = useState<StagedBacklogMissionControlCommand | null>(null);
-  const [projectCreateMenuStyle, setProjectCreateMenuStyle] = useState<CSSProperties | null>(null);
   const [renderedMainPopup, setRenderedMainPopup] = useState<MainPopupRenderId | null>(null);
   const [mainPopupPhase, setMainPopupPhase] = useState<PopupAnimationPhase>("idle");
   const [renderedSidePopup, setRenderedSidePopup] = useState<SidePopupRenderId | null>(null);
@@ -10831,10 +10870,9 @@ export function RunnerChat({
   const agentReasoningPopupRef = useRef<HTMLDivElement | null>(null);
   const environmentSelectorButtonRef = useRef<HTMLButtonElement | null>(null);
   const environmentPopupRef = useRef<HTMLDivElement | null>(null);
+  const organizationSelectorButtonRef = useRef<HTMLButtonElement | null>(null);
+  const organizationPopupRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const projectTasksPopupRef = useRef<HTMLDivElement | null>(null);
-  const projectCreateButtonRef = useRef<HTMLButtonElement | null>(null);
-  const projectCreateMenuRef = useRef<HTMLDivElement | null>(null);
   const forkEnvironmentPopupRef = useRef<HTMLDivElement | null>(null);
   const runSummaryMoreMenuRef = useRef<HTMLSpanElement | null>(null);
   const emailDeliveryAttachmentsPopoverRef = useRef<HTMLSpanElement | null>(null);
@@ -16065,7 +16103,6 @@ export function RunnerChat({
     setSelectedWorkspaceFileIds([]);
     setIsDraggingOver(false);
     setIsScreenFileDragActive(false);
-    setProjectTasksPopupOpen(false);
     clearQuotedSelectionPopup();
   }
 
@@ -17145,6 +17182,17 @@ export function RunnerChat({
       environmentId: nextEnvironmentId,
       projectId: "",
     });
+    setActiveInputPopup(null);
+  }
+
+  function selectComposerOrganization(nextOrganizationId: string) {
+    const normalizedOrganizationId = String(nextOrganizationId || "").trim();
+    if (!normalizedOrganizationId) {
+      setActiveInputPopup(null);
+      return;
+    }
+
+    onComposerOrganizationChange?.(normalizedOrganizationId);
     setActiveInputPopup(null);
   }
 
@@ -19939,80 +19987,39 @@ export function RunnerChat({
   const notionConnected = notionConfig?.connected ?? false;
   const googleDriveConnected = googleDriveConfig?.connected ?? false;
   const oneDriveConnected = oneDriveConfig?.connected ?? false;
-  const connectedComposerConnectors = [
-    { id: "github", label: "GitHub", source: "github" as const, connected: githubConnected, Icon: IconGithub },
-    { id: "notion", label: "Notion", source: "notion" as const, connected: notionConnected, Icon: IconNotion },
-    { id: "one-drive", label: "OneDrive", source: "one-drive" as const, connected: oneDriveConnected, Icon: IconOneDrive },
-    { id: "google-drive", label: "Google Drive", source: "google-drive" as const, connected: googleDriveConnected, Icon: IconGoogleDrive },
-  ].filter((connector) => connector.connected);
-  useEffect(() => {
-    if (!projectTasksPopupOpen) {
-      return undefined;
-    }
-
-    const handleDocumentPointerDown = (event: Event) => {
-      const target = event.target instanceof Node ? event.target : null;
-      if (target && projectTasksPopupRef.current?.contains(target)) {
+  const composerPlanDisplay = getRunnerComposerPlanDisplay(composerPlanTierId);
+  const ComposerPlanIcon = composerPlanDisplay.Icon;
+  const composerOrganizationOptions = useMemo<RunnerChatOption[]>(() => {
+    const seenOrganizationIds = new Set<string>();
+    const normalizedOrganizations: RunnerChatOption[] = [];
+    (Array.isArray(composerOrganizations) ? composerOrganizations : []).forEach((organization) => {
+      const id = String(organization?.id || "").trim();
+      const name = String(organization?.name || "").trim();
+      if (!id || !name || seenOrganizationIds.has(id)) {
         return;
       }
-      if (target && projectCreateMenuRef.current?.contains(target)) {
-        return;
-      }
-      setProjectTasksPopupOpen(false);
-    };
-    const handleDocumentKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setProjectTasksPopupOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handleDocumentPointerDown, true);
-    document.addEventListener("keydown", handleDocumentKeyDown, true);
-    return () => {
-      document.removeEventListener("pointerdown", handleDocumentPointerDown, true);
-      document.removeEventListener("keydown", handleDocumentKeyDown, true);
-    };
-  }, [projectTasksPopupOpen]);
-  useLayoutEffect(() => {
-    if (!projectTasksPopupOpen) {
-      setProjectCreateMenuStyle(null);
-      return undefined;
-    }
-
-    const updateCreateMenuPosition = () => {
-      const button = projectCreateButtonRef.current;
-      if (!button) {
-        setProjectCreateMenuStyle(null);
-        return;
-      }
-      const rect = button.getBoundingClientRect();
-      const host = rootRef.current;
-      const hostRect = host?.getBoundingClientRect() ?? { left: 0, top: 0, width: window.innerWidth };
-      const menuWidth = 240;
-      const viewportPadding = 8;
-      const left = Math.max(
-        viewportPadding,
-        Math.min(rect.left - hostRect.left, hostRect.width - menuWidth - viewportPadding)
-      );
-      const top = Math.max(viewportPadding, rect.top - hostRect.top - 8);
-      setProjectCreateMenuStyle({
-        position: "absolute",
-        left,
-        top,
-        bottom: "auto",
-        transform: "translateY(-100%)",
-        zIndex: 1000,
+      seenOrganizationIds.add(id);
+      const description = typeof organization?.description === "string" ? organization.description.trim() : "";
+      normalizedOrganizations.push({
+        ...organization,
+        id,
+        name,
+        ...(description ? { description } : {}),
       });
-    };
-
-    updateCreateMenuPosition();
-    window.addEventListener("resize", updateCreateMenuPosition);
-    window.addEventListener("scroll", updateCreateMenuPosition, true);
-    return () => {
-      window.removeEventListener("resize", updateCreateMenuPosition);
-      window.removeEventListener("scroll", updateCreateMenuPosition, true);
-    };
-  }, [projectTasksPopupOpen]);
+    });
+    return normalizedOrganizations.length > 0
+      ? normalizedOrganizations
+      : [{ id: "__personal_workspace__", name: "Personal Workspace" }];
+  }, [composerOrganizations]);
+  const selectedComposerOrganizationId = String(composerOrganizationId || "").trim();
+  const selectedComposerOrganization = composerOrganizationOptions.find((organization) => organization.id === selectedComposerOrganizationId)
+    || composerOrganizationOptions.find((organization) => organization.isDefault)
+    || composerOrganizationOptions[0]
+    || null;
+  const composerOrganizationLabel = selectedComposerOrganization?.name || "Organization";
+  const canChangeComposerOrganization =
+    composerOrganizationOptions.length > 1 &&
+    typeof onComposerOrganizationChange === "function";
   const scheduleEnabled = (scheduleConfig?.enabled ?? false) || scheduledTask !== null;
   const githubContextLabel = githubConfig?.contextLabel || "Branch";
   const defaultGithubBranchFromContext = useMemo(() => {
@@ -20122,6 +20129,7 @@ export function RunnerChat({
   const showAgentReasoningPopup = renderedSidePopup === "agent-reasoning";
   const showAgentPopup = renderedMainPopup === "agent";
   const showEnvironmentPopup = renderedMainPopup === "environment";
+  const showOrganizationPopup = renderedMainPopup === "organization";
   const showGithubPopup = renderedSidePopup === "github";
   const showNotionPopup = renderedSidePopup === "notion";
   const showGoogleDrivePopup = renderedSidePopup === "google-drive";
@@ -20172,6 +20180,12 @@ export function RunnerChat({
     open: showEnvironmentPopup,
     anchorRef: environmentSelectorButtonRef,
     popupRef: environmentPopupRef,
+    placement: "above-end",
+  });
+  const organizationPopupStyle = useComposerAnchoredPopupStyle({
+    open: showOrganizationPopup,
+    anchorRef: organizationSelectorButtonRef,
+    popupRef: organizationPopupRef,
     placement: "above-end",
   });
   const hasPortalDocumentPreview = Boolean(documentPreviewPortalTarget);
@@ -20404,6 +20418,57 @@ export function RunnerChat({
         ? "Stop speech to text"
         : "Start speech to text"
       : "Speech-to-text is not supported in this browser";
+
+  function renderComposerOrganizationSelector() {
+    return (
+      <div className="tb-composer-organization-anchor">
+        <button
+          ref={organizationSelectorButtonRef}
+          type="button"
+          className={`tb-composer-organization-selector ${showOrganizationPopup ? "active" : ""}`.trim()}
+          onClick={() => {
+            if (canChangeComposerOrganization) {
+              togglePopup("organization");
+            }
+          }}
+          disabled={!canChangeComposerOrganization}
+          aria-label={`Organization: ${composerOrganizationLabel}`}
+          aria-expanded={showOrganizationPopup}
+        >
+          <LucideBuilding2 className="tb-composer-organization-icon" strokeWidth={1.45} />
+          <span className="tb-composer-organization-label">{composerOrganizationLabel}</span>
+          {canChangeComposerOrganization ? <IconChevronDown className="tb-composer-organization-chevron" /> : null}
+        </button>
+
+        {renderComposerPopupPortal(
+          showOrganizationPopup ? (
+            <div ref={organizationPopupRef} className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent tb-popup-menu-inline-organization ${mainPopupAnimationClass}`.trim()}>
+              <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-organization">
+                {composerOrganizationOptions.map((organization) => {
+                  const isSelected = selectedComposerOrganization?.id === organization.id;
+                  return (
+                    <button
+                      key={organization.id}
+                      type="button"
+                      className={`tb-popup-row tb-popup-row-select tb-popup-row-agent tb-popup-row-organization ${isSelected ? "selected" : ""}`.trim()}
+                      onClick={() => selectComposerOrganization(organization.id)}
+                    >
+                      <LucideBuilding2 className="tb-popup-icon" strokeWidth={1.6} />
+                      <span className="tb-popup-label">{organization.name}</span>
+                      <span className="tb-popup-check-slot">
+                        {isSelected ? <IconCheck className="tb-popup-check" /> : null}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null,
+          organizationPopupStyle
+        )}
+      </div>
+    );
+  }
 
   function renderAgentSelectorControl() {
     if (hideAgentSelector || agents.length === 0) {
@@ -23227,143 +23292,20 @@ export function RunnerChat({
               </div>
               {useComputerAgentsMode && shouldRenderInlineComposerWithEmptyState ? (
                 <div className="tb-composer-connectors-row" aria-label="Project tasks and plugins">
-                  <div className="tb-composer-project-task-area" ref={projectTasksPopupRef}>
+                  <div className="tb-composer-project-task-area">
                     <button
-                      ref={projectCreateButtonRef}
                       type="button"
-                      className={`tb-composer-project-task-button ${projectTasksPopupOpen ? "is-open" : ""}`.trim()}
-                      onClick={() => setProjectTasksPopupOpen((current) => !current)}
-                      aria-haspopup="dialog"
-                      aria-expanded={projectTasksPopupOpen}
+                      className="tb-composer-plan-label"
+                      aria-label={composerPlanDisplay.label}
+                      onClick={onOpenPlansBudget}
+                      disabled={!onOpenPlansBudget}
                     >
-                      <LucidePlus className="tb-composer-project-task-icon" strokeWidth={1.75} />
-                      <span>Create</span>
+                      <ComposerPlanIcon className="tb-composer-plan-icon" strokeWidth={1.75} />
+                      <span>{composerPlanDisplay.label}</span>
                     </button>
-                    {projectTasksPopupOpen && projectCreateMenuStyle && typeof document !== "undefined" ? createPortal(
-                      <div ref={projectCreateMenuRef} className="tb-composer-create-menu-portal" style={projectCreateMenuStyle}>
-                        <div className="tb-popup-menu tb-popup-menu-main tb-composer-create-menu tb-popup-menu-animate-up-in" role="dialog" aria-label="Create">
-                          <button
-                            type="button"
-                            className="tb-popup-row tb-popup-row-core-action"
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => {
-                              const prompt = currentInputRef.current || input;
-                              stageResourceCreationCommand("app", prompt);
-                              setProjectTasksPopupOpen(false);
-                              focusComposerSoon();
-                            }}
-                          >
-                            <LucideMonitor className="tb-popup-icon" strokeWidth={1.75} />
-                            <span className="tb-popup-label">Web App</span>
-                            <span className="tb-popup-value">/app</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="tb-popup-row tb-popup-row-core-action"
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => {
-                              const prompt = currentInputRef.current || input;
-                              stageSlideCreationCommand(prompt);
-                              setProjectTasksPopupOpen(false);
-                              focusComposerSoon();
-                            }}
-                          >
-                            <LucidePresentation className="tb-popup-icon" strokeWidth={1.75} />
-                            <span className="tb-popup-label">Slides</span>
-                            <span className="tb-popup-value">/slides</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="tb-popup-row tb-popup-row-core-action"
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => {
-                              const prompt = currentInputRef.current || input;
-                              stageAdCreationCommand(prompt);
-                              setProjectTasksPopupOpen(false);
-                              focusComposerSoon();
-                            }}
-                          >
-                            <LucideImages className="tb-popup-icon" strokeWidth={1.75} />
-                            <span className="tb-popup-label">Ad</span>
-                            <span className="tb-popup-value">/ad</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="tb-popup-row tb-popup-row-core-action"
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => {
-                              const prompt = currentInputRef.current || input;
-                              stageResearchCreationCommand(prompt);
-                              setProjectTasksPopupOpen(false);
-                              focusComposerSoon();
-                            }}
-                          >
-                            <LucideTelescope className="tb-popup-icon" strokeWidth={1.75} />
-                            <span className="tb-popup-label">Research</span>
-                            <span className="tb-popup-value">/research</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="tb-popup-row tb-popup-row-core-action"
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => {
-                              const prompt = currentInputRef.current || input;
-                              stageScrapeCreationCommand(prompt);
-                              setProjectTasksPopupOpen(false);
-                              focusComposerSoon();
-                            }}
-                          >
-                            <LucideGlobe className="tb-popup-icon" strokeWidth={1.75} />
-                            <span className="tb-popup-label">Scrape</span>
-                            <span className="tb-popup-value">/scrape</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="tb-popup-row tb-popup-row-core-action"
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => {
-                              const prompt = currentInputRef.current || input;
-                              stageParseCreationCommand(prompt);
-                              setProjectTasksPopupOpen(false);
-                              focusComposerSoon();
-                            }}
-                          >
-                            <LucideFileText className="tb-popup-icon" strokeWidth={1.75} />
-                            <span className="tb-popup-label">Parse</span>
-                            <span className="tb-popup-value">/parse</span>
-                          </button>
-                        </div>
-                      </div>
-                    , rootRef.current || document.body) : null}
                   </div>
                   <div className="tb-composer-connectors-right">
-                    {connectedComposerConnectors.length > 0 ? (
-                      <div className="tb-composer-connectors-actions">
-                        {connectedComposerConnectors.map((connector) => {
-                          const ConnectorIcon = connector.Icon;
-                          return (
-                            <button
-                              key={connector.id}
-                              type="button"
-                              className="tb-composer-connector-button"
-                              onClick={() => openFileBrowserModal(connector.source)}
-                            >
-                              <ConnectorIcon className="tb-composer-connector-brand-icon" />
-                              <span>{connector.label}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="tb-composer-connectors-link"
-                      onClick={onOpenPluginsOverview}
-                      disabled={!onOpenPluginsOverview}
-                    >
-                      <span>Show Plugins</span>
-                      <IconChevronRight className="tb-composer-connectors-link-icon" />
-                    </button>
+                    {renderComposerOrganizationSelector()}
                   </div>
                 </div>
               ) : null}

@@ -23847,137 +23847,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             );
           };
 
-          const renderMetronomeDeploymentRows = () => {
-            const deployments = activeWorkflowDeployments;
-            const activeDeploymentId = String(activeWorkflowDeployment?.id || activeWorkflow?.activeDeploymentId || "").trim();
-            const selectedDeploymentId = String(
-              activeWorkflow?.metadata?.restoredFromDeploymentId
-              || activeWorkflow?.metadata?.restored_from_deployment_id
-              || activeDeploymentId
-              || ""
-            ).trim();
-            const isBusy = metronomePublishState.status === "loading";
-            if (!deployments.length) {
-              return React.createElement("div", { className: "playground-metronome-publish-empty-state" },
-                React.createElement("div", { className: "playground-metronome-publish-empty-card" },
-                  React.createElement("img", {
-                    className: "playground-metronome-publish-empty-image",
-                    src: "/img/empty-state/metronome.webp",
-                    alt: "",
-                    "aria-hidden": "true",
-                  }),
-                  React.createElement("h3", { className: "playground-metronome-publish-empty-title" }, "No saved versions yet"),
-                  React.createElement("p", { className: "playground-metronome-publish-empty-copy" },
-                    "Create a version to start tracking graph, node settings, and trigger changes."
-                  )
-                )
-              );
-            }
-            return deployments.map((deployment) => {
-              const isActiveDeployment = deployment.id === activeDeploymentId || deployment.status === "active";
-              const isSelectedDeployment = deployment.id === selectedDeploymentId;
-              const deploymentTitle = String(deployment.label || ("Version " + deployment.version)).trim();
-              const deploymentDescription = String(deployment.description || "").trim();
-              return React.createElement("div", {
-                key: deployment.id,
-                className: "playground-metronome-publish-row"
-                  + (isActiveDeployment ? " is-active" : "")
-                  + (isSelectedDeployment ? " is-selected" : ""),
-              },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-metronome-publish-row-checkbox" + (isSelectedDeployment ? " is-selected" : ""),
-                  disabled: isBusy || isSelectedDeployment,
-                  onClick: () => void restoreActiveWorkflowVersion(deployment.id),
-                  "aria-label": "Display version " + deployment.version,
-                  "aria-pressed": isSelectedDeployment ? "true" : "false",
-                },
-                  isSelectedDeployment
-                    ? React.createElement(Check, { width: 16, height: 16, strokeWidth: 2.5 })
-                    : null
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-metronome-publish-row-main",
-                  disabled: isBusy || isSelectedDeployment,
-                  onClick: () => void restoreActiveWorkflowVersion(deployment.id),
-                },
-                  React.createElement("div", { className: "playground-metronome-publish-row-title" },
-                    React.createElement("span", null, deploymentTitle),
-                    isActiveDeployment
-                      ? React.createElement("span", { className: "playground-metronome-publish-active-chip" },
-                          React.createElement(Check, { width: 11, height: 11, strokeWidth: 2 }),
-                          React.createElement("span", null, "Published")
-                        )
-                      : null
-                  ),
-                  deploymentDescription
-                    ? React.createElement("div", { className: "playground-metronome-publish-row-description" }, deploymentDescription)
-                    : null,
-                  React.createElement("div", { className: "playground-metronome-publish-row-copy playground-metronome-publish-row-meta" },
-                    (deployment.publishedAt ? "Published " : "Saved ")
-                    + formatMetronomeDeploymentTimestamp(deployment.publishedAt || deployment.createdAt)
-                    + " · "
-                    + String(deployment.nodeCount || 0)
-                    + " nodes · "
-                    + String(deployment.edgeCount || 0)
-                    + " connections"
-                  )
-                ),
-                React.createElement("div", { className: "playground-metronome-publish-row-actions" },
-                  isActiveDeployment
-                    ? null
-                    : React.createElement("button", {
-                        type: "button",
-                        className: "playground-metronome-secondary-button playground-metronome-publish-row-action",
-                        disabled: isBusy,
-                        onClick: () => void publishMetronomeDeploymentVersion(deployment.id),
-                      },
-                        React.createElement(Rocket, { width: 13, height: 13, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Publish")
-                      ),
-                  React.createElement("span", { className: "playground-metronome-publish-row-menu-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-metronome-publish-row-menu-trigger" + (openMetronomeVersionMenuId === deployment.id ? " is-open" : ""),
-                      disabled: isBusy,
-                      onClick: (event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        setOpenMetronomeVersionMenuId((current) => current === deployment.id ? "" : deployment.id);
-                      },
-                      "aria-label": "Version options",
-                      "aria-expanded": openMetronomeVersionMenuId === deployment.id ? "true" : "false",
-                    }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
-                    openMetronomeVersionMenuId === deployment.id
-                      ? React.createElement("div", {
-                          className: "playground-metronome-publish-row-menu",
-                          role: "menu",
-                        },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-metronome-publish-row-menu-item",
-                            onClick: () => openEditWorkflowVersionModal(deployment.id),
-                          },
-                            React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Edit version")
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-metronome-publish-row-menu-item is-danger",
-                            onClick: () => void deleteWorkflowVersion(deployment.id),
-                          },
-                            React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Delete version")
-                          )
-                        )
-                      : null
-                  )
-                )
-              );
-            });
-          };
-
           const renderMetronomeDeploymentHistory = () => {
             if (isLoadingMetronomeDeploymentEvents) {
               if (!visibleMetronomeDeploymentEvents.length) {
@@ -24024,134 +23893,131 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             const isBusy = metronomePublishState.status === "loading";
             const isValidating = metronomePublishState.status === "validating";
             const publishIssues = Array.isArray(metronomePublishState.issues) ? metronomePublishState.issues : [];
-            return React.createElement("aside", { className: "playground-metronome-node-inspector playground-metronome-publish-sidebar" },
-              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-metronome-inspector-header" },
-                React.createElement("div", { className: "playground-tasks-detail-navbar-title playground-metronome-inspector-navbar-title" },
-                  React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
-                    React.createElement("span", { className: "playground-metronome-inspector-node-kind is-icon", "aria-label": "Versions" },
-                      React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.9 })
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
-                    React.createElement("div", { className: "playground-content-title playground-tasks-detail-navbar-title-input playground-metronome-inspector-title-input" }, "Versions")
-                  )
-                ),
-                React.createElement("div", { className: "playground-content-nav-center" }),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-header-icon-button is-plain playground-metronome-inspector-close",
-                  onClick: () => {
-                    setOpenMetronomeVersionMenuId("");
-                    setIsMetronomePublishSettingsMenuOpen(false);
-                    setIsMetronomePublishMenuOpen(false);
+            const activeDeploymentId = String(activeWorkflowDeployment?.id || activeWorkflow?.activeDeploymentId || "").trim();
+            const selectedDeploymentId = String(
+              activeWorkflow?.metadata?.restoredFromDeploymentId
+              || activeWorkflow?.metadata?.restored_from_deployment_id
+              || activeDeploymentId
+              || ""
+            ).trim();
+            const titleActionsExtra = React.createElement(React.Fragment, null,
+              React.createElement("button", {
+                type: "button",
+                className: "playground-metronome-publish-row-menu-trigger playground-metronome-publish-settings-trigger" + (isMetronomePublishSettingsMenuOpen ? " is-open" : ""),
+                disabled: isBusy,
+                onClick: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setOpenMetronomeVersionMenuId("");
+                  setIsMetronomePublishSettingsMenuOpen((current) => !current);
+                },
+                "aria-label": "Workflow version settings",
+                "aria-expanded": isMetronomePublishSettingsMenuOpen ? "true" : "false",
+              }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
+              isMetronomePublishSettingsMenuOpen
+                ? React.createElement("div", {
+                    className: "playground-metronome-publish-row-menu playground-metronome-publish-settings-menu",
+                    role: "menu",
+                    onClick: (event) => event.stopPropagation(),
                   },
-                  "aria-label": "Close deployments",
-                }, React.createElement(X, { width: 15, height: 15, strokeWidth: 1.9 }))
-              ),
-              React.createElement("div", { className: "playground-metronome-inspector-body" },
-                React.createElement("div", { className: "playground-metronome-publish-sidebar-section-title" },
-                  React.createElement("span", { className: "playground-metronome-publish-sidebar-section-title-text" }, "Saved versions"),
-                  React.createElement("span", { className: "playground-metronome-publish-title-actions" },
                     React.createElement("button", {
                       type: "button",
-                      className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-metronome-publish-version-button",
-                      disabled: isBusy,
-                      onClick: openCreateWorkflowVersionModal,
+                      className: "playground-metronome-publish-row-menu-item",
+                      onClick: () => {
+                        setIsMetronomePublishSettingsMenuOpen(false);
+                        openEditWorkflowModal();
+                      },
                     },
-                      React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Version")
+                      React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Settings")
                     ),
                     React.createElement("button", {
                       type: "button",
-                      className: "playground-metronome-publish-row-menu-trigger playground-metronome-publish-settings-trigger" + (isMetronomePublishSettingsMenuOpen ? " is-open" : ""),
-                      disabled: isBusy,
-                      onClick: (event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        setOpenMetronomeVersionMenuId("");
-                        setIsMetronomePublishSettingsMenuOpen((current) => !current);
+                      className: "playground-metronome-publish-row-menu-item",
+                      onClick: () => {
+                        setIsMetronomePublishSettingsMenuOpen(false);
+                        setIsMetronomeDeploymentHistoryModalOpen(true);
+                        void refreshMetronomeDeploymentEvents(activeWorkflow.id);
                       },
-                      "aria-label": "Workflow version settings",
-                      "aria-expanded": isMetronomePublishSettingsMenuOpen ? "true" : "false",
-                    }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
-                    isMetronomePublishSettingsMenuOpen
-                      ? React.createElement("div", {
-                          className: "playground-metronome-publish-row-menu playground-metronome-publish-settings-menu",
-                          role: "menu",
-                        },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-metronome-publish-row-menu-item",
-                            onClick: () => {
-                              setIsMetronomePublishSettingsMenuOpen(false);
-                              openEditWorkflowModal();
-                            },
-                          },
-                            React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Settings")
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-metronome-publish-row-menu-item",
-                            onClick: () => {
-                              setIsMetronomePublishSettingsMenuOpen(false);
-                              setIsMetronomeDeploymentHistoryModalOpen(true);
-                              void refreshMetronomeDeploymentEvents(activeWorkflow.id);
-                            },
-                          },
-                            React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "History")
-                          )
-                        )
-                      : null
-                  )
-                ),
-                isValidating
-                  ? React.createElement("div", { className: "playground-metronome-publish-state" },
-                      metronomePublishState.message || "Checking workflow before publishing..."
-                    )
-                  : null,
-                metronomePublishState.status === "error"
-                  ? React.createElement("div", { className: "playground-metronome-publish-issues" },
-                      React.createElement("div", { className: "playground-metronome-publish-issues-title" }, "Resolve before publishing"),
-                      publishIssues.length
-                        ? React.createElement("ul", { className: "playground-metronome-publish-issues-list" },
-                            publishIssues.slice(0, 8).map((issue, index) => React.createElement("li", {
-                              key: String(issue.code || "issue") + "-" + String(issue.nodeId || issue.edgeId || index),
-                              className: "playground-metronome-publish-issues-item",
-                            },
-                              React.createElement("span", { className: "playground-metronome-publish-issues-dot", "aria-hidden": "true" }),
-                              React.createElement("span", null, issue.message || "Resolve this workflow issue before publishing.")
-                            ))
-                          )
-                        : React.createElement("div", null, metronomePublishState.message || "The workflow is not ready to publish.")
-                    )
-                  : null,
-                React.createElement("div", { className: "playground-metronome-publish-list" }, renderMetronomeDeploymentRows())
-              ),
-              React.createElement("div", { className: "playground-metronome-publish-sidebar-actions" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-metronome-primary-button playground-metronome-publish-new-button",
-                  disabled: isBusy,
-                  onClick: () => void publishActiveWorkflowVersion(),
-                },
-                  React.createElement(Rocket, { width: 13, height: 13, strokeWidth: 1.8 }),
-                  React.createElement("span", null, isBusy ? "Publishing..." : "Publish current editor")
-                ),
-                activeWorkflowDeployment
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-metronome-secondary-button playground-metronome-publish-new-button",
-                      disabled: isBusy,
-                      onClick: () => void unpublishActiveWorkflow(),
                     },
-                      React.createElement(PauseCircle, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, isBusy ? "Working..." : "Unpublish workflow")
+                      React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "History")
                     )
-                  : null
-              )
+                  )
+                : null
             );
+            const stateContent = React.createElement(React.Fragment, null,
+              isValidating
+                ? React.createElement("div", { className: "playground-metronome-publish-state" },
+                    metronomePublishState.message || "Checking workflow before publishing..."
+                  )
+                : null,
+              metronomePublishState.status === "error"
+                ? React.createElement("div", { className: "playground-metronome-publish-issues" },
+                    React.createElement("div", { className: "playground-metronome-publish-issues-title" }, "Resolve before publishing"),
+                    publishIssues.length
+                      ? React.createElement("ul", { className: "playground-metronome-publish-issues-list" },
+                          publishIssues.slice(0, 8).map((issue, index) => React.createElement("li", {
+                            key: String(issue.code || "issue") + "-" + String(issue.nodeId || issue.edgeId || index),
+                            className: "playground-metronome-publish-issues-item",
+                          },
+                            React.createElement("span", { className: "playground-metronome-publish-issues-dot", "aria-hidden": "true" }),
+                            React.createElement("span", null, issue.message || "Resolve this workflow issue before publishing.")
+                          ))
+                        )
+                      : React.createElement("div", null, metronomePublishState.message || "The workflow is not ready to publish.")
+                  )
+                : null
+            );
+            return React.createElement(PlaygroundVersionSidebar, {
+              versions: activeWorkflowDeployments,
+              activeVersionId: activeDeploymentId,
+              selectedVersionId: selectedDeploymentId,
+              state: metronomePublishState,
+              busy: isBusy,
+              openMenuId: openMetronomeVersionMenuId,
+              onOpenMenuIdChange: setOpenMetronomeVersionMenuId,
+              onClose: () => {
+                setOpenMetronomeVersionMenuId("");
+                setIsMetronomePublishSettingsMenuOpen(false);
+                setIsMetronomePublishMenuOpen(false);
+              },
+              onSaveVersion: openCreateWorkflowVersionModal,
+              onPublishCurrent: () => void publishActiveWorkflowVersion(),
+              onUnpublishActive: activeWorkflowDeployment ? () => void unpublishActiveWorkflow() : null,
+              onSelectVersion: (versionId) => void restoreActiveWorkflowVersion(versionId),
+              onPublishVersion: (versionId) => void publishMetronomeDeploymentVersion(versionId),
+              titleActionsExtra,
+              stateContent,
+              emptyCopy: "Create a version to start tracking graph, node settings, and trigger changes.",
+              unpublishLabel: "Unpublish workflow",
+              getVersionTitle: (deployment) => String(deployment.label || ("Version " + deployment.version)).trim(),
+              getVersionDescription: (deployment) => String(deployment.description || "").trim(),
+              getVersionMeta: (deployment) => (
+                (deployment.publishedAt ? "Published " : "Saved ")
+                + formatMetronomeDeploymentTimestamp(deployment.publishedAt || deployment.createdAt)
+                + " · "
+                + String(deployment.nodeCount || 0)
+                + " nodes · "
+                + String(deployment.edgeCount || 0)
+                + " connections"
+              ),
+              getRowMenuItems: (deployment) => [
+                {
+                  id: "edit",
+                  label: "Edit version",
+                  icon: SquarePen,
+                  onClick: () => openEditWorkflowVersionModal(deployment.id),
+                },
+                {
+                  id: "delete",
+                  label: "Delete version",
+                  icon: Trash2,
+                  danger: true,
+                  onClick: () => void deleteWorkflowVersion(deployment.id),
+                },
+              ],
+            });
           };
 
           const renderCodeMode = () => {

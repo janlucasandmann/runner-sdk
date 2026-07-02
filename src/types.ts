@@ -211,6 +211,7 @@ export interface RunnerRunRequest {
   method?: "POST" | "PUT";
   headers?: HeadersInit;
   credentials?: RequestCredentials;
+  organizationId?: string | null;
 }
 
 export interface RunnerPrepareRequest {
@@ -219,6 +220,7 @@ export interface RunnerPrepareRequest {
   method?: "POST" | "PUT";
   headers?: HeadersInit;
   credentials?: RequestCredentials;
+  organizationId?: string | null;
   buildRunRequest?: (preparePayload: unknown, currentRunRequest: RunnerRunRequest) => RunnerRunRequest;
   getSetupLogs?: (preparePayload: unknown) => RunnerLog[];
 }
@@ -226,6 +228,7 @@ export interface RunnerPrepareRequest {
 export interface RunnerExecuteOptions {
   run: RunnerRunRequest;
   prepare?: RunnerPrepareRequest;
+  organizationId?: string | null;
   signal?: AbortSignal;
   throwOnError?: boolean;
   onRawEvent?: (event: RawRunnerEvent) => void;
@@ -257,6 +260,7 @@ export interface RunnerApiRequestOptions {
   headers?: HeadersInit;
   credentials?: RequestCredentials;
   signal?: AbortSignal;
+  organizationId?: string | null;
 }
 
 export interface RunnerGuardrailPrompt {
