@@ -17,6 +17,7 @@ import { PLATFORM_UI_PRIMITIVES_CSS, PLATFORM_UI_PRIMITIVES_SCRIPT } from "./dem
 import { PROJECT_TYPE_ALIASES, PROJECT_TYPE_REGISTRY } from "./demo-project-types.mjs";
 import { RESOURCE_TEMPLATE_CATALOG, RESOURCE_TEMPLATE_TYPES } from "./demo-resource-templates.mjs";
 import { RESOURCE_TEMPLATES_PAGE_CSS, RESOURCE_TEMPLATES_PAGE_SCRIPT } from "./demo-resource-templates-page.mjs";
+import { VERSIONING_CORE_SCRIPT } from "./demo-versioning-core.mjs";
 import { VERSION_SIDEBAR_SCRIPT } from "./demo-version-sidebar.mjs";
 import { PLAYGROUND_EVALUATIONS_CSS, PLAYGROUND_EVALUATIONS_SCRIPT } from "./playground-evaluations-page.mjs";
 import { createPlaygroundEvaluationsRuntime } from "./playground-evaluations-runtime.mjs";
@@ -33055,6 +33056,209 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         min-width: 0;
       }
 
+      .playground-agents-versions-sidebar .playground-metronome-publish-section-footer {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+      }
+
+      .playground-agents-version-compare-button {
+        width: 100%;
+        justify-content: center;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-agents-version-compare-button:hover:not(:disabled),
+      .playground-agents-version-compare-button:focus-visible {
+        background: transparent !important;
+      }
+
+      .playground-agents-version-compare-button::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-version-changes-page {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-version-changes-header {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-version-changes-back-button.playground-resource-detail-back-button {
+        align-self: flex-start;
+      }
+
+      .playground-version-changes-title-row {
+        min-width: 0;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-version-changes-title-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .playground-version-changes-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 18px;
+        line-height: 1.15;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+
+      .playground-version-changes-subtitle,
+      .playground-version-changes-compare-labels {
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.4;
+        font-weight: 400;
+      }
+
+      .playground-version-changes-summary {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 11px;
+        line-height: 1;
+        font-weight: 400;
+      }
+
+      .playground-version-changes-summary .is-additions {
+        color: #3fb950;
+      }
+
+      .playground-version-changes-summary .is-deletions {
+        color: #f85149;
+      }
+
+      .playground-version-changes-compare-labels {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .playground-version-changes-compare-selectors {
+        min-width: 0;
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .playground-version-changes-select-shell {
+        min-width: 190px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-version-changes-select-label {
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 400;
+      }
+
+      .playground-version-changes-select-control-wrap {
+        position: relative;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+      }
+
+      .playground-version-changes-select-control {
+        width: 100%;
+        height: 32px;
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.92);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 400;
+        padding: 0 30px 0 12px;
+        outline: none;
+      }
+
+      .playground-version-changes-select-control:focus {
+        border-color: rgba(255, 255, 255, 0.22);
+      }
+
+      .playground-version-changes-select-control-wrap > svg {
+        position: absolute;
+        right: 11px;
+        color: rgba(255, 255, 255, 0.62);
+        pointer-events: none;
+      }
+
+      .playground-version-changes-select-arrow {
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 13px;
+        line-height: 32px;
+        padding-bottom: 1px;
+      }
+
+      .playground-version-changes-file-list {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-version-changes-file-card {
+        min-width: 0;
+      }
+
+      .playground-version-changes-file-card .tb-runner-diff-surface {
+        border-radius: 10px;
+      }
+
+      .playground-version-changes-empty {
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      @media (max-width: 720px) {
+        .playground-version-changes-title-row {
+          flex-direction: column;
+        }
+
+        .playground-version-changes-select-shell {
+          min-width: min(100%, 260px);
+        }
+      }
+
       .tb-runner-chat.playground-agents-assistant-runner {
         flex: 1 1 auto;
         min-width: 0;
@@ -50208,6 +50412,92 @@ ${METRONOME_PAGE_CSS}
         overflow: hidden;
       }
 
+      .playground-evaluator-thread-prompt {
+        display: inline;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+        line-height: 1.45;
+        font-weight: 500;
+      }
+
+      .playground-evaluator-thread-link {
+        appearance: none;
+        border: 0;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        color: rgb(96, 165, 250);
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .playground-evaluator-thread-link:hover,
+      .playground-evaluator-thread-link:focus-visible {
+        color: rgb(147, 197, 253);
+        text-decoration: underline;
+        outline: none;
+      }
+
+      .playground-evaluator-thread-muted {
+        color: rgba(255, 255, 255, 0.72);
+        font-weight: 400;
+      }
+
+      .playground-evaluator-summary-kpi-card .tb-run-summary-json-header {
+        min-height: 46px;
+      }
+
+      .playground-evaluator-summary-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0;
+        padding: 14px 16px;
+      }
+
+      .playground-evaluator-summary-kpi {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .playground-evaluator-summary-kpi + .playground-evaluator-summary-kpi {
+        padding-left: 16px;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-evaluator-summary-kpi-label {
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 11px;
+        line-height: 1;
+        font-weight: 500;
+      }
+
+      .playground-evaluator-summary-kpi-value {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 17px;
+        line-height: 1.1;
+        font-weight: 500;
+      }
+
+      .playground-evaluator-summary-kpi-status-icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+      }
+
+      .playground-evaluator-summary-kpi-status-icon.is-passed {
+        color: rgb(52, 211, 153);
+      }
+
+      .playground-evaluator-summary-kpi-status-icon.is-failed {
+        color: rgb(248, 113, 113);
+      }
+
       .playground-metronome-run-thread-surface {
         background: transparent;
       }
@@ -60395,7 +60685,76 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         delete source.published_at;
         delete source.unpublishedAt;
         delete source.unpublished_at;
+        delete source.runnerVersioning;
+        delete source.runner_versioning;
+        delete source.versioning;
+        delete source.activeAgentDeployment;
+        delete source.active_agent_deployment;
         return source;
+      }
+
+      function createPlaygroundAgentVersionRevisionId() {
+        return "agent_revision_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+      }
+
+      function createPlaygroundAgentDeploymentId(versionId = "") {
+        const suffix = String(versionId || "").trim() || (Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8));
+        return "agent_deployment_" + suffix.replace(/[^A-Za-z0-9_-]+/g, "_");
+      }
+
+      function normalizePlaygroundVersionActor(actor) {
+        const source = actor && typeof actor === "object" && !Array.isArray(actor) ? actor : {};
+        const id = String(source.id || source.userId || source.user_id || source.uid || source.email || "").trim();
+        const name = String(source.name || source.displayName || source.display_name || source.fullName || source.full_name || source.email || "").trim();
+        const email = String(source.email || source.emailAddress || source.email_address || "").trim().toLowerCase();
+        const avatarUrl = String(source.avatarUrl || source.avatar_url || source.photoURL || source.photoUrl || source.photo_url || source.picture || "").trim();
+        if (!id && !name && !email && !avatarUrl) {
+          return null;
+        }
+        return {
+          id,
+          name,
+          email,
+          avatarUrl,
+        };
+      }
+
+      function normalizePlaygroundAgentVersionLifecycleState(version, status = "") {
+        const rawState = String(
+          version?.lifecycleState
+          || version?.lifecycle_state
+          || version?.state
+          || ""
+        ).trim().toLowerCase();
+        if (["draft", "saved", "published", "deprecated", "archived", "unpublished"].includes(rawState)) {
+          return rawState;
+        }
+        const normalizedStatus = String(status || version?.status || "").trim().toLowerCase();
+        if (normalizedStatus === "active") return "published";
+        if (normalizedStatus === "superseded") return "deprecated";
+        if (normalizedStatus === "unpublished") return "unpublished";
+        return "saved";
+      }
+
+      function normalizePlaygroundAgentVersionDeployment(rawDeployment, fallback = {}) {
+        const source = rawDeployment && typeof rawDeployment === "object" && !Array.isArray(rawDeployment)
+          ? rawDeployment
+          : {};
+        const id = String(source.id || source.deploymentId || source.deployment_id || fallback.id || "").trim();
+        const status = String(source.status || source.deploymentStatus || source.deployment_status || fallback.status || "").trim().toLowerCase();
+        const versionId = String(source.versionId || source.version_id || fallback.versionId || "").trim();
+        const publishedAt = String(source.publishedAt || source.published_at || fallback.publishedAt || "").trim();
+        const publishedBy = normalizePlaygroundVersionActor(source.publishedBy || source.published_by || fallback.publishedBy);
+        if (!id && !status && !versionId && !publishedAt && !publishedBy) {
+          return null;
+        }
+        return {
+          id,
+          versionId,
+          status: status || "published",
+          publishedAt,
+          publishedBy,
+        };
       }
 
       function normalizePlaygroundAgentVersion(rawVersion, fallbackIndex = 0) {
@@ -60408,6 +60767,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         const versionNumber = Number(version.version || version.versionNumber || version.version_number || 0) || (fallbackIndex + 1);
         const rawStatus = String(version.status || "").trim().toLowerCase();
         const status = ["active", "saved", "superseded", "unpublished"].includes(rawStatus) ? rawStatus : "saved";
+        const lifecycleState = normalizePlaygroundAgentVersionLifecycleState(version, status);
         const agentType = version.agentType === "team" || snapshot.agentType === "team" ? "team" : "single";
         const enabledSkills = Array.isArray(version.enabledSkills)
           ? version.enabledSkills
@@ -60488,9 +60848,37 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           label: String(version.label || version.name || ("Version " + versionNumber)).trim(),
           description: String(version.description || version.summary || "").trim(),
           status,
+          lifecycleState,
+          lifecycle_state: lifecycleState,
+          revisionId: String(version.revisionId || version.revision_id || "").trim(),
+          revision_id: String(version.revisionId || version.revision_id || "").trim(),
+          baseRevisionId: String(version.baseRevisionId || version.base_revision_id || "").trim(),
+          base_revision_id: String(version.baseRevisionId || version.base_revision_id || "").trim(),
+          revisionNumber: Number(version.revisionNumber || version.revision_number || versionNumber || 0) || versionNumber,
+          revision_number: Number(version.revisionNumber || version.revision_number || versionNumber || 0) || versionNumber,
           createdAt,
           updatedAt: String(version.updatedAt || version.updated_at || "").trim(),
           publishedAt: String(version.publishedAt || version.published_at || "").trim(),
+          unpublishedAt: String(version.unpublishedAt || version.unpublished_at || "").trim(),
+          createdBy: normalizePlaygroundVersionActor(version.createdBy || version.created_by),
+          created_by: normalizePlaygroundVersionActor(version.createdBy || version.created_by),
+          updatedBy: normalizePlaygroundVersionActor(version.updatedBy || version.updated_by),
+          updated_by: normalizePlaygroundVersionActor(version.updatedBy || version.updated_by),
+          publishedBy: normalizePlaygroundVersionActor(version.publishedBy || version.published_by),
+          published_by: normalizePlaygroundVersionActor(version.publishedBy || version.published_by),
+          unpublishedBy: normalizePlaygroundVersionActor(version.unpublishedBy || version.unpublished_by),
+          unpublished_by: normalizePlaygroundVersionActor(version.unpublishedBy || version.unpublished_by),
+          deploymentId: String(version.deploymentId || version.deployment_id || version.deployment?.id || "").trim(),
+          deployment_id: String(version.deploymentId || version.deployment_id || version.deployment?.id || "").trim(),
+          deploymentStatus: String(version.deploymentStatus || version.deployment_status || version.deployment?.status || "").trim().toLowerCase(),
+          deployment_status: String(version.deploymentStatus || version.deployment_status || version.deployment?.status || "").trim().toLowerCase(),
+          deployment: normalizePlaygroundAgentVersionDeployment(version.deployment, {
+            id: version.deploymentId || version.deployment_id,
+            versionId: id,
+            status: version.deploymentStatus || version.deployment_status,
+            publishedAt: version.publishedAt || version.published_at,
+            publishedBy: version.publishedBy || version.published_by,
+          }),
           name: normalizedSnapshot.name,
           model: normalizedSnapshot.model,
           skillCount: normalizedSnapshot.enabledSkills.length,
@@ -60563,15 +60951,50 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         const nextVersion = normalizedExisting.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), 0) + 1;
         const requestedStatus = String(options?.status || "saved").trim().toLowerCase();
         const status = requestedStatus === "active" ? "active" : "saved";
+        const lifecycleState = status === "active" ? "published" : "saved";
+        const actor = normalizePlaygroundVersionActor(options?.actor);
+        const id = createPlaygroundAgentVersionId();
+        const revisionId = createPlaygroundAgentVersionRevisionId();
+        const deploymentId = status === "active" ? createPlaygroundAgentDeploymentId(id) : "";
         const snapshot = buildPlaygroundAgentVersionSnapshot(agent);
         return normalizePlaygroundAgentVersion({
-          id: createPlaygroundAgentVersionId(),
+          id,
           version: nextVersion,
           label: String(options?.label || ("Version " + nextVersion)).trim(),
           description: String(options?.description || "").trim(),
           status,
+          lifecycleState,
+          lifecycle_state: lifecycleState,
+          revisionId,
+          revision_id: revisionId,
+          baseRevisionId: String(options?.baseRevisionId || options?.base_revision_id || "").trim(),
+          base_revision_id: String(options?.baseRevisionId || options?.base_revision_id || "").trim(),
+          revisionNumber: nextVersion,
+          revision_number: nextVersion,
           createdAt: now,
+          createdBy: actor,
+          created_by: actor,
+          updatedAt: now,
+          updated_at: now,
+          updatedBy: actor,
+          updated_by: actor,
           publishedAt: status === "active" ? now : "",
+          published_at: status === "active" ? now : "",
+          publishedBy: status === "active" ? actor : null,
+          published_by: status === "active" ? actor : null,
+          deploymentId,
+          deployment_id: deploymentId,
+          deploymentStatus: status === "active" ? "published" : "",
+          deployment_status: status === "active" ? "published" : "",
+          deployment: deploymentId
+            ? {
+                id: deploymentId,
+                versionId: id,
+                status: "published",
+                publishedAt: now,
+                publishedBy: actor,
+              }
+            : null,
           name: snapshot.name,
           model: snapshot.model,
           enabledSkills: snapshot.enabledSkills,
@@ -74173,6 +74596,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 ${ENVIRONMENT_CHANGES_SCRIPT}
 ${IMAGINE_TEMPLATE_PAGE_SCRIPT}
 ${IMAGINE_PAGE_SCRIPT}
+${VERSIONING_CORE_SCRIPT}
 ${VERSION_SIDEBAR_SCRIPT}
 ${METRONOME_PAGE_SCRIPT}
 ${MODELS_PAGE_SCRIPT}
@@ -105838,6 +106262,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentVersionNameDraft, setAgentVersionNameDraft] = useState("");
         const [agentVersionDescriptionDraft, setAgentVersionDescriptionDraft] = useState("");
         const [isAgentVersionDescriptionEditing, setIsAgentVersionDescriptionEditing] = useState(false);
+        const [agentVersionChangesState, setAgentVersionChangesState] = useState(null);
         const [openAgentVersionMenuId, setOpenAgentVersionMenuId] = useState("");
         const [agentUpgradeModalOpen, setAgentUpgradeModalOpen] = useState(false);
         const [agentUpgradeCheckoutLoading, setAgentUpgradeCheckoutLoading] = useState(false);
@@ -107060,6 +107485,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setAgentModelPopover("");
           setAgentVersionsSidebarOpen(false);
           finishCloseAgentVersionModal();
+          setAgentVersionChangesState(null);
           setOpenAgentVersionMenuId("");
           setAgentApiModalOpen(false);
           setAgentApiModalVisible(false);
@@ -108682,16 +109108,20 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             name: nextName,
             agentType: "single",
           });
-          const initialVersion = createPlaygroundAgentVersion(creationDraft, [], { status: "active" });
+          const initialVersion = createPlaygroundAgentVersion(creationDraft, [], { status: "active", actor: getAgentVersionActor() });
           const versionedCreationDraft = createPlaygroundAgentWithVersionList(creationDraft, [initialVersion], initialVersion.id);
-          const persistedAgent = await persistAgentRecord(versionedCreationDraft);
+          const versionedCreationCommitDraft = prepareAgentVersionedRecordForCommit(versionedCreationDraft, {
+            operation: "initialize",
+            actor: getAgentVersionActor(),
+          });
+          const persistedAgent = await persistAgentRecord(versionedCreationCommitDraft);
           const savedAgent = readPlaygroundAgentVersions(persistedAgent).length > 0
             ? persistedAgent
             : normalizePlaygroundAgentRecord({
-                ...versionedCreationDraft,
+                ...versionedCreationCommitDraft,
                 ...persistedAgent,
-                metadata: getAgentMetadataRecord(versionedCreationDraft),
-                publishedAt: versionedCreationDraft.publishedAt || persistedAgent.publishedAt || "",
+                metadata: getAgentMetadataRecord(versionedCreationCommitDraft),
+                publishedAt: versionedCreationCommitDraft.publishedAt || persistedAgent.publishedAt || "",
               });
 
           editorDirtyRef.current = false;
@@ -109393,6 +109823,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
             return;
           }
+          if (
+            draftAgent.isSystem !== true
+            && draftAgent.isDefault !== true
+            && !agentCreationSetupOpen
+            && !isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
+          ) {
+            return;
+          }
           if (!editorDirtyRef.current) {
             return;
           }
@@ -109428,7 +109866,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return;
           }
           agentInitialVersionSeededRef.current.add(seedKey);
-          const initialVersion = createPlaygroundAgentVersion(draftAgent, [], { status: "active" });
+          const initialVersion = createPlaygroundAgentVersion(draftAgent, [], { status: "active", actor: getAgentVersionActor() });
           const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, [initialVersion], initialVersion.id);
           setDraftAgent(nextAgent);
           setAgentDetailsById((current) => ({
@@ -109436,6 +109874,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             [nextAgent.id]: nextAgent,
           }));
           void commitVersionedAgentRecord(nextAgent, {
+            operation: "initialize",
+            actor: getAgentVersionActor(),
+            skipConflictCheck: true,
             loadingMessage: "Initializing agent version...",
             successMessage: "Version initialized",
             errorMessage: "Failed to initialize agent version.",
@@ -113938,16 +114379,20 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               ...composerDraft,
               name: nextName,
             });
-            const initialVersion = createPlaygroundAgentVersion(creationDraft, [], { status: "active" });
+            const initialVersion = createPlaygroundAgentVersion(creationDraft, [], { status: "active", actor: getAgentVersionActor() });
             const versionedCreationDraft = createPlaygroundAgentWithVersionList(creationDraft, [initialVersion], initialVersion.id);
-            const persistedAgent = await persistAgentRecord(versionedCreationDraft);
+            const versionedCreationCommitDraft = prepareAgentVersionedRecordForCommit(versionedCreationDraft, {
+              operation: "initialize",
+              actor: getAgentVersionActor(),
+            });
+            const persistedAgent = await persistAgentRecord(versionedCreationCommitDraft);
             const savedAgent = readPlaygroundAgentVersions(persistedAgent).length > 0
               ? persistedAgent
               : normalizePlaygroundAgentRecord({
-                  ...versionedCreationDraft,
+                  ...versionedCreationCommitDraft,
                   ...persistedAgent,
-                  metadata: getAgentMetadataRecord(versionedCreationDraft),
-                  publishedAt: versionedCreationDraft.publishedAt || persistedAgent.publishedAt || "",
+                  metadata: getAgentMetadataRecord(versionedCreationCommitDraft),
+                  publishedAt: versionedCreationCommitDraft.publishedAt || persistedAgent.publishedAt || "",
                 });
             setAgentDetailsById((current) => ({
               ...current,
@@ -114162,58 +114607,241 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           });
         }
 
-        function getAgentVersionMetadata(agentRecord = draftAgent) {
-          return agentRecord?.metadata && typeof agentRecord.metadata === "object" && !Array.isArray(agentRecord.metadata)
-            ? agentRecord.metadata
-            : {};
+        function getAgentVersionActor() {
+          return normalizePlaygroundVersionActor({
+            id: currentUserId || currentUserEmail || "local-user",
+            name: currentUserName || currentUserEmail || "User",
+            email: currentUserEmail,
+            avatarUrl: currentUserAvatarUrl,
+          });
         }
 
-        function readDraftAgentVersions(agentRecord = draftAgent) {
-          return readPlaygroundAgentVersions(agentRecord);
+        function getAgentVersionActorLabel(actor) {
+          const normalizedActor = normalizePlaygroundVersionActor(actor);
+          if (!normalizedActor) {
+            return "";
+          }
+          return String(normalizedActor.name || normalizedActor.email || normalizedActor.id || "").trim();
         }
 
-        function getDraftAgentActiveVersion(agentRecord = draftAgent) {
-          const versions = readDraftAgentVersions(agentRecord);
-          const metadata = getAgentVersionMetadata(agentRecord);
-          const activeId = String(metadata.activeAgentVersionId || metadata.active_agent_version_id || "").trim();
-          return versions.find((version) => version.id === activeId)
-            || versions.find((version) => version.status === "active")
-            || null;
+        function getAgentVersioningMetadata(agentRecord) {
+          const metadata = getAgentMetadataRecord(agentRecord);
+          const versioning = metadata.runnerVersioning || metadata.runner_versioning || metadata.versioning || {};
+          return versioning && typeof versioning === "object" && !Array.isArray(versioning) ? versioning : {};
         }
 
-        function getDraftAgentSelectedVersion(agentRecord = draftAgent) {
-          const versions = readDraftAgentVersions(agentRecord);
-          const metadata = getAgentVersionMetadata(agentRecord);
+        function getAgentVersioningRevisionId(agentRecord) {
+          const versioning = getAgentVersioningMetadata(agentRecord);
+          return String(versioning.revisionId || versioning.revision_id || "").trim();
+        }
+
+        function getAgentVersioningRevisionNumber(agentRecord) {
+          const versioning = getAgentVersioningMetadata(agentRecord);
+          return Number(versioning.revisionNumber || versioning.revision_number || 0) || 0;
+        }
+
+        function getAgentVersionLifecycleLabel(version) {
+          const lifecycleState = normalizePlaygroundAgentVersionLifecycleState(version, version?.status);
+          if (lifecycleState === "published") return "Published";
+          if (lifecycleState === "deprecated") return "Superseded";
+          if (lifecycleState === "unpublished") return "Unpublished";
+          if (lifecycleState === "archived") return "Archived";
+          if (lifecycleState === "draft") return "Draft";
+          return "Saved";
+        }
+
+        function buildAgentVersioningMetadata(agentRecord, options = {}) {
+          const now = new Date().toISOString();
+          const metadata = getAgentMetadataRecord(agentRecord);
+          const currentVersioning = getAgentVersioningMetadata(agentRecord);
+          const actor = normalizePlaygroundVersionActor(options.actor) || getAgentVersionActor();
+          const operation = String(options.operation || "save-current").trim() || "save-current";
           const activeVersion = getDraftAgentActiveVersion(agentRecord);
-          const selectedId = String(
-            metadata.restoredFromAgentVersionId
-            || metadata.restored_from_agent_version_id
-            || activeVersion?.id
+          const selectedVersion = getDraftAgentSelectedVersion(agentRecord);
+          const previousRevisionId = String(
+            currentVersioning.revisionId
+            || currentVersioning.revision_id
+            || getAgentVersioningRevisionId(draftAgent)
+            || getAgentVersioningRevisionId(selectedAgentSnapshot)
             || ""
           ).trim();
-          return versions.find((version) => version.id === selectedId)
-            || activeVersion
-            || versions[0]
-            || null;
+          const nextRevisionNumber = Math.max(
+            getAgentVersioningRevisionNumber(agentRecord),
+            getAgentVersioningRevisionNumber(draftAgent),
+            getAgentVersioningRevisionNumber(selectedAgentSnapshot)
+          ) + 1;
+          const nextRevisionId = createPlaygroundAgentVersionRevisionId();
+          const isPublishOperation = operation.includes("publish") || (operation === "initialize" && Boolean(activeVersion));
+          const nextState = isPublishOperation
+            ? "published"
+            : operation.includes("unpublish")
+              ? "unpublished"
+              : "saved";
+          const nextVersioning = {
+            ...currentVersioning,
+            schemaVersion: 1,
+            schema_version: 1,
+            resourceType: "agent",
+            resource_type: "agent",
+            revisionId: nextRevisionId,
+            revision_id: nextRevisionId,
+            baseRevisionId: previousRevisionId,
+            base_revision_id: previousRevisionId,
+            revisionNumber: nextRevisionNumber,
+            revision_number: nextRevisionNumber,
+            state: nextState,
+            lastOperation: operation,
+            last_operation: operation,
+            activeVersionId: activeVersion?.id || "",
+            active_version_id: activeVersion?.id || "",
+            selectedVersionId: selectedVersion?.id || "",
+            selected_version_id: selectedVersion?.id || "",
+            updatedAt: now,
+            updated_at: now,
+            updatedBy: actor,
+            updated_by: actor,
+          };
+          if (operation.includes("save")) {
+            nextVersioning.lastSavedAt = now;
+            nextVersioning.last_saved_at = now;
+            nextVersioning.lastSavedBy = actor;
+            nextVersioning.last_saved_by = actor;
+          }
+          if (isPublishOperation) {
+            nextVersioning.lastPublishedAt = now;
+            nextVersioning.last_published_at = now;
+            nextVersioning.lastPublishedBy = actor;
+            nextVersioning.last_published_by = actor;
+          }
+          if (operation.includes("unpublish")) {
+            nextVersioning.lastUnpublishedAt = now;
+            nextVersioning.last_unpublished_at = now;
+            nextVersioning.lastUnpublishedBy = actor;
+            nextVersioning.last_unpublished_by = actor;
+          }
+          const nextMetadata = {
+            ...metadata,
+            runnerVersioning: nextVersioning,
+            runner_versioning: nextVersioning,
+          };
+          if (isPublishOperation && activeVersion) {
+            const deploymentId = activeVersion.deploymentId || activeVersion.deployment_id || createPlaygroundAgentDeploymentId(activeVersion.id);
+            nextMetadata.activeAgentDeployment = {
+              id: deploymentId,
+              versionId: activeVersion.id,
+              version: activeVersion.version,
+              status: "published",
+              publishedAt: now,
+              publishedBy: actor,
+            };
+            nextMetadata.active_agent_deployment = nextMetadata.activeAgentDeployment;
+          }
+          if (operation.includes("unpublish")) {
+            delete nextMetadata.activeAgentDeployment;
+            delete nextMetadata.active_agent_deployment;
+          }
+          return nextMetadata;
         }
 
-        function stringifyAgentVersionComparableValue(value) {
-          if (value === null || typeof value !== "object") {
-            return JSON.stringify(value);
+        function prepareAgentVersionedRecordForCommit(agentRecord, options = {}) {
+          const normalizedAgent = normalizePlaygroundAgentRecord(agentRecord);
+          const nextMetadata = buildAgentVersioningMetadata(normalizedAgent, options);
+          return normalizePlaygroundAgentRecord({
+            ...normalizedAgent,
+            metadata: nextMetadata,
+          });
+        }
+
+        async function fetchLatestAgentVersionRecord(agentId) {
+          const normalizedAgentId = String(agentId || "").trim();
+          if (!normalizedAgentId || normalizedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
+            return null;
           }
-          if (Array.isArray(value)) {
-            return "[" + value.map((entry) => stringifyAgentVersionComparableValue(entry)).join(",") + "]";
+          try {
+            const response = await fetch(backendUrl + "/agents/" + encodeURIComponent(normalizedAgentId), {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              return null;
+            }
+            return getPlaygroundAgentResponseRecord(data);
+          } catch {
+            return null;
           }
-          return "{" + Object.keys(value).sort().map((key) => (
-            JSON.stringify(key) + ":" + stringifyAgentVersionComparableValue(value[key])
-          )).join(",") + "}";
+        }
+
+        async function assertAgentVersionCommitIsCurrent(agentRecord, options = {}) {
+          if (options.skipConflictCheck) {
+            return;
+          }
+          const normalizedAgentId = String(agentRecord?.id || "").trim();
+          if (!normalizedAgentId || normalizedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
+            return;
+          }
+          const latestAgent = await fetchLatestAgentVersionRecord(normalizedAgentId);
+          if (!latestAgent) {
+            return;
+          }
+          const localRevisionId = getAgentVersioningRevisionId(draftAgent) || getAgentVersioningRevisionId(selectedAgentSnapshot);
+          const latestRevisionId = getAgentVersioningRevisionId(latestAgent);
+          if (localRevisionId && latestRevisionId && localRevisionId !== latestRevisionId) {
+            throw new Error("This agent changed in another session. Reload before saving this version.");
+          }
+          if (localRevisionId || latestRevisionId) {
+            return;
+          }
+          const localUpdatedAt = String(draftAgent?.updatedAt || selectedAgentSnapshot?.updatedAt || "").trim();
+          const latestUpdatedAt = String(latestAgent?.updatedAt || "").trim();
+          if (localUpdatedAt && latestUpdatedAt && localUpdatedAt !== latestUpdatedAt) {
+            const localSignature = agentVersionController.getCurrentSnapshotSignature(draftAgent || selectedAgentSnapshot);
+            const latestSignature = agentVersionController.getCurrentSnapshotSignature(latestAgent);
+            if (localSignature !== latestSignature) {
+              throw new Error("This agent changed in another session. Reload before saving this version.");
+            }
+          }
+        }
+
+        function validateAgentVersionForPublish(agentRecord, version) {
+          const normalizedVersion = version ? normalizePlaygroundAgentVersion(version) : null;
+          const snapshot = normalizedVersion?.snapshot || buildPlaygroundAgentVersionSnapshot(agentRecord);
+          const issues = [];
+          const name = String(snapshot.name || agentRecord?.name || "").trim();
+          const modelId = getPlaygroundAgentModelMeta(snapshot.model || agentRecord?.model || "", resolvedAgentModelOptions).id;
+          if (!name) {
+            issues.push("Add an agent name.");
+          }
+          if (!modelId) {
+            issues.push("Choose a model.");
+          }
+          if (snapshot.agentType === "team") {
+            if (!String(snapshot.teamOrchestratorAgentId || "").trim()) {
+              issues.push("Choose an orchestrator agent.");
+            }
+            if (!Array.isArray(snapshot.teamSubagentIds) || snapshot.teamSubagentIds.length === 0) {
+              issues.push("Add at least one team member.");
+            }
+          } else if (!String(snapshot.instructions || "").trim()) {
+            issues.push("Add instructions before publishing.");
+          }
+          const availableGuardrailIds = new Set((Array.isArray(guardrailSets) ? guardrailSets : [])
+            .map((guardrailSet) => String(guardrailSet?.id || "").trim())
+            .filter(Boolean));
+          const missingGuardrailIds = normalizePlaygroundGuardrailSetIds(snapshot.guardrailSetIds)
+            .filter((guardrailSetId) => availableGuardrailIds.size > 0 && !availableGuardrailIds.has(guardrailSetId));
+          if (missingGuardrailIds.length > 0) {
+            issues.push("Remove unavailable guardrail sets before publishing.");
+          }
+          return {
+            ok: issues.length === 0,
+            issues,
+            message: issues.slice(0, 3).join(" "),
+          };
         }
 
         function normalizeAgentVersionComparableList(value) {
-          return (Array.isArray(value) ? value : [])
-            .map((entry) => String(entry || "").trim())
-            .filter(Boolean)
-            .sort((left, right) => left.localeCompare(right));
+          return normalizePlaygroundVersionComparableList(value);
         }
 
         function normalizeAgentVersionComparablePromptAdaptations(value) {
@@ -114255,63 +114883,186 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           };
         }
 
-        function getAgentVersionSnapshotSignature(snapshot) {
-          return stringifyAgentVersionComparableValue(buildAgentVersionComparableSnapshot(snapshot));
+        const agentVersionController = createPlaygroundVersionController({
+          getMetadata: (agentRecord) => (
+            agentRecord?.metadata && typeof agentRecord.metadata === "object" && !Array.isArray(agentRecord.metadata)
+              ? agentRecord.metadata
+              : {}
+          ),
+          readVersions: readPlaygroundAgentVersions,
+          normalizeVersions: normalizePlaygroundAgentVersions,
+          createVersion: createPlaygroundAgentVersion,
+          withVersionList: createPlaygroundAgentWithVersionList,
+          fromVersionSnapshot: createPlaygroundAgentFromVersionSnapshot,
+          buildSnapshot: buildPlaygroundAgentVersionSnapshot,
+          buildComparableSnapshot: buildAgentVersionComparableSnapshot,
+          getActiveVersionId: (metadata) => metadata.activeAgentVersionId || metadata.active_agent_version_id || "",
+          getSelectedVersionId: (metadata, activeVersion) => (
+            metadata.restoredFromAgentVersionId
+            || metadata.restored_from_agent_version_id
+            || activeVersion?.id
+            || ""
+          ),
+          updateVersionFromResource: (version, agentRecord, options = {}) => {
+            const now = new Date().toISOString();
+            const normalizedVersion = normalizePlaygroundAgentVersion(version || {});
+            const snapshot = buildPlaygroundAgentVersionSnapshot(agentRecord);
+            const nextStatus = String(options.status || "saved").trim().toLowerCase() === "active" ? "active" : "saved";
+            const actor = normalizePlaygroundVersionActor(options.actor) || getAgentVersionActor();
+            const revisionId = createPlaygroundAgentVersionRevisionId();
+            const deploymentId = nextStatus === "active" ? (normalizedVersion.deploymentId || normalizedVersion.deployment_id || createPlaygroundAgentDeploymentId(normalizedVersion.id)) : "";
+            return normalizePlaygroundAgentVersion({
+              ...normalizedVersion,
+              status: nextStatus,
+              lifecycleState: nextStatus === "active" ? "published" : "saved",
+              lifecycle_state: nextStatus === "active" ? "published" : "saved",
+              revisionId,
+              revision_id: revisionId,
+              baseRevisionId: normalizedVersion.revisionId || normalizedVersion.revision_id || "",
+              base_revision_id: normalizedVersion.revisionId || normalizedVersion.revision_id || "",
+              revisionNumber: (Number(normalizedVersion.revisionNumber || normalizedVersion.revision_number || normalizedVersion.version || 0) || 0) + 1,
+              revision_number: (Number(normalizedVersion.revisionNumber || normalizedVersion.revision_number || normalizedVersion.version || 0) || 0) + 1,
+              updatedAt: now,
+              updated_at: now,
+              updatedBy: actor,
+              updated_by: actor,
+              publishedAt: nextStatus === "active" ? now : "",
+              published_at: nextStatus === "active" ? now : "",
+              publishedBy: nextStatus === "active" ? actor : null,
+              published_by: nextStatus === "active" ? actor : null,
+              deploymentId,
+              deployment_id: deploymentId,
+              deploymentStatus: nextStatus === "active" ? "published" : "",
+              deployment_status: nextStatus === "active" ? "published" : "",
+              name: snapshot.name,
+              model: snapshot.model,
+              enabledSkills: snapshot.enabledSkills,
+              guardrailSetIds: snapshot.guardrailSetIds,
+              permissionSet: snapshot.permissionSet,
+              snapshot,
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          updateVersionMetadata: (version, details = {}) => {
+            const normalizedVersion = normalizePlaygroundAgentVersion(version || {});
+            const actor = normalizePlaygroundVersionActor(details.actor) || getAgentVersionActor();
+            const now = String(details.updatedAt || new Date().toISOString()).trim();
+            return normalizePlaygroundAgentVersion({
+              ...normalizedVersion,
+              label: details.label,
+              description: details.description,
+              updatedAt: now,
+              updated_at: now,
+              updatedBy: actor,
+              updated_by: actor,
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          publishVersion: (version, options = {}) => {
+            const normalizedVersion = normalizePlaygroundAgentVersion(version || {});
+            const publishedAt = String(options.publishedAt || new Date().toISOString()).trim();
+            const actor = normalizePlaygroundVersionActor(options.actor) || getAgentVersionActor();
+            const deploymentId = normalizedVersion.deploymentId || normalizedVersion.deployment_id || createPlaygroundAgentDeploymentId(normalizedVersion.id);
+            return normalizePlaygroundAgentVersion({
+              ...normalizedVersion,
+              status: "active",
+              lifecycleState: "published",
+              lifecycle_state: "published",
+              updatedAt: publishedAt,
+              updated_at: publishedAt,
+              updatedBy: actor,
+              updated_by: actor,
+              publishedAt,
+              published_at: publishedAt,
+              publishedBy: actor,
+              published_by: actor,
+              deploymentId,
+              deployment_id: deploymentId,
+              deploymentStatus: "published",
+              deployment_status: "published",
+              deployment: {
+                id: deploymentId,
+                versionId: normalizedVersion.id,
+                status: "published",
+                publishedAt,
+                publishedBy: actor,
+              },
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          supersedeVersion: (version, options = {}) => {
+            const normalizedVersion = normalizePlaygroundAgentVersion(version || {});
+            const supersededAt = String(options.supersededAt || new Date().toISOString()).trim();
+            return normalizePlaygroundAgentVersion({
+              ...normalizedVersion,
+              status: "superseded",
+              lifecycleState: "deprecated",
+              lifecycle_state: "deprecated",
+              updatedAt: supersededAt,
+              updated_at: supersededAt,
+              deploymentStatus: "superseded",
+              deployment_status: "superseded",
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          unpublishVersion: (version, options = {}) => {
+            const normalizedVersion = normalizePlaygroundAgentVersion(version || {});
+            const unpublishedAt = String(options.unpublishedAt || new Date().toISOString()).trim();
+            const actor = normalizePlaygroundVersionActor(options.actor) || getAgentVersionActor();
+            return normalizePlaygroundAgentVersion({
+              ...normalizedVersion,
+              status: "unpublished",
+              lifecycleState: "unpublished",
+              lifecycle_state: "unpublished",
+              updatedAt: unpublishedAt,
+              updated_at: unpublishedAt,
+              updatedBy: actor,
+              updated_by: actor,
+              unpublishedAt,
+              unpublished_at: unpublishedAt,
+              unpublishedBy: actor,
+              unpublished_by: actor,
+              deploymentStatus: "unpublished",
+              deployment_status: "unpublished",
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          applyUnpublishMetadata: (agentRecord, context = {}) => {
+            const nextMetadata = agentRecord?.metadata && typeof agentRecord.metadata === "object" && !Array.isArray(agentRecord.metadata)
+              ? { ...agentRecord.metadata, unpublishedAt: context.unpublishedAt, unpublished_at: context.unpublishedAt }
+              : { unpublishedAt: context.unpublishedAt, unpublished_at: context.unpublishedAt };
+            delete nextMetadata.publishedAt;
+            delete nextMetadata.published_at;
+            return {
+              ...agentRecord,
+              metadata: nextMetadata,
+              publishedAt: "",
+            };
+          },
+        });
+
+        function getAgentVersionMetadata(agentRecord = draftAgent) {
+          return agentVersionController.getMetadata(agentRecord);
         }
 
-        function getDraftAgentCurrentSnapshotSignature() {
-          return stringifyAgentVersionComparableValue(buildAgentVersionComparableSnapshot(buildPlaygroundAgentVersionSnapshot(draftAgent)));
+        function readDraftAgentVersions(agentRecord = draftAgent) {
+          return agentVersionController.readVersions(agentRecord);
         }
 
-        function getAgentVersionCurrentSnapshotSignature(agentRecord = draftAgent) {
-          return stringifyAgentVersionComparableValue(buildAgentVersionComparableSnapshot(buildPlaygroundAgentVersionSnapshot(agentRecord)));
+        function getDraftAgentActiveVersion(agentRecord = draftAgent) {
+          return agentVersionController.getActiveVersion(agentRecord);
         }
 
-        function getAgentVersionBaselineKey(agentRecord = draftAgent) {
-          const normalizedAgentId = String(agentRecord?.id || "").trim();
-          if (!normalizedAgentId) {
-            return "";
-          }
-          const selectedVersion = getDraftAgentSelectedVersion(agentRecord);
-          const selectedVersionId = String(selectedVersion?.id || "").trim();
-          return normalizedAgentId + "::" + selectedVersionId;
+        function getDraftAgentSelectedVersion(agentRecord = draftAgent) {
+          return agentVersionController.getSelectedVersion(agentRecord);
         }
 
         function rememberAgentVersionBaseline(agentRecord = draftAgent, options = {}) {
-          if (!agentRecord) {
-            return;
+          const didUpdateBaseline = agentVersionController.rememberBaseline(agentRecord, agentVersionBaselineRef, options);
+          if (didUpdateBaseline) {
+            agentVersionDraftTouchedRef.current = false;
           }
-          const baselineKey = getAgentVersionBaselineKey(agentRecord);
-          if (!baselineKey) {
-            return;
-          }
-          if (!options.force && agentVersionBaselineRef.current?.key === baselineKey && agentVersionBaselineRef.current?.signature) {
-            return;
-          }
-          agentVersionDraftTouchedRef.current = false;
-          agentVersionBaselineRef.current = {
-            key: baselineKey,
-            signature: getAgentVersionCurrentSnapshotSignature(agentRecord),
-          };
         }
 
         function hasDraftAgentVersionChanges() {
-          if (!draftAgent) {
-            return false;
-          }
-          if (!agentVersionDraftTouchedRef.current) {
-            return false;
-          }
-          const currentBaselineKey = getAgentVersionBaselineKey(draftAgent);
-          const baseline = agentVersionBaselineRef.current || {};
-          if (baseline.key && baseline.key === currentBaselineKey && baseline.signature) {
-            return getAgentVersionCurrentSnapshotSignature(draftAgent) !== baseline.signature;
-          }
-          const selectedVersion = getDraftAgentSelectedVersion();
-          if (!selectedVersion) {
-            return true;
-          }
-          return getDraftAgentCurrentSnapshotSignature() !== getAgentVersionSnapshotSignature(selectedVersion.snapshot);
+          return agentVersionController.hasDraftChanges(draftAgent, agentVersionBaselineRef, {
+            touched: agentVersionDraftTouchedRef.current,
+          });
         }
 
         function isDraftAgentSelectedVersionPublished() {
@@ -114399,14 +115150,19 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           });
 
           try {
-            const savedAgent = await persistAgentRecord(normalizedNextAgent);
+            await assertAgentVersionCommitIsCurrent(normalizedNextAgent, options);
+            const versionedNextAgent = prepareAgentVersionedRecordForCommit(normalizedNextAgent, {
+              ...options,
+              actor: options.actor || getAgentVersionActor(),
+            });
+            const savedAgent = await persistAgentRecord(versionedNextAgent);
             const savedHasVersionMetadata = readPlaygroundAgentVersions(savedAgent).length > 0
               || Boolean(savedAgent?.metadata?.activeAgentVersionId || savedAgent?.metadata?.active_agent_version_id);
             const mergedSavedAgent = normalizePlaygroundAgentRecord({
-              ...normalizedNextAgent,
+              ...versionedNextAgent,
               ...savedAgent,
-              metadata: savedHasVersionMetadata ? savedAgent.metadata : normalizedNextAgent.metadata,
-              publishedAt: savedAgent?.publishedAt || normalizedNextAgent.publishedAt || "",
+              metadata: savedHasVersionMetadata ? savedAgent.metadata : versionedNextAgent.metadata,
+              publishedAt: savedAgent?.publishedAt || versionedNextAgent.publishedAt || "",
             });
             editorDirtyRef.current = false;
             setAgentDetailsById((current) => ({
@@ -114416,6 +115172,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             setAgentListMode(getPlaygroundAgentListMode(mergedSavedAgent));
             setSelectedAgentId(mergedSavedAgent.id);
             setDraftAgent(mergedSavedAgent);
+            rememberAgentVersionBaseline(mergedSavedAgent, { force: true });
             setOpenAgentVersionMenuId("");
             setSaveState({
               isSaving: false,
@@ -114475,46 +115232,25 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setAgentPublishMenuOpen(false);
           setAgentVersionsHeaderMenuOpen(false);
           finishCloseAgentVersionModal();
+          setAgentVersionChangesState(null);
           setOpenAgentVersionMenuId("");
-        }
-
-        function buildUpdatedAgentVersionFromDraft(version, options = {}) {
-          const now = new Date().toISOString();
-          const normalizedVersion = normalizePlaygroundAgentVersion(version || {});
-          const snapshot = buildPlaygroundAgentVersionSnapshot(draftAgent);
-          const nextStatus = String(options.status || "saved").trim().toLowerCase() === "active" ? "active" : "saved";
-          return normalizePlaygroundAgentVersion({
-            ...normalizedVersion,
-            status: nextStatus,
-            updatedAt: now,
-            publishedAt: nextStatus === "active" ? now : "",
-            name: snapshot.name,
-            model: snapshot.model,
-            enabledSkills: snapshot.enabledSkills,
-            guardrailSetIds: snapshot.guardrailSetIds,
-            permissionSet: snapshot.permissionSet,
-            snapshot,
-          }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
         }
 
         async function saveCurrentAgentVersion() {
           if (!draftAgent || agentVersionState.status === "loading") {
             return;
           }
-          const versions = readDraftAgentVersions();
-          const selectedVersion = getDraftAgentSelectedVersion();
-          const nextVersion = selectedVersion
-            ? buildUpdatedAgentVersionFromDraft(selectedVersion, { status: "saved" })
-            : createPlaygroundAgentVersion(draftAgent, versions, { status: "saved" });
-          const nextVersions = selectedVersion
-            ? normalizePlaygroundAgentVersions(versions.map((version) => (
-                version.id === selectedVersion.id
-                  ? nextVersion
-                  : version
-              )))
-            : normalizePlaygroundAgentVersions([nextVersion, ...versions]);
-          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, nextVersions, nextVersion.id);
-          await commitVersionedAgentRecord(nextAgent, {
+          if (!hasDraftAgentVersionChanges()) {
+            return;
+          }
+          const actor = getAgentVersionActor();
+          const result = agentVersionController.buildSaveCurrentResource(draftAgent, { status: "saved", actor });
+          if (!result?.resource) {
+            return;
+          }
+          await commitVersionedAgentRecord(result.resource, {
+            operation: "save-current",
+            actor,
             loadingMessage: "Saving current version...",
             successMessage: "Current version saved",
             errorMessage: "Failed to save current version.",
@@ -114635,14 +115371,18 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!forceNewVersion && !hasDraftAgentVersionChanges()) {
             return null;
           }
-          const versions = readDraftAgentVersions();
-          const newVersion = createPlaygroundAgentVersion(draftAgent, versions, {
-            status: "saved",
+          const actor = getAgentVersionActor();
+          const result = agentVersionController.buildNewVersionResource(draftAgent, {
             label: options.label,
             description: options.description,
+            actor,
           });
-          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, [newVersion, ...versions], newVersion.id);
-          return await commitVersionedAgentRecord(nextAgent, {
+          if (!result?.resource) {
+            return null;
+          }
+          return await commitVersionedAgentRecord(result.resource, {
+            operation: "save-new-version",
+            actor,
             loadingMessage: "Saving new version...",
             successMessage: "New version saved",
             errorMessage: "Failed to save new version.",
@@ -114653,37 +115393,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftAgent || agentVersionState.status === "loading") {
             return null;
           }
-          const normalizedVersionId = String(versionId || "").trim();
-          const versions = readDraftAgentVersions();
-          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
-          if (!targetVersion) {
+          const actor = getAgentVersionActor();
+          const result = agentVersionController.buildVersionMetadataResource(draftAgent, versionId, {
+            ...versionDetails,
+            actor,
+          });
+          if (!result?.resource) {
             return null;
           }
-          const now = new Date().toISOString();
-          const nextLabel = String(versionDetails.label || "").trim() || String(targetVersion.label || ("Version " + targetVersion.version)).trim();
-          const nextDescription = String(versionDetails.description || "").trim();
-          const nextVersions = normalizePlaygroundAgentVersions(versions.map((version) => (
-            version.id === targetVersion.id
-              ? {
-                  ...version,
-                  label: nextLabel,
-                  description: nextDescription,
-                  updatedAt: now,
-                  updated_at: now,
-                }
-              : version
-          )));
-          const metadata = getAgentVersionMetadata();
-          const selectedVersionId = String(
-            metadata.restoredFromAgentVersionId
-            || metadata.restored_from_agent_version_id
-            || metadata.activeAgentVersionId
-            || metadata.active_agent_version_id
-            || targetVersion.id
-            || ""
-          ).trim();
-          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, nextVersions, selectedVersionId);
-          return await commitVersionedAgentRecord(nextAgent, {
+          return await commitVersionedAgentRecord(result.resource, {
+            operation: "edit-version",
+            actor,
             loadingMessage: "Saving version details...",
             successMessage: "Version details saved",
             errorMessage: "Failed to save version details.",
@@ -114720,26 +115440,24 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             });
             return;
           }
-          const versions = readDraftAgentVersions();
           const selectedVersion = getDraftAgentSelectedVersion();
-          if (!selectedVersion) {
+          const validation = validateAgentVersionForPublish(draftAgent, selectedVersion);
+          if (!validation.ok) {
+            setAgentVersionState({
+              status: "error",
+              message: "",
+              error: validation.message || "Resolve validation issues before publishing.",
+            });
             return;
           }
-          const now = new Date().toISOString();
-          const nextVersions = normalizePlaygroundAgentVersions(versions.map((version) => {
-            if (version.id === selectedVersion.id) {
-              return {
-                ...version,
-                status: "active",
-                publishedAt: now,
-                updatedAt: now,
-              };
-            }
-            return version.status === "active" ? { ...version, status: "superseded" } : version;
-          }));
-          const publishedVersion = nextVersions.find((version) => version.id === selectedVersion.id) || selectedVersion;
-          const nextAgent = createPlaygroundAgentFromVersionSnapshot(draftAgent, publishedVersion, nextVersions, publishedVersion.id);
-          await commitVersionedAgentRecord(nextAgent, {
+          const actor = getAgentVersionActor();
+          const result = agentVersionController.buildPublishSelectedResource(draftAgent, { actor });
+          if (!result?.resource) {
+            return;
+          }
+          await commitVersionedAgentRecord(result.resource, {
+            operation: "publish",
+            actor,
             loadingMessage: "Publishing current version...",
             successMessage: "Published",
             errorMessage: "Failed to publish current version.",
@@ -114750,14 +115468,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftAgent || agentVersionState.status === "loading") {
             return;
           }
-          const normalizedVersionId = String(versionId || "").trim();
-          const versions = readDraftAgentVersions();
-          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
-          if (!targetVersion) {
+          const result = agentVersionController.buildRestoreVersionResource(draftAgent, versionId);
+          if (!result?.resource) {
             return;
           }
-          const nextAgent = createPlaygroundAgentFromVersionSnapshot(draftAgent, targetVersion, versions, targetVersion.id);
-          await commitVersionedAgentRecord(nextAgent, {
+          await commitVersionedAgentRecord(result.resource, {
+            operation: "restore",
+            actor: getAgentVersionActor(),
             loadingMessage: "Restoring agent version...",
             successMessage: "Version restored",
             errorMessage: "Failed to restore agent version.",
@@ -114768,26 +115485,24 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftAgent || agentVersionState.status === "loading") {
             return;
           }
-          const normalizedVersionId = String(versionId || "").trim();
-          const versions = readDraftAgentVersions();
-          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
-          if (!targetVersion) {
+          const targetVersion = readDraftAgentVersions().find((version) => version.id === String(versionId || "").trim());
+          const validation = validateAgentVersionForPublish(draftAgent, targetVersion);
+          if (!validation.ok) {
+            setAgentVersionState({
+              status: "error",
+              message: "",
+              error: validation.message || "Resolve validation issues before publishing.",
+            });
             return;
           }
-          const now = new Date().toISOString();
-          const nextVersions = normalizePlaygroundAgentVersions(versions.map((version) => {
-            if (version.id === targetVersion.id) {
-              return {
-                ...version,
-                status: "active",
-                publishedAt: now,
-              };
-            }
-            return version.status === "active" ? { ...version, status: "superseded" } : version;
-          }));
-          const nextTargetVersion = nextVersions.find((version) => version.id === targetVersion.id) || targetVersion;
-          const nextAgent = createPlaygroundAgentFromVersionSnapshot(draftAgent, nextTargetVersion, nextVersions, nextTargetVersion.id);
-          await commitVersionedAgentRecord(nextAgent, {
+          const actor = getAgentVersionActor();
+          const result = agentVersionController.buildPublishVersionResource(draftAgent, versionId, { actor });
+          if (!result?.resource) {
+            return;
+          }
+          await commitVersionedAgentRecord(result.resource, {
+            operation: "publish-version",
+            actor,
             loadingMessage: "Publishing agent version...",
             successMessage: "Published",
             errorMessage: "Failed to publish agent version.",
@@ -114798,18 +115513,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftAgent || agentVersionState.status === "loading") {
             return;
           }
-          const normalizedVersionId = String(versionId || "").trim();
-          const versions = readDraftAgentVersions();
-          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
-          if (!targetVersion) {
+          const result = agentVersionController.buildDeleteVersionResource(draftAgent, versionId);
+          if (!result?.resource) {
             return;
           }
           if (!window.confirm("Delete this agent version?")) {
             return;
           }
-          const nextVersions = versions.filter((version) => version.id !== targetVersion.id);
-          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, nextVersions);
-          await commitVersionedAgentRecord(nextAgent, {
+          await commitVersionedAgentRecord(result.resource, {
+            operation: "delete-version",
+            actor: getAgentVersionActor(),
             loadingMessage: "Deleting agent version...",
             successMessage: "Version deleted",
             errorMessage: "Failed to delete agent version.",
@@ -114820,30 +115533,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftAgent || agentVersionState.status === "loading") {
             return;
           }
-          const activeVersion = getDraftAgentActiveVersion();
-          if (!activeVersion) {
+          const actor = getAgentVersionActor();
+          const result = agentVersionController.buildUnpublishActiveResource(draftAgent, { actor });
+          if (!result?.resource) {
             return;
           }
           if (!window.confirm("Unpublish this agent? Version history will be kept.")) {
             return;
           }
-          const now = new Date().toISOString();
-          const nextVersions = normalizePlaygroundAgentVersions(readDraftAgentVersions().map((version) => (
-            version.id === activeVersion.id || version.status === "active"
-              ? { ...version, status: "unpublished" }
-              : version
-          )));
-          const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, nextVersions);
-          const nextMetadata = nextAgent.metadata && typeof nextAgent.metadata === "object" && !Array.isArray(nextAgent.metadata)
-            ? { ...nextAgent.metadata, unpublishedAt: now, unpublished_at: now }
-            : { unpublishedAt: now, unpublished_at: now };
-          delete nextMetadata.publishedAt;
-          delete nextMetadata.published_at;
-          await commitVersionedAgentRecord({
-            ...nextAgent,
-            metadata: nextMetadata,
-            publishedAt: "",
-          }, {
+          await commitVersionedAgentRecord(result.resource, {
+            operation: "unpublish",
+            actor,
             loadingMessage: "Unpublishing agent...",
             successMessage: "Unpublished",
             errorMessage: "Failed to unpublish agent.",
@@ -114857,11 +115557,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             resetEditorAuxiliaryState();
             return;
           }
-          const versions = readDraftAgentVersions();
           const selectedVersion = getDraftAgentSelectedVersion();
           if (selectedVersion) {
-            const nextAgent = createPlaygroundAgentFromVersionSnapshot(draftAgent, selectedVersion, versions, selectedVersion.id);
-            await commitVersionedAgentRecord(nextAgent, {
+            const result = agentVersionController.buildRestoreVersionResource(draftAgent, selectedVersion.id);
+            if (!result?.resource) {
+              return;
+            }
+            await commitVersionedAgentRecord(result.resource, {
+              operation: "revert",
+              actor: getAgentVersionActor(),
               loadingMessage: "Reverting agent...",
               successMessage: "Reverted",
               errorMessage: "Failed to revert agent.",
@@ -114871,6 +115575,210 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const nextDraft = selectedAgentSnapshot ? normalizePlaygroundAgentRecord(selectedAgentSnapshot) : null;
           setDraftAgent(nextDraft);
           resetEditorAuxiliaryState();
+        }
+
+        function getAgentVersionSkillDiffItems(snapshot) {
+          const skillNamesById = new Map((Array.isArray(skills) ? skills : [])
+            .map((skill) => [String(skill?.id || "").trim(), String(skill?.name || skill?.label || skill?.id || "").trim()])
+          );
+          return normalizeAgentVersionComparableList(snapshot?.enabledSkills)
+            .map((skillId) => ({
+              id: skillId,
+              label: skillNamesById.get(skillId) || skillId,
+            }));
+        }
+
+        function getAgentVersionGuardrailDiffItems(snapshot) {
+          const guardrailNamesById = new Map((Array.isArray(guardrailSets) ? guardrailSets : [])
+            .map((guardrailSet) => [String(guardrailSet?.id || "").trim(), String(guardrailSet?.name || guardrailSet?.title || guardrailSet?.id || "").trim()])
+          );
+          return normalizeAgentVersionComparableList(snapshot?.guardrailSetIds)
+            .map((guardrailSetId) => ({
+              id: guardrailSetId,
+              label: guardrailNamesById.get(guardrailSetId) || guardrailSetId,
+            }));
+        }
+
+        function getAgentVersionTeamMemberDiffItems(snapshot) {
+          const agentNamesById = new Map(allKnownAgents.map((agent) => [String(agent?.id || "").trim(), String(agent?.name || agent?.id || "").trim()]));
+          return normalizeAgentVersionComparableList(snapshot?.teamSubagentIds)
+            .map((agentId) => ({
+              id: agentId,
+              label: agentNamesById.get(agentId) || agentId,
+            }));
+        }
+
+        function getAgentVersionOrchestratorDiffItem(snapshot) {
+          const agentId = String(snapshot?.teamOrchestratorAgentId || "").trim();
+          const agent = agentId ? allKnownAgents.find((entry) => String(entry?.id || "").trim() === agentId) : null;
+          return agentId
+            ? { id: agentId, label: String(agent?.name || agentId).trim() }
+            : null;
+        }
+
+        function buildAgentVersionConfigDiffPayload(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundAgentVersion({ snapshot }).snapshot;
+          return {
+            name: normalizedSnapshot.name,
+            description: normalizedSnapshot.description,
+            model: {
+              id: normalizedSnapshot.model,
+              label: getPlaygroundAgentModelMeta(normalizedSnapshot.model || "", resolvedAgentModelOptions)?.label || normalizedSnapshot.model || "",
+            },
+            runtime: normalizedSnapshot.binary,
+            reasoningEffort: normalizedSnapshot.reasoningEffort,
+            deepResearchModel: normalizedSnapshot.deepResearchModel || null,
+            type: normalizedSnapshot.agentType,
+          };
+        }
+
+        function buildAgentVersionTeamDiffPayload(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundAgentVersion({ snapshot }).snapshot;
+          return {
+            orchestrator: getAgentVersionOrchestratorDiffItem(normalizedSnapshot),
+            members: getAgentVersionTeamMemberDiffItems(normalizedSnapshot),
+            executionMode: normalizedSnapshot.teamExecutionMode || "",
+          };
+        }
+
+        function buildAgentVersionGuardrailDiffPayload(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundAgentVersion({ snapshot }).snapshot;
+          return {
+            sets: getAgentVersionGuardrailDiffItems(normalizedSnapshot),
+            invisiblePromptAdaptations: normalizeAgentVersionComparablePromptAdaptations(
+              normalizedSnapshot.promptAdaptations || normalizedSnapshot.invisiblePromptAdaptations
+            ),
+          };
+        }
+
+        function buildAgentVersionDiffFilesFromSnapshots(baseSnapshot, targetSnapshot) {
+          if (!baseSnapshot || !targetSnapshot) {
+            return [];
+          }
+          const normalizedBaseSnapshot = normalizePlaygroundAgentVersion({ snapshot: baseSnapshot }).snapshot;
+          const normalizedTargetSnapshot = normalizePlaygroundAgentVersion({ snapshot: targetSnapshot }).snapshot;
+          const files = [
+            createPlaygroundVersionDiffFile({
+              id: "config",
+              path: "agent/config.json",
+              before: buildAgentVersionConfigDiffPayload(normalizedBaseSnapshot),
+              after: buildAgentVersionConfigDiffPayload(normalizedTargetSnapshot),
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "instructions",
+              path: "agent/instructions.md",
+              before: normalizedBaseSnapshot.instructions || "",
+              after: normalizedTargetSnapshot.instructions || "",
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "permissions",
+              path: "agent/permissions.json",
+              before: normalizePlaygroundPermissionSet(normalizedBaseSnapshot.permissionSet, "agent"),
+              after: normalizePlaygroundPermissionSet(normalizedTargetSnapshot.permissionSet, "agent"),
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "skills",
+              path: "agent/skills.json",
+              before: getAgentVersionSkillDiffItems(normalizedBaseSnapshot),
+              after: getAgentVersionSkillDiffItems(normalizedTargetSnapshot),
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "guardrails",
+              path: "agent/guardrails.json",
+              before: buildAgentVersionGuardrailDiffPayload(normalizedBaseSnapshot),
+              after: buildAgentVersionGuardrailDiffPayload(normalizedTargetSnapshot),
+            }),
+          ];
+          if (normalizedBaseSnapshot.agentType === "team" || normalizedTargetSnapshot.agentType === "team") {
+            files.push(createPlaygroundVersionDiffFile({
+              id: "team",
+              path: "agent/team.json",
+              before: buildAgentVersionTeamDiffPayload(normalizedBaseSnapshot),
+              after: buildAgentVersionTeamDiffPayload(normalizedTargetSnapshot),
+            }));
+          }
+          return files.filter(Boolean);
+        }
+
+        const AGENT_VERSION_COMPARE_CURRENT_EDITOR_ID = "current-editor";
+
+        function getAgentVersionCompareVersionSourceId(versionId) {
+          const normalizedVersionId = String(versionId || "").trim();
+          return normalizedVersionId ? "version:" + normalizedVersionId : "";
+        }
+
+        function getAgentVersionCompareVersionId(sourceId) {
+          const normalizedSourceId = String(sourceId || "").trim();
+          return normalizedSourceId.startsWith("version:") ? normalizedSourceId.slice("version:".length).trim() : "";
+        }
+
+        function getAgentVersionCompareVersionLabel(version) {
+          if (!version) {
+            return "Version";
+          }
+          return String(version.label || ("Version " + version.version)).trim() || "Version";
+        }
+
+        function buildAgentVersionCompareSources(versions) {
+          const normalizedVersions = Array.isArray(versions) ? versions : [];
+          return [
+            {
+              id: AGENT_VERSION_COMPARE_CURRENT_EDITOR_ID,
+              label: "Current editor",
+              snapshot: buildPlaygroundAgentVersionSnapshot(draftAgent),
+            },
+          ].concat(normalizedVersions.map((version) => ({
+            id: getAgentVersionCompareVersionSourceId(version.id),
+            label: getAgentVersionCompareVersionLabel(version),
+            snapshot: normalizePlaygroundAgentVersion(version).snapshot,
+          })));
+        }
+
+        function resolveAgentVersionCompareSource(sourceId, sources, fallbackSource) {
+          const normalizedSourceId = String(sourceId || "").trim();
+          return sources.find((source) => source.id === normalizedSourceId) || fallbackSource || sources[0] || null;
+        }
+
+        function getDefaultAgentVersionCompareLeftSourceId(versions) {
+          const metadata = getAgentVersionMetadata();
+          const activeVersionId = String(metadata.activeAgentVersionId || metadata.active_agent_version_id || "").trim();
+          const activeVersion = versions.find((version) => version.id === activeVersionId)
+            || versions.find((version) => String(version.status || "").toLowerCase() === "active")
+            || versions[0];
+          return activeVersion ? getAgentVersionCompareVersionSourceId(activeVersion.id) : AGENT_VERSION_COMPARE_CURRENT_EDITOR_ID;
+        }
+
+        function openAgentVersionChangesPage(versionId, options = {}) {
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftAgentVersions();
+          if (!versions.length && !draftAgent) {
+            return;
+          }
+          const explicitLeftSourceId = String(options.leftSourceId || "").trim();
+          const explicitRightSourceId = String(options.rightSourceId || "").trim();
+          const fallbackLeftSourceId = normalizedVersionId
+            ? getAgentVersionCompareVersionSourceId(normalizedVersionId)
+            : getDefaultAgentVersionCompareLeftSourceId(versions);
+          const leftSourceId = explicitLeftSourceId || fallbackLeftSourceId;
+          const rightSourceId = explicitRightSourceId || AGENT_VERSION_COMPARE_CURRENT_EDITOR_ID;
+          setOpenAgentVersionMenuId("");
+          setAgentVersionsSidebarOpen(true);
+          setAgentVersionChangesState({
+            leftSourceId,
+            rightSourceId,
+          });
+        }
+
+        function closeAgentVersionChangesPage() {
+          setAgentVersionChangesState(null);
+        }
+
+        function handleAgentVersionCompareSourceChange(side, sourceId) {
+          const normalizedSourceId = String(sourceId || "").trim() || AGENT_VERSION_COMPARE_CURRENT_EDITOR_ID;
+          setAgentVersionChangesState((current) => ({
+            ...(current || {}),
+            [side === "left" ? "leftSourceId" : "rightSourceId"]: normalizedSourceId,
+          }));
         }
 
         function renderAgentRenameModal() {
@@ -115339,6 +116247,23 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               React.createElement("div", { className: "playground-environments-empty-state" },
                 React.createElement("div", { className: "playground-environments-empty-title" }, "No agent selected"),
                 React.createElement("div", { className: "playground-environments-empty-copy" }, "Choose an agent from the list or create a new one.")
+              )
+            );
+          }
+
+          const agentVersionChangesPage = renderAgentVersionChangesPage();
+          if (agentVersionChangesPage) {
+            const agentDetailBackgroundImageUrl = getPlaygroundAgentBackgroundImageUrl(draftAgent);
+            const agentDetailMainClassName = "playground-environments-editor-main playground-tasks-detail-main"
+              + (agentDetailBackgroundImageUrl ? " is-agent-background-active" : "");
+            const agentDetailMainStyle = agentDetailBackgroundImageUrl
+              ? { "--playground-agent-detail-bg-image": "url(" + JSON.stringify(agentDetailBackgroundImageUrl) + ")" }
+              : undefined;
+            return React.createElement("div", { className: agentDetailMainClassName, ref: agentDetailMainRef, style: agentDetailMainStyle },
+              React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+                React.createElement("div", { className: "playground-agents-detail-content is-agent-overview-general is-agent-version-changes" },
+                  agentVersionChangesPage
+                )
               )
             );
           }
@@ -118620,12 +119545,29 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             onRestoreVersion: (versionId) => void restoreAgentVersion(versionId),
             onPublishVersion: (versionId) => void publishAgentVersion(versionId),
             onDeleteVersion: (versionId) => void deleteAgentVersion(versionId),
+            versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-agents-version-compare-button",
+                disabled: agentVersionState.status === "loading" || !versions.length,
+                onClick: () => openAgentVersionChangesPage(),
+              },
+                React.createElement(Code2, { width: 13, height: 13, strokeWidth: 1.8 }),
+                React.createElement("span", null, "View Changes")
+              )
+            ),
             getRowMenuItems: (version) => [
               {
                 id: "edit",
                 label: "Edit version",
                 icon: SquarePen,
                 onClick: () => openEditAgentVersionModal(version.id),
+              },
+              {
+                id: "compare",
+                label: "View Changes",
+                icon: Code2,
+                onClick: () => openAgentVersionChangesPage(version.id),
               },
               {
                 id: "restore",
@@ -118647,8 +119589,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             getVersionDescription: () => "",
             getVersionMeta: (version) => {
               const modelMeta = getPlaygroundAgentModelMeta(version.model || version.snapshot?.model || draftAgent?.model || "", resolvedAgentModelOptions);
-              return (version.publishedAt ? "Published " : "Saved ")
-                + formatAgentVersionTimestamp(version.publishedAt || version.createdAt)
+              const lifecycleLabel = getAgentVersionLifecycleLabel(version);
+              const timestamp = version.publishedAt || version.updatedAt || version.createdAt;
+              const actorLabel = getAgentVersionActorLabel(version.publishedAt ? version.publishedBy : (version.updatedBy || version.createdBy));
+              return lifecycleLabel
+                + " "
+                + formatAgentVersionTimestamp(timestamp)
+                + (actorLabel ? " by " + actorLabel : "")
                 + " · "
                 + (modelMeta?.label || version.model || "Model");
             },
@@ -118671,6 +119618,57 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             },
             sidebar
           );
+        }
+
+        function renderAgentVersionChangesPage() {
+          if (!agentVersionChangesState) {
+            return null;
+          }
+          const versions = readDraftAgentVersions();
+          const sources = buildAgentVersionCompareSources(versions);
+          const legacyTargetSourceId = agentVersionChangesState.targetVersionId
+            ? getAgentVersionCompareVersionSourceId(agentVersionChangesState.targetVersionId)
+            : "";
+          const requestedLeftSourceId = String(agentVersionChangesState.leftSourceId || legacyTargetSourceId || "").trim()
+            || getDefaultAgentVersionCompareLeftSourceId(versions);
+          const requestedRightSourceId = String(agentVersionChangesState.rightSourceId || "").trim()
+            || AGENT_VERSION_COMPARE_CURRENT_EDITOR_ID;
+          const currentEditorSource = sources.find((source) => source.id === AGENT_VERSION_COMPARE_CURRENT_EDITOR_ID) || sources[0] || null;
+          const leftSource = resolveAgentVersionCompareSource(requestedLeftSourceId, sources, sources[1] || currentEditorSource);
+          const rightSource = resolveAgentVersionCompareSource(requestedRightSourceId, sources, currentEditorSource);
+          if (!leftSource || !rightSource) {
+            return null;
+          }
+          const diffFiles = buildAgentVersionDiffFilesFromSnapshots(leftSource.snapshot, rightSource.snapshot);
+          const compareOptions = sources.map((source) =>
+            React.createElement("option", { key: source.id, value: source.id }, source.label)
+          );
+          const renderCompareSelect = (value, side) =>
+            React.createElement("label", { className: "playground-version-changes-select-shell" },
+              React.createElement("span", { className: "playground-version-changes-select-control-wrap" },
+                React.createElement("select", {
+                  className: "playground-version-changes-select-control",
+                  value,
+                  onChange: (event) => handleAgentVersionCompareSourceChange(side, event.target.value),
+                }, compareOptions),
+                React.createElement(ChevronDown, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" })
+              )
+            );
+          return renderPlaygroundVersionChangesPage({
+            title: "Changes",
+            compareControls: React.createElement(React.Fragment, null,
+              renderCompareSelect(leftSource.id, "left"),
+              React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
+              renderCompareSelect(rightSource.id, "right")
+            ),
+            files: diffFiles,
+            backIcon: ArrowLeft,
+            backText: "Back",
+            backLabel: "Back to agent details",
+            onBack: closeAgentVersionChangesPage,
+            emptyMessage: "No differences from the current editor.",
+            className: "playground-agents-version-changes-page",
+          });
         }
 
         function renderAgentVersionModal() {
@@ -167716,7 +168714,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function toggleThreadNavMenu(event) {
           event.preventDefault();
           event.stopPropagation();
-          if (!selectedKnownThread?.id) {
+          if (!selectedThreadNavRecord?.id) {
             return;
           }
           setThreadActionMenuState(null);
@@ -180919,7 +181917,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
             activePage === "thread" &&
             hasRealAccess &&
             (Boolean(threadTaskOpenRequest) || Boolean(threadSubagentDetailOpen));
-          const hasThreadTarget = Boolean(currentThreadId) && baseThreadItems.some((thread) => thread.id === currentThreadId);
+          const normalizedCurrentThreadId = String(currentThreadId || "").trim();
+          const hasThreadTarget = Boolean(normalizedCurrentThreadId) && (
+            baseThreadItems.some((thread) => thread.id === normalizedCurrentThreadId)
+            || evaluationThreadIds.has(normalizedCurrentThreadId)
+            || (isRealThreadId(normalizedCurrentThreadId) && !isPrivateThreadId(normalizedCurrentThreadId))
+            || realThreads.some((thread) => {
+              const normalizedThreadId = String(thread?.id || "").trim();
+              return normalizedThreadId === normalizedCurrentThreadId && isEvaluationThreadRecord(thread);
+            })
+          );
 
           if (activePage !== "thread" || hasThreadSideDetailOpen || !hasThreadTarget) {
             setThreadNavMenuOpen(false);
@@ -180955,7 +181962,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             window.removeEventListener("resize", handleViewportChange);
             window.removeEventListener("scroll", handleViewportChange, true);
           };
-        }, [activePage, baseThreadItems, currentThreadId, hasRealAccess, threadNavMenuOpen, threadSubagentDetailOpen, threadTaskOpenRequest]);
+        }, [activePage, baseThreadItems, currentThreadId, evaluationThreadIds, hasRealAccess, realThreads, threadNavMenuOpen, threadSubagentDetailOpen, threadTaskOpenRequest]);
 
         useEffect(() => {
           if (!threadTaskListMenuOpen) {
@@ -181333,6 +182340,189 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return [...pinnedThreadItems, ...baseThreadItems, ...scheduledThreadItems]
             .find((thread) => thread.id === currentThreadId) || null;
         }, [baseThreadItems, currentThreadId, pinnedThreadItems, scheduledThreadItems]);
+        const activeEvaluationThreadContext = useMemo(() => {
+          const normalizedThreadId = String(currentThreadId || "").trim();
+          if (activePage !== "thread" || !normalizedThreadId) {
+            return null;
+          }
+          const normalizedEvaluationSets = (Array.isArray(evaluationSets) ? evaluationSets : [])
+            .map((set) => typeof normalizePlaygroundEvaluationSet === "function" ? normalizePlaygroundEvaluationSet(set) : set)
+            .filter(Boolean);
+          for (const evaluationSet of normalizedEvaluationSets) {
+            const runs = Array.isArray(evaluationSet?.runs) ? evaluationSet.runs : [];
+            for (const run of runs) {
+              const cases = Array.isArray(run?.cases) ? run.cases : [];
+              for (const caseItem of cases) {
+                const evaluationThreadId = String(caseItem?.threadId || "").trim();
+                const evaluatorThreadId = String(caseItem?.evaluatorThreadId || "").trim();
+                if (normalizedThreadId !== evaluationThreadId && normalizedThreadId !== evaluatorThreadId) {
+                  continue;
+                }
+                return {
+                  evaluationSetId: String(evaluationSet?.id || "").trim(),
+                  evaluationName: String(evaluationSet?.name || "").trim() || "Evaluation",
+                  runId: String(run?.id || "").trim(),
+                  runLabel: String(run?.label || "").trim() || "Run",
+                  passThreshold: Number.isFinite(Number(run?.passThreshold ?? evaluationSet?.passThreshold))
+                    ? Math.max(0, Math.min(1, Number(run?.passThreshold ?? evaluationSet?.passThreshold)))
+                    : 0.8,
+                  caseId: String(caseItem?.id || "").trim(),
+                  caseItem,
+                  evaluationThreadId,
+                  evaluatorThreadId,
+                  threadKind: normalizedThreadId === evaluatorThreadId ? "Evaluator" : "Evaluation",
+                };
+              }
+            }
+          }
+          return null;
+        }, [activePage, currentThreadId, evaluationSets]);
+
+        function normalizePlaygroundEvaluatorKpiRatio(value) {
+          if (value === null || value === undefined || value === "") {
+            return null;
+          }
+          if (typeof value === "string") {
+            const trimmed = value.trim();
+            if (!trimmed) {
+              return null;
+            }
+            const percentMatch = trimmed.match(/^([0-9]+(?:\.[0-9]+)?)\s*%$/);
+            if (percentMatch) {
+              const numericPercent = Number(percentMatch[1]);
+              return Number.isFinite(numericPercent) ? Math.max(0, Math.min(1, numericPercent / 100)) : null;
+            }
+          }
+          const numeric = Number(value);
+          if (!Number.isFinite(numeric)) {
+            return null;
+          }
+          return Math.max(0, Math.min(1, numeric > 1 ? numeric / 100 : numeric));
+        }
+
+        function readPlaygroundEvaluatorKpiRatio(source, keys) {
+          if (!source || typeof source !== "object" || Array.isArray(source)) {
+            return null;
+          }
+          for (const key of keys) {
+            if (Object.prototype.hasOwnProperty.call(source, key)) {
+              const ratio = normalizePlaygroundEvaluatorKpiRatio(source[key]);
+              if (ratio !== null) {
+                return ratio;
+              }
+            }
+          }
+          return null;
+        }
+
+        function readPlaygroundEvaluatorKpiBoolean(source, keys) {
+          if (!source || typeof source !== "object" || Array.isArray(source)) {
+            return null;
+          }
+          for (const key of keys) {
+            if (!Object.prototype.hasOwnProperty.call(source, key)) {
+              continue;
+            }
+            const rawValue = source[key];
+            if (typeof rawValue === "boolean") {
+              return rawValue;
+            }
+            const normalized = String(rawValue || "").trim().toLowerCase();
+            if (["true", "passed", "pass", "yes", "1"].includes(normalized)) {
+              return true;
+            }
+            if (["false", "failed", "fail", "no", "0"].includes(normalized)) {
+              return false;
+            }
+          }
+          return null;
+        }
+
+        function formatPlaygroundEvaluatorKpiPercent(value, fallback = "—") {
+          const ratio = normalizePlaygroundEvaluatorKpiRatio(value);
+          return ratio === null ? fallback : Math.round(ratio * 100) + "%";
+        }
+
+        function buildPlaygroundEvaluatorResultKpis(jsonValue, context) {
+          const source = jsonValue && typeof jsonValue === "object" && !Array.isArray(jsonValue) ? jsonValue : {};
+          const nestedResult = source.result && typeof source.result === "object" && !Array.isArray(source.result) ? source.result : {};
+          const caseItem = context?.caseItem && typeof context.caseItem === "object" ? context.caseItem : {};
+          const passThreshold = normalizePlaygroundEvaluatorKpiRatio(context?.passThreshold) ?? 0.8;
+          const score = readPlaygroundEvaluatorKpiRatio(source, ["score", "grade", "rating"])
+            ?? readPlaygroundEvaluatorKpiRatio(nestedResult, ["score", "grade", "rating"])
+            ?? normalizePlaygroundEvaluatorKpiRatio(caseItem.score);
+          const confidence = readPlaygroundEvaluatorKpiRatio(source, ["confidence", "confidenceScore", "confidence_score"])
+            ?? readPlaygroundEvaluatorKpiRatio(nestedResult, ["confidence", "confidenceScore", "confidence_score"]);
+          const explicitPassed = readPlaygroundEvaluatorKpiBoolean(source, ["passed", "pass", "success", "result"])
+            ?? readPlaygroundEvaluatorKpiBoolean(nestedResult, ["passed", "pass", "success", "result"]);
+          const passed = explicitPassed === null
+            ? (score === null ? false : score >= passThreshold)
+            : explicitPassed;
+          return { score, confidence, passed };
+        }
+
+        function renderEvaluatorThreadUserPromptContent() {
+          if (!activeEvaluationThreadContext || activeEvaluationThreadContext.threadKind !== "Evaluator") {
+            return undefined;
+          }
+          const evaluationThreadId = String(activeEvaluationThreadContext.evaluationThreadId || "").trim();
+          const runLabel = String(activeEvaluationThreadContext.runLabel || "").trim() || "Run";
+          const evaluationName = String(activeEvaluationThreadContext.evaluationName || "").trim() || "Evaluation";
+          return React.createElement("span", { className: "playground-evaluator-thread-prompt" },
+            "Evaluate ",
+            evaluationThreadId
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "playground-evaluator-thread-link",
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    handleThreadSelect(evaluationThreadId);
+                  },
+                  title: "Open evaluation thread " + evaluationThreadId,
+                }, evaluationThreadId)
+              : React.createElement("span", { className: "playground-evaluator-thread-muted" }, "evaluation thread"),
+            React.createElement("span", { className: "playground-evaluator-thread-muted" }, " on " + runLabel + " for " + evaluationName)
+          );
+        }
+
+        function renderEvaluatorRunSummaryJsonSegment({ value }) {
+          if (!activeEvaluationThreadContext || activeEvaluationThreadContext.threadKind !== "Evaluator") {
+            return undefined;
+          }
+          const result = buildPlaygroundEvaluatorResultKpis(value, activeEvaluationThreadContext);
+          const statusLabel = result.passed ? "Passed" : "Did not pass";
+          const StatusIcon = result.passed ? CircleCheckBig : AlertCircle;
+          const kpis = [
+            { label: "Score", value: formatPlaygroundEvaluatorKpiPercent(result.score) },
+            { label: "Confidence", value: formatPlaygroundEvaluatorKpiPercent(result.confidence) },
+            {
+              label: "Result",
+              value: statusLabel,
+              icon: React.createElement(StatusIcon, {
+                className: "playground-evaluator-summary-kpi-status-icon " + (result.passed ? "is-passed" : "is-failed"),
+                strokeWidth: 1.9,
+              }),
+            },
+          ];
+          return React.createElement("div", { className: "tb-run-summary-json-document playground-evaluator-summary-kpi-card" },
+            React.createElement("div", { className: "tb-run-summary-json-header" },
+              React.createElement("div", { className: "tb-run-summary-json-title" },
+                React.createElement(ChartColumnIncreasing, { className: "tb-run-summary-json-title-icon", strokeWidth: 1.9 }),
+                React.createElement("span", null, "Evaluation Result")
+              )
+            ),
+            React.createElement("div", { className: "playground-evaluator-summary-kpi-grid" },
+              kpis.map((item) => React.createElement("div", { key: item.label, className: "playground-evaluator-summary-kpi" },
+                React.createElement("div", { className: "playground-evaluator-summary-kpi-label" }, item.label),
+                React.createElement("div", { className: "playground-evaluator-summary-kpi-value" },
+                  item.icon || null,
+                  React.createElement("span", null, item.value)
+                )
+              ))
+            )
+          );
+        }
         const selectedThreadTaskListTargetId = String(selectedKnownThread?.id || currentThreadId || "").trim();
 
         const openCurrentThreadTaskListMenu = useCallback(() => {
@@ -181407,6 +182597,17 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const isAgentVersionsDrawerOpen = isResourcesPage
           && (activeResourcesView === "agents" || activeResourcesView === "computers")
           && isAgentVersionsDetailOpen;
+
+        useEffect(() => {
+          if (!isAgentVersionsDrawerOpen) {
+            return;
+          }
+          setNotificationsOpen(false);
+          if (accountMenuPlacement === "top-nav") {
+            setAccountMenuOpen(false);
+          }
+        }, [accountMenuPlacement, isAgentVersionsDrawerOpen]);
+
         const platformNavigationHistoryRef = useRef([]);
         const platformNavigationInitializedRef = useRef(false);
         const platformNavigationLastKeyRef = useRef("");
@@ -181991,22 +183192,49 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
           return selectedKnownThread?.title || "Current thread";
         }, [activePage, currentThreadId, hasDemoAccess, hasRealAccess, isResourcesPage, metronomeRunTraceSelection, selectedKnownThread]);
+        const selectedThreadNavRecord = useMemo(() => {
+          if (selectedKnownThread?.id) {
+            return selectedKnownThread;
+          }
+          const normalizedThreadId = String(currentThreadId || "").trim();
+          if (activePage !== "thread" || !normalizedThreadId || metronomeRunTraceSelection?.key) {
+            return null;
+          }
+          const matchingRealThread = Array.isArray(realThreads)
+            ? realThreads.find((thread) => String(thread?.id || "").trim() === normalizedThreadId)
+            : null;
+          if (matchingRealThread) {
+            return matchingRealThread;
+          }
+          if (!activeEvaluationThreadContext && !isRealThreadId(normalizedThreadId)) {
+            return null;
+          }
+          return {
+            id: normalizedThreadId,
+            title: activeEvaluationThreadContext?.threadKind || "Current thread",
+            createdAt: "",
+            updatedAt: "",
+            agentCT: 0,
+            environmentCT: 0,
+          };
+        }, [activeEvaluationThreadContext, activePage, currentThreadId, metronomeRunTraceSelection?.key, realThreads, selectedKnownThread]);
+        const showThreadNavMutationActions = Boolean(selectedKnownThread?.id && !activeEvaluationThreadContext);
         const selectedThreadStartedLabel = useMemo(() => {
-          const startedAt = typeof selectedKnownThread?.createdAt === "string" ? selectedKnownThread.createdAt.trim() : "";
+          const startedAt = typeof selectedThreadNavRecord?.createdAt === "string" ? selectedThreadNavRecord.createdAt.trim() : "";
           return startedAt ? formatPlaygroundFileDate(startedAt) : "Unknown";
-        }, [selectedKnownThread]);
+        }, [selectedThreadNavRecord]);
         const selectedThreadUpdatedLabel = useMemo(() => {
-          const updatedAt = typeof selectedKnownThread?.updatedAt === "string" ? selectedKnownThread.updatedAt.trim() : "";
-          const fallbackStartedAt = typeof selectedKnownThread?.createdAt === "string" ? selectedKnownThread.createdAt.trim() : "";
+          const updatedAt = typeof selectedThreadNavRecord?.updatedAt === "string" ? selectedThreadNavRecord.updatedAt.trim() : "";
+          const fallbackStartedAt = typeof selectedThreadNavRecord?.createdAt === "string" ? selectedThreadNavRecord.createdAt.trim() : "";
           const effectiveUpdatedAt = updatedAt || fallbackStartedAt;
           return effectiveUpdatedAt ? formatPlaygroundFileDate(effectiveUpdatedAt) : "Unknown";
-        }, [selectedKnownThread]);
+        }, [selectedThreadNavRecord]);
         const selectedThreadAgentCtLabel = useMemo(() => {
-          return formatSettingsComputeTokens(selectedKnownThread?.agentCT || 0);
-        }, [selectedKnownThread]);
+          return formatSettingsComputeTokens(selectedThreadNavRecord?.agentCT || 0);
+        }, [selectedThreadNavRecord]);
         const selectedThreadEnvironmentCtLabel = useMemo(() => {
-          return formatSettingsComputeTokens(selectedKnownThread?.environmentCT || 0);
-        }, [selectedKnownThread]);
+          return formatSettingsComputeTokens(selectedThreadNavRecord?.environmentCT || 0);
+        }, [selectedThreadNavRecord]);
         const selectedThreadTaskListState = threadTaskListState.threadId === String(currentThreadId || "").trim()
           ? threadTaskListState
           : { threadId: String(currentThreadId || "").trim(), status: "idle", error: "", todos: [], updatedAt: "" };
@@ -187172,6 +188400,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             className: "playground-resources-page",
             pathItems: resourcesPathItems,
             includeSearchDivider: activeResourcesView === "agents" || activeResourcesView === "computers",
+            hideCommonActions: isAgentVersionsDrawerOpen,
             extraActions: React.createElement("div", {
               id: "playground-resources-nav-actions",
               className: "playground-resources-nav-actions-slot",
@@ -191224,10 +192453,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
               const label = String(item.label || "").trim();
               const isCurrent = index === effectiveItems.length - 1;
               const key = String(index) + ":" + label;
-              const itemNode = typeof item.onClick === "function" && !isCurrent
+              const isClickable = typeof item.onClick === "function" && (!isCurrent || item.allowCurrentClick === true);
+              const itemNode = isClickable
                 ? React.createElement("button", {
                     type: "button",
-                    className: "playground-top-nav-path-item",
+                    className: "playground-top-nav-path-item" + (isCurrent ? " is-current" : ""),
                     onClick: item.onClick,
                   }, label)
                 : React.createElement("span", {
@@ -191249,6 +192479,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               ? [options.extraActions]
               : [];
           const hidePath = options.hidePath === true;
+          const hideCommonActions = options.hideCommonActions === true;
           return React.createElement("div", {
               className: [
                 "playground-content-nav",
@@ -191275,11 +192506,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ref: options.rightRef || null,
               },
               ...extraActions,
-              renderTopNavCommonActions({
-                includeGhost: options.includeGhost === true,
-                ghostVariant: options.ghostVariant || "",
-                includeSearchDivider: options.includeSearchDivider === true,
-              })
+              hideCommonActions
+                ? null
+                : renderTopNavCommonActions({
+                    includeGhost: options.includeGhost === true,
+                    ghostVariant: options.ghostVariant || "",
+                    includeSearchDivider: options.includeSearchDivider === true,
+                  })
             )
           );
         }
@@ -192032,10 +193265,40 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      ? renderGenericPageNav()
 	                    : activePage === "calendar"
 	                      ? renderGenericPageNav()
-                    : React.createElement("div", { className: "playground-content-nav" },
+	                    : React.createElement("div", { className: "playground-content-nav" },
                         React.createElement("div", { className: "playground-content-nav-left" },
                           renderTopNavSidebarToggle(),
-                          React.createElement("div", { className: "playground-content-title" }, selectedThreadTitle)
+                          activeEvaluationThreadContext
+                            ? renderTopNavPath([
+                                {
+                                  label: "Evaluations",
+                                  onClick: () => {
+                                    setSelectedEvaluationCaseId("");
+                                    openEvaluationsPage({ mode: "overview" });
+                                  },
+                                },
+                                {
+                                  label: activeEvaluationThreadContext.runLabel || "Run",
+                                  onClick: () => {
+                                    setSelectedEvaluationCaseId("");
+                                    openEvaluationsPage({
+                                      mode: "run",
+                                      evaluationId: activeEvaluationThreadContext.evaluationSetId,
+                                      evaluationRunId: activeEvaluationThreadContext.runId,
+                                    });
+                                  },
+                                },
+                                {
+                                  label: activeEvaluationThreadContext.threadKind || "Evaluation",
+                                  allowCurrentClick: true,
+                                  onClick: () => {
+                                    if (currentThreadId) {
+                                      handleThreadSelect(currentThreadId);
+                                    }
+                                  },
+                                },
+                              ])
+                            : React.createElement("div", { className: "playground-content-title" }, selectedThreadTitle)
                         ),
                         React.createElement("div", { className: "playground-content-nav-center" },
                           activePage === "thread" && !isThreadSideDetailOpen
@@ -192137,9 +193400,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     "aria-label": "Thread actions",
                                     "aria-expanded": threadNavMenuOpen ? "true" : "false",
                                     onClick: toggleThreadNavMenu,
-                                    disabled: !selectedKnownThread?.id,
+                                    disabled: !selectedThreadNavRecord?.id,
                                   }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-                                  threadNavMenuOpen && selectedKnownThread?.id
+                                  threadNavMenuOpen && selectedThreadNavRecord?.id
                                   ? React.createElement("div", {
                                       className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-thread-nav-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
                                       onClick: (event) => event.stopPropagation(),
@@ -192150,11 +193413,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                           React.createElement("span", null, "Thread ID"),
                                           React.createElement("span", {
                                             className: "playground-thread-nav-popup-thread-id",
-                                            title: selectedKnownThread.id,
-                                          }, selectedKnownThread.id)
+                                            title: selectedThreadNavRecord.id,
+                                          }, selectedThreadNavRecord.id)
                                         )
                                       ),
-                                      selectedThreadProjectName
+                                      showThreadNavMutationActions && selectedThreadProjectName
                                         ? React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
                                             React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
                                             React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
@@ -192168,7 +193431,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                             )
                                           )
                                         : null,
-                                      selectedThreadTaskTitle
+                                      showThreadNavMutationActions && selectedThreadTaskTitle
                                         ? React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
                                             React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
                                             React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
@@ -192222,66 +193485,76 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                           }, selectedThreadEnvironmentCtLabel)
                                         )
                                       ),
-                                      React.createElement("div", { className: "playground-thread-nav-popup-divider", "aria-hidden": "true" }),
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "tb-popup-row",
-                                        onClick: () => {
-                                          void handleThreadPinToggle(selectedKnownThread.id);
-                                        },
-                                        disabled: threadMutationState.action === "pin" && threadMutationState.threadId === selectedKnownThread.id,
-                                      },
-                                        React.createElement(Pin, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                          React.createElement("span", null,
-                                            threadMutationState.action === "pin" && threadMutationState.threadId === selectedKnownThread.id
-                                              ? (selectedKnownThread.isPinned ? "Unpinning thread..." : "Pinning thread...")
-                                              : (selectedKnownThread.isPinned ? "Unpin thread" : "Pin thread")
+                                      showThreadNavMutationActions
+                                        ? React.createElement("div", { className: "playground-thread-nav-popup-divider", "aria-hidden": "true" })
+                                        : null,
+                                      showThreadNavMutationActions
+                                        ? React.createElement("button", {
+                                            type: "button",
+                                            className: "tb-popup-row",
+                                            onClick: () => {
+                                              void handleThreadPinToggle(selectedKnownThread.id);
+                                            },
+                                            disabled: threadMutationState.action === "pin" && threadMutationState.threadId === selectedKnownThread.id,
+                                          },
+                                            React.createElement(Pin, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                              React.createElement("span", null,
+                                                threadMutationState.action === "pin" && threadMutationState.threadId === selectedKnownThread.id
+                                                  ? (selectedKnownThread.isPinned ? "Unpinning thread..." : "Pinning thread...")
+                                                  : (selectedKnownThread.isPinned ? "Unpin thread" : "Pin thread")
+                                              )
+                                            )
                                           )
-                                        )
-                                      ),
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "tb-popup-row",
-                                        onClick: () => openThreadRenameDialog(selectedKnownThread),
-                                      },
-                                        React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                          React.createElement("span", null, "Rename thread")
-                                        )
-                                      ),
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "tb-popup-row",
-                                        onClick: () => handleOpenThreadProjectAction(selectedKnownThread),
-                                        disabled: threadMutationState.action === "project" && threadMutationState.threadId === selectedKnownThread.id,
-                                      },
-                                        React.createElement(FolderOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                          React.createElement("span", null,
-                                            threadMutationState.action === "project" && threadMutationState.threadId === selectedKnownThread.id
-                                              ? (selectedThreadProjectId ? "Removing from project..." : "Adding to project...")
-                                              : (selectedThreadProjectId ? "Remove from Project" : "Add to Project")
+                                        : null,
+                                      showThreadNavMutationActions
+                                        ? React.createElement("button", {
+                                            type: "button",
+                                            className: "tb-popup-row",
+                                            onClick: () => openThreadRenameDialog(selectedKnownThread),
+                                          },
+                                            React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                              React.createElement("span", null, "Rename thread")
+                                            )
                                           )
-                                        )
-                                      ),
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "tb-popup-row playground-tasks-detail-menu-item-danger",
-                                        onClick: () => {
-                                          void handleThreadDelete(selectedKnownThread.id);
-                                        },
-                                        disabled: threadMutationState.action === "delete" && threadMutationState.threadId === selectedKnownThread.id,
-                                      },
-                                        React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                          React.createElement("span", null,
-                                            threadMutationState.action === "delete" && threadMutationState.threadId === selectedKnownThread.id
-                                              ? "Deleting thread..."
-                                              : "Delete Thread"
+                                        : null,
+                                      showThreadNavMutationActions
+                                        ? React.createElement("button", {
+                                            type: "button",
+                                            className: "tb-popup-row",
+                                            onClick: () => handleOpenThreadProjectAction(selectedKnownThread),
+                                            disabled: threadMutationState.action === "project" && threadMutationState.threadId === selectedKnownThread.id,
+                                          },
+                                            React.createElement(FolderOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                              React.createElement("span", null,
+                                                threadMutationState.action === "project" && threadMutationState.threadId === selectedKnownThread.id
+                                                  ? (selectedThreadProjectId ? "Removing from project..." : "Adding to project...")
+                                                  : (selectedThreadProjectId ? "Remove from Project" : "Add to Project")
+                                              )
+                                            )
                                           )
-                                        )
-                                      )
+                                        : null,
+                                      showThreadNavMutationActions
+                                        ? React.createElement("button", {
+                                            type: "button",
+                                            className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+                                            onClick: () => {
+                                              void handleThreadDelete(selectedKnownThread.id);
+                                            },
+                                            disabled: threadMutationState.action === "delete" && threadMutationState.threadId === selectedKnownThread.id,
+                                          },
+                                            React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                              React.createElement("span", null,
+                                                threadMutationState.action === "delete" && threadMutationState.threadId === selectedKnownThread.id
+                                                  ? "Deleting thread..."
+                                                  : "Delete Thread"
+                                              )
+                                            )
+                                          )
+                                        : null
                                     )
                                   : null
                                 ),
@@ -193160,10 +194433,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     onEnvironmentChange: (nextEnvironmentId) => {
                                       setEnvironmentId(String(nextEnvironmentId || "").trim());
                                     },
-                                    onActionSummaryClick: (summary) => {
-                                      if (!activeRunnerThreadId || !summary?.revertedChangeStepId) {
-                                        return;
-                                      }
+	                                    onActionSummaryClick: (summary) => {
+	                                      if (!activeRunnerThreadId || !summary?.revertedChangeStepId) {
+	                                        return;
+	                                      }
                                       setChangesNavigationTarget({
                                         token: Date.now().toString(36) + Math.random().toString(36).slice(2),
                                         threadId: activeRunnerThreadId,
@@ -193171,11 +194444,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                         filePath: summary.revertedFilePath || null,
                                         openDetail: true,
                                       });
-                                      setContentMode("changes");
-                                    },
-                                    subagentDetailPortalTarget: threadSubagentDetailHost,
-                                    documentPreviewPortalTarget: threadSubagentDetailHost,
-                                    documentPreviewPortalOnly: true,
+	                                      setContentMode("changes");
+	                                    },
+                                    renderUserPromptContent: renderEvaluatorThreadUserPromptContent,
+                                    renderRunSummaryJsonSegment: renderEvaluatorRunSummaryJsonSegment,
+	                                    subagentDetailPortalTarget: threadSubagentDetailHost,
+	                                    documentPreviewPortalTarget: threadSubagentDetailHost,
+	                                    documentPreviewPortalOnly: true,
                                     disableSubagentDetailDrawer: isThreadTaskDetailOpen,
                                   })
                                 : hasDemoAccess

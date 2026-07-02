@@ -594,6 +594,25 @@ type RunnerRunSummarySegment =
   | { kind: "markdown"; content: string; id: string }
   | { kind: "json"; value: RunnerSummaryJsonValue; id: string; title: string };
 
+export interface RunnerChatUserPromptRenderContext {
+  turnId: string;
+  turnIndex: number;
+  isLatestTurn: boolean;
+  prompt: string;
+  displayContent: string;
+  isEmailPrompt: boolean;
+  emailFrom: string;
+}
+
+export interface RunnerChatRunSummaryJsonRenderContext {
+  turnId: string;
+  segmentId: string;
+  title: string;
+  value: RunnerSummaryJsonValue;
+  summaryContent: string;
+  agentMessage: RunnerLog;
+}
+
 function splitRunnerRunSummaryContent(content: string): RunnerRunSummarySegment[] {
   const normalizedContent = stripSystemTags(content || "").trim();
   if (!normalizedContent) return [];
@@ -3045,6 +3064,8 @@ export interface RunnerChatProps {
   }) => Promise<void> | void;
   followUpActions?: RunnerChatFollowUpAction[];
   followUpError?: string;
+  renderUserPromptContent?: (context: RunnerChatUserPromptRenderContext) => ReactNode | undefined;
+  renderRunSummaryJsonSegment?: (context: RunnerChatRunSummaryJsonRenderContext) => ReactNode | undefined;
 }
 
 export interface RunnerChatActionSummaryClickPayload {
@@ -10662,6 +10683,8 @@ export function RunnerChat({
   onBacklogMissionControlSubmit,
   followUpActions = [],
   followUpError = "",
+  renderUserPromptContent,
+  renderRunSummaryJsonSegment,
 }: RunnerChatProps) {
   const [input, setInput] = useState(initialTask);
   const [inputSelectionStart, setInputSelectionStart] = useState(() => initialTask.length);
@@ -13028,6 +13051,17 @@ export function RunnerChat({
         <div className="tb-run-summary-content">
           {summarySegments.map((segment) => {
             if (segment.kind === "json") {
+              const customJsonSegment = renderRunSummaryJsonSegment?.({
+                turnId: turn.id,
+                segmentId: segment.id,
+                title: segment.title,
+                value: segment.value,
+                summaryContent,
+                agentMessage,
+              });
+              if (customJsonSegment !== undefined) {
+                return <Fragment key={segment.id}>{customJsonSegment}</Fragment>;
+              }
               return (
                 <RunnerRunSummaryJsonDocument
                   key={segment.id}
@@ -21708,6 +21742,26 @@ export function RunnerChat({
               const emailPromptLabel = emailPromptDisplay.isEmailPrompt ? (
                 <div className="tb-user-turn-email-label">Email from {emailPromptDisplay.emailFrom}</div>
               ) : null;
+              const customUserPromptContent = renderUserPromptContent?.({
+                turnId: turn.id,
+                turnIndex,
+                isLatestTurn,
+                prompt: turn.prompt,
+                displayContent: displayedUserPrompt,
+                isEmailPrompt: emailPromptDisplay.isEmailPrompt,
+                emailFrom: emailPromptDisplay.emailFrom,
+              });
+              const hasCustomUserPromptContent = customUserPromptContent !== undefined;
+              const defaultUserPromptContent = (
+                <>
+                  {emailPromptLabel}
+                  <CollapsibleRunnerUserPrompt
+                    content={displayedUserPrompt}
+                    className="tb-message-markdown tb-message-markdown-user"
+                  />
+                </>
+              );
+              const userPromptContent = hasCustomUserPromptContent ? customUserPromptContent : defaultUserPromptContent;
               const isBtwTurn = turn.presentation === "btw" || normalizedPrompt.toLowerCase().startsWith("/btw");
               const isEditingTurn = editingTurnId === turn.id;
               const canEditTurn = isEditableUserTurn(turn);
@@ -21730,8 +21784,8 @@ export function RunnerChat({
               const hasSpecialPromptPreview = Boolean(taskPreviewForTurn || missionControlPreviewForTurn);
               const isActionableTurn = isActionableUserTurn(turn);
               const isForkingTurn = forkingTurnId === turn.id;
-              const isEditablePromptTurn = canEditTurn && !hasSpecialPromptPreview && !shouldRenderMetronomeWorkflowPrompt;
-              const showTurnActions = isActionableTurn && !isEditingTurn && !hasSpecialPromptPreview && !shouldRenderMetronomeWorkflowPrompt;
+              const isEditablePromptTurn = canEditTurn && !hasCustomUserPromptContent && !hasSpecialPromptPreview && !shouldRenderMetronomeWorkflowPrompt;
+              const showTurnActions = isActionableTurn && !hasCustomUserPromptContent && !isEditingTurn && !hasSpecialPromptPreview && !shouldRenderMetronomeWorkflowPrompt;
               const areTurnActionsDisabled = !canEditTurn || isForkingTurn || hasSpecialPromptPreview;
               const shouldRenderSpecialPreviewPrompt = Boolean(
                 (taskPreviewForTurn?.reviewRequest === true || taskPreviewForTurn?.showPromptPreview === true) && normalizedPrompt
@@ -21960,11 +22014,7 @@ export function RunnerChat({
                           className={`task-prompt-in-session-context tb-thread-history-anchor ${emailPromptDisplay.isEmailPrompt ? "is-email-origin" : ""}`.trim()}
                           style={promptStyle}
                         >
-                          {emailPromptLabel}
-                          <CollapsibleRunnerUserPrompt
-                            content={displayedUserPrompt}
-                            className="tb-message-markdown tb-message-markdown-user"
-                          />
+                          {userPromptContent}
                         </div>
                       </>
                     ) : null}
@@ -21989,11 +22039,7 @@ export function RunnerChat({
                         ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
                         className="tb-btw-turn-prompt tb-thread-history-anchor"
                       >
-                        {emailPromptLabel}
-                        <CollapsibleRunnerUserPrompt
-                          content={displayedUserPrompt}
-                          className="tb-message-markdown tb-message-markdown-user"
-                        />
+                        {userPromptContent}
                       </div>
                       {isTurnRunning && !agentMessage?.message ? (
                         <div className="tb-btw-turn-pending tb-thinking-status" style={responseStyle}>
@@ -22053,15 +22099,7 @@ export function RunnerChat({
                       >
                         {runModeLabel}
                         <div className={`task-prompt-in-session-context ${emailPromptDisplay.isEmailPrompt ? "is-email-origin" : ""}`.trim()}>
-                          {metronomeWorkflowPromptContent || (
-                            <>
-                              {emailPromptLabel}
-                              <CollapsibleRunnerUserPrompt
-                                content={displayedUserPrompt}
-                                className="tb-message-markdown tb-message-markdown-user"
-                              />
-                            </>
-                          )}
+                          {metronomeWorkflowPromptContent || userPromptContent}
                         </div>
                       </div>
                     ) : null}
@@ -22249,13 +22287,7 @@ export function RunnerChat({
                         ) : missionControlPreviewForTurn ? (
                           renderRunnerMissionControlPreviewCard(missionControlPreviewForTurn)
                         ) : (
-                          <>
-                            {emailPromptLabel}
-                            <CollapsibleRunnerUserPrompt
-                              content={displayedUserPrompt}
-                              className="tb-message-markdown tb-message-markdown-user"
-                            />
-                          </>
+                          userPromptContent
                         )}
                       </div>
                       {showTurnActions ? (

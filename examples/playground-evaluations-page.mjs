@@ -190,7 +190,7 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
 
       .playground-evaluations-case-kpis {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 16px;
         padding: 16px 0 4px;
       }
@@ -238,6 +238,12 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
         grid-column: 1 / -1;
       }
 
+      .playground-evaluations-case-detail-field.is-reasoning {
+        padding: 18px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
       .playground-evaluations-case-detail-label {
         color: rgba(255, 255, 255, 0.94);
         font-size: 14px;
@@ -252,10 +258,21 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
         line-height: 1.45;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
+        word-break: break-word;
+        overflow: visible;
       }
 
       .playground-evaluations-case-detail-text {
         min-height: 0;
+      }
+
+      .playground-evaluations-case-text-content {
+        min-width: 0;
+        max-width: 100%;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        overflow: visible;
       }
 
       .playground-evaluations-case-reasoning-markdown.tb-message-markdown,
@@ -274,6 +291,68 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
       .playground-evaluations-case-reasoning-markdown.tb-message-markdown > :last-child,
       .playground-evaluations-case-reasoning-markdown .tb-message-markdown > :last-child {
         margin-bottom: 0;
+      }
+
+      .playground-evaluations-case-detail .tb-message-markdown pre,
+      .playground-evaluations-case-detail .tb-message-markdown code {
+        max-width: 100%;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        overflow: hidden;
+      }
+
+      .playground-evaluations-case-code-runner-shell.tb-runner-chat {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+      }
+
+      .playground-evaluations-case-code-shell {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+      }
+
+      .playground-evaluations-case-code-runner-shell.tb-runner-chat .tb-log-card-code {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-evaluations-case-code-shell .monaco-editor,
+      .playground-evaluations-case-code-shell .overflow-guard,
+      .playground-evaluations-case-code-shell .monaco-editor-background,
+      .playground-evaluations-case-code-shell .monaco-scrollable-element,
+      .playground-evaluations-case-code-shell .lines-content,
+      .playground-evaluations-case-code-shell .view-overlays,
+      .playground-evaluations-case-code-shell .view-zones,
+      .playground-evaluations-case-code-shell .margin-view-overlays,
+      .playground-evaluations-case-code-shell .margin {
+        background: transparent !important;
+      }
+
+      .playground-evaluations-case-code-shell .monaco-scrollable-element,
+      .playground-evaluations-case-code-shell .overflow-guard {
+        overflow: hidden !important;
+      }
+
+      .playground-evaluations-case-code-fallback {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.86);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        overflow: visible;
       }
 
       .playground-evaluations-case-links {
@@ -362,6 +441,49 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
       .playground-evaluations-pass-threshold-field {
         width: min(240px, 100%);
         margin-bottom: 14px;
+      }
+
+      .playground-evaluations-pass-threshold-inline {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-evaluations-settings-header-control {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+      }
+
+      .playground-evaluations-pass-threshold-inline-label {
+        color: rgba(255, 255, 255, 0.54);
+        font-size: 11px;
+        line-height: 1;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+
+      .playground-evaluations-pass-threshold-inline .playground-evaluations-input {
+        width: 76px;
+        height: 28px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: transparent;
+        text-align: center;
+      }
+
+      .playground-evaluations-dataset-guidance-section.playground-agents-detail-instructions-section {
+        margin-bottom: 16px;
+      }
+
+      .playground-evaluations-dataset-guidance-section .playground-tasks-detail-description-editor {
+        min-height: 118px;
+      }
+
+      .playground-evaluations-dataset-guidance-section .playground-tasks-detail-description-input,
+      .playground-evaluations-dataset-guidance-section .playground-tasks-detail-description-preview-scope.tb-runner-chat {
+        min-height: 118px;
       }
 
       .playground-evaluations-section {
@@ -1722,6 +1844,330 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         return data;
       }
 
+      function normalizePlaygroundEvaluationCodeLanguage(language) {
+        const normalized = String(language || "").trim().toLowerCase();
+        const aliases = {
+          js: "javascript",
+          jsx: "javascript",
+          ts: "typescript",
+          tsx: "typescript",
+          sh: "shell",
+          bash: "shell",
+          zsh: "shell",
+          yml: "yaml",
+          md: "markdown",
+          py: "python",
+        };
+        return aliases[normalized] || normalized || "plaintext";
+      }
+
+      function parsePlaygroundEvaluationFencedCode(value) {
+        const text = String(value || "").trim();
+        const fence = String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96);
+        if (!text.startsWith(fence)) {
+          return null;
+        }
+        const firstLineEnd = text.indexOf("\n");
+        if (firstLineEnd < 0) {
+          return null;
+        }
+        const language = normalizePlaygroundEvaluationCodeLanguage(text.slice(fence.length, firstLineEnd).trim());
+        let body = text.slice(firstLineEnd + 1);
+        const closingIndex = body.lastIndexOf(fence);
+        if (closingIndex >= 0 && body.slice(closingIndex).trim() === fence) {
+          body = body.slice(0, closingIndex);
+        }
+        return {
+          language,
+          value: body.replace(/\n$/, ""),
+        };
+      }
+
+      function formatPlaygroundEvaluationJsonCode(value) {
+        const text = String(value || "").trim();
+        try {
+          return JSON.stringify(JSON.parse(text), null, 2);
+        } catch {
+          return text;
+        }
+      }
+
+      function extractPlaygroundEvaluationJsonBlock(value) {
+        const text = String(value || "").trim();
+        if (!text) {
+          return null;
+        }
+        const startIndex = Math.min(
+          ...["{", "["]
+            .map((token) => text.indexOf(token))
+            .filter((index) => index >= 0)
+        );
+        if (!Number.isFinite(startIndex) || startIndex < 0) {
+          return null;
+        }
+        const opener = text[startIndex];
+        const closer = opener === "{" ? "}" : "]";
+        let depth = 0;
+        let inString = false;
+        let escaped = false;
+        for (let index = startIndex; index < text.length; index += 1) {
+          const char = text[index];
+          if (inString) {
+            if (escaped) {
+              escaped = false;
+            } else if (char === "\\") {
+              escaped = true;
+            } else if (char === '"') {
+              inString = false;
+            }
+            continue;
+          }
+          if (char === '"') {
+            inString = true;
+            continue;
+          }
+          if (char === opener) {
+            depth += 1;
+          } else if (char === closer) {
+            depth -= 1;
+            if (depth === 0) {
+              const candidate = text.slice(startIndex, index + 1);
+              try {
+                const parsed = JSON.parse(candidate);
+                return {
+                  language: "json",
+                  value: JSON.stringify(parsed, null, 2),
+                  parsed,
+                  startIndex,
+                  endIndex: index + 1,
+                  raw: candidate,
+                };
+              } catch {
+                return null;
+              }
+            }
+          }
+        }
+        return null;
+      }
+
+      function getPlaygroundEvaluationTextCodeBlock(value) {
+        const text = String(value || "").trim();
+        if (!text) {
+          return null;
+        }
+        const fencedCode = parsePlaygroundEvaluationFencedCode(text);
+        if (fencedCode) {
+          return fencedCode;
+        }
+        const startsWithJson = text.startsWith("{") || text.startsWith("[");
+        const endsWithJson = text.endsWith("}") || text.endsWith("]");
+        if (startsWithJson && endsWithJson) {
+          return {
+            language: "json",
+            value: formatPlaygroundEvaluationJsonCode(text),
+          };
+        }
+        const extractedJsonBlock = extractPlaygroundEvaluationJsonBlock(text);
+        if (extractedJsonBlock) {
+          return extractedJsonBlock;
+        }
+        return null;
+      }
+
+      function normalizePlaygroundEvaluationConfidence(value) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) {
+          return null;
+        }
+        const normalizedValue = numericValue > 1 ? numericValue / 100 : numericValue;
+        return Math.max(0, Math.min(1, normalizedValue));
+      }
+
+      function getPlaygroundEvaluationParsedEvaluatorResult(value) {
+        const text = String(value || "").trim();
+        if (!text) {
+          return null;
+        }
+        const block = extractPlaygroundEvaluationJsonBlock(text);
+        const parsed = block?.parsed && typeof block.parsed === "object" && !Array.isArray(block.parsed)
+          ? block.parsed
+          : null;
+        if (!parsed) {
+          return null;
+        }
+        const reason = String(
+          parsed.reason
+          ?? parsed.reasoning
+          ?? parsed.explanation
+          ?? parsed.rationale
+          ?? ""
+        ).trim();
+        const confidence = normalizePlaygroundEvaluationConfidence(
+          parsed.confidence
+          ?? parsed.confidenceScore
+          ?? parsed.confidence_score
+          ?? parsed.score
+        );
+        const cleanupTextFragment = (fragment) => {
+          const fence = String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96);
+          return String(fragment || "")
+            .replace(new RegExp(fence + "[a-z0-9_-]*\\s*$", "i"), "")
+            .replace(new RegExp("^" + fence + "\\s*", "i"), "")
+            .trim();
+        };
+        const beforeText = cleanupTextFragment(text.slice(0, block.startIndex || 0));
+        const afterText = cleanupTextFragment(text.slice(block.endIndex || text.length));
+        return {
+          reason,
+          confidence,
+          beforeText,
+          afterText,
+        };
+      }
+
+      function getPlaygroundEvaluationCaseDisplayReasoning(caseItem) {
+        const directReason = String(caseItem?.evaluatorReason || "").trim();
+        const evaluatorOutput = String(caseItem?.evaluatorOutput || "").trim();
+        const errorText = String(caseItem?.error || "").trim();
+        const parsedResult = getPlaygroundEvaluationParsedEvaluatorResult(evaluatorOutput)
+          || getPlaygroundEvaluationParsedEvaluatorResult(directReason);
+        const directReasonIsJsonResult = Boolean(directReason && getPlaygroundEvaluationParsedEvaluatorResult(directReason));
+        const parsedReason = String(parsedResult?.reason || "").trim();
+        const visibleDirectReason = directReasonIsJsonResult ? "" : directReason;
+        const displayParts = [
+          parsedResult?.beforeText || "",
+          visibleDirectReason,
+          parsedReason && parsedReason !== visibleDirectReason ? parsedReason : "",
+          parsedResult?.afterText || "",
+        ].filter((part) => String(part || "").trim());
+        return {
+          text: displayParts.length ? displayParts.join("\n\n") : directReason || evaluatorOutput || errorText,
+          confidence: parsedResult?.confidence ?? normalizePlaygroundEvaluationConfidence(caseItem?.confidence ?? caseItem?.evaluatorConfidence ?? caseItem?.evaluator_confidence),
+        };
+      }
+
+      function PlaygroundEvaluationCaseCodeValue({ value, language = "plaintext" }) {
+        const [editorModule, setEditorModule] = useState(null);
+        const editorDisposableRef = useRef(null);
+        const normalizedValue = useMemo(() => String(value || ""), [value]);
+        const normalizedLanguage = useMemo(() => normalizePlaygroundEvaluationCodeLanguage(language), [language]);
+        const baseEditorHeight = useMemo(() => {
+          const lineCount = Math.max(1, normalizedValue.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n").length);
+          return Math.max(24, lineCount * 20 + 4);
+        }, [normalizedValue]);
+        const [editorHeight, setEditorHeight] = useState(baseEditorHeight);
+        const MonacoEditorComponent = editorModule?.default || null;
+
+        useEffect(() => {
+          setEditorHeight(baseEditorHeight);
+        }, [baseEditorHeight]);
+
+        useEffect(() => {
+          let cancelled = false;
+          if (typeof loadPlaygroundCodeEditorModule !== "function") {
+            return undefined;
+          }
+          void loadPlaygroundCodeEditorModule()
+            .then((module) => {
+              if (cancelled || !module) return;
+              setEditorModule(module);
+              void module.loader?.init?.()
+                .then((monaco) => {
+                  if (!cancelled && typeof ensurePlaygroundCodeEditorTheme === "function") {
+                    ensurePlaygroundCodeEditorTheme(monaco);
+                  }
+                })
+                .catch(() => {});
+            })
+            .catch(() => {});
+          return () => {
+            cancelled = true;
+          };
+        }, []);
+
+        useEffect(() => () => {
+          editorDisposableRef.current?.dispose?.();
+          editorDisposableRef.current = null;
+        }, []);
+
+        function updateEditorHeight(editor) {
+          if (!editor?.getContentHeight) {
+            return;
+          }
+          const nextHeight = Math.max(24, Math.ceil(editor.getContentHeight()));
+          setEditorHeight((current) => Math.abs(current - nextHeight) > 1 ? nextHeight : current);
+          if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+            window.requestAnimationFrame(() => {
+              const layoutInfo = editor.getLayoutInfo?.();
+              if (layoutInfo?.width && editor.layout) {
+                editor.layout({ width: layoutInfo.width, height: nextHeight });
+              }
+            });
+          }
+        }
+
+        if (!MonacoEditorComponent) {
+          return React.createElement("div", { className: "playground-evaluations-case-code-runner-shell tb-runner-chat" },
+            React.createElement("div", { className: "tb-log-card-code tb-log-card-code-hide-scrollbars playground-evaluations-case-code-shell" },
+              React.createElement("pre", { className: "tb-log-card-code-fallback playground-evaluations-case-code-fallback" }, normalizedValue || "-")
+            )
+          );
+        }
+
+        return React.createElement("div", { className: "playground-evaluations-case-code-runner-shell tb-runner-chat" },
+          React.createElement("div", { className: "tb-log-card-code tb-log-card-code-hide-scrollbars playground-evaluations-case-code-shell", style: { height: editorHeight } },
+            React.createElement(MonacoEditorComponent, {
+              height: String(editorHeight) + "px",
+              language: normalizedLanguage,
+              theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+              value: normalizedValue,
+              beforeMount: typeof ensurePlaygroundCodeEditorTheme === "function" ? ensurePlaygroundCodeEditorTheme : undefined,
+              onMount: (editor) => {
+                editorDisposableRef.current?.dispose?.();
+                editorDisposableRef.current = editor?.onDidContentSizeChange?.(() => updateEditorHeight(editor)) || null;
+                updateEditorHeight(editor);
+              },
+              options: {
+                automaticLayout: true,
+                contextmenu: false,
+                domReadOnly: true,
+                folding: false,
+                glyphMargin: false,
+                hideCursorInOverviewRuler: true,
+                lineDecorationsWidth: 0,
+                lineNumbers: "off",
+                lineNumbersMinChars: 0,
+                minimap: { enabled: false },
+                occurrencesHighlight: "off",
+                overviewRulerBorder: false,
+                overviewRulerLanes: 0,
+                padding: { top: 0, bottom: 0 },
+                readOnly: true,
+                renderLineHighlight: "none",
+                renderValidationDecorations: "off",
+                renderWhitespace: "none",
+                scrollBeyondLastLine: false,
+                scrollbar: {
+                  alwaysConsumeMouseWheel: false,
+                  handleMouseWheel: false,
+                  horizontal: "hidden",
+                  vertical: "hidden",
+                },
+                smoothScrolling: false,
+                tabSize: 2,
+                wordWrap: "on",
+                wrappingIndent: "none",
+                wrappingStrategy: "advanced",
+                fontSize: 12,
+                lineHeight: 20,
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              },
+            })
+          )
+        );
+      }
+
       function renderPlaygroundEvaluationsPage(options = {}) {
         return React.createElement(PlaygroundEvaluationsPageView, options);
       }
@@ -1779,6 +2225,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         } = options;
         const evaluationActionsPopoverRef = useRef(null);
         const evaluationRenameInputRef = useRef(null);
+        const evaluationGuidanceTextareaRef = useRef(null);
         const announcedEvaluationThreadIdsRef = useRef(new Set());
         const hydratedEvaluationRunCostIdsRef = useRef(new Set());
         const [evaluationTopNavActionsContainer, setEvaluationTopNavActionsContainer] = useState(null);
@@ -1791,6 +2238,8 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         const [evaluationCasesFilterMode, setEvaluationCasesFilterMode] = useState("all");
         const [evaluationCasesToolbarPopover, setEvaluationCasesToolbarPopover] = useState("");
         const [evaluationCasesVisibleCount, setEvaluationCasesVisibleCount] = useState(10);
+        const [evaluationGuidanceEditingId, setEvaluationGuidanceEditingId] = useState("");
+        const [evaluationGuidanceHistoryById, setEvaluationGuidanceHistoryById] = useState({});
         const normalizedSets = (Array.isArray(evaluationSets) ? evaluationSets : []).map((set) => normalizePlaygroundEvaluationSet(set));
         const agentOptions = Array.isArray(agents) ? agents : [];
         const environmentOptions = Array.isArray(environments) ? environments : [];
@@ -1808,6 +2257,16 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               : "overview";
         const isEvaluationDetailPage = normalizedMode === "detail" && Boolean(activeSet);
         const nowIso = new Date().toISOString();
+
+        useEffect(() => {
+          if (!evaluationGuidanceEditingId || typeof window === "undefined") {
+            return undefined;
+          }
+          const frame = window.requestAnimationFrame(() => {
+            resizeEvaluationGuidanceTextarea(evaluationGuidanceTextareaRef.current);
+          });
+          return () => window.cancelAnimationFrame(frame);
+        }, [evaluationGuidanceEditingId, activeSet?.id, activeSet?.evaluationGuidance]);
 
         useEffect(() => {
           if (!topNavActionsPortalId || typeof document === "undefined") {
@@ -1912,6 +2371,210 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             const nextSet = typeof updater === "function" ? updater(normalized) : normalized;
             return normalizePlaygroundEvaluationSet({ ...nextSet, updatedAt: new Date().toISOString() });
           }));
+        }
+
+        function resizeEvaluationGuidanceTextarea(textarea) {
+          if (!textarea || typeof window === "undefined") return;
+          const computedStyles = window.getComputedStyle(textarea);
+          const lineHeight = Number.parseFloat(computedStyles.lineHeight) || 21;
+          const paddingTop = Number.parseFloat(computedStyles.paddingTop) || 0;
+          const paddingBottom = Number.parseFloat(computedStyles.paddingBottom) || 0;
+          const borderTopWidth = Number.parseFloat(computedStyles.borderTopWidth) || 0;
+          const borderBottomWidth = Number.parseFloat(computedStyles.borderBottomWidth) || 0;
+          const singleLineHeight = Math.ceil(lineHeight + paddingTop + paddingBottom + borderTopWidth + borderBottomWidth);
+          textarea.style.height = "auto";
+          textarea.style.height = (String(textarea.value || "").trim()
+            ? Math.max(singleLineHeight, textarea.scrollHeight)
+            : singleLineHeight) + "px";
+        }
+
+        function updateEvaluationGuidanceValue(setId, value, options = {}) {
+          const normalizedSetId = String(setId || "").trim();
+          if (!normalizedSetId) return;
+          const nextValue = String(value ?? "");
+          const currentSet = normalizedSets.find((set) => set.id === normalizedSetId) || null;
+          const previousValue = String(currentSet?.evaluationGuidance || "");
+          if (previousValue === nextValue) return;
+          if (options.recordHistory !== false) {
+            setEvaluationGuidanceHistoryById((current) => {
+              const currentHistory = current[normalizedSetId] || { past: [], future: [] };
+              return {
+                ...current,
+                [normalizedSetId]: {
+                  past: [...(Array.isArray(currentHistory.past) ? currentHistory.past : []), previousValue].slice(-80),
+                  future: [],
+                },
+              };
+            });
+          }
+          updateEvaluationSet(normalizedSetId, (set) => ({
+            ...set,
+            evaluationGuidance: nextValue,
+          }));
+        }
+
+        function focusEvaluationGuidanceTextareaAtEnd(value) {
+          if (typeof window === "undefined") return;
+          window.requestAnimationFrame(() => {
+            const textarea = evaluationGuidanceTextareaRef.current;
+            if (!textarea) return;
+            const nextCaret = String(value || "").length;
+            textarea.focus();
+            textarea.setSelectionRange(nextCaret, nextCaret);
+            resizeEvaluationGuidanceTextarea(textarea);
+          });
+        }
+
+        function applyEvaluationGuidanceSelection(setId, nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateEvaluationGuidanceValue(setId, nextValue);
+          if (typeof window === "undefined") return;
+          window.requestAnimationFrame(() => {
+            const textarea = evaluationGuidanceTextareaRef.current;
+            if (!textarea) return;
+            const maxLength = String(nextValue || "").length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeEvaluationGuidanceTextarea(textarea);
+          });
+        }
+
+        function buildEvaluationMarkdownWrappedEdit(value, selectionStart, selectionEnd, prefix, suffix = prefix) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          if (safeStart !== safeEnd) {
+            if (selectedText.startsWith(prefix) && selectedText.endsWith(suffix) && selectedText.length >= prefix.length + suffix.length) {
+              const unwrappedText = selectedText.slice(prefix.length, selectedText.length - suffix.length);
+              return {
+                value: value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd),
+                selectionStart: safeStart,
+                selectionEnd: safeStart + unwrappedText.length,
+              };
+            }
+            const surroundingPrefix = value.slice(Math.max(0, safeStart - prefix.length), safeStart);
+            const surroundingSuffix = value.slice(safeEnd, safeEnd + suffix.length);
+            if (surroundingPrefix === prefix && surroundingSuffix === suffix) {
+              return {
+                value: value.slice(0, safeStart - prefix.length) + selectedText + value.slice(safeEnd + suffix.length),
+                selectionStart: safeStart - prefix.length,
+                selectionEnd: safeStart - prefix.length + selectedText.length,
+              };
+            }
+            const wrappedText = prefix + selectedText + suffix;
+            return {
+              value: value.slice(0, safeStart) + wrappedText + value.slice(safeEnd),
+              selectionStart: safeStart + prefix.length,
+              selectionEnd: safeStart + prefix.length + selectedText.length,
+            };
+          }
+          const insertedText = prefix + suffix;
+          return {
+            value: value.slice(0, safeStart) + insertedText + value.slice(safeEnd),
+            selectionStart: safeStart + prefix.length,
+            selectionEnd: safeStart + prefix.length,
+          };
+        }
+
+        function buildEvaluationMarkdownListEdit(value, selectionStart, selectionEnd, listType = "unordered") {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const lineStart = value.lastIndexOf("\n", Math.max(0, safeStart - 1)) + 1;
+          let lineEnd = value.indexOf("\n", safeEnd);
+          if (lineEnd === -1) lineEnd = value.length;
+          const block = value.slice(lineStart, lineEnd);
+          const lines = block.split("\n");
+          const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+          const isOrderedList = listType === "ordered";
+          const orderedListPattern = /^(\s*)\d+\.\s+/;
+          const unorderedListPattern = /^(\s*)-\s+/;
+          const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => (
+            isOrderedList ? orderedListPattern.test(line) : unorderedListPattern.test(line)
+          ));
+          let orderedIndex = 1;
+          const nextLines = lines.map((line) => {
+            if (!line.trim()) {
+              if (shouldRemoveList) return line;
+              return isOrderedList ? String(orderedIndex++) + ". " : "- ";
+            }
+            if (shouldRemoveList) {
+              return line.replace(isOrderedList ? orderedListPattern : unorderedListPattern, "$1");
+            }
+            if (!isOrderedList && unorderedListPattern.test(line)) return line;
+            if (isOrderedList && orderedListPattern.test(line)) {
+              orderedIndex += 1;
+              return line;
+            }
+            const cleanLine = line.replace(/^(\s*)(?:-\s+|\d+\.\s+)/, "$1");
+            return cleanLine.replace(/^(\s*)/, (_match, indent) => (
+              String(indent || "") + (isOrderedList ? String(orderedIndex++) + ". " : "- ")
+            ));
+          });
+          const nextBlock = nextLines.join("\n");
+          const nextValue = value.slice(0, lineStart) + nextBlock + value.slice(lineEnd);
+          const collapsedSelection = safeStart === safeEnd;
+          const markerLength = isOrderedList ? 3 : 2;
+          const nextCaretOffset = shouldRemoveList
+            ? Math.max(0, safeStart - lineStart - markerLength)
+            : safeStart - lineStart + markerLength;
+          return {
+            value: nextValue,
+            selectionStart: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart,
+            selectionEnd: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart + nextBlock.length,
+          };
+        }
+
+        function buildEvaluationMarkdownLinkEdit(value, selectionStart, selectionEnd) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          const existingLinkMatch = selectedText.match(/^\[([^\]]+)\]\(([^)]*)\)$/);
+          if (existingLinkMatch) {
+            const unwrappedText = existingLinkMatch[1];
+            return {
+              value: value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd),
+              selectionStart: safeStart,
+              selectionEnd: safeStart + unwrappedText.length,
+            };
+          }
+          const label = selectedText || "link text";
+          const url = "url";
+          const markdownLink = "[" + label + "](" + url + ")";
+          const nextValue = value.slice(0, safeStart) + markdownLink + value.slice(safeEnd);
+          const urlStart = safeStart + label.length + 3;
+          return {
+            value: nextValue,
+            selectionStart: urlStart,
+            selectionEnd: urlStart + url.length,
+          };
+        }
+
+        function handleEvaluationGuidanceMarkdownFormat(setId, formatType) {
+          const textarea = evaluationGuidanceTextareaRef.current;
+          const currentSet = normalizedSets.find((set) => set.id === setId) || null;
+          if (!textarea || !currentSet) return;
+          const value = String(currentSet.evaluationGuidance || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+          if (formatType === "bold") {
+            edit = buildEvaluationMarkdownWrappedEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildEvaluationMarkdownWrappedEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildEvaluationMarkdownWrappedEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildEvaluationMarkdownListEdit(value, selectionStart, selectionEnd, "unordered");
+          } else if (formatType === "ordered-list") {
+            edit = buildEvaluationMarkdownListEdit(value, selectionStart, selectionEnd, "ordered");
+          } else if (formatType === "code") {
+            edit = buildEvaluationMarkdownWrappedEdit(value, selectionStart, selectionEnd, String.fromCharCode(96));
+          } else if (formatType === "link") {
+            edit = buildEvaluationMarkdownLinkEdit(value, selectionStart, selectionEnd);
+          }
+          if (!edit) return;
+          applyEvaluationGuidanceSelection(setId, edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
         function updateEvaluationRunCase(setId, runId, caseId, patch) {
@@ -3192,7 +3855,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         }
 
         function renderCaseDetailField(label, value, options = {}) {
-          return React.createElement("div", { className: "playground-evaluations-case-detail-field" + (options.wide ? " is-wide" : "") },
+          return React.createElement("div", { className: "playground-evaluations-case-detail-field" + (options.wide ? " is-wide" : "") + (options.reasoning ? " is-reasoning" : "") },
             React.createElement("div", { className: "playground-evaluations-case-detail-label" }, label),
             React.createElement("div", { className: "playground-evaluations-case-detail-value" + (options.text ? " playground-evaluations-case-detail-text" : "") }, value || "-")
           );
@@ -3215,6 +3878,170 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             });
           }
           return text;
+        }
+
+        function renderEvaluationCaseTextValue(value) {
+          const text = String(value || "").trim();
+          if (!text) return "-";
+          const codeBlock = getPlaygroundEvaluationTextCodeBlock(text);
+          if (codeBlock) {
+            return React.createElement(PlaygroundEvaluationCaseCodeValue, {
+              value: codeBlock.value,
+              language: codeBlock.language,
+            });
+          }
+          return React.createElement("div", { className: "playground-evaluations-case-text-content" }, text);
+        }
+
+        function renderEvaluationPassThresholdInline(set) {
+          return React.createElement("label", { className: "playground-evaluations-pass-threshold-inline" },
+            React.createElement("span", { className: "playground-evaluations-pass-threshold-inline-label" }, "Pass Threshold"),
+            React.createElement("input", {
+              type: "number",
+              min: "0",
+              max: "100",
+              step: "0.1",
+              className: "playground-evaluations-input",
+              value: Number((normalizePlaygroundEvaluationPassThreshold(set.passThreshold) * 100).toFixed(1)),
+              onChange: (event) => updateEvaluationSet(set.id, (current) => ({
+                ...current,
+                passThreshold: normalizePlaygroundEvaluationPassThreshold(event.target.value),
+              })),
+            })
+          );
+        }
+
+        function renderEvaluationGuidanceEditor(set) {
+          const guidance = String(set?.evaluationGuidance || "");
+          const isEditing = evaluationGuidanceEditingId === set.id;
+          const history = evaluationGuidanceHistoryById[set.id] || { past: [], future: [] };
+          const canUndo = Array.isArray(history.past) && history.past.length > 0;
+          const canRedo = Array.isArray(history.future) && history.future.length > 0;
+          const placeholder = "Optional scoring instructions that apply to every row in this evaluation set.";
+          const applyHistoryValue = (value) => {
+            updateEvaluationGuidanceValue(set.id, String(value ?? ""), { recordHistory: false });
+            focusEvaluationGuidanceTextareaAtEnd(value);
+          };
+          const handleUndo = () => {
+            if (!canUndo) return;
+            const currentValue = guidance;
+            const previousValue = history.past[history.past.length - 1];
+            setEvaluationGuidanceHistoryById((current) => {
+              const currentHistory = current[set.id] || { past: [], future: [] };
+              return {
+                ...current,
+                [set.id]: {
+                  past: (Array.isArray(currentHistory.past) ? currentHistory.past : []).slice(0, -1),
+                  future: [currentValue, ...(Array.isArray(currentHistory.future) ? currentHistory.future : [])].slice(0, 80),
+                },
+              };
+            });
+            applyHistoryValue(previousValue);
+          };
+          const handleRedo = () => {
+            if (!canRedo) return;
+            const currentValue = guidance;
+            const nextValue = history.future[0];
+            setEvaluationGuidanceHistoryById((current) => {
+              const currentHistory = current[set.id] || { past: [], future: [] };
+              return {
+                ...current,
+                [set.id]: {
+                  past: [...(Array.isArray(currentHistory.past) ? currentHistory.past : []), currentValue].slice(-80),
+                  future: (Array.isArray(currentHistory.future) ? currentHistory.future : []).slice(1),
+                },
+              };
+            });
+            applyHistoryValue(nextValue);
+          };
+          const renderToolbarButton = (action) =>
+            React.createElement("button", {
+              key: action.id,
+              type: "button",
+              className: "playground-tasks-detail-format-button",
+              title: action.label,
+              "aria-label": action.label,
+              disabled: Boolean(action.disabled),
+              onMouseDown: (event) => event.preventDefault(),
+              onClick: action.onClick || (() => handleEvaluationGuidanceMarkdownFormat(set.id, action.id)),
+            }, React.createElement(action.icon, {
+              width: 14,
+              height: 14,
+              strokeWidth: action.strokeWidth || 1.8,
+            }));
+          const formatActionGroups = [
+            [
+              { id: "undo", label: "Undo", icon: Undo2, disabled: !canUndo, onClick: handleUndo },
+              { id: "redo", label: "Redo", icon: Redo2, disabled: !canRedo, onClick: handleRedo },
+            ],
+            [
+              { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
+              { id: "italic", label: "Italic", icon: Italic },
+              { id: "underline", label: "Underline", icon: Underline },
+            ],
+            [
+              { id: "list", label: "List", icon: List },
+              { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
+            ],
+            [
+              { id: "code", label: "Code", icon: CodeXml },
+              { id: "link", label: "Link", icon: Link2 },
+            ],
+          ];
+          return React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-evaluations-dataset-guidance-section" },
+            React.createElement("div", { className: "playground-tasks-detail-section-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Dataset Evaluator Guidance"),
+              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                formatActionGroups.flatMap((group, groupIndex) => [
+                  groupIndex > 0
+                    ? React.createElement("span", {
+                        key: "divider:" + groupIndex,
+                        className: "playground-agents-detail-instructions-toolbar-divider",
+                        "aria-hidden": "true",
+                      })
+                    : null,
+                  ...group.map((action) => renderToolbarButton(action)),
+                ])
+              )
+            ),
+            React.createElement("div", {
+              className: "playground-tasks-detail-description-editor" + (isEditing ? " is-editing" : " is-preview"),
+            },
+              !isEditing
+                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                    guidance.trim()
+                      ? typeof PlaygroundTaskDescriptionMarkdown === "function"
+                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                            content: guidance,
+                            className: "playground-tasks-detail-description-preview tb-message-markdown",
+                          })
+                        : React.createElement("div", {
+                            className: "playground-tasks-detail-description-preview",
+                          }, guidance)
+                      : React.createElement("div", {
+                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                        }, placeholder)
+                  )
+                : null,
+              React.createElement("textarea", {
+                ref: evaluationGuidanceTextareaRef,
+                className: "playground-tasks-detail-description-input " + (isEditing ? "is-editing" : "is-preview"),
+                rows: 1,
+                placeholder: isEditing ? placeholder : "",
+                value: guidance,
+                onFocus: () => {
+                  setEvaluationGuidanceEditingId(set.id);
+                },
+                onChange: (event) => {
+                  updateEvaluationGuidanceValue(set.id, event.target.value);
+                  resizeEvaluationGuidanceTextarea(event.currentTarget);
+                },
+                onBlur: () => {
+                  setEvaluationGuidanceEditingId("");
+                },
+              })
+            )
+          );
         }
 
         function renderOverview() {
@@ -3314,8 +4141,8 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               isDataTab
                 ? React.createElement(React.Fragment, null,
                     React.createElement("div", { className: "playground-guardrails-prompts-header" },
-                      React.createElement("div", { className: "playground-guardrails-prompts-title" },
-                        React.createElement("span", null, "Input / output pairs")
+                      React.createElement("div", { className: "playground-guardrails-prompts-title playground-evaluations-settings-header-control" },
+                        renderEvaluationPassThresholdInline(activeSet)
                       ),
                       React.createElement("div", { className: "playground-guardrails-detail-actions" },
                         React.createElement("button", {
@@ -3337,33 +4164,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
 	                        }, React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }), React.createElement("span", null, "Row"))
 	                      )
 	                    ),
-	                    React.createElement("label", { className: "playground-evaluations-field playground-evaluations-pass-threshold-field" },
-	                      React.createElement("span", null, "Pass Threshold"),
-	                      React.createElement("input", {
-	                        type: "number",
-	                        min: "0",
-	                        max: "100",
-	                        step: "0.1",
-	                        className: "playground-evaluations-input",
-	                        value: Number((normalizePlaygroundEvaluationPassThreshold(activeSet.passThreshold) * 100).toFixed(1)),
-	                        onChange: (event) => updateEvaluationSet(activeSet.id, (set) => ({
-	                          ...set,
-	                          passThreshold: normalizePlaygroundEvaluationPassThreshold(event.target.value),
-	                        })),
-	                      })
-	                    ),
-	                    React.createElement("label", { className: "playground-evaluations-field playground-evaluations-dataset-guidance" },
-	                      React.createElement("span", null, "Dataset Evaluator Guidance"),
-	                      React.createElement("textarea", {
-	                        className: "playground-evaluations-textarea",
-	                        value: activeSet.evaluationGuidance || "",
-	                        placeholder: "Optional scoring instructions that apply to every row in this evaluation set.",
-	                        onChange: (event) => updateEvaluationSet(activeSet.id, (set) => ({
-	                          ...set,
-	                          evaluationGuidance: event.target.value,
-	                        })),
-	                      })
-	                    ),
+	                    renderEvaluationGuidanceEditor(activeSet),
 	                    renderDataTable(activeSet)
 	                  )
                 : React.createElement(React.Fragment, null,
@@ -3393,7 +4194,11 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           const displayStatus = getPlaygroundEvaluationCaseDisplayStatus(activeCase, activeRun.passThreshold);
           const isActiveCase = isPlaygroundEvaluationCaseActive(activeCase);
           const scoreLabel = isActiveCase ? activeCase.status.replace(/_/g, " ") : formatPlaygroundEvaluationPercent(activeCase.score);
-          const reasoning = activeCase.evaluatorReason || activeCase.evaluatorOutput || activeCase.error || "";
+          const reasoningDisplay = getPlaygroundEvaluationCaseDisplayReasoning(activeCase);
+          const reasoning = reasoningDisplay.text || "";
+          const confidenceLabel = reasoningDisplay.confidence === null || reasoningDisplay.confidence === undefined
+            ? "-"
+            : formatPlaygroundEvaluationPercent(reasoningDisplay.confidence);
           return React.createElement("div", { className: "playground-guardrails-detail playground-evaluations-detail playground-evaluations-case-detail" },
             React.createElement("div", { className: "playground-guardrails-editor" },
               React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-evaluations-case-section" },
@@ -3408,12 +4213,13 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                   renderCaseKpi("Agent", renderRunAgentCell(activeRun, activeSet)),
                   renderCaseKpi("Environment", renderRunEnvironmentCell(activeRun, activeSet)),
                   renderCaseKpi("Score", React.createElement("span", { className: "playground-evaluations-case-score" }, scoreLabel)),
+                  renderCaseKpi("Confidence", confidenceLabel),
                   renderCaseKpi("Status", React.createElement("span", { className: "playground-evaluations-status-pill" + (displayStatus === "failed" || displayStatus === "error" ? " is-failed" : "") }, displayStatus.replace(/_/g, " ")))
                 ),
                 React.createElement("div", { className: "playground-evaluations-case-detail-grid" },
-                  renderCaseDetailField("Reasoning", renderEvaluationCaseMarkdown(reasoning), { wide: true }),
-                  renderCaseDetailField("Expected Output", activeCase.expectedOutput, { text: true, wide: true }),
-                  renderCaseDetailField("Actual Output", activeCase.actualOutput, { text: true, wide: true })
+                  renderCaseDetailField("Reasoning", renderEvaluationCaseMarkdown(reasoning), { wide: true, reasoning: true }),
+                  renderCaseDetailField("Expected Output", renderEvaluationCaseTextValue(activeCase.expectedOutput), { wide: true }),
+                  renderCaseDetailField("Actual Output", renderEvaluationCaseTextValue(activeCase.actualOutput), { wide: true })
                 )
               )
             )

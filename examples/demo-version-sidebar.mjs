@@ -353,7 +353,8 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
               React.createElement("div", { className: "playground-metronome-publish-list" },
                 versions.length ? versions.map(renderVersionRow) : renderEmptyState()
               )
-            )
+            ),
+            props.versionsSectionFooter || null
           ),
           hasFooterActions
             ? React.createElement("div", { className: "playground-metronome-publish-sidebar-actions" },
