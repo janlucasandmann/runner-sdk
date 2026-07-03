@@ -21,6 +21,8 @@ import { VERSIONING_CORE_SCRIPT } from "./demo-versioning-core.mjs";
 import { VERSION_SIDEBAR_SCRIPT } from "./demo-version-sidebar.mjs";
 import { PLAYGROUND_EVALUATIONS_CSS, PLAYGROUND_EVALUATIONS_SCRIPT } from "./playground-evaluations-page.mjs";
 import { createPlaygroundEvaluationsRuntime } from "./playground-evaluations-runtime.mjs";
+import { PLAYGROUND_FINE_TUNING_CSS, PLAYGROUND_FINE_TUNING_SCRIPT } from "./playground-fine-tuning-page.mjs";
+import { createPlaygroundFineTuningRuntime } from "./playground-fine-tuning-runtime.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42564,6 +42566,87 @@ ${METRONOME_PAGE_CSS}
         justify-content: flex-start;
       }
 
+      .playground-agents-overview-page .playground-environments-home-content {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+      }
+
+      .playground-agents-overview-analytics-card.playground-project-overview-progress-combo-card {
+        margin: 0;
+      }
+
+      .playground-agents-overview-analytics-card .playground-project-overview-progress-combo-metric-dot.is-agents {
+        background: rgb(143, 196, 255);
+      }
+
+      .playground-agents-overview-analytics-card .playground-project-overview-progress-combo-metric-dot.is-teams {
+        background: rgb(103, 80, 255);
+      }
+
+      .playground-agents-overview-analytics-card .playground-project-overview-progress-combo-metric-dot.is-agent-ct {
+        background: #7effff;
+      }
+
+      .playground-agents-overview-analytics-card .playground-project-overview-progress-combo-metric-dot.is-team-ct {
+        background: #c5a3ff;
+      }
+
+      .playground-agents-overview-analytics-card .playground-project-overview-progress-combo-metric-dot.is-total-ct {
+        background: #9ff6ce;
+      }
+
+      .playground-agents-overview-list-section.playground-project-overview-panel-plain.playground-plugins-section {
+        margin-top: 24px !important;
+        overflow: visible;
+      }
+
+      .playground-agents-overview-list-section .playground-plugins-section-header {
+        margin-top: 0;
+      }
+
+      .playground-agents-overview-list-section .playground-plugins-search-row {
+        margin-bottom: 12px;
+      }
+
+      .playground-agents-overview-list-section,
+      .playground-agents-overview-list-section .playground-project-overview-threads-table,
+      .playground-agents-overview-list-section .playground-project-overview-thread-list,
+      .playground-agents-overview-list-section .playground-project-overview-threads-table-row,
+      .playground-agents-overview-list-section .playground-project-overview-thread-cell.is-actions {
+        overflow: visible !important;
+      }
+
+      .playground-agents-overview-list-section .playground-project-overview-threads-table-header,
+      .playground-agents-overview-list-section .playground-project-overview-threads-table-row {
+        grid-template-columns: minmax(170px, 1.25fr) minmax(156px, 1fr) minmax(140px, 0.86fr) minmax(92px, 0.5fr) minmax(92px, 0.54fr) 28px;
+        gap: 12px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      .playground-agents-overview-list-section .playground-project-overview-threads-table-header,
+      .playground-agents-overview-list-section .playground-project-overview-threads-table-row,
+      .playground-agents-overview-list-section .playground-project-overview-threads-table-header *,
+      .playground-agents-overview-list-section .playground-project-overview-threads-table-row * {
+        font-size: 12px;
+      }
+
+      .playground-agents-overview-list-section .playground-project-overview-thread-cell,
+      .playground-agents-overview-list-section .playground-plugin-row-title,
+      .playground-agents-overview-list-section .playground-agents-overview-model-name,
+      .playground-agents-overview-list-section .playground-guardrails-creator-label,
+      .playground-agents-overview-list-section .playground-agents-overview-table-value {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-agents-overview-list-section .playground-project-overview-thread-cell.is-name {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
       .playground-resources-overview-section > .playground-plugins-section-header {
         padding-bottom: 0;
         border-bottom: 0;
@@ -44143,6 +44226,17 @@ ${METRONOME_PAGE_CSS}
 
 		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-table-section .playground-agents-overview-table-shell::before {
 		        content: none;
+		      }
+
+		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section {
+		        margin-top: 24px !important;
+		        overflow: visible !important;
+		      }
+
+		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-project-overview-threads-table,
+		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-project-overview-thread-list,
+		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-project-overview-threads-table-row {
+		        overflow: visible !important;
 		      }
 
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list {
@@ -51660,6 +51754,7 @@ ${METRONOME_PAGE_CSS}
       }
 ${MODELS_PAGE_CSS}
 ${RESOURCE_TEMPLATES_PAGE_CSS}
+${PLAYGROUND_FINE_TUNING_CSS}
 ${PLATFORM_UI_PRIMITIVES_CSS}
     </style>
 
@@ -51726,7 +51821,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -75221,6 +75316,7 @@ ${METRONOME_PAGE_SCRIPT}
 ${MODELS_PAGE_SCRIPT}
 ${RESOURCE_TEMPLATES_PAGE_SCRIPT}
 ${PLAYGROUND_EVALUATIONS_SCRIPT}
+${PLAYGROUND_FINE_TUNING_SCRIPT}
 ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
       function getPlaygroundImageMaskViewportRect(containerWidth, containerHeight, naturalWidth, naturalHeight) {
@@ -116464,53 +116560,23 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               return undefined;
             }, [chartSignature, hasUsageData]);
 
-            return React.createElement("div", { className: "playground-settings-usage-chart-card" },
-              React.createElement("div", { className: "playground-project-overview-chart-header" },
-                React.createElement("div", { className: "playground-project-overview-chart-header-main" },
-                  React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Daily CT by Agent Type"),
-                  timescaleControl || null
-                )
-              ),
+            return React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame playground-agents-home-chartjs-frame" },
               isLoading
                 ? React.createElement("div", {
-                    className: "playground-project-overview-chart-shell playground-agents-home-chartjs-frame",
+                    className: "playground-overview-chart-loading",
+                    style: { position: "static", inset: "auto", height: "100%" },
+                    "aria-label": "Loading chart data",
                   },
-                    React.createElement("div", {
-                        className: "playground-overview-chart-loading",
-                        style: { position: "static", inset: "auto", height: "100%" },
-                        "aria-label": "Loading chart data",
-                      },
-                      React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
-                    )
-                  )
+                  React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
+                )
                 : (!normalizedLabels.length || !normalizedSeries.length || !hasUsageData)
                   ? (emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet"))
-                  : React.createElement(React.Fragment, null,
-                      React.createElement("div", {
-                          className: "playground-project-overview-chart-shell playground-agents-home-chartjs-frame",
-                          role: "img",
-                          "aria-label": ariaLabel || "Agent and team activity over time",
-                        },
-                        React.createElement("canvas", {
-                          ref: canvasRef,
-                          className: "playground-agents-home-chartjs-canvas",
-                        })
-                      ),
-                      React.createElement("div", {
-                          className: "playground-settings-usage-inline-legend",
-                          style: { justifyContent: "flex-start" },
-                        },
-                        normalizedSeries.map((entry) =>
-                          React.createElement("div", { key: entry.id || entry.label, className: "playground-settings-usage-legend-item" },
-                            React.createElement("span", {
-                              className: "playground-settings-usage-legend-swatch",
-                              style: { background: entry.color },
-                            }),
-                            React.createElement("span", null, entry.label)
-                          )
-                        )
-                      )
-                    )
+                  : React.createElement("canvas", {
+                      ref: canvasRef,
+                      className: "playground-project-overview-progress-combo-canvas playground-agents-home-chartjs-canvas",
+                      role: "img",
+                      "aria-label": ariaLabel || "Agent and team activity over time",
+                    })
             );
           }
 
@@ -116561,39 +116627,48 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             });
 
           const isDevelopConfigureAgentsHome = embeddedInResources;
-          const agentsHomeAnalyticsTitleRow = isDevelopConfigureAgentsHome
-            ? React.createElement("div", { className: "playground-develop-server-metrics-title-row playground-agents-configure-analytics-title-row" },
-                React.createElement("h2", { className: "playground-develop-server-metrics-title" }, "Analytics"),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-content-menu-button",
-                    "aria-label": "Analytics options",
-                    "aria-expanded": agentsAnalyticsMenuOpen ? "true" : "false",
-                    onClick: () => setAgentsAnalyticsMenuOpen((current) => !current),
-                  }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-                  agentsAnalyticsMenuOpen
-                    ? React.createElement("div", {
-                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                      },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row",
-                          onClick: () => {
-                            setAgentsAnalyticsMenuOpen(false);
-                            if (typeof onOpenSettingsUsage === "function") {
-                              onOpenSettingsUsage();
-                            }
-                          },
+          const agentsHomeTimescaleControl = React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
+            React.createElement("select", {
+              className: "playground-environments-home-comparison-timescale-select",
+              value: agentsHomeChartTimescale,
+              onChange: (event) => setAgentsHomeChartTimescale(String(event.target.value || "month")),
+              "aria-label": "Agent analytics timescale",
+            },
+              React.createElement("option", { value: "day" }, "Daily"),
+              React.createElement("option", { value: "week" }, "Weekly"),
+              React.createElement("option", { value: "month" }, "Monthly")
+            )
+          );
+          const agentsHomeAnalyticsOptions = isDevelopConfigureAgentsHome
+            ? React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-content-menu-button",
+                  "aria-label": "Analytics options",
+                  "aria-expanded": agentsAnalyticsMenuOpen ? "true" : "false",
+                  onClick: () => setAgentsAnalyticsMenuOpen((current) => !current),
+                }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                agentsAnalyticsMenuOpen
+                  ? React.createElement("div", {
+                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                    },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row",
+                        onClick: () => {
+                          setAgentsAnalyticsMenuOpen(false);
+                          if (typeof onOpenSettingsUsage === "function") {
+                            onOpenSettingsUsage();
+                          }
                         },
-                          React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                            React.createElement("span", null, "Show Usage")
-                          )
+                      },
+                        React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, "Show Usage")
                         )
                       )
-                    : null
-                )
+                    )
+                  : null
               )
             : null;
 
@@ -116624,40 +116699,43 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   React.createElement("div", {
                     className: "playground-environments-home-metrics" + (isDevelopConfigureAgentsHome ? " playground-develop-server-metrics playground-develop-server-kind-metrics" : ""),
                   },
-                    agentsHomeAnalyticsTitleRow,
-                    React.createElement("div", { className: "playground-tasks-detail-facts" },
-                      React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                        React.createElement("div", { className: "playground-database-overview" },
-                          React.createElement("div", { className: "playground-database-overview-chart-block" },
-                            React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
-                              agentsHomeKpis.map((item) =>
-                                React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
-                                  React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                                    React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                                  ),
-                                  React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                                )
-                              )
+                    React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-agents-overview-analytics-card" },
+                      React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
+                        React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Analytics"),
+                        React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
+                          agentsHomeTimescaleControl,
+                          agentsHomeAnalyticsOptions
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
+                        agentsHomeKpis.map((item) =>
+                          React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+                            React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+                              React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
+                              React.createElement("span", null, item.label)
                             ),
-	                              renderAgentsHomeUsageChart({
-	                              ariaLabel: "Agent and team activity over time",
-	                              labels: activityBuckets.map((bucket) => String(bucket?.label || "")),
-	                              singleValues: agentsHomeHasCostActivity ? singleAgentCostActivity : singleAgentActivity,
-	                              teamValues: agentsHomeHasCostActivity ? teamAgentCostActivity : teamActivity,
-                                singleCountValues: singleAgentActivity,
-                                teamCountValues: teamActivity,
-                                usesComputeTokenValues: agentsHomeHasCostActivity,
-	                              emptyText: agentsHomeThreadsLoading ? "Loading activity..." : (agentsHomeThreadsError || "No activity data yet"),
-	                              emptyContent: isDevelopConfigureAgentsHome
-	                                ? renderAgentsConfigureUsageEmptyState(
-                                    "no-agent-usage.avif",
-                                    "No Agent Usage yet",
-                                    "Agent usage appears here once agents start running and consuming compute tokens."
-                                  )
-                                : null,
-                            })
+                            React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
                           )
                         )
+                      ),
+                      React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
+                        renderAgentsHomeUsageChart({
+                          ariaLabel: "Agent and team activity over time",
+                          labels: activityBuckets.map((bucket) => String(bucket?.label || "")),
+                          singleValues: agentsHomeHasCostActivity ? singleAgentCostActivity : singleAgentActivity,
+                          teamValues: agentsHomeHasCostActivity ? teamAgentCostActivity : teamActivity,
+                          singleCountValues: singleAgentActivity,
+                          teamCountValues: teamActivity,
+                          usesComputeTokenValues: agentsHomeHasCostActivity,
+                          emptyText: agentsHomeThreadsLoading ? "Loading activity..." : (agentsHomeThreadsError || "No activity data yet"),
+                          emptyContent: isDevelopConfigureAgentsHome
+                            ? renderAgentsConfigureUsageEmptyState(
+                                "no-agent-usage.avif",
+                                "No Agent Usage yet",
+                                "Agent usage appears here once agents start running and consuming compute tokens."
+                              )
+                            : null,
+                        })
                       )
                     )
                   ),
@@ -124067,11 +124145,97 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   React.createElement(Bot, { width: 16, height: 16, strokeWidth: 1.8 })
                 );
           };
+          const getAgentOverviewCreatorIdentity = (agent) => {
+            if (agent?.isDefault === true || agent?.isSystem === true || isPlaygroundDefaultAgentConfigurationLocked(agent)) {
+              return {
+                name: "Computer Agents",
+                avatarUrl: RUNNER_TRANSPARENT_LOGO_URL,
+                isSystem: true,
+              };
+            }
+            const record = agent && typeof agent === "object" && !Array.isArray(agent) ? agent : {};
+            const metadata = record.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
+            const nested = record.creator && typeof record.creator === "object" && !Array.isArray(record.creator)
+              ? record.creator
+              : record.createdBy && typeof record.createdBy === "object" && !Array.isArray(record.createdBy)
+                ? record.createdBy
+                : record.created_by && typeof record.created_by === "object" && !Array.isArray(record.created_by)
+                  ? record.created_by
+                  : metadata.creator && typeof metadata.creator === "object" && !Array.isArray(metadata.creator)
+                    ? metadata.creator
+                    : metadata.createdBy && typeof metadata.createdBy === "object" && !Array.isArray(metadata.createdBy)
+                      ? metadata.createdBy
+                      : metadata.created_by && typeof metadata.created_by === "object" && !Array.isArray(metadata.created_by)
+                        ? metadata.created_by
+                        : {};
+            const creatorName = String(
+              nested.name
+              || nested.displayName
+              || nested.display_name
+              || record.creatorName
+              || record.creator_name
+              || record.createdByName
+              || record.created_by_name
+              || metadata.creatorName
+              || metadata.creator_name
+              || metadata.createdByName
+              || metadata.created_by_name
+              || accountName
+              || accountEmail
+              || ""
+            ).trim();
+            const creatorAvatarUrl = String(
+              nested.avatarUrl
+              || nested.avatar_url
+              || nested.photoUrl
+              || nested.photoURL
+              || nested.imageUrl
+              || nested.imageURL
+              || record.creatorAvatarUrl
+              || record.creator_avatar_url
+              || record.createdByAvatarUrl
+              || record.created_by_avatar_url
+              || metadata.creatorAvatarUrl
+              || metadata.creator_avatar_url
+              || metadata.createdByAvatarUrl
+              || metadata.created_by_avatar_url
+              || accountAvatarUrl
+              || ""
+            ).trim();
+            return {
+              id: String(nested.id || record.creatorId || record.creator_id || record.createdById || record.created_by_id || metadata.creatorId || metadata.creator_id || metadata.createdById || metadata.created_by_id || accountEmail || "").trim(),
+              userId: String(nested.userId || nested.user_id || record.creatorUserId || record.creator_user_id || metadata.creatorUserId || metadata.creator_user_id || sessionState.userId || "").trim(),
+              name: creatorName,
+              email: String(nested.email || nested.mail || record.creatorEmail || record.creator_email || record.createdByEmail || record.created_by_email || metadata.creatorEmail || metadata.creator_email || metadata.createdByEmail || metadata.created_by_email || accountEmail || "").trim(),
+              avatarUrl: creatorAvatarUrl,
+              isSystem: false,
+            };
+          };
+          const getAgentOverviewCreatorLabel = (agent) => {
+            const creator = getAgentOverviewCreatorIdentity(agent);
+            return String(creator.name || creator.email || creator.id || creator.userId || "Unknown").trim();
+          };
+          const renderAgentOverviewCreatorCell = (agent) => {
+            const creator = getAgentOverviewCreatorIdentity(agent);
+            const label = getAgentOverviewCreatorLabel(agent);
+            const avatarUrl = canRenderAvatarImage(creator.avatarUrl) ? creator.avatarUrl : "";
+            return React.createElement("span", { className: "playground-guardrails-creator-cell", title: label },
+              React.createElement("span", {
+                className: "playground-guardrails-creator-avatar" + (creator.isSystem ? " is-system" : ""),
+                "aria-hidden": "true",
+              },
+                avatarUrl
+                  ? React.createElement("img", { src: avatarUrl, alt: "" })
+                  : getAccountInitials(label)
+              ),
+              React.createElement("span", { className: "playground-guardrails-creator-label" }, label)
+            );
+          };
           const isDevelopConfigureAgentsOverview = embeddedInResources;
           const agentsOverviewEntityLabel = agentListMode === "teams" ? "Teams" : "Agents";
 
           return React.createElement("section", {
-              className: "playground-plugins-section" + (isDevelopConfigureAgentsOverview ? " playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section" : ""),
+              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section" + (isDevelopConfigureAgentsOverview ? " playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section" : ""),
             },
             isDevelopConfigureAgentsOverview
               ? null
@@ -124207,114 +124371,92 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     ? (agentListMode === "teams" ? "No matching teams found." : "No matching agents found.")
                     : (agentListMode === "teams" ? "No teams available." : "No agents available.")
                 )
-              : React.createElement("div", { className: "playground-agents-overview-table-shell" },
-                  React.createElement("table", { className: "playground-agents-overview-table" },
-                    React.createElement("colgroup", null,
-                      React.createElement("col", { style: { width: "42%" } }),
-                      React.createElement("col", { style: { width: "240px" } }),
-                      React.createElement("col", { style: { width: "110px" } }),
-                      React.createElement("col", { style: { width: "190px" } }),
-                      React.createElement("col", { style: { width: "130px" } }),
-                      React.createElement("col", { style: { width: "64px" } })
-                    ),
-                    React.createElement("thead", null,
-                      React.createElement("tr", null,
-                        React.createElement("th", null, "Name"),
-                        React.createElement("th", null, "Model"),
-                        React.createElement("th", null, "Context"),
-                        React.createElement("th", { className: "is-right" }, "Cost / mTok"),
-                        React.createElement("th", { className: "is-right" }, "Last used"),
-                        React.createElement("th", { className: "is-action" }, "")
-                      )
-                    ),
-                    React.createElement("tbody", null,
-                      visibleOverviewAgents.map((agent) => {
-                        const isTeamListItem = agent?.agentType === "team" || isPlaygroundTeamAgent(agent);
-                        const modelMeta = getPlaygroundAgentModelMeta(agent?.model || "claude-haiku-4-5", resolvedAgentModelOptions);
-                        const providerLabel = getPlaygroundAgentModelProviderFilterKey(modelMeta) === "custom"
-                          ? "Custom"
-                          : getPlaygroundAgentModelProviderLabel(modelMeta);
-                        const agentName = agent.id === PLAYGROUND_AGENT_DRAFT_ID
-                          ? (draftAgent?.name || (draftAgent?.agentType === "team" ? "New Team" : "New Agent"))
-                          : (agent.name || "Untitled Agent");
-                        const description = String(agent.description || (isTeamListItem ? "Agent team" : "Agent")).trim();
-                        const lastUsedAt = getOverviewAgentLastUsedAt(agent);
-                        const lastUsedLabel = lastUsedAt
-                          ? formatPlaygroundFileDate(lastUsedAt)
-                          : (agentsHomeThreadsLoading ? "Loading..." : "Never");
-                        const openAgent = () => {
-                          setAgentsOverviewToolbarPopover("");
-                          handleAgentSelect(agent.id);
-                        };
-                        const isMenuOpen = agentListActionMenuState?.agentId === agent.id;
-                        return React.createElement("tr", {
-                            key: agent.id,
-                            tabIndex: 0,
-                            role: "button",
-                            "aria-label": "Open " + agentName,
-                            onClick: openAgent,
-                            onKeyDown: (event) => {
-                              if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault();
-                                openAgent();
-                              }
-                            },
+              : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
+                  React.createElement("div", { className: "playground-project-overview-threads-table-header" },
+                    React.createElement("div", null, "Name"),
+                    React.createElement("div", null, "Model"),
+                    React.createElement("div", null, "Creator"),
+                    React.createElement("div", null, "Cost / mTok"),
+                    React.createElement("div", null, "Last used"),
+                    React.createElement("div", null)
+                  ),
+                  React.createElement("div", { className: "playground-project-overview-thread-list" },
+                    visibleOverviewAgents.map((agent) => {
+                      const isTeamListItem = agent?.agentType === "team" || isPlaygroundTeamAgent(agent);
+                      const modelMeta = getPlaygroundAgentModelMeta(agent?.model || "claude-haiku-4-5", resolvedAgentModelOptions);
+                      const agentName = agent.id === PLAYGROUND_AGENT_DRAFT_ID
+                        ? (draftAgent?.name || (draftAgent?.agentType === "team" ? "New Team" : "New Agent"))
+                        : (agent.name || "Untitled Agent");
+                      const lastUsedAt = getOverviewAgentLastUsedAt(agent);
+                      const lastUsedLabel = lastUsedAt
+                        ? formatPlaygroundFileDate(lastUsedAt)
+                        : (agentsHomeThreadsLoading ? "Loading..." : "Never");
+                      const openAgent = () => {
+                        setAgentsOverviewToolbarPopover("");
+                        handleAgentSelect(agent.id);
+                      };
+                      const isMenuOpen = agentListActionMenuState?.agentId === agent.id;
+                      return React.createElement("div", {
+                          key: agent.id,
+                          tabIndex: 0,
+                          role: "button",
+                          className: "playground-project-overview-threads-table-row",
+                          "aria-label": "Open " + agentName,
+                          onClick: openAgent,
+                          onKeyDown: (event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              openAgent();
+                            }
                           },
-                          React.createElement("td", null,
-                            React.createElement("div", { className: "playground-agents-overview-name-cell" },
-                              isTeamListItem
-                                ? React.createElement("span", { className: "playground-agents-overview-table-avatar is-team", "aria-hidden": "true" },
-                                    React.createElement(Layers, { width: 17, height: 17, strokeWidth: 1.8 })
-                                  )
-                                : renderAgentListAvatar(agent, "playground-agents-overview-table-avatar"),
-                              React.createElement("div", { className: "playground-agents-overview-name-copy" },
-                                React.createElement("div", { className: "playground-agents-overview-name-title" }, agentName),
-                                React.createElement("div", {
-                                  className: "playground-agents-overview-name-description",
-                                  title: description,
-                                }, description)
-                              )
-                            )
-                          ),
-                          React.createElement("td", null,
-                            React.createElement("div", { className: "playground-agents-overview-model-cell" },
-                              renderOverviewModelProviderIcon(modelMeta),
-                              React.createElement("div", { className: "playground-agents-overview-model-copy" },
-                                React.createElement("div", { className: "playground-agents-overview-model-provider" }, providerLabel),
-                                React.createElement("div", {
-                                  className: "playground-agents-overview-model-name",
-                                  title: modelMeta?.label || modelMeta?.id || "",
-                                }, modelMeta?.label || modelMeta?.id || "Selected model")
-                              )
-                            )
-                          ),
-                          React.createElement("td", null,
-                            React.createElement("div", { className: "playground-agents-overview-table-value" }, modelMeta?.contextWindow || "Custom")
-                          ),
-                          React.createElement("td", null,
-                            React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundAgentModelComputeTokenCost(modelMeta?.id))
-                          ),
-                          React.createElement("td", null,
-                            React.createElement("div", {
-                              className: "playground-agents-overview-table-value is-right",
-                              title: lastUsedAt ? formatPlaygroundExactDate(lastUsedAt) : "",
-                            }, lastUsedLabel)
-                          ),
-                          React.createElement("td", { className: "playground-overview-table-action-cell" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-overview-table-action-button" + (isMenuOpen ? " is-open" : ""),
-                              onClick: (event) => openAgentListActionMenu(event, agent),
-                              onKeyDown: (event) => event.stopPropagation(),
-                              "aria-label": "Agent actions",
-                              "aria-expanded": isMenuOpen ? "true" : "false",
-                            },
-                              React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
+                        },
+                        React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
+                          React.createElement("div", { className: "playground-agents-overview-name-cell" },
+                            isTeamListItem
+                              ? React.createElement("span", { className: "playground-agents-overview-table-avatar is-team", "aria-hidden": "true" },
+                                  React.createElement(Layers, { width: 17, height: 17, strokeWidth: 1.8 })
+                                )
+                              : renderAgentListAvatar(agent, "playground-agents-overview-table-avatar"),
+                            React.createElement("div", { className: "playground-agents-overview-name-copy" },
+                              React.createElement("div", { className: "playground-agents-overview-name-title" }, agentName)
                             )
                           )
-                        );
-                      })
-                    )
+                        ),
+                        React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
+                          React.createElement("div", { className: "playground-agents-overview-model-cell" },
+                            renderOverviewModelProviderIcon(modelMeta),
+                            React.createElement("div", { className: "playground-agents-overview-model-copy" },
+                              React.createElement("div", {
+                                className: "playground-agents-overview-model-name",
+                                title: modelMeta?.label || modelMeta?.id || "",
+                              }, modelMeta?.label || modelMeta?.id || "Selected model")
+                            )
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" }, renderAgentOverviewCreatorCell(agent)),
+                        React.createElement("div", { className: "playground-project-overview-thread-cell is-cost" },
+                          React.createElement("div", { className: "playground-agents-overview-table-value" }, formatPlaygroundAgentModelComputeTokenCost(modelMeta?.id))
+                        ),
+                        React.createElement("div", {
+                          className: "playground-project-overview-thread-cell is-date",
+                          title: lastUsedAt ? formatPlaygroundExactDate(lastUsedAt) : "",
+                        },
+                          React.createElement("div", { className: "playground-agents-overview-table-value" }, lastUsedLabel)
+                        ),
+                        React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-overview-table-action-button" + (isMenuOpen ? " is-open" : ""),
+                            onClick: (event) => openAgentListActionMenu(event, agent),
+                            onKeyDown: (event) => event.stopPropagation(),
+                            "aria-label": "Agent actions",
+                            "aria-expanded": isMenuOpen ? "true" : "false",
+                          },
+                            React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
+                          )
+                        )
+                      );
+                    })
                   )
                 )
           );
@@ -158243,6 +158385,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         "guardrailId",
         "evaluationId",
         "evaluationRunId",
+        "fineTuneJobId",
         "developSection",
         "imagineView",
         "mediaMode",
@@ -159459,6 +159602,22 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [evaluationJsonlImportOpen, setEvaluationJsonlImportOpen] = useState(false);
         const [evaluationJsonlImportValue, setEvaluationJsonlImportValue] = useState("");
         const [evaluationJsonlImportError, setEvaluationJsonlImportError] = useState("");
+        const [fineTuningJobs, setFineTuningJobs] = useState(() => readPlaygroundFineTuningJobsFromStorage());
+        const [selectedFineTuningJobId, setSelectedFineTuningJobId] = useState(() => {
+          const storedJobs = readPlaygroundFineTuningJobsFromStorage();
+          return storedJobs[0]?.id || "";
+        });
+        const [fineTuningPageMode, setFineTuningPageMode] = useState("overview");
+        const [fineTuningSearchQuery, setFineTuningSearchQuery] = useState("");
+        const [fineTuningCreateModalOpen, setFineTuningCreateModalOpen] = useState(false);
+        const [fineTuningCreateForm, setFineTuningCreateForm] = useState({
+          name: "",
+          agentId: "",
+          environmentId: "",
+          evaluationSetIds: [],
+          instructions: "",
+          verifyAfter: true,
+        });
         const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
         const [projectOverviewResourceSearchQuery, setProjectOverviewResourceSearchQuery] = useState("");
         const [projectOverviewResourceViewMode, setProjectOverviewResourceViewMode] = useState("list");
@@ -159787,6 +159946,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           writePlaygroundEvaluationSetsToStorage(evaluationSets);
         }, [evaluationSets]);
         useEffect(() => {
+          writePlaygroundFineTuningJobsToStorage(fineTuningJobs);
+        }, [fineTuningJobs]);
+        useEffect(() => {
           if (selectedGuardrailSetId && allGuardrailSets.some((set) => set.id === selectedGuardrailSetId)) {
             return;
           }
@@ -159835,6 +159997,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setEvaluationsPageMode(evaluationSets[0]?.id ? "detail" : "overview");
           }
         }, [evaluationSets, evaluationsPageMode, selectedEvaluationSetId]);
+        useEffect(() => {
+          if (selectedFineTuningJobId && fineTuningJobs.some((job) => normalizePlaygroundFineTuningJob(job).id === selectedFineTuningJobId)) {
+            return;
+          }
+          setSelectedFineTuningJobId(fineTuningJobs[0] ? normalizePlaygroundFineTuningJob(fineTuningJobs[0]).id : "");
+          if (fineTuningPageMode !== "overview") {
+            setFineTuningPageMode(fineTuningJobs[0] ? "detail" : "overview");
+          }
+        }, [fineTuningJobs, fineTuningPageMode, selectedFineTuningJobId]);
         useLayoutEffect(() => {
           if (guardrailsPageMode !== "detail") {
             return;
@@ -174067,6 +174238,24 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setActivePage("evaluations");
         }
 
+        function openFineTuningPage(options = {}) {
+          setAccountMenuOpen(false);
+          setProfileEditorOpen(false);
+          if (!options.preserveSidebarMode) {
+            setSidebarWorkspaceMode("configure");
+          }
+          setResourcesHeaderState({
+            mode: "overview",
+            title: "",
+          });
+          const requestedJobId = String(options.jobId || options.fineTuneJobId || "").trim();
+          if (requestedJobId) {
+            setSelectedFineTuningJobId(requestedJobId);
+          }
+          setFineTuningPageMode(options.mode === "detail" || requestedJobId ? "detail" : "overview");
+          setActivePage("fine-tuning");
+        }
+
         function openResourceTemplatesPage(options = {}) {
           setAccountMenuOpen(false);
           setProfileEditorOpen(false);
@@ -187388,6 +187577,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
             };
           }
 
+          if (activePage === "fine-tuning") {
+            return {
+              page: "fine-tuning",
+              mode: fineTuningPageMode === "detail" ? "detail" : "overview",
+              fineTuneJobId: selectedFineTuningJobId,
+            };
+          }
+
           if (activePage === "resource-templates") {
             return {
               page: "resource-templates",
@@ -187658,6 +187855,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
               mode: entry.mode === "run" ? "run" : entry.mode === "detail" ? "detail" : "overview",
               evaluationId: entry.evaluationId || "",
               evaluationRunId: entry.evaluationRunId || "",
+            });
+            return;
+          }
+
+          if (entry.page === "fine-tuning") {
+            openFineTuningPage({
+              mode: entry.mode === "detail" ? "detail" : "overview",
+              jobId: entry.fineTuneJobId || "",
             });
             return;
           }
@@ -193024,6 +193229,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
+        function renderFineTuningPageNav() {
+          const activeFineTuningJob = (Array.isArray(fineTuningJobs) ? fineTuningJobs : [])
+            .map((job) => normalizePlaygroundFineTuningJob(job))
+            .find((job) => job?.id === selectedFineTuningJobId);
+          const fineTuningPathItems = [{ label: "Configure" }, { label: "Fine-Tuning" }];
+          if (fineTuningPageMode === "detail" && activeFineTuningJob?.name) {
+            fineTuningPathItems.push({ label: activeFineTuningJob.name });
+          }
+          return renderUnifiedTopNav({
+            className: "playground-configure-navbar playground-models-navbar",
+            pathItems: fineTuningPathItems,
+          });
+        }
+
         function renderInferencePageNav() {
           return renderUnifiedTopNav({
             className: "playground-configure-navbar playground-models-navbar",
@@ -196259,6 +196478,46 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
+        function renderFineTuningPage() {
+          return React.createElement(PlaygroundFineTuningPage, {
+            backendUrl: proxyBackendBase,
+            requestHeaders,
+            agents: runtimeAgents,
+            environments: runtimeEnvironments,
+            evaluationSets,
+            setEvaluationSets,
+            fineTuningJobs,
+            setFineTuningJobs,
+            selectedFineTuningJobId,
+            setSelectedFineTuningJobId,
+            fineTuningPageMode,
+            setFineTuningPageMode,
+            fineTuningSearchQuery,
+            setFineTuningSearchQuery,
+            fineTuningCreateModalOpen,
+            setFineTuningCreateModalOpen,
+            fineTuningCreateForm,
+            setFineTuningCreateForm,
+            defaultAgentId: resolvedComposerAgentId || resolvedPreferredAgentId || "",
+            defaultEnvironmentId: resolvedEnvironmentId || environmentId || "",
+            onOpenThread: handleThreadSelect,
+            onOpenEvaluationRun: (evaluationId, evaluationRunId) => {
+              openEvaluationsPage({
+                mode: "run",
+                evaluationId,
+                evaluationRunId,
+              });
+            },
+            onFineTuningThreadStarted: (threadRecord) => {
+              if (threadRecord?.id) {
+                upsertRealThreadRecord(threadRecord);
+              }
+              void refreshThreads(undefined, String(threadRecord?.id || "").trim(), { silent: true });
+            },
+            onAgentsRefresh: refreshAgents,
+          });
+        }
+
         function getPlaygroundResourceTemplateMetronomePreviewWorkflowId(templateId) {
           const normalizedTemplateId = String(templateId || "")
             .trim()
@@ -198094,6 +198353,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 onClick: () => openEvaluationsPage(),
               },
               {
+                id: "fine-tuning",
+                label: "Fine-Tuning",
+                Icon: TestTubeDiagonal,
+                active: activePage === "fine-tuning",
+                onClick: () => openFineTuningPage(),
+              },
+              {
                 id: "guardrails",
                 label: "Guardrails",
                 Icon: Shield,
@@ -198681,6 +198947,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      ? renderGuardrailsPageNav()
 	                    : activePage === "evaluations"
 	                      ? renderEvaluationsPageNav()
+	                    : activePage === "fine-tuning"
+	                      ? renderFineTuningPageNav()
 	                    : activePage === "resource-templates"
 	                      ? renderResourceTemplatesPageNav()
 	                    : activePage === "inference"
@@ -199005,7 +199273,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             : null
                         )
                       ),
-	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isResourcesVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (activePage === "files" || activePage === "guardrails" || activePage === "evaluations" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
+	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isResourcesVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (activePage === "files" || activePage === "guardrails" || activePage === "evaluations" || activePage === "fine-tuning" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "fine-tuning" ? " is-fine-tuning-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
 	                    activePage === "settings"
 	                      ? renderSettingsPage()
 	                      : activePage === "team"
@@ -199041,6 +199309,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      : activePage === "evaluations"
 	                        ? hasRealAccess
 	                          ? renderEvaluationsPage()
+	                          : hasDemoAccess
+	                            ? renderDemoFeaturePage("resources")
+	                            : renderAuthGate()
+	                      : activePage === "fine-tuning"
+	                        ? hasRealAccess
+	                          ? renderFineTuningPage()
 	                          : hasDemoAccess
 	                            ? renderDemoFeaturePage("resources")
 	                            : renderAuthGate()
@@ -208823,6 +209097,17 @@ const playgroundEvaluationsRuntime = createPlaygroundEvaluationsRuntime({
   enrichThreadPayloadWithAgentGuardrails,
 });
 
+const playgroundFineTuningRuntime = createPlaygroundFineTuningRuntime({
+  sendJson,
+  readRequestBody,
+  parseUpstreamUrl,
+  readOptionalApiKey,
+  withProxyOrganizationHeader,
+  hasAiosSession,
+  fetchAiosApi,
+  enrichThreadPayloadWithAgentGuardrails,
+});
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url || "/", `http://localhost:${port}`);
 
@@ -209452,6 +209737,10 @@ const server = http.createServer((req, res) => {
   }
 
   if (playgroundEvaluationsRuntime.handleRequest(req, res, url)) {
+    return;
+  }
+
+  if (playgroundFineTuningRuntime.handleRequest(req, res, url)) {
     return;
   }
 
