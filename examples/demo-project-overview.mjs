@@ -3310,7 +3310,8 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-files-section .playground-plugins-search {
         position: relative;
         z-index: 1;
-        min-height: 32px;
+        height: 30px;
+        min-height: 30px;
         border: 0;
         background: rgba(255, 255, 255, 0.05);
         font-size: 12px;

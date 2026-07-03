@@ -263,6 +263,26 @@ export interface RunnerApiRequestOptions {
   organizationId?: string | null;
 }
 
+export interface RunnerAgentCreateInput {
+  name: string;
+  instructions?: string;
+  description?: string;
+  model?: string;
+  guardrailSetIds?: string[];
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerAgentUpdateInput {
+  name?: string;
+  instructions?: string;
+  description?: string;
+  model?: string;
+  guardrailSetIds?: string[];
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
 export interface RunnerGuardrailPrompt {
   id?: string;
   title: string;
@@ -319,6 +339,272 @@ export interface RunnerAgentRecord {
   promptAdaptations?: RunnerGuardrailPromptAdaptation[];
   invisiblePromptAdaptations?: RunnerGuardrailPromptAdaptation[];
   metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export type RunnerAgentVersionStatus = "saved" | "active" | "superseded" | "unpublished" | string;
+
+export interface RunnerAgentVersionSnapshot {
+  name?: string;
+  description?: string;
+  model?: string;
+  instructions?: string;
+  guardrailSetIds?: string[];
+  guardrails?: RunnerGuardrailSet[];
+  promptAdaptations?: RunnerGuardrailPromptAdaptation[];
+  invisiblePromptAdaptations?: RunnerGuardrailPromptAdaptation[];
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerAgentVersion {
+  id: string;
+  version: number;
+  label?: string;
+  description?: string;
+  status?: RunnerAgentVersionStatus;
+  lifecycleState?: string;
+  lifecycle_state?: string;
+  revisionId?: string;
+  revision_id?: string;
+  baseRevisionId?: string;
+  base_revision_id?: string;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+  publishedAt?: string;
+  published_at?: string;
+  unpublishedAt?: string;
+  unpublished_at?: string;
+  snapshot?: RunnerAgentVersionSnapshot;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerAgentVersionCreateInput {
+  label?: string;
+  name?: string;
+  description?: string;
+  status?: RunnerAgentVersionStatus;
+  snapshot?: RunnerAgentVersionSnapshot;
+  agent?: RunnerAgentRecord;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerAgentVersionUpdateInput {
+  label?: string;
+  name?: string;
+  description?: string;
+  status?: RunnerAgentVersionStatus;
+  snapshot?: RunnerAgentVersionSnapshot;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerAgentVersionDiffFile {
+  id?: string;
+  filePath: string;
+  label?: string;
+  beforeContent?: string;
+  afterContent?: string;
+  fileContent?: string;
+  diffContent: string;
+  additions?: number;
+  deletions?: number;
+  [key: string]: unknown;
+}
+
+export interface RunnerAgentVersionCompareResult {
+  agentId?: string;
+  baseVersionId?: string;
+  targetVersionId?: string;
+  files: RunnerAgentVersionDiffFile[];
+  additions?: number;
+  deletions?: number;
+  [key: string]: unknown;
+}
+
+export type RunnerEnvironmentVersionStatus = "saved" | "active" | "superseded" | "unpublished" | string;
+
+export interface RunnerEnvironmentVersionSnapshot {
+  name?: string;
+  description?: string;
+  computeProfile?: string;
+  runtimes?: Record<string, string>;
+  packages?: Record<string, unknown>;
+  environmentVariables?: unknown[];
+  secrets?: unknown[];
+  setupScripts?: string[];
+  mcpServers?: unknown[];
+  documentation?: unknown[];
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerEnvironmentVersion {
+  id: string;
+  version: number;
+  label?: string;
+  description?: string;
+  status?: RunnerEnvironmentVersionStatus;
+  lifecycleState?: string;
+  lifecycle_state?: string;
+  revisionId?: string;
+  revision_id?: string;
+  baseRevisionId?: string;
+  base_revision_id?: string;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+  publishedAt?: string;
+  published_at?: string;
+  unpublishedAt?: string;
+  unpublished_at?: string;
+  snapshot?: RunnerEnvironmentVersionSnapshot;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerEnvironmentVersionCreateInput {
+  label?: string;
+  name?: string;
+  description?: string;
+  status?: RunnerEnvironmentVersionStatus;
+  snapshot?: RunnerEnvironmentVersionSnapshot;
+  environment?: Record<string, unknown>;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerEnvironmentVersionUpdateInput {
+  label?: string;
+  name?: string;
+  description?: string;
+  status?: RunnerEnvironmentVersionStatus;
+  snapshot?: RunnerEnvironmentVersionSnapshot;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerEnvironmentVersionDiffFile {
+  id?: string;
+  filePath: string;
+  label?: string;
+  beforeContent?: string;
+  afterContent?: string;
+  fileContent?: string;
+  diffContent: string;
+  additions?: number;
+  deletions?: number;
+  [key: string]: unknown;
+}
+
+export interface RunnerEnvironmentVersionCompareResult {
+  environmentId?: string;
+  baseVersionId?: string;
+  targetVersionId?: string;
+  files: RunnerEnvironmentVersionDiffFile[];
+  additions?: number;
+  deletions?: number;
+  [key: string]: unknown;
+}
+
+export type RunnerServerVersionStatus = "saved" | "active" | "superseded" | "unpublished" | string;
+
+export interface RunnerServerVersionSnapshot {
+  name?: string;
+  description?: string;
+  kind?: string;
+  sourceType?: string;
+  sourceEnvironmentId?: string | null;
+  sourcePath?: string;
+  region?: string;
+  runtime?: string;
+  authMode?: string;
+  template?: string;
+  templateAgentId?: string;
+  templateEnvironmentId?: string;
+  databaseMode?: string;
+  databaseId?: string;
+  databaseName?: string;
+  databaseDescription?: string;
+  databaseLocation?: string;
+  customDomain?: string;
+  sourceFiles?: unknown[];
+  sourceFileContents?: Record<string, string>;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerServerVersion {
+  id: string;
+  version: number;
+  label?: string;
+  description?: string;
+  status?: RunnerServerVersionStatus;
+  lifecycleState?: string;
+  lifecycle_state?: string;
+  revisionId?: string;
+  revision_id?: string;
+  baseRevisionId?: string;
+  base_revision_id?: string;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+  publishedAt?: string;
+  published_at?: string;
+  unpublishedAt?: string;
+  unpublished_at?: string;
+  snapshot?: RunnerServerVersionSnapshot;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerServerVersionCreateInput {
+  label?: string;
+  name?: string;
+  description?: string;
+  status?: RunnerServerVersionStatus;
+  snapshot?: RunnerServerVersionSnapshot;
+  server?: Record<string, unknown>;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerServerVersionUpdateInput {
+  label?: string;
+  name?: string;
+  description?: string;
+  status?: RunnerServerVersionStatus;
+  snapshot?: RunnerServerVersionSnapshot;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerServerVersionDiffFile {
+  id?: string;
+  filePath: string;
+  label?: string;
+  beforeContent?: string;
+  afterContent?: string;
+  fileContent?: string;
+  diffContent: string;
+  additions?: number;
+  deletions?: number;
+  [key: string]: unknown;
+}
+
+export interface RunnerServerVersionCompareResult {
+  serverId?: string;
+  baseVersionId?: string;
+  targetVersionId?: string;
+  files: RunnerServerVersionDiffFile[];
+  additions?: number;
+  deletions?: number;
   [key: string]: unknown;
 }
 

@@ -53,7 +53,7 @@ export const VERSIONING_CORE_SCRIPT = String.raw`
         const newLines = Array.isArray(afterLines) ? afterLines : [];
         const oldLength = oldLines.length;
         const newLength = newLines.length;
-        if (oldLength * newLength > 160000) {
+        if (oldLength * newLength > 4000000) {
           return oldLines.map((line) => ({ type: "delete", line }))
             .concat(newLines.map((line) => ({ type: "add", line })));
         }
@@ -94,6 +94,13 @@ export const VERSIONING_CORE_SCRIPT = String.raw`
 
       function buildPlaygroundVersionUnifiedDiff(filePath, beforeContent, afterContent) {
         const normalizedPath = normalizePlaygroundVersionDiffPath(filePath);
+        if (String(beforeContent ?? "") === String(afterContent ?? "")) {
+          return {
+            diffContent: "",
+            additions: 0,
+            deletions: 0,
+          };
+        }
         const beforeLines = splitPlaygroundVersionDiffLines(beforeContent);
         const afterLines = splitPlaygroundVersionDiffLines(afterContent);
         const rows = buildPlaygroundVersionLineDiffRows(beforeLines, afterLines);
@@ -477,6 +484,9 @@ export const VERSIONING_CORE_SCRIPT = String.raw`
           buildDeleteVersionResource(resource, versionId) {
             const normalizedVersionId = String(versionId || "").trim();
             const versions = controller.readVersions(resource);
+            if (versions.length <= 1) {
+              return null;
+            }
             const targetVersion = versions.find((version) => version.id === normalizedVersionId);
             if (!targetVersion) {
               return null;

@@ -28,8 +28,7 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
         ].filter(Boolean).join(" ");
         const title = String(props.title || "Versions").trim() || "Versions";
         const sectionTitle = String(props.sectionTitle || "Saved versions").trim() || "Saved versions";
-        const emptyTitle = String(props.emptyTitle || "No saved versions yet").trim() || "No saved versions yet";
-        const emptyCopy = String(props.emptyCopy || "Create a version to track changes over time.").trim();
+        const minimumVersionCount = Math.max(1, Number(props.minimumVersionCount || 1) || 1);
         const getVersionTitle = typeof props.getVersionTitle === "function"
           ? props.getVersionTitle
           : (version) => String(version?.label || ("Version " + (version?.version || ""))).trim() || "Version";
@@ -54,7 +53,7 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
                   onClick: () => props.onRestoreVersion(version.id),
                 });
               }
-              if (typeof props.onDeleteVersion === "function") {
+              if (typeof props.onDeleteVersion === "function" && versions.length > minimumVersionCount) {
                 items.push({
                   id: "delete",
                   label: "Delete version",
@@ -115,17 +114,18 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
           return null;
         };
 
-        const renderEmptyState = () => React.createElement("div", { className: "playground-metronome-publish-empty-state" },
-          React.createElement("div", { className: "playground-metronome-publish-empty-card" },
-            React.createElement("img", {
-              className: "playground-metronome-publish-empty-image",
-              src: props.emptyImageSrc || "/img/empty-state/metronome.webp",
-              alt: "",
-              "aria-hidden": "true",
-            }),
-            React.createElement("h3", { className: "playground-metronome-publish-empty-title" }, emptyTitle),
-            emptyCopy ? React.createElement("p", { className: "playground-metronome-publish-empty-copy" }, emptyCopy) : null
-          )
+        const renderLoadingState = () => React.createElement("div", {
+            className: "playground-metronome-publish-loading-state",
+            role: "status",
+            "aria-label": props.loadingLabel || "Loading versions",
+          },
+          React.createElement(Loader2, {
+            className: "playground-files-state-loader playground-metronome-publish-loading-icon",
+            width: 18,
+            height: 18,
+            strokeWidth: 1.75,
+            "aria-hidden": "true",
+          })
         );
 
         const renderVersionRow = (version, index) => {
@@ -136,7 +136,8 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
           const versionDescription = getVersionDescription(version, { isActiveVersion, isSelectedVersion, index });
           const versionMeta = getVersionMeta(version, { isActiveVersion, isSelectedVersion, index });
           const rowMenuItems = (getRowMenuItems(version, { isActiveVersion, isSelectedVersion, index, isBusy }) || [])
-            .filter((item) => item && typeof item.onClick === "function");
+            .filter((item) => item && typeof item.onClick === "function")
+            .filter((item) => !(versions.length <= minimumVersionCount && String(item.id || "").trim().toLowerCase() === "delete"));
 
           const handleSelect = () => {
             if (!onSelectVersion || isBusy || isSelectedVersion) {
@@ -351,7 +352,7 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
             renderStateContent(),
             React.createElement("div", { className: "playground-metronome-publish-list-container" },
               React.createElement("div", { className: "playground-metronome-publish-list" },
-                versions.length ? versions.map(renderVersionRow) : renderEmptyState()
+                versions.length ? versions.map(renderVersionRow) : renderLoadingState()
               )
             ),
             props.versionsSectionFooter || null

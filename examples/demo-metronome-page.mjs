@@ -1112,6 +1112,19 @@ export const METRONOME_PAGE_CSS = String.raw`
         line-height: 1.45;
       }
 
+      .playground-metronome-publish-loading-state {
+        min-height: 96px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-metronome-publish-loading-icon {
+        width: 18px;
+        height: 18px;
+      }
+
       .playground-metronome-publish-row.is-active {
         color: rgba(255, 255, 255, 0.98);
       }
@@ -1415,6 +1428,20 @@ export const METRONOME_PAGE_CSS = String.raw`
         padding: 0 11px;
         gap: 6px;
         font-size: 11px;
+      }
+
+      .playground-metronome-version-changes-shell {
+        min-width: 0;
+        min-height: 0;
+        height: 100%;
+        overflow: auto;
+        padding: 24px 44px 48px;
+        box-sizing: border-box;
+      }
+
+      .playground-metronome-version-changes-shell .playground-version-changes-page {
+        width: min(100%, 1080px);
+        margin: 0 auto;
       }
 
       .playground-metronome-publish-sidebar .playground-metronome-publish-state {
@@ -12407,7 +12434,12 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const selectedDeployment = selectedDeploymentId
             ? deployments.find((deployment) => deployment.id === selectedDeploymentId)
             : null;
-          if (!selectedDeployment) {
+          const selectedDeploymentIsEditable = Boolean(
+            selectedDeployment
+            && String(selectedDeployment.status || "").toLowerCase() !== "active"
+            && !String(selectedDeployment.publishedAt || "").trim()
+          );
+          if (!selectedDeployment || !selectedDeploymentIsEditable) {
             return baseWorkflow;
           }
           const now = new Date().toISOString();
@@ -15158,10 +15190,20 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const [metronomeShareAccessLevel, setMetronomeShareAccessLevel] = useState("use");
           const [metronomeShareState, setMetronomeShareState] = useState({ status: "idle", message: "" });
           const [workflowVersionModal, setWorkflowVersionModal] = useState(null);
+          const [workflowVersionModalVisible, setWorkflowVersionModalVisible] = useState(false);
+          const [workflowVersionModalClosing, setWorkflowVersionModalClosing] = useState(false);
           const [workflowVersionNameDraft, setWorkflowVersionNameDraft] = useState("");
           const [workflowVersionDescriptionDraft, setWorkflowVersionDescriptionDraft] = useState("");
+          const [isWorkflowVersionDescriptionEditing, setIsWorkflowVersionDescriptionEditing] = useState(false);
+          const workflowVersionModalFrameRef = useRef(null);
+          const workflowVersionModalCloseTimerRef = useRef(null);
+          const workflowVersionDescriptionTextareaRef = useRef(null);
           const [openMetronomeVersionMenuId, setOpenMetronomeVersionMenuId] = useState("");
+          const metronomePublishMenuRef = useRef(null);
+          const [isMetronomePublishActionsMenuOpen, setIsMetronomePublishActionsMenuOpen] = useState(false);
           const [isMetronomePublishSettingsMenuOpen, setIsMetronomePublishSettingsMenuOpen] = useState(false);
+          const [isMetronomeVersionsHeaderMenuOpen, setIsMetronomeVersionsHeaderMenuOpen] = useState(false);
+          const [metronomeVersionChangesState, setMetronomeVersionChangesState] = useState(null);
           const metronomeAutosaveTimerRef = useRef(null);
           const metronomeAutosaveLastSavedKeyRef = useRef("");
           const metronomeAutosaveLatestKeyRef = useRef("");
@@ -15658,6 +15700,32 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               document.removeEventListener("keydown", handleEscape);
             };
           }, [openMetronomeVersionMenuId, isMetronomePublishSettingsMenuOpen]);
+
+          useEffect(() => {
+            if (!isMetronomePublishActionsMenuOpen) return undefined;
+
+            const handleMetronomePublishMenuPointerDown = (event) => {
+              const target = event?.target instanceof Node ? event.target : null;
+              if (!target || !metronomePublishMenuRef.current || metronomePublishMenuRef.current.contains(target)) {
+                return;
+              }
+              setIsMetronomePublishActionsMenuOpen(false);
+            };
+
+            const handleMetronomePublishMenuEscape = (event) => {
+              if (event.key === "Escape") {
+                setIsMetronomePublishActionsMenuOpen(false);
+              }
+            };
+
+            document.addEventListener("mousedown", handleMetronomePublishMenuPointerDown);
+            window.addEventListener("keydown", handleMetronomePublishMenuEscape);
+            return () => {
+              document.removeEventListener("mousedown", handleMetronomePublishMenuPointerDown);
+              window.removeEventListener("keydown", handleMetronomePublishMenuEscape);
+            };
+          }, [isMetronomePublishActionsMenuOpen]);
+
           const metronomeFunctionOptions = useMemo(() => {
             return metronomeServerResources
               .filter((resource) => {
@@ -16166,6 +16234,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             setIsMetronomeRunSidebarMenuOpen(false);
             setMetronomeRunPrompt("");
             setMetronomeRunState({ status: "idle", message: "" });
+            setIsMetronomePublishActionsMenuOpen(false);
             setIsMetronomePublishMenuOpen(false);
             setIsMetronomeDeploymentHistoryModalOpen(false);
             setMetronomePublishState({ status: "idle", message: "" });
@@ -16250,6 +16319,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 });
                 if (shouldShowRunInlineDetail && (hasPendingRun || items.length)) {
                   setSelectedNodeId("");
+                  setIsMetronomePublishActionsMenuOpen(false);
                   setIsMetronomePublishMenuOpen(false);
                   setIsMetronomeRunSidebarMenuOpen(false);
                   setIsMetronomeRunSidebarOpen(false);
@@ -16257,6 +16327,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 }
                 if (shouldOpenRunSidebar && (!pendingRunId || hasPendingRun || items.length)) {
                   setSelectedNodeId("");
+                  setIsMetronomePublishActionsMenuOpen(false);
                   setIsMetronomePublishMenuOpen(false);
                   setIsMetronomeRunSidebarMenuOpen(false);
                   setIsMetronomeRunSidebarOpen(true);
@@ -16662,6 +16733,130 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             || metronomeCodeFiles.find((file) => file.path === "main.py")
             || metronomeCodeFiles[0]
             || null;
+          const METRONOME_VERSION_COMPARE_CURRENT_EDITOR_ID = "__current_metronome_editor__";
+          const buildMetronomeVersionComparableSnapshot = (workflow, snapshotNodes, snapshotEdges) => {
+            const baseWorkflow = workflow && typeof workflow === "object" ? workflow : {};
+            const persistedNodes = createMetronomePersistedNodes(snapshotNodes || baseWorkflow.nodes || []);
+            const persistedEdges = createMetronomePersistedEdges(snapshotEdges || baseWorkflow.edges || []);
+            const comparableWorkflow = normalizeMetronomeWorkflow({
+              ...baseWorkflow,
+              nodes: persistedNodes,
+              edges: persistedEdges,
+              triggerSummary: deriveMetronomeTriggerSummary(persistedNodes),
+            });
+            const definition = createMetronomeWorkflowDefinition(comparableWorkflow, persistedNodes, persistedEdges);
+            const files = generateMetronomePythonSdkFiles(comparableWorkflow, persistedNodes, persistedEdges);
+            return {
+              id: comparableWorkflow.id || "",
+              name: comparableWorkflow.name || "Untitled Metronome",
+              description: comparableWorkflow.description || "",
+              status: comparableWorkflow.status || "draft",
+              triggerSummary: comparableWorkflow.triggerSummary || deriveMetronomeTriggerSummary(persistedNodes),
+              definition,
+              files,
+            };
+          };
+          const buildMetronomeVersionCompareSources = () => {
+            const currentEditorSnapshot = buildMetronomeVersionComparableSnapshot(activeWorkflow || {}, nodes, edges);
+            const versionSources = activeWorkflowDeployments.map((deployment) => {
+              const deploymentNodes = createMetronomePersistedNodes(deployment.nodes || deployment.definition?.nodes || []);
+              const deploymentEdges = createMetronomePersistedEdges(deployment.edges || deployment.definition?.edges || []);
+              return {
+                id: "version:" + String(deployment.id || ""),
+                versionId: String(deployment.id || ""),
+                label: String(deployment.label || ("Version " + deployment.version)).trim(),
+                snapshot: buildMetronomeVersionComparableSnapshot({
+                  ...(activeWorkflow || {}),
+                  status: deployment.status || activeWorkflow?.status || "draft",
+                  triggerSummary: deployment.triggerSummary || deriveMetronomeTriggerSummary(deploymentNodes),
+                }, deploymentNodes, deploymentEdges),
+              };
+            });
+            return [
+              {
+                id: METRONOME_VERSION_COMPARE_CURRENT_EDITOR_ID,
+                versionId: "",
+                label: "Current editor",
+                snapshot: currentEditorSnapshot,
+              },
+              ...versionSources,
+            ];
+          };
+          const getMetronomeVersionCompareSourceId = (versionId) => {
+            const normalizedVersionId = String(versionId || "").trim();
+            return normalizedVersionId ? "version:" + normalizedVersionId : "";
+          };
+          const resolveMetronomeVersionCompareSource = (sourceId, sources, fallbackSource = null) => {
+            const normalizedSourceId = String(sourceId || "").trim();
+            return sources.find((source) => source.id === normalizedSourceId) || fallbackSource || sources[0] || null;
+          };
+          const getDefaultMetronomeVersionCompareLeftSourceId = () => {
+            const selectedDeploymentId = readMetronomeSelectedDeploymentId(activeWorkflow);
+            const selectedDeployment = activeWorkflowDeployments.find((deployment) => deployment.id === selectedDeploymentId);
+            const activeDeployment = activeWorkflowDeployment || activeWorkflowDeployments.find((deployment) => deployment.status === "active") || null;
+            const fallbackDeployment = selectedDeployment || activeDeployment || activeWorkflowDeployments[0] || null;
+            return fallbackDeployment ? getMetronomeVersionCompareSourceId(fallbackDeployment.id) : "";
+          };
+          const buildMetronomeVersionDiffFilesFromSnapshots = (leftSnapshot, rightSnapshot) => {
+            const leftFiles = new Map((Array.isArray(leftSnapshot?.files) ? leftSnapshot.files : []).map((file) => [String(file?.path || ""), file]));
+            const rightFiles = new Map((Array.isArray(rightSnapshot?.files) ? rightSnapshot.files : []).map((file) => [String(file?.path || ""), file]));
+            const paths = Array.from(new Set(["workflow.json", ...leftFiles.keys(), ...rightFiles.keys()])).filter(Boolean);
+            return paths.map((path) => {
+              if (path === "workflow.json") {
+                return createPlaygroundVersionDiffFile({
+                  id: path,
+                  filePath: path,
+                  before: JSON.stringify({
+                    name: leftSnapshot?.name || "",
+                    description: leftSnapshot?.description || "",
+                    status: leftSnapshot?.status || "",
+                    triggerSummary: leftSnapshot?.triggerSummary || "",
+                    definition: leftSnapshot?.definition || { nodes: [], edges: [] },
+                  }, null, 2),
+                  after: JSON.stringify({
+                    name: rightSnapshot?.name || "",
+                    description: rightSnapshot?.description || "",
+                    status: rightSnapshot?.status || "",
+                    triggerSummary: rightSnapshot?.triggerSummary || "",
+                    definition: rightSnapshot?.definition || { nodes: [], edges: [] },
+                  }, null, 2),
+                });
+              }
+              const leftFile = leftFiles.get(path) || {};
+              const rightFile = rightFiles.get(path) || {};
+              return createPlaygroundVersionDiffFile({
+                id: path,
+                filePath: path,
+                before: leftFile.value || "",
+                after: rightFile.value || "",
+              });
+            }).filter(Boolean);
+          };
+          const openMetronomeVersionChangesPage = (versionId = "", options = {}) => {
+            const explicitLeftSourceId = String(options.leftSourceId || "").trim();
+            const explicitRightSourceId = String(options.rightSourceId || "").trim();
+            const fallbackLeftSourceId = getMetronomeVersionCompareSourceId(versionId)
+              || getDefaultMetronomeVersionCompareLeftSourceId();
+            setSelectedNodeId("");
+            setIsMetronomeRunSidebarOpen(false);
+            setIsMetronomeRunSidebarMenuOpen(false);
+            setIsMetronomePublishActionsMenuOpen(false);
+            setIsMetronomePublishMenuOpen(true);
+            setMetronomeVersionChangesState({
+              leftSourceId: explicitLeftSourceId || fallbackLeftSourceId,
+              rightSourceId: explicitRightSourceId || METRONOME_VERSION_COMPARE_CURRENT_EDITOR_ID,
+            });
+          };
+          const closeMetronomeVersionChangesPage = () => {
+            setMetronomeVersionChangesState(null);
+          };
+          const handleMetronomeVersionCompareSourceChange = (side, sourceId) => {
+            const normalizedSourceId = String(sourceId || "").trim();
+            setMetronomeVersionChangesState((current) => ({
+              ...(current || {}),
+              [side === "left" ? "leftSourceId" : "rightSourceId"]: normalizedSourceId,
+            }));
+          };
           const cloneGraphValue = useCallback((value) => JSON.parse(JSON.stringify(value || [])), []);
           const getGraphSnapshot = useCallback(() => ({
             nodes: cloneGraphValue(nodes),
@@ -17120,14 +17315,117 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               window.cancelAnimationFrame(workflowNameModalFrameRef.current);
               workflowNameModalFrameRef.current = null;
             }
+            if (workflowVersionModalCloseTimerRef.current) {
+              window.clearTimeout(workflowVersionModalCloseTimerRef.current);
+              workflowVersionModalCloseTimerRef.current = null;
+            }
+            if (workflowVersionModalFrameRef.current) {
+              window.cancelAnimationFrame(workflowVersionModalFrameRef.current);
+              workflowVersionModalFrameRef.current = null;
+            }
             workflowWallpaperPreloadTokenRef.current += 1;
           }, []);
 
-          const closeWorkflowVersionModal = useCallback(() => {
+          const finishCloseWorkflowVersionModal = useCallback(() => {
+            if (workflowVersionModalCloseTimerRef.current) {
+              window.clearTimeout(workflowVersionModalCloseTimerRef.current);
+              workflowVersionModalCloseTimerRef.current = null;
+            }
+            if (workflowVersionModalFrameRef.current) {
+              window.cancelAnimationFrame(workflowVersionModalFrameRef.current);
+              workflowVersionModalFrameRef.current = null;
+            }
             setWorkflowVersionModal(null);
+            setWorkflowVersionModalVisible(false);
+            setWorkflowVersionModalClosing(false);
             setWorkflowVersionNameDraft("");
             setWorkflowVersionDescriptionDraft("");
+            setIsWorkflowVersionDescriptionEditing(false);
           }, []);
+
+          const closeWorkflowVersionModal = useCallback((options = {}) => {
+            if (options?.animate === false || (!workflowVersionModal && !workflowVersionModalVisible && !workflowVersionModalClosing)) {
+              finishCloseWorkflowVersionModal();
+              return;
+            }
+            if (workflowVersionModalClosing) {
+              return;
+            }
+            if (workflowVersionModalFrameRef.current) {
+              window.cancelAnimationFrame(workflowVersionModalFrameRef.current);
+              workflowVersionModalFrameRef.current = null;
+            }
+            setWorkflowVersionModalVisible(false);
+            setWorkflowVersionModalClosing(true);
+            if (workflowVersionModalCloseTimerRef.current) {
+              window.clearTimeout(workflowVersionModalCloseTimerRef.current);
+            }
+            workflowVersionModalCloseTimerRef.current = window.setTimeout(() => {
+              workflowVersionModalCloseTimerRef.current = null;
+              finishCloseWorkflowVersionModal();
+            }, 120);
+          }, [finishCloseWorkflowVersionModal, workflowVersionModal, workflowVersionModalClosing, workflowVersionModalVisible]);
+
+          const openWorkflowVersionModal = useCallback((modalConfig) => {
+            if (workflowVersionModalCloseTimerRef.current) {
+              window.clearTimeout(workflowVersionModalCloseTimerRef.current);
+              workflowVersionModalCloseTimerRef.current = null;
+            }
+            if (workflowVersionModalFrameRef.current) {
+              window.cancelAnimationFrame(workflowVersionModalFrameRef.current);
+              workflowVersionModalFrameRef.current = null;
+            }
+            setWorkflowVersionModalVisible(false);
+            setWorkflowVersionModalClosing(false);
+            setWorkflowVersionModal(modalConfig);
+            workflowVersionModalFrameRef.current = window.requestAnimationFrame(() => {
+              workflowVersionModalFrameRef.current = window.requestAnimationFrame(() => {
+                workflowVersionModalFrameRef.current = null;
+                setWorkflowVersionModalVisible(true);
+              });
+            });
+          }, []);
+
+          const applyWorkflowVersionDescriptionFormat = useCallback((formatId) => {
+            const textarea = workflowVersionDescriptionTextareaRef.current;
+            const currentValue = String(workflowVersionDescriptionDraft || "");
+            const start = textarea && typeof textarea.selectionStart === "number" ? textarea.selectionStart : currentValue.length;
+            const end = textarea && typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : currentValue.length;
+            const selectedText = currentValue.slice(start, end);
+            let nextText = currentValue;
+            let nextSelectionStart = start;
+            let nextSelectionEnd = end;
+            const wrapSelection = (prefix, suffix = prefix, placeholder = "text") => {
+              const inner = selectedText || placeholder;
+              nextText = currentValue.slice(0, start) + prefix + inner + suffix + currentValue.slice(end);
+              nextSelectionStart = start + prefix.length;
+              nextSelectionEnd = nextSelectionStart + inner.length;
+            };
+            if (formatId === "bold") {
+              wrapSelection("**", "**", "bold text");
+            } else if (formatId === "italic") {
+              wrapSelection("_", "_", "italic text");
+            } else if (formatId === "underline") {
+              wrapSelection("<u>", "</u>", "underlined text");
+            } else if (formatId === "list") {
+              const inner = selectedText || "Change summary";
+              const formatted = inner
+                .split("\n")
+                .map((line) => line.trim() ? "- " + line.replace(/^[-*]\s+/, "") : "- ")
+                .join("\n");
+              nextText = currentValue.slice(0, start) + formatted + currentValue.slice(end);
+              nextSelectionStart = start;
+              nextSelectionEnd = start + formatted.length;
+            }
+            setWorkflowVersionDescriptionDraft(nextText);
+            setIsWorkflowVersionDescriptionEditing(true);
+            if (textarea) {
+              window.requestAnimationFrame(() => {
+                textarea.focus();
+                textarea.setSelectionRange(nextSelectionStart, nextSelectionEnd);
+              });
+            }
+          }, [workflowVersionDescriptionDraft]);
 
           const commitWorkflowNameModal = useCallback(async () => {
             if (!workflowNameModal) return;
@@ -17527,6 +17825,117 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             }
           }, [activeWorkflow, activeWorkflowId, nodes, edges, replaceMetronomeWorkflowInEditableState]);
 
+          const saveCurrentWorkflowVersion = useCallback(async () => {
+            if (!activeWorkflowId || !activeWorkflow) return;
+            const existingDeployments = readMetronomeWorkflowDeployments(activeWorkflow);
+            const selectedDeploymentId = readMetronomeSelectedDeploymentId(activeWorkflow);
+            const selectedDeployment = existingDeployments.find((deployment) => deployment.id === selectedDeploymentId)
+              || activeWorkflowDeployment
+              || existingDeployments[0]
+              || null;
+            if (!selectedDeployment) {
+              await saveActiveWorkflowVersion({ label: "Version 1", description: "" });
+              return;
+            }
+            const selectedStatus = String(selectedDeployment.status || "").toLowerCase();
+            const selectedIsImmutable = selectedStatus === "active" || Boolean(String(selectedDeployment.publishedAt || "").trim());
+            if (selectedIsImmutable) {
+              setMetronomePublishState({
+                status: "error",
+                message: "Published versions are immutable. Save to a new version instead.",
+              });
+              return;
+            }
+            const now = new Date().toISOString();
+            const persistedNodes = createMetronomePersistedNodes(nodes);
+            const persistedEdges = createMetronomePersistedEdges(edges);
+            const triggerSummary = deriveMetronomeTriggerSummary(persistedNodes);
+            const updatedDeployment = normalizeMetronomeDeploymentVersion({
+              ...selectedDeployment,
+              nodes: persistedNodes,
+              edges: persistedEdges,
+              definition: createMetronomeWorkflowDefinition(activeWorkflow, persistedNodes, persistedEdges),
+              triggerSummary,
+              nodeCount: persistedNodes.length,
+              edgeCount: persistedEdges.length,
+              updatedAt: now,
+              updated_at: now,
+            });
+            const nextDeployments = normalizeMetronomeDeployments(existingDeployments.map((deployment) => (
+              deployment.id === updatedDeployment.id ? updatedDeployment : deployment
+            )));
+            const activeDeploymentId = String(activeWorkflow.activeDeploymentId || activeWorkflow.metadata?.activeDeploymentId || activeWorkflow.metadata?.active_deployment_id || "").trim();
+            const nextActiveDeployment = nextDeployments.find((deployment) => deployment.id === activeDeploymentId)
+              || nextDeployments.find((deployment) => deployment.status === "active")
+              || null;
+            const nextMetadata = {
+              ...(activeWorkflow.metadata && typeof activeWorkflow.metadata === "object" ? activeWorkflow.metadata : {}),
+              deployments: nextDeployments,
+              metronomeDeployments: nextDeployments,
+              activeDeploymentId: nextActiveDeployment?.id || "",
+              active_deployment_id: nextActiveDeployment?.id || "",
+              activeDeploymentVersion: nextActiveDeployment?.version || 0,
+              active_deployment_version: nextActiveDeployment?.version || 0,
+              publishedAt: nextActiveDeployment?.publishedAt || activeWorkflow.publishedAt || "",
+              published_at: nextActiveDeployment?.publishedAt || activeWorkflow.publishedAt || "",
+              restoredFromDeploymentId: updatedDeployment.id,
+              restored_from_deployment_id: updatedDeployment.id,
+              restoredFromDeploymentVersion: updatedDeployment.version,
+              restored_from_deployment_version: updatedDeployment.version,
+            };
+            const nextWorkflow = normalizeMetronomeWorkflow({
+              ...activeWorkflow,
+              nodes: persistedNodes,
+              edges: persistedEdges,
+              triggerSummary,
+              deployments: nextDeployments,
+              activeDeploymentId: nextActiveDeployment?.id || "",
+              activeDeploymentVersion: nextActiveDeployment?.version || 0,
+              publishedAt: nextActiveDeployment?.publishedAt || activeWorkflow.publishedAt || "",
+              metadata: nextMetadata,
+              updatedAt: now,
+            });
+            setMetronomePublishState({ status: "loading", message: "" });
+            replaceMetronomeWorkflowInEditableState(activeWorkflowId, nextWorkflow);
+            try {
+              const savedWorkflow = await saveEditableMetronomeWorkflowApi(nextWorkflow);
+              const workflowIdForVersion = savedWorkflow.id || nextWorkflow.id;
+              const updatedVersion = await updateMetronomeVersionApi(
+                workflowIdForVersion,
+                updatedDeployment.id,
+                nextWorkflow,
+                persistedNodes,
+                persistedEdges,
+                {
+                  label: updatedDeployment.label,
+                  description: updatedDeployment.description,
+                }
+              );
+              let versions = [];
+              try {
+                versions = await fetchMetronomeVersionsApi(workflowIdForVersion);
+              } catch (versionLoadError) {
+                console.warn("[Metronome] Failed to refresh versions after save", versionLoadError);
+              }
+              const hydratedWorkflow = createMetronomeWorkflowWithVersionList(
+                savedWorkflow,
+                versions.length ? versions : nextDeployments,
+                updatedVersion.id || updatedDeployment.id
+              );
+              replaceMetronomeWorkflowInEditableState(nextWorkflow.id, hydratedWorkflow);
+              if (hydratedWorkflow.id && hydratedWorkflow.id !== activeWorkflowId) {
+                setActiveWorkflowId(hydratedWorkflow.id);
+              }
+              setIsMetronomeApiAvailable(true);
+              setMetronomePublishState({ status: "idle", message: "" });
+            } catch (error) {
+              console.warn("[Metronome] Failed to save current workflow version", error);
+              if (!error?.status || error.status >= 500) setIsMetronomeApiAvailable(false);
+              replaceMetronomeWorkflowInEditableState(activeWorkflowId, activeWorkflow);
+              setMetronomePublishState(getMetronomePublishErrorState(error));
+            }
+          }, [activeWorkflow, activeWorkflowId, activeWorkflowDeployment, nodes, edges, saveActiveWorkflowVersion, replaceMetronomeWorkflowInEditableState]);
+
           const openCreateWorkflowVersionModal = useCallback(() => {
             if (!activeWorkflow) return;
             const existingDeployments = readMetronomeWorkflowDeployments(activeWorkflow);
@@ -17535,8 +17944,9 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             setIsMetronomePublishSettingsMenuOpen(false);
             setWorkflowVersionNameDraft("Version " + nextVersion);
             setWorkflowVersionDescriptionDraft("");
-            setWorkflowVersionModal({ mode: "create" });
-          }, [activeWorkflow]);
+            setIsWorkflowVersionDescriptionEditing(false);
+            openWorkflowVersionModal({ mode: "create" });
+          }, [activeWorkflow, openWorkflowVersionModal]);
 
           const openEditWorkflowVersionModal = useCallback((deploymentId) => {
             if (!activeWorkflow) return;
@@ -17546,13 +17956,15 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             setOpenMetronomeVersionMenuId("");
             setWorkflowVersionNameDraft(String(targetDeployment.label || ("Version " + targetDeployment.version)).trim());
             setWorkflowVersionDescriptionDraft(String(targetDeployment.description || "").trim());
-            setWorkflowVersionModal({ mode: "edit", deploymentId: targetDeployment.id });
-          }, [activeWorkflow]);
+            setIsWorkflowVersionDescriptionEditing(false);
+            openWorkflowVersionModal({ mode: "edit", deploymentId: targetDeployment.id });
+          }, [activeWorkflow, openWorkflowVersionModal]);
 
           const updateWorkflowVersionDetails = useCallback(async (deploymentId, versionDetails = {}) => {
             const normalizedDeploymentId = String(deploymentId || "").trim();
             if (!normalizedDeploymentId || !activeWorkflowId || !activeWorkflow) return;
             const existingDeployments = readMetronomeWorkflowDeployments(activeWorkflow);
+            if (existingDeployments.length <= 1) return;
             const targetDeployment = existingDeployments.find((deployment) => deployment.id === normalizedDeploymentId);
             if (!targetDeployment) return;
             const now = new Date().toISOString();
@@ -17956,6 +18368,59 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               setMetronomePublishState(getMetronomePublishErrorState(error));
             }
           }, [activeWorkflow, activeWorkflowId, setNodes, setEdges, replaceMetronomeWorkflowInEditableState]);
+
+          const revertActiveWorkflowToLastSavedVersion = useCallback(async () => {
+            if (!activeWorkflow) return;
+            const selectedDeploymentId = readMetronomeSelectedDeploymentId(activeWorkflow);
+            const fallbackDeployment = activeWorkflowDeployment || activeWorkflowDeployments[0] || null;
+            const deploymentId = selectedDeploymentId || fallbackDeployment?.id || "";
+            if (!deploymentId) return;
+            await restoreActiveWorkflowVersion(deploymentId);
+          }, [activeWorkflow, activeWorkflowDeployment, activeWorkflowDeployments, restoreActiveWorkflowVersion]);
+
+          useEffect(() => {
+            if (!isEditor || isActiveWorkflowBuiltIn || !activeWorkflow) {
+              return undefined;
+            }
+            const handleMetronomeVersionShortcut = (event) => {
+              if (!(event.metaKey || event.ctrlKey)) {
+                return;
+              }
+              if (workflowVersionModal || workflowNameModal) {
+                return;
+              }
+              const key = String(event.key || "").toLowerCase();
+              if (key === "s") {
+                event.preventDefault();
+                if (event.shiftKey) {
+                  openCreateWorkflowVersionModal();
+                } else {
+                  void saveCurrentWorkflowVersion();
+                }
+                return;
+              }
+              if (key === "p") {
+                event.preventDefault();
+                setSelectedNodeId("");
+                setIsMetronomeRunSidebarOpen(false);
+                setIsMetronomeRunSidebarMenuOpen(false);
+                setIsMetronomePublishActionsMenuOpen(false);
+                setIsMetronomePublishSettingsMenuOpen(false);
+                setIsMetronomeVersionsHeaderMenuOpen(false);
+                setIsMetronomePublishMenuOpen(true);
+              }
+            };
+            window.addEventListener("keydown", handleMetronomeVersionShortcut, true);
+            return () => window.removeEventListener("keydown", handleMetronomeVersionShortcut, true);
+          }, [
+            activeWorkflow,
+            isActiveWorkflowBuiltIn,
+            isEditor,
+            openCreateWorkflowVersionModal,
+            saveCurrentWorkflowVersion,
+            workflowNameModal,
+            workflowVersionModal,
+          ]);
 
           const unpublishActiveWorkflow = useCallback(async () => {
             if (!activeWorkflowId || !activeWorkflow) return;
@@ -18427,6 +18892,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 
           const openMetronomeRunSidebar = useCallback((runId = "") => {
             setSelectedNodeId("");
+            setIsMetronomePublishActionsMenuOpen(false);
             setIsMetronomePublishMenuOpen(false);
             setMetronomeRunInlineDetailId("");
             const normalizedRunId = String(runId || "").trim();
@@ -18552,6 +19018,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 setMetronomeRunInlineDetailId("");
                 setMetronomeEditorHighlightRunId(nextRun.id);
                 setMetronomeEditorMode("runs");
+                setIsMetronomePublishActionsMenuOpen(false);
                 setIsMetronomePublishMenuOpen(false);
                 setIsMetronomeRunSidebarOpen(true);
                 setMetronomeRunPrompt("");
@@ -23898,6 +24365,49 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             );
           };
 
+          const getMetronomeVersionPopupActions = (options = {}) => {
+            const isBusy = Boolean(options.isBusy) || metronomePublishState.status === "loading";
+            const activeDeploymentId = String(activeWorkflowDeployment?.id || activeWorkflow?.activeDeploymentId || "").trim();
+            const selectedDeploymentId = String(
+              activeWorkflow?.metadata?.restoredFromDeploymentId
+              || activeWorkflow?.metadata?.restored_from_deployment_id
+              || activeDeploymentId
+              || ""
+            ).trim();
+            const selectedDeployment = selectedDeploymentId
+              ? activeWorkflowDeployments.find((deployment) => deployment.id === selectedDeploymentId)
+              : null;
+            const selectedDeploymentIsImmutable = Boolean(
+              selectedDeployment
+              && (String(selectedDeployment.status || "").toLowerCase() === "active" || String(selectedDeployment.publishedAt || "").trim())
+            );
+            return [
+              {
+                id: "save",
+                label: "Save",
+                Icon: Save,
+                shortcut: "⌘S",
+                disabled: isBusy || isActiveWorkflowBuiltIn || selectedDeploymentIsImmutable,
+                onClick: () => void saveCurrentWorkflowVersion(),
+              },
+              {
+                id: "save-new",
+                label: "Save to new Version",
+                Icon: GitBranchPlus,
+                shortcut: "⇧⌘S",
+                disabled: isBusy || isActiveWorkflowBuiltIn,
+                onClick: () => openCreateWorkflowVersionModal(),
+              },
+              {
+                id: "revert",
+                label: "Revert to last saved Version",
+                Icon: Undo2,
+                disabled: isBusy || isActiveWorkflowBuiltIn || !activeWorkflowDeployments.length,
+                onClick: () => void revertActiveWorkflowToLastSavedVersion(),
+              },
+            ];
+          };
+
           const renderMetronomePublishControl = () => {
             if (!activeWorkflow) return null;
             if (isActiveWorkflowBuiltIn) {
@@ -23910,33 +24420,86 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 React.createElement("span", null, "Copy")
               );
             }
-            return React.createElement("div", { className: "playground-metronome-publish-shell" },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-metronome-create-button playground-metronome-publish-button" + (isMetronomePublishMenuOpen ? " is-active" : ""),
-                onClick: () => {
-                  const nextOpen = !isMetronomePublishMenuOpen;
-                  if (nextOpen) {
-                    setSelectedNodeId("");
-                    setIsMetronomeRunSidebarOpen(false);
-                    setIsMetronomeRunSidebarMenuOpen(false);
-                    const definition = createMetronomeWorkflowDefinition(
-                      activeWorkflow,
-                      createMetronomePersistedNodes(nodes),
-                      createMetronomePersistedEdges(edges)
-                    );
-                    void validateMetronomeDefinitionForPublishUi(definition, { showLoading: true });
-                  } else {
-                    setMetronomePublishState((current) => current.status === "loading" ? current : { status: "idle", message: "" });
-                  }
-                  setIsMetronomePublishMenuOpen(nextOpen);
+            const isBusy = metronomePublishState.status === "loading";
+            const versionPopupActions = getMetronomeVersionPopupActions({ isBusy });
+            const openMetronomeVersionsSidebar = () => {
+              setSelectedNodeId("");
+              setIsMetronomeRunSidebarOpen(false);
+              setIsMetronomeRunSidebarMenuOpen(false);
+              setIsMetronomePublishActionsMenuOpen(false);
+              setIsMetronomePublishSettingsMenuOpen(false);
+              setIsMetronomeVersionsHeaderMenuOpen(false);
+              setIsMetronomePublishMenuOpen(true);
+            };
+            return renderPlaygroundPlatformPopup({
+              open: isMetronomePublishActionsMenuOpen,
+              shellRef: metronomePublishMenuRef,
+              shellClassName: "playground-agents-detail-publish-split-shell playground-metronome-detail-publish-split-shell",
+              menuClassName: "playground-agents-detail-publish-menu playground-metronome-detail-publish-menu",
+              trigger: React.createElement("div", {
+                  className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control playground-metronome-detail-header-publish-button"
+                    + (isMetronomePublishMenuOpen ? " is-active" : "")
+                    + (isBusy ? " is-disabled" : ""),
                 },
-                "aria-expanded": isMetronomePublishMenuOpen ? "true" : "false",
+                React.createElement("button", {
+                    type: "button",
+                    className: "playground-agents-detail-publish-main",
+                    title: "Open Metronome versions",
+                    "aria-label": "Open Metronome versions",
+                    "aria-expanded": isMetronomePublishMenuOpen ? "true" : "false",
+                    disabled: isBusy,
+                    onClick: openMetronomeVersionsSidebar,
+                  },
+                  React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Publish")
+                ),
+                React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
+                React.createElement("button", {
+                    type: "button",
+                    className: "playground-agents-detail-publish-chevron",
+                    title: "Version save options",
+                    "aria-label": "Version save options",
+                    "aria-haspopup": "menu",
+                    "aria-expanded": isMetronomePublishActionsMenuOpen ? "true" : "false",
+                    disabled: isBusy,
+                    onClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setIsMetronomePublishActionsMenuOpen((current) => !current);
+                    },
+                  },
+                  React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                )
+              ),
+              menuProps: {
+                role: "menu",
+                onClick: (event) => event.stopPropagation(),
               },
-                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Publish")
+              children: React.createElement(React.Fragment, null,
+                versionPopupActions.map((action) => React.createElement("button", {
+                    key: action.id || action.label,
+                    type: "button",
+                    className: "tb-popup-row",
+                    role: "menuitem",
+                    disabled: isBusy || action.disabled,
+                    onClick: () => {
+                      setIsMetronomePublishActionsMenuOpen(false);
+                      void action.onClick();
+                    },
+                  },
+                  React.createElement(action.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                    React.createElement("span", null, action.label)
+                  ),
+                  action.shortcut
+                    ? React.createElement("span", {
+                        className: "playground-agents-detail-publish-menu-shortcut",
+                        "aria-hidden": "true",
+                      }, action.shortcut)
+                    : null
+                ))
               )
-            );
+            });
           };
 
           const renderMetronomeDeploymentHistory = () => {
@@ -23992,52 +24555,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               || activeDeploymentId
               || ""
             ).trim();
-            const titleActionsExtra = React.createElement(React.Fragment, null,
-              React.createElement("button", {
-                type: "button",
-                className: "playground-metronome-publish-row-menu-trigger playground-metronome-publish-settings-trigger" + (isMetronomePublishSettingsMenuOpen ? " is-open" : ""),
-                disabled: isBusy,
-                onClick: (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  setOpenMetronomeVersionMenuId("");
-                  setIsMetronomePublishSettingsMenuOpen((current) => !current);
-                },
-                "aria-label": "Workflow version settings",
-                "aria-expanded": isMetronomePublishSettingsMenuOpen ? "true" : "false",
-              }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
-              isMetronomePublishSettingsMenuOpen
-                ? React.createElement("div", {
-                    className: "playground-metronome-publish-row-menu playground-metronome-publish-settings-menu",
-                    role: "menu",
-                    onClick: (event) => event.stopPropagation(),
-                  },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-metronome-publish-row-menu-item",
-                      onClick: () => {
-                        setIsMetronomePublishSettingsMenuOpen(false);
-                        openEditWorkflowModal();
-                      },
-                    },
-                      React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Settings")
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-metronome-publish-row-menu-item",
-                      onClick: () => {
-                        setIsMetronomePublishSettingsMenuOpen(false);
-                        setIsMetronomeDeploymentHistoryModalOpen(true);
-                        void refreshMetronomeDeploymentEvents(activeWorkflow.id);
-                      },
-                    },
-                      React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "History")
-                    )
-                  )
-                : null
-            );
+            const versionHeaderActions = getMetronomeVersionPopupActions({ isBusy });
             const stateContent = React.createElement(React.Fragment, null,
               isValidating
                 ? React.createElement("div", { className: "playground-metronome-publish-state" },
@@ -24062,6 +24580,9 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 : null
             );
             return React.createElement(PlaygroundVersionSidebar, {
+              open: isMetronomePublishMenuOpen,
+              title: "Publish Metronome",
+              className: "playground-metronome-workflow-versions-sidebar",
               versions: activeWorkflowDeployments,
               activeVersionId: activeDeploymentId,
               selectedVersionId: selectedDeploymentId,
@@ -24069,22 +24590,36 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               busy: isBusy,
               openMenuId: openMetronomeVersionMenuId,
               onOpenMenuIdChange: setOpenMetronomeVersionMenuId,
+              headerMenuOpen: isMetronomeVersionsHeaderMenuOpen,
+              headerMenuActions: versionHeaderActions,
+              headerMenuDisabled: isBusy,
+              onHeaderMenuOpenChange: setIsMetronomeVersionsHeaderMenuOpen,
               onClose: () => {
                 setOpenMetronomeVersionMenuId("");
+                setIsMetronomePublishActionsMenuOpen(false);
                 setIsMetronomePublishSettingsMenuOpen(false);
+                setIsMetronomeVersionsHeaderMenuOpen(false);
+                setMetronomeVersionChangesState(null);
                 setIsMetronomePublishMenuOpen(false);
               },
               onSaveVersion: openCreateWorkflowVersionModal,
-              onPublishCurrent: () => void publishActiveWorkflowVersion(),
-              onUnpublishActive: activeWorkflowDeployment ? () => void unpublishActiveWorkflow() : null,
               onSelectVersion: (versionId) => void restoreActiveWorkflowVersion(versionId),
               onPublishVersion: (versionId) => void publishMetronomeDeploymentVersion(versionId),
-              titleActionsExtra,
               stateContent,
-              emptyCopy: "Create a version to start tracking graph, node settings, and trigger changes.",
               unpublishLabel: "Unpublish workflow",
+              versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-agents-version-compare-button",
+                  disabled: isBusy || !activeWorkflowDeployments.length,
+                  onClick: () => openMetronomeVersionChangesPage(),
+                },
+                  React.createElement(Code2, { width: 13, height: 13, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "View Changes")
+                )
+              ),
               getVersionTitle: (deployment) => String(deployment.label || ("Version " + deployment.version)).trim(),
-              getVersionDescription: (deployment) => String(deployment.description || "").trim(),
+              getVersionDescription: () => "",
               getVersionMeta: (deployment) => (
                 (deployment.publishedAt ? "Published " : "Saved ")
                 + formatMetronomeDeploymentTimestamp(deployment.publishedAt || deployment.createdAt)
@@ -24102,6 +24637,12 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   onClick: () => openEditWorkflowVersionModal(deployment.id),
                 },
                 {
+                  id: "compare",
+                  label: "View Changes",
+                  icon: Code2,
+                  onClick: () => openMetronomeVersionChangesPage(deployment.id),
+                },
+                {
                   id: "delete",
                   label: "Delete version",
                   icon: Trash2,
@@ -24109,6 +24650,52 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   onClick: () => void deleteWorkflowVersion(deployment.id),
                 },
               ],
+            });
+          };
+
+          const renderMetronomeVersionChangesPage = () => {
+            if (!metronomeVersionChangesState) {
+              return null;
+            }
+            const sources = buildMetronomeVersionCompareSources();
+            const currentEditorSource = sources.find((source) => source.id === METRONOME_VERSION_COMPARE_CURRENT_EDITOR_ID) || sources[0] || null;
+            const requestedLeftSourceId = String(metronomeVersionChangesState.leftSourceId || "").trim()
+              || getDefaultMetronomeVersionCompareLeftSourceId();
+            const requestedRightSourceId = String(metronomeVersionChangesState.rightSourceId || "").trim()
+              || METRONOME_VERSION_COMPARE_CURRENT_EDITOR_ID;
+            const leftSource = resolveMetronomeVersionCompareSource(requestedLeftSourceId, sources, sources[1] || currentEditorSource);
+            const rightSource = resolveMetronomeVersionCompareSource(requestedRightSourceId, sources, currentEditorSource);
+            if (!leftSource || !rightSource) {
+              return null;
+            }
+            const diffFiles = buildMetronomeVersionDiffFilesFromSnapshots(leftSource.snapshot, rightSource.snapshot);
+            const compareOptions = sources.map((source) =>
+              React.createElement("option", { key: source.id, value: source.id }, source.label)
+            );
+            const renderCompareSelect = (value, side, ariaLabel) =>
+              React.createElement("label", { className: "playground-version-changes-select-shell" },
+                React.createElement("span", { className: "playground-version-changes-select-control-wrap" },
+                  React.createElement("select", {
+                    className: "playground-version-changes-select-control",
+                    value,
+                    onChange: (event) => handleMetronomeVersionCompareSourceChange(side, event.target.value),
+                    "aria-label": ariaLabel,
+                  }, compareOptions),
+                  React.createElement(ChevronDown, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" })
+                )
+              );
+            return renderPlaygroundVersionChangesPage({
+              title: "Changes",
+              backText: "Back",
+              backLabel: "Back to Metronome",
+              onBack: closeMetronomeVersionChangesPage,
+              compareControls: React.createElement(React.Fragment, null,
+                renderCompareSelect(leftSource.id, "left", "Base version"),
+                React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
+                renderCompareSelect(rightSource.id, "right", "Compare version")
+              ),
+              files: diffFiles,
+              emptyMessage: "No changes between these versions.",
             });
           };
 
@@ -25241,7 +25828,21 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             return portalTarget ? createPortal(sidebar, portalTarget) : null;
           };
 
-          const renderEditor = () => metronomeEditorMode === "code"
+          const renderMetronomeChangesMode = () => React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "playground-metronome-editor" },
+              React.createElement("main", { className: "playground-metronome-editor-main" },
+                React.createElement("div", { className: "playground-metronome-version-changes-shell" },
+                  renderMetronomeVersionChangesPage()
+                )
+              )
+            ),
+            renderMetronomePublishSidebarPortal(),
+            renderMetronomeRunSidebarPortal()
+          );
+
+          const renderEditor = () => metronomeVersionChangesState
+            ? renderMetronomeChangesMode()
+            : metronomeEditorMode === "code"
             ? React.createElement(React.Fragment, null,
                 renderCodeMode(),
                 renderMetronomePublishSidebarPortal(),
@@ -25274,6 +25875,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                               onCreateNode: handleCreateNode,
                               onSelectNode: (nodeId) => {
                                 setIsMetronomeRunSidebarOpen(false);
+                                setIsMetronomePublishActionsMenuOpen(false);
                                 setIsMetronomePublishMenuOpen(false);
                                 setSelectedNodeId(nodeId);
                               },
@@ -25460,83 +26062,128 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             if (!workflowVersionModal) return null;
             const isBusy = metronomePublishState.status === "loading";
             const isEdit = workflowVersionModal.mode === "edit";
-            return React.createElement("div", {
-              className: "playground-metronome-name-modal-backdrop",
-              role: "dialog",
-              "aria-modal": "true",
-            },
-              React.createElement("div", { className: "playground-metronome-name-modal" },
-                React.createElement("div", { className: "playground-metronome-name-modal-header" },
-                  React.createElement("div", null,
-                    React.createElement("div", { className: "playground-metronome-name-modal-title" }, isEdit ? "Edit Version" : "New Version"),
-                    React.createElement("div", { className: "playground-metronome-name-modal-copy" },
-                      isEdit
-                        ? "Rename this workflow version or update the note shown in version history."
-                        : "Name this workflow version and add a short note for the version history."
+            const trimmedVersionName = String(workflowVersionNameDraft || "").trim();
+            const renderDescriptionField = () => React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-tasks-issue-description-editor playground-agents-version-description-editor playground-metronome-version-description-editor" },
+              React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                  [
+                    { id: "bold", label: "Bold", icon: Bold },
+                    { id: "italic", label: "Italic", icon: Italic },
+                    { id: "underline", label: "Underline", icon: Underline },
+                    { id: "list", label: "List", icon: List },
+                  ].map((action) =>
+                    React.createElement("button", {
+                      key: action.id,
+                      type: "button",
+                      className: "playground-tasks-detail-format-button",
+                      title: action.label,
+                      "aria-label": action.label,
+                      disabled: isBusy,
+                      onMouseDown: (event) => event.preventDefault(),
+                      onClick: () => applyWorkflowVersionDescriptionFormat(action.id),
+                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isWorkflowVersionDescriptionEditing ? " is-editing" : " is-preview") },
+                !isWorkflowVersionDescriptionEditing
+                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                      String(workflowVersionDescriptionDraft || "").trim()
+                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                            content: workflowVersionDescriptionDraft,
+                            className: "playground-tasks-detail-description-preview tb-message-markdown",
+                          })
+                        : React.createElement("div", {
+                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                          }, "Describe what changed in this version.")
                     )
+                  : null,
+                React.createElement("textarea", {
+                  ref: workflowVersionDescriptionTextareaRef,
+                  className: "playground-tasks-detail-description-input " + (isWorkflowVersionDescriptionEditing ? "is-editing" : "is-preview"),
+                  rows: 1,
+                  placeholder: isWorkflowVersionDescriptionEditing ? "Describe what changed in this version." : "",
+                  value: workflowVersionDescriptionDraft || "",
+                  disabled: isBusy,
+                  onFocus: () => setIsWorkflowVersionDescriptionEditing(true),
+                  onChange: (event) => setWorkflowVersionDescriptionDraft(event.target.value),
+                  onBlur: () => setIsWorkflowVersionDescriptionEditing(false),
+                  onKeyDown: (event) => {
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      closeWorkflowVersionModal();
+                    }
+                  },
+                })
+              )
+            );
+            return renderPlaygroundPlatformModal({
+              open: Boolean(workflowVersionModal),
+              visible: workflowVersionModalVisible,
+              closing: workflowVersionModalClosing,
+              onClose: () => closeWorkflowVersionModal(),
+              as: "form",
+              backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-version-modal-backdrop playground-metronome-version-modal-backdrop",
+              className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-version-modal playground-metronome-version-modal",
+              ariaLabel: isEdit ? "Edit Metronome version" : "New Metronome version",
+              surfaceProps: {
+                onSubmit: (event) => {
+                  event.preventDefault();
+                  void commitWorkflowVersionModal();
+                },
+                onKeyDown: (event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    closeWorkflowVersionModal();
+                  }
+                },
+              },
+              children: React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                      React.createElement(isEdit ? SquarePen : GitBranchPlus, { width: 18, height: 18, strokeWidth: 1.9 })
+                    ),
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-tasks-project-modal-name-input playground-tasks-issue-modal-title-input",
+                      value: workflowVersionNameDraft,
+                      placeholder: "Version name",
+                      autoFocus: true,
+                      disabled: isBusy,
+                      onChange: (event) => setWorkflowVersionNameDraft(event.target.value),
+                    })
                   ),
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-metronome-icon-button playground-metronome-name-modal-close",
-                    onClick: closeWorkflowVersionModal,
-                    "aria-label": "Close",
-                  },
-                    React.createElement(X, { width: 15, height: 15, strokeWidth: 1.9 })
-                  )
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: () => closeWorkflowVersionModal(),
+                    title: "Close",
+                    disabled: isBusy,
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 ),
-                React.createElement("div", { className: "playground-metronome-name-modal-body" },
-                  React.createElement("div", { className: "playground-metronome-field" },
-                    React.createElement("label", { className: "playground-metronome-field-label" }, "Name"),
-                    React.createElement("input", {
-                      className: "playground-metronome-input",
-                      value: workflowVersionNameDraft,
-                      autoFocus: true,
-                      onChange: (event) => setWorkflowVersionNameDraft(event.target.value),
-                      onKeyDown: (event) => {
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          void commitWorkflowVersionModal();
-                        }
-                        if (event.key === "Escape") {
-                          event.preventDefault();
-                          closeWorkflowVersionModal();
-                        }
-                      },
-                    })
-                  ),
-                  React.createElement("div", { className: "playground-metronome-field" },
-                    React.createElement("label", { className: "playground-metronome-field-label" }, "Short description"),
-                    React.createElement("textarea", {
-                      className: "playground-metronome-textarea",
-                      value: workflowVersionDescriptionDraft,
-                      maxLength: 220,
-                      placeholder: "What changed in this version?",
-                      onChange: (event) => setWorkflowVersionDescriptionDraft(event.target.value),
-                      onKeyDown: (event) => {
-                        if (event.key === "Escape") {
-                          event.preventDefault();
-                          closeWorkflowVersionModal();
-                        }
-                      },
-                    })
-                  ),
-                  React.createElement("div", { className: "playground-metronome-name-modal-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-metronome-secondary-button",
-                      onClick: closeWorkflowVersionModal,
-                      disabled: isBusy,
-                    }, "Cancel"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-metronome-primary-button",
-                      onClick: () => void commitWorkflowVersionModal(),
-                      disabled: isBusy,
-                    }, isBusy ? (isEdit ? "Saving..." : "Creating...") : (isEdit ? "Save" : "Create"))
-                  )
+                React.createElement("div", { className: "playground-tasks-issue-modal-body" },
+                  renderDescriptionField(),
+                  metronomePublishState.status === "error" && metronomePublishState.message
+                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, metronomePublishState.message)
+                    : null
+                ),
+                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: () => closeWorkflowVersionModal(),
+                    disabled: isBusy,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: isBusy || !trimmedVersionName,
+                  }, isBusy ? (isEdit ? "Saving..." : "Creating...") : (isEdit ? "Save Version" : "Create Version"))
                 )
               )
-            );
+            });
           };
 
           const renderMetronomeShareWorkflowModal = () => {

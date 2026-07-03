@@ -2,13 +2,23 @@ import { RunnerEventNormalizer } from "./normalize-event.js";
 import { iterateSseData } from "./sse.js";
 import {
   RawRunnerEvent,
+  RunnerAgentCreateInput,
   RunnerAgentRecord,
+  RunnerAgentUpdateInput,
+  RunnerAgentVersion,
+  RunnerAgentVersionCompareResult,
+  RunnerAgentVersionCreateInput,
+  RunnerAgentVersionUpdateInput,
   RunnerApiRequestOptions,
   RunnerEnvironmentForkResult,
   RunnerEnvironmentSnapshotInitializeResult,
   RunnerEnvironmentSnapshot,
   RunnerEnvironmentSnapshotDiffResult,
   RunnerEnvironmentSnapshotFileResult,
+  RunnerEnvironmentVersion,
+  RunnerEnvironmentVersionCompareResult,
+  RunnerEnvironmentVersionCreateInput,
+  RunnerEnvironmentVersionUpdateInput,
   RunnerExecuteOptions,
   RunnerExecuteResult,
   RunnerGuardrailSet,
@@ -16,6 +26,10 @@ import {
   RunnerGuardrailSetUpdateInput,
   RunnerLog,
   RunnerRunRequest,
+  RunnerServerVersion,
+  RunnerServerVersionCompareResult,
+  RunnerServerVersionCreateInput,
+  RunnerServerVersionUpdateInput,
   RunnerThreadForkResult,
   RunnerThreadFileHistoryResult,
   RunnerThreadRevertResult,
@@ -463,6 +477,598 @@ export class RunnerClient {
         name: options.name ?? undefined,
         description: options.description ?? undefined,
       }),
+    });
+  }
+
+  async listEnvironmentVersions(
+    options: RunnerApiRequestOptions & {
+      environmentId: string;
+    },
+  ): Promise<RunnerEnvironmentVersion[]> {
+    const url = this.buildApiUrl(options.backendUrl, `/environments/${encodeURIComponent(options.environmentId)}/versions`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerEnvironmentVersion>(payload, ["versions", "environmentVersions", "environment_versions", "computerVersions", "computer_versions"]);
+  }
+
+  async getEnvironmentVersion(
+    options: RunnerApiRequestOptions & {
+      environmentId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerEnvironmentVersion> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/environments/${encodeURIComponent(options.environmentId)}/versions/${encodeURIComponent(options.versionId)}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readObjectResponse<RunnerEnvironmentVersion>(payload, ["version", "environmentVersion", "environment_version", "computerVersion", "computer_version"]);
+  }
+
+  async createEnvironmentVersion(
+    options: RunnerApiRequestOptions & {
+      environmentId: string;
+      version: RunnerEnvironmentVersionCreateInput;
+    },
+  ): Promise<RunnerEnvironmentVersion> {
+    const url = this.buildApiUrl(options.backendUrl, `/environments/${encodeURIComponent(options.environmentId)}/versions`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.version),
+    });
+    return this.readObjectResponse<RunnerEnvironmentVersion>(payload, ["version", "environmentVersion", "environment_version", "computerVersion", "computer_version"]);
+  }
+
+  async updateEnvironmentVersion(
+    options: RunnerApiRequestOptions & {
+      environmentId: string;
+      versionId: string;
+      version: RunnerEnvironmentVersionUpdateInput;
+    },
+  ): Promise<RunnerEnvironmentVersion> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/environments/${encodeURIComponent(options.environmentId)}/versions/${encodeURIComponent(options.versionId)}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "PATCH",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.version),
+    });
+    return this.readObjectResponse<RunnerEnvironmentVersion>(payload, ["version", "environmentVersion", "environment_version", "computerVersion", "computer_version"]);
+  }
+
+  async deleteEnvironmentVersion(
+    options: RunnerApiRequestOptions & {
+      environmentId: string;
+      versionId: string;
+    },
+  ): Promise<void> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/environments/${encodeURIComponent(options.environmentId)}/versions/${encodeURIComponent(options.versionId)}`,
+    );
+    await this.requestJsonOrEmpty<unknown>(url, {
+      method: "DELETE",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async publishEnvironmentVersion(
+    options: RunnerApiRequestOptions & {
+      environmentId: string;
+      versionId: string;
+    },
+  ): Promise<Record<string, unknown>> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/environments/${encodeURIComponent(options.environmentId)}/versions/${encodeURIComponent(options.versionId)}/publish`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<Record<string, unknown>>(payload, ["environment", "computer"]);
+  }
+
+  async unpublishEnvironmentVersion(
+    options: RunnerApiRequestOptions & {
+      environmentId: string;
+      versionId: string;
+    },
+  ): Promise<Record<string, unknown>> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/environments/${encodeURIComponent(options.environmentId)}/versions/${encodeURIComponent(options.versionId)}/unpublish`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<Record<string, unknown>>(payload, ["environment", "computer"]);
+  }
+
+  async restoreEnvironmentVersion(
+    options: RunnerApiRequestOptions & {
+      environmentId: string;
+      versionId: string;
+    },
+  ): Promise<Record<string, unknown>> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/environments/${encodeURIComponent(options.environmentId)}/versions/${encodeURIComponent(options.versionId)}/restore`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<Record<string, unknown>>(payload, ["environment", "computer"]);
+  }
+
+  async compareEnvironmentVersions(
+    options: RunnerApiRequestOptions & {
+      environmentId: string;
+      baseVersionId: string;
+      targetVersionId: string;
+    },
+  ): Promise<RunnerEnvironmentVersionCompareResult> {
+    const search = new URLSearchParams({
+      baseVersionId: options.baseVersionId,
+      targetVersionId: options.targetVersionId,
+    });
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/environments/${encodeURIComponent(options.environmentId)}/versions/compare?${search.toString()}`,
+    );
+    return this.requestJson<RunnerEnvironmentVersionCompareResult>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async listServerVersions(
+    options: RunnerApiRequestOptions & {
+      serverId: string;
+    },
+  ): Promise<RunnerServerVersion[]> {
+    const url = this.buildApiUrl(options.backendUrl, `/servers/${encodeURIComponent(options.serverId)}/versions`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerServerVersion>(payload, ["versions", "serverVersions", "server_versions"]);
+  }
+
+  async getServerVersion(
+    options: RunnerApiRequestOptions & {
+      serverId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerServerVersion> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/servers/${encodeURIComponent(options.serverId)}/versions/${encodeURIComponent(options.versionId)}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readObjectResponse<RunnerServerVersion>(payload, ["version", "serverVersion", "server_version"]);
+  }
+
+  async createServerVersion(
+    options: RunnerApiRequestOptions & {
+      serverId: string;
+      version: RunnerServerVersionCreateInput;
+    },
+  ): Promise<RunnerServerVersion> {
+    const url = this.buildApiUrl(options.backendUrl, `/servers/${encodeURIComponent(options.serverId)}/versions`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.version),
+    });
+    return this.readObjectResponse<RunnerServerVersion>(payload, ["version", "serverVersion", "server_version"]);
+  }
+
+  async updateServerVersion(
+    options: RunnerApiRequestOptions & {
+      serverId: string;
+      versionId: string;
+      version: RunnerServerVersionUpdateInput;
+    },
+  ): Promise<RunnerServerVersion> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/servers/${encodeURIComponent(options.serverId)}/versions/${encodeURIComponent(options.versionId)}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "PATCH",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.version),
+    });
+    return this.readObjectResponse<RunnerServerVersion>(payload, ["version", "serverVersion", "server_version"]);
+  }
+
+  async deleteServerVersion(
+    options: RunnerApiRequestOptions & {
+      serverId: string;
+      versionId: string;
+    },
+  ): Promise<void> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/servers/${encodeURIComponent(options.serverId)}/versions/${encodeURIComponent(options.versionId)}`,
+    );
+    await this.requestJsonOrEmpty<unknown>(url, {
+      method: "DELETE",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async publishServerVersion(
+    options: RunnerApiRequestOptions & {
+      serverId: string;
+      versionId: string;
+    },
+  ): Promise<Record<string, unknown>> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/servers/${encodeURIComponent(options.serverId)}/versions/${encodeURIComponent(options.versionId)}/publish`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<Record<string, unknown>>(payload, ["server"]);
+  }
+
+  async unpublishServerVersion(
+    options: RunnerApiRequestOptions & {
+      serverId: string;
+      versionId: string;
+    },
+  ): Promise<Record<string, unknown>> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/servers/${encodeURIComponent(options.serverId)}/versions/${encodeURIComponent(options.versionId)}/unpublish`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<Record<string, unknown>>(payload, ["server"]);
+  }
+
+  async restoreServerVersion(
+    options: RunnerApiRequestOptions & {
+      serverId: string;
+      versionId: string;
+    },
+  ): Promise<Record<string, unknown>> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/servers/${encodeURIComponent(options.serverId)}/versions/${encodeURIComponent(options.versionId)}/restore`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<Record<string, unknown>>(payload, ["server"]);
+  }
+
+  async compareServerVersions(
+    options: RunnerApiRequestOptions & {
+      serverId: string;
+      baseVersionId: string;
+      targetVersionId: string;
+    },
+  ): Promise<RunnerServerVersionCompareResult> {
+    const search = new URLSearchParams({
+      baseVersionId: options.baseVersionId,
+      targetVersionId: options.targetVersionId,
+    });
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/servers/${encodeURIComponent(options.serverId)}/versions/compare?${search.toString()}`,
+    );
+    return this.requestJson<RunnerServerVersionCompareResult>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async listAgents(options: RunnerApiRequestOptions): Promise<RunnerAgentRecord[]> {
+    const url = this.buildApiUrl(options.backendUrl, "/agents");
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerAgentRecord>(payload, ["agents"]);
+  }
+
+  async getAgent(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+    },
+  ): Promise<RunnerAgentRecord> {
+    const url = this.buildApiUrl(options.backendUrl, `/agents/${encodeURIComponent(options.agentId)}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readObjectResponse<RunnerAgentRecord>(payload, ["agent"]);
+  }
+
+  async createAgent(
+    options: RunnerApiRequestOptions & {
+      agent: RunnerAgentCreateInput;
+    },
+  ): Promise<RunnerAgentRecord> {
+    const url = this.buildApiUrl(options.backendUrl, "/agents");
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.agent),
+    });
+    return this.readObjectResponse<RunnerAgentRecord>(payload, ["agent"]);
+  }
+
+  async updateAgent(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      agent: RunnerAgentUpdateInput;
+    },
+  ): Promise<RunnerAgentRecord> {
+    const url = this.buildApiUrl(options.backendUrl, `/agents/${encodeURIComponent(options.agentId)}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "PATCH",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.agent),
+    });
+    return this.readObjectResponse<RunnerAgentRecord>(payload, ["agent"]);
+  }
+
+  async deleteAgent(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+    },
+  ): Promise<void> {
+    const url = this.buildApiUrl(options.backendUrl, `/agents/${encodeURIComponent(options.agentId)}`);
+    await this.requestJsonOrEmpty<unknown>(url, {
+      method: "DELETE",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async listAgentVersions(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+    },
+  ): Promise<RunnerAgentVersion[]> {
+    const url = this.buildApiUrl(options.backendUrl, `/agents/${encodeURIComponent(options.agentId)}/versions`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerAgentVersion>(payload, ["versions", "agentVersions", "agent_versions"]);
+  }
+
+  async getAgentVersion(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerAgentVersion> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/agents/${encodeURIComponent(options.agentId)}/versions/${encodeURIComponent(options.versionId)}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readObjectResponse<RunnerAgentVersion>(payload, ["version", "agentVersion", "agent_version"]);
+  }
+
+  async createAgentVersion(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      version: RunnerAgentVersionCreateInput;
+    },
+  ): Promise<RunnerAgentVersion> {
+    const url = this.buildApiUrl(options.backendUrl, `/agents/${encodeURIComponent(options.agentId)}/versions`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.version),
+    });
+    return this.readObjectResponse<RunnerAgentVersion>(payload, ["version", "agentVersion", "agent_version"]);
+  }
+
+  async updateAgentVersion(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      versionId: string;
+      version: RunnerAgentVersionUpdateInput;
+    },
+  ): Promise<RunnerAgentVersion> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/agents/${encodeURIComponent(options.agentId)}/versions/${encodeURIComponent(options.versionId)}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "PATCH",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.version),
+    });
+    return this.readObjectResponse<RunnerAgentVersion>(payload, ["version", "agentVersion", "agent_version"]);
+  }
+
+  async deleteAgentVersion(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      versionId: string;
+    },
+  ): Promise<void> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/agents/${encodeURIComponent(options.agentId)}/versions/${encodeURIComponent(options.versionId)}`,
+    );
+    await this.requestJsonOrEmpty<unknown>(url, {
+      method: "DELETE",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async publishAgentVersion(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerAgentRecord> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/agents/${encodeURIComponent(options.agentId)}/versions/${encodeURIComponent(options.versionId)}/publish`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<RunnerAgentRecord>(payload, ["agent"]);
+  }
+
+  async unpublishAgentVersion(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerAgentRecord> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/agents/${encodeURIComponent(options.agentId)}/versions/${encodeURIComponent(options.versionId)}/unpublish`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<RunnerAgentRecord>(payload, ["agent"]);
+  }
+
+  async restoreAgentVersion(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerAgentRecord> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/agents/${encodeURIComponent(options.agentId)}/versions/${encodeURIComponent(options.versionId)}/restore`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<RunnerAgentRecord>(payload, ["agent"]);
+  }
+
+  async compareAgentVersions(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      baseVersionId: string;
+      targetVersionId: string;
+    },
+  ): Promise<RunnerAgentVersionCompareResult> {
+    const search = new URLSearchParams({
+      baseVersionId: options.baseVersionId,
+      targetVersionId: options.targetVersionId,
+    });
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/agents/${encodeURIComponent(options.agentId)}/versions/compare?${search.toString()}`,
+    );
+    return this.requestJson<RunnerAgentVersionCompareResult>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
     });
   }
 

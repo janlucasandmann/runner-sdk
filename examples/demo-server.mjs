@@ -2578,12 +2578,14 @@ const html = `<!doctype html>
       .playground-content-shell.is-thread-side-detail-open > .playground-content-nav,
       .playground-content-shell.is-resources-side-detail-open > .playground-content-nav,
       .playground-content-shell.is-metronome-node-detail-open > .playground-content-nav,
+      .playground-content-shell:has(> .playground-agent-versions-node-drawer.is-open) > .playground-content-nav,
       .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview) > .playground-content-nav,
       .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail) > .playground-content-nav {
         padding-right: calc(6px + var(--playground-thread-task-detail-width));
       }
 
-      .playground-content-shell.is-thread-side-detail-open > .playground-content-nav {
+      .playground-content-shell.is-thread-side-detail-open > .playground-content-nav,
+      .playground-content-shell:has(> .playground-agent-versions-node-drawer.is-open) > .playground-content-nav {
         pointer-events: none;
       }
 
@@ -5782,6 +5784,11 @@ const html = `<!doctype html>
         contain: none;
       }
 
+      .playground-content-body.is-guardrails-page.is-agent-versions-detail-open,
+      .playground-content-body.is-evaluations-page.is-agent-versions-detail-open {
+        margin: 0 calc(var(--playground-thread-task-detail-width) + 6px) 0 0;
+      }
+
       .playground-thread-task-drawer {
         position: absolute;
         top: 0;
@@ -5832,6 +5839,10 @@ const html = `<!doctype html>
         opacity: 1;
         transform: translateX(0);
         pointer-events: auto;
+      }
+
+      .playground-agent-versions-node-drawer {
+        z-index: 10050;
       }
 
       .playground-thread-subagent-drawer {
@@ -6328,7 +6339,7 @@ const html = `<!doctype html>
         margin: 0;
         color: rgba(255, 255, 255, 0.96);
         font-size: 36px;
-        font-weight: 500;
+        font-weight: 400;
         line-height: 1.04;
         letter-spacing: -0.04em;
         text-wrap: balance;
@@ -20894,7 +20905,8 @@ const html = `<!doctype html>
       }
 
       .playground-files-control-button {
-        min-height: 34px;
+        height: 30px;
+        min-height: 30px;
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -20905,8 +20917,8 @@ const html = `<!doctype html>
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         color: rgba(255, 255, 255, 0.9);
-        font-size: 13px;
-        font-weight: 500;
+        font-size: 12px !important;
+        font-weight: 400 !important;
         cursor: pointer;
         transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
       }
@@ -21268,6 +21280,40 @@ const html = `<!doctype html>
         z-index: 10090;
       }
 
+      .playground-guardrails-detail-topnav-actions {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .playground-guardrails-action-menu-shell {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-guardrails-row-action-menu-shell {
+        width: 28px;
+        height: 28px;
+        justify-self: start;
+      }
+
+      .playground-guardrails-action-menu-shell .playground-guardrails-action-menu {
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        width: 180px;
+        min-width: 180px;
+        max-height: min(220px, calc(100vh - 120px));
+        transform-origin: top right;
+      }
+
+      .playground-guardrails-action-menu .tb-popup-row.is-danger,
+      .playground-guardrails-action-menu .tb-popup-row.is-danger .tb-popup-icon,
+      .playground-guardrails-action-menu .tb-popup-row.is-danger .playground-tasks-toolbar-popup-item-copy span:first-child {
+        color: #ff6b6b;
+      }
+
       .playground-guardrails-browser {
         overflow: hidden;
       }
@@ -21322,7 +21368,7 @@ const html = `<!doctype html>
 
       .playground-guardrails-table {
         width: 100%;
-        min-width: 680px;
+        min-width: 720px;
         display: flex;
         flex-direction: column;
       }
@@ -21330,7 +21376,7 @@ const html = `<!doctype html>
       .playground-guardrails-table-header,
       .playground-guardrails-table-row {
         display: grid;
-        grid-template-columns: minmax(240px, 1.45fr) 86px 92px 112px 32px;
+        grid-template-columns: minmax(220px, 1.35fr) 86px minmax(150px, 0.85fr) 112px 32px;
         align-items: center;
         gap: 12px;
       }
@@ -21345,7 +21391,7 @@ const html = `<!doctype html>
       }
 
       .playground-guardrails-table-row {
-        min-height: 62px;
+        min-height: 54px;
         padding: 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         color: rgba(255, 255, 255, 0.9);
@@ -21368,7 +21414,7 @@ const html = `<!doctype html>
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 0;
       }
 
       .playground-guardrails-set-title {
@@ -21382,10 +21428,61 @@ const html = `<!doctype html>
         text-overflow: ellipsis;
       }
 
-      .playground-guardrails-set-description,
       .playground-guardrails-table-muted {
         min-width: 0;
         color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-guardrails-creator-cell {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-guardrails-creator-avatar {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.11);
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 500;
+      }
+
+      .playground-guardrails-creator-avatar img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      .playground-guardrails-creator-avatar.is-system {
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-guardrails-creator-avatar.is-system img {
+        width: 14px;
+        height: 14px;
+        object-fit: contain;
+      }
+
+      .playground-guardrails-creator-label {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.84);
         font-size: 12px;
         line-height: 1.35;
         font-weight: 400;
@@ -21429,6 +21526,7 @@ const html = `<!doctype html>
       }
 
       .playground-guardrails-row-action:hover,
+      .playground-guardrails-row-action.is-active,
       .playground-guardrails-prompt-delete:hover {
         background: rgba(255, 255, 255, 0.08);
         color: #fff;
@@ -33091,6 +33189,10 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         gap: 14px;
       }
 
+      .playground-guardrails-version-changes-page {
+        padding-top: 24px;
+      }
+
       .playground-version-changes-header {
         display: flex;
         flex-direction: column;
@@ -33190,13 +33292,14 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         align-items: center;
       }
 
-      .playground-version-changes-select-control {
+      .playground-version-changes-select-control,
+      .playground-version-changes-select {
         width: 100%;
         height: 32px;
         appearance: none;
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.05);
+        background: transparent;
         color: rgba(255, 255, 255, 0.92);
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         font-size: 12px;
@@ -33206,7 +33309,8 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         outline: none;
       }
 
-      .playground-version-changes-select-control:focus {
+      .playground-version-changes-select-control:focus,
+      .playground-version-changes-select:focus {
         border-color: rgba(255, 255, 255, 0.22);
       }
 
@@ -33217,7 +33321,8 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         pointer-events: none;
       }
 
-      .playground-version-changes-select-arrow {
+      .playground-version-changes-select-arrow,
+      .playground-version-changes-compare-arrow {
         color: rgba(255, 255, 255, 0.48);
         font-size: 13px;
         line-height: 32px;
@@ -44833,6 +44938,86 @@ ${METRONOME_PAGE_CSS}
         overflow: hidden;
       }
 
+      .playground-agents-detail-evaluations-section .playground-project-overview-threads-table-header,
+      .playground-agents-detail-evaluations-section .playground-project-overview-threads-table-row {
+        grid-template-columns: minmax(180px, 1.4fr) minmax(82px, 0.42fr) minmax(108px, 0.56fr) minmax(76px, 0.38fr) minmax(92px, 0.48fr) 24px;
+        gap: 12px;
+      }
+
+      .playground-agents-detail-evaluation-version-section .playground-project-overview-threads-table-header,
+      .playground-agents-detail-evaluation-version-section .playground-project-overview-threads-table-row {
+        grid-template-columns: minmax(120px, 0.8fr) minmax(86px, 0.44fr) minmax(96px, 0.48fr) minmax(112px, 0.58fr) minmax(86px, 0.42fr) 24px;
+        gap: 12px;
+      }
+
+      .playground-agents-detail-evaluations-section .playground-project-overview-thread-cell,
+      .playground-agents-detail-evaluation-version-section .playground-project-overview-thread-cell {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+      }
+
+      .playground-agents-detail-evaluation-score,
+      .playground-agents-detail-evaluation-version {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-agents-detail-evaluation-env {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-width: 0;
+        max-width: 100%;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-agents-detail-evaluation-env svg {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.68);
+      }
+
+      .playground-agents-detail-evaluation-status {
+        display: inline-flex;
+        align-items: center;
+        width: max-content;
+        max-width: 100%;
+        padding: 4px 9px;
+        border-radius: 999px;
+        background: rgba(45, 212, 137, 0.18);
+        color: rgba(190, 255, 221, 0.95);
+        font-size: 11px;
+        line-height: 1;
+        text-transform: lowercase;
+      }
+
+      .playground-agents-detail-evaluation-status.is-running {
+        background: rgba(102, 166, 255, 0.18);
+        color: rgba(198, 224, 255, 0.95);
+      }
+
+      .playground-agents-detail-evaluation-status.is-failed {
+        background: rgba(255, 92, 122, 0.16);
+        color: rgba(255, 195, 205, 0.95);
+      }
+
+      .playground-agents-detail-evaluation-detail-back {
+        margin: 0 0 8px;
+      }
+
+      .playground-agents-detail-evaluation-modal .playground-mission-control-modal-body {
+        gap: 14px;
+      }
+
+      .playground-agents-detail-evaluation-modal-error {
+        color: rgba(255, 158, 176, 0.95);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
       .playground-agents-detail-threads-section .playground-project-overview-thread-cell.is-source,
       .playground-agents-detail-threads-section .playground-project-overview-thread-cell.is-environment,
       .playground-agents-detail-threads-section .playground-project-overview-thread-cell.is-triggered-by {
@@ -52131,7 +52316,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       const FIREBASE_STORAGE_BUCKET = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "testbaseai.firebasestorage.app")};
       const FIREBASE_MESSAGING_SENDER_ID = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "65067873832")};
       const FIREBASE_APP_ID = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:65067873832:web:15722955fece43cdf9671d")};
-      const SEARCH_THREAD_FETCH_LIMIT = 20;
+      const SEARCH_THREAD_FETCH_LIMIT = 240;
       const SETTINGS_CT_PER_DOLLAR = 100;
       const PLAYGROUND_SERVER_IDLE_RATE_PER_MINUTE = {
         website: 0.000005,
@@ -59582,6 +59767,16 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         const versionNumber = Number(version.version || version.versionNumber || version.version_number || 0) || (fallbackIndex + 1);
         const rawStatus = String(version.status || "").trim().toLowerCase();
         const status = ["active", "saved", "superseded", "unpublished"].includes(rawStatus) ? rawStatus : "saved";
+        const rawLifecycleState = String(version.lifecycleState || version.lifecycle_state || "").trim().toLowerCase();
+        const lifecycleState = ["published", "saved", "draft", "deprecated", "unpublished", "archived"].includes(rawLifecycleState)
+          ? rawLifecycleState
+          : status === "active"
+            ? "published"
+            : status === "superseded"
+              ? "deprecated"
+              : status === "unpublished"
+                ? "unpublished"
+                : "saved";
         const rawRuntimes = version.runtimes && typeof version.runtimes === "object" && !Array.isArray(version.runtimes)
           ? version.runtimes
           : snapshot.runtimes && typeof snapshot.runtimes === "object" && !Array.isArray(snapshot.runtimes)
@@ -59637,9 +59832,34 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           label: String(version.label || version.name || ("Version " + versionNumber)).trim(),
           description: String(version.description || version.summary || "").trim(),
           status,
+          lifecycleState,
+          lifecycle_state: lifecycleState,
           createdAt,
+          created_at: createdAt,
           updatedAt: String(version.updatedAt || version.updated_at || "").trim(),
+          updated_at: String(version.updatedAt || version.updated_at || "").trim(),
           publishedAt: String(version.publishedAt || version.published_at || "").trim(),
+          published_at: String(version.publishedAt || version.published_at || "").trim(),
+          unpublishedAt: String(version.unpublishedAt || version.unpublished_at || "").trim(),
+          unpublished_at: String(version.unpublishedAt || version.unpublished_at || "").trim(),
+          revisionId: String(version.revisionId || version.revision_id || "").trim(),
+          revision_id: String(version.revisionId || version.revision_id || "").trim(),
+          baseRevisionId: String(version.baseRevisionId || version.base_revision_id || "").trim(),
+          base_revision_id: String(version.baseRevisionId || version.base_revision_id || "").trim(),
+          revisionNumber: Number(version.revisionNumber || version.revision_number || versionNumber || 0) || versionNumber,
+          revision_number: Number(version.revisionNumber || version.revision_number || versionNumber || 0) || versionNumber,
+          createdBy: normalizePlaygroundVersionActor(version.createdBy || version.created_by),
+          created_by: normalizePlaygroundVersionActor(version.createdBy || version.created_by),
+          updatedBy: normalizePlaygroundVersionActor(version.updatedBy || version.updated_by),
+          updated_by: normalizePlaygroundVersionActor(version.updatedBy || version.updated_by),
+          publishedBy: normalizePlaygroundVersionActor(version.publishedBy || version.published_by),
+          published_by: normalizePlaygroundVersionActor(version.publishedBy || version.published_by),
+          unpublishedBy: normalizePlaygroundVersionActor(version.unpublishedBy || version.unpublished_by),
+          unpublished_by: normalizePlaygroundVersionActor(version.unpublishedBy || version.unpublished_by),
+          deploymentId: String(version.deploymentId || version.deployment_id || "").trim(),
+          deployment_id: String(version.deploymentId || version.deployment_id || "").trim(),
+          deploymentStatus: String(version.deploymentStatus || version.deployment_status || "").trim(),
+          deployment_status: String(version.deploymentStatus || version.deployment_status || "").trim(),
           name: normalizedSnapshot.name,
           computeProfile: normalizedSnapshot.computeProfile,
           runtimeCount: Object.keys(normalizedSnapshot.runtimes || {}).length,
@@ -59680,6 +59900,15 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         return "environment_version_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
       }
 
+      function createPlaygroundEnvironmentVersionRevisionId() {
+        return "environment_revision_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+      }
+
+      function createPlaygroundEnvironmentDeploymentId(versionId = "") {
+        const normalizedVersionId = String(versionId || "").trim();
+        return "environment_deployment_" + (normalizedVersionId || (Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8)));
+      }
+
       function buildPlaygroundEnvironmentVersionSnapshot(environment) {
         const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environment || buildPlaygroundDefaultEnvironmentDraft());
         const runtimes = Object.fromEntries(
@@ -59716,14 +59945,38 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         const requestedStatus = String(options?.status || "saved").trim().toLowerCase();
         const status = requestedStatus === "active" ? "active" : "saved";
         const snapshot = buildPlaygroundEnvironmentVersionSnapshot(environment);
+        const actor = normalizePlaygroundVersionActor(options?.actor);
+        const revisionId = createPlaygroundEnvironmentVersionRevisionId();
+        const versionId = createPlaygroundEnvironmentVersionId();
+        const deploymentId = status === "active" ? createPlaygroundEnvironmentDeploymentId(versionId) : "";
         return normalizePlaygroundEnvironmentVersion({
-          id: createPlaygroundEnvironmentVersionId(),
+          id: versionId,
           version: nextVersion,
           label: String(options?.label || ("Version " + nextVersion)).trim(),
           description: String(options?.description || "").trim(),
           status,
+          lifecycleState: status === "active" ? "published" : "saved",
+          lifecycle_state: status === "active" ? "published" : "saved",
           createdAt: now,
+          created_at: now,
+          updatedAt: now,
+          updated_at: now,
+          createdBy: actor,
+          created_by: actor,
+          updatedBy: actor,
+          updated_by: actor,
           publishedAt: status === "active" ? now : "",
+          published_at: status === "active" ? now : "",
+          publishedBy: status === "active" ? actor : null,
+          published_by: status === "active" ? actor : null,
+          revisionId,
+          revision_id: revisionId,
+          revisionNumber: nextVersion,
+          revision_number: nextVersion,
+          deploymentId,
+          deployment_id: deploymentId,
+          deploymentStatus: status === "active" ? "published" : "",
+          deployment_status: status === "active" ? "published" : "",
           name: snapshot.name,
           computeProfile: snapshot.computeProfile,
           runtimes: snapshot.runtimes,
@@ -59901,6 +60154,372 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           createdAt: typeof server.createdAt === "string" && server.createdAt ? server.createdAt : draft.createdAt,
           updatedAt: typeof server.updatedAt === "string" && server.updatedAt ? server.updatedAt : draft.updatedAt,
         };
+      }
+
+      function stripPlaygroundServerVersionMetadata(metadata) {
+        const source = metadata && typeof metadata === "object" && !Array.isArray(metadata)
+          ? { ...metadata }
+          : {};
+        delete source.serverVersions;
+        delete source.server_versions;
+        delete source.versions;
+        delete source.activeServerVersionId;
+        delete source.active_server_version_id;
+        delete source.activeServerVersionNumber;
+        delete source.active_server_version_number;
+        delete source.restoredFromServerVersionId;
+        delete source.restored_from_server_version_id;
+        delete source.restoredFromServerVersionNumber;
+        delete source.restored_from_server_version_number;
+        delete source.publishedAt;
+        delete source.published_at;
+        delete source.unpublishedAt;
+        delete source.unpublished_at;
+        delete source.activeServerDeployment;
+        delete source.active_server_deployment;
+        return source;
+      }
+
+      function normalizePlaygroundServerVersionSourceFiles(value) {
+        return (Array.isArray(value) ? value : [])
+          .map((entry, index) => {
+            const path = normalizeHistoryPath(entry?.path || entry?.name || "");
+            if (!path) {
+              return null;
+            }
+            return {
+              id: String(entry?.id || path || ("source-" + index)).trim(),
+              name: String(entry?.name || path.split("/").pop() || path).trim(),
+              path,
+              isFolder: Boolean(entry?.isFolder),
+              size: Number.isFinite(Number(entry?.size)) ? Number(entry.size) : 0,
+              type: String(entry?.type || entry?.mimeType || "").trim(),
+              modifiedTime: String(entry?.modifiedTime || entry?.updatedAt || "").trim(),
+            };
+          })
+          .filter(Boolean)
+          .sort((left, right) => String(left.path || "").localeCompare(String(right.path || "")));
+      }
+
+      function normalizePlaygroundServerVersionSourceFileContents(value) {
+        const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+        return Object.fromEntries(
+          Object.entries(source)
+            .map(([path, content]) => [normalizeHistoryPath(path), typeof content === "string" ? content : String(content ?? "")])
+            .filter(([path]) => path)
+            .sort(([left], [right]) => left.localeCompare(right))
+        );
+      }
+
+      function normalizePlaygroundServerVersion(rawVersion, fallbackIndex = 0) {
+        const version = rawVersion && typeof rawVersion === "object" && !Array.isArray(rawVersion) ? rawVersion : {};
+        const snapshot = version.snapshot && typeof version.snapshot === "object" && !Array.isArray(version.snapshot)
+          ? version.snapshot
+          : {};
+        const createdAt = String(version.createdAt || version.created_at || version.publishedAt || version.published_at || new Date().toISOString()).trim();
+        const id = String(version.id || version.versionId || version.version_id || ("server_version_" + (fallbackIndex + 1))).trim();
+        const versionNumber = Number(version.version || version.versionNumber || version.version_number || 0) || (fallbackIndex + 1);
+        const rawStatus = String(version.status || "").trim().toLowerCase();
+        const status = ["active", "saved", "superseded", "unpublished"].includes(rawStatus) ? rawStatus : "saved";
+        const rawLifecycleState = String(version.lifecycleState || version.lifecycle_state || "").trim().toLowerCase();
+        const lifecycleState = ["published", "saved", "draft", "deprecated", "unpublished", "archived"].includes(rawLifecycleState)
+          ? rawLifecycleState
+          : status === "active"
+            ? "published"
+            : status === "superseded"
+              ? "deprecated"
+              : status === "unpublished"
+                ? "unpublished"
+                : "saved";
+        const normalizedKind = canonicalizePlaygroundServerKind(version.kind || snapshot.kind || "web_app");
+        const normalizedSnapshot = {
+          name: String(version.name || snapshot.name || "").trim(),
+          description: typeof snapshot.description === "string"
+            ? snapshot.description
+            : typeof version.description === "string"
+              ? version.description
+              : "",
+          kind: normalizedKind,
+          sourceType: ["manual", "computer", "git"].includes(snapshot.sourceType || version.sourceType) ? (snapshot.sourceType || version.sourceType) : "manual",
+          sourceEnvironmentId: typeof snapshot.sourceEnvironmentId === "string" ? snapshot.sourceEnvironmentId : (typeof version.sourceEnvironmentId === "string" ? version.sourceEnvironmentId : ""),
+          sourcePath: typeof snapshot.sourcePath === "string" ? snapshot.sourcePath : (typeof version.sourcePath === "string" ? version.sourcePath : ""),
+          region: String(snapshot.region || version.region || "us-central1").trim() || "us-central1",
+          runtime: String(version.runtime || snapshot.runtime || "nodejs22").trim() || "nodejs22",
+          authMode: ["public", "private"].includes(snapshot.authMode || version.authMode) ? (snapshot.authMode || version.authMode) : "public",
+          template: String(snapshot.template || version.template || "blank").trim() || "blank",
+          templateAgentId: String(snapshot.templateAgentId || version.templateAgentId || "").trim(),
+          templateEnvironmentId: String(snapshot.templateEnvironmentId || version.templateEnvironmentId || "").trim(),
+          databaseMode: ["none", "existing", "create"].includes(snapshot.databaseMode || version.databaseMode) ? (snapshot.databaseMode || version.databaseMode) : "none",
+          databaseId: String(snapshot.databaseId || version.databaseId || "").trim(),
+          databaseName: String(snapshot.databaseName || version.databaseName || "").trim(),
+          databaseDescription: typeof snapshot.databaseDescription === "string" ? snapshot.databaseDescription : "",
+          databaseLocation: String(snapshot.databaseLocation || version.databaseLocation || "eur3").trim() || "eur3",
+          customDomain: typeof snapshot.customDomain === "string" ? snapshot.customDomain : "",
+          serviceUrl: typeof snapshot.serviceUrl === "string" ? snapshot.serviceUrl : "",
+          cloudRunServiceName: typeof snapshot.cloudRunServiceName === "string" ? snapshot.cloudRunServiceName : "",
+          imageUrl: typeof snapshot.imageUrl === "string" ? snapshot.imageUrl : "",
+          lastDeployedAt: typeof snapshot.lastDeployedAt === "string" ? snapshot.lastDeployedAt : "",
+          sourceFiles: normalizePlaygroundServerVersionSourceFiles(snapshot.sourceFiles || version.sourceFiles),
+          sourceFileContents: normalizePlaygroundServerVersionSourceFileContents(snapshot.sourceFileContents || version.sourceFileContents),
+          metadata: stripPlaygroundServerVersionMetadata(snapshot.metadata),
+        };
+
+        return {
+          id,
+          version: versionNumber,
+          label: String(version.label || version.name || ("Version " + versionNumber)).trim(),
+          description: String(version.description || version.summary || "").trim(),
+          status,
+          lifecycleState,
+          lifecycle_state: lifecycleState,
+          createdAt,
+          created_at: createdAt,
+          updatedAt: String(version.updatedAt || version.updated_at || "").trim(),
+          updated_at: String(version.updatedAt || version.updated_at || "").trim(),
+          publishedAt: String(version.publishedAt || version.published_at || "").trim(),
+          published_at: String(version.publishedAt || version.published_at || "").trim(),
+          unpublishedAt: String(version.unpublishedAt || version.unpublished_at || "").trim(),
+          unpublished_at: String(version.unpublishedAt || version.unpublished_at || "").trim(),
+          revisionId: String(version.revisionId || version.revision_id || "").trim(),
+          revision_id: String(version.revisionId || version.revision_id || "").trim(),
+          baseRevisionId: String(version.baseRevisionId || version.base_revision_id || "").trim(),
+          base_revision_id: String(version.baseRevisionId || version.base_revision_id || "").trim(),
+          revisionNumber: Number(version.revisionNumber || version.revision_number || versionNumber || 0) || versionNumber,
+          revision_number: Number(version.revisionNumber || version.revision_number || versionNumber || 0) || versionNumber,
+          createdBy: normalizePlaygroundVersionActor(version.createdBy || version.created_by),
+          created_by: normalizePlaygroundVersionActor(version.createdBy || version.created_by),
+          updatedBy: normalizePlaygroundVersionActor(version.updatedBy || version.updated_by),
+          updated_by: normalizePlaygroundVersionActor(version.updatedBy || version.updated_by),
+          publishedBy: normalizePlaygroundVersionActor(version.publishedBy || version.published_by),
+          published_by: normalizePlaygroundVersionActor(version.publishedBy || version.published_by),
+          unpublishedBy: normalizePlaygroundVersionActor(version.unpublishedBy || version.unpublished_by),
+          unpublished_by: normalizePlaygroundVersionActor(version.unpublishedBy || version.unpublished_by),
+          deploymentId: String(version.deploymentId || version.deployment_id || "").trim(),
+          deployment_id: String(version.deploymentId || version.deployment_id || "").trim(),
+          deploymentStatus: String(version.deploymentStatus || version.deployment_status || "").trim(),
+          deployment_status: String(version.deploymentStatus || version.deployment_status || "").trim(),
+          name: normalizedSnapshot.name,
+          kind: normalizedSnapshot.kind,
+          runtime: normalizedSnapshot.runtime,
+          sourceFileCount: normalizedSnapshot.sourceFiles.filter((entry) => !entry.isFolder).length,
+          snapshot: normalizedSnapshot,
+        };
+      }
+
+      function normalizePlaygroundServerVersions(value) {
+        const rawItems = Array.isArray(value) ? value : [];
+        return rawItems
+          .map((version, index) => normalizePlaygroundServerVersion(version, index))
+          .filter((version) => version.id)
+          .sort((a, b) => {
+            const versionDelta = Number(b.version || 0) - Number(a.version || 0);
+            if (versionDelta) return versionDelta;
+            return new Date(b.publishedAt || b.createdAt || 0).getTime() - new Date(a.publishedAt || a.createdAt || 0).getTime();
+          });
+      }
+
+      function readPlaygroundServerVersions(server) {
+        const metadata = server?.metadata && typeof server.metadata === "object" && !Array.isArray(server.metadata)
+          ? server.metadata
+          : {};
+        return normalizePlaygroundServerVersions(
+          server?.serverVersions
+          || server?.versions
+          || metadata.serverVersions
+          || metadata.server_versions
+          || metadata.versions
+          || []
+        );
+      }
+
+      function createPlaygroundServerVersionId() {
+        return "server_version_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+      }
+
+      function createPlaygroundServerVersionRevisionId() {
+        return "server_revision_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+      }
+
+      function createPlaygroundServerDeploymentId(versionId = "") {
+        const normalizedVersionId = String(versionId || "").trim();
+        return "server_deployment_" + (normalizedVersionId || (Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8)));
+      }
+
+      function buildPlaygroundServerVersionSnapshot(server, options = {}) {
+        const normalizedServer = normalizePlaygroundServerRecord(server || buildPlaygroundDefaultServerDraft());
+        const sourceFileContents = normalizePlaygroundServerVersionSourceFileContents(options.sourceFileContents || {});
+        const sourceFiles = normalizePlaygroundServerVersionSourceFiles(options.sourceFiles || []);
+        return {
+          name: String(normalizedServer.name || "").trim() || "Untitled Server",
+          description: typeof normalizedServer.description === "string" ? normalizedServer.description : "",
+          kind: canonicalizePlaygroundServerKind(normalizedServer.kind),
+          sourceType: normalizedServer.sourceType || "manual",
+          sourceEnvironmentId: normalizedServer.sourceEnvironmentId || "",
+          sourcePath: normalizedServer.sourcePath || "",
+          region: normalizedServer.region || "us-central1",
+          runtime: normalizedServer.runtime || "nodejs22",
+          authMode: normalizedServer.authMode || "public",
+          template: normalizedServer.template || "blank",
+          templateAgentId: normalizedServer.templateAgentId || "",
+          templateEnvironmentId: normalizedServer.templateEnvironmentId || "",
+          databaseMode: normalizedServer.databaseMode || "none",
+          databaseId: normalizedServer.databaseId || "",
+          databaseName: normalizedServer.databaseName || "",
+          databaseDescription: typeof normalizedServer.databaseDescription === "string" ? normalizedServer.databaseDescription : "",
+          databaseLocation: normalizedServer.databaseLocation || "eur3",
+          customDomain: typeof normalizedServer.customDomain === "string" ? normalizedServer.customDomain : "",
+          serviceUrl: typeof normalizedServer.serviceUrl === "string" ? normalizedServer.serviceUrl : "",
+          cloudRunServiceName: typeof normalizedServer.cloudRunServiceName === "string" ? normalizedServer.cloudRunServiceName : "",
+          imageUrl: typeof normalizedServer.imageUrl === "string" ? normalizedServer.imageUrl : "",
+          lastDeployedAt: typeof normalizedServer.lastDeployedAt === "string" ? normalizedServer.lastDeployedAt : "",
+          sourceFiles,
+          sourceFileContents,
+          metadata: stripPlaygroundServerVersionMetadata(buildPlaygroundServerMetadata(normalizedServer)),
+        };
+      }
+
+      function createPlaygroundServerVersion(server, existingVersions = [], options = {}) {
+        const now = new Date().toISOString();
+        const normalizedExisting = normalizePlaygroundServerVersions(existingVersions);
+        const nextVersion = normalizedExisting.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), 0) + 1;
+        const requestedStatus = String(options?.status || "saved").trim().toLowerCase();
+        const status = requestedStatus === "active" ? "active" : "saved";
+        const snapshot = options?.snapshot && typeof options.snapshot === "object" && !Array.isArray(options.snapshot)
+          ? normalizePlaygroundServerVersion({ snapshot: options.snapshot }).snapshot
+          : buildPlaygroundServerVersionSnapshot(server, options);
+        const actor = normalizePlaygroundVersionActor(options?.actor);
+        const revisionId = createPlaygroundServerVersionRevisionId();
+        const versionId = createPlaygroundServerVersionId();
+        const deploymentId = status === "active" ? createPlaygroundServerDeploymentId(versionId) : "";
+        return normalizePlaygroundServerVersion({
+          id: versionId,
+          version: nextVersion,
+          label: String(options?.label || ("Version " + nextVersion)).trim(),
+          description: String(options?.description || "").trim(),
+          status,
+          lifecycleState: status === "active" ? "published" : "saved",
+          lifecycle_state: status === "active" ? "published" : "saved",
+          createdAt: now,
+          created_at: now,
+          updatedAt: now,
+          updated_at: now,
+          createdBy: actor,
+          created_by: actor,
+          updatedBy: actor,
+          updated_by: actor,
+          publishedAt: status === "active" ? now : "",
+          published_at: status === "active" ? now : "",
+          publishedBy: status === "active" ? actor : null,
+          published_by: status === "active" ? actor : null,
+          revisionId,
+          revision_id: revisionId,
+          revisionNumber: nextVersion,
+          revision_number: nextVersion,
+          deploymentId,
+          deployment_id: deploymentId,
+          deploymentStatus: status === "active" ? "published" : "",
+          deployment_status: status === "active" ? "published" : "",
+          name: snapshot.name,
+          kind: snapshot.kind,
+          runtime: snapshot.runtime,
+          sourceFiles: snapshot.sourceFiles,
+          sourceFileContents: snapshot.sourceFileContents,
+          snapshot,
+        }, nextVersion - 1);
+      }
+
+      function createPlaygroundServerWithVersionList(server, versions, preferredSelectedId = "") {
+        const baseServer = normalizePlaygroundServerRecord(server || buildPlaygroundDefaultServerDraft());
+        const normalizedVersions = normalizePlaygroundServerVersions(versions);
+        const metadata = baseServer.metadata && typeof baseServer.metadata === "object" && !Array.isArray(baseServer.metadata)
+          ? { ...baseServer.metadata }
+          : {};
+        const previousSelectedId = String(
+          metadata.restoredFromServerVersionId
+          || metadata.restored_from_server_version_id
+          || metadata.activeServerVersionId
+          || metadata.active_server_version_id
+          || ""
+        ).trim();
+        const selectedVersion = normalizedVersions.find((version) => version.id === String(preferredSelectedId || "").trim())
+          || normalizedVersions.find((version) => version.id === previousSelectedId)
+          || normalizedVersions.find((version) => version.status === "active")
+          || normalizedVersions[0]
+          || null;
+        const activeVersion = normalizedVersions.find((version) => version.status === "active")
+          || normalizedVersions.find((version) => version.id === String(metadata.activeServerVersionId || metadata.active_server_version_id || "").trim())
+          || null;
+        metadata.serverVersions = normalizedVersions;
+        metadata.server_versions = normalizedVersions;
+        metadata.activeServerVersionId = activeVersion?.id || "";
+        metadata.active_server_version_id = activeVersion?.id || "";
+        metadata.activeServerVersionNumber = activeVersion?.version || 0;
+        metadata.active_server_version_number = activeVersion?.version || 0;
+        metadata.restoredFromServerVersionId = selectedVersion?.id || "";
+        metadata.restored_from_server_version_id = selectedVersion?.id || "";
+        metadata.restoredFromServerVersionNumber = selectedVersion?.version || 0;
+        metadata.restored_from_server_version_number = selectedVersion?.version || 0;
+        if (activeVersion?.publishedAt) {
+          metadata.publishedAt = activeVersion.publishedAt;
+          metadata.published_at = activeVersion.publishedAt;
+          metadata.activeServerDeployment = {
+            id: activeVersion.deploymentId || activeVersion.deployment_id || createPlaygroundServerDeploymentId(activeVersion.id),
+            versionId: activeVersion.id,
+            version: activeVersion.version,
+            status: "published",
+            publishedAt: activeVersion.publishedAt,
+            publishedBy: activeVersion.publishedBy || activeVersion.published_by || null,
+          };
+          metadata.active_server_deployment = metadata.activeServerDeployment;
+        } else {
+          delete metadata.publishedAt;
+          delete metadata.published_at;
+          delete metadata.activeServerDeployment;
+          delete metadata.active_server_deployment;
+        }
+        return normalizePlaygroundServerRecord({
+          ...baseServer,
+          metadata,
+          publishedAt: activeVersion?.publishedAt || "",
+        });
+      }
+
+      function createPlaygroundServerFromVersionSnapshot(server, version, versions, preferredSelectedId = "") {
+        const baseServer = normalizePlaygroundServerRecord(server || buildPlaygroundDefaultServerDraft());
+        const normalizedVersion = normalizePlaygroundServerVersion(version || {});
+        const snapshot = normalizedVersion.snapshot || {};
+        const baseMetadata = stripPlaygroundServerVersionMetadata(baseServer.metadata);
+        const snapshotMetadata = stripPlaygroundServerVersionMetadata(snapshot.metadata);
+        const nextServer = normalizePlaygroundServerRecord({
+          ...baseServer,
+          name: snapshot.name || baseServer.name,
+          description: typeof snapshot.description === "string" ? snapshot.description : baseServer.description,
+          kind: snapshot.kind || baseServer.kind,
+          sourceType: snapshot.sourceType || baseServer.sourceType,
+          sourceEnvironmentId: snapshot.sourceEnvironmentId || baseServer.sourceEnvironmentId,
+          sourcePath: typeof snapshot.sourcePath === "string" ? snapshot.sourcePath : baseServer.sourcePath,
+          region: snapshot.region || baseServer.region,
+          runtime: snapshot.runtime || baseServer.runtime,
+          authMode: snapshot.authMode || baseServer.authMode,
+          template: snapshot.template || baseServer.template,
+          templateAgentId: typeof snapshot.templateAgentId === "string" ? snapshot.templateAgentId : baseServer.templateAgentId,
+          templateEnvironmentId: typeof snapshot.templateEnvironmentId === "string" ? snapshot.templateEnvironmentId : baseServer.templateEnvironmentId,
+          databaseMode: snapshot.databaseMode || baseServer.databaseMode,
+          databaseId: typeof snapshot.databaseId === "string" ? snapshot.databaseId : baseServer.databaseId,
+          databaseName: typeof snapshot.databaseName === "string" ? snapshot.databaseName : baseServer.databaseName,
+          databaseDescription: typeof snapshot.databaseDescription === "string" ? snapshot.databaseDescription : baseServer.databaseDescription,
+          databaseLocation: snapshot.databaseLocation || baseServer.databaseLocation,
+          customDomain: typeof snapshot.customDomain === "string" ? snapshot.customDomain : baseServer.customDomain,
+          serviceUrl: typeof snapshot.serviceUrl === "string" ? snapshot.serviceUrl : baseServer.serviceUrl,
+          cloudRunServiceName: typeof snapshot.cloudRunServiceName === "string" ? snapshot.cloudRunServiceName : baseServer.cloudRunServiceName,
+          imageUrl: typeof snapshot.imageUrl === "string" ? snapshot.imageUrl : baseServer.imageUrl,
+          lastDeployedAt: typeof snapshot.lastDeployedAt === "string" ? snapshot.lastDeployedAt : baseServer.lastDeployedAt,
+          metadata: {
+            ...baseMetadata,
+            ...snapshotMetadata,
+          },
+        });
+        return createPlaygroundServerWithVersionList(nextServer, versions, preferredSelectedId || normalizedVersion.id);
       }
 
       function getPlaygroundPaymentsMetadata(server) {
@@ -82044,6 +82663,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         onWorkspaceTeamsRequest,
         versionsDrawerPortalId = "",
         onVersionsSidebarOpenChange,
+        currentUserId = "",
+        currentUserName = "",
+        currentUserEmail = "",
+        currentUserAvatarUrl = "",
         developServerOperationalMetrics = null,
         developServerOperationalMetricsLoading = false,
         developServerOperationalMetricsError = "",
@@ -82069,6 +82692,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const serverDeployProgressTimerRef = useRef(null);
         const serverRenameInputRef = useRef(null);
         const serverFileUploadInputRef = useRef(null);
+        const serverPublishMenuRef = useRef(null);
+        const serverVersionDescriptionTextareaRef = useRef(null);
+        const serverVersionModalCloseTimerRef = useRef(null);
+        const serverVersionModalFrameRef = useRef(null);
+        const serverInitialVersionSeededRef = useRef(new Set());
+        const serverVersionBaselineRef = useRef({ key: "", signature: "" });
+        const serverVersionDraftTouchedRef = useRef(false);
+        const serverDetailsCollapsedBeforeVersionsRef = useRef(null);
         const environmentDockerfileTextareaRef = useRef(null);
         const serverComposerDescriptionTextareaRef = useRef(null);
         const environmentGuiImageRef = useRef(null);
@@ -82078,7 +82709,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const environmentComposerRuntimePopoverRef = useRef(null);
         const environmentActionsPopoverRef = useRef(null);
         const environmentPublishMenuRef = useRef(null);
+        const environmentVersionDescriptionTextareaRef = useRef(null);
+        const environmentVersionModalCloseTimerRef = useRef(null);
+        const environmentVersionModalFrameRef = useRef(null);
+        const environmentInitialVersionSeededRef = useRef(new Set());
+        const environmentVersionBaselineRef = useRef({ key: "", signature: "" });
+        const environmentVersionDraftTouchedRef = useRef(false);
         const environmentVersionsDrawerContainerRef = useRef(null);
+        const environmentDetailsCollapsedBeforeVersionsRef = useRef(null);
         const environmentShareTeamModalCloseTimerRef = useRef(null);
         const environmentShareTeamModalFrameRef = useRef(null);
         const environmentApiModalCloseTimerRef = useRef(null);
@@ -82241,8 +82879,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	        const [authDetailTab, setAuthDetailTab] = useState("users");
 	        const [secretsDetailTab, setSecretsDetailTab] = useState("secrets");
 	        const [agentRuntimeDetailTab, setAgentRuntimeDetailTab] = useState("general");
-	        const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
+        const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
         const [environmentPublishMenuOpen, setEnvironmentPublishMenuOpen] = useState(false);
+        const [environmentVersionsHeaderMenuOpen, setEnvironmentVersionsHeaderMenuOpen] = useState(false);
         const [environmentVersionsSidebarOpen, setEnvironmentVersionsSidebarOpen] = useState(false);
         const [environmentVersionsDrawerContainer, setEnvironmentVersionsDrawerContainer] = useState(null);
         const [environmentVersionState, setEnvironmentVersionState] = useState({
@@ -82250,6 +82889,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           message: "",
           error: "",
         });
+        const [environmentVersionModal, setEnvironmentVersionModal] = useState(null);
+        const [environmentVersionModalVisible, setEnvironmentVersionModalVisible] = useState(false);
+        const [environmentVersionModalClosing, setEnvironmentVersionModalClosing] = useState(false);
+        const [environmentVersionNameDraft, setEnvironmentVersionNameDraft] = useState("");
+        const [environmentVersionDescriptionDraft, setEnvironmentVersionDescriptionDraft] = useState("");
+        const [isEnvironmentVersionDescriptionEditing, setIsEnvironmentVersionDescriptionEditing] = useState(false);
+        const [environmentVersionChangesState, setEnvironmentVersionChangesState] = useState(null);
         const [openEnvironmentVersionMenuId, setOpenEnvironmentVersionMenuId] = useState("");
         const [environmentShareTeamModalOpen, setEnvironmentShareTeamModalOpen] = useState(false);
         const [environmentShareTeamModalVisible, setEnvironmentShareTeamModalVisible] = useState(false);
@@ -82273,6 +82919,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [environmentRenameError, setEnvironmentRenameError] = useState("");
         const [isEnvironmentDescriptionEditing, setIsEnvironmentDescriptionEditing] = useState(false);
         const [serverActionsPopoverOpen, setServerActionsPopoverOpen] = useState(false);
+        const [serverPublishMenuOpen, setServerPublishMenuOpen] = useState(false);
+        const [serverVersionsHeaderMenuOpen, setServerVersionsHeaderMenuOpen] = useState(false);
+        const [serverVersionsSidebarOpen, setServerVersionsSidebarOpen] = useState(false);
+        const [serverVersionState, setServerVersionState] = useState({
+          status: "idle",
+          message: "",
+          error: "",
+        });
+        const [serverVersionModal, setServerVersionModal] = useState(null);
+        const [serverVersionModalVisible, setServerVersionModalVisible] = useState(false);
+        const [serverVersionModalClosing, setServerVersionModalClosing] = useState(false);
+        const [serverVersionNameDraft, setServerVersionNameDraft] = useState("");
+        const [serverVersionDescriptionDraft, setServerVersionDescriptionDraft] = useState("");
+        const [isServerVersionDescriptionEditing, setIsServerVersionDescriptionEditing] = useState(false);
+        const [serverVersionChangesState, setServerVersionChangesState] = useState(null);
+        const [openServerVersionMenuId, setOpenServerVersionMenuId] = useState("");
         const [serverFileActionsPopoverOpen, setServerFileActionsPopoverOpen] = useState(false);
         const [serverCodeAddFileMenuOpen, setServerCodeAddFileMenuOpen] = useState(false);
         const [serverSourceFileMenuPath, setServerSourceFileMenuPath] = useState("");
@@ -83311,7 +83973,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         useEffect(() => {
           function handleServerEditorSaveShortcut(event) {
-            if (!(event.metaKey || event.ctrlKey) || event.altKey || String(event.key || "").toLowerCase() !== "s") {
+            if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey || String(event.key || "").toLowerCase() !== "s") {
               return;
             }
             if (resourceMode !== "servers" || !serverFileEditorState.path || serverFileEditorState.status !== "ready") {
@@ -83338,11 +84000,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         function resetEditorAuxiliaryState() {
           editorDirtyRef.current = false;
+          environmentVersionDraftTouchedRef.current = false;
           setEnvironmentRuntimePopover("");
           setEnvironmentActionsPopoverOpen(false);
           setEnvironmentPublishMenuOpen(false);
+          setEnvironmentVersionsHeaderMenuOpen(false);
           setEnvironmentVersionsSidebarOpen(false);
+          environmentDetailsCollapsedBeforeVersionsRef.current = null;
+          setEnvironmentVersionChangesState(null);
           setOpenEnvironmentVersionMenuId("");
+          finishCloseEnvironmentVersionModal();
           setEnvironmentVersionState({
             status: "idle",
             message: "",
@@ -83364,6 +84031,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         function resetServerEditorAuxiliaryState() {
           serverEditorDirtyRef.current = false;
+          serverVersionDraftTouchedRef.current = false;
           if (serverDeployProgressTimerRef.current) {
             window.clearInterval(serverDeployProgressTimerRef.current);
             serverDeployProgressTimerRef.current = null;
@@ -83374,6 +84042,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
           serverAutosaveQueuedRef.current = null;
           setServerActionsPopoverOpen(false);
+          setServerPublishMenuOpen(false);
+          setServerVersionsHeaderMenuOpen(false);
+          setServerVersionsSidebarOpen(false);
+          serverDetailsCollapsedBeforeVersionsRef.current = null;
+          setServerVersionChangesState(null);
+          setOpenServerVersionMenuId("");
+          finishCloseServerVersionModal();
           setServerFileActionsPopoverOpen(false);
           setServerSourceFileMenuPath("");
           setServerSourceExpandedFolders(new Set());
@@ -83432,6 +84107,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             isSaving: false,
             error: "",
             message: "",
+          });
+          setServerVersionState({
+            status: "idle",
+            message: "",
+            error: "",
           });
           setServerFileTransferState({
             isUploading: false,
@@ -83736,6 +84416,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return typeof updater === "function" ? updater(base) : updater;
           });
           editorDirtyRef.current = true;
+          environmentVersionDraftTouchedRef.current = true;
           setSaveState((current) => ({
             ...current,
             error: "",
@@ -83901,6 +84582,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               [environmentId]: normalized,
             }));
             if (selectedEnvironmentId === environmentId && !editorDirtyRef.current) {
+              rememberEnvironmentVersionBaseline(normalized);
               setDraftEnvironment(normalized);
             }
           } catch (error) {
@@ -85915,7 +86597,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           resetEditorAuxiliaryState();
           setEnvironmentDetailsCollapsed(false);
           setEnvironmentDetailTab("general");
-          setDraftEnvironment(seedEnvironment ? normalizePlaygroundEnvironmentRecord(seedEnvironment) : null);
+          const normalizedSeedEnvironment = seedEnvironment ? normalizePlaygroundEnvironmentRecord(seedEnvironment) : null;
+          if (normalizedSeedEnvironment) {
+            rememberEnvironmentVersionBaseline(normalizedSeedEnvironment);
+          }
+          setDraftEnvironment(normalizedSeedEnvironment);
           void loadEnvironmentDetails(selectedEnvironmentId);
         }, [environmentDetailsById, loadEnvironmentDetails, orderedEnvironments, selectedEnvironmentId]);
 
@@ -86251,9 +86937,44 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (typeof onVersionsSidebarOpenChange !== "function") {
             return undefined;
           }
-          onVersionsSidebarOpenChange(Boolean(environmentVersionsSidebarOpen));
+          onVersionsSidebarOpenChange(Boolean(environmentVersionsSidebarOpen || serverVersionsSidebarOpen));
           return () => onVersionsSidebarOpenChange(false);
-        }, [environmentVersionsSidebarOpen, onVersionsSidebarOpenChange]);
+        }, [environmentVersionsSidebarOpen, onVersionsSidebarOpenChange, serverVersionsSidebarOpen]);
+
+        useEffect(() => {
+          if (environmentVersionsSidebarOpen) {
+            if (environmentDetailsCollapsedBeforeVersionsRef.current === null) {
+              environmentDetailsCollapsedBeforeVersionsRef.current = Boolean(environmentDetailsCollapsed);
+            }
+            if (!environmentDetailsCollapsed) {
+              setEnvironmentDetailsCollapsed(true);
+            }
+            return;
+          }
+
+          if (environmentDetailsCollapsedBeforeVersionsRef.current !== null) {
+            const shouldRestoreCollapsed = Boolean(environmentDetailsCollapsedBeforeVersionsRef.current);
+            environmentDetailsCollapsedBeforeVersionsRef.current = null;
+            setEnvironmentDetailsCollapsed(shouldRestoreCollapsed);
+          }
+        }, [environmentVersionsSidebarOpen, environmentDetailsCollapsed]);
+
+        useEffect(() => {
+          if (serverVersionsSidebarOpen) {
+            if (serverDetailsCollapsedBeforeVersionsRef.current === null) {
+              serverDetailsCollapsedBeforeVersionsRef.current = Boolean(serverDetailsCollapsed);
+            }
+            if (!serverDetailsCollapsed) {
+              setServerDetailsCollapsed(true);
+            }
+            return;
+          }
+          if (serverDetailsCollapsedBeforeVersionsRef.current !== null) {
+            const shouldRestoreCollapsed = Boolean(serverDetailsCollapsedBeforeVersionsRef.current);
+            serverDetailsCollapsedBeforeVersionsRef.current = null;
+            setServerDetailsCollapsed(shouldRestoreCollapsed);
+          }
+        }, [serverDetailsCollapsed, serverVersionsSidebarOpen]);
 
         useEffect(() => {
           const normalizedTargetEnvironmentId = String(navigationTargetEnvironmentId || "").trim();
@@ -86582,6 +87303,31 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             window.removeEventListener("keydown", handleEnvironmentPublishMenuEscape);
           };
         }, [environmentPublishMenuOpen]);
+
+        useEffect(() => {
+          if (!serverPublishMenuOpen) return undefined;
+
+          function handleServerPublishMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !serverPublishMenuRef.current || serverPublishMenuRef.current.contains(target)) {
+              return;
+            }
+            setServerPublishMenuOpen(false);
+          }
+
+          function handleServerPublishMenuEscape(event) {
+            if (event.key === "Escape") {
+              setServerPublishMenuOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleServerPublishMenuPointerDown);
+          window.addEventListener("keydown", handleServerPublishMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleServerPublishMenuPointerDown);
+            window.removeEventListener("keydown", handleServerPublishMenuEscape);
+          };
+        }, [serverPublishMenuOpen]);
 
         useEffect(() => {
           if (!environmentShareTeamModalOpen && !environmentShareTeamModalClosing) {
@@ -87198,6 +87944,212 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           };
         }, [draftEnvironment]);
 
+        useEffect(() => {
+          if (
+            !draftEnvironment?.id
+            || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID
+            || draftEnvironment.isSystem
+            || draftEnvironment.isDefault
+            || loadingEnvironmentId === draftEnvironment.id
+            || saveState.isSaving
+            || environmentVersionState.status === "loading"
+          ) {
+            return;
+          }
+          if (readPlaygroundEnvironmentVersions(draftEnvironment).length > 0) {
+            return;
+          }
+          const seedKey = String(draftEnvironment.id || "").trim();
+          if (!seedKey || environmentInitialVersionSeededRef.current.has(seedKey)) {
+            return;
+          }
+          environmentInitialVersionSeededRef.current.add(seedKey);
+          const actor = getEnvironmentVersionActor();
+          const initialVersion = createPlaygroundEnvironmentVersion(draftEnvironment, [], { status: "active", actor });
+          const nextEnvironment = createPlaygroundEnvironmentWithVersionList(draftEnvironment, [initialVersion], initialVersion.id);
+          setDraftEnvironment(nextEnvironment);
+          setEnvironmentDetailsById((current) => ({
+            ...current,
+            [nextEnvironment.id]: nextEnvironment,
+          }));
+          void commitVersionedEnvironmentRecord(nextEnvironment, {
+            operation: "initialize",
+            actor,
+            loadingMessage: "Initializing computer version...",
+            successMessage: "Version initialized",
+            errorMessage: "Failed to initialize computer version.",
+          });
+        }, [
+          draftEnvironment,
+          environmentVersionState.status,
+          loadingEnvironmentId,
+          saveState.isSaving,
+        ]);
+
+        useEffect(() => {
+          if (
+            resourceMode === "servers"
+            || !draftEnvironment?.id
+            || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID
+            || draftEnvironment.isSystem
+          ) {
+            return undefined;
+          }
+
+          function handleEnvironmentVersionKeyboardShortcut(event) {
+            const isCommandShortcut = Boolean(event.metaKey || event.ctrlKey);
+            if (!isCommandShortcut || event.altKey) {
+              return;
+            }
+            const key = String(event.key || "").toLowerCase();
+            if (key !== "s" && key !== "p") {
+              return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation?.();
+            if (saveState.isSaving || environmentVersionState.status === "loading" || environmentVersionModal) {
+              return;
+            }
+
+            if (key === "s" && event.shiftKey) {
+              openCreateEnvironmentVersionModal();
+              return;
+            }
+
+            if (key === "s") {
+              if (getEnvironmentVersionPrimaryActionKind() === "save" && hasDraftEnvironmentVersionChanges()) {
+                void saveCurrentEnvironmentVersion();
+              }
+              return;
+            }
+
+            if (key === "p" && !event.shiftKey && canPublishDraftEnvironmentSelectedVersion()) {
+              void publishCurrentEnvironmentVersion();
+            }
+          }
+
+          window.addEventListener("keydown", handleEnvironmentVersionKeyboardShortcut, true);
+          return () => window.removeEventListener("keydown", handleEnvironmentVersionKeyboardShortcut, true);
+        }, [
+          draftEnvironment,
+          environmentVersionModal,
+          environmentVersionState.status,
+          resourceMode,
+          saveState.isSaving,
+        ]);
+
+        useEffect(() => {
+          const normalizedKind = canonicalizePlaygroundServerKind(draftServer?.kind);
+          const isDeployableServer = normalizedKind === "web_app" || normalizedKind === "function";
+          if (
+            resourceMode !== "servers"
+            || !draftServer?.id
+            || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
+            || !isDeployableServer
+            || isSelectedServerTemplatePreview
+            || isPlaygroundResourceTemplatePreviewRecord(draftServer)
+            || loadingServerId === draftServer.id
+            || serverSaveState.isSaving
+            || serverVersionState.status === "loading"
+          ) {
+            return;
+          }
+          if (readPlaygroundServerVersions(draftServer).length > 0) {
+            rememberServerVersionBaseline(draftServer, { force: true });
+            return;
+          }
+          const seedKey = String(draftServer.id || "").trim();
+          if (!seedKey || serverInitialVersionSeededRef.current.has(seedKey)) {
+            return;
+          }
+          serverInitialVersionSeededRef.current.add(seedKey);
+          const actor = getServerVersionActor();
+          const initialVersion = createPlaygroundServerVersion(draftServer, [], {
+            status: "active",
+            actor,
+            snapshot: buildDraftServerVersionSnapshot(draftServer),
+          });
+          const nextServer = createPlaygroundServerWithVersionList(draftServer, [initialVersion], initialVersion.id);
+          setDraftServer(nextServer);
+          upsertLocalServerRecord(nextServer);
+          void commitVersionedServerRecord(nextServer, {
+            operation: "initialize",
+            actor,
+            loadingMessage: "Initializing server version...",
+            successMessage: "Version initialized",
+            errorMessage: "Failed to initialize server version.",
+          });
+        }, [
+          currentServerFiles,
+          draftServer,
+          isSelectedServerTemplatePreview,
+          loadingServerId,
+          resourceMode,
+          serverFileEditorState.path,
+          serverFileEditorState.status,
+          serverFileEditorState.value,
+          serverSaveState.isSaving,
+          serverVersionState.status,
+        ]);
+
+        useEffect(() => {
+          const normalizedKind = canonicalizePlaygroundServerKind(draftServer?.kind);
+          const isDeployableServer = normalizedKind === "web_app" || normalizedKind === "function";
+          if (
+            resourceMode !== "servers"
+            || !isDeployableServer
+            || !draftServer?.id
+            || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
+          ) {
+            return undefined;
+          }
+
+          function handleServerVersionKeyboardShortcut(event) {
+            const isCommandShortcut = Boolean(event.metaKey || event.ctrlKey);
+            if (!isCommandShortcut || event.altKey) {
+              return;
+            }
+            const key = String(event.key || "").toLowerCase();
+            if (key !== "s" && key !== "p") {
+              return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation?.();
+            if (serverSaveState.isSaving || serverVersionState.status === "loading" || serverVersionModal) {
+              return;
+            }
+
+            if (key === "s" && event.shiftKey) {
+              openCreateServerVersionModal();
+              return;
+            }
+
+            if (key === "s") {
+              if (getServerVersionPrimaryActionKind() === "save" && hasDraftServerVersionChanges()) {
+                void saveCurrentServerVersion();
+              }
+              return;
+            }
+
+            if (key === "p" && !event.shiftKey && canPublishDraftServerSelectedVersion()) {
+              void publishCurrentServerVersion();
+            }
+          }
+
+          window.addEventListener("keydown", handleServerVersionKeyboardShortcut, true);
+          return () => window.removeEventListener("keydown", handleServerVersionKeyboardShortcut, true);
+        }, [
+          draftServer,
+          resourceMode,
+          serverSaveState.isSaving,
+          serverVersionModal,
+          serverVersionState.status,
+        ]);
+
         function handleEnvironmentSelect(environmentId) {
           commitDraftEnvironmentIfDirty();
           setToolbarPopover("");
@@ -87595,6 +88547,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return typeof updater === "function" ? updater(base) : updater;
           });
           serverEditorDirtyRef.current = true;
+          serverVersionDraftTouchedRef.current = true;
           setServerSaveState((current) => ({
             ...current,
             error: "",
@@ -90417,6 +91370,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }
 
             await loadServerFiles(draftServer.id);
+            serverVersionDraftTouchedRef.current = true;
             setServerFileTransferState({
               isUploading: false,
               error: "",
@@ -90510,6 +91464,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }
 
             await loadServerFiles(draftServer.id);
+            serverVersionDraftTouchedRef.current = true;
             setServerFileTransferState((current) => ({
               ...current,
               error: "",
@@ -90595,6 +91550,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }
 
             await loadServerFiles(draftServer.id);
+            serverVersionDraftTouchedRef.current = true;
             if (serverFileEditorState.path === currentPath) {
               setServerFileEditorState((current) => ({
                 ...current,
@@ -90669,6 +91625,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             saveError: "",
             saveMessage: "",
           }));
+          serverVersionDraftTouchedRef.current = true;
         }
 
         function handleServerFileEditorRevert() {
@@ -90743,6 +91700,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               saveError: "",
               saveMessage: "Saved",
             }));
+            serverVersionDraftTouchedRef.current = true;
             await loadServerFiles(draftServer.id);
           } catch (error) {
             setServerFileEditorState((current) => ({
@@ -90790,6 +91748,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }
 
             await loadServerFiles(draftServer.id);
+            serverVersionDraftTouchedRef.current = true;
             setServerFileTransferState({
               isUploading: false,
               error: "",
@@ -91046,6 +92005,92 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return savedServer;
         }
 
+        async function deployServerRecord(serverRecord, options = {}) {
+          const serverToDeploy = normalizePlaygroundServerRecord(serverRecord || draftServer);
+          const serverToDeployId = String(serverToDeploy?.id || "").trim();
+          if (!serverToDeployId || serverToDeployId === PLAYGROUND_SERVER_DRAFT_ID) {
+            throw new Error("No server was available to deploy.");
+          }
+          setServerDeploymentStatusDismissed(false);
+          setServerDeploymentState({
+            isDeploying: true,
+            isInvoking: false,
+            error: "",
+            message: options.message || "",
+            lastResponseText: "",
+            deployProgress: Math.max(0.08, Number(options.progress || 0.08) || 0.08),
+          });
+          startServerDeployProgressTimer();
+
+          try {
+            const response = await fetch(
+              backendUrl + "/servers/" + encodeURIComponent(serverToDeployId) + "/deploy",
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({}),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to deploy server.");
+            }
+
+            const updatedServer = getPlaygroundServerResponseRecord(data);
+            const mergedUpdatedServer = updatedServer
+              ? normalizePlaygroundServerRecord({
+                  ...serverToDeploy,
+                  ...updatedServer,
+                  metadata: options.preserveVersionMetadata ? serverToDeploy.metadata : updatedServer.metadata,
+                })
+              : null;
+            if (mergedUpdatedServer) {
+              upsertLocalServerRecord(mergedUpdatedServer);
+              if (selectedServerIdRef.current === mergedUpdatedServer.id || serverToDeployId === mergedUpdatedServer.id) {
+                setDraftServer(mergedUpdatedServer);
+                if (options.preserveVersionMetadata) {
+                  rememberServerVersionBaseline(mergedUpdatedServer, { force: true });
+                }
+              }
+            }
+
+            clearServerDeployProgressTimer();
+            setServerDeploymentState({
+              isDeploying: false,
+              isInvoking: false,
+              error: "",
+              message: data?.serviceUrl ? "Deployed to " + data.serviceUrl : "Deployment finished",
+              lastResponseText: "",
+              deployProgress: 1,
+            });
+            void loadServerContext(serverToDeployId, { force: true });
+            void loadServerAnalytics(serverToDeployId, { force: true });
+            void loadServerDeployments(serverToDeployId, { force: true });
+            void loadServerLogs(serverToDeployId, "deployment", { force: true });
+            return mergedUpdatedServer || serverToDeploy;
+          } catch (error) {
+            clearServerDeployProgressTimer();
+            setServerSaveState((current) => ({
+              ...current,
+              isSaving: false,
+              error: current.error,
+              message: "",
+            }));
+            setServerDeploymentState({
+              isDeploying: false,
+              isInvoking: false,
+              error: error instanceof Error ? error.message : "Failed to deploy server.",
+              message: "",
+              lastResponseText: "",
+              deployProgress: 0,
+            });
+            throw error;
+          }
+        }
+
         async function handleDeployServer() {
           if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
             return;
@@ -91088,55 +92133,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 deployProgress: Math.max(Number(current.deployProgress || 0), 0.2),
               }));
             }
-            const response = await fetch(
-              backendUrl + "/servers/" + encodeURIComponent(serverToDeployId) + "/deploy",
-              {
-                method: "POST",
-                headers: {
-                  ...requestHeaders,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({}),
-              }
-            );
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to deploy server.");
-            }
-
-            const updatedServer = getPlaygroundServerResponseRecord(data);
-            if (updatedServer) {
-              setServers((current) => {
-                const existingIndex = current.findIndex((server) => server.id === updatedServer.id);
-                if (existingIndex === -1) {
-                  return [updatedServer, ...current];
-                }
-                const next = [...current];
-                next[existingIndex] = updatedServer;
-                return next;
-              });
-              setServerDetailsById((current) => ({
-                ...current,
-                [updatedServer.id]: updatedServer,
-              }));
-              if (selectedServerIdRef.current === updatedServer.id || serverToDeployId === updatedServer.id) {
-                setDraftServer(updatedServer);
-              }
-            }
-
-            clearServerDeployProgressTimer();
-            setServerDeploymentState({
-              isDeploying: false,
-              isInvoking: false,
-              error: "",
-              message: data?.serviceUrl ? "Deployed to " + data.serviceUrl : "Deployment finished",
-              lastResponseText: "",
-              deployProgress: 1,
-            });
-            void loadServerContext(serverToDeployId, { force: true });
-            void loadServerAnalytics(serverToDeployId, { force: true });
-            void loadServerDeployments(serverToDeployId, { force: true });
-            void loadServerLogs(serverToDeployId, "deployment", { force: true });
+            await deployServerRecord(serverToDeploy);
           } catch (error) {
             clearServerDeployProgressTimer();
             setServerSaveState((current) => ({
@@ -92025,28 +93022,446 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }
 
         function getEnvironmentVersionMetadata(environmentRecord = draftEnvironment) {
-          return environmentRecord?.metadata && typeof environmentRecord.metadata === "object" && !Array.isArray(environmentRecord.metadata)
-            ? environmentRecord.metadata
-            : {};
+          return environmentVersionController.getMetadata(environmentRecord);
         }
 
-        function readDraftEnvironmentVersions() {
-          return readPlaygroundEnvironmentVersions(draftEnvironment);
+        function readDraftEnvironmentVersions(environmentRecord = draftEnvironment) {
+          return environmentVersionController.readVersions(environmentRecord);
         }
 
-        function getDraftEnvironmentActiveVersion() {
-          const versions = readDraftEnvironmentVersions();
-          const metadata = getEnvironmentVersionMetadata();
-          const activeId = String(
+        function getDraftEnvironmentActiveVersion(environmentRecord = draftEnvironment) {
+          return environmentVersionController.getActiveVersion(environmentRecord);
+        }
+
+        function getDraftEnvironmentSelectedVersion(environmentRecord = draftEnvironment) {
+          return environmentVersionController.getSelectedVersion(environmentRecord);
+        }
+
+        function getEnvironmentVersionActor() {
+          return normalizePlaygroundVersionActor({
+            id: currentUserId || currentUserEmail || "local-user",
+            name: currentUserName || currentUserEmail || "User",
+            email: currentUserEmail,
+            avatarUrl: currentUserAvatarUrl,
+          });
+        }
+
+        function getEnvironmentVersionActorLabel(actor) {
+          const normalizedActor = normalizePlaygroundVersionActor(actor);
+          if (!normalizedActor) {
+            return "";
+          }
+          return String(normalizedActor.name || normalizedActor.email || normalizedActor.id || "").trim();
+        }
+
+        function getEnvironmentVersionLifecycleLabel(version) {
+          const lifecycleState = String(version?.lifecycleState || version?.lifecycle_state || "").trim().toLowerCase();
+          if (lifecycleState === "published" || String(version?.status || "").trim().toLowerCase() === "active") return "Published";
+          if (lifecycleState === "deprecated" || String(version?.status || "").trim().toLowerCase() === "superseded") return "Superseded";
+          if (lifecycleState === "unpublished" || String(version?.status || "").trim().toLowerCase() === "unpublished") return "Unpublished";
+          if (lifecycleState === "archived") return "Archived";
+          if (lifecycleState === "draft") return "Draft";
+          return "Saved";
+        }
+
+        function getEnvironmentVersioningMetadata(environmentRecord) {
+          const metadata = getEnvironmentMetadataRecord(environmentRecord);
+          const versioning = metadata.runnerVersioning || metadata.runner_versioning || metadata.versioning || {};
+          return versioning && typeof versioning === "object" && !Array.isArray(versioning) ? versioning : {};
+        }
+
+        function getEnvironmentVersioningRevisionId(environmentRecord) {
+          const versioning = getEnvironmentVersioningMetadata(environmentRecord);
+          return String(versioning.revisionId || versioning.revision_id || "").trim();
+        }
+
+        function getEnvironmentVersioningRevisionNumber(environmentRecord) {
+          const versioning = getEnvironmentVersioningMetadata(environmentRecord);
+          return Number(versioning.revisionNumber || versioning.revision_number || 0) || 0;
+        }
+
+        function buildEnvironmentVersioningMetadata(environmentRecord, options = {}) {
+          const now = new Date().toISOString();
+          const metadata = getEnvironmentMetadataRecord(environmentRecord);
+          const currentVersioning = getEnvironmentVersioningMetadata(environmentRecord);
+          const actor = normalizePlaygroundVersionActor(options.actor) || getEnvironmentVersionActor();
+          const operation = String(options.operation || "save-current").trim() || "save-current";
+          const activeVersion = getDraftEnvironmentActiveVersion(environmentRecord);
+          const selectedVersion = getDraftEnvironmentSelectedVersion(environmentRecord);
+          const previousRevisionId = String(
+            currentVersioning.revisionId
+            || currentVersioning.revision_id
+            || getEnvironmentVersioningRevisionId(draftEnvironment)
+            || getEnvironmentVersioningRevisionId(selectedEnvironmentSnapshot)
+            || ""
+          ).trim();
+          const nextRevisionNumber = Math.max(
+            getEnvironmentVersioningRevisionNumber(environmentRecord),
+            getEnvironmentVersioningRevisionNumber(draftEnvironment),
+            getEnvironmentVersioningRevisionNumber(selectedEnvironmentSnapshot)
+          ) + 1;
+          const nextRevisionId = createPlaygroundEnvironmentVersionRevisionId();
+          const isPublishOperation = operation.includes("publish") || (operation === "initialize" && Boolean(activeVersion));
+          const nextState = isPublishOperation
+            ? "published"
+            : operation.includes("unpublish")
+              ? "unpublished"
+              : "saved";
+          const nextVersioning = {
+            ...currentVersioning,
+            schemaVersion: 1,
+            schema_version: 1,
+            resourceType: "computer",
+            resource_type: "computer",
+            revisionId: nextRevisionId,
+            revision_id: nextRevisionId,
+            baseRevisionId: previousRevisionId,
+            base_revision_id: previousRevisionId,
+            revisionNumber: nextRevisionNumber,
+            revision_number: nextRevisionNumber,
+            state: nextState,
+            lastOperation: operation,
+            last_operation: operation,
+            activeVersionId: activeVersion?.id || "",
+            active_version_id: activeVersion?.id || "",
+            selectedVersionId: selectedVersion?.id || "",
+            selected_version_id: selectedVersion?.id || "",
+            updatedAt: now,
+            updated_at: now,
+            updatedBy: actor,
+            updated_by: actor,
+          };
+          if (operation.includes("save")) {
+            nextVersioning.lastSavedAt = now;
+            nextVersioning.last_saved_at = now;
+            nextVersioning.lastSavedBy = actor;
+            nextVersioning.last_saved_by = actor;
+          }
+          if (isPublishOperation) {
+            nextVersioning.lastPublishedAt = now;
+            nextVersioning.last_published_at = now;
+            nextVersioning.lastPublishedBy = actor;
+            nextVersioning.last_published_by = actor;
+          }
+          if (operation.includes("unpublish")) {
+            nextVersioning.lastUnpublishedAt = now;
+            nextVersioning.last_unpublished_at = now;
+            nextVersioning.lastUnpublishedBy = actor;
+            nextVersioning.last_unpublished_by = actor;
+          }
+          const nextMetadata = {
+            ...metadata,
+            runnerVersioning: nextVersioning,
+            runner_versioning: nextVersioning,
+          };
+          if (isPublishOperation && activeVersion) {
+            const deploymentId = activeVersion.deploymentId || activeVersion.deployment_id || createPlaygroundEnvironmentDeploymentId(activeVersion.id);
+            nextMetadata.activeComputerDeployment = {
+              id: deploymentId,
+              versionId: activeVersion.id,
+              version: activeVersion.version,
+              status: "published",
+              publishedAt: now,
+              publishedBy: actor,
+            };
+            nextMetadata.active_computer_deployment = nextMetadata.activeComputerDeployment;
+          }
+          if (operation.includes("unpublish")) {
+            delete nextMetadata.activeComputerDeployment;
+            delete nextMetadata.active_computer_deployment;
+          }
+          return nextMetadata;
+        }
+
+        function prepareEnvironmentVersionedRecordForCommit(environmentRecord, options = {}) {
+          const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environmentRecord);
+          const nextMetadata = buildEnvironmentVersioningMetadata(normalizedEnvironment, options);
+          return normalizePlaygroundEnvironmentRecord({
+            ...normalizedEnvironment,
+            metadata: nextMetadata,
+          });
+        }
+
+        function normalizeEnvironmentVersionComparableList(value) {
+          return (Array.isArray(value) ? value : [])
+            .filter((entry) => entry !== null && entry !== undefined && String(typeof entry === "object" ? stringifyPlaygroundVersionComparableValue(entry) : entry).trim())
+            .slice()
+            .sort((left, right) => stringifyPlaygroundVersionComparableValue(left).localeCompare(stringifyPlaygroundVersionComparableValue(right)));
+        }
+
+        function buildEnvironmentVersionComparableSnapshot(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundEnvironmentVersion({ snapshot }).snapshot;
+          return {
+            name: normalizedSnapshot.name,
+            description: normalizedSnapshot.description,
+            computeProfile: normalizedSnapshot.computeProfile,
+            runtimes: Object.fromEntries(Object.entries(normalizedSnapshot.runtimes || {}).sort(([left], [right]) => left.localeCompare(right))),
+            packages: {
+              system: normalizeEnvironmentVersionComparableList(normalizedSnapshot.packages?.system),
+              python: normalizeEnvironmentVersionComparableList(normalizedSnapshot.packages?.python),
+              node: normalizeEnvironmentVersionComparableList(normalizedSnapshot.packages?.node),
+            },
+            environmentVariables: normalizeEnvironmentVersionComparableList(
+              normalizePlaygroundEnvironmentVariables(normalizedSnapshot.environmentVariables).map((item) => ({
+                key: item.key,
+                value: item.value,
+              }))
+            ),
+            secrets: normalizeEnvironmentVersionComparableList(
+              normalizePlaygroundEnvironmentVariables(normalizedSnapshot.secrets).map((item) => ({ key: item.key }))
+            ),
+            setupScripts: normalizeEnvironmentVersionComparableList(normalizedSnapshot.setupScripts),
+            mcpServers: normalizeEnvironmentVersionComparableList(
+              normalizePlaygroundMcpServers(normalizedSnapshot.mcpServers).map((server) => ({
+                name: server.name,
+                type: server.type,
+                url: server.url || "",
+                command: server.command || "",
+                enabled: server.enabled !== false,
+              }))
+            ),
+            documentation: normalizeEnvironmentVersionComparableList(
+              normalizePlaygroundDocumentationFiles(normalizedSnapshot.documentation).map((file) => ({
+                name: file.name,
+                url: file.url,
+              }))
+            ),
+            internetAccess: normalizedSnapshot.internetAccess !== false,
+            guiEnabled: normalizedSnapshot.guiEnabled === true,
+            officeAppsEnabled: normalizedSnapshot.officeAppsEnabled === true,
+            dockerfileExtensions: normalizedSnapshot.dockerfileExtensions || "",
+            baseImage: normalizedSnapshot.baseImage || "",
+          };
+        }
+
+        const environmentVersionController = createPlaygroundVersionController({
+          getMetadata: (environmentRecord) => (
+            environmentRecord?.metadata && typeof environmentRecord.metadata === "object" && !Array.isArray(environmentRecord.metadata)
+              ? environmentRecord.metadata
+              : {}
+          ),
+          readVersions: readPlaygroundEnvironmentVersions,
+          normalizeVersions: normalizePlaygroundEnvironmentVersions,
+          createVersion: createPlaygroundEnvironmentVersion,
+          withVersionList: createPlaygroundEnvironmentWithVersionList,
+          fromVersionSnapshot: createPlaygroundEnvironmentFromVersionSnapshot,
+          buildSnapshot: buildPlaygroundEnvironmentVersionSnapshot,
+          buildComparableSnapshot: buildEnvironmentVersionComparableSnapshot,
+          getActiveVersionId: (metadata) => (
             metadata.activeEnvironmentVersionId
             || metadata.active_environment_version_id
             || metadata.activeComputerVersionId
             || metadata.active_computer_version_id
             || ""
-          ).trim();
-          return versions.find((version) => version.id === activeId)
-            || versions.find((version) => version.status === "active")
-            || null;
+          ),
+          getSelectedVersionId: (metadata, activeVersion) => (
+            metadata.restoredFromEnvironmentVersionId
+            || metadata.restored_from_environment_version_id
+            || metadata.restoredFromComputerVersionId
+            || metadata.restored_from_computer_version_id
+            || activeVersion?.id
+            || ""
+          ),
+          updateVersionFromResource: (version, environmentRecord, options = {}) => {
+            const now = new Date().toISOString();
+            const normalizedVersion = normalizePlaygroundEnvironmentVersion(version || {});
+            const snapshot = buildPlaygroundEnvironmentVersionSnapshot(environmentRecord);
+            const nextStatus = String(options.status || "saved").trim().toLowerCase() === "active" ? "active" : "saved";
+            const actor = normalizePlaygroundVersionActor(options.actor) || getEnvironmentVersionActor();
+            const revisionId = createPlaygroundEnvironmentVersionRevisionId();
+            const deploymentId = nextStatus === "active" ? (normalizedVersion.deploymentId || normalizedVersion.deployment_id || createPlaygroundEnvironmentDeploymentId(normalizedVersion.id)) : "";
+            return normalizePlaygroundEnvironmentVersion({
+              ...normalizedVersion,
+              status: nextStatus,
+              lifecycleState: nextStatus === "active" ? "published" : "saved",
+              lifecycle_state: nextStatus === "active" ? "published" : "saved",
+              revisionId,
+              revision_id: revisionId,
+              baseRevisionId: normalizedVersion.revisionId || normalizedVersion.revision_id || "",
+              base_revision_id: normalizedVersion.revisionId || normalizedVersion.revision_id || "",
+              revisionNumber: (Number(normalizedVersion.revisionNumber || normalizedVersion.revision_number || normalizedVersion.version || 0) || 0) + 1,
+              revision_number: (Number(normalizedVersion.revisionNumber || normalizedVersion.revision_number || normalizedVersion.version || 0) || 0) + 1,
+              updatedAt: now,
+              updated_at: now,
+              updatedBy: actor,
+              updated_by: actor,
+              publishedAt: nextStatus === "active" ? now : "",
+              published_at: nextStatus === "active" ? now : "",
+              publishedBy: nextStatus === "active" ? actor : null,
+              published_by: nextStatus === "active" ? actor : null,
+              deploymentId,
+              deployment_id: deploymentId,
+              deploymentStatus: nextStatus === "active" ? "published" : "",
+              deployment_status: nextStatus === "active" ? "published" : "",
+              name: snapshot.name,
+              computeProfile: snapshot.computeProfile,
+              runtimes: snapshot.runtimes,
+              runtimeCount: Object.keys(snapshot.runtimes || {}).length,
+              snapshot,
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          updateVersionMetadata: (version, details = {}) => {
+            const normalizedVersion = normalizePlaygroundEnvironmentVersion(version || {});
+            const actor = normalizePlaygroundVersionActor(details.actor) || getEnvironmentVersionActor();
+            const now = String(details.updatedAt || new Date().toISOString()).trim();
+            return normalizePlaygroundEnvironmentVersion({
+              ...normalizedVersion,
+              label: details.label,
+              description: details.description,
+              updatedAt: now,
+              updated_at: now,
+              updatedBy: actor,
+              updated_by: actor,
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          publishVersion: (version, options = {}) => {
+            const normalizedVersion = normalizePlaygroundEnvironmentVersion(version || {});
+            const publishedAt = String(options.publishedAt || new Date().toISOString()).trim();
+            const actor = normalizePlaygroundVersionActor(options.actor) || getEnvironmentVersionActor();
+            const deploymentId = normalizedVersion.deploymentId || normalizedVersion.deployment_id || createPlaygroundEnvironmentDeploymentId(normalizedVersion.id);
+            return normalizePlaygroundEnvironmentVersion({
+              ...normalizedVersion,
+              status: "active",
+              lifecycleState: "published",
+              lifecycle_state: "published",
+              updatedAt: publishedAt,
+              updated_at: publishedAt,
+              updatedBy: actor,
+              updated_by: actor,
+              publishedAt,
+              published_at: publishedAt,
+              publishedBy: actor,
+              published_by: actor,
+              deploymentId,
+              deployment_id: deploymentId,
+              deploymentStatus: "published",
+              deployment_status: "published",
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          supersedeVersion: (version, options = {}) => {
+            const normalizedVersion = normalizePlaygroundEnvironmentVersion(version || {});
+            const supersededAt = String(options.supersededAt || new Date().toISOString()).trim();
+            return normalizePlaygroundEnvironmentVersion({
+              ...normalizedVersion,
+              status: "superseded",
+              lifecycleState: "deprecated",
+              lifecycle_state: "deprecated",
+              updatedAt: supersededAt,
+              updated_at: supersededAt,
+              deploymentStatus: "superseded",
+              deployment_status: "superseded",
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          unpublishVersion: (version, options = {}) => {
+            const normalizedVersion = normalizePlaygroundEnvironmentVersion(version || {});
+            const unpublishedAt = String(options.unpublishedAt || new Date().toISOString()).trim();
+            const actor = normalizePlaygroundVersionActor(options.actor) || getEnvironmentVersionActor();
+            return normalizePlaygroundEnvironmentVersion({
+              ...normalizedVersion,
+              status: "unpublished",
+              lifecycleState: "unpublished",
+              lifecycle_state: "unpublished",
+              updatedAt: unpublishedAt,
+              updated_at: unpublishedAt,
+              updatedBy: actor,
+              updated_by: actor,
+              unpublishedAt,
+              unpublished_at: unpublishedAt,
+              unpublishedBy: actor,
+              unpublished_by: actor,
+              deploymentStatus: "unpublished",
+              deployment_status: "unpublished",
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          applyUnpublishMetadata: (environmentRecord, context = {}) => {
+            const nextMetadata = getEnvironmentMetadataRecord(environmentRecord);
+            nextMetadata.unpublishedAt = context.unpublishedAt;
+            nextMetadata.unpublished_at = context.unpublishedAt;
+            delete nextMetadata.publishedAt;
+            delete nextMetadata.published_at;
+            return {
+              ...environmentRecord,
+              metadata: nextMetadata,
+              publishedAt: "",
+            };
+          },
+        });
+
+        function rememberEnvironmentVersionBaseline(environmentRecord = draftEnvironment, options = {}) {
+          const didUpdateBaseline = environmentVersionController.rememberBaseline(environmentRecord, environmentVersionBaselineRef, options);
+          if (didUpdateBaseline) {
+            environmentVersionDraftTouchedRef.current = false;
+          }
+        }
+
+        function hasDraftEnvironmentVersionChanges() {
+          return environmentVersionController.hasDraftChanges(draftEnvironment, environmentVersionBaselineRef, {
+            touched: environmentVersionDraftTouchedRef.current,
+          });
+        }
+
+        function canPublishDraftEnvironmentSelectedVersion() {
+          const selectedVersion = getDraftEnvironmentSelectedVersion();
+          return Boolean(selectedVersion && !hasDraftEnvironmentVersionChanges() && selectedVersion.status !== "active");
+        }
+
+        function getEnvironmentVersionPrimaryActionKind() {
+          return canPublishDraftEnvironmentSelectedVersion() ? "publish" : "save";
+        }
+
+        function getEnvironmentVersionPopupActions(options = {}) {
+          const includeVersionHistory = options.includeVersionHistory !== false;
+          const environmentVersionPrimaryActionKind = getEnvironmentVersionPrimaryActionKind();
+          const environmentVersionHasChanges = hasDraftEnvironmentVersionChanges();
+          const environmentVersionCanPublish = canPublishDraftEnvironmentSelectedVersion();
+          const actions = [
+            environmentVersionPrimaryActionKind === "publish"
+              ? {
+                  id: "publish",
+                  label: "Publish",
+                  Icon: Rocket,
+                  shortcut: "⌘P",
+                  disabled: !environmentVersionCanPublish,
+                  onClick: publishCurrentEnvironmentVersion,
+                }
+              : {
+                  id: "save",
+                  label: "Save",
+                  Icon: Save,
+                  shortcut: "⌘S",
+                  disabled: !environmentVersionHasChanges,
+                  onClick: saveCurrentEnvironmentVersion,
+                },
+            {
+              id: "save-new-version",
+              label: "Save to new Version",
+              Icon: GitBranchPlus,
+              shortcut: "⇧⌘S",
+              disabled: !environmentVersionHasChanges,
+              onClick: () => openCreateEnvironmentVersionModal(),
+            },
+            {
+              id: "revert",
+              label: "Revert to last saved Version",
+              Icon: Undo2,
+              disabled: !environmentVersionHasChanges,
+              onClick: handleRevertDraft,
+            },
+          ];
+          if (includeVersionHistory) {
+            actions.push({
+              id: "version-history",
+              label: "Version history",
+              Icon: History,
+              disabled: false,
+              onClick: () => {
+                setEnvironmentPublishMenuOpen(false);
+                setEnvironmentVersionsHeaderMenuOpen(false);
+                setEnvironmentVersionsSidebarOpen(true);
+              },
+            });
+          }
+          return actions;
         }
 
         async function commitVersionedEnvironmentRecord(nextEnvironment, options = {}) {
@@ -92066,19 +93481,23 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           });
 
           try {
-            const savedEnvironment = await persistEnvironmentRecord(normalizedNextEnvironment);
+            const versionedNextEnvironment = prepareEnvironmentVersionedRecordForCommit(normalizedNextEnvironment, {
+              ...options,
+              actor: options.actor || getEnvironmentVersionActor(),
+            });
+            const savedEnvironment = await persistEnvironmentRecord(versionedNextEnvironment);
             const savedHasVersionMetadata = readPlaygroundEnvironmentVersions(savedEnvironment).length > 0
               || Boolean(
                 savedEnvironment?.metadata?.activeEnvironmentVersionId
                 || savedEnvironment?.metadata?.active_environment_version_id
                 || savedEnvironment?.metadata?.activeComputerVersionId
                 || savedEnvironment?.metadata?.active_computer_version_id
-              );
+            );
             const mergedSavedEnvironment = normalizePlaygroundEnvironmentRecord({
-              ...normalizedNextEnvironment,
+              ...versionedNextEnvironment,
               ...savedEnvironment,
-              metadata: savedHasVersionMetadata ? savedEnvironment.metadata : normalizedNextEnvironment.metadata,
-              publishedAt: savedEnvironment?.publishedAt || normalizedNextEnvironment.publishedAt || "",
+              metadata: savedHasVersionMetadata ? savedEnvironment.metadata : versionedNextEnvironment.metadata,
+              publishedAt: savedEnvironment?.publishedAt || versionedNextEnvironment.publishedAt || "",
             });
             setEnvironmentDetailsById((current) => ({
               ...current,
@@ -92086,13 +93505,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }));
             setSelectedEnvironmentId(mergedSavedEnvironment.id);
             setDraftEnvironment(mergedSavedEnvironment);
+            rememberEnvironmentVersionBaseline(mergedSavedEnvironment, { force: true });
             setOpenEnvironmentVersionMenuId("");
             setModifiedSecrets({});
             setModifiedMcpTokens({});
             setSaveState({
               isSaving: false,
               error: "",
-              message: options.successMessage || "Saved",
+              message: "",
             });
             setEnvironmentVersionState({
               status: "success",
@@ -92131,6 +93551,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
           setEnvironmentActionsPopoverOpen(false);
           setEnvironmentPublishMenuOpen(false);
+          setEnvironmentVersionsHeaderMenuOpen(false);
           setOpenEnvironmentVersionMenuId("");
           setEnvironmentVersionState((current) => current.status === "loading" ? current : {
             status: "idle",
@@ -92143,6 +93564,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         function closeEnvironmentVersionsSidebar() {
           setEnvironmentVersionsSidebarOpen(false);
           setEnvironmentPublishMenuOpen(false);
+          setEnvironmentVersionsHeaderMenuOpen(false);
+          finishCloseEnvironmentVersionModal();
+          setEnvironmentVersionChangesState(null);
           setOpenEnvironmentVersionMenuId("");
         }
 
@@ -92150,27 +93574,214 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftEnvironment || environmentVersionState.status === "loading") {
             return;
           }
-          const versions = readDraftEnvironmentVersions();
-          const newVersion = createPlaygroundEnvironmentVersion(draftEnvironment, versions, { status: "saved" });
-          const nextEnvironment = createPlaygroundEnvironmentWithVersionList(draftEnvironment, [newVersion, ...versions], newVersion.id);
-          await commitVersionedEnvironmentRecord(nextEnvironment, {
-            loadingMessage: "Saving computer version...",
-            successMessage: "Version saved",
-            errorMessage: "Failed to save computer version.",
+          if (!hasDraftEnvironmentVersionChanges()) {
+            return;
+          }
+          const actor = getEnvironmentVersionActor();
+          const result = environmentVersionController.buildSaveCurrentResource(draftEnvironment, { status: "saved", actor });
+          if (!result?.resource) {
+            return;
+          }
+          await commitVersionedEnvironmentRecord(result.resource, {
+            operation: "save-current",
+            actor,
+            loadingMessage: "Saving current version...",
+            successMessage: "Current version saved",
+            errorMessage: "Failed to save current version.",
           });
+        }
+
+        function cancelEnvironmentVersionModalAnimation() {
+          if (environmentVersionModalCloseTimerRef.current) {
+            window.clearTimeout(environmentVersionModalCloseTimerRef.current);
+            environmentVersionModalCloseTimerRef.current = null;
+          }
+          if (environmentVersionModalFrameRef.current) {
+            window.cancelAnimationFrame(environmentVersionModalFrameRef.current);
+            environmentVersionModalFrameRef.current = null;
+          }
+        }
+
+        function finishCloseEnvironmentVersionModal() {
+          cancelEnvironmentVersionModalAnimation();
+          setEnvironmentVersionModal(null);
+          setEnvironmentVersionModalVisible(false);
+          setEnvironmentVersionModalClosing(false);
+          setEnvironmentVersionNameDraft("");
+          setEnvironmentVersionDescriptionDraft("");
+          setIsEnvironmentVersionDescriptionEditing(false);
+        }
+
+        function openEnvironmentVersionModal(nextModal, draft = {}) {
+          if (!draftEnvironment || environmentVersionState.status === "loading" || saveState.isSaving) {
+            return;
+          }
+          cancelEnvironmentVersionModalAnimation();
+          setEnvironmentPublishMenuOpen(false);
+          setEnvironmentVersionsHeaderMenuOpen(false);
+          setOpenEnvironmentVersionMenuId("");
+          setEnvironmentVersionState((current) => current.status === "loading" ? current : {
+            status: "idle",
+            message: "",
+            error: "",
+          });
+          setEnvironmentVersionNameDraft(String(draft.name || "").trim());
+          setEnvironmentVersionDescriptionDraft(String(draft.description || ""));
+          setIsEnvironmentVersionDescriptionEditing(false);
+          setEnvironmentVersionModal(nextModal);
+          setEnvironmentVersionModalClosing(false);
+          setEnvironmentVersionModalVisible(false);
+          environmentVersionModalFrameRef.current = window.requestAnimationFrame(() => {
+            environmentVersionModalFrameRef.current = window.requestAnimationFrame(() => {
+              environmentVersionModalFrameRef.current = null;
+              setEnvironmentVersionModalVisible(true);
+            });
+          });
+        }
+
+        function openCreateEnvironmentVersionModal(options = {}) {
+          if (!draftEnvironment || environmentVersionState.status === "loading" || saveState.isSaving) {
+            return;
+          }
+          const forceNewVersion = Boolean(options.force);
+          if (!forceNewVersion && !hasDraftEnvironmentVersionChanges()) {
+            return;
+          }
+          const versions = readDraftEnvironmentVersions();
+          const nextVersion = versions.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), 0) + 1;
+          openEnvironmentVersionModal(
+            { mode: "create", force: forceNewVersion },
+            {
+              name: "Version " + nextVersion,
+              description: "",
+            }
+          );
+        }
+
+        function openEditEnvironmentVersionModal(versionId) {
+          if (!draftEnvironment || environmentVersionState.status === "loading" || saveState.isSaving) {
+            return;
+          }
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftEnvironmentVersions();
+          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
+          if (!targetVersion) {
+            return;
+          }
+          openEnvironmentVersionModal(
+            { mode: "edit", versionId: targetVersion.id },
+            {
+              name: String(targetVersion.label || ("Version " + targetVersion.version)).trim(),
+              description: String(targetVersion.description || ""),
+            }
+          );
+        }
+
+        function closeEnvironmentVersionModal(options = {}) {
+          if (saveState.isSaving || environmentVersionState.status === "loading") {
+            return;
+          }
+          if (options.animate === false) {
+            finishCloseEnvironmentVersionModal();
+            return;
+          }
+          if (!environmentVersionModal || environmentVersionModalClosing) {
+            return;
+          }
+          cancelEnvironmentVersionModalAnimation();
+          setEnvironmentVersionModalVisible(false);
+          setEnvironmentVersionModalClosing(true);
+          environmentVersionModalCloseTimerRef.current = window.setTimeout(() => {
+            environmentVersionModalCloseTimerRef.current = null;
+            finishCloseEnvironmentVersionModal();
+          }, typeof PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS === "number" ? PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS : 75);
+        }
+
+        async function saveEnvironmentToNewVersion(options = {}) {
+          if (!draftEnvironment || environmentVersionState.status === "loading") {
+            return null;
+          }
+          const forceNewVersion = Boolean(options.force);
+          if (!forceNewVersion && !hasDraftEnvironmentVersionChanges()) {
+            return null;
+          }
+          const actor = getEnvironmentVersionActor();
+          const result = environmentVersionController.buildNewVersionResource(draftEnvironment, {
+            label: options.label,
+            description: options.description,
+            actor,
+          });
+          if (!result?.resource) {
+            return null;
+          }
+          return await commitVersionedEnvironmentRecord(result.resource, {
+            operation: "save-new-version",
+            actor,
+            loadingMessage: "Saving new version...",
+            successMessage: "New version saved",
+            errorMessage: "Failed to save new version.",
+          });
+        }
+
+        async function updateEnvironmentVersionDetails(versionId, versionDetails = {}) {
+          if (!draftEnvironment || environmentVersionState.status === "loading") {
+            return null;
+          }
+          const actor = getEnvironmentVersionActor();
+          const result = environmentVersionController.buildVersionMetadataResource(draftEnvironment, versionId, {
+            ...versionDetails,
+            actor,
+          });
+          if (!result?.resource) {
+            return null;
+          }
+          return await commitVersionedEnvironmentRecord(result.resource, {
+            operation: "edit-version",
+            actor,
+            loadingMessage: "Saving version details...",
+            successMessage: "Version details saved",
+            errorMessage: "Failed to save version details.",
+          });
+        }
+
+        async function commitEnvironmentVersionModal() {
+          if (!environmentVersionModal || saveState.isSaving || environmentVersionState.status === "loading") {
+            return;
+          }
+          const label = String(environmentVersionNameDraft || "").trim() || "Version";
+          const description = String(environmentVersionDescriptionDraft || "").trim();
+          const savedEnvironment = environmentVersionModal.mode === "edit"
+            ? await updateEnvironmentVersionDetails(environmentVersionModal.versionId, { label, description })
+            : await saveEnvironmentToNewVersion({
+                force: Boolean(environmentVersionModal.force),
+                label,
+                description,
+              });
+          if (savedEnvironment) {
+            closeEnvironmentVersionModal();
+          }
         }
 
         async function publishCurrentEnvironmentVersion() {
           if (!draftEnvironment || environmentVersionState.status === "loading") {
             return;
           }
-          const versions = readDraftEnvironmentVersions();
-          const supersededVersions = versions.map((version) => (
-            version.status === "active" ? { ...version, status: "superseded" } : version
-          ));
-          const publishedVersion = createPlaygroundEnvironmentVersion(draftEnvironment, supersededVersions, { status: "active" });
-          const nextEnvironment = createPlaygroundEnvironmentWithVersionList(draftEnvironment, [publishedVersion, ...supersededVersions], publishedVersion.id);
-          await commitVersionedEnvironmentRecord(nextEnvironment, {
+          if (hasDraftEnvironmentVersionChanges()) {
+            setEnvironmentVersionState({
+              status: "error",
+              message: "",
+              error: "Save the current version before publishing.",
+            });
+            return;
+          }
+          const actor = getEnvironmentVersionActor();
+          const result = environmentVersionController.buildPublishSelectedResource(draftEnvironment, { actor });
+          if (!result?.resource) {
+            return;
+          }
+          await commitVersionedEnvironmentRecord(result.resource, {
+            operation: "publish",
+            actor,
             loadingMessage: "Publishing computer...",
             successMessage: "Published",
             errorMessage: "Failed to publish computer.",
@@ -92181,14 +93792,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftEnvironment || environmentVersionState.status === "loading") {
             return;
           }
-          const normalizedVersionId = String(versionId || "").trim();
-          const versions = readDraftEnvironmentVersions();
-          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
-          if (!targetVersion) {
+          const result = environmentVersionController.buildRestoreVersionResource(draftEnvironment, versionId);
+          if (!result?.resource) {
             return;
           }
-          const nextEnvironment = createPlaygroundEnvironmentFromVersionSnapshot(draftEnvironment, targetVersion, versions, targetVersion.id);
-          await commitVersionedEnvironmentRecord(nextEnvironment, {
+          await commitVersionedEnvironmentRecord(result.resource, {
+            operation: "restore",
+            actor: getEnvironmentVersionActor(),
             loadingMessage: "Restoring computer version...",
             successMessage: "Version restored",
             errorMessage: "Failed to restore computer version.",
@@ -92199,26 +93809,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftEnvironment || environmentVersionState.status === "loading") {
             return;
           }
-          const normalizedVersionId = String(versionId || "").trim();
-          const versions = readDraftEnvironmentVersions();
-          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
-          if (!targetVersion) {
+          const actor = getEnvironmentVersionActor();
+          const result = environmentVersionController.buildPublishVersionResource(draftEnvironment, versionId, { actor });
+          if (!result?.resource) {
             return;
           }
-          const now = new Date().toISOString();
-          const nextVersions = normalizePlaygroundEnvironmentVersions(versions.map((version) => {
-            if (version.id === targetVersion.id) {
-              return {
-                ...version,
-                status: "active",
-                publishedAt: now,
-              };
-            }
-            return version.status === "active" ? { ...version, status: "superseded" } : version;
-          }));
-          const nextTargetVersion = nextVersions.find((version) => version.id === targetVersion.id) || targetVersion;
-          const nextEnvironment = createPlaygroundEnvironmentFromVersionSnapshot(draftEnvironment, nextTargetVersion, nextVersions, nextTargetVersion.id);
-          await commitVersionedEnvironmentRecord(nextEnvironment, {
+          await commitVersionedEnvironmentRecord(result.resource, {
+            operation: "publish-version",
+            actor,
             loadingMessage: "Publishing computer version...",
             successMessage: "Published",
             errorMessage: "Failed to publish computer version.",
@@ -92229,18 +93827,19 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftEnvironment || environmentVersionState.status === "loading") {
             return;
           }
-          const normalizedVersionId = String(versionId || "").trim();
-          const versions = readDraftEnvironmentVersions();
-          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
-          if (!targetVersion) {
+          if (readDraftEnvironmentVersions().length <= 1) {
+            return;
+          }
+          const result = environmentVersionController.buildDeleteVersionResource(draftEnvironment, versionId);
+          if (!result?.resource) {
             return;
           }
           if (!window.confirm("Delete this computer version?")) {
             return;
           }
-          const nextVersions = versions.filter((version) => version.id !== targetVersion.id);
-          const nextEnvironment = createPlaygroundEnvironmentWithVersionList(draftEnvironment, nextVersions);
-          await commitVersionedEnvironmentRecord(nextEnvironment, {
+          await commitVersionedEnvironmentRecord(result.resource, {
+            operation: "delete-version",
+            actor: getEnvironmentVersionActor(),
             loadingMessage: "Deleting computer version...",
             successMessage: "Version deleted",
             errorMessage: "Failed to delete computer version.",
@@ -92251,34 +93850,278 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftEnvironment || environmentVersionState.status === "loading") {
             return;
           }
-          const activeVersion = getDraftEnvironmentActiveVersion();
-          if (!activeVersion) {
+          const actor = getEnvironmentVersionActor();
+          const result = environmentVersionController.buildUnpublishActiveResource(draftEnvironment, { actor });
+          if (!result?.resource) {
             return;
           }
           if (!window.confirm("Unpublish this computer? Version history will be kept.")) {
             return;
           }
-          const now = new Date().toISOString();
-          const nextVersions = normalizePlaygroundEnvironmentVersions(readDraftEnvironmentVersions().map((version) => (
-            version.id === activeVersion.id || version.status === "active"
-              ? { ...version, status: "unpublished" }
-              : version
-          )));
-          const nextEnvironment = createPlaygroundEnvironmentWithVersionList(draftEnvironment, nextVersions);
-          const nextMetadata = nextEnvironment.metadata && typeof nextEnvironment.metadata === "object" && !Array.isArray(nextEnvironment.metadata)
-            ? { ...nextEnvironment.metadata, unpublishedAt: now, unpublished_at: now }
-            : { unpublishedAt: now, unpublished_at: now };
-          delete nextMetadata.publishedAt;
-          delete nextMetadata.published_at;
-          await commitVersionedEnvironmentRecord({
-            ...nextEnvironment,
-            metadata: nextMetadata,
-            publishedAt: "",
-          }, {
+          await commitVersionedEnvironmentRecord(result.resource, {
+            operation: "unpublish",
+            actor,
             loadingMessage: "Unpublishing computer...",
             successMessage: "Unpublished",
             errorMessage: "Failed to unpublish computer.",
           });
+        }
+
+        function buildEnvironmentVersionConfigDiffPayload(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundEnvironmentVersion({ snapshot }).snapshot;
+          const profile = getPlaygroundEnvironmentComputeProfileConfig(normalizedSnapshot.computeProfile);
+          return {
+            name: normalizedSnapshot.name,
+            description: normalizedSnapshot.description,
+            computeProfile: {
+              id: normalizedSnapshot.computeProfile,
+              label: profile?.label || normalizedSnapshot.computeProfile || "",
+            },
+            internetAccess: normalizedSnapshot.internetAccess !== false,
+            guiEnabled: normalizedSnapshot.guiEnabled === true,
+            officeAppsEnabled: normalizedSnapshot.officeAppsEnabled === true,
+            baseImage: normalizedSnapshot.baseImage || "",
+          };
+        }
+
+        function buildEnvironmentVersionRuntimeDiffPayload(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundEnvironmentVersion({ snapshot }).snapshot;
+          return Object.fromEntries(Object.entries(normalizedSnapshot.runtimes || {}).sort(([left], [right]) => left.localeCompare(right)));
+        }
+
+        function buildEnvironmentVersionPackagesDiffPayload(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundEnvironmentVersion({ snapshot }).snapshot;
+          return {
+            system: normalizeEnvironmentVersionComparableList(normalizedSnapshot.packages?.system),
+            python: normalizeEnvironmentVersionComparableList(normalizedSnapshot.packages?.python),
+            node: normalizeEnvironmentVersionComparableList(normalizedSnapshot.packages?.node),
+          };
+        }
+
+        function buildEnvironmentVersionVariablesDiffPayload(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundEnvironmentVersion({ snapshot }).snapshot;
+          return normalizeEnvironmentVersionComparableList(
+            normalizePlaygroundEnvironmentVariables(normalizedSnapshot.environmentVariables).map((item) => ({
+              key: item.key,
+              value: item.value,
+            }))
+          );
+        }
+
+        function buildEnvironmentVersionSecretsDiffPayload(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundEnvironmentVersion({ snapshot }).snapshot;
+          return normalizeEnvironmentVersionComparableList(
+            normalizePlaygroundEnvironmentVariables(normalizedSnapshot.secrets).map((item) => ({ key: item.key }))
+          );
+        }
+
+        function buildEnvironmentVersionMcpDiffPayload(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundEnvironmentVersion({ snapshot }).snapshot;
+          return normalizeEnvironmentVersionComparableList(
+            normalizePlaygroundMcpServers(normalizedSnapshot.mcpServers).map((server) => ({
+              name: server.name,
+              type: server.type,
+              url: server.url || "",
+              command: server.command || "",
+              enabled: server.enabled !== false,
+            }))
+          );
+        }
+
+        function buildEnvironmentVersionDocsDiffPayload(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundEnvironmentVersion({ snapshot }).snapshot;
+          return normalizeEnvironmentVersionComparableList(
+            normalizePlaygroundDocumentationFiles(normalizedSnapshot.documentation).map((file) => ({
+              name: file.name,
+              url: file.url,
+            }))
+          );
+        }
+
+        function buildEnvironmentVersionDiffFilesFromSnapshots(baseSnapshot, targetSnapshot) {
+          if (!baseSnapshot || !targetSnapshot) {
+            return [];
+          }
+          const normalizedBaseSnapshot = normalizePlaygroundEnvironmentVersion({ snapshot: baseSnapshot }).snapshot;
+          const normalizedTargetSnapshot = normalizePlaygroundEnvironmentVersion({ snapshot: targetSnapshot }).snapshot;
+          return [
+            createPlaygroundVersionDiffFile({
+              id: "config",
+              path: "computer/config.json",
+              before: buildEnvironmentVersionConfigDiffPayload(normalizedBaseSnapshot),
+              after: buildEnvironmentVersionConfigDiffPayload(normalizedTargetSnapshot),
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "runtimes",
+              path: "computer/runtimes.json",
+              before: buildEnvironmentVersionRuntimeDiffPayload(normalizedBaseSnapshot),
+              after: buildEnvironmentVersionRuntimeDiffPayload(normalizedTargetSnapshot),
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "packages",
+              path: "computer/packages.json",
+              before: buildEnvironmentVersionPackagesDiffPayload(normalizedBaseSnapshot),
+              after: buildEnvironmentVersionPackagesDiffPayload(normalizedTargetSnapshot),
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "environment-variables",
+              path: "computer/environment-variables.json",
+              before: buildEnvironmentVersionVariablesDiffPayload(normalizedBaseSnapshot),
+              after: buildEnvironmentVersionVariablesDiffPayload(normalizedTargetSnapshot),
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "secrets",
+              path: "computer/secrets.json",
+              before: buildEnvironmentVersionSecretsDiffPayload(normalizedBaseSnapshot),
+              after: buildEnvironmentVersionSecretsDiffPayload(normalizedTargetSnapshot),
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "setup-scripts",
+              path: "computer/setup-scripts.json",
+              before: normalizeEnvironmentVersionComparableList(normalizedBaseSnapshot.setupScripts),
+              after: normalizeEnvironmentVersionComparableList(normalizedTargetSnapshot.setupScripts),
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "mcp",
+              path: "computer/mcp-servers.json",
+              before: buildEnvironmentVersionMcpDiffPayload(normalizedBaseSnapshot),
+              after: buildEnvironmentVersionMcpDiffPayload(normalizedTargetSnapshot),
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "documentation",
+              path: "computer/documentation.json",
+              before: buildEnvironmentVersionDocsDiffPayload(normalizedBaseSnapshot),
+              after: buildEnvironmentVersionDocsDiffPayload(normalizedTargetSnapshot),
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "dockerfile",
+              path: "computer/dockerfile-extension.dockerfile",
+              before: normalizedBaseSnapshot.dockerfileExtensions || "",
+              after: normalizedTargetSnapshot.dockerfileExtensions || "",
+            }),
+          ].filter(Boolean);
+        }
+
+        const ENVIRONMENT_VERSION_COMPARE_CURRENT_EDITOR_ID = "current-editor";
+
+        function getEnvironmentVersionCompareVersionSourceId(versionId) {
+          const normalizedVersionId = String(versionId || "").trim();
+          return normalizedVersionId ? "version:" + normalizedVersionId : "";
+        }
+
+        function getEnvironmentVersionCompareVersionLabel(version) {
+          if (!version) {
+            return "Version";
+          }
+          return String(version.label || ("Version " + version.version)).trim() || "Version";
+        }
+
+        function buildEnvironmentVersionCompareSources(versions) {
+          const normalizedVersions = Array.isArray(versions) ? versions : [];
+          return [
+            {
+              id: ENVIRONMENT_VERSION_COMPARE_CURRENT_EDITOR_ID,
+              label: "Current editor",
+              snapshot: buildPlaygroundEnvironmentVersionSnapshot(draftEnvironment),
+            },
+          ].concat(normalizedVersions.map((version) => ({
+            id: getEnvironmentVersionCompareVersionSourceId(version.id),
+            label: getEnvironmentVersionCompareVersionLabel(version),
+            snapshot: normalizePlaygroundEnvironmentVersion(version).snapshot,
+          })));
+        }
+
+        function resolveEnvironmentVersionCompareSource(sourceId, sources, fallbackSource) {
+          const normalizedSourceId = String(sourceId || "").trim();
+          return sources.find((source) => source.id === normalizedSourceId) || fallbackSource || sources[0] || null;
+        }
+
+        function getDefaultEnvironmentVersionCompareLeftSourceId(versions) {
+          const metadata = getEnvironmentVersionMetadata();
+          const activeVersionId = String(
+            metadata.activeEnvironmentVersionId
+            || metadata.active_environment_version_id
+            || metadata.activeComputerVersionId
+            || metadata.active_computer_version_id
+            || ""
+          ).trim();
+          const activeVersion = versions.find((version) => version.id === activeVersionId)
+            || versions.find((version) => String(version.status || "").toLowerCase() === "active")
+            || versions[0];
+          return activeVersion ? getEnvironmentVersionCompareVersionSourceId(activeVersion.id) : ENVIRONMENT_VERSION_COMPARE_CURRENT_EDITOR_ID;
+        }
+
+        function openEnvironmentVersionChangesPage(versionId, options = {}) {
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftEnvironmentVersions();
+          if (!versions.length && !draftEnvironment) {
+            return;
+          }
+          const explicitLeftSourceId = String(options.leftSourceId || "").trim();
+          const explicitRightSourceId = String(options.rightSourceId || "").trim();
+          const fallbackLeftSourceId = normalizedVersionId
+            ? getEnvironmentVersionCompareVersionSourceId(normalizedVersionId)
+            : getDefaultEnvironmentVersionCompareLeftSourceId(versions);
+          const leftSourceId = explicitLeftSourceId || fallbackLeftSourceId;
+          const rightSourceId = explicitRightSourceId || ENVIRONMENT_VERSION_COMPARE_CURRENT_EDITOR_ID;
+          setOpenEnvironmentVersionMenuId("");
+          setEnvironmentVersionsSidebarOpen(true);
+          setEnvironmentVersionChangesState({
+            leftSourceId,
+            rightSourceId,
+          });
+        }
+
+        function closeEnvironmentVersionChangesPage() {
+          setEnvironmentVersionChangesState(null);
+        }
+
+        function handleEnvironmentVersionCompareSourceChange(side, sourceId) {
+          const normalizedSourceId = String(sourceId || "").trim() || ENVIRONMENT_VERSION_COMPARE_CURRENT_EDITOR_ID;
+          setEnvironmentVersionChangesState((current) => ({
+            ...(current || {}),
+            [side === "left" ? "leftSourceId" : "rightSourceId"]: normalizedSourceId,
+          }));
+        }
+
+        function applyEnvironmentVersionDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          setEnvironmentVersionDescriptionDraft(nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = environmentVersionDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeEnvironmentDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleEnvironmentVersionDescriptionFormat(formatType) {
+          const textarea = environmentVersionDescriptionTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(environmentVersionDescriptionDraft || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+          if (formatType === "bold") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+          if (!edit) {
+            return;
+          }
+          applyEnvironmentVersionDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
         function applyEnvironmentSharedTeam(environmentRecord, teamId) {
@@ -92612,15 +94455,1068 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }
 
         function handleRevertDraft() {
+          clearEnvironmentAutosaveQueue();
           if (selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
             resetEditorAuxiliaryState();
             setDraftEnvironment(buildPlaygroundDefaultEnvironmentDraft());
             return;
           }
 
+          const selectedVersion = getDraftEnvironmentSelectedVersion();
+          if (selectedVersion) {
+            const result = environmentVersionController.buildRestoreVersionResource(draftEnvironment, selectedVersion.id);
+            if (!result?.resource) {
+              return;
+            }
+            void commitVersionedEnvironmentRecord(result.resource, {
+              operation: "revert",
+              actor: getEnvironmentVersionActor(),
+              loadingMessage: "Reverting computer...",
+              successMessage: "Reverted",
+              errorMessage: "Failed to revert computer.",
+            });
+            return;
+          }
+
           const nextDraft = selectedEnvironmentSnapshot ? normalizePlaygroundEnvironmentRecord(selectedEnvironmentSnapshot) : null;
           resetEditorAuxiliaryState();
           setDraftEnvironment(nextDraft);
+          rememberEnvironmentVersionBaseline(nextDraft, { force: true });
+        }
+
+        function getServerMetadataRecord(serverRecord) {
+          return serverRecord?.metadata && typeof serverRecord.metadata === "object" && !Array.isArray(serverRecord.metadata)
+            ? serverRecord.metadata
+            : {};
+        }
+
+        function getCurrentServerVersionSourceFileContents() {
+          const normalizedServerId = String(selectedServerId || draftServer?.id || "").trim();
+          const previewContents = normalizedServerId && resourceTemplatePreviewServerFileContentById[normalizedServerId]
+            ? resourceTemplatePreviewServerFileContentById[normalizedServerId]
+            : {};
+          const contents = normalizePlaygroundServerVersionSourceFileContents(previewContents);
+          if (serverFileEditorState.status === "ready" && serverFileEditorState.path) {
+            contents[normalizeHistoryPath(serverFileEditorState.path)] = String(serverFileEditorState.value || "");
+          }
+          return normalizePlaygroundServerVersionSourceFileContents(contents);
+        }
+
+        function buildDraftServerVersionSnapshot(serverRecord = draftServer) {
+          return buildPlaygroundServerVersionSnapshot(serverRecord, {
+            sourceFiles: currentServerFiles,
+            sourceFileContents: getCurrentServerVersionSourceFileContents(),
+          });
+        }
+
+        function buildServerVersionComparableSnapshot(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundServerVersion({ snapshot }).snapshot;
+          return {
+            name: normalizedSnapshot.name,
+            description: normalizedSnapshot.description,
+            kind: normalizedSnapshot.kind,
+            sourceType: normalizedSnapshot.sourceType,
+            sourceEnvironmentId: normalizedSnapshot.sourceEnvironmentId,
+            sourcePath: normalizedSnapshot.sourcePath,
+            region: normalizedSnapshot.region,
+            runtime: normalizedSnapshot.runtime,
+            authMode: normalizedSnapshot.authMode,
+            template: normalizedSnapshot.template,
+            templateAgentId: normalizedSnapshot.templateAgentId,
+            templateEnvironmentId: normalizedSnapshot.templateEnvironmentId,
+            databaseMode: normalizedSnapshot.databaseMode,
+            databaseId: normalizedSnapshot.databaseId,
+            databaseName: normalizedSnapshot.databaseName,
+            databaseDescription: normalizedSnapshot.databaseDescription,
+            databaseLocation: normalizedSnapshot.databaseLocation,
+            customDomain: normalizedSnapshot.customDomain,
+            sourceFiles: normalizeEnvironmentVersionComparableList(
+              normalizePlaygroundServerVersionSourceFiles(normalizedSnapshot.sourceFiles).map((file) => ({
+                path: file.path,
+                isFolder: file.isFolder === true,
+                size: file.size || 0,
+              }))
+            ),
+            sourceFileContents: normalizePlaygroundServerVersionSourceFileContents(normalizedSnapshot.sourceFileContents),
+          };
+        }
+
+        const serverVersionController = createPlaygroundVersionController({
+          getMetadata: getServerMetadataRecord,
+          readVersions: readPlaygroundServerVersions,
+          normalizeVersions: normalizePlaygroundServerVersions,
+          createVersion: (serverRecord, existingVersions = [], options = {}) => createPlaygroundServerVersion(serverRecord, existingVersions, {
+            ...options,
+            snapshot: buildDraftServerVersionSnapshot(serverRecord),
+          }),
+          withVersionList: createPlaygroundServerWithVersionList,
+          fromVersionSnapshot: createPlaygroundServerFromVersionSnapshot,
+          buildSnapshot: buildDraftServerVersionSnapshot,
+          buildComparableSnapshot: buildServerVersionComparableSnapshot,
+          getActiveVersionId: (metadata) => metadata.activeServerVersionId || metadata.active_server_version_id || "",
+          getSelectedVersionId: (metadata, activeVersion) => (
+            metadata.restoredFromServerVersionId
+            || metadata.restored_from_server_version_id
+            || activeVersion?.id
+            || ""
+          ),
+          updateVersionFromResource: (version, serverRecord, options = {}) => {
+            const now = new Date().toISOString();
+            const normalizedVersion = normalizePlaygroundServerVersion(version || {});
+            const snapshot = buildDraftServerVersionSnapshot(serverRecord);
+            const nextStatus = String(options.status || "saved").trim().toLowerCase() === "active" ? "active" : "saved";
+            const actor = normalizePlaygroundVersionActor(options.actor) || getServerVersionActor();
+            const revisionId = createPlaygroundServerVersionRevisionId();
+            const deploymentId = nextStatus === "active" ? (normalizedVersion.deploymentId || normalizedVersion.deployment_id || createPlaygroundServerDeploymentId(normalizedVersion.id)) : "";
+            return normalizePlaygroundServerVersion({
+              ...normalizedVersion,
+              status: nextStatus,
+              lifecycleState: nextStatus === "active" ? "published" : "saved",
+              lifecycle_state: nextStatus === "active" ? "published" : "saved",
+              revisionId,
+              revision_id: revisionId,
+              baseRevisionId: normalizedVersion.revisionId || normalizedVersion.revision_id || "",
+              base_revision_id: normalizedVersion.revisionId || normalizedVersion.revision_id || "",
+              revisionNumber: (Number(normalizedVersion.revisionNumber || normalizedVersion.revision_number || normalizedVersion.version || 0) || 0) + 1,
+              revision_number: (Number(normalizedVersion.revisionNumber || normalizedVersion.revision_number || normalizedVersion.version || 0) || 0) + 1,
+              updatedAt: now,
+              updated_at: now,
+              updatedBy: actor,
+              updated_by: actor,
+              publishedAt: nextStatus === "active" ? now : "",
+              published_at: nextStatus === "active" ? now : "",
+              publishedBy: nextStatus === "active" ? actor : null,
+              published_by: nextStatus === "active" ? actor : null,
+              deploymentId,
+              deployment_id: deploymentId,
+              deploymentStatus: nextStatus === "active" ? "published" : "",
+              deployment_status: nextStatus === "active" ? "published" : "",
+              name: snapshot.name,
+              kind: snapshot.kind,
+              runtime: snapshot.runtime,
+              sourceFiles: snapshot.sourceFiles,
+              sourceFileContents: snapshot.sourceFileContents,
+              snapshot,
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          updateVersionMetadata: (version, details = {}) => {
+            const normalizedVersion = normalizePlaygroundServerVersion(version || {});
+            const actor = normalizePlaygroundVersionActor(details.actor) || getServerVersionActor();
+            const now = String(details.updatedAt || new Date().toISOString()).trim();
+            return normalizePlaygroundServerVersion({
+              ...normalizedVersion,
+              label: details.label,
+              description: details.description,
+              updatedAt: now,
+              updated_at: now,
+              updatedBy: actor,
+              updated_by: actor,
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          publishVersion: (version, options = {}) => {
+            const normalizedVersion = normalizePlaygroundServerVersion(version || {});
+            const publishedAt = String(options.publishedAt || new Date().toISOString()).trim();
+            const actor = normalizePlaygroundVersionActor(options.actor) || getServerVersionActor();
+            const deploymentId = normalizedVersion.deploymentId || normalizedVersion.deployment_id || createPlaygroundServerDeploymentId(normalizedVersion.id);
+            return normalizePlaygroundServerVersion({
+              ...normalizedVersion,
+              status: "active",
+              lifecycleState: "published",
+              lifecycle_state: "published",
+              updatedAt: publishedAt,
+              updated_at: publishedAt,
+              updatedBy: actor,
+              updated_by: actor,
+              publishedAt,
+              published_at: publishedAt,
+              publishedBy: actor,
+              published_by: actor,
+              deploymentId,
+              deployment_id: deploymentId,
+              deploymentStatus: "published",
+              deployment_status: "published",
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          supersedeVersion: (version, options = {}) => {
+            const normalizedVersion = normalizePlaygroundServerVersion(version || {});
+            const supersededAt = String(options.supersededAt || new Date().toISOString()).trim();
+            return normalizePlaygroundServerVersion({
+              ...normalizedVersion,
+              status: "superseded",
+              lifecycleState: "deprecated",
+              lifecycle_state: "deprecated",
+              updatedAt: supersededAt,
+              updated_at: supersededAt,
+              deploymentStatus: "superseded",
+              deployment_status: "superseded",
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          unpublishVersion: (version, options = {}) => {
+            const normalizedVersion = normalizePlaygroundServerVersion(version || {});
+            const unpublishedAt = String(options.unpublishedAt || new Date().toISOString()).trim();
+            const actor = normalizePlaygroundVersionActor(options.actor) || getServerVersionActor();
+            return normalizePlaygroundServerVersion({
+              ...normalizedVersion,
+              status: "unpublished",
+              lifecycleState: "unpublished",
+              lifecycle_state: "unpublished",
+              updatedAt: unpublishedAt,
+              updated_at: unpublishedAt,
+              updatedBy: actor,
+              updated_by: actor,
+              unpublishedAt,
+              unpublished_at: unpublishedAt,
+              unpublishedBy: actor,
+              unpublished_by: actor,
+              deploymentStatus: "unpublished",
+              deployment_status: "unpublished",
+            }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+          },
+          applyUnpublishMetadata: (serverRecord, context = {}) => {
+            const nextMetadata = getServerMetadataRecord(serverRecord);
+            nextMetadata.unpublishedAt = context.unpublishedAt;
+            nextMetadata.unpublished_at = context.unpublishedAt;
+            delete nextMetadata.publishedAt;
+            delete nextMetadata.published_at;
+            delete nextMetadata.activeServerDeployment;
+            delete nextMetadata.active_server_deployment;
+            return {
+              ...serverRecord,
+              metadata: nextMetadata,
+              publishedAt: "",
+            };
+          },
+        });
+
+        function getServerVersionMetadata(serverRecord = draftServer) {
+          return serverVersionController.getMetadata(serverRecord);
+        }
+
+        function readDraftServerVersions(serverRecord = draftServer) {
+          return serverVersionController.readVersions(serverRecord);
+        }
+
+        function getDraftServerActiveVersion(serverRecord = draftServer) {
+          return serverVersionController.getActiveVersion(serverRecord);
+        }
+
+        function getDraftServerSelectedVersion(serverRecord = draftServer) {
+          return serverVersionController.getSelectedVersion(serverRecord);
+        }
+
+        function getServerVersionActor() {
+          return normalizePlaygroundVersionActor({
+            id: currentUserId || currentUserEmail || "local-user",
+            name: currentUserName || currentUserEmail || "User",
+            email: currentUserEmail,
+            avatarUrl: currentUserAvatarUrl,
+          });
+        }
+
+        function getServerVersionActorLabel(actor) {
+          const normalizedActor = normalizePlaygroundVersionActor(actor);
+          if (!normalizedActor) {
+            return "";
+          }
+          return String(normalizedActor.name || normalizedActor.email || normalizedActor.id || "").trim();
+        }
+
+        function getServerVersionLifecycleLabel(version) {
+          const lifecycleState = String(version?.lifecycleState || version?.lifecycle_state || "").trim().toLowerCase();
+          if (lifecycleState === "published" || String(version?.status || "").trim().toLowerCase() === "active") return "Published";
+          if (lifecycleState === "deprecated" || String(version?.status || "").trim().toLowerCase() === "superseded") return "Superseded";
+          if (lifecycleState === "unpublished" || String(version?.status || "").trim().toLowerCase() === "unpublished") return "Unpublished";
+          if (lifecycleState === "archived") return "Archived";
+          if (lifecycleState === "draft") return "Draft";
+          return "Saved";
+        }
+
+        function rememberServerVersionBaseline(serverRecord = draftServer, options = {}) {
+          const didUpdateBaseline = serverVersionController.rememberBaseline(serverRecord, serverVersionBaselineRef, options);
+          if (didUpdateBaseline) {
+            serverVersionDraftTouchedRef.current = false;
+          }
+        }
+
+        function hasDraftServerVersionChanges() {
+          return serverVersionController.hasDraftChanges(draftServer, serverVersionBaselineRef, {
+            touched: serverVersionDraftTouchedRef.current,
+          });
+        }
+
+        function canPublishDraftServerSelectedVersion() {
+          const selectedVersion = getDraftServerSelectedVersion();
+          return Boolean(selectedVersion && !hasDraftServerVersionChanges() && selectedVersion.status !== "active");
+        }
+
+        function getServerVersionPrimaryActionKind() {
+          return canPublishDraftServerSelectedVersion() ? "publish" : "save";
+        }
+
+        function getServerVersioningMetadata(serverRecord) {
+          const metadata = getServerMetadataRecord(serverRecord);
+          const versioning = metadata.runnerVersioning || metadata.runner_versioning || metadata.versioning || {};
+          return versioning && typeof versioning === "object" && !Array.isArray(versioning) ? versioning : {};
+        }
+
+        function getServerVersioningRevisionId(serverRecord) {
+          const versioning = getServerVersioningMetadata(serverRecord);
+          return String(versioning.revisionId || versioning.revision_id || "").trim();
+        }
+
+        function getServerVersioningRevisionNumber(serverRecord) {
+          const versioning = getServerVersioningMetadata(serverRecord);
+          return Number(versioning.revisionNumber || versioning.revision_number || 0) || 0;
+        }
+
+        function buildServerVersioningMetadata(serverRecord, options = {}) {
+          const now = new Date().toISOString();
+          const metadata = getServerMetadataRecord(serverRecord);
+          const currentVersioning = getServerVersioningMetadata(serverRecord);
+          const actor = normalizePlaygroundVersionActor(options.actor) || getServerVersionActor();
+          const operation = String(options.operation || "save-current").trim() || "save-current";
+          const activeVersion = getDraftServerActiveVersion(serverRecord);
+          const selectedVersion = getDraftServerSelectedVersion(serverRecord);
+          const previousRevisionId = String(
+            currentVersioning.revisionId
+            || currentVersioning.revision_id
+            || getServerVersioningRevisionId(draftServer)
+            || getServerVersioningRevisionId(selectedServerSnapshot)
+            || ""
+          ).trim();
+          const nextRevisionNumber = Math.max(
+            getServerVersioningRevisionNumber(serverRecord),
+            getServerVersioningRevisionNumber(draftServer),
+            getServerVersioningRevisionNumber(selectedServerSnapshot)
+          ) + 1;
+          const nextRevisionId = createPlaygroundServerVersionRevisionId();
+          const isPublishOperation = operation.includes("publish") || (operation === "initialize" && Boolean(activeVersion));
+          const nextState = isPublishOperation
+            ? "published"
+            : operation.includes("unpublish")
+              ? "unpublished"
+              : "saved";
+          const resourceType = canonicalizePlaygroundServerKind(serverRecord?.kind) === "function" ? "function" : "web_app";
+          const nextVersioning = {
+            ...currentVersioning,
+            schemaVersion: 1,
+            schema_version: 1,
+            resourceType,
+            resource_type: resourceType,
+            revisionId: nextRevisionId,
+            revision_id: nextRevisionId,
+            baseRevisionId: previousRevisionId,
+            base_revision_id: previousRevisionId,
+            revisionNumber: nextRevisionNumber,
+            revision_number: nextRevisionNumber,
+            state: nextState,
+            lastOperation: operation,
+            last_operation: operation,
+            activeVersionId: activeVersion?.id || "",
+            active_version_id: activeVersion?.id || "",
+            selectedVersionId: selectedVersion?.id || "",
+            selected_version_id: selectedVersion?.id || "",
+            updatedAt: now,
+            updated_at: now,
+            updatedBy: actor,
+            updated_by: actor,
+          };
+          if (operation.includes("save")) {
+            nextVersioning.lastSavedAt = now;
+            nextVersioning.last_saved_at = now;
+            nextVersioning.lastSavedBy = actor;
+            nextVersioning.last_saved_by = actor;
+          }
+          if (isPublishOperation) {
+            nextVersioning.lastPublishedAt = now;
+            nextVersioning.last_published_at = now;
+            nextVersioning.lastPublishedBy = actor;
+            nextVersioning.last_published_by = actor;
+          }
+          if (operation.includes("unpublish")) {
+            nextVersioning.lastUnpublishedAt = now;
+            nextVersioning.last_unpublished_at = now;
+            nextVersioning.lastUnpublishedBy = actor;
+            nextVersioning.last_unpublished_by = actor;
+          }
+          const nextMetadata = {
+            ...metadata,
+            runnerVersioning: nextVersioning,
+            runner_versioning: nextVersioning,
+          };
+          if (isPublishOperation && activeVersion) {
+            const deploymentId = activeVersion.deploymentId || activeVersion.deployment_id || createPlaygroundServerDeploymentId(activeVersion.id);
+            nextMetadata.activeServerDeployment = {
+              id: deploymentId,
+              versionId: activeVersion.id,
+              version: activeVersion.version,
+              status: "published",
+              publishedAt: now,
+              publishedBy: actor,
+            };
+            nextMetadata.active_server_deployment = nextMetadata.activeServerDeployment;
+          }
+          if (operation.includes("unpublish")) {
+            delete nextMetadata.activeServerDeployment;
+            delete nextMetadata.active_server_deployment;
+          }
+          return nextMetadata;
+        }
+
+        function prepareServerVersionedRecordForCommit(serverRecord, options = {}) {
+          const normalizedServer = normalizePlaygroundServerRecord(serverRecord);
+          const nextMetadata = buildServerVersioningMetadata(normalizedServer, options);
+          return normalizePlaygroundServerRecord({
+            ...normalizedServer,
+            metadata: nextMetadata,
+          });
+        }
+
+        async function commitVersionedServerRecord(nextServer, options = {}) {
+          const normalizedNextServer = normalizePlaygroundServerRecord(nextServer);
+          const loadingMessage = options.loadingMessage || "Saving server version...";
+          if (serverAutosaveTimerRef.current) {
+            window.clearTimeout(serverAutosaveTimerRef.current);
+            serverAutosaveTimerRef.current = null;
+          }
+          serverAutosaveQueuedRef.current = null;
+          serverEditorDirtyRef.current = false;
+          setServerVersionState({
+            status: "loading",
+            message: loadingMessage,
+            error: "",
+          });
+          setServerSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const versionedNextServer = prepareServerVersionedRecordForCommit(normalizedNextServer, {
+              ...options,
+              actor: options.actor || getServerVersionActor(),
+            });
+            const savedServer = await persistServerRecord(versionedNextServer);
+            const savedHasVersionMetadata = readPlaygroundServerVersions(savedServer).length > 0
+              || Boolean(savedServer?.metadata?.activeServerVersionId || savedServer?.metadata?.active_server_version_id);
+            const mergedSavedServer = normalizePlaygroundServerRecord({
+              ...versionedNextServer,
+              ...savedServer,
+              metadata: savedHasVersionMetadata ? savedServer.metadata : versionedNextServer.metadata,
+              publishedAt: savedServer?.publishedAt || versionedNextServer.publishedAt || "",
+            });
+            upsertLocalServerRecord(mergedSavedServer);
+            setSelectedServerId(mergedSavedServer.id);
+            setDraftServer(mergedSavedServer);
+            rememberServerVersionBaseline(mergedSavedServer, { force: true });
+            setOpenServerVersionMenuId("");
+            setServerSaveState({
+              isSaving: false,
+              error: "",
+              message: "",
+            });
+            setServerVersionState({
+              status: "success",
+              message: options.successMessage || "Saved",
+              error: "",
+            });
+            window.setTimeout(() => {
+              setServerVersionState((current) => current.status === "success"
+                ? { status: "idle", message: "", error: "" }
+                : current
+              );
+            }, 1800);
+            return mergedSavedServer;
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : (options.errorMessage || "Failed to save server version.");
+            setServerSaveState({
+              isSaving: false,
+              error: errorMessage,
+              message: "",
+            });
+            setServerVersionState({
+              status: "error",
+              message: "",
+              error: errorMessage,
+            });
+            return null;
+          }
+        }
+
+        function getServerVersionPopupActions(options = {}) {
+          const includeVersionHistory = options.includeVersionHistory !== false;
+          const serverVersionPrimaryActionKind = getServerVersionPrimaryActionKind();
+          const serverVersionHasChanges = hasDraftServerVersionChanges();
+          const serverVersionCanPublish = canPublishDraftServerSelectedVersion();
+          const actions = [
+            serverVersionPrimaryActionKind === "publish"
+              ? {
+                  id: "publish",
+                  label: "Publish",
+                  Icon: Rocket,
+                  shortcut: "⌘P",
+                  disabled: !serverVersionCanPublish,
+                  onClick: publishCurrentServerVersion,
+                }
+              : {
+                  id: "save",
+                  label: "Save",
+                  Icon: Save,
+                  shortcut: "⌘S",
+                  disabled: !serverVersionHasChanges,
+                  onClick: saveCurrentServerVersion,
+                },
+            {
+              id: "save-new-version",
+              label: "Save to new Version",
+              Icon: GitBranchPlus,
+              shortcut: "⇧⌘S",
+              disabled: !serverVersionHasChanges,
+              onClick: () => openCreateServerVersionModal(),
+            },
+            {
+              id: "revert",
+              label: "Revert to last saved Version",
+              Icon: Undo2,
+              disabled: !serverVersionHasChanges,
+              onClick: handleRevertServerDraft,
+            },
+          ];
+          if (includeVersionHistory) {
+            actions.push({
+              id: "version-history",
+              label: "Version history",
+              Icon: History,
+              disabled: false,
+              onClick: () => {
+                setServerPublishMenuOpen(false);
+                setServerVersionsHeaderMenuOpen(false);
+                setServerVersionsSidebarOpen(true);
+              },
+            });
+          }
+          return actions;
+        }
+
+        function toggleServerVersionsSidebar() {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          setServerActionsPopoverOpen(false);
+          setServerPublishMenuOpen(false);
+          setServerVersionsHeaderMenuOpen(false);
+          setOpenServerVersionMenuId("");
+          setServerVersionState((current) => current.status === "loading" ? current : {
+            status: "idle",
+            message: "",
+            error: "",
+          });
+          setServerVersionsSidebarOpen((current) => !current);
+        }
+
+        function closeServerVersionsSidebar() {
+          setServerVersionsSidebarOpen(false);
+          setServerPublishMenuOpen(false);
+          setServerVersionsHeaderMenuOpen(false);
+          finishCloseServerVersionModal();
+          setServerVersionChangesState(null);
+          setOpenServerVersionMenuId("");
+        }
+
+        async function saveCurrentServerVersion() {
+          if (!draftServer || serverVersionState.status === "loading") {
+            return;
+          }
+          if (!hasDraftServerVersionChanges()) {
+            return;
+          }
+          const actor = getServerVersionActor();
+          const result = serverVersionController.buildSaveCurrentResource(draftServer, { status: "saved", actor });
+          if (!result?.resource) {
+            return;
+          }
+          await commitVersionedServerRecord(result.resource, {
+            operation: "save-current",
+            actor,
+            loadingMessage: "Saving current version...",
+            successMessage: "Current version saved",
+            errorMessage: "Failed to save current version.",
+          });
+        }
+
+        function cancelServerVersionModalAnimation() {
+          if (serverVersionModalCloseTimerRef.current) {
+            window.clearTimeout(serverVersionModalCloseTimerRef.current);
+            serverVersionModalCloseTimerRef.current = null;
+          }
+          if (serverVersionModalFrameRef.current) {
+            window.cancelAnimationFrame(serverVersionModalFrameRef.current);
+            serverVersionModalFrameRef.current = null;
+          }
+        }
+
+        function finishCloseServerVersionModal() {
+          cancelServerVersionModalAnimation();
+          setServerVersionModal(null);
+          setServerVersionModalVisible(false);
+          setServerVersionModalClosing(false);
+          setServerVersionNameDraft("");
+          setServerVersionDescriptionDraft("");
+          setIsServerVersionDescriptionEditing(false);
+        }
+
+        function openServerVersionModal(nextModal, draft = {}) {
+          if (!draftServer || serverVersionState.status === "loading" || serverSaveState.isSaving) {
+            return;
+          }
+          cancelServerVersionModalAnimation();
+          setServerPublishMenuOpen(false);
+          setServerVersionsHeaderMenuOpen(false);
+          setOpenServerVersionMenuId("");
+          setServerVersionState((current) => current.status === "loading" ? current : {
+            status: "idle",
+            message: "",
+            error: "",
+          });
+          setServerVersionNameDraft(String(draft.name || "").trim());
+          setServerVersionDescriptionDraft(String(draft.description || ""));
+          setIsServerVersionDescriptionEditing(false);
+          setServerVersionModal(nextModal);
+          setServerVersionModalClosing(false);
+          setServerVersionModalVisible(false);
+          serverVersionModalFrameRef.current = window.requestAnimationFrame(() => {
+            serverVersionModalFrameRef.current = window.requestAnimationFrame(() => {
+              serverVersionModalFrameRef.current = null;
+              setServerVersionModalVisible(true);
+            });
+          });
+        }
+
+        function openCreateServerVersionModal(options = {}) {
+          if (!draftServer || serverVersionState.status === "loading" || serverSaveState.isSaving) {
+            return;
+          }
+          const forceNewVersion = Boolean(options.force);
+          if (!forceNewVersion && !hasDraftServerVersionChanges()) {
+            return;
+          }
+          const versions = readDraftServerVersions();
+          const nextVersion = versions.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), 0) + 1;
+          openServerVersionModal(
+            { mode: "create", force: forceNewVersion },
+            {
+              name: "Version " + nextVersion,
+              description: "",
+            }
+          );
+        }
+
+        function openEditServerVersionModal(versionId) {
+          if (!draftServer || serverVersionState.status === "loading" || serverSaveState.isSaving) {
+            return;
+          }
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftServerVersions();
+          const targetVersion = versions.find((version) => version.id === normalizedVersionId);
+          if (!targetVersion) {
+            return;
+          }
+          openServerVersionModal(
+            { mode: "edit", versionId: targetVersion.id },
+            {
+              name: String(targetVersion.label || ("Version " + targetVersion.version)).trim(),
+              description: String(targetVersion.description || ""),
+            }
+          );
+        }
+
+        function closeServerVersionModal(options = {}) {
+          if (serverSaveState.isSaving || serverVersionState.status === "loading") {
+            return;
+          }
+          if (options.animate === false) {
+            finishCloseServerVersionModal();
+            return;
+          }
+          if (!serverVersionModal || serverVersionModalClosing) {
+            return;
+          }
+          cancelServerVersionModalAnimation();
+          setServerVersionModalVisible(false);
+          setServerVersionModalClosing(true);
+          serverVersionModalCloseTimerRef.current = window.setTimeout(() => {
+            serverVersionModalCloseTimerRef.current = null;
+            finishCloseServerVersionModal();
+          }, typeof PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS === "number" ? PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS : 75);
+        }
+
+        async function saveServerToNewVersion(options = {}) {
+          if (!draftServer || serverVersionState.status === "loading") {
+            return null;
+          }
+          const forceNewVersion = Boolean(options.force);
+          if (!forceNewVersion && !hasDraftServerVersionChanges()) {
+            return null;
+          }
+          const actor = getServerVersionActor();
+          const result = serverVersionController.buildNewVersionResource(draftServer, {
+            label: options.label,
+            description: options.description,
+            actor,
+          });
+          if (!result?.resource) {
+            return null;
+          }
+          return await commitVersionedServerRecord(result.resource, {
+            operation: "save-new-version",
+            actor,
+            loadingMessage: "Saving new version...",
+            successMessage: "New version saved",
+            errorMessage: "Failed to save new version.",
+          });
+        }
+
+        async function updateServerVersionDetails(versionId, versionDetails = {}) {
+          if (!draftServer || serverVersionState.status === "loading") {
+            return null;
+          }
+          const actor = getServerVersionActor();
+          const result = serverVersionController.buildVersionMetadataResource(draftServer, versionId, {
+            ...versionDetails,
+            actor,
+          });
+          if (!result?.resource) {
+            return null;
+          }
+          return await commitVersionedServerRecord(result.resource, {
+            operation: "edit-version",
+            actor,
+            loadingMessage: "Saving version details...",
+            successMessage: "Version details saved",
+            errorMessage: "Failed to save version details.",
+          });
+        }
+
+        async function commitServerVersionModal() {
+          if (!serverVersionModal || serverSaveState.isSaving || serverVersionState.status === "loading") {
+            return;
+          }
+          const label = String(serverVersionNameDraft || "").trim() || "Version";
+          const description = String(serverVersionDescriptionDraft || "").trim();
+          const savedServer = serverVersionModal.mode === "edit"
+            ? await updateServerVersionDetails(serverVersionModal.versionId, { label, description })
+            : await saveServerToNewVersion({
+                force: Boolean(serverVersionModal.force),
+                label,
+                description,
+              });
+          if (savedServer) {
+            closeServerVersionModal();
+          }
+        }
+
+        async function publishCurrentServerVersion() {
+          if (!draftServer || serverVersionState.status === "loading") {
+            return;
+          }
+          if (hasDraftServerVersionChanges()) {
+            setServerVersionState({
+              status: "error",
+              message: "",
+              error: "Save the current version before publishing.",
+            });
+            return;
+          }
+          const actor = getServerVersionActor();
+          const result = serverVersionController.buildPublishSelectedResource(draftServer, { actor });
+          if (!result?.resource) {
+            return;
+          }
+          const savedServer = await commitVersionedServerRecord(result.resource, {
+            operation: "publish",
+            actor,
+            loadingMessage: "Publishing current version...",
+            successMessage: "Published",
+            errorMessage: "Failed to publish current version.",
+          });
+          if (savedServer) {
+            await deployServerRecord(savedServer, { preserveVersionMetadata: true });
+          }
+        }
+
+        async function restoreServerVersion(versionId) {
+          if (!draftServer || serverVersionState.status === "loading") {
+            return;
+          }
+          const result = serverVersionController.buildRestoreVersionResource(draftServer, versionId);
+          if (!result?.resource) {
+            return;
+          }
+          await commitVersionedServerRecord(result.resource, {
+            operation: "restore",
+            actor: getServerVersionActor(),
+            loadingMessage: "Restoring server version...",
+            successMessage: "Version restored",
+            errorMessage: "Failed to restore server version.",
+          });
+        }
+
+        async function publishServerVersion(versionId) {
+          if (!draftServer || serverVersionState.status === "loading") {
+            return;
+          }
+          const actor = getServerVersionActor();
+          const result = serverVersionController.buildPublishVersionResource(draftServer, versionId, { actor });
+          if (!result?.resource) {
+            return;
+          }
+          const savedServer = await commitVersionedServerRecord(result.resource, {
+            operation: "publish-version",
+            actor,
+            loadingMessage: "Publishing server version...",
+            successMessage: "Published",
+            errorMessage: "Failed to publish server version.",
+          });
+          if (savedServer) {
+            await deployServerRecord(savedServer, { preserveVersionMetadata: true });
+          }
+        }
+
+        async function deleteServerVersion(versionId) {
+          if (!draftServer || serverVersionState.status === "loading") {
+            return;
+          }
+          if (readDraftServerVersions().length <= 1) {
+            return;
+          }
+          const result = serverVersionController.buildDeleteVersionResource(draftServer, versionId);
+          if (!result?.resource) {
+            return;
+          }
+          if (!window.confirm("Delete this server version?")) {
+            return;
+          }
+          await commitVersionedServerRecord(result.resource, {
+            operation: "delete-version",
+            actor: getServerVersionActor(),
+            loadingMessage: "Deleting server version...",
+            successMessage: "Version deleted",
+            errorMessage: "Failed to delete server version.",
+          });
+        }
+
+        async function handleRevertServerDraft() {
+          if (serverAutosaveTimerRef.current) {
+            window.clearTimeout(serverAutosaveTimerRef.current);
+            serverAutosaveTimerRef.current = null;
+          }
+          serverAutosaveQueuedRef.current = null;
+          const selectedVersion = getDraftServerSelectedVersion();
+          if (selectedVersion) {
+            const result = serverVersionController.buildRestoreVersionResource(draftServer, selectedVersion.id);
+            if (!result?.resource) {
+              return;
+            }
+            await commitVersionedServerRecord(result.resource, {
+              operation: "revert",
+              actor: getServerVersionActor(),
+              loadingMessage: "Reverting server...",
+              successMessage: "Reverted",
+              errorMessage: "Failed to revert server.",
+            });
+            return;
+          }
+          const nextDraft = selectedServerSnapshot ? normalizePlaygroundServerRecord(selectedServerSnapshot) : null;
+          setDraftServer(nextDraft);
+          serverEditorDirtyRef.current = false;
+          rememberServerVersionBaseline(nextDraft, { force: true });
+        }
+
+        function buildServerVersionConfigDiffPayload(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundServerVersion({ snapshot }).snapshot;
+          return {
+            name: normalizedSnapshot.name,
+            description: normalizedSnapshot.description,
+            kind: normalizedSnapshot.kind,
+            sourceType: normalizedSnapshot.sourceType,
+            sourceEnvironmentId: normalizedSnapshot.sourceEnvironmentId,
+            sourcePath: normalizedSnapshot.sourcePath,
+            region: normalizedSnapshot.region,
+            runtime: normalizedSnapshot.runtime,
+            authMode: normalizedSnapshot.authMode,
+            template: normalizedSnapshot.template,
+            templateAgentId: normalizedSnapshot.templateAgentId,
+            templateEnvironmentId: normalizedSnapshot.templateEnvironmentId,
+            databaseMode: normalizedSnapshot.databaseMode,
+            databaseId: normalizedSnapshot.databaseId,
+            databaseName: normalizedSnapshot.databaseName,
+            databaseDescription: normalizedSnapshot.databaseDescription,
+            databaseLocation: normalizedSnapshot.databaseLocation,
+            customDomain: normalizedSnapshot.customDomain,
+          };
+        }
+
+        function buildServerVersionSourceManifestDiffPayload(snapshot) {
+          const normalizedSnapshot = normalizePlaygroundServerVersion({ snapshot }).snapshot;
+          return normalizeEnvironmentVersionComparableList(
+            normalizePlaygroundServerVersionSourceFiles(normalizedSnapshot.sourceFiles).map((file) => ({
+              path: file.path,
+              isFolder: file.isFolder === true,
+              size: file.size || 0,
+              modifiedTime: file.modifiedTime || "",
+            }))
+          );
+        }
+
+        function buildServerVersionDiffFilesFromSnapshots(baseSnapshot, targetSnapshot) {
+          if (!baseSnapshot || !targetSnapshot) {
+            return [];
+          }
+          const normalizedBaseSnapshot = normalizePlaygroundServerVersion({ snapshot: baseSnapshot }).snapshot;
+          const normalizedTargetSnapshot = normalizePlaygroundServerVersion({ snapshot: targetSnapshot }).snapshot;
+          const baseContents = normalizePlaygroundServerVersionSourceFileContents(normalizedBaseSnapshot.sourceFileContents);
+          const targetContents = normalizePlaygroundServerVersionSourceFileContents(normalizedTargetSnapshot.sourceFileContents);
+          const contentPaths = Array.from(new Set(Object.keys(baseContents).concat(Object.keys(targetContents)))).sort((left, right) => left.localeCompare(right));
+          const files = [
+            createPlaygroundVersionDiffFile({
+              id: "config",
+              path: "server/config.json",
+              before: buildServerVersionConfigDiffPayload(normalizedBaseSnapshot),
+              after: buildServerVersionConfigDiffPayload(normalizedTargetSnapshot),
+            }),
+            createPlaygroundVersionDiffFile({
+              id: "source-files",
+              path: "server/source-files.json",
+              before: buildServerVersionSourceManifestDiffPayload(normalizedBaseSnapshot),
+              after: buildServerVersionSourceManifestDiffPayload(normalizedTargetSnapshot),
+            }),
+          ];
+          contentPaths.forEach((path) => {
+            files.push(createPlaygroundVersionDiffFile({
+              id: "source:" + path,
+              path: "server/source/" + path,
+              before: baseContents[path] || "",
+              after: targetContents[path] || "",
+            }));
+          });
+          return files.filter(Boolean);
+        }
+
+        const SERVER_VERSION_COMPARE_CURRENT_EDITOR_ID = "current-editor";
+
+        function getServerVersionCompareVersionSourceId(versionId) {
+          const normalizedVersionId = String(versionId || "").trim();
+          return normalizedVersionId ? "version:" + normalizedVersionId : "";
+        }
+
+        function getServerVersionCompareVersionLabel(version) {
+          if (!version) {
+            return "Version";
+          }
+          return String(version.label || ("Version " + version.version)).trim() || "Version";
+        }
+
+        function buildServerVersionCompareSources(versions) {
+          const normalizedVersions = Array.isArray(versions) ? versions : [];
+          return [
+            {
+              id: SERVER_VERSION_COMPARE_CURRENT_EDITOR_ID,
+              label: "Current editor",
+              snapshot: buildDraftServerVersionSnapshot(draftServer),
+            },
+          ].concat(normalizedVersions.map((version) => ({
+            id: getServerVersionCompareVersionSourceId(version.id),
+            label: getServerVersionCompareVersionLabel(version),
+            snapshot: normalizePlaygroundServerVersion(version).snapshot,
+          })));
+        }
+
+        function resolveServerVersionCompareSource(sourceId, sources, fallbackSource) {
+          const normalizedSourceId = String(sourceId || "").trim();
+          return sources.find((source) => source.id === normalizedSourceId) || fallbackSource || sources[0] || null;
+        }
+
+        function getDefaultServerVersionCompareLeftSourceId(versions) {
+          const metadata = getServerVersionMetadata();
+          const activeVersionId = String(metadata.activeServerVersionId || metadata.active_server_version_id || "").trim();
+          const activeVersion = versions.find((version) => version.id === activeVersionId)
+            || versions.find((version) => String(version.status || "").toLowerCase() === "active")
+            || versions[0];
+          return activeVersion ? getServerVersionCompareVersionSourceId(activeVersion.id) : SERVER_VERSION_COMPARE_CURRENT_EDITOR_ID;
+        }
+
+        function openServerVersionChangesPage(versionId, options = {}) {
+          const normalizedVersionId = String(versionId || "").trim();
+          const versions = readDraftServerVersions();
+          if (!versions.length && !draftServer) {
+            return;
+          }
+          const explicitLeftSourceId = String(options.leftSourceId || "").trim();
+          const explicitRightSourceId = String(options.rightSourceId || "").trim();
+          const fallbackLeftSourceId = normalizedVersionId
+            ? getServerVersionCompareVersionSourceId(normalizedVersionId)
+            : getDefaultServerVersionCompareLeftSourceId(versions);
+          const leftSourceId = explicitLeftSourceId || fallbackLeftSourceId;
+          const rightSourceId = explicitRightSourceId || SERVER_VERSION_COMPARE_CURRENT_EDITOR_ID;
+          setOpenServerVersionMenuId("");
+          setServerVersionsSidebarOpen(true);
+          setServerVersionChangesState({
+            leftSourceId,
+            rightSourceId,
+          });
+        }
+
+        function closeServerVersionChangesPage() {
+          setServerVersionChangesState(null);
+        }
+
+        function handleServerVersionCompareSourceChange(side, sourceId) {
+          const normalizedSourceId = String(sourceId || "").trim() || SERVER_VERSION_COMPARE_CURRENT_EDITOR_ID;
+          setServerVersionChangesState((current) => ({
+            ...(current || {}),
+            [side === "left" ? "leftSourceId" : "rightSourceId"]: normalizedSourceId,
+          }));
+        }
+
+        function applyServerVersionDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          setServerVersionDescriptionDraft(nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = serverVersionDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeEnvironmentDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleServerVersionDescriptionFormat(formatType) {
+          const textarea = serverVersionDescriptionTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(serverVersionDescriptionDraft || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+          if (formatType === "bold") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+          if (!edit) {
+            return;
+          }
+          applyServerVersionDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
         function updateEnvironmentField(field, value) {
@@ -97422,6 +100318,87 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 )
               )
             : null;
+          const canShowServerVersionPublish = isSourceDeployableServer
+            && !isServerTemplatePreview
+            && Boolean(draftServer?.id)
+            && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID;
+          const serverVersionPopupActions = getServerVersionPopupActions({ includeVersionHistory: false });
+          const isServerPublishControlDisabled = !canShowServerVersionPublish || serverSaveState.isSaving || serverVersionState.status === "loading";
+          const isServerPublishMenuDisabled = isServerPublishControlDisabled || serverDeploymentState.isDeploying;
+          const renderServerPublishSplitButton = () => canShowServerVersionPublish
+            ? renderPlaygroundPlatformPopup({
+                open: serverPublishMenuOpen,
+                shellRef: serverPublishMenuRef,
+                shellClassName: "playground-agents-detail-publish-split-shell playground-server-detail-publish-split-shell",
+                menuClassName: "playground-agents-detail-publish-menu playground-server-detail-publish-menu",
+                trigger: React.createElement("div", {
+                    className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control playground-server-detail-header-publish-button"
+                      + (serverVersionsSidebarOpen ? " is-active" : "")
+                      + (isServerPublishControlDisabled ? " is-disabled" : ""),
+                  },
+                  React.createElement("button", {
+                      type: "button",
+                      className: "playground-agents-detail-publish-main",
+                      title: "Open server versions",
+                      "aria-label": "Open server versions",
+                      "aria-expanded": serverVersionsSidebarOpen ? "true" : "false",
+                      disabled: isServerPublishControlDisabled,
+                      onClick: () => {
+                        setServerPublishMenuOpen(false);
+                        setServerVersionsHeaderMenuOpen(false);
+                        setServerVersionsSidebarOpen(true);
+                      },
+                    },
+                    React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Publish")
+                  ),
+                  React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
+                  React.createElement("button", {
+                      type: "button",
+                      className: "playground-agents-detail-publish-chevron",
+                      title: "Version save options",
+                      "aria-label": "Version save options",
+                      "aria-haspopup": "menu",
+                      "aria-expanded": serverPublishMenuOpen ? "true" : "false",
+                      disabled: isServerPublishMenuDisabled,
+                      onClick: (event) => {
+                        event.stopPropagation();
+                        setServerPublishMenuOpen((current) => !current);
+                      },
+                    },
+                    React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                  )
+                ),
+                menuProps: {
+                  role: "menu",
+                  onClick: (event) => event.stopPropagation(),
+                },
+                children: React.createElement(React.Fragment, null,
+                  serverVersionPopupActions.map((action) => React.createElement("button", {
+                      key: action.label,
+                      type: "button",
+                      className: "tb-popup-row",
+                      role: "menuitem",
+                      disabled: isServerPublishMenuDisabled || action.disabled,
+                      onClick: () => {
+                        setServerPublishMenuOpen(false);
+                        void action.onClick();
+                      },
+                    },
+                    React.createElement(action.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                      React.createElement("span", null, action.label)
+                    ),
+                    action.shortcut
+                      ? React.createElement("span", {
+                          className: "playground-agents-detail-publish-menu-shortcut",
+                          "aria-hidden": "true",
+                        }, action.shortcut)
+                      : null
+                  ))
+                )
+              })
+            : null;
           const serverBottomBar = React.createElement("div", { className: "playground-servers-editor-bottom-bar" },
             React.createElement("div", { className: "playground-servers-editor-bottom-bar-inner" },
               React.createElement("div", { className: "playground-servers-editor-bottom-bar-copy" },
@@ -97703,15 +100680,178 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               ? " is-code-tab"
               : ""
           );
+
+          function renderServerVersionsSidebar() {
+            if (!canShowServerVersionPublish || !serverVersionsSidebarOpen) {
+              return null;
+            }
+            const versions = readDraftServerVersions();
+            const metadata = getServerVersionMetadata();
+            const activeVersion = getDraftServerActiveVersion();
+            const activeVersionId = String(
+              activeVersion?.id
+              || metadata.activeServerVersionId
+              || metadata.active_server_version_id
+              || ""
+            ).trim();
+            const selectedVersionId = String(
+              metadata.restoredFromServerVersionId
+              || metadata.restored_from_server_version_id
+              || activeVersionId
+              || ""
+            ).trim();
+            return React.createElement(PlaygroundVersionSidebar, {
+              open: serverVersionsSidebarOpen,
+              title: "Publish " + serverKindLabel,
+              className: "playground-server-versions-sidebar",
+              versions,
+              activeVersionId,
+              selectedVersionId,
+              state: serverVersionState,
+              busy: serverVersionState.status === "loading",
+              openMenuId: openServerVersionMenuId,
+              onOpenMenuIdChange: setOpenServerVersionMenuId,
+              headerMenuOpen: serverVersionsHeaderMenuOpen,
+              headerMenuActions: getServerVersionPopupActions({ includeVersionHistory: false }),
+              headerMenuDisabled: serverSaveState.isSaving || serverVersionState.status === "loading" || serverDeploymentState.isDeploying,
+              onHeaderMenuOpenChange: setServerVersionsHeaderMenuOpen,
+              onClose: closeServerVersionsSidebar,
+              onSaveVersion: () => openCreateServerVersionModal({ force: true }),
+              onRestoreVersion: (versionId) => void restoreServerVersion(versionId),
+              onPublishVersion: (versionId) => void publishServerVersion(versionId),
+              onDeleteVersion: (versionId) => void deleteServerVersion(versionId),
+              versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-agents-version-compare-button",
+                  disabled: serverVersionState.status === "loading" || !versions.length,
+                  onClick: () => openServerVersionChangesPage(),
+                },
+                  React.createElement(Code2, { width: 13, height: 13, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "View Changes")
+                )
+              ),
+              getRowMenuItems: (version) => [
+                {
+                  id: "edit",
+                  label: "Edit version",
+                  icon: SquarePen,
+                  onClick: () => openEditServerVersionModal(version.id),
+                },
+                {
+                  id: "compare",
+                  label: "View Changes",
+                  icon: Code2,
+                  onClick: () => openServerVersionChangesPage(version.id),
+                },
+                {
+                  id: "restore",
+                  label: "Restore version",
+                  icon: RotateCcw,
+                  onClick: () => void restoreServerVersion(version.id),
+                },
+                {
+                  id: "delete",
+                  label: "Delete version",
+                  icon: Trash2,
+                  danger: true,
+                  onClick: () => void deleteServerVersion(version.id),
+                },
+              ],
+              getVersionTitle: (version) => String(version.label || ("Version " + version.version)).trim(),
+              getVersionDescription: () => "",
+              getVersionMeta: (version) => {
+                const lifecycleLabel = getServerVersionLifecycleLabel(version);
+                const timestamp = version.publishedAt || version.updatedAt || version.createdAt;
+                const actorLabel = getServerVersionActorLabel(version.publishedAt ? version.publishedBy : (version.updatedBy || version.createdBy));
+                return lifecycleLabel
+                  + " "
+                  + formatEnvironmentVersionTimestamp(timestamp)
+                  + (actorLabel ? " by " + actorLabel : "")
+                  + " · "
+                  + (version.runtime || version.snapshot?.runtime || draftServer.runtime || "nodejs22");
+              },
+            });
+          }
+
+          function renderServerVersionsSidebarPortal() {
+            const sidebar = renderServerVersionsSidebar();
+            if (!sidebar) {
+              return null;
+            }
+            if (environmentVersionsDrawerContainer && typeof createPortal === "function") {
+              return createPortal(sidebar, environmentVersionsDrawerContainer);
+            }
+            if (versionsDrawerPortalId) {
+              return null;
+            }
+            return React.createElement("aside", {
+                className: "playground-metronome-node-drawer playground-agent-versions-inline-drawer is-open",
+              },
+              sidebar
+            );
+          }
+
+          function renderServerVersionChangesPage() {
+            if (!serverVersionChangesState) {
+              return null;
+            }
+            const versions = readDraftServerVersions();
+            const sources = buildServerVersionCompareSources(versions);
+            const requestedLeftSourceId = String(serverVersionChangesState.leftSourceId || "").trim()
+              || getDefaultServerVersionCompareLeftSourceId(versions);
+            const requestedRightSourceId = String(serverVersionChangesState.rightSourceId || "").trim()
+              || SERVER_VERSION_COMPARE_CURRENT_EDITOR_ID;
+            const currentEditorSource = sources.find((source) => source.id === SERVER_VERSION_COMPARE_CURRENT_EDITOR_ID) || sources[0] || null;
+            const leftSource = resolveServerVersionCompareSource(requestedLeftSourceId, sources, sources[1] || currentEditorSource);
+            const rightSource = resolveServerVersionCompareSource(requestedRightSourceId, sources, currentEditorSource);
+            if (!leftSource || !rightSource) {
+              return null;
+            }
+            const diffFiles = buildServerVersionDiffFilesFromSnapshots(leftSource.snapshot, rightSource.snapshot);
+            const compareOptions = sources.map((source) =>
+              React.createElement("option", { key: source.id, value: source.id }, source.label)
+            );
+            const renderCompareSelect = (value, side, ariaLabel) =>
+              React.createElement("label", { className: "playground-version-changes-select-shell" },
+                React.createElement("span", { className: "playground-version-changes-select-control-wrap" },
+                  React.createElement("select", {
+                    className: "playground-version-changes-select-control",
+                    value,
+                    onChange: (event) => handleServerVersionCompareSourceChange(side, event.target.value),
+                    "aria-label": ariaLabel,
+                  }, compareOptions),
+                  React.createElement(ChevronDown, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" })
+                )
+              );
+            const compareControls = React.createElement(React.Fragment, null,
+              renderCompareSelect(leftSource.id, "left", "Base version"),
+              React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
+              renderCompareSelect(rightSource.id, "right", "Compare version")
+            );
+            return renderPlaygroundVersionChangesPage({
+              title: "Changes",
+              backText: "Back to " + serverKindLabel,
+              backLabel: "Back to " + serverKindLabel,
+              onBack: closeServerVersionChangesPage,
+              compareControls,
+              files: diffFiles,
+              emptyMessage: "No changes between these versions.",
+            });
+          }
+
+          const activeServerEditorContent = serverVersionChangesState
+            ? renderServerVersionChangesPage()
+            : React.createElement("div", { className: serverDetailContentClassName },
+                serverSaveState.error
+                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
+                  : null,
+                isSourceDeployableServer ? null : descriptionSection,
+                serverDetailTabs,
+                serverEditorTabContent
+              );
           const serverEditorScroll = React.createElement("div", { className: serverEditorScrollClassName },
-            React.createElement("div", { className: serverDetailContentClassName },
-              serverSaveState.error
-                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
-                : null,
-              isSourceDeployableServer ? null : descriptionSection,
-              serverDetailTabs,
-              serverEditorTabContent
-            )
+            activeServerEditorContent
           );
 
 	          const serverMainTopbar = React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar" + (isSourceDeployableServer ? " is-function-detail-navbar" : "") },
@@ -97819,17 +100959,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                         : React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
                       React.createElement("span", null, isWebAppServer ? "Open App" : (serverDeploymentState.isInvoking ? "Testing..." : "Test Invoke"))
                     ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button is-primary",
-                      onClick: () => void handleDeployServer(),
-                      disabled: serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
-                    },
-                      serverDeploymentState.isDeploying
-                        ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                        : React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy")
-                    )
+                    renderServerPublishSplitButton()
                   )
                 : null
             )
@@ -99655,6 +102785,120 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
 
           const activeSourceFilesSidebar = isSourceDeployableServer ? null : sourceFilesSidebar;
+          function renderServerVersionModal() {
+            if (!serverVersionModal) {
+              return null;
+            }
+            const title = serverVersionModal.mode === "edit" ? "Edit Version" : "New Version";
+            const isSavingVersion = serverSaveState.isSaving || serverVersionState.status === "loading";
+            const descriptionFormatActions = [
+              { id: "bold", label: "Bold", icon: Bold },
+              { id: "italic", label: "Italic", icon: Italic },
+              { id: "underline", label: "Underline", icon: Underline },
+              { id: "list", label: "List", icon: List },
+            ];
+            return React.createElement("div", {
+                className: "playground-tasks-project-modal-backdrop"
+                  + (serverVersionModalVisible ? " is-visible" : "")
+                  + (serverVersionModalClosing ? " is-closing" : ""),
+                onClick: () => closeServerVersionModal(),
+              },
+              React.createElement("form", {
+                  className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-version-modal playground-server-version-modal"
+                    + (serverVersionModalVisible ? " is-visible" : "")
+                    + (serverVersionModalClosing ? " is-closing" : ""),
+                  onClick: (event) => event.stopPropagation(),
+                  onSubmit: (event) => {
+                    event.preventDefault();
+                    void commitServerVersionModal();
+                  },
+                },
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-content-title playground-tasks-project-modal-name-input",
+                      value: serverVersionNameDraft,
+                      onChange: (event) => setServerVersionNameDraft(event.target.value),
+                      placeholder: "Version name",
+                      autoFocus: true,
+                      disabled: isSavingVersion,
+                    })
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: () => closeServerVersionModal(),
+                    title: "Close",
+                    disabled: isSavingVersion,
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-tasks-project-modal-body playground-agents-version-modal-body" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-header playground-agents-version-modal-description-header" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                    React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                      descriptionFormatActions.map((action) =>
+                        React.createElement("button", {
+                          key: action.id,
+                          type: "button",
+                          className: "playground-tasks-detail-format-button",
+                          title: action.label,
+                          "aria-label": action.label,
+                          disabled: isSavingVersion,
+                          onMouseDown: (event) => event.preventDefault(),
+                          onClick: () => handleServerVersionDescriptionFormat(action.id),
+                        }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-detail-description playground-agents-version-modal-description" },
+                    !isServerVersionDescriptionEditing
+                      ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                          String(serverVersionDescriptionDraft || "").trim()
+                            ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                content: serverVersionDescriptionDraft,
+                                className: "playground-tasks-detail-description-preview tb-message-markdown",
+                              })
+                            : React.createElement("div", {
+                                className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                              }, "Add Description here")
+                        )
+                      : null,
+                    React.createElement("textarea", {
+                      ref: serverVersionDescriptionTextareaRef,
+                      className: "playground-tasks-detail-description-input " + (isServerVersionDescriptionEditing ? "is-editing" : "is-preview"),
+                      rows: 3,
+                      placeholder: isServerVersionDescriptionEditing ? "Add Description here" : "",
+                      value: serverVersionDescriptionDraft,
+                      disabled: isSavingVersion,
+                      onFocus: () => setIsServerVersionDescriptionEditing(true),
+                      onChange: (event) => {
+                        setServerVersionDescriptionDraft(event.target.value);
+                        resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                      },
+                      onBlur: () => setIsServerVersionDescriptionEditing(false),
+                    })
+                  )
+                ),
+                serverVersionState.error
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, serverVersionState.error)
+                  : null,
+                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: () => closeServerVersionModal(),
+                    disabled: isSavingVersion,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: isSavingVersion || !String(serverVersionNameDraft || "").trim(),
+                  }, isSavingVersion ? "Saving..." : serverVersionModal.mode === "edit" ? "Save" : "Create Version")
+                )
+              )
+            );
+          }
 
           return React.createElement(React.Fragment, null,
             React.createElement("div", { className: serverEditorMainClassName, ref: serverDetailMainRef },
@@ -99682,7 +102926,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             ),
             serverDeploymentHelpModal,
             serverCustomDomainModal,
-            serverRuntimePreviewModal
+            serverRuntimePreviewModal,
+            renderServerVersionModal(),
+            renderServerVersionsSidebarPortal()
           );
         }
 
@@ -101494,6 +104740,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           );
           const isEnvironmentPublishControlDisabled = saveState.isSaving || environmentVersionState.status === "loading";
           const areEnvironmentPublishMenuActionsDisabled = saveState.isSaving || environmentVersionState.status === "loading";
+          const environmentVersionPopupActions = getEnvironmentVersionPopupActions();
           const renderEnvironmentPublishSplitButton = () => renderPlaygroundPlatformPopup({
             open: environmentPublishMenuOpen,
             shellRef: environmentPublishMenuRef,
@@ -101507,13 +104754,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               React.createElement("button", {
                   type: "button",
                   className: "playground-agents-detail-publish-main",
-                  title: "Publish computer",
-                  "aria-label": "Publish computer",
+                  title: "Open computer versions",
+                  "aria-label": "Open computer versions",
                   "aria-expanded": environmentVersionsSidebarOpen ? "true" : "false",
                   disabled: isEnvironmentPublishControlDisabled,
                   onClick: () => {
                     setEnvironmentPublishMenuOpen(false);
-                    toggleEnvironmentVersionsSidebar();
+                    setEnvironmentVersionsHeaderMenuOpen(false);
+                    setEnvironmentVersionsSidebarOpen(true);
                   },
                 },
                 React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
@@ -101523,8 +104771,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               React.createElement("button", {
                   type: "button",
                   className: "playground-agents-detail-publish-chevron",
-                  title: "Publish save options",
-                  "aria-label": "Publish save options",
+                  title: "Version save options",
+                  "aria-label": "Version save options",
                   "aria-haspopup": "menu",
                   "aria-expanded": environmentPublishMenuOpen ? "true" : "false",
                   disabled: isEnvironmentPublishControlDisabled,
@@ -101541,51 +104789,28 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               onClick: (event) => event.stopPropagation(),
             },
             children: React.createElement(React.Fragment, null,
-              React.createElement("button", {
+              environmentVersionPopupActions.map((action) => React.createElement("button", {
+                  key: action.label,
                   type: "button",
                   className: "tb-popup-row",
                   role: "menuitem",
-                  disabled: areEnvironmentPublishMenuActionsDisabled || !draftEnvironment,
+                  disabled: areEnvironmentPublishMenuActionsDisabled || !draftEnvironment || action.disabled,
                   onClick: () => {
                     setEnvironmentPublishMenuOpen(false);
-                    void saveDraftEnvironmentImmediate();
+                    void action.onClick();
                   },
                 },
-                React.createElement(Save, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                React.createElement(action.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
                 React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Save")
-                )
-              ),
-              React.createElement("button", {
-                  type: "button",
-                  className: "tb-popup-row",
-                  role: "menuitem",
-                  disabled: areEnvironmentPublishMenuActionsDisabled || !draftEnvironment,
-                  onClick: () => {
-                    setEnvironmentPublishMenuOpen(false);
-                    void saveCurrentEnvironmentVersion();
-                  },
-                },
-                React.createElement(GitBranchPlus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Save to new Version")
-                )
-              ),
-              React.createElement("button", {
-                  type: "button",
-                  className: "tb-popup-row",
-                  role: "menuitem",
-                  disabled: areEnvironmentPublishMenuActionsDisabled || !draftEnvironment,
-                  onClick: () => {
-                    setEnvironmentPublishMenuOpen(false);
-                    handleRevertDraft();
-                  },
-                },
-                React.createElement(Undo2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Revert to last saved Version")
-                )
-              )
+                  React.createElement("span", null, action.label)
+                ),
+                action.shortcut
+                  ? React.createElement("span", {
+                      className: "playground-agents-detail-publish-menu-shortcut",
+                      "aria-hidden": "true",
+                    }, action.shortcut)
+                  : null
+              ))
             )
           });
           const renderEnvironmentControlRow = (className) =>
@@ -101981,7 +105206,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             ? environmentDetailAdvancedSection
             : environmentDetailGeneralSection;
 
-          function renderEnvironmentVersionRows() {
+          function renderEnvironmentVersionsSidebar() {
+            if (!canShowEnvironmentDetailHeaderPublish || !environmentVersionsSidebarOpen) {
+              return null;
+            }
             const versions = readDraftEnvironmentVersions();
             const metadata = getEnvironmentVersionMetadata();
             const activeVersion = getDraftEnvironmentActiveVersion();
@@ -102001,211 +105229,80 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               || activeVersionId
               || ""
             ).trim();
-            const isBusy = environmentVersionState.status === "loading";
-
-            if (!versions.length) {
-              return React.createElement("div", { className: "playground-metronome-publish-empty-state" },
-                React.createElement("div", { className: "playground-metronome-publish-empty-card" },
-                  React.createElement("img", {
-                    className: "playground-metronome-publish-empty-image",
-                    src: "/img/empty-state/metronome.webp",
-                    alt: "",
-                    "aria-hidden": "true",
-                  }),
-                  React.createElement("h3", { className: "playground-metronome-publish-empty-title" }, "No saved versions yet"),
-                  React.createElement("p", { className: "playground-metronome-publish-empty-copy" },
-                    "Create a version to track runtime versions, packages, environment variables, secrets, MCP servers, and setup scripts."
-                  )
+            return React.createElement(PlaygroundVersionSidebar, {
+              open: environmentVersionsSidebarOpen,
+              title: "Publish Computer",
+              className: "playground-computer-versions-sidebar",
+              versions,
+              activeVersionId,
+              selectedVersionId,
+              state: environmentVersionState,
+              busy: environmentVersionState.status === "loading",
+              openMenuId: openEnvironmentVersionMenuId,
+              onOpenMenuIdChange: setOpenEnvironmentVersionMenuId,
+              headerMenuOpen: environmentVersionsHeaderMenuOpen,
+              headerMenuActions: getEnvironmentVersionPopupActions({ includeVersionHistory: false }),
+              headerMenuDisabled: saveState.isSaving || environmentVersionState.status === "loading",
+              onHeaderMenuOpenChange: setEnvironmentVersionsHeaderMenuOpen,
+              onClose: closeEnvironmentVersionsSidebar,
+              onSaveVersion: () => openCreateEnvironmentVersionModal({ force: true }),
+              onRestoreVersion: (versionId) => void restoreEnvironmentVersion(versionId),
+              onPublishVersion: (versionId) => void publishEnvironmentVersion(versionId),
+              onDeleteVersion: (versionId) => void deleteEnvironmentVersion(versionId),
+              versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-agents-version-compare-button",
+                  disabled: environmentVersionState.status === "loading" || !versions.length,
+                  onClick: () => openEnvironmentVersionChangesPage(),
+                },
+                  React.createElement(Code2, { width: 13, height: 13, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "View Changes")
                 )
-              );
-            }
-
-            return versions.map((version) => {
-              const isActiveVersion = version.id === activeVersionId || version.status === "active";
-              const isSelectedVersion = version.id === selectedVersionId;
-              const versionTitle = String(version.label || ("Version " + version.version)).trim();
-              const versionDescription = String(version.description || "").trim();
-              const profile = getPlaygroundEnvironmentComputeProfileConfig(version.computeProfile || version.snapshot?.computeProfile || draftEnvironment?.computeProfile);
-              const runtimeCount = Number(version.runtimeCount || Object.keys(version.snapshot?.runtimes || {}).length || 0) || 0;
-              return React.createElement("div", {
-                key: version.id,
-                className: "playground-metronome-publish-row"
-                  + (isActiveVersion ? " is-active" : "")
-                  + (isSelectedVersion ? " is-selected" : ""),
+              ),
+              getRowMenuItems: (version) => [
+                {
+                  id: "edit",
+                  label: "Edit version",
+                  icon: SquarePen,
+                  onClick: () => openEditEnvironmentVersionModal(version.id),
+                },
+                {
+                  id: "compare",
+                  label: "View Changes",
+                  icon: Code2,
+                  onClick: () => openEnvironmentVersionChangesPage(version.id),
+                },
+                {
+                  id: "restore",
+                  label: "Restore version",
+                  icon: RotateCcw,
+                  onClick: () => void restoreEnvironmentVersion(version.id),
+                },
+                {
+                  id: "delete",
+                  label: "Delete version",
+                  icon: Trash2,
+                  danger: true,
+                  onClick: () => void deleteEnvironmentVersion(version.id),
+                },
+              ],
+              unpublishLabel: "Unpublish computer",
+              getVersionTitle: (version) => String(version.label || ("Version " + version.version)).trim(),
+              getVersionDescription: () => "",
+              getVersionMeta: (version) => {
+                const profile = getPlaygroundEnvironmentComputeProfileConfig(version.computeProfile || version.snapshot?.computeProfile || draftEnvironment?.computeProfile);
+                const lifecycleLabel = getEnvironmentVersionLifecycleLabel(version);
+                const timestamp = version.publishedAt || version.updatedAt || version.createdAt;
+                const actorLabel = getEnvironmentVersionActorLabel(version.publishedAt ? version.publishedBy : (version.updatedBy || version.createdBy));
+                return lifecycleLabel
+                  + " "
+                  + formatEnvironmentVersionTimestamp(timestamp)
+                  + (actorLabel ? " by " + actorLabel : "")
+                  + " · "
+                  + (profile?.label || "Computer profile");
               },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-metronome-publish-row-checkbox" + (isSelectedVersion ? " is-selected" : ""),
-                  disabled: isBusy || isSelectedVersion,
-                  onClick: () => void restoreEnvironmentVersion(version.id),
-                  "aria-label": "Display computer version " + version.version,
-                  "aria-pressed": isSelectedVersion ? "true" : "false",
-                },
-                  isSelectedVersion
-                    ? React.createElement(Check, { width: 16, height: 16, strokeWidth: 2.5 })
-                    : null
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-metronome-publish-row-main",
-                  disabled: isBusy || isSelectedVersion,
-                  onClick: () => void restoreEnvironmentVersion(version.id),
-                },
-                  React.createElement("div", { className: "playground-metronome-publish-row-title" },
-                    React.createElement("span", null, versionTitle),
-                    isActiveVersion
-                      ? React.createElement("span", { className: "playground-metronome-publish-active-chip" },
-                          React.createElement(Check, { width: 11, height: 11, strokeWidth: 2 }),
-                          React.createElement("span", null, "Published")
-                        )
-                      : null
-                  ),
-                  versionDescription
-                    ? React.createElement("div", { className: "playground-metronome-publish-row-description" }, versionDescription)
-                    : null,
-                  React.createElement("div", { className: "playground-metronome-publish-row-copy playground-metronome-publish-row-meta" },
-                    (version.publishedAt ? "Published " : "Saved ")
-                    + formatEnvironmentVersionTimestamp(version.publishedAt || version.createdAt)
-                    + " · "
-                    + (profile?.label || "Computer profile")
-                    + " · "
-                    + runtimeCount
-                    + " runtime"
-                    + (runtimeCount === 1 ? "" : "s")
-                  )
-                ),
-                React.createElement("div", { className: "playground-metronome-publish-row-actions" },
-                  isActiveVersion
-                    ? null
-                    : React.createElement("button", {
-                        type: "button",
-                        className: "playground-metronome-secondary-button playground-metronome-publish-row-action",
-                        disabled: isBusy,
-                        onClick: () => void publishEnvironmentVersion(version.id),
-                      },
-                        React.createElement(Rocket, { width: 13, height: 13, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Publish")
-                      ),
-                  React.createElement("span", { className: "playground-metronome-publish-row-menu-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-metronome-publish-row-menu-trigger" + (openEnvironmentVersionMenuId === version.id ? " is-open" : ""),
-                      disabled: isBusy,
-                      onClick: (event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        setOpenEnvironmentVersionMenuId((current) => current === version.id ? "" : version.id);
-                      },
-                      "aria-label": "Computer version options",
-                      "aria-expanded": openEnvironmentVersionMenuId === version.id ? "true" : "false",
-                    }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
-                    openEnvironmentVersionMenuId === version.id
-                      ? React.createElement("div", {
-                          className: "playground-metronome-publish-row-menu",
-                          role: "menu",
-                        },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-metronome-publish-row-menu-item",
-                            onClick: () => void restoreEnvironmentVersion(version.id),
-                          },
-                            React.createElement(RotateCcw, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Restore version")
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-metronome-publish-row-menu-item is-danger",
-                            onClick: () => void deleteEnvironmentVersion(version.id),
-                          },
-                            React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Delete version")
-                          )
-                        )
-                      : null
-                  )
-                )
-              );
             });
-          }
-
-          function renderEnvironmentVersionsSidebar() {
-            if (!canShowEnvironmentDetailHeaderPublish || !environmentVersionsSidebarOpen) {
-              return null;
-            }
-            const isBusy = environmentVersionState.status === "loading";
-            const activeVersion = getDraftEnvironmentActiveVersion();
-            return React.createElement("aside", {
-                className: "playground-agents-versions-sidebar playground-computer-versions-sidebar playground-metronome-node-inspector playground-metronome-publish-sidebar",
-                "aria-hidden": environmentVersionsSidebarOpen ? "false" : "true",
-              },
-              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-metronome-inspector-header" },
-                React.createElement("div", { className: "playground-tasks-detail-navbar-title playground-metronome-inspector-navbar-title" },
-                  React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
-                    React.createElement("span", { className: "playground-metronome-inspector-node-kind is-icon", "aria-label": "Versions" },
-                      React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.9 })
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
-                    React.createElement("div", { className: "playground-content-title playground-tasks-detail-navbar-title-input playground-metronome-inspector-title-input" }, "Versions")
-                  )
-                ),
-                React.createElement("div", { className: "playground-content-nav-center" }),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-header-icon-button is-plain playground-metronome-inspector-close",
-                  onClick: closeEnvironmentVersionsSidebar,
-                  "aria-label": "Close versions",
-                }, React.createElement(X, { width: 15, height: 15, strokeWidth: 1.9 }))
-              ),
-              React.createElement("div", { className: "playground-metronome-inspector-body" },
-                React.createElement("div", { className: "playground-metronome-publish-sidebar-section-title" },
-                  React.createElement("span", { className: "playground-metronome-publish-sidebar-section-title-text" }, "Saved versions"),
-                  React.createElement("span", { className: "playground-metronome-publish-title-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-metronome-publish-version-button",
-                      disabled: isBusy,
-                      onClick: () => void saveCurrentEnvironmentVersion(),
-                    },
-                      React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Version")
-                    )
-                  )
-                ),
-                environmentVersionState.status === "loading"
-                  ? React.createElement("div", { className: "playground-metronome-publish-state" }, environmentVersionState.message || "Saving computer version...")
-                  : null,
-                environmentVersionState.status === "error"
-                  ? React.createElement("div", { className: "playground-metronome-publish-state is-error" }, environmentVersionState.error || "Failed to update computer versions.")
-                  : null,
-                environmentVersionState.status === "success"
-                  ? React.createElement("div", { className: "playground-metronome-publish-state is-success" }, environmentVersionState.message || "Saved")
-                  : null,
-                React.createElement("div", { className: "playground-metronome-publish-list" }, renderEnvironmentVersionRows())
-              ),
-              React.createElement("div", { className: "playground-metronome-publish-sidebar-actions" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-metronome-primary-button playground-metronome-publish-new-button",
-                  disabled: isBusy,
-                  onClick: () => void publishCurrentEnvironmentVersion(),
-                },
-                  React.createElement(Rocket, { width: 13, height: 13, strokeWidth: 1.8 }),
-                  React.createElement("span", null, isBusy ? "Publishing..." : "Publish current editor")
-                ),
-                activeVersion
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-metronome-secondary-button playground-metronome-publish-new-button",
-                      disabled: isBusy,
-                      onClick: () => void unpublishActiveEnvironmentVersion(),
-                    },
-                      React.createElement(PauseCircle, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, isBusy ? "Working..." : "Unpublish computer")
-                    )
-                  : null
-              )
-            );
           }
 
           function renderEnvironmentVersionsSidebarPortal() {
@@ -102224,6 +105321,194 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               },
               sidebar
             );
+          }
+
+          function renderEnvironmentVersionChangesPage() {
+            if (!environmentVersionChangesState) {
+              return null;
+            }
+            const versions = readDraftEnvironmentVersions();
+            const sources = buildEnvironmentVersionCompareSources(versions);
+            const requestedLeftSourceId = String(environmentVersionChangesState.leftSourceId || "").trim()
+              || getDefaultEnvironmentVersionCompareLeftSourceId(versions);
+            const requestedRightSourceId = String(environmentVersionChangesState.rightSourceId || "").trim()
+              || ENVIRONMENT_VERSION_COMPARE_CURRENT_EDITOR_ID;
+            const currentEditorSource = sources.find((source) => source.id === ENVIRONMENT_VERSION_COMPARE_CURRENT_EDITOR_ID) || sources[0] || null;
+            const leftSource = resolveEnvironmentVersionCompareSource(requestedLeftSourceId, sources, sources[1] || currentEditorSource);
+            const rightSource = resolveEnvironmentVersionCompareSource(requestedRightSourceId, sources, currentEditorSource);
+            if (!leftSource || !rightSource) {
+              return null;
+            }
+            const diffFiles = buildEnvironmentVersionDiffFilesFromSnapshots(leftSource.snapshot, rightSource.snapshot);
+            const compareOptions = sources.map((source) =>
+              React.createElement("option", { key: source.id, value: source.id }, source.label)
+            );
+            const renderCompareSelect = (value, side) =>
+              React.createElement("label", { className: "playground-version-changes-select-shell" },
+                React.createElement("span", { className: "playground-version-changes-select-control-wrap" },
+                  React.createElement("select", {
+                    className: "playground-version-changes-select-control",
+                    value,
+                    onChange: (event) => handleEnvironmentVersionCompareSourceChange(side, event.target.value),
+                  }, compareOptions),
+                  React.createElement(ChevronDown, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" })
+                )
+              );
+            return renderPlaygroundVersionChangesPage({
+              title: "Changes",
+              compareControls: React.createElement(React.Fragment, null,
+                renderCompareSelect(leftSource.id, "left"),
+                React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
+                renderCompareSelect(rightSource.id, "right")
+              ),
+              files: diffFiles,
+              backIcon: ArrowLeft,
+              backText: "Back",
+              backLabel: "Back to computer details",
+              onBack: closeEnvironmentVersionChangesPage,
+              emptyMessage: "No differences from the current editor.",
+              className: "playground-computer-version-changes-page",
+            });
+          }
+
+          function renderEnvironmentVersionModal() {
+            if (!environmentVersionModal) {
+              return null;
+            }
+            const isBusy = saveState.isSaving || environmentVersionState.status === "loading";
+            const isEditMode = environmentVersionModal.mode === "edit";
+            const trimmedVersionName = String(environmentVersionNameDraft || "").trim();
+
+            function renderEnvironmentVersionDescriptionField() {
+              return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-tasks-issue-description-editor playground-agents-version-description-editor playground-computer-version-description-editor" },
+                React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                  React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                    [
+                      { id: "bold", label: "Bold", icon: Bold },
+                      { id: "italic", label: "Italic", icon: Italic },
+                      { id: "underline", label: "Underline", icon: Underline },
+                      { id: "list", label: "List", icon: List },
+                    ].map((action) =>
+                      React.createElement("button", {
+                        key: action.id,
+                        type: "button",
+                        className: "playground-tasks-detail-format-button",
+                        title: action.label,
+                        "aria-label": action.label,
+                        disabled: isBusy,
+                        onMouseDown: (event) => event.preventDefault(),
+                        onClick: () => handleEnvironmentVersionDescriptionFormat(action.id),
+                      }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                    )
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isEnvironmentVersionDescriptionEditing ? " is-editing" : " is-preview") },
+                  !isEnvironmentVersionDescriptionEditing
+                    ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                        String(environmentVersionDescriptionDraft || "").trim()
+                          ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                              content: environmentVersionDescriptionDraft,
+                              className: "playground-tasks-detail-description-preview tb-message-markdown",
+                            })
+                          : React.createElement("div", {
+                              className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                            }, "Describe what changed in this version.")
+                      )
+                    : null,
+                  React.createElement("textarea", {
+                    ref: environmentVersionDescriptionTextareaRef,
+                    className: "playground-tasks-detail-description-input " + (isEnvironmentVersionDescriptionEditing ? "is-editing" : "is-preview"),
+                    rows: 1,
+                    placeholder: isEnvironmentVersionDescriptionEditing ? "Describe what changed in this version." : "",
+                    value: environmentVersionDescriptionDraft || "",
+                    disabled: isBusy,
+                    onFocus: (event) => {
+                      setIsEnvironmentVersionDescriptionEditing(true);
+                      resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                    },
+                    onChange: (event) => {
+                      setEnvironmentVersionDescriptionDraft(event.target.value);
+                      resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                    },
+                    onBlur: () => setIsEnvironmentVersionDescriptionEditing(false),
+                    onKeyDown: (event) => {
+                      if (event.key === "Escape") {
+                        event.preventDefault();
+                        closeEnvironmentVersionModal();
+                      }
+                    },
+                  })
+                )
+              );
+            }
+
+            return renderPlaygroundPlatformModal({
+              open: Boolean(environmentVersionModal),
+              visible: environmentVersionModalVisible,
+              closing: environmentVersionModalClosing,
+              onClose: () => closeEnvironmentVersionModal(),
+              as: "form",
+              backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-version-modal-backdrop playground-computer-version-modal-backdrop",
+              className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-version-modal playground-computer-version-modal",
+              ariaLabel: isEditMode ? "Edit computer version" : "New computer version",
+              surfaceProps: {
+                onSubmit: (event) => {
+                  event.preventDefault();
+                  void commitEnvironmentVersionModal();
+                },
+                onKeyDown: (event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    closeEnvironmentVersionModal();
+                  }
+                },
+              },
+              children: React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                      React.createElement(isEditMode ? SquarePen : GitBranchPlus, { width: 18, height: 18, strokeWidth: 1.9 })
+                    ),
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-tasks-project-modal-name-input playground-tasks-issue-modal-title-input",
+                      value: environmentVersionNameDraft,
+                      placeholder: "Version name",
+                      autoFocus: true,
+                      disabled: isBusy,
+                      onChange: (event) => setEnvironmentVersionNameDraft(event.target.value),
+                    })
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: () => closeEnvironmentVersionModal(),
+                    title: "Close",
+                    disabled: isBusy,
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-tasks-issue-modal-body" },
+                  renderEnvironmentVersionDescriptionField(),
+                  environmentVersionState.status === "error" && environmentVersionState.error
+                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, environmentVersionState.error)
+                    : null
+                ),
+                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: () => closeEnvironmentVersionModal(),
+                    disabled: isBusy,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: isBusy || !trimmedVersionName,
+                  }, isBusy ? (isEditMode ? "Saving..." : "Creating...") : (isEditMode ? "Save Version" : "Create Version"))
+                )
+              )
+            });
           }
 
           function renderEnvironmentShareTeamModal() {
@@ -102529,22 +105814,27 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main playground-computer-detail-main", ref: environmentDetailMainRef },
             React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
               React.createElement("div", { className: "playground-agents-detail-content playground-computer-detail-content is-agent-overview-general" },
-                saveState.error
-                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, saveState.error)
-                  : saveState.message
-                    ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, saveState.message)
-                    : null,
-                environmentGuiState.error
-                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, environmentGuiState.error)
-                  : null,
-                environmentResourceDetailBackButton,
-                environmentProfileSection,
-                environmentDetailWorkspaceSection
+                environmentVersionChangesState
+                  ? renderEnvironmentVersionChangesPage()
+                  : React.createElement(React.Fragment, null,
+                      saveState.error
+                        ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, saveState.error)
+                        : saveState.message
+                          ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, saveState.message)
+                          : null,
+                      environmentGuiState.error
+                        ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, environmentGuiState.error)
+                        : null,
+                      environmentResourceDetailBackButton,
+                      environmentProfileSection,
+                      environmentDetailWorkspaceSection
+                    )
               )
             )
             ),
             desktopOverlay,
             renderEnvironmentVersionsSidebarPortal(),
+            renderEnvironmentVersionModal(),
             renderEnvironmentShareTeamModal(),
             renderEnvironmentApiModal()
           );
@@ -104746,7 +108036,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
           return renderCurrentResourceCreateControl(buttonClassName);
         };
-        const resourcesTopNavActions = topNavActionsContainer
+        const shouldHideResourcesTopNavActions = environmentVersionsSidebarOpen
+          || serverVersionsSidebarOpen
+          || (!isServersMode && !shouldShowEnvironmentHome && Boolean(selectedEnvironmentId));
+        const resourcesTopNavActions = topNavActionsContainer && !shouldHideResourcesTopNavActions
           ? createPortal(
               renderResourcesTopActionControl(isServersMode ? "playground-files-header-icon-button is-plain" : "playground-top-nav-private-chat-button"),
               topNavActionsContainer
@@ -106039,6 +109332,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         computerAgents = null,
         agents,
         environments = [],
+        projects = [],
         skills = [],
         currentUserId = "",
         currentUserName = "",
@@ -106050,6 +109344,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         workspaceTeamsLoading = false,
         workspaceTeamsRequiresPlan = false,
         guardrailSets = [],
+        evaluationSets = [],
+        setEvaluationSets,
         onWorkspaceTeamsRequest,
         initialAgentId,
         preferredEnvironmentId = "",
@@ -106105,6 +109401,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentSendTeamModalFrameRef = useRef(null);
         const agentApiModalCloseTimerRef = useRef(null);
         const agentApiModalFrameRef = useRef(null);
+        const agentEvaluationRunModalCloseTimerRef = useRef(null);
+        const agentEvaluationRunModalFrameRef = useRef(null);
         const agentApiEnvironmentPopoverRef = useRef(null);
         const agentWorkspaceTeamsRequestedRef = useRef(false);
         const agentWorkspaceTeamMembersRequestedRef = useRef(new Set());
@@ -106159,6 +109457,20 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentDetailThreadFilterMode, setAgentDetailThreadFilterMode] = useState("all");
         const [agentDetailThreadToolbarPopover, setAgentDetailThreadToolbarPopover] = useState("");
         const [agentDetailVisibleThreadCount, setAgentDetailVisibleThreadCount] = useState(5);
+        const [agentDetailEvaluationSearchQuery, setAgentDetailEvaluationSearchQuery] = useState("");
+        const [agentDetailEvaluationSelectedSetId, setAgentDetailEvaluationSelectedSetId] = useState("");
+        const [agentDetailEvaluationRunModalOpen, setAgentDetailEvaluationRunModalOpen] = useState(false);
+        const [agentDetailEvaluationRunForm, setAgentDetailEvaluationRunForm] = useState({
+          setId: "",
+          name: "",
+          environmentKey: "",
+        });
+        const [agentDetailEvaluationRunModalVisible, setAgentDetailEvaluationRunModalVisible] = useState(false);
+        const [agentDetailEvaluationRunModalClosing, setAgentDetailEvaluationRunModalClosing] = useState(false);
+        const [agentDetailEvaluationRunState, setAgentDetailEvaluationRunState] = useState({
+          status: "idle",
+          error: "",
+        });
         const [agentGuardrailSearchQuery, setAgentGuardrailSearchQuery] = useState("");
         const [agentGuardrailImportPopoverOpen, setAgentGuardrailImportPopoverOpen] = useState(false);
         const [selectedAgentsObservabilityThreadId, setSelectedAgentsObservabilityThreadId] = useState("");
@@ -106187,6 +109499,31 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           latency: true,
           errors: true,
         });
+        useEffect(() => {
+          if (!agentDetailEvaluationRunModalOpen) {
+            if (!agentDetailEvaluationRunModalClosing) {
+              setAgentDetailEvaluationRunModalVisible(false);
+            }
+            return undefined;
+          }
+          setAgentDetailEvaluationRunModalClosing(false);
+          setAgentDetailEvaluationRunModalVisible(false);
+          if (agentEvaluationRunModalFrameRef.current) {
+            window.cancelAnimationFrame(agentEvaluationRunModalFrameRef.current);
+          }
+          agentEvaluationRunModalFrameRef.current = window.requestAnimationFrame(() => {
+            agentEvaluationRunModalFrameRef.current = window.requestAnimationFrame(() => {
+              agentEvaluationRunModalFrameRef.current = null;
+              setAgentDetailEvaluationRunModalVisible(true);
+            });
+          });
+          return () => {
+            if (agentEvaluationRunModalFrameRef.current) {
+              window.cancelAnimationFrame(agentEvaluationRunModalFrameRef.current);
+              agentEvaluationRunModalFrameRef.current = null;
+            }
+          };
+        }, [agentDetailEvaluationRunModalOpen, agentDetailEvaluationRunModalClosing]);
         const [saveState, setSaveState] = useState({
           isSaving: false,
           error: "",
@@ -115513,6 +118850,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftAgent || agentVersionState.status === "loading") {
             return;
           }
+          if (readDraftAgentVersions().length <= 1) {
+            return;
+          }
           const result = agentVersionController.buildDeleteVersionResource(draftAgent, versionId);
           if (!result?.resource) {
             return;
@@ -118925,11 +122265,820 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                       : (hasAgentDetailThreadListFilters ? "No matching agent threads." : "No agent threads yet.")
                   )
           );
+          const agentEvaluationEnvironmentChoices = typeof buildPlaygroundEvaluationEnvironmentChoices === "function"
+            ? buildPlaygroundEvaluationEnvironmentChoices(environments, projects)
+            : [];
+          const agentEvaluationSets = (Array.isArray(evaluationSets) ? evaluationSets : [])
+            .map((set, index) => (typeof normalizePlaygroundEvaluationSet === "function" ? normalizePlaygroundEvaluationSet(set, index) : set))
+            .filter((set) => String(set?.id || "").trim());
+          const getAgentEvaluationRunTimestampMs = (run) => {
+            const timestamp = Date.parse(String(run?.completedAt || run?.updatedAt || run?.createdAt || ""));
+            return Number.isFinite(timestamp) ? timestamp : 0;
+          };
+          const isAgentEvaluationRunActive = (run) => (
+            typeof isPlaygroundEvaluationRunActive === "function"
+              ? isPlaygroundEvaluationRunActive(run)
+              : String(run?.status || "").trim().toLowerCase() === "running"
+          );
+          const formatAgentEvaluationPercent = (value) => {
+            const score = Math.max(0, Math.min(1, Number(value) || 0));
+            return Math.round(score * 100) + "%";
+          };
+          const formatAgentEvaluationDate = (value) => (
+            typeof formatPlaygroundEvaluationDate === "function"
+              ? formatPlaygroundEvaluationDate(value)
+              : (formatPlaygroundFileDate(value) || "Never")
+          );
+          const formatAgentEvaluationCt = (value) => (
+            typeof formatPlaygroundEvaluationCostCt === "function"
+              ? formatPlaygroundEvaluationCostCt(value)
+              : formatSettingsComputeTokens(value)
+          );
+          const getAgentEvaluationActiveVersion = () => {
+            const selectedVersion = typeof getDraftAgentSelectedVersion === "function" ? getDraftAgentSelectedVersion(draftAgent) : null;
+            const activeVersion = typeof getDraftAgentActiveVersion === "function" ? getDraftAgentActiveVersion(draftAgent) : null;
+            const versions = typeof readDraftAgentVersions === "function" ? readDraftAgentVersions(draftAgent) : [];
+            return selectedVersion || activeVersion || versions[0] || null;
+          };
+          const getAgentEvaluationVersionLabel = (run) => {
+            const versionNumber = Number(run?.targetAgentVersionNumber || run?.agentVersionNumber || 0) || 0;
+            const label = String(run?.targetAgentVersionLabel || run?.agentVersionLabel || "").trim();
+            if (label) return label;
+            if (versionNumber > 0) return "Version " + versionNumber;
+            return "Unversioned";
+          };
+          const getAgentEvaluationVersionKey = (run) => {
+            const id = String(run?.targetAgentVersionId || run?.agentVersionId || "").trim();
+            if (id) return id;
+            const versionNumber = Number(run?.targetAgentVersionNumber || run?.agentVersionNumber || 0) || 0;
+            return versionNumber > 0 ? "version:" + versionNumber : "unversioned";
+          };
+          const getAgentEvaluationRunStatus = (run) => {
+            if (isAgentEvaluationRunActive(run)) return "running";
+            const status = String(run?.status || "").trim().toLowerCase();
+            if (status === "failed" || status === "error") return "failed";
+            return Number(run?.averageScore || 0) >= Number(run?.passThreshold || 0.8) ? "passed" : "completed";
+          };
+          const getAgentEvaluationEnvironmentLabel = (run) => {
+            if (String(run?.environmentType || "").trim().toLowerCase() === "project") {
+              return String(run?.projectName || run?.projectId || "Project").trim() || "Project";
+            }
+            return String(run?.environmentName || run?.environmentId || "Computer").trim() || "Computer";
+          };
+          const selectedAgentEvaluationAgentId = String(draftAgent.id || "").trim();
+          const agentEvaluationRows = agentEvaluationSets
+            .map((set) => {
+              const runs = (Array.isArray(set.runs) ? set.runs : [])
+                .filter((run) => String(run?.targetAgentId || "").trim() === selectedAgentEvaluationAgentId)
+                .sort((left, right) => getAgentEvaluationRunTimestampMs(right) - getAgentEvaluationRunTimestampMs(left));
+              return {
+                set,
+                runs,
+                latestRun: runs[0] || null,
+              };
+            })
+            .filter((row) => row.runs.length > 0);
+          const normalizedAgentEvaluationSearch = String(agentDetailEvaluationSearchQuery || "").trim().toLowerCase();
+          const filteredAgentEvaluationRows = agentEvaluationRows.filter((row) => {
+            if (!normalizedAgentEvaluationSearch) return true;
+            const haystack = [
+              row.set?.name,
+              row.set?.id,
+              row.latestRun?.label,
+              getAgentEvaluationVersionLabel(row.latestRun),
+              getAgentEvaluationEnvironmentLabel(row.latestRun),
+            ].join(" ").toLowerCase();
+            return haystack.includes(normalizedAgentEvaluationSearch);
+          });
+          const selectedAgentEvaluationRow = agentEvaluationRows.find((row) => row.set.id === agentDetailEvaluationSelectedSetId)
+            || (agentDetailEvaluationSelectedSetId
+              ? agentEvaluationSets
+                  .map((set) => ({
+                    set,
+                    runs: (Array.isArray(set.runs) ? set.runs : [])
+                      .filter((run) => String(run?.targetAgentId || "").trim() === selectedAgentEvaluationAgentId)
+                      .sort((left, right) => getAgentEvaluationRunTimestampMs(right) - getAgentEvaluationRunTimestampMs(left)),
+                    latestRun: null,
+                  }))
+                  .find((row) => row.set.id === agentDetailEvaluationSelectedSetId)
+              : null);
+          if (selectedAgentEvaluationRow && !selectedAgentEvaluationRow.latestRun) {
+            selectedAgentEvaluationRow.latestRun = selectedAgentEvaluationRow.runs[0] || null;
+          }
+          const getAgentEvaluationDefaultEnvironmentChoice = (set) => (
+            typeof getPlaygroundEvaluationEnvironmentChoice === "function"
+              ? getPlaygroundEvaluationEnvironmentChoice(agentEvaluationEnvironmentChoices, set || {}, preferredEnvironmentId)
+              : agentEvaluationEnvironmentChoices[0] || null
+          );
+          function upsertAgentEvaluationRun(setId, run, setPatch = {}) {
+            if (typeof setEvaluationSets !== "function" || !setId || typeof normalizePlaygroundEvaluationRun !== "function") return;
+            const normalizedRun = normalizePlaygroundEvaluationRun(run);
+            if (!normalizedRun.id) return;
+            setEvaluationSets((current) => (Array.isArray(current) ? current : []).map((item) => {
+              const normalizedSet = typeof normalizePlaygroundEvaluationSet === "function" ? normalizePlaygroundEvaluationSet(item) : item;
+              if (String(normalizedSet?.id || "").trim() !== setId) return normalizedSet;
+              const existingRun = (Array.isArray(normalizedSet.runs) ? normalizedSet.runs : []).find((itemRun) => itemRun.id === normalizedRun.id) || null;
+              const nextRun = existingRun
+                ? normalizePlaygroundEvaluationRun({
+                    ...existingRun,
+                    ...normalizedRun,
+                    targetAgentVersionId: normalizedRun.targetAgentVersionId || existingRun.targetAgentVersionId,
+                    targetAgentVersionNumber: normalizedRun.targetAgentVersionNumber || existingRun.targetAgentVersionNumber,
+                    targetAgentVersionLabel: normalizedRun.targetAgentVersionLabel || existingRun.targetAgentVersionLabel,
+                    targetAgentVersionRevisionId: normalizedRun.targetAgentVersionRevisionId || existingRun.targetAgentVersionRevisionId,
+                  })
+                : normalizedRun;
+              return normalizePlaygroundEvaluationSet({
+                ...normalizedSet,
+                ...setPatch,
+                runs: [nextRun, ...(Array.isArray(normalizedSet.runs) ? normalizedSet.runs : []).filter((itemRun) => itemRun.id !== normalizedRun.id)],
+                updatedAt: new Date().toISOString(),
+              });
+            }));
+          }
+          function markAgentEvaluationRunFailed(setId, runId, fallbackRun, error) {
+            if (typeof normalizePlaygroundEvaluationRun !== "function") return;
+            const errorMessage = error?.message || String(error || "Failed to load evaluation run.");
+            upsertAgentEvaluationRun(setId, {
+              ...(fallbackRun || {}),
+              id: runId || fallbackRun?.id,
+              status: "failed",
+              error: errorMessage,
+              completedAt: new Date().toISOString(),
+            });
+          }
+          async function pollAgentEvaluationRun(setId, runId, fallbackRun) {
+            const normalizedBackendUrl = String(backendUrl || "").replace(/\\/+$/, "");
+            if (!normalizedBackendUrl || !runId) return;
+            let consecutiveFailures = 0;
+            for (let attempt = 0; attempt < 480; attempt += 1) {
+              if (typeof sleepPlaygroundEvaluationFrontend === "function") {
+                await sleepPlaygroundEvaluationFrontend(attempt === 0 ? 700 : 1200);
+              } else {
+                await new Promise((resolve) => window.setTimeout(resolve, attempt === 0 ? 700 : 1200));
+              }
+              try {
+                const response = await fetch(normalizedBackendUrl + "/evaluations/runs/" + encodeURIComponent(runId), {
+                  method: "GET",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: requestHeaders || {},
+                });
+                const data = typeof readPlaygroundEvaluationBackendJson === "function"
+                  ? await readPlaygroundEvaluationBackendJson(response, "Failed to load evaluation run.")
+                  : await response.json();
+                const nextRun = normalizePlaygroundEvaluationRun({
+                  ...(fallbackRun || {}),
+                  ...(data?.run || data?.data || data || {}),
+                });
+                consecutiveFailures = 0;
+                if (!nextRun.id) return;
+                upsertAgentEvaluationRun(setId, nextRun);
+                if (!isAgentEvaluationRunActive(nextRun)) return;
+              } catch (error) {
+                consecutiveFailures += 1;
+                if (consecutiveFailures >= 8) {
+                  markAgentEvaluationRunFailed(setId, runId, fallbackRun, error);
+                  return;
+                }
+              }
+            }
+          }
+          function openAgentEvaluationRunModal(setId = "") {
+            const targetSet = agentEvaluationSets.find((set) => set.id === String(setId || "").trim())
+              || agentEvaluationSets[0]
+              || null;
+            const environmentChoice = getAgentEvaluationDefaultEnvironmentChoice(targetSet);
+            setAgentDetailEvaluationRunForm({
+              setId: targetSet?.id || "",
+              name: targetSet ? (targetSet.name + " · " + (getAgentEvaluationVersionLabel({ targetAgentVersionNumber: getAgentEvaluationActiveVersion()?.version, targetAgentVersionLabel: getAgentEvaluationActiveVersion()?.label }) || "Run")) : "",
+              environmentKey: environmentChoice?.key || "",
+            });
+            setAgentDetailEvaluationRunState({ status: "idle", error: "" });
+            setAgentDetailEvaluationRunModalOpen(true);
+          }
+          function finishCloseAgentEvaluationRunModal() {
+            if (typeof window !== "undefined") {
+              if (agentEvaluationRunModalFrameRef.current) {
+                window.cancelAnimationFrame(agentEvaluationRunModalFrameRef.current);
+                agentEvaluationRunModalFrameRef.current = null;
+              }
+              if (agentEvaluationRunModalCloseTimerRef.current) {
+                window.clearTimeout(agentEvaluationRunModalCloseTimerRef.current);
+                agentEvaluationRunModalCloseTimerRef.current = null;
+              }
+            }
+            setAgentDetailEvaluationRunModalVisible(false);
+            setAgentDetailEvaluationRunModalClosing(false);
+            setAgentDetailEvaluationRunModalOpen(false);
+            setAgentDetailEvaluationRunState({ status: "idle", error: "" });
+          }
+          function closeAgentEvaluationRunModal(options = {}) {
+            if (!options.force && agentDetailEvaluationRunState.status === "running") return;
+            if (options?.animate === false || typeof window === "undefined") {
+              finishCloseAgentEvaluationRunModal();
+              return;
+            }
+            if ((!agentDetailEvaluationRunModalOpen && !agentDetailEvaluationRunModalClosing) || agentDetailEvaluationRunModalClosing) {
+              return;
+            }
+            setAgentDetailEvaluationRunModalVisible(false);
+            setAgentDetailEvaluationRunModalClosing(true);
+            if (agentEvaluationRunModalCloseTimerRef.current) {
+              window.clearTimeout(agentEvaluationRunModalCloseTimerRef.current);
+            }
+            agentEvaluationRunModalCloseTimerRef.current = window.setTimeout(() => {
+              agentEvaluationRunModalCloseTimerRef.current = null;
+              finishCloseAgentEvaluationRunModal();
+            }, 75);
+          }
+          async function handleAgentEvaluationRunSubmit(event) {
+            if (event?.preventDefault) event.preventDefault();
+            const normalizedBackendUrl = String(backendUrl || "").replace(/\\/+$/, "");
+            const targetSet = agentEvaluationSets.find((set) => set.id === String(agentDetailEvaluationRunForm?.setId || "").trim()) || null;
+            const environmentChoice = (typeof getPlaygroundEvaluationEnvironmentChoiceByKey === "function"
+              ? getPlaygroundEvaluationEnvironmentChoiceByKey(agentEvaluationEnvironmentChoices, agentDetailEvaluationRunForm?.environmentKey)
+              : null) || getAgentEvaluationDefaultEnvironmentChoice(targetSet);
+            if (!targetSet) {
+              setAgentDetailEvaluationRunState({ status: "error", error: "Select an evaluation set first." });
+              return;
+            }
+            if (!selectedAgentEvaluationAgentId) {
+              setAgentDetailEvaluationRunState({ status: "error", error: "Save the agent before running an evaluation." });
+              return;
+            }
+            if (!environmentChoice?.environmentId) {
+              setAgentDetailEvaluationRunState({ status: "error", error: "Select an environment first." });
+              return;
+            }
+            if (!normalizedBackendUrl) {
+              setAgentDetailEvaluationRunState({ status: "error", error: "Evaluation backend is unavailable." });
+              return;
+            }
+            const activeVersion = getAgentEvaluationActiveVersion();
+            const evaluator = typeof normalizePlaygroundEvaluationEvaluator === "function"
+              ? normalizePlaygroundEvaluationEvaluator(targetSet.evaluator)
+              : targetSet.evaluator;
+            const targetEnvironmentType = environmentChoice.type === "project" ? "project" : "computer";
+            const targetEnvironmentId = String(environmentChoice.environmentId || "").trim();
+            const targetProjectId = targetEnvironmentType === "project" ? String(environmentChoice.projectId || "").trim() : "";
+            const evaluationSetSnapshot = normalizePlaygroundEvaluationSet({
+              ...targetSet,
+              targetAgentId: selectedAgentEvaluationAgentId,
+              environmentType: targetEnvironmentType,
+              environmentId: targetEnvironmentId,
+              projectId: targetProjectId,
+              evaluator,
+            });
+            const runRequestOptions = {
+              id: typeof createPlaygroundEvaluationId === "function" ? createPlaygroundEvaluationId("eval_run") : ("eval_run_" + Date.now().toString(36)),
+              label: String(agentDetailEvaluationRunForm?.name || "").trim(),
+              targetAgentId: selectedAgentEvaluationAgentId,
+              targetAgentName: String(draftAgent.name || draftAgent.label || draftAgent.title || selectedAgentEvaluationAgentId).trim(),
+              targetAgentPhotoUrl: typeof getPlaygroundEvaluationAgentPhotoUrl === "function"
+                ? getPlaygroundEvaluationAgentPhotoUrl(draftAgent)
+                : getPlaygroundAgentRunnerPhotoUrl(draftAgent),
+              targetAgentVersionId: String(activeVersion?.id || "").trim(),
+              targetAgentVersionNumber: Math.max(0, Number(activeVersion?.version || 0) || 0),
+              targetAgentVersionLabel: String(activeVersion?.label || (activeVersion?.version ? "Version " + activeVersion.version : "") || "").trim(),
+              targetAgentVersionRevisionId: String(activeVersion?.revisionId || activeVersion?.revision_id || "").trim(),
+              environmentType: targetEnvironmentType,
+              environmentId: targetEnvironmentId,
+              environmentName: targetEnvironmentType === "computer" ? String(environmentChoice.environmentName || environmentChoice.name || targetEnvironmentId).trim() : "",
+              projectId: targetProjectId,
+              projectName: targetEnvironmentType === "project" ? String(environmentChoice.projectName || environmentChoice.name || targetProjectId).trim() : "",
+              evaluator,
+              passThreshold: typeof normalizePlaygroundEvaluationPassThreshold === "function"
+                ? normalizePlaygroundEvaluationPassThreshold(targetSet.passThreshold)
+                : Number(targetSet.passThreshold || 0.8),
+            };
+            setAgentDetailEvaluationRunState({ status: "running", error: "" });
+            try {
+              const response = await fetch(normalizedBackendUrl + "/evaluations/runs", {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  ...(requestHeaders || {}),
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  evaluationSet: evaluationSetSnapshot,
+                  runOptions: runRequestOptions,
+                }),
+              });
+              const data = typeof readPlaygroundEvaluationBackendJson === "function"
+                ? await readPlaygroundEvaluationBackendJson(response, "Failed to start evaluation run.")
+                : await response.json();
+              const run = normalizePlaygroundEvaluationRun({
+                ...runRequestOptions,
+                ...(data?.run || data?.data || data || {}),
+              });
+              if (!run.id) {
+                throw new Error("Evaluation run was created but no run id was returned.");
+              }
+              upsertAgentEvaluationRun(targetSet.id, run, {
+                targetAgentId: selectedAgentEvaluationAgentId,
+                environmentType: targetEnvironmentType,
+                environmentId: targetEnvironmentId,
+                projectId: targetProjectId,
+                evaluator,
+                passThreshold: runRequestOptions.passThreshold,
+              });
+              setAgentDetailEvaluationSelectedSetId(targetSet.id);
+              setAgentDetailEvaluationRunState({ status: "idle", error: "" });
+              closeAgentEvaluationRunModal({ force: true });
+              void pollAgentEvaluationRun(targetSet.id, run.id, run);
+            } catch (error) {
+              setAgentDetailEvaluationRunState({ status: "error", error: error?.message || String(error) });
+            }
+          }
+          function PlaygroundAgentEvaluationVersionChart({ entries, passThreshold }) {
+            const canvasRef = useRef(null);
+            const chartRef = useRef(null);
+            const chartSignature = JSON.stringify({
+              entries: entries.map((entry) => ({
+                label: entry.label,
+                score: entry.score,
+                passThreshold,
+              })),
+            });
+            useEffect(() => () => {
+              if (chartRef.current) {
+                chartRef.current.destroy();
+                chartRef.current = null;
+              }
+            }, []);
+            useEffect(() => {
+              const canvas = canvasRef.current;
+              if (!canvas || typeof Chart !== "function") return undefined;
+              const labels = entries.map((entry) => entry.label);
+              const values = entries.map((entry) => Math.round(Math.max(0, Math.min(1, Number(entry.score || 0))) * 100));
+              const thresholdValue = Math.round(Math.max(0, Math.min(1, Number(passThreshold || 0.8))) * 100);
+              const makeVerticalGradient = (context, stops, fallback) => {
+                const chart = context?.chart;
+                const chartArea = chart?.chartArea;
+                const ctx = chart?.ctx;
+                if (!ctx || !chartArea) return fallback;
+                const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                stops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
+                return gradient;
+              };
+              const chartData = {
+                labels,
+                datasets: [
+                  {
+                    id: "score",
+                    type: "bar",
+                    label: "Score",
+                    data: values,
+                    backgroundColor: (context) => makeVerticalGradient(context, [
+                      [0, "rgba(126, 255, 255, 0.82)"],
+                      [1, "rgba(91, 103, 230, 0.62)"],
+                    ], "rgba(102, 166, 255, 0.72)"),
+                    borderWidth: 0,
+                    borderRadius: 3,
+                    barPercentage: 0.64,
+                    categoryPercentage: 0.82,
+                    maxBarThickness: 34,
+                    order: 2,
+                  },
+                  {
+                    id: "threshold",
+                    type: "line",
+                    label: "Pass threshold",
+                    data: values.map(() => thresholdValue),
+                    borderColor: "rgba(255, 255, 255, 0.48)",
+                    borderDash: [5, 6],
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    tension: 0,
+                    order: 1,
+                  },
+                ],
+              };
+              const chartOptions = {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                normalized: true,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    enabled: true,
+                    backgroundColor: "rgba(8, 8, 8, 0.96)",
+                    borderColor: "rgba(255, 255, 255, 0.14)",
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    titleColor: "rgba(255, 255, 255, 0.94)",
+                    bodyColor: "rgba(255, 255, 255, 0.78)",
+                    padding: 10,
+                    callbacks: {
+                      label: (context) => String(context.dataset?.label || "Score") + ": " + Math.round(Number(context.parsed?.y || 0)) + "%",
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    grid: { display: false, drawBorder: false },
+                    border: { display: false },
+                    ticks: {
+                      color: "rgba(255, 255, 255, 0.42)",
+                      font: { size: 11, weight: "400", family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" },
+                      maxRotation: 0,
+                      minRotation: 0,
+                    },
+                  },
+                  y: {
+                    min: 0,
+                    max: 100,
+                    border: { display: false },
+                    grid: { color: "rgba(255, 255, 255, 0.07)", drawTicks: false },
+                    ticks: {
+                      color: "rgba(255, 255, 255, 0.34)",
+                      padding: 8,
+                      font: { size: 11, weight: "400", family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" },
+                      callback: (value) => Math.round(Number(value || 0)) + "%",
+                    },
+                  },
+                },
+              };
+              if (chartRef.current) {
+                chartRef.current.data = chartData;
+                chartRef.current.options = chartOptions;
+                chartRef.current.update("none");
+                return undefined;
+              }
+              chartRef.current = new Chart(canvas, { type: "bar", data: chartData, options: chartOptions });
+              return undefined;
+            }, [chartSignature]);
+            return React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
+              React.createElement("canvas", {
+                ref: canvasRef,
+                className: "playground-project-overview-progress-combo-canvas playground-agents-detail-progress-combo-canvas",
+                role: "img",
+                "aria-label": "Evaluation score by agent version",
+              })
+            );
+          }
+          function renderAgentEvaluationStatusBadge(run) {
+            const status = getAgentEvaluationRunStatus(run);
+            return React.createElement("span", {
+              className: "playground-agents-detail-evaluation-status"
+                + (status === "running" ? " is-running" : "")
+                + (status === "failed" ? " is-failed" : ""),
+            }, status);
+          }
+          function renderAgentEvaluationEnvironment(run) {
+            const isProject = String(run?.environmentType || "").trim().toLowerCase() === "project";
+            return React.createElement("span", {
+              className: "playground-agents-detail-evaluation-env",
+              title: getAgentEvaluationEnvironmentLabel(run),
+            },
+              React.createElement(isProject ? Rocket : Monitor, { width: 13, height: 13, strokeWidth: 1.8 }),
+              React.createElement("span", null, getAgentEvaluationEnvironmentLabel(run))
+            );
+          }
+          function renderAgentEvaluationRunModal() {
+            if (!agentDetailEvaluationRunModalOpen && !agentDetailEvaluationRunModalClosing) return null;
+            const form = agentDetailEvaluationRunForm && typeof agentDetailEvaluationRunForm === "object" ? agentDetailEvaluationRunForm : {};
+            const selectedSet = agentEvaluationSets.find((set) => set.id === String(form.setId || "").trim()) || null;
+            const busy = agentDetailEvaluationRunState.status === "running";
+            return React.createElement("div", {
+                className: "playground-tasks-project-modal-backdrop playground-tasks-project-issue-backdrop playground-project-overview-outcome-editor-backdrop playground-evaluations-run-modal-backdrop playground-agents-detail-evaluation-modal-backdrop"
+                  + (agentDetailEvaluationRunModalVisible ? " is-visible" : "")
+                  + (agentDetailEvaluationRunModalClosing ? " is-closing" : ""),
+                role: "dialog",
+                "aria-modal": "true",
+                onClick: closeAgentEvaluationRunModal,
+              },
+              React.createElement("form", {
+                  className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-mission-control-modal playground-project-overview-outcome-editor-modal playground-evaluations-run-modal playground-agents-detail-evaluation-modal"
+                    + (agentDetailEvaluationRunModalVisible ? " is-visible" : "")
+                    + (agentDetailEvaluationRunModalClosing ? " is-closing" : ""),
+                  onClick: (event) => event.stopPropagation(),
+                  onSubmit: handleAgentEvaluationRunSubmit,
+                },
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                      React.createElement(Play, { width: 18, height: 18, strokeWidth: 1.8 })
+                    ),
+                    React.createElement("input", {
+                      className: "playground-tasks-project-modal-name-input playground-tasks-issue-modal-title-input",
+                      value: form.name || "",
+                      placeholder: "Run name",
+                      onChange: (event) => setAgentDetailEvaluationRunForm((current) => ({ ...(current || {}), name: event.target.value })),
+                      autoFocus: true,
+                      "aria-label": "Run name",
+                    })
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: closeAgentEvaluationRunModal,
+                    title: "Close",
+                    "aria-label": "Close run evaluation modal",
+                    disabled: busy,
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-mission-control-modal-body playground-project-overview-outcome-editor-shell playground-evaluations-run-modal-shell" },
+                  React.createElement("div", { className: "playground-mission-control-modal-context playground-project-overview-outcome-editor-body playground-evaluations-run-modal-body playground-agents-detail-evaluation-modal-body" },
+                    React.createElement("div", { className: "playground-tasks-issue-modal-grid" },
+                      React.createElement("label", { className: "playground-tasks-project-modal-field playground-tasks-issue-modal-field" },
+                        React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Evaluation"),
+                        React.createElement("select", {
+                          className: "playground-tasks-issue-modal-select",
+                          value: form.setId || "",
+                          onChange: (event) => {
+                            const nextSet = agentEvaluationSets.find((set) => set.id === event.target.value) || null;
+                            const nextEnvironment = getAgentEvaluationDefaultEnvironmentChoice(nextSet);
+                            setAgentDetailEvaluationRunForm((current) => ({
+                              ...(current || {}),
+                              setId: event.target.value,
+                              name: current?.name || (nextSet?.name || ""),
+                              environmentKey: nextEnvironment?.key || current?.environmentKey || "",
+                            }));
+                          },
+                        },
+                          agentEvaluationSets.length > 0
+                            ? agentEvaluationSets.map((set) =>
+                                React.createElement("option", { key: set.id, value: set.id }, set.name || set.id)
+                              )
+                            : React.createElement("option", { value: "" }, "No evaluation sets")
+                        )
+                      ),
+                      React.createElement("label", { className: "playground-tasks-project-modal-field playground-tasks-issue-modal-field" },
+                        React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Environment"),
+                        React.createElement("select", {
+                          className: "playground-tasks-issue-modal-select",
+                          value: form.environmentKey || "",
+                          onChange: (event) => setAgentDetailEvaluationRunForm((current) => ({ ...(current || {}), environmentKey: event.target.value })),
+                        },
+                          React.createElement("optgroup", { label: "Computers" },
+                            agentEvaluationEnvironmentChoices.filter((choice) => choice.type === "computer").length > 0
+                              ? agentEvaluationEnvironmentChoices.filter((choice) => choice.type === "computer").map((choice) =>
+                                  React.createElement("option", { key: choice.key, value: choice.key }, choice.environmentName || choice.environmentId)
+                                )
+                              : React.createElement("option", { value: "", disabled: true }, "No computers available")
+                          ),
+                          React.createElement("optgroup", { label: "Projects" },
+                            agentEvaluationEnvironmentChoices.filter((choice) => choice.type === "project").length > 0
+                              ? agentEvaluationEnvironmentChoices.filter((choice) => choice.type === "project").map((choice) =>
+                                  React.createElement("option", { key: choice.key, value: choice.key, disabled: choice.disabled },
+                                    (choice.projectName || choice.projectId) + (choice.disabled ? " · no default computer" : "")
+                                  )
+                                )
+                              : React.createElement("option", { value: "", disabled: true }, "No projects available")
+                          )
+                        )
+                      )
+                    ),
+                    selectedSet
+                      ? React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                          "Agent: " + (draftAgent.name || "Current agent") + " · Pass threshold " + formatAgentEvaluationPercent(selectedSet.passThreshold) + " · " + (Array.isArray(selectedSet.dataRows) ? selectedSet.dataRows.length : 0) + " cases"
+                        )
+                      : null,
+                    agentDetailEvaluationRunState.error
+                      ? React.createElement("div", { className: "playground-agents-detail-evaluation-modal-error" }, agentDetailEvaluationRunState.error)
+                      : null
+                  ),
+                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: closeAgentEvaluationRunModal,
+                      disabled: busy,
+                    }, "Cancel"),
+                    React.createElement("button", {
+                      type: "submit",
+                      className: "playground-environments-action-button is-primary",
+                      disabled: busy || !agentEvaluationSets.length,
+                    },
+                      busy ? React.createElement(Loader2, { className: "playground-files-state-loader", width: 14, height: 14, strokeWidth: 1.8 }) : React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, busy ? "Starting" : "Run Evaluation")
+                    )
+                  )
+                )
+              )
+            );
+          }
+          function renderAgentEvaluationListSection() {
+            return React.createElement("section", {
+                className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-agents-detail-evaluations-section",
+                key: "evaluation",
+                "data-section-id": "evaluation",
+              },
+              React.createElement("div", { className: "playground-plugins-section-header" },
+                React.createElement("div", { className: "playground-plugins-section-copy" },
+                  React.createElement("h3", { className: "playground-plugins-section-title" }, "Evaluation")
+                )
+              ),
+              React.createElement("div", { className: "playground-plugins-search-row" },
+                React.createElement("div", { className: "playground-plugins-search-shell" },
+                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("input", {
+                    type: "search",
+                    value: agentDetailEvaluationSearchQuery,
+                    onChange: (event) => setAgentDetailEvaluationSearchQuery(event.target.value),
+                    className: "playground-plugins-search",
+                    placeholder: "Search evaluations",
+                    "aria-label": "Search agent evaluations",
+                  })
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button playground-project-overview-toolbar-action",
+                  onClick: () => openAgentEvaluationRunModal(filteredAgentEvaluationRows[0]?.set?.id || agentEvaluationSets[0]?.id || ""),
+                  disabled: !agentEvaluationSets.length || typeof setEvaluationSets !== "function",
+                },
+                  React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Run Evaluation")
+                )
+              ),
+              filteredAgentEvaluationRows.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-threads-table" },
+                    React.createElement("div", { className: "playground-project-overview-threads-table-header" },
+                      React.createElement("div", null, "Evaluation"),
+                      React.createElement("div", null, "Score"),
+                      React.createElement("div", null, "Version"),
+                      React.createElement("div", null, "Runs"),
+                      React.createElement("div", null, "Updated"),
+                      React.createElement("div", null)
+                    ),
+                    React.createElement("div", { className: "playground-project-overview-thread-list" },
+                      filteredAgentEvaluationRows.map((row) =>
+                        React.createElement("div", {
+                            key: row.set.id,
+                            className: "playground-project-overview-threads-table-row",
+                            role: "button",
+                            tabIndex: 0,
+                            onClick: () => setAgentDetailEvaluationSelectedSetId(row.set.id),
+                            onKeyDown: (event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                setAgentDetailEvaluationSelectedSetId(row.set.id);
+                              }
+                            },
+                          },
+                          React.createElement("div", { className: "playground-project-overview-thread-cell" },
+                            React.createElement("div", { className: "playground-plugin-row-title" }, row.set.name || "Untitled Evaluation")
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-thread-cell" },
+                            React.createElement("span", { className: "playground-agents-detail-evaluation-score" },
+                              row.latestRun ? formatAgentEvaluationPercent(row.latestRun.averageScore) : "-"
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-thread-cell" },
+                            React.createElement("span", { className: "playground-agents-detail-evaluation-version" }, getAgentEvaluationVersionLabel(row.latestRun))
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-thread-cell" }, String(row.runs.length)),
+                          React.createElement("div", { className: "playground-project-overview-thread-cell" }, formatAgentEvaluationDate(row.latestRun?.completedAt || row.latestRun?.createdAt || row.set.updatedAt)),
+                          React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
+                            React.createElement(ChevronRight, { width: 15, height: 15, strokeWidth: 1.8 })
+                          )
+                        )
+                      )
+                    )
+                  )
+                : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                    normalizedAgentEvaluationSearch
+                      ? "No matching evaluations for this agent."
+                      : "No evaluations have been run for this agent yet."
+                  )
+            );
+          }
+          function renderAgentEvaluationDetailSection(row) {
+            const selectedRow = row || null;
+            if (!selectedRow?.set) {
+              return renderAgentEvaluationListSection();
+            }
+            const runs = selectedRow.runs || [];
+            const latestRunsByVersion = Array.from(runs.reduce((map, run) => {
+              const key = getAgentEvaluationVersionKey(run);
+              const existing = map.get(key);
+              if (!existing || getAgentEvaluationRunTimestampMs(run) > getAgentEvaluationRunTimestampMs(existing)) {
+                map.set(key, run);
+              }
+              return map;
+            }, new Map()).values()).sort((left, right) => {
+              const leftNumber = Number(left?.targetAgentVersionNumber || 0) || 0;
+              const rightNumber = Number(right?.targetAgentVersionNumber || 0) || 0;
+              if (rightNumber !== leftNumber) return rightNumber - leftNumber;
+              return getAgentEvaluationRunTimestampMs(right) - getAgentEvaluationRunTimestampMs(left);
+            });
+            const latestRun = runs[0] || null;
+            const bestRun = runs.reduce((best, run) => Number(run?.averageScore || 0) > Number(best?.averageScore || 0) ? run : best, latestRun || null);
+            const passedRuns = runs.filter((run) => !isAgentEvaluationRunActive(run) && Number(run?.averageScore || 0) >= Number(run?.passThreshold || selectedRow.set.passThreshold || 0.8)).length;
+            const passRate = runs.length > 0 ? passedRuns / runs.length : 0;
+            const chartEntries = latestRunsByVersion.map((run) => ({
+              label: getAgentEvaluationVersionLabel(run),
+              score: run.averageScore,
+            }));
+            const kpis = [
+              { id: "latest-score", label: "Latest Score", value: latestRun ? formatAgentEvaluationPercent(latestRun.averageScore) : "-" },
+              { id: "best-score", label: "Best Score", value: bestRun ? formatAgentEvaluationPercent(bestRun.averageScore) : "-" },
+              { id: "pass-rate", label: "Pass Rate", value: formatAgentEvaluationPercent(passRate) },
+              { id: "versions", label: "Versions", value: String(latestRunsByVersion.length) },
+            ];
+            return React.createElement(React.Fragment, null,
+              React.createElement("button", {
+                type: "button",
+                className: "playground-resource-detail-back-button playground-agents-detail-evaluation-detail-back",
+                onClick: () => setAgentDetailEvaluationSelectedSetId(""),
+              },
+                React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Back")
+              ),
+              React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card" },
+                React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
+                  React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, selectedRow.set.name || "Evaluation"),
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button playground-project-overview-toolbar-action",
+                      onClick: () => openAgentEvaluationRunModal(selectedRow.set.id),
+                      disabled: typeof setEvaluationSets !== "function",
+                    },
+                      React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Run Evaluation")
+                    )
+                  )
+                ),
+                React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
+                  kpis.map((item) =>
+                    React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+                        React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
+                        React.createElement("span", null, item.label)
+                      ),
+                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
+                    )
+                  )
+                ),
+                React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
+                  chartEntries.length > 0
+                    ? React.createElement(PlaygroundAgentEvaluationVersionChart, {
+                        entries: chartEntries,
+                        passThreshold: selectedRow.set.passThreshold,
+                      })
+                    : React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
+                        React.createElement("div", { className: "playground-project-overview-chart-empty" }, "Run this evaluation to compare versions.")
+                      )
+                )
+              ),
+              React.createElement("section", {
+                  className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-agents-detail-evaluation-version-section",
+                },
+                React.createElement("div", { className: "playground-plugins-section-header" },
+                  React.createElement("div", { className: "playground-plugins-section-copy" },
+                    React.createElement("h3", { className: "playground-plugins-section-title" }, "Runs by Version")
+                  )
+                ),
+                latestRunsByVersion.length > 0
+                  ? React.createElement("div", { className: "playground-project-overview-threads-table" },
+                      React.createElement("div", { className: "playground-project-overview-threads-table-header" },
+                        React.createElement("div", null, "Version"),
+                        React.createElement("div", null, "Score"),
+                        React.createElement("div", null, "Status"),
+                        React.createElement("div", null, "Environment"),
+                        React.createElement("div", null, "Updated"),
+                        React.createElement("div", null)
+                      ),
+                      React.createElement("div", { className: "playground-project-overview-thread-list" },
+                        latestRunsByVersion.map((run) =>
+                          React.createElement("div", {
+                              key: run.id,
+                              className: "playground-project-overview-threads-table-row",
+                            },
+                            React.createElement("div", { className: "playground-project-overview-thread-cell" },
+                              React.createElement("span", { className: "playground-agents-detail-evaluation-version" }, getAgentEvaluationVersionLabel(run))
+                            ),
+                            React.createElement("div", { className: "playground-project-overview-thread-cell" },
+                              React.createElement("span", { className: "playground-agents-detail-evaluation-score" }, formatAgentEvaluationPercent(run.averageScore))
+                            ),
+                            React.createElement("div", { className: "playground-project-overview-thread-cell" }, renderAgentEvaluationStatusBadge(run)),
+                            React.createElement("div", { className: "playground-project-overview-thread-cell" }, renderAgentEvaluationEnvironment(run)),
+                            React.createElement("div", { className: "playground-project-overview-thread-cell" }, formatAgentEvaluationDate(run.completedAt || run.createdAt)),
+                            React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" })
+                          )
+                        )
+                      )
+                    )
+                  : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No runs for this evaluation yet.")
+              )
+            );
+          }
+          const agentEvaluationsSection = selectedAgentEvaluationRow
+            ? renderAgentEvaluationDetailSection(selectedAgentEvaluationRow)
+            : renderAgentEvaluationListSection();
           const agentDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs" },
             React.createElement("div", { className: "playground-project-overview-chart-tabs" },
               [
                 { id: "general", label: "General" },
                 { id: "threads", label: "Threads" },
+                { id: "evaluation", label: "Evaluation" },
                 { id: "guardrails", label: "Guardrails" },
                 { id: "permissions", label: "Permissions" },
               ].map((tab) =>
@@ -119139,6 +123288,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             ? agentPermissionsSection
             : agentDetailTab === "guardrails"
               ? agentGuardrailsSection
+            : agentDetailTab === "evaluation"
+              ? agentEvaluationsSection
             : agentDetailTab === "threads"
               ? agentThreadsSection
               : React.createElement(React.Fragment, null,
@@ -119167,11 +123318,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
 	          return React.createElement("div", { className: agentDetailMainClassName, ref: agentDetailMainRef, style: agentDetailMainStyle },
 	            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-	              React.createElement("div", { className: "playground-agents-detail-content" + ((agentDetailTab === "general" || agentDetailTab === "permissions" || agentDetailTab === "threads" || agentDetailTab === "guardrails") ? " is-agent-overview-general" : "") },
+	              React.createElement("div", { className: "playground-agents-detail-content" + ((agentDetailTab === "general" || agentDetailTab === "permissions" || agentDetailTab === "threads" || agentDetailTab === "evaluation" || agentDetailTab === "guardrails") ? " is-agent-overview-general" : "") },
 		                agentResourceDetailBackButton,
 		                agentProfileSection,
 	                agentDetailWorkspaceSection
-              )
+              ),
+              renderAgentEvaluationRunModal()
             )
           );
         }
@@ -119583,7 +123735,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 onClick: () => void deleteAgentVersion(version.id),
               },
             ],
-            emptyCopy: "Create a version to track instructions, model, permissions, skills, and team setup.",
             unpublishLabel: "Unpublish agent",
             getVersionTitle: (version) => String(version.label || ("Version " + version.version)).trim(),
             getVersionDescription: () => "",
@@ -154131,6 +158282,57 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
           ? { ...source.metadata }
           : {};
+        const sourceCreator = source.creator && typeof source.creator === "object" && !Array.isArray(source.creator)
+          ? source.creator
+          : source.createdBy && typeof source.createdBy === "object" && !Array.isArray(source.createdBy)
+            ? source.createdBy
+            : source.created_by && typeof source.created_by === "object" && !Array.isArray(source.created_by)
+              ? source.created_by
+              : {};
+        const metadataCreator = metadata.creator && typeof metadata.creator === "object" && !Array.isArray(metadata.creator)
+          ? metadata.creator
+          : metadata.createdBy && typeof metadata.createdBy === "object" && !Array.isArray(metadata.createdBy)
+            ? metadata.createdBy
+            : metadata.created_by && typeof metadata.created_by === "object" && !Array.isArray(metadata.created_by)
+              ? metadata.created_by
+              : {};
+        const creatorIdentity = {
+          id: String(sourceCreator.id || metadataCreator.id || source.creatorId || source.creator_id || source.createdById || source.created_by_id || metadata.creatorId || metadata.creator_id || metadata.createdById || metadata.created_by_id || "").trim(),
+          userId: String(sourceCreator.userId || sourceCreator.user_id || metadataCreator.userId || metadataCreator.user_id || source.creatorUserId || source.creator_user_id || metadata.creatorUserId || metadata.creator_user_id || "").trim(),
+          name: String(sourceCreator.name || sourceCreator.displayName || sourceCreator.display_name || metadataCreator.name || metadataCreator.displayName || metadataCreator.display_name || source.creatorName || source.creator_name || source.createdByName || source.created_by_name || metadata.creatorName || metadata.creator_name || metadata.createdByName || metadata.created_by_name || "").trim(),
+          email: String(sourceCreator.email || sourceCreator.mail || metadataCreator.email || metadataCreator.mail || source.creatorEmail || source.creator_email || source.createdByEmail || source.created_by_email || metadata.creatorEmail || metadata.creator_email || metadata.createdByEmail || metadata.created_by_email || "").trim(),
+          avatarUrl: String(sourceCreator.avatarUrl || sourceCreator.avatar_url || sourceCreator.photoUrl || sourceCreator.photoURL || sourceCreator.imageUrl || sourceCreator.imageURL || metadataCreator.avatarUrl || metadataCreator.avatar_url || metadataCreator.photoUrl || metadataCreator.photoURL || metadataCreator.imageUrl || metadataCreator.imageURL || source.creatorAvatarUrl || source.creator_avatar_url || source.createdByAvatarUrl || source.created_by_avatar_url || metadata.creatorAvatarUrl || metadata.creator_avatar_url || metadata.createdByAvatarUrl || metadata.created_by_avatar_url || "").trim(),
+        };
+        if (creatorIdentity.id || creatorIdentity.userId || creatorIdentity.name || creatorIdentity.email || creatorIdentity.avatarUrl) {
+          metadata.creator = {
+            ...metadataCreator,
+            ...(creatorIdentity.id ? { id: creatorIdentity.id } : {}),
+            ...(creatorIdentity.userId ? { userId: creatorIdentity.userId, user_id: creatorIdentity.userId } : {}),
+            ...(creatorIdentity.name ? { name: creatorIdentity.name, displayName: creatorIdentity.name, display_name: creatorIdentity.name } : {}),
+            ...(creatorIdentity.email ? { email: creatorIdentity.email } : {}),
+            ...(creatorIdentity.avatarUrl ? { avatarUrl: creatorIdentity.avatarUrl, avatar_url: creatorIdentity.avatarUrl, photoUrl: creatorIdentity.avatarUrl, photoURL: creatorIdentity.avatarUrl } : {}),
+          };
+          if (creatorIdentity.id) {
+            metadata.creatorId = creatorIdentity.id;
+            metadata.creator_id = creatorIdentity.id;
+          }
+          if (creatorIdentity.userId) {
+            metadata.creatorUserId = creatorIdentity.userId;
+            metadata.creator_user_id = creatorIdentity.userId;
+          }
+          if (creatorIdentity.name) {
+            metadata.creatorName = creatorIdentity.name;
+            metadata.creator_name = creatorIdentity.name;
+          }
+          if (creatorIdentity.email) {
+            metadata.creatorEmail = creatorIdentity.email;
+            metadata.creator_email = creatorIdentity.email;
+          }
+          if (creatorIdentity.avatarUrl) {
+            metadata.creatorAvatarUrl = creatorIdentity.avatarUrl;
+            metadata.creator_avatar_url = creatorIdentity.avatarUrl;
+          }
+        }
         const rawName = typeof source.name === "string"
           ? source.name
           : typeof source.title === "string"
@@ -154368,6 +158570,207 @@ ${PROJECT_OVERVIEW_SCRIPT}
         return createPlaygroundGuardrailWithVersionList(nextSet, versions, preferredSelectedId || normalizedVersion.id);
       }
 
+      function buildPlaygroundGuardrailVersionComparableSnapshot(snapshot) {
+        const normalizedSnapshot = normalizePlaygroundGuardrailVersion({ snapshot }).snapshot;
+        return {
+          name: String(normalizedSnapshot.name || "").trim(),
+          description: String(normalizedSnapshot.description || ""),
+          prompts: (Array.isArray(normalizedSnapshot.prompts) ? normalizedSnapshot.prompts : [])
+            .map((prompt, index) => ({
+              id: String(prompt?.id || ("prompt_" + (index + 1))).trim(),
+              title: String(prompt?.title || "").trim(),
+              prompt: String(prompt?.prompt || ""),
+            })),
+        };
+      }
+
+      function updatePlaygroundGuardrailVersionFromSet(version, set, options = {}) {
+        const now = String(options.updatedAt || new Date().toISOString()).trim();
+        const normalizedVersion = normalizePlaygroundGuardrailVersion(version || {});
+        const snapshot = buildPlaygroundGuardrailVersionSnapshot(set);
+        const requestedStatus = String(options.status || normalizedVersion.status || "saved").trim().toLowerCase();
+        const status = requestedStatus === "active" ? "active" : "saved";
+        return normalizePlaygroundGuardrailVersion({
+          ...normalizedVersion,
+          status,
+          updatedAt: now,
+          updated_at: now,
+          publishedAt: status === "active" ? String(options.publishedAt || normalizedVersion.publishedAt || now).trim() : "",
+          published_at: status === "active" ? String(options.publishedAt || normalizedVersion.publishedAt || now).trim() : "",
+          name: snapshot.name,
+          prompts: snapshot.prompts,
+          promptCount: snapshot.prompts.length,
+          snapshot,
+        }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+      }
+
+      function updatePlaygroundGuardrailVersionMetadata(version, details = {}) {
+        const normalizedVersion = normalizePlaygroundGuardrailVersion(version || {});
+        const now = String(details.updatedAt || new Date().toISOString()).trim();
+        return normalizePlaygroundGuardrailVersion({
+          ...normalizedVersion,
+          label: String(details.label || "").trim() || String(normalizedVersion.label || ("Version " + normalizedVersion.version)).trim(),
+          description: String(details.description || "").trim(),
+          updatedAt: now,
+          updated_at: now,
+        }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+      }
+
+      function publishPlaygroundGuardrailVersion(version, options = {}) {
+        const normalizedVersion = normalizePlaygroundGuardrailVersion(version || {});
+        const publishedAt = String(options.publishedAt || new Date().toISOString()).trim();
+        return normalizePlaygroundGuardrailVersion({
+          ...normalizedVersion,
+          status: "active",
+          updatedAt: publishedAt,
+          updated_at: publishedAt,
+          publishedAt,
+          published_at: publishedAt,
+        }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+      }
+
+      function supersedePlaygroundGuardrailVersion(version, options = {}) {
+        const normalizedVersion = normalizePlaygroundGuardrailVersion(version || {});
+        const supersededAt = String(options.supersededAt || new Date().toISOString()).trim();
+        return normalizePlaygroundGuardrailVersion({
+          ...normalizedVersion,
+          status: "superseded",
+          updatedAt: supersededAt,
+          updated_at: supersededAt,
+        }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+      }
+
+      function unpublishPlaygroundGuardrailVersion(version, options = {}) {
+        const normalizedVersion = normalizePlaygroundGuardrailVersion(version || {});
+        const unpublishedAt = String(options.unpublishedAt || new Date().toISOString()).trim();
+        return normalizePlaygroundGuardrailVersion({
+          ...normalizedVersion,
+          status: "unpublished",
+          updatedAt: unpublishedAt,
+          updated_at: unpublishedAt,
+          publishedAt: "",
+          published_at: "",
+        }, Math.max(0, Number(normalizedVersion.version || 1) - 1));
+      }
+
+      function ensurePlaygroundGuardrailInitialVersion(set) {
+        const normalizedSet = normalizePlaygroundGuardrailSet(set || createPlaygroundGuardrailSetDraft());
+        const versions = readPlaygroundGuardrailVersions(normalizedSet);
+        if (versions.length > 0) {
+          return createPlaygroundGuardrailWithVersionList(normalizedSet, versions);
+        }
+        const initialVersion = createPlaygroundGuardrailVersion(normalizedSet, [], {
+          status: "active",
+          label: "Version 1",
+          description: "Initial version",
+        });
+        return createPlaygroundGuardrailWithVersionList(normalizedSet, [initialVersion], initialVersion.id);
+      }
+
+      const playgroundGuardrailVersionController = createPlaygroundVersionController({
+        getMetadata: (set) => (
+          set?.metadata && typeof set.metadata === "object" && !Array.isArray(set.metadata)
+            ? set.metadata
+            : {}
+        ),
+        readVersions: readPlaygroundGuardrailVersions,
+        normalizeVersions: normalizePlaygroundGuardrailVersions,
+        createVersion: createPlaygroundGuardrailVersion,
+        withVersionList: createPlaygroundGuardrailWithVersionList,
+        fromVersionSnapshot: createPlaygroundGuardrailFromVersionSnapshot,
+        buildSnapshot: buildPlaygroundGuardrailVersionSnapshot,
+        buildComparableSnapshot: buildPlaygroundGuardrailVersionComparableSnapshot,
+        getActiveVersionId: (metadata) => (
+          metadata.activeGuardrailVersionId
+          || metadata.active_guardrail_version_id
+          || ""
+        ),
+        getSelectedVersionId: (metadata, activeVersion) => (
+          metadata.restoredFromGuardrailVersionId
+          || metadata.restored_from_guardrail_version_id
+          || activeVersion?.id
+          || ""
+        ),
+        updateVersionFromResource: updatePlaygroundGuardrailVersionFromSet,
+        updateVersionMetadata: updatePlaygroundGuardrailVersionMetadata,
+        publishVersion: publishPlaygroundGuardrailVersion,
+        supersedeVersion: supersedePlaygroundGuardrailVersion,
+        unpublishVersion: unpublishPlaygroundGuardrailVersion,
+        applyUnpublishMetadata: (set) => {
+          const normalizedSet = normalizePlaygroundGuardrailSet(set);
+          const metadata = normalizedSet.metadata && typeof normalizedSet.metadata === "object" && !Array.isArray(normalizedSet.metadata)
+            ? { ...normalizedSet.metadata }
+            : {};
+          delete metadata.publishedAt;
+          delete metadata.published_at;
+          return normalizePlaygroundGuardrailSet({
+            ...normalizedSet,
+            metadata,
+            publishedAt: "",
+          });
+        },
+      });
+
+      function createPlaygroundGuardrailVersionPromptSlug(prompt, index = 0) {
+        const source = String(prompt?.title || prompt?.id || ("prompt " + (index + 1))).trim().toLowerCase();
+        const slug = source
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 60);
+        return slug || ("prompt-" + (index + 1));
+      }
+
+      function buildPlaygroundGuardrailVersionDiffFilesFromSnapshots(baseSnapshot, targetSnapshot) {
+        if (!baseSnapshot || !targetSnapshot) {
+          return [];
+        }
+        const normalizedBaseSnapshot = normalizePlaygroundGuardrailVersion({ snapshot: baseSnapshot }).snapshot;
+        const normalizedTargetSnapshot = normalizePlaygroundGuardrailVersion({ snapshot: targetSnapshot }).snapshot;
+        const basePrompts = Array.isArray(normalizedBaseSnapshot.prompts) ? normalizedBaseSnapshot.prompts : [];
+        const targetPrompts = Array.isArray(normalizedTargetSnapshot.prompts) ? normalizedTargetSnapshot.prompts : [];
+        const promptIds = Array.from(new Set(basePrompts.concat(targetPrompts).map((prompt, index) => (
+          String(prompt?.id || ("prompt_" + (index + 1))).trim()
+        )))).filter(Boolean);
+        const files = [
+          createPlaygroundVersionDiffFile({
+            id: "config",
+            path: "guardrail-set/config.json",
+            before: {
+              name: normalizedBaseSnapshot.name,
+              prompts: basePrompts.map((prompt, index) => ({
+                id: String(prompt?.id || ("prompt_" + (index + 1))).trim(),
+                title: String(prompt?.title || "").trim(),
+              })),
+            },
+            after: {
+              name: normalizedTargetSnapshot.name,
+              prompts: targetPrompts.map((prompt, index) => ({
+                id: String(prompt?.id || ("prompt_" + (index + 1))).trim(),
+                title: String(prompt?.title || "").trim(),
+              })),
+            },
+          }),
+          createPlaygroundVersionDiffFile({
+            id: "description",
+            path: "guardrail-set/description.md",
+            before: normalizedBaseSnapshot.description || "",
+            after: normalizedTargetSnapshot.description || "",
+          }),
+        ];
+        promptIds.forEach((promptId, index) => {
+          const basePrompt = basePrompts.find((prompt) => String(prompt?.id || "").trim() === promptId) || null;
+          const targetPrompt = targetPrompts.find((prompt) => String(prompt?.id || "").trim() === promptId) || null;
+          const displayPrompt = targetPrompt || basePrompt || {};
+          files.push(createPlaygroundVersionDiffFile({
+            id: "prompt:" + promptId,
+            path: "guardrail-set/prompts/" + createPlaygroundGuardrailVersionPromptSlug(displayPrompt, index) + ".md",
+            before: basePrompt?.prompt || "",
+            after: targetPrompt?.prompt || "",
+          }));
+        });
+        return files.filter(Boolean);
+      }
+
       function readPlaygroundGuardrailSetsFromStorage() {
         if (typeof window === "undefined" || !window.localStorage) {
           return [];
@@ -154377,6 +158780,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return Array.isArray(parsed)
             ? parsed
                 .map((set) => normalizePlaygroundGuardrailSet({ ...set, source: "custom", isDefault: false, readOnly: false, readonly: false }))
+                .map((set) => ensurePlaygroundGuardrailInitialVersion(set))
                 .filter((set) => !isPlaygroundDefaultGuardrailSet(set))
             : [];
         } catch {
@@ -154577,7 +158981,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         ));
         const [threadDisplayCount, setThreadDisplayCount] = useState(10);
         const threadDisplayCountRef = useRef(10);
-        const threadFetchLimitRef = useRef(20);
+        const threadFetchLimitRef = useRef(SEARCH_THREAD_FETCH_LIMIT);
         threadDisplayCountRef.current = threadDisplayCount;
         const [threadActionMenuState, setThreadActionMenuState] = useState(null);
         const [metronomeRunActionMenuState, setMetronomeRunActionMenuState] = useState(null);
@@ -154981,7 +159385,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [resourceTemplateSlideIndex, setResourceTemplateSlideIndex] = useState(0);
         const [resourceTemplateToolbarPopover, setResourceTemplateToolbarPopover] = useState("");
         const guardrailsToolbarRef = useRef(null);
+        const guardrailTitleInputRef = useRef(null);
+        const guardrailSetActionMenuRef = useRef(null);
+        const guardrailDetailActionsMenuRef = useRef(null);
         const guardrailsDescriptionTextareaRef = useRef(null);
+        const guardrailPublishMenuRef = useRef(null);
+        const guardrailVersionDescriptionTextareaRef = useRef(null);
+        const guardrailVersionModalCloseTimerRef = useRef(null);
+        const guardrailVersionModalFrameRef = useRef(null);
+        const guardrailVersionBaselineRef = useRef({ key: "", signature: "" });
+        const guardrailVersionDraftTouchedRef = useRef(false);
         const [guardrailSets, setGuardrailSets] = useState(() => readPlaygroundGuardrailSetsFromStorage());
         const [selectedGuardrailSetId, setSelectedGuardrailSetId] = useState(() => {
           const storedSets = readPlaygroundGuardrailSetsFromStorage();
@@ -154993,8 +159406,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [guardrailsSetFilter, setGuardrailsSetFilter] = useState("all");
         const [guardrailsPageMode, setGuardrailsPageMode] = useState("overview");
         const [guardrailsToolbarPopover, setGuardrailsToolbarPopover] = useState("");
+        const [guardrailSetActionMenuId, setGuardrailSetActionMenuId] = useState("");
+        const [guardrailDetailActionsMenuOpen, setGuardrailDetailActionsMenuOpen] = useState(false);
+        const [guardrailPublishMenuOpen, setGuardrailPublishMenuOpen] = useState(false);
+        const [guardrailVersionsHeaderMenuOpen, setGuardrailVersionsHeaderMenuOpen] = useState(false);
         const [guardrailVersionsSidebarOpen, setGuardrailVersionsSidebarOpen] = useState(false);
         const [guardrailVersionState, setGuardrailVersionState] = useState({ status: "idle", message: "", error: "" });
+        const [guardrailVersionModal, setGuardrailVersionModal] = useState(null);
+        const [guardrailVersionModalVisible, setGuardrailVersionModalVisible] = useState(false);
+        const [guardrailVersionModalClosing, setGuardrailVersionModalClosing] = useState(false);
+        const [guardrailVersionNameDraft, setGuardrailVersionNameDraft] = useState("");
+        const [guardrailVersionDescriptionDraft, setGuardrailVersionDescriptionDraft] = useState("");
+        const [isGuardrailVersionDescriptionEditing, setIsGuardrailVersionDescriptionEditing] = useState(false);
+        const [guardrailVersionChangesState, setGuardrailVersionChangesState] = useState(null);
         const [openGuardrailVersionMenuId, setOpenGuardrailVersionMenuId] = useState("");
         const allGuardrailSets = useMemo(() => getPlaygroundAllGuardrailSets(guardrailSets), [guardrailSets]);
         const [evaluationSets, setEvaluationSets] = useState(() => readPlaygroundEvaluationSetsFromStorage());
@@ -155018,7 +159442,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           targetAgentId: "",
           environmentId: "",
           passThreshold: "80",
-          evaluatorType: "exact",
+          evaluatorType: "agent",
           evaluatorAgentId: "",
           evaluatorCode: "",
         });
@@ -155028,7 +159452,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           name: "",
           targetAgentId: "",
           environmentKey: "",
-          evaluatorType: "exact",
+          evaluatorType: "agent",
           evaluatorAgentId: "",
           evaluatorCode: "",
         });
@@ -155189,9 +159613,176 @@ ${PROJECT_OVERVIEW_SCRIPT}
             selectionEnd: urlStart + url.length,
           };
         }
+        function clearGuardrailVersionModalTimers() {
+          if (typeof window === "undefined") return;
+          if (guardrailVersionModalCloseTimerRef.current) {
+            window.clearTimeout(guardrailVersionModalCloseTimerRef.current);
+            guardrailVersionModalCloseTimerRef.current = null;
+          }
+          if (guardrailVersionModalFrameRef.current) {
+            window.cancelAnimationFrame(guardrailVersionModalFrameRef.current);
+            guardrailVersionModalFrameRef.current = null;
+          }
+        }
+        function resetGuardrailVersionTransientState(options = {}) {
+          setGuardrailVersionsSidebarOpen(false);
+          setGuardrailPublishMenuOpen(false);
+          setGuardrailVersionsHeaderMenuOpen(false);
+          setGuardrailSetActionMenuId("");
+          setGuardrailDetailActionsMenuOpen(false);
+          setGuardrailVersionChangesState(null);
+          setOpenGuardrailVersionMenuId("");
+          if (options.closeModal === false) {
+            return;
+          }
+          clearGuardrailVersionModalTimers();
+          setGuardrailVersionModal(null);
+          setGuardrailVersionModalVisible(false);
+          setGuardrailVersionModalClosing(false);
+          setGuardrailVersionNameDraft("");
+          setGuardrailVersionDescriptionDraft("");
+          setIsGuardrailVersionDescriptionEditing(false);
+        }
+        function focusGuardrailTitleInput() {
+          if (typeof window === "undefined") return;
+          window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+              const titleInput = guardrailTitleInputRef.current;
+              if (!titleInput) return;
+              titleInput.focus();
+              if (typeof titleInput.select === "function") {
+                titleInput.select();
+              }
+            });
+          });
+        }
+        function handleRenameGuardrailSet(setId) {
+          const normalizedSetId = String(setId || "").trim();
+          if (!normalizedSetId) return;
+          const targetSet = allGuardrailSets.find((set) => set?.id === normalizedSetId);
+          if (!targetSet || isPlaygroundDefaultGuardrailSet(targetSet)) return;
+          setSelectedGuardrailSetId(normalizedSetId);
+          setGuardrailsPageMode("detail");
+          setGuardrailsToolbarPopover("");
+          setGuardrailSetActionMenuId("");
+          setGuardrailDetailActionsMenuOpen(false);
+          setGuardrailPublishMenuOpen(false);
+          setGuardrailVersionsHeaderMenuOpen(false);
+          setOpenGuardrailVersionMenuId("");
+          setActivePage("guardrails");
+          focusGuardrailTitleInput();
+        }
+        function handleDeleteGuardrailSet(setId) {
+          const normalizedSetId = String(setId || "").trim();
+          if (!normalizedSetId) return;
+          const targetSet = allGuardrailSets.find((set) => set?.id === normalizedSetId);
+          if (!targetSet || isPlaygroundDefaultGuardrailSet(targetSet)) return;
+          const confirmed = typeof window === "undefined" || window.confirm("Delete " + (targetSet?.name || "this guardrail set") + "?");
+          if (!confirmed) return;
+          setGuardrailSetActionMenuId("");
+          setGuardrailDetailActionsMenuOpen(false);
+          setGuardrailSets((current) => (Array.isArray(current) ? current : []).filter((set) => set?.id !== normalizedSetId));
+          if (selectedGuardrailSetId === normalizedSetId) {
+            const fallbackSet = allGuardrailSets.find((set) => set?.id !== normalizedSetId);
+            setSelectedGuardrailSetId(fallbackSet?.id || "");
+            resetGuardrailVersionTransientState();
+            if (guardrailsPageMode === "detail") {
+              setGuardrailsPageMode("overview");
+            }
+          }
+        }
+        function renderGuardrailActionMenuItems(setId) {
+          return React.createElement(React.Fragment, null,
+            React.createElement("button", {
+              type: "button",
+              className: "tb-popup-row",
+              role: "menuitem",
+              onClick: () => handleRenameGuardrailSet(setId),
+            },
+              React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, "Rename")
+              )
+            ),
+            React.createElement("button", {
+              type: "button",
+              className: "tb-popup-row is-danger",
+              role: "menuitem",
+              onClick: () => handleDeleteGuardrailSet(setId),
+            },
+              React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, "Delete")
+              )
+            )
+          );
+        }
         useEffect(() => {
           writePlaygroundGuardrailSetsToStorage(guardrailSets);
         }, [guardrailSets]);
+        useEffect(() => {
+          if (!guardrailPublishMenuOpen) {
+            return undefined;
+          }
+
+          function handleGuardrailPublishMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !guardrailPublishMenuRef.current || guardrailPublishMenuRef.current.contains(target)) {
+              return;
+            }
+            setGuardrailPublishMenuOpen(false);
+          }
+
+          function handleGuardrailPublishMenuEscape(event) {
+            if (event.key === "Escape") {
+              setGuardrailPublishMenuOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleGuardrailPublishMenuPointerDown);
+          window.addEventListener("keydown", handleGuardrailPublishMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleGuardrailPublishMenuPointerDown);
+            window.removeEventListener("keydown", handleGuardrailPublishMenuEscape);
+          };
+        }, [guardrailPublishMenuOpen]);
+        useEffect(() => {
+          if (!guardrailSetActionMenuId && !guardrailDetailActionsMenuOpen) {
+            return undefined;
+          }
+
+          function handleGuardrailActionsPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target) {
+              return;
+            }
+            const activeRowShell = guardrailSetActionMenuRef.current;
+            const detailShell = guardrailDetailActionsMenuRef.current;
+            if (
+              (activeRowShell && activeRowShell.contains(target))
+              || (detailShell && detailShell.contains(target))
+            ) {
+              return;
+            }
+            setGuardrailSetActionMenuId("");
+            setGuardrailDetailActionsMenuOpen(false);
+          }
+
+          function handleGuardrailActionsEscape(event) {
+            if (event.key !== "Escape") {
+              return;
+            }
+            setGuardrailSetActionMenuId("");
+            setGuardrailDetailActionsMenuOpen(false);
+          }
+
+          document.addEventListener("mousedown", handleGuardrailActionsPointerDown);
+          window.addEventListener("keydown", handleGuardrailActionsEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleGuardrailActionsPointerDown);
+            window.removeEventListener("keydown", handleGuardrailActionsEscape);
+          };
+        }, [guardrailDetailActionsMenuOpen, guardrailSetActionMenuId]);
         useEffect(() => {
           writePlaygroundEvaluationSetsToStorage(evaluationSets);
         }, [evaluationSets]);
@@ -155201,6 +159792,39 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
           setSelectedGuardrailSetId(allGuardrailSets[0]?.id || "");
         }, [allGuardrailSets, selectedGuardrailSetId]);
+        useEffect(() => {
+          const isGuardrailDetailContext = activePage === "guardrails" && guardrailsPageMode === "detail";
+          if (isGuardrailDetailContext) {
+            return;
+          }
+          const hasOpenGuardrailVersionSurface = guardrailVersionsSidebarOpen
+            || guardrailPublishMenuOpen
+            || guardrailVersionsHeaderMenuOpen
+            || guardrailDetailActionsMenuOpen
+            || Boolean(guardrailVersionChangesState)
+            || Boolean(openGuardrailVersionMenuId)
+            || Boolean(guardrailVersionModal);
+          if (!hasOpenGuardrailVersionSurface) {
+            return;
+          }
+          resetGuardrailVersionTransientState();
+        }, [
+          activePage,
+          guardrailDetailActionsMenuOpen,
+          guardrailPublishMenuOpen,
+          guardrailVersionChangesState,
+          guardrailVersionModal,
+          guardrailVersionsHeaderMenuOpen,
+          guardrailVersionsSidebarOpen,
+          guardrailsPageMode,
+          openGuardrailVersionMenuId,
+        ]);
+        useEffect(() => {
+          if (activePage === "guardrails" || !guardrailSetActionMenuId) {
+            return;
+          }
+          setGuardrailSetActionMenuId("");
+        }, [activePage, guardrailSetActionMenuId]);
         useEffect(() => {
           if (selectedEvaluationSetId && evaluationSets.some((set) => set.id === selectedEvaluationSetId)) {
             return;
@@ -166715,7 +171339,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (!hasRealAccess) {
             setRealThreads([]);
             setRealThreadsHasMore(false);
-            threadFetchLimitRef.current = 20;
+            threadFetchLimitRef.current = SEARCH_THREAD_FETCH_LIMIT;
             return;
           }
 
@@ -166724,8 +171348,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               ? Math.max(1, Math.round(limitOverride))
               : 20;
           const retainedSidebarLimit = Math.max(
-            20,
-            Number.isFinite(threadFetchLimitRef.current) ? threadFetchLimitRef.current : 20,
+            SEARCH_THREAD_FETCH_LIMIT,
+            Number.isFinite(threadFetchLimitRef.current) ? threadFetchLimitRef.current : SEARCH_THREAD_FETCH_LIMIT,
             Number.isFinite(threadDisplayCountRef.current) ? threadDisplayCountRef.current : 10
           );
           const requestedLimit = Math.max(explicitRequestedLimit, retainedSidebarLimit);
@@ -167024,13 +171648,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const handleShowMoreThreads = useCallback(async function handleShowMoreThreads() {
           const nextDisplayCount = threadDisplayCount + 10;
           threadDisplayCountRef.current = nextDisplayCount;
-          threadFetchLimitRef.current = Math.max(threadFetchLimitRef.current || 20, nextDisplayCount);
+          threadFetchLimitRef.current = Math.max(threadFetchLimitRef.current || SEARCH_THREAD_FETCH_LIMIT, SEARCH_THREAD_FETCH_LIMIT, nextDisplayCount);
           setThreadDisplayCount(nextDisplayCount);
           if (hasDemoAccess || !hasRealAccess || isThreadsLoading) {
             return;
           }
           if (realThreadsHasMore && realThreads.length < nextDisplayCount) {
-            void refreshThreads(Math.max(20, nextDisplayCount + 10));
+            void refreshThreads(Math.max(SEARCH_THREAD_FETCH_LIMIT, nextDisplayCount + 10));
           }
         }, [hasDemoAccess, hasRealAccess, isThreadsLoading, realThreads.length, realThreadsHasMore, refreshThreads, threadDisplayCount]);
 
@@ -169409,7 +174033,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (options.guardrailId) {
             setSelectedGuardrailSetId(String(options.guardrailId || "").trim());
           }
-          setGuardrailsPageMode(options.mode === "detail" || options.guardrailId ? "detail" : "overview");
+          resetGuardrailVersionTransientState();
+          const nextGuardrailsPageMode = options.mode === "detail" || options.guardrailId ? "detail" : "overview";
+          setGuardrailsPageMode(nextGuardrailsPageMode);
           setActivePage("guardrails");
         }
 
@@ -181745,7 +186371,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         useEffect(() => {
           threadDisplayCountRef.current = 10;
-          threadFetchLimitRef.current = 20;
+          threadFetchLimitRef.current = SEARCH_THREAD_FETCH_LIMIT;
           setThreadDisplayCount(10);
         }, [threadListMode]);
 
@@ -182594,19 +187220,38 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : resourcesView;
         const activeResourcesServerKind = activeResourcesView === "servers" ? resourcesServerKind : "";
         const isResourcesPage = activePage === "resources" || activePage === "agents" || activePage === "environments";
-        const isAgentVersionsDrawerOpen = isResourcesPage
-          && (activeResourcesView === "agents" || activeResourcesView === "computers")
-          && isAgentVersionsDetailOpen;
+        const hasGuardrailsVersionsDrawerSlot = activePage === "guardrails";
+        const hasEvaluationsVersionsDrawerSlot = activePage === "evaluations";
+        const hasResourcesVersionsDrawerSlot = (
+          isResourcesPage
+          && (activeResourcesView === "agents" || activeResourcesView === "computers" || activeResourcesView === "servers")
+        ) || hasGuardrailsVersionsDrawerSlot || hasEvaluationsVersionsDrawerSlot;
+        const selectedGlobalGuardrailSet = allGuardrailSets.find((set) => set?.id === selectedGuardrailSetId) || null;
+        const isGuardrailsVersionsDrawerOpen = Boolean(
+          hasGuardrailsVersionsDrawerSlot
+          && guardrailsPageMode === "detail"
+          && selectedGlobalGuardrailSet
+          && !isPlaygroundDefaultGuardrailSet(selectedGlobalGuardrailSet)
+          && guardrailVersionsSidebarOpen
+        );
+        const isResourcesVersionsDrawerOpen = (
+          isResourcesPage
+          && hasResourcesVersionsDrawerSlot
+          && isAgentVersionsDetailOpen
+        ) || isGuardrailsVersionsDrawerOpen || (
+          hasEvaluationsVersionsDrawerSlot
+          && isAgentVersionsDetailOpen
+        );
 
         useEffect(() => {
-          if (!isAgentVersionsDrawerOpen) {
+          if (!isResourcesVersionsDrawerOpen) {
             return;
           }
           setNotificationsOpen(false);
           if (accountMenuPlacement === "top-nav") {
             setAccountMenuOpen(false);
           }
-        }, [accountMenuPlacement, isAgentVersionsDrawerOpen]);
+        }, [accountMenuPlacement, isResourcesVersionsDrawerOpen]);
 
         const platformNavigationHistoryRef = useRef([]);
         const platformNavigationInitializedRef = useRef(false);
@@ -188310,9 +192955,45 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (guardrailsPageMode === "detail" && activeGuardrailSet?.name) {
             guardrailsPathItems.push({ label: activeGuardrailSet.name });
           }
+          const canShowGuardrailDetailActions = Boolean(
+            guardrailsPageMode === "detail"
+            && activeGuardrailSet
+            && !isPlaygroundDefaultGuardrailSet(activeGuardrailSet)
+            && !isResourcesVersionsDrawerOpen
+          );
+          const guardrailDetailTopNavActions = canShowGuardrailDetailActions
+            ? React.createElement("span", { className: "playground-guardrails-detail-topnav-actions" },
+                renderPlaygroundPlatformPopup({
+                  open: guardrailDetailActionsMenuOpen,
+                  shellRef: guardrailDetailActionsMenuRef,
+                  shellClassName: "playground-guardrails-action-menu-shell playground-guardrails-detail-action-menu-shell",
+                  menuClassName: "playground-agents-detail-publish-menu playground-guardrails-action-menu",
+                  trigger: React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-header-icon-button is-plain" + (guardrailDetailActionsMenuOpen ? " is-active" : ""),
+                    title: "Guardrail actions",
+                    "aria-label": "Guardrail actions",
+                    "aria-haspopup": "menu",
+                    "aria-expanded": guardrailDetailActionsMenuOpen ? "true" : "false",
+                    onClick: () => {
+                      setGuardrailSetActionMenuId("");
+                      setGuardrailDetailActionsMenuOpen((current) => !current);
+                    },
+                  }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
+                  menuProps: {
+                    role: "menu",
+                    onClick: (event) => event.stopPropagation(),
+                  },
+                  children: renderGuardrailActionMenuItems(activeGuardrailSet.id),
+                })
+              )
+            : null;
           return renderUnifiedTopNav({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: guardrailsPathItems,
+            extraActions: guardrailDetailTopNavActions,
+            includeSearchDivider: canShowGuardrailDetailActions,
+            hideCommonActions: isResourcesVersionsDrawerOpen,
           });
         }
 
@@ -188322,7 +193003,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             .find((set) => set?.id === selectedEvaluationSetId);
           const activeEvaluationRun = activeEvaluationSet?.runs?.find((run) => run?.id === selectedEvaluationRunId);
           const evaluationsPathItems = [{ label: "Configure" }, { label: "Evaluations" }];
-          const showEvaluationSetActions = evaluationsPageMode === "detail" && Boolean(activeEvaluationSet?.id);
+          const showEvaluationSetActions = evaluationsPageMode === "detail" && Boolean(activeEvaluationSet?.id) && !isResourcesVersionsDrawerOpen;
           if ((evaluationsPageMode === "detail" || evaluationsPageMode === "run") && activeEvaluationSet?.name) {
             evaluationsPathItems.push({ label: activeEvaluationSet.name });
           }
@@ -188339,6 +193020,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   className: "playground-evaluations-nav-actions",
                 })
               : null,
+            hideCommonActions: isResourcesVersionsDrawerOpen,
           });
         }
 
@@ -188400,7 +193082,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             className: "playground-resources-page",
             pathItems: resourcesPathItems,
             includeSearchDivider: activeResourcesView === "agents" || activeResourcesView === "computers",
-            hideCommonActions: isAgentVersionsDrawerOpen,
+            hideCommonActions: isResourcesVersionsDrawerOpen,
             extraActions: React.createElement("div", {
               id: "playground-resources-nav-actions",
               className: "playground-resources-nav-actions-slot",
@@ -189704,6 +194386,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   computerAgents: demoComputerAgents,
                   agents: realAgents,
                   environments: runtimeEnvironments,
+                  projects: runnerWorkspaceProjects,
                   skills: demoSkills,
                   currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
                   currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",
@@ -189715,6 +194398,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   workspaceTeamsLoading: teamPageLoading,
                   workspaceTeamsRequiresPlan: teamPageRequiresPlan,
                   guardrailSets: allGuardrailSets,
+                  evaluationSets,
+                  setEvaluationSets,
                   onWorkspaceTeamsRequest: (options = {}) => {
                     const requestedTeamId = String(options?.selectedTeamId || options?.teamId || "").trim();
                     void loadTeamPageData({ selectedTeamId: requestedTeamId });
@@ -189843,6 +194528,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 computerAgents: demoComputerAgents,
                 agents: runtimeAgents,
                 skills: demoSkills,
+                currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
+                currentUserName: hasSessionAuth ? accountName : "Me",
+                currentUserEmail: hasSessionAuth ? accountEmail : "",
+                currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                 preferredEnvironmentId: resolvedEnvironmentId || "",
                 preferredAgentId: resolvedPreferredAgentId || "",
                 navigationToken: environmentsOpenToken,
@@ -189989,7 +194678,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const safeGuardrailSets = Array.isArray(allGuardrailSets) ? allGuardrailSets : [];
           const customGuardrailSets = Array.isArray(guardrailSets) ? guardrailSets : [];
           const normalizedQuery = String(guardrailsSearchQuery || "").trim().toLowerCase();
-          const getPromptCount = (set) => Array.isArray(set?.prompts) ? set.prompts.length : 0;
           const isGuardrailSetReadonly = (set) => isPlaygroundDefaultGuardrailSet(set);
           const formatGuardrailDate = (value) => {
             const date = new Date(value || "");
@@ -190010,6 +194698,92 @@ ${PROJECT_OVERVIEW_SCRIPT}
               minute: "2-digit",
             });
           };
+          const getGuardrailCreatorIdentity = (set) => {
+            if (isGuardrailSetReadonly(set)) {
+              return {
+                name: "Computer Agents",
+                avatarUrl: RUNNER_TRANSPARENT_LOGO_URL,
+                isSystem: true,
+              };
+            }
+            const record = set && typeof set === "object" && !Array.isArray(set) ? set : {};
+            const metadata = record.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
+            const nested = record.creator && typeof record.creator === "object" && !Array.isArray(record.creator)
+              ? record.creator
+              : record.createdBy && typeof record.createdBy === "object" && !Array.isArray(record.createdBy)
+                ? record.createdBy
+                : record.created_by && typeof record.created_by === "object" && !Array.isArray(record.created_by)
+                  ? record.created_by
+                  : metadata.creator && typeof metadata.creator === "object" && !Array.isArray(metadata.creator)
+                    ? metadata.creator
+                    : metadata.createdBy && typeof metadata.createdBy === "object" && !Array.isArray(metadata.createdBy)
+                      ? metadata.createdBy
+                      : metadata.created_by && typeof metadata.created_by === "object" && !Array.isArray(metadata.created_by)
+                        ? metadata.created_by
+                        : {};
+            const creatorName = String(
+              nested.name
+              || nested.displayName
+              || nested.display_name
+              || record.creatorName
+              || record.creator_name
+              || record.createdByName
+              || record.created_by_name
+              || metadata.creatorName
+              || metadata.creator_name
+              || metadata.createdByName
+              || metadata.created_by_name
+              || accountName
+              || accountEmail
+              || ""
+            ).trim();
+            const creatorAvatarUrl = String(
+              nested.avatarUrl
+              || nested.avatar_url
+              || nested.photoUrl
+              || nested.photoURL
+              || nested.imageUrl
+              || nested.imageURL
+              || record.creatorAvatarUrl
+              || record.creator_avatar_url
+              || record.createdByAvatarUrl
+              || record.created_by_avatar_url
+              || metadata.creatorAvatarUrl
+              || metadata.creator_avatar_url
+              || metadata.createdByAvatarUrl
+              || metadata.created_by_avatar_url
+              || accountAvatarUrl
+              || ""
+            ).trim();
+            return {
+              id: String(nested.id || record.creatorId || record.creator_id || record.createdById || record.created_by_id || metadata.creatorId || metadata.creator_id || metadata.createdById || metadata.created_by_id || accountEmail || "").trim(),
+              userId: String(nested.userId || nested.user_id || record.creatorUserId || record.creator_user_id || metadata.creatorUserId || metadata.creator_user_id || sessionState.userId || "").trim(),
+              name: creatorName,
+              email: String(nested.email || nested.mail || record.creatorEmail || record.creator_email || record.createdByEmail || record.created_by_email || metadata.creatorEmail || metadata.creator_email || metadata.createdByEmail || metadata.created_by_email || accountEmail || "").trim(),
+              avatarUrl: creatorAvatarUrl,
+              isSystem: false,
+            };
+          };
+          const getGuardrailCreatorLabel = (set) => {
+            const creator = getGuardrailCreatorIdentity(set);
+            return String(creator.name || creator.email || creator.id || creator.userId || "Unknown").trim();
+          };
+          function renderGuardrailCreatorCell(set) {
+            const creator = getGuardrailCreatorIdentity(set);
+            const label = getGuardrailCreatorLabel(set);
+            const avatarUrl = canRenderAvatarImage(creator.avatarUrl) ? creator.avatarUrl : "";
+            return React.createElement("span", { className: "playground-guardrails-creator-cell", title: label },
+              React.createElement("span", {
+                className: "playground-guardrails-creator-avatar" + (creator.isSystem ? " is-system" : ""),
+                "aria-hidden": "true",
+              },
+                avatarUrl
+                  ? React.createElement("img", { src: avatarUrl, alt: "" })
+                  : getAccountInitials(label)
+              ),
+              React.createElement("span", { className: "playground-guardrails-creator-label" }, label)
+            );
+          }
           const filteredGuardrailSets = safeGuardrailSets
             .filter((set) => {
               const isDefaultSet = isGuardrailSetReadonly(set);
@@ -190030,8 +194804,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               if (guardrailsSort === "name") {
                 return String(left?.name || "").localeCompare(String(right?.name || ""));
               }
-              if (guardrailsSort === "prompts") {
-                return getPromptCount(right) - getPromptCount(left);
+              if (guardrailsSort === "creator") {
+                return getGuardrailCreatorLabel(left).localeCompare(getGuardrailCreatorLabel(right));
               }
               const rightTime = new Date(right?.updatedAt || right?.createdAt || 0).getTime() || 0;
               const leftTime = new Date(left?.updatedAt || left?.createdAt || 0).getTime() || 0;
@@ -190046,30 +194820,66 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : [];
 
           function createGuardrailSet() {
-            const nextSet = createPlaygroundGuardrailSetDraft({
+            const creator = {
+              id: String(sessionState.userId || accountEmail || accountName || "").trim(),
+              userId: String(sessionState.userId || "").trim(),
+              name: String(accountName || accountEmail || "Me").trim(),
+              email: String(accountEmail || "").trim(),
+              avatarUrl: String(accountAvatarUrl || "").trim(),
+            };
+            const draftSet = createPlaygroundGuardrailSetDraft({
               name: "Guardrail Set " + (customGuardrailSets.length + 1),
               description: "",
+              metadata: {
+                creator,
+                ...(creator.id ? { creatorId: creator.id, creator_id: creator.id } : {}),
+                ...(creator.userId ? { creatorUserId: creator.userId, creator_user_id: creator.userId } : {}),
+                ...(creator.name ? { creatorName: creator.name, creator_name: creator.name } : {}),
+                ...(creator.email ? { creatorEmail: creator.email, creator_email: creator.email } : {}),
+                ...(creator.avatarUrl ? { creatorAvatarUrl: creator.avatarUrl, creator_avatar_url: creator.avatarUrl } : {}),
+              },
             });
+            const nextSet = ensurePlaygroundGuardrailInitialVersion(draftSet);
             setGuardrailSets((current) => [nextSet, ...(Array.isArray(current) ? current : [])]);
             setSelectedGuardrailSetId(nextSet.id);
             setGuardrailsSetFilter("custom");
             setGuardrailsPageMode("detail");
             setGuardrailsToolbarPopover("");
+            setGuardrailSetActionMenuId("");
+            setGuardrailDetailActionsMenuOpen(false);
+            setGuardrailPublishMenuOpen(false);
+            setGuardrailVersionsHeaderMenuOpen(false);
+            setGuardrailVersionChangesState(null);
+            rememberGuardrailVersionBaseline(nextSet, { force: true });
           }
 
           function selectGuardrailSet(setId) {
             setSelectedGuardrailSetId(setId);
             setGuardrailsPageMode("detail");
             setGuardrailsToolbarPopover("");
+            setGuardrailSetActionMenuId("");
+            setGuardrailDetailActionsMenuOpen(false);
             setGuardrailVersionsSidebarOpen(false);
+            setGuardrailPublishMenuOpen(false);
+            setGuardrailVersionsHeaderMenuOpen(false);
+            setGuardrailVersionChangesState(null);
             setOpenGuardrailVersionMenuId("");
+            finishCloseGuardrailVersionModal();
+            guardrailVersionDraftTouchedRef.current = false;
           }
 
           function returnToGuardrailsOverview() {
             setGuardrailsPageMode("overview");
             setGuardrailsToolbarPopover("");
+            setGuardrailSetActionMenuId("");
+            setGuardrailDetailActionsMenuOpen(false);
             setGuardrailVersionsSidebarOpen(false);
+            setGuardrailPublishMenuOpen(false);
+            setGuardrailVersionsHeaderMenuOpen(false);
+            setGuardrailVersionChangesState(null);
             setOpenGuardrailVersionMenuId("");
+            finishCloseGuardrailVersionModal();
+            guardrailVersionDraftTouchedRef.current = false;
           }
 
           function updateGuardrailSet(setId, updater) {
@@ -190077,6 +194887,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             if (!normalizedSetId) return;
             const targetSet = safeGuardrailSets.find((set) => set?.id === normalizedSetId);
             if (isGuardrailSetReadonly(targetSet)) return;
+            guardrailVersionDraftTouchedRef.current = true;
             setGuardrailSets((current) => (Array.isArray(current) ? current : []).map((set) => {
               if (set?.id !== normalizedSetId) return set;
               const updatedSet = typeof updater === "function" ? updater(set) : { ...set, ...updater };
@@ -190090,45 +194901,104 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }));
           }
 
-          function deleteGuardrailSet(setId) {
-            const normalizedSetId = String(setId || "").trim();
-            if (!normalizedSetId) return;
-            const targetSet = safeGuardrailSets.find((set) => set?.id === normalizedSetId);
-            if (isGuardrailSetReadonly(targetSet)) return;
-            const confirmed = typeof window === "undefined" || window.confirm("Delete " + (targetSet?.name || "this guardrail set") + "?");
-            if (!confirmed) return;
-            setGuardrailSets((current) => (Array.isArray(current) ? current : []).filter((set) => set?.id !== normalizedSetId));
-            if (selectedGuardrailSetId === normalizedSetId) {
-              const fallbackSet = safeGuardrailSets.find((set) => set?.id !== normalizedSetId);
-              setSelectedGuardrailSetId(fallbackSet?.id || "");
-              setGuardrailVersionsSidebarOpen(false);
-              setOpenGuardrailVersionMenuId("");
-              if (guardrailsPageMode === "detail") {
-                setGuardrailsPageMode("overview");
-              }
+          function getGuardrailVersionMetadata(set = selectedGuardrailSet) {
+            return playgroundGuardrailVersionController.getMetadata(set);
+          }
+
+          function readSelectedGuardrailVersions(set = selectedGuardrailSet) {
+            return playgroundGuardrailVersionController.readVersions(set);
+          }
+
+          function getSelectedGuardrailActiveVersion(set = selectedGuardrailSet) {
+            return playgroundGuardrailVersionController.getActiveVersion(set);
+          }
+
+          function getSelectedGuardrailVersion(set = selectedGuardrailSet) {
+            return playgroundGuardrailVersionController.getSelectedVersion(set);
+          }
+
+          function rememberGuardrailVersionBaseline(set = selectedGuardrailSet, options = {}) {
+            const didUpdateBaseline = playgroundGuardrailVersionController.rememberBaseline(set, guardrailVersionBaselineRef, options);
+            if (didUpdateBaseline) {
+              guardrailVersionDraftTouchedRef.current = false;
             }
           }
 
-          function getGuardrailVersionMetadata(set = selectedGuardrailSet) {
-            return set?.metadata && typeof set.metadata === "object" && !Array.isArray(set.metadata)
-              ? set.metadata
-              : {};
+          function hasSelectedGuardrailVersionChanges() {
+            return playgroundGuardrailVersionController.hasDraftChanges(selectedGuardrailSet, guardrailVersionBaselineRef, {
+              requireTouched: false,
+              touched: guardrailVersionDraftTouchedRef.current,
+            });
           }
 
-          function readSelectedGuardrailVersions() {
-            return readPlaygroundGuardrailVersions(selectedGuardrailSet);
+          function canPublishSelectedGuardrailVersion() {
+            const selectedVersion = getSelectedGuardrailVersion();
+            return Boolean(selectedVersion && !hasSelectedGuardrailVersionChanges() && selectedVersion.status !== "active");
           }
 
-          function getSelectedGuardrailActiveVersion() {
-            const metadata = getGuardrailVersionMetadata();
-            const activeVersionId = String(metadata.activeGuardrailVersionId || metadata.active_guardrail_version_id || "").trim();
-            return readSelectedGuardrailVersions().find((version) => version.id === activeVersionId || version.status === "active") || null;
+          function getGuardrailVersionPrimaryActionKind() {
+            return canPublishSelectedGuardrailVersion() ? "publish" : "save";
+          }
+
+          function getGuardrailVersionPopupActions(options = {}) {
+            const includeVersionHistory = options.includeVersionHistory !== false;
+            const primaryActionKind = getGuardrailVersionPrimaryActionKind();
+            const hasChanges = hasSelectedGuardrailVersionChanges();
+            const canPublish = canPublishSelectedGuardrailVersion();
+            const actions = [
+              primaryActionKind === "publish"
+                ? {
+                    id: "publish",
+                    label: "Publish",
+                    Icon: Rocket,
+                    shortcut: "⌘P",
+                    disabled: !canPublish,
+                    onClick: publishCurrentGuardrailVersion,
+                  }
+                : {
+                    id: "save",
+                    label: "Save",
+                    Icon: Save,
+                    shortcut: "⌘S",
+                    disabled: !hasChanges,
+                    onClick: saveCurrentGuardrailVersion,
+                  },
+              {
+                id: "save-new-version",
+                label: "Save to new Version",
+                Icon: GitBranchPlus,
+                shortcut: "⇧⌘S",
+                disabled: !hasChanges,
+                onClick: () => openCreateGuardrailVersionModal(),
+              },
+              {
+                id: "revert",
+                label: "Revert to last saved Version",
+                Icon: Undo2,
+                disabled: !hasChanges,
+                onClick: handleRevertGuardrailDraft,
+              },
+            ];
+            if (includeVersionHistory) {
+              actions.push({
+                id: "version-history",
+                label: "Version history",
+                Icon: History,
+                disabled: false,
+                onClick: () => {
+                  setGuardrailPublishMenuOpen(false);
+                  setGuardrailVersionsHeaderMenuOpen(false);
+                  setGuardrailVersionsSidebarOpen(true);
+                },
+              });
+            }
+            return actions;
           }
 
           function commitVersionedGuardrailSet(nextSet, options = {}) {
             const normalizedSet = normalizePlaygroundGuardrailSet(nextSet);
             if (!normalizedSet?.id || isGuardrailSetReadonly(normalizedSet)) {
-              return;
+              return null;
             }
             setGuardrailVersionState({
               status: "loading",
@@ -190139,128 +195009,318 @@ ${PROJECT_OVERVIEW_SCRIPT}
               setGuardrailSets((current) => (Array.isArray(current) ? current : []).map((set) => (
                 set?.id === normalizedSet.id ? normalizedSet : set
               )));
+              rememberGuardrailVersionBaseline(normalizedSet, { force: true });
+              setGuardrailPublishMenuOpen(false);
+              setGuardrailVersionsHeaderMenuOpen(false);
               setOpenGuardrailVersionMenuId("");
               setGuardrailVersionState({
                 status: "success",
                 message: options.successMessage || "Guardrail versions updated.",
                 error: "",
               });
-              window.setTimeout(() => {
-                setGuardrailVersionState((current) => current.status === "success" ? { status: "idle", message: "", error: "" } : current);
-              }, 1400);
+              if (typeof window !== "undefined") {
+                window.setTimeout(() => {
+                  setGuardrailVersionState((current) => current.status === "success" ? { status: "idle", message: "", error: "" } : current);
+                }, 1400);
+              }
+              return normalizedSet;
             } catch (error) {
               setGuardrailVersionState({
                 status: "error",
                 message: "",
                 error: error?.message || options.errorMessage || "Failed to update guardrail versions.",
               });
+              return null;
             }
           }
 
           function saveCurrentGuardrailVersion() {
-            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
-            const versions = readSelectedGuardrailVersions();
-            const nextVersion = createPlaygroundGuardrailVersion(selectedGuardrailSet, versions, { status: "saved" });
-            const nextSet = createPlaygroundGuardrailWithVersionList(selectedGuardrailSet, [nextVersion, ...versions], nextVersion.id);
-            commitVersionedGuardrailSet(nextSet, {
-              loadingMessage: "Saving guardrail version...",
-              successMessage: "Guardrail version saved.",
-              errorMessage: "Failed to save guardrail version.",
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
+            if (!hasSelectedGuardrailVersionChanges()) return null;
+            const result = playgroundGuardrailVersionController.buildSaveCurrentResource(selectedGuardrailSet, { status: "saved" });
+            if (!result?.resource) return null;
+            return commitVersionedGuardrailSet(result.resource, {
+              loadingMessage: "Saving current version...",
+              successMessage: "Current version saved",
+              errorMessage: "Failed to save current version.",
             });
           }
 
+          function cancelGuardrailVersionModalAnimation() {
+            if (guardrailVersionModalCloseTimerRef.current) {
+              window.clearTimeout(guardrailVersionModalCloseTimerRef.current);
+              guardrailVersionModalCloseTimerRef.current = null;
+            }
+            if (guardrailVersionModalFrameRef.current) {
+              window.cancelAnimationFrame(guardrailVersionModalFrameRef.current);
+              guardrailVersionModalFrameRef.current = null;
+            }
+          }
+
+          function finishCloseGuardrailVersionModal() {
+            cancelGuardrailVersionModalAnimation();
+            setGuardrailVersionModal(null);
+            setGuardrailVersionModalVisible(false);
+            setGuardrailVersionModalClosing(false);
+            setGuardrailVersionNameDraft("");
+            setGuardrailVersionDescriptionDraft("");
+            setIsGuardrailVersionDescriptionEditing(false);
+          }
+
+          function openGuardrailVersionModal(nextModal, draft = {}) {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return;
+            cancelGuardrailVersionModalAnimation();
+            setGuardrailPublishMenuOpen(false);
+            setGuardrailVersionsHeaderMenuOpen(false);
+            setOpenGuardrailVersionMenuId("");
+            setGuardrailVersionState((current) => current.status === "loading" ? current : {
+              status: "idle",
+              message: "",
+              error: "",
+            });
+            setGuardrailVersionNameDraft(String(draft.name || "").trim());
+            setGuardrailVersionDescriptionDraft(String(draft.description || ""));
+            setIsGuardrailVersionDescriptionEditing(false);
+            setGuardrailVersionModal(nextModal);
+            setGuardrailVersionModalClosing(false);
+            setGuardrailVersionModalVisible(false);
+            guardrailVersionModalFrameRef.current = window.requestAnimationFrame(() => {
+              guardrailVersionModalFrameRef.current = window.requestAnimationFrame(() => {
+                guardrailVersionModalFrameRef.current = null;
+                setGuardrailVersionModalVisible(true);
+              });
+            });
+          }
+
+          function openCreateGuardrailVersionModal(options = {}) {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return;
+            const forceNewVersion = Boolean(options.force);
+            if (!forceNewVersion && !hasSelectedGuardrailVersionChanges()) return;
+            const versions = readSelectedGuardrailVersions();
+            const nextVersion = versions.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), 0) + 1;
+            openGuardrailVersionModal(
+              { mode: "create", force: forceNewVersion },
+              { name: "Version " + nextVersion, description: "" }
+            );
+          }
+
+          function openEditGuardrailVersionModal(versionId) {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return;
+            const normalizedVersionId = String(versionId || "").trim();
+            const targetVersion = readSelectedGuardrailVersions().find((version) => version.id === normalizedVersionId);
+            if (!targetVersion) return;
+            openGuardrailVersionModal(
+              { mode: "edit", versionId: targetVersion.id },
+              {
+                name: String(targetVersion.label || ("Version " + targetVersion.version)).trim(),
+                description: String(targetVersion.description || ""),
+              }
+            );
+          }
+
+          function closeGuardrailVersionModal(options = {}) {
+            if (guardrailVersionState.status === "loading") return;
+            if (options.animate === false) {
+              finishCloseGuardrailVersionModal();
+              return;
+            }
+            if (!guardrailVersionModal || guardrailVersionModalClosing) return;
+            cancelGuardrailVersionModalAnimation();
+            setGuardrailVersionModalVisible(false);
+            setGuardrailVersionModalClosing(true);
+            guardrailVersionModalCloseTimerRef.current = window.setTimeout(() => {
+              guardrailVersionModalCloseTimerRef.current = null;
+              finishCloseGuardrailVersionModal();
+            }, typeof PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS === "number" ? PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS : 75);
+          }
+
+          function saveGuardrailToNewVersion(options = {}) {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
+            const forceNewVersion = Boolean(options.force);
+            if (!forceNewVersion && !hasSelectedGuardrailVersionChanges()) return null;
+            const result = playgroundGuardrailVersionController.buildNewVersionResource(selectedGuardrailSet, {
+              label: options.label,
+              description: options.description,
+            });
+            if (!result?.resource) return null;
+            return commitVersionedGuardrailSet(result.resource, {
+              loadingMessage: "Saving new version...",
+              successMessage: "New version saved",
+              errorMessage: "Failed to save new version.",
+            });
+          }
+
+          function updateGuardrailVersionDetails(versionId, versionDetails = {}) {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
+            const result = playgroundGuardrailVersionController.buildVersionMetadataResource(selectedGuardrailSet, versionId, versionDetails);
+            if (!result?.resource) return null;
+            return commitVersionedGuardrailSet(result.resource, {
+              loadingMessage: "Saving version details...",
+              successMessage: "Version details saved",
+              errorMessage: "Failed to save version details.",
+            });
+          }
+
+          function commitGuardrailVersionModal() {
+            if (!guardrailVersionModal || guardrailVersionState.status === "loading") return;
+            const label = String(guardrailVersionNameDraft || "").trim() || "Version";
+            const description = String(guardrailVersionDescriptionDraft || "").trim();
+            const savedSet = guardrailVersionModal.mode === "edit"
+              ? updateGuardrailVersionDetails(guardrailVersionModal.versionId, { label, description })
+              : saveGuardrailToNewVersion({
+                  force: Boolean(guardrailVersionModal.force),
+                  label,
+                  description,
+                });
+            if (savedSet) {
+              closeGuardrailVersionModal();
+            }
+          }
+
           function publishCurrentGuardrailVersion() {
-            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
-            const versions = readSelectedGuardrailVersions().map((version) => (
-              version.status === "active"
-                ? { ...version, status: "superseded" }
-                : version
-            ));
-            const nextVersion = createPlaygroundGuardrailVersion(selectedGuardrailSet, versions, { status: "active" });
-            const nextSet = createPlaygroundGuardrailWithVersionList(selectedGuardrailSet, [nextVersion, ...versions], nextVersion.id);
-            commitVersionedGuardrailSet(nextSet, {
-              loadingMessage: "Publishing guardrail version...",
-              successMessage: "Guardrail version published.",
-              errorMessage: "Failed to publish guardrail version.",
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
+            if (hasSelectedGuardrailVersionChanges()) {
+              setGuardrailVersionState({
+                status: "error",
+                message: "",
+                error: "Save the current version before publishing.",
+              });
+              return null;
+            }
+            if (!canPublishSelectedGuardrailVersion()) return null;
+            const result = playgroundGuardrailVersionController.buildPublishSelectedResource(selectedGuardrailSet);
+            if (!result?.resource) return null;
+            return commitVersionedGuardrailSet(result.resource, {
+              loadingMessage: "Publishing current version...",
+              successMessage: "Published",
+              errorMessage: "Failed to publish current version.",
             });
           }
 
           function restoreGuardrailVersion(versionId) {
-            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
-            const versions = readSelectedGuardrailVersions();
-            const targetVersion = versions.find((version) => version.id === String(versionId || "").trim());
-            if (!targetVersion) return;
-            const nextSet = createPlaygroundGuardrailFromVersionSnapshot(selectedGuardrailSet, targetVersion, versions, targetVersion.id);
-            commitVersionedGuardrailSet(nextSet, {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
+            const result = playgroundGuardrailVersionController.buildRestoreVersionResource(selectedGuardrailSet, versionId);
+            if (!result?.resource) return null;
+            return commitVersionedGuardrailSet(result.resource, {
               loadingMessage: "Restoring guardrail version...",
-              successMessage: "Guardrail version restored.",
+              successMessage: "Version restored",
               errorMessage: "Failed to restore guardrail version.",
             });
           }
 
           function publishGuardrailVersion(versionId) {
-            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
-            const normalizedVersionId = String(versionId || "").trim();
-            const versions = readSelectedGuardrailVersions();
-            const targetVersion = versions.find((version) => version.id === normalizedVersionId);
-            if (!targetVersion) return;
-            const now = new Date().toISOString();
-            const nextVersions = versions.map((version) => {
-              if (version.id === normalizedVersionId) {
-                return {
-                  ...version,
-                  status: "active",
-                  publishedAt: version.publishedAt || now,
-                };
-              }
-              return version.status === "active"
-                ? { ...version, status: "superseded" }
-                : version;
-            });
-            const activeVersion = nextVersions.find((version) => version.id === normalizedVersionId) || targetVersion;
-            const nextSet = createPlaygroundGuardrailFromVersionSnapshot(selectedGuardrailSet, activeVersion, nextVersions, activeVersion.id);
-            commitVersionedGuardrailSet(nextSet, {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
+            const result = playgroundGuardrailVersionController.buildPublishVersionResource(selectedGuardrailSet, versionId);
+            if (!result?.resource) return null;
+            return commitVersionedGuardrailSet(result.resource, {
               loadingMessage: "Publishing guardrail version...",
-              successMessage: "Guardrail version published.",
+              successMessage: "Published",
               errorMessage: "Failed to publish guardrail version.",
             });
           }
 
           function deleteGuardrailVersion(versionId) {
-            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
-            const normalizedVersionId = String(versionId || "").trim();
-            if (!normalizedVersionId) return;
-            const versions = readSelectedGuardrailVersions();
-            const targetVersion = versions.find((version) => version.id === normalizedVersionId);
-            if (!targetVersion) return;
-            const confirmed = typeof window === "undefined" || window.confirm("Delete " + (targetVersion.label || "this version") + "?");
-            if (!confirmed) return;
-            const nextVersions = versions.filter((version) => version.id !== normalizedVersionId);
-            const nextSet = createPlaygroundGuardrailWithVersionList(selectedGuardrailSet, nextVersions);
-            commitVersionedGuardrailSet(nextSet, {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
+            if (readSelectedGuardrailVersions().length <= 1) return null;
+            const result = playgroundGuardrailVersionController.buildDeleteVersionResource(selectedGuardrailSet, versionId);
+            if (!result?.resource) return null;
+            const confirmed = typeof window === "undefined" || window.confirm("Delete this guardrail version?");
+            if (!confirmed) return null;
+            return commitVersionedGuardrailSet(result.resource, {
               loadingMessage: "Deleting guardrail version...",
-              successMessage: "Guardrail version deleted.",
+              successMessage: "Version deleted",
               errorMessage: "Failed to delete guardrail version.",
             });
           }
 
           function unpublishActiveGuardrailVersion() {
-            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
-            const activeVersion = getSelectedGuardrailActiveVersion();
-            if (!activeVersion) return;
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
+            const result = playgroundGuardrailVersionController.buildUnpublishActiveResource(selectedGuardrailSet);
+            if (!result?.resource) return null;
             const confirmed = typeof window === "undefined" || window.confirm("Unpublish this guardrail set?");
-            if (!confirmed) return;
-            const versions = readSelectedGuardrailVersions().map((version) => (
-              version.id === activeVersion.id
-                ? { ...version, status: "unpublished", publishedAt: "" }
-                : version
-            ));
-            const nextSet = createPlaygroundGuardrailWithVersionList(selectedGuardrailSet, versions);
-            commitVersionedGuardrailSet(nextSet, {
+            if (!confirmed) return null;
+            return commitVersionedGuardrailSet(result.resource, {
               loadingMessage: "Unpublishing guardrail set...",
-              successMessage: "Guardrail set unpublished.",
+              successMessage: "Unpublished",
               errorMessage: "Failed to unpublish guardrail set.",
             });
+          }
+
+          function handleRevertGuardrailDraft() {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
+            const selectedVersion = getSelectedGuardrailVersion();
+            if (!selectedVersion) return null;
+            const result = playgroundGuardrailVersionController.buildRestoreVersionResource(selectedGuardrailSet, selectedVersion.id);
+            if (!result?.resource) return null;
+            return commitVersionedGuardrailSet(result.resource, {
+              loadingMessage: "Reverting guardrail set...",
+              successMessage: "Reverted",
+              errorMessage: "Failed to revert guardrail set.",
+            });
+          }
+
+          const GUARDRAIL_VERSION_COMPARE_CURRENT_EDITOR_ID = "current-editor";
+          const getGuardrailVersionCompareVersionSourceId = (versionId) => {
+            const normalizedVersionId = String(versionId || "").trim();
+            return normalizedVersionId ? "version:" + normalizedVersionId : "";
+          };
+          const getGuardrailVersionCompareVersionLabel = (version) => String(version?.label || ("Version " + version?.version)).trim() || "Version";
+          const buildGuardrailVersionCompareSources = (versions) => [
+            {
+              id: GUARDRAIL_VERSION_COMPARE_CURRENT_EDITOR_ID,
+              label: "Current editor",
+              snapshot: buildPlaygroundGuardrailVersionSnapshot(selectedGuardrailSet),
+            },
+          ].concat((Array.isArray(versions) ? versions : []).map((version) => ({
+            id: getGuardrailVersionCompareVersionSourceId(version.id),
+            label: getGuardrailVersionCompareVersionLabel(version),
+            snapshot: normalizePlaygroundGuardrailVersion(version).snapshot,
+          })));
+          const resolveGuardrailVersionCompareSource = (sourceId, sources, fallbackSource) => {
+            const normalizedSourceId = String(sourceId || "").trim();
+            return sources.find((source) => source.id === normalizedSourceId) || fallbackSource || sources[0] || null;
+          };
+          const getDefaultGuardrailVersionCompareLeftSourceId = (versions) => {
+            const activeVersion = getSelectedGuardrailActiveVersion()
+              || (Array.isArray(versions) ? versions[0] : null);
+            return activeVersion ? getGuardrailVersionCompareVersionSourceId(activeVersion.id) : GUARDRAIL_VERSION_COMPARE_CURRENT_EDITOR_ID;
+          };
+
+          function openGuardrailVersionChangesPage(versionId, options = {}) {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
+            const normalizedVersionId = String(versionId || "").trim();
+            const versions = readSelectedGuardrailVersions();
+            const leftSourceId = String(options.leftSourceId || "").trim()
+              || (normalizedVersionId
+                ? getGuardrailVersionCompareVersionSourceId(normalizedVersionId)
+                : getDefaultGuardrailVersionCompareLeftSourceId(versions));
+            const rightSourceId = String(options.rightSourceId || "").trim() || GUARDRAIL_VERSION_COMPARE_CURRENT_EDITOR_ID;
+            setOpenGuardrailVersionMenuId("");
+            setGuardrailPublishMenuOpen(false);
+            setGuardrailVersionsHeaderMenuOpen(false);
+            setGuardrailVersionsSidebarOpen(true);
+            setGuardrailVersionChangesState({ leftSourceId, rightSourceId });
+          }
+
+          function closeGuardrailVersionChangesPage() {
+            setGuardrailVersionChangesState(null);
+          }
+
+          function handleGuardrailVersionCompareSourceChange(side, sourceId) {
+            const normalizedSourceId = String(sourceId || "").trim() || GUARDRAIL_VERSION_COMPARE_CURRENT_EDITOR_ID;
+            setGuardrailVersionChangesState((current) => ({
+              ...(current || {}),
+              [side === "left" ? "leftSourceId" : "rightSourceId"]: normalizedSourceId,
+            }));
+          }
+
+          function closeGuardrailVersionsSidebar() {
+            setGuardrailVersionsSidebarOpen(false);
+            setGuardrailPublishMenuOpen(false);
+            setGuardrailVersionsHeaderMenuOpen(false);
+            finishCloseGuardrailVersionModal();
+            setGuardrailVersionChangesState(null);
+            setOpenGuardrailVersionMenuId("");
           }
 
           function renderGuardrailVersionsSidebar() {
@@ -190280,6 +195340,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return React.createElement(PlaygroundVersionSidebar, {
               className: "playground-guardrails-versions-sidebar",
               open: guardrailVersionsSidebarOpen,
+              title: "Publish Guardrail",
               versions,
               activeVersionId,
               selectedVersionId,
@@ -190287,30 +195348,397 @@ ${PROJECT_OVERVIEW_SCRIPT}
               busy: guardrailVersionState.status === "loading",
               openMenuId: openGuardrailVersionMenuId,
               onOpenMenuIdChange: setOpenGuardrailVersionMenuId,
-              onClose: () => {
-                setGuardrailVersionsSidebarOpen(false);
-                setOpenGuardrailVersionMenuId("");
-              },
-              onSaveVersion: () => saveCurrentGuardrailVersion(),
-              onPublishCurrent: () => publishCurrentGuardrailVersion(),
-              onUnpublishActive: activeVersion ? () => unpublishActiveGuardrailVersion() : null,
-              onSelectVersion: (versionId) => restoreGuardrailVersion(versionId),
+              headerMenuOpen: guardrailVersionsHeaderMenuOpen,
+              headerMenuActions: getGuardrailVersionPopupActions({ includeVersionHistory: false }),
+              headerMenuDisabled: guardrailVersionState.status === "loading",
+              onHeaderMenuOpenChange: setGuardrailVersionsHeaderMenuOpen,
+              onClose: closeGuardrailVersionsSidebar,
+              onSaveVersion: () => openCreateGuardrailVersionModal({ force: true }),
+              onRestoreVersion: (versionId) => restoreGuardrailVersion(versionId),
               onPublishVersion: (versionId) => publishGuardrailVersion(versionId),
               onDeleteVersion: (versionId) => deleteGuardrailVersion(versionId),
-              emptyCopy: "Create a version to track guardrail prompts and description changes.",
+              versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-agents-version-compare-button",
+                  disabled: guardrailVersionState.status === "loading" || !versions.length,
+                  onClick: () => openGuardrailVersionChangesPage(),
+                },
+                  React.createElement(Code2, { width: 13, height: 13, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "View Changes")
+                )
+              ),
+              getRowMenuItems: (version) => [
+                {
+                  id: "edit",
+                  label: "Edit version",
+                  icon: SquarePen,
+                  onClick: () => openEditGuardrailVersionModal(version.id),
+                },
+                {
+                  id: "compare",
+                  label: "View Changes",
+                  icon: Code2,
+                  onClick: () => openGuardrailVersionChangesPage(version.id),
+                },
+                {
+                  id: "restore",
+                  label: "Restore version",
+                  icon: RotateCcw,
+                  onClick: () => restoreGuardrailVersion(version.id),
+                },
+                {
+                  id: "delete",
+                  label: "Delete version",
+                  icon: Trash2,
+                  danger: true,
+                  onClick: () => deleteGuardrailVersion(version.id),
+                },
+              ],
               unpublishLabel: "Unpublish guardrail set",
               getVersionTitle: (version) => String(version.label || ("Version " + version.version)).trim(),
-              getVersionDescription: (version) => String(version.description || "").trim(),
+              getVersionDescription: () => "",
               getVersionMeta: (version) => {
-                const promptCount = Number(version.promptCount || version.snapshot?.prompts?.length || 0) || 0;
-                return (version.publishedAt ? "Published " : "Saved ")
-                  + formatGuardrailVersionTimestamp(version.publishedAt || version.createdAt)
-                  + " · "
-                  + promptCount
-                  + " prompt"
-                  + (promptCount === 1 ? "" : "s");
+                const lifecycleLabel = version.status === "active"
+                  ? "Published"
+                  : version.status === "superseded"
+                    ? "Superseded"
+                    : version.status === "unpublished"
+                      ? "Unpublished"
+                      : "Saved";
+                return lifecycleLabel + " " + formatGuardrailVersionTimestamp(version.publishedAt || version.updatedAt || version.createdAt);
               },
             });
+          }
+
+          function renderGuardrailVersionsSidebarPortal() {
+            const sidebar = renderGuardrailVersionsSidebar();
+            if (!sidebar) {
+              return null;
+            }
+            const drawerContainer = typeof document !== "undefined"
+              ? document.getElementById("playground-agent-versions-drawer-root")
+              : null;
+            if (drawerContainer && typeof createPortal === "function") {
+              return createPortal(sidebar, drawerContainer);
+            }
+            return React.createElement("aside", {
+                className: "playground-metronome-node-drawer playground-agent-versions-inline-drawer is-open",
+              },
+              sidebar
+            );
+          }
+
+          function renderGuardrailPublishSplitButton() {
+            const isBusy = guardrailVersionState.status === "loading";
+            const actions = getGuardrailVersionPopupActions();
+            return renderPlaygroundPlatformPopup({
+              open: guardrailPublishMenuOpen,
+              shellRef: guardrailPublishMenuRef,
+              shellClassName: "playground-agents-detail-publish-split-shell playground-guardrails-publish-split-shell",
+              menuClassName: "playground-agents-detail-publish-menu playground-guardrails-publish-menu",
+              trigger: React.createElement("div", {
+                  className: "playground-metronome-create-button playground-metronome-publish-button playground-guardrails-publish-button playground-agents-detail-publish-split-control"
+                    + (guardrailVersionsSidebarOpen ? " is-active" : "")
+                    + (isBusy ? " is-disabled" : ""),
+                },
+                React.createElement("button", {
+                    type: "button",
+                    className: "playground-agents-detail-publish-main",
+                    title: "Open guardrail versions",
+                    "aria-label": "Open guardrail versions",
+                    "aria-expanded": guardrailVersionsSidebarOpen ? "true" : "false",
+                    disabled: isBusy,
+                    onClick: () => {
+                      setGuardrailPublishMenuOpen(false);
+                      setGuardrailVersionsHeaderMenuOpen(false);
+                      setGuardrailVersionsSidebarOpen(true);
+                    },
+                  },
+                  React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Publish")
+                ),
+                React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
+                React.createElement("button", {
+                    type: "button",
+                    className: "playground-agents-detail-publish-chevron",
+                    title: "Version save options",
+                    "aria-label": "Version save options",
+                    "aria-haspopup": "menu",
+                    "aria-expanded": guardrailPublishMenuOpen ? "true" : "false",
+                    disabled: isBusy,
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      setGuardrailPublishMenuOpen((current) => !current);
+                    },
+                  },
+                  React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                )
+              ),
+              menuProps: {
+                role: "menu",
+                onClick: (event) => event.stopPropagation(),
+              },
+              children: React.createElement(React.Fragment, null,
+                actions.map((action) => React.createElement("button", {
+                    key: action.id,
+                    type: "button",
+                    className: "tb-popup-row",
+                    role: "menuitem",
+                    disabled: isBusy || action.disabled,
+                    onClick: () => {
+                      setGuardrailPublishMenuOpen(false);
+                      action.onClick();
+                    },
+                  },
+                  React.createElement(action.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                    React.createElement("span", null, action.label)
+                  ),
+                  action.shortcut
+                    ? React.createElement("span", {
+                        className: "playground-agents-detail-publish-menu-shortcut",
+                        "aria-hidden": "true",
+                      }, action.shortcut)
+                    : null
+                ))
+              )
+            });
+          }
+
+          function renderGuardrailVersionChangesPage() {
+            if (!guardrailVersionChangesState || !selectedGuardrailSet) {
+              return null;
+            }
+            const versions = readSelectedGuardrailVersions();
+            const sources = buildGuardrailVersionCompareSources(versions);
+            const requestedLeftSourceId = String(guardrailVersionChangesState.leftSourceId || "").trim()
+              || getDefaultGuardrailVersionCompareLeftSourceId(versions);
+            const requestedRightSourceId = String(guardrailVersionChangesState.rightSourceId || "").trim()
+              || GUARDRAIL_VERSION_COMPARE_CURRENT_EDITOR_ID;
+            const currentEditorSource = sources.find((source) => source.id === GUARDRAIL_VERSION_COMPARE_CURRENT_EDITOR_ID) || sources[0] || null;
+            const leftSource = resolveGuardrailVersionCompareSource(requestedLeftSourceId, sources, sources[1] || currentEditorSource);
+            const rightSource = resolveGuardrailVersionCompareSource(requestedRightSourceId, sources, currentEditorSource);
+            if (!leftSource || !rightSource) {
+              return null;
+            }
+            const diffFiles = buildPlaygroundGuardrailVersionDiffFilesFromSnapshots(leftSource.snapshot, rightSource.snapshot);
+            const compareOptions = sources.map((source) =>
+              React.createElement("option", { key: source.id, value: source.id }, source.label)
+            );
+            const renderCompareSelect = (value, side) =>
+              React.createElement("label", { className: "playground-version-changes-select-shell" },
+                React.createElement("span", { className: "playground-version-changes-select-control-wrap" },
+                  React.createElement("select", {
+                    className: "playground-version-changes-select-control",
+                    value,
+                    onChange: (event) => handleGuardrailVersionCompareSourceChange(side, event.target.value),
+                  }, compareOptions),
+                  React.createElement(ChevronDown, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" })
+                )
+              );
+            return renderPlaygroundVersionChangesPage({
+              title: "Changes",
+              compareControls: React.createElement(React.Fragment, null,
+                renderCompareSelect(leftSource.id, "left"),
+                React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
+                renderCompareSelect(rightSource.id, "right")
+              ),
+              files: diffFiles,
+              backIcon: ArrowLeft,
+              backText: "Back",
+              backLabel: "Back to guardrail set",
+              onBack: closeGuardrailVersionChangesPage,
+              emptyMessage: "No differences from the current editor.",
+              className: "playground-guardrails-version-changes-page",
+            });
+          }
+
+          function applyGuardrailVersionDescriptionMarkdownFormat(formatType) {
+            const textarea = guardrailVersionDescriptionTextareaRef.current;
+            const value = String(guardrailVersionDescriptionDraft || "");
+            const selectionStart = textarea && typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+            const selectionEnd = textarea && typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+            let edit = null;
+            if (formatType === "bold") {
+              edit = buildGuardrailsWrappedMarkdownEdit(value, selectionStart, selectionEnd, "**");
+            } else if (formatType === "italic") {
+              edit = buildGuardrailsWrappedMarkdownEdit(value, selectionStart, selectionEnd, "*");
+            } else if (formatType === "underline") {
+              edit = buildGuardrailsWrappedMarkdownEdit(value, selectionStart, selectionEnd, "++");
+            } else if (formatType === "list") {
+              edit = buildGuardrailsMarkdownListEdit(value, selectionStart, selectionEnd, "unordered");
+            }
+            if (!edit) return;
+            setGuardrailVersionDescriptionDraft(edit.value);
+            window.requestAnimationFrame(() => {
+              const nextTextarea = guardrailVersionDescriptionTextareaRef.current;
+              if (!nextTextarea) return;
+              const maxLength = edit.value.length;
+              const safeSelectionStart = Math.max(0, Math.min(edit.selectionStart, maxLength));
+              const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(edit.selectionEnd, maxLength));
+              nextTextarea.focus();
+              nextTextarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+              resizeGuardrailsDescriptionTextarea(nextTextarea);
+            });
+          }
+
+          function renderGuardrailVersionModal() {
+            if (!guardrailVersionModal) {
+              return null;
+            }
+            const isBusy = guardrailVersionState.status === "loading";
+            const isEditMode = guardrailVersionModal.mode === "edit";
+            const trimmedVersionName = String(guardrailVersionNameDraft || "").trim();
+            const renderDescriptionField = () => React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-tasks-issue-description-editor playground-agents-version-description-editor playground-guardrails-version-description-editor" },
+              React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                  [
+                    { id: "bold", label: "Bold", icon: Bold },
+                    { id: "italic", label: "Italic", icon: Italic },
+                    { id: "underline", label: "Underline", icon: Underline },
+                    { id: "list", label: "List", icon: List },
+                  ].map((action) =>
+                    React.createElement("button", {
+                      key: action.id,
+                      type: "button",
+                      className: "playground-tasks-detail-format-button",
+                      title: action.label,
+                      "aria-label": action.label,
+                      disabled: isBusy,
+                      onMouseDown: (event) => event.preventDefault(),
+                      onClick: () => applyGuardrailVersionDescriptionMarkdownFormat(action.id),
+                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: action.id === "bold" ? 2.7 : 1.8 }))
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isGuardrailVersionDescriptionEditing ? " is-editing" : " is-preview") },
+                !isGuardrailVersionDescriptionEditing
+                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                      String(guardrailVersionDescriptionDraft || "").trim()
+                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                            content: guardrailVersionDescriptionDraft,
+                            className: "playground-tasks-detail-description-preview tb-message-markdown",
+                          })
+                        : React.createElement("div", {
+                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                          }, "Describe what changed in this version.")
+                    )
+                  : null,
+                React.createElement("textarea", {
+                  ref: guardrailVersionDescriptionTextareaRef,
+                  className: "playground-tasks-detail-description-input " + (isGuardrailVersionDescriptionEditing ? "is-editing" : "is-preview"),
+                  rows: 1,
+                  placeholder: isGuardrailVersionDescriptionEditing ? "Describe what changed in this version." : "",
+                  value: guardrailVersionDescriptionDraft || "",
+                  disabled: isBusy,
+                  onFocus: (event) => {
+                    setIsGuardrailVersionDescriptionEditing(true);
+                    resizeGuardrailsDescriptionTextarea(event.currentTarget);
+                  },
+                  onChange: (event) => {
+                    setGuardrailVersionDescriptionDraft(event.target.value);
+                    resizeGuardrailsDescriptionTextarea(event.currentTarget);
+                  },
+                  onBlur: () => setIsGuardrailVersionDescriptionEditing(false),
+                  onKeyDown: (event) => {
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      closeGuardrailVersionModal();
+                    }
+                  },
+                })
+              )
+            );
+            return renderPlaygroundPlatformModal({
+              open: Boolean(guardrailVersionModal),
+              visible: guardrailVersionModalVisible,
+              closing: guardrailVersionModalClosing,
+              onClose: () => closeGuardrailVersionModal(),
+              as: "form",
+              backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-version-modal-backdrop playground-guardrails-version-modal-backdrop",
+              className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-version-modal playground-guardrails-version-modal",
+              ariaLabel: isEditMode ? "Edit guardrail version" : "New guardrail version",
+              surfaceProps: {
+                onSubmit: (event) => {
+                  event.preventDefault();
+                  commitGuardrailVersionModal();
+                },
+                onKeyDown: (event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    closeGuardrailVersionModal();
+                  }
+                },
+              },
+              children: React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                      React.createElement(isEditMode ? SquarePen : GitBranchPlus, { width: 18, height: 18, strokeWidth: 1.9 })
+                    ),
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-tasks-project-modal-name-input playground-tasks-issue-modal-title-input",
+                      value: guardrailVersionNameDraft,
+                      placeholder: "Version name",
+                      autoFocus: true,
+                      disabled: isBusy,
+                      onChange: (event) => setGuardrailVersionNameDraft(event.target.value),
+                    })
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: () => closeGuardrailVersionModal(),
+                    title: "Close",
+                    disabled: isBusy,
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-tasks-issue-modal-body" },
+                  renderDescriptionField(),
+                  guardrailVersionState.status === "error" && guardrailVersionState.error
+                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, guardrailVersionState.error)
+                    : null
+                ),
+                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: () => closeGuardrailVersionModal(),
+                    disabled: isBusy,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: isBusy || !trimmedVersionName,
+                  }, isBusy ? (isEditMode ? "Saving..." : "Creating...") : (isEditMode ? "Save Version" : "Create Version"))
+                )
+              )
+            });
+          }
+
+          function handleGuardrailsKeyboardShortcuts(event) {
+            if (!isGuardrailsDetailPage || selectedGuardrailSetReadonly || event.defaultPrevented) {
+              return;
+            }
+            const isCommand = event.metaKey || event.ctrlKey;
+            if (!isCommand) return;
+            const key = String(event.key || "").toLowerCase();
+            if (key === "s") {
+              event.preventDefault();
+              if (event.shiftKey) {
+                openCreateGuardrailVersionModal();
+              } else {
+                saveCurrentGuardrailVersion();
+              }
+            } else if (key === "p" && !event.shiftKey) {
+              event.preventDefault();
+              if (canPublishSelectedGuardrailVersion()) {
+                publishCurrentGuardrailVersion();
+              }
+            }
           }
 
           function addGuardrailPrompt(setId) {
@@ -190360,7 +195788,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const sortOptions = [
             { id: "updated", label: "Updated" },
             { id: "name", label: "Name" },
-            { id: "prompts", label: "Prompts" },
+            { id: "creator", label: "Creator" },
           ];
           const guardrailsSetFilterOptions = [
             { id: "all", label: "All Sets" },
@@ -190399,15 +195827,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 React.createElement("div", { className: "playground-guardrails-table-header" },
                   React.createElement("span", null, "Set"),
                   React.createElement("span", null, "Type"),
-                  React.createElement("span", null, "Prompts"),
+                  React.createElement("span", null, "Creator"),
                   React.createElement("span", null, "Updated"),
                   React.createElement("span", null, "")
                 ),
                 filteredGuardrailSets.map((set) => {
                   const selected = selectedGuardrailSet?.id === set?.id;
                   const isDefaultSet = isGuardrailSetReadonly(set);
-                  const totalPrompts = getPromptCount(set);
-                  const promptLabel = totalPrompts + " " + (totalPrompts === 1 ? "prompt" : "prompts");
                   return React.createElement("div", {
                     key: set.id,
                     role: "button",
@@ -190418,28 +195844,40 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   },
                     React.createElement("div", { className: "playground-guardrails-set-cell" },
                       React.createElement("div", { className: "playground-guardrails-set-copy" },
-                        React.createElement("span", { className: "playground-guardrails-set-title" }, set.name || "Untitled Guardrail Set"),
-                        set.description
-                          ? React.createElement("span", { className: "playground-guardrails-set-description" }, set.description)
-                          : null
+                        React.createElement("span", { className: "playground-guardrails-set-title" }, set.name || "Untitled Guardrail Set")
                         )
                     ),
                     React.createElement("span", { className: "playground-guardrails-kind-pill" + (isDefaultSet ? " is-default" : " is-custom") },
                       isDefaultSet ? "Default" : "Custom"
                     ),
-                    React.createElement("span", { className: "playground-guardrails-table-muted" }, promptLabel),
+                    renderGuardrailCreatorCell(set),
                     React.createElement("span", { className: "playground-guardrails-table-muted" }, formatGuardrailDate(set.updatedAt || set.createdAt)),
                     isDefaultSet
                       ? React.createElement("span", { className: "playground-guardrails-row-action-placeholder", "aria-hidden": "true" })
-                      : React.createElement("button", {
-                          type: "button",
-                          className: "playground-guardrails-row-action",
-                          onClick: (event) => {
-                            event.stopPropagation();
-                            deleteGuardrailSet(set.id);
+                      : renderPlaygroundPlatformPopup({
+                          open: guardrailSetActionMenuId === set.id,
+                          shellRef: guardrailSetActionMenuId === set.id ? guardrailSetActionMenuRef : null,
+                          shellClassName: "playground-guardrails-action-menu-shell playground-guardrails-row-action-menu-shell",
+                          menuClassName: "playground-agents-detail-publish-menu playground-guardrails-action-menu",
+                          trigger: React.createElement("button", {
+                            type: "button",
+                            className: "playground-guardrails-row-action" + (guardrailSetActionMenuId === set.id ? " is-active" : ""),
+                            onClick: (event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              setGuardrailDetailActionsMenuOpen(false);
+                              setGuardrailSetActionMenuId((current) => current === set.id ? "" : set.id);
+                            },
+                            "aria-label": "Guardrail set actions",
+                            "aria-haspopup": "menu",
+                            "aria-expanded": guardrailSetActionMenuId === set.id ? "true" : "false",
+                          }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
+                          menuProps: {
+                            role: "menu",
+                            onClick: (event) => event.stopPropagation(),
                           },
-                          "aria-label": "Delete guardrail set",
-                        }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                          children: renderGuardrailActionMenuItems(set.id),
+                        })
                   );
                 })
               )
@@ -190536,11 +195974,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
             { id: "link", label: "Link", icon: Link2 },
           ];
 
-          return React.createElement("section", { className: "playground-files-page playground-guardrails-page" },
-            React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" + (guardrailVersionsSidebarOpen && isGuardrailsDetailPage && !selectedGuardrailSetReadonly ? " has-guardrail-versions" : "") },
+          return React.createElement("section", {
+              className: "playground-files-page playground-guardrails-page",
+              onKeyDownCapture: handleGuardrailsKeyboardShortcuts,
+            },
+            React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" },
               React.createElement("section", { className: "playground-files-browser playground-guardrails-browser" },
-                React.createElement("div", { className: "playground-files-browser-header playground-guardrails-browser-header" },
-                  React.createElement("div", { className: "playground-files-library-header playground-guardrails-library-header" },
+                guardrailVersionChangesState
+                  ? null
+                  : React.createElement("div", { className: "playground-files-browser-header playground-guardrails-browser-header" },
+                    React.createElement("div", { className: "playground-files-library-header playground-guardrails-library-header" },
                     isGuardrailsDetailPage
                       ? React.createElement("button", {
                           type: "button",
@@ -190556,6 +195999,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       React.createElement("h1", { className: "playground-files-library-title" + (isGuardrailsDetailPage ? " playground-guardrails-detail-title" : "") },
                         isGuardrailsDetailPage
                           ? React.createElement("input", {
+                              ref: guardrailTitleInputRef,
                               type: "text",
                               className: "playground-guardrails-title-input",
                               value: selectedGuardrailSet.name || "",
@@ -190568,29 +196012,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           : guardrailsPageTitle
                       ),
                       isGuardrailsDetailPage
-                        ? selectedGuardrailSetReadonly
+                        ? guardrailVersionChangesState
+                          ? null
+                          : selectedGuardrailSetReadonly
                           ? React.createElement("div", { className: "playground-guardrails-detail-actions" },
                               React.createElement("span", { className: "playground-guardrails-readonly-pill" }, "Default Set")
                             )
                           : React.createElement("div", { className: "playground-guardrails-detail-actions" },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-metronome-create-button playground-metronome-publish-button playground-guardrails-publish-button" + (guardrailVersionsSidebarOpen ? " is-active" : ""),
-                                onClick: () => {
-                                  setOpenGuardrailVersionMenuId("");
-                                  setGuardrailVersionsSidebarOpen((current) => !current);
-                                },
-                                "aria-expanded": guardrailVersionsSidebarOpen ? "true" : "false",
-                              },
-                                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                                React.createElement("span", null, "Publish")
-                              ),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-files-library-icon-button",
-                                onClick: () => deleteGuardrailSet(selectedGuardrailSet.id),
-                                "aria-label": "Delete guardrail set",
-                              }, React.createElement(Trash2, { width: 15, height: 15, strokeWidth: 1.8 }))
+                              renderGuardrailPublishSplitButton()
                             )
                         : React.createElement("div", { className: "playground-files-library-actions" },
                             React.createElement("div", { className: "playground-files-library-search-anchor" },
@@ -190652,7 +196081,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ),
                 React.createElement("div", { className: "playground-files-browser-body playground-guardrails-browser-body" },
                   isGuardrailsDetailPage
-                    ? React.createElement("div", { className: "playground-guardrails-detail" },
+                    ? guardrailVersionChangesState
+                      ? React.createElement("div", { className: "playground-guardrails-detail playground-guardrails-version-changes-shell" },
+                          renderGuardrailVersionChangesPage()
+                        )
+                      : React.createElement("div", { className: "playground-guardrails-detail" },
                         React.createElement("div", { className: "playground-guardrails-editor" },
                           React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-guardrails-description-section" },
                             React.createElement("div", { className: "playground-tasks-detail-section-header" },
@@ -190754,7 +196187,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       )
                 )
               )
-              , renderGuardrailVersionsSidebar()
+              , renderGuardrailVersionModal()
+              , renderGuardrailVersionsSidebarPortal()
             )
           );
         }
@@ -190768,6 +196202,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
             projects: runnerWorkspaceProjects,
             defaultAgentId: resolvedComposerAgentId || resolvedPreferredAgentId || "",
             defaultEnvironmentId: resolvedEnvironmentId || environmentId || "",
+            currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
+            currentUserName: hasSessionAuth ? accountName : "Me",
+            currentUserEmail: hasSessionAuth ? accountEmail : "",
+            currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
             evaluationRunModalOpen,
             setEvaluationRunModalOpen,
             evaluationRunForm,
@@ -190789,6 +196227,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
               }
               void refreshThreads(undefined, String(threadRecord?.id || "").trim(), { silent: true });
             },
+            threadRecords: baseThreadItems,
+            onRefreshThreadRecords: () => refreshThreads(80, "", { silent: true }),
+            versionsDrawerPortalId: "playground-agent-versions-drawer-root",
+            onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
             evaluationSets,
             setEvaluationSets,
             selectedEvaluationSetId,
@@ -193563,7 +199005,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             : null
                         )
                       ),
-	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isAgentVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (activePage === "files" || activePage === "guardrails" || activePage === "evaluations" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
+	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isResourcesVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (activePage === "files" || activePage === "guardrails" || activePage === "evaluations" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
 	                    activePage === "settings"
 	                      ? renderSettingsPage()
 	                      : activePage === "team"
@@ -194513,10 +199955,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       })
                     : null
                   ,
-                  isResourcesPage && (activeResourcesView === "agents" || activeResourcesView === "computers")
+                  hasResourcesVersionsDrawerSlot
                     ? React.createElement("aside", {
                         id: "playground-agent-versions-drawer-root",
-                        className: "playground-metronome-node-drawer playground-agent-versions-node-drawer" + (isAgentVersionsDrawerOpen ? " is-open" : ""),
+                        className: "playground-metronome-node-drawer playground-agent-versions-node-drawer" + (isResourcesVersionsDrawerOpen ? " is-open" : ""),
                       })
                     : null
                   ,
@@ -204329,6 +209771,73 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const environmentVersionsMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/versions$/);
+  if (req.method === "GET" && environmentVersionsMatch) {
+    void proxyUpstreamGet(req, res, `/environments/${encodeURIComponent(decodeURIComponent(environmentVersionsMatch[1]))}/versions`);
+    return;
+  }
+
+  if (req.method === "POST" && environmentVersionsMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentVersionsMatch[1]))}/versions`,
+      "POST",
+    );
+    return;
+  }
+
+  const environmentVersionsCompareMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/versions\/compare$/);
+  if (req.method === "GET" && environmentVersionsCompareMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentVersionsCompareMatch[1]))}/versions/compare${url.search || ""}`,
+    );
+    return;
+  }
+
+  const environmentVersionActionMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/versions\/([^/]+)\/(publish|unpublish|restore)$/);
+  if (req.method === "POST" && environmentVersionActionMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentVersionActionMatch[1]))}/versions/${encodeURIComponent(decodeURIComponent(environmentVersionActionMatch[2]))}/${environmentVersionActionMatch[3]}`,
+      "POST",
+    );
+    return;
+  }
+
+  const environmentVersionDetailMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/versions\/([^/]+)$/);
+  if (req.method === "GET" && environmentVersionDetailMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentVersionDetailMatch[1]))}/versions/${encodeURIComponent(decodeURIComponent(environmentVersionDetailMatch[2]))}`,
+    );
+    return;
+  }
+
+  if ((req.method === "PATCH" || req.method === "PUT") && environmentVersionDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentVersionDetailMatch[1]))}/versions/${encodeURIComponent(decodeURIComponent(environmentVersionDetailMatch[2]))}`,
+      req.method,
+    );
+    return;
+  }
+
+  if (req.method === "DELETE" && environmentVersionDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentVersionDetailMatch[1]))}/versions/${encodeURIComponent(decodeURIComponent(environmentVersionDetailMatch[2]))}`,
+      "DELETE",
+    );
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/api/real/servers") {
     void proxyUpstreamGet(req, res, "/servers" + (url.search || ""));
     return;
@@ -204336,6 +209845,73 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "POST" && url.pathname === "/api/real/servers") {
     void proxyUpstreamJsonRequest(req, res, "/servers", "POST");
+    return;
+  }
+
+  const serverVersionsMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/versions$/);
+  if (req.method === "GET" && serverVersionsMatch) {
+    void proxyUpstreamGet(req, res, `/servers/${encodeURIComponent(decodeURIComponent(serverVersionsMatch[1]))}/versions`);
+    return;
+  }
+
+  if (req.method === "POST" && serverVersionsMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverVersionsMatch[1]))}/versions`,
+      "POST",
+    );
+    return;
+  }
+
+  const serverVersionsCompareMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/versions\/compare$/);
+  if (req.method === "GET" && serverVersionsCompareMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverVersionsCompareMatch[1]))}/versions/compare${url.search || ""}`,
+    );
+    return;
+  }
+
+  const serverVersionActionMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/versions\/([^/]+)\/(publish|unpublish|restore)$/);
+  if (req.method === "POST" && serverVersionActionMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverVersionActionMatch[1]))}/versions/${encodeURIComponent(decodeURIComponent(serverVersionActionMatch[2]))}/${serverVersionActionMatch[3]}`,
+      "POST",
+    );
+    return;
+  }
+
+  const serverVersionDetailMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/versions\/([^/]+)$/);
+  if (req.method === "GET" && serverVersionDetailMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverVersionDetailMatch[1]))}/versions/${encodeURIComponent(decodeURIComponent(serverVersionDetailMatch[2]))}`,
+    );
+    return;
+  }
+
+  if ((req.method === "PATCH" || req.method === "PUT") && serverVersionDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverVersionDetailMatch[1]))}/versions/${encodeURIComponent(decodeURIComponent(serverVersionDetailMatch[2]))}`,
+      req.method,
+    );
+    return;
+  }
+
+  if (req.method === "DELETE" && serverVersionDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverVersionDetailMatch[1]))}/versions/${encodeURIComponent(decodeURIComponent(serverVersionDetailMatch[2]))}`,
+      "DELETE",
+    );
     return;
   }
 
@@ -205238,6 +210814,70 @@ const server = http.createServer((req, res) => {
       res,
       `/agents/${encodeURIComponent(decodeURIComponent(agentGuardrailDetailMatch[1]))}/guardrails/${encodeURIComponent(decodeURIComponent(agentGuardrailDetailMatch[2]))}`,
       req.method,
+    );
+    return;
+  }
+
+  const agentVersionsMatch = url.pathname.match(/^\/api\/real\/agents\/([^/]+)\/versions$/);
+  if (req.method === "GET" && agentVersionsMatch) {
+    void proxyUpstreamGet(req, res, `/agents/${encodeURIComponent(decodeURIComponent(agentVersionsMatch[1]))}/versions`);
+    return;
+  }
+
+  if (req.method === "POST" && agentVersionsMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/agents/${encodeURIComponent(decodeURIComponent(agentVersionsMatch[1]))}/versions`,
+      "POST",
+    );
+    return;
+  }
+
+  const agentVersionCompareMatch = url.pathname.match(/^\/api\/real\/agents\/([^/]+)\/versions\/compare$/);
+  if (req.method === "GET" && agentVersionCompareMatch) {
+    const upstreamPath = `/agents/${encodeURIComponent(decodeURIComponent(agentVersionCompareMatch[1]))}/versions/compare${url.search || ""}`;
+    void proxyUpstreamGet(req, res, upstreamPath);
+    return;
+  }
+
+  const agentVersionActionMatch = url.pathname.match(/^\/api\/real\/agents\/([^/]+)\/versions\/([^/]+)\/(publish|unpublish|restore)$/);
+  if (req.method === "POST" && agentVersionActionMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/agents/${encodeURIComponent(decodeURIComponent(agentVersionActionMatch[1]))}/versions/${encodeURIComponent(decodeURIComponent(agentVersionActionMatch[2]))}/${agentVersionActionMatch[3]}`,
+      "POST",
+    );
+    return;
+  }
+
+  const agentVersionDetailMatch = url.pathname.match(/^\/api\/real\/agents\/([^/]+)\/versions\/([^/]+)$/);
+  if (req.method === "GET" && agentVersionDetailMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/agents/${encodeURIComponent(decodeURIComponent(agentVersionDetailMatch[1]))}/versions/${encodeURIComponent(decodeURIComponent(agentVersionDetailMatch[2]))}`,
+    );
+    return;
+  }
+
+  if ((req.method === "PATCH" || req.method === "PUT") && agentVersionDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/agents/${encodeURIComponent(decodeURIComponent(agentVersionDetailMatch[1]))}/versions/${encodeURIComponent(decodeURIComponent(agentVersionDetailMatch[2]))}`,
+      "PATCH",
+    );
+    return;
+  }
+
+  if (req.method === "DELETE" && agentVersionDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/agents/${encodeURIComponent(decodeURIComponent(agentVersionDetailMatch[1]))}/versions/${encodeURIComponent(decodeURIComponent(agentVersionDetailMatch[2]))}`,
+      "DELETE",
     );
     return;
   }
