@@ -1677,6 +1677,10 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
 
       function normalizePlaygroundEvaluationRun(rawRun, fallbackIndex = 0) {
         const source = rawRun && typeof rawRun === "object" && !Array.isArray(rawRun) ? rawRun : {};
+        const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : {};
+        const runnerPlayground = metadata.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+          ? metadata.runnerPlayground
+          : {};
         const cases = Array.isArray(source.cases) ? source.cases.map((item, index) => normalizePlaygroundEvaluationRunCase(item, index)) : [];
         const passThreshold = normalizePlaygroundEvaluationPassThreshold(source.passThreshold ?? source.pass_threshold ?? source.threshold ?? 0.8);
         const averageScore = cases.length > 0
@@ -1713,10 +1717,12 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           targetAgentId: String(source.targetAgentId || source.target_agent_id || source.agentId || source.agent_id || "").trim(),
           targetAgentName: String(source.targetAgentName || source.target_agent_name || source.agentName || source.agent_name || "").trim(),
           targetAgentPhotoUrl: String(source.targetAgentPhotoUrl || source.target_agent_photo_url || source.agentPhotoUrl || source.agent_photo_url || source.photoUrl || source.photoURL || "").trim(),
-          targetAgentVersionId: String(source.targetAgentVersionId || source.target_agent_version_id || source.agentVersionId || source.agent_version_id || "").trim(),
-          targetAgentVersionNumber: Math.max(0, Number(source.targetAgentVersionNumber || source.target_agent_version_number || source.agentVersionNumber || source.agent_version_number || source.versionNumber || source.version_number || 0) || 0),
-          targetAgentVersionLabel: String(source.targetAgentVersionLabel || source.target_agent_version_label || source.agentVersionLabel || source.agent_version_label || source.versionLabel || source.version_label || "").trim(),
-          targetAgentVersionRevisionId: String(source.targetAgentVersionRevisionId || source.target_agent_version_revision_id || source.agentVersionRevisionId || source.agent_version_revision_id || source.revisionId || source.revision_id || "").trim(),
+          targetAgentVersionId: String(source.targetAgentVersionId || source.target_agent_version_id || source.agentVersionId || source.agent_version_id || runnerPlayground.targetAgentVersionId || runnerPlayground.target_agent_version_id || runnerPlayground.agentVersionId || runnerPlayground.agent_version_id || metadata.targetAgentVersionId || metadata.target_agent_version_id || metadata.agentVersionId || metadata.agent_version_id || "").trim(),
+          targetAgentVersionNumber: Math.max(0, Number(source.targetAgentVersionNumber || source.target_agent_version_number || source.agentVersionNumber || source.agent_version_number || source.versionNumber || source.version_number || runnerPlayground.targetAgentVersionNumber || runnerPlayground.target_agent_version_number || metadata.targetAgentVersionNumber || metadata.target_agent_version_number || 0) || 0),
+          targetAgentVersionLabel: String(source.targetAgentVersionLabel || source.target_agent_version_label || source.agentVersionLabel || source.agent_version_label || source.versionLabel || source.version_label || runnerPlayground.targetAgentVersionLabel || runnerPlayground.target_agent_version_label || metadata.targetAgentVersionLabel || metadata.target_agent_version_label || "").trim(),
+          targetAgentVersionRevisionId: String(source.targetAgentVersionRevisionId || source.target_agent_version_revision_id || source.agentVersionRevisionId || source.agent_version_revision_id || source.revisionId || source.revision_id || runnerPlayground.targetAgentVersionRevisionId || runnerPlayground.target_agent_version_revision_id || metadata.targetAgentVersionRevisionId || metadata.target_agent_version_revision_id || "").trim(),
+          fineTuningJobId: String(source.fineTuningJobId || source.fine_tuning_job_id || runnerPlayground.fineTuningJobId || runnerPlayground.fine_tuning_job_id || metadata.fineTuningJobId || metadata.fine_tuning_job_id || "").trim(),
+          fine_tuning_job_id: String(source.fine_tuning_job_id || source.fineTuningJobId || runnerPlayground.fine_tuning_job_id || runnerPlayground.fineTuningJobId || metadata.fine_tuning_job_id || metadata.fineTuningJobId || "").trim(),
           environmentType: String(source.environmentType || source.environment_type || source.targetEnvironmentType || source.target_environment_type || "").trim().toLowerCase() === "project" ? "project" : "computer",
           environmentId: String(source.environmentId || source.environment_id || source.computerId || source.computer_id || "").trim(),
           environmentName: String(source.environmentName || source.environment_name || source.computerName || source.computer_name || "").trim(),
@@ -1731,6 +1737,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           totalCount: cases.length,
           costTokens,
           costSource: String(source.costSource || source.cost_source || ""),
+          metadata: Object.keys(metadata).length ? metadata : null,
           cases,
         };
       }
@@ -5318,6 +5325,8 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             targetAgentVersionNumber: Math.max(0, Number(runOptions.targetAgentVersionNumber || selectedAgentVersion?.version || 0) || 0),
             targetAgentVersionLabel: String(runOptions.targetAgentVersionLabel || selectedAgentVersion?.label || (selectedAgentVersion?.version ? "Version " + selectedAgentVersion.version : "") || "").trim(),
             targetAgentVersionRevisionId: String(runOptions.targetAgentVersionRevisionId || selectedAgentVersion?.revisionId || selectedAgentVersion?.revision_id || "").trim(),
+            fineTuningJobId: String(runOptions.fineTuningJobId || runOptions.fine_tuning_job_id || "").trim(),
+            fine_tuning_job_id: String(runOptions.fine_tuning_job_id || runOptions.fineTuningJobId || "").trim(),
             environmentType: targetEnvironmentType,
             environmentId: targetEnvironmentId,
             environmentName: targetEnvironmentType === "computer" ? String(selectedEnvironmentChoice?.environmentName || selectedEnvironmentChoice?.name || targetEnvironmentId).trim() : "",
@@ -5325,6 +5334,9 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             projectName: targetEnvironmentType === "project" ? String(selectedEnvironmentChoice?.projectName || selectedEnvironmentChoice?.name || targetProjectId).trim() : "",
             evaluator,
             passThreshold: normalizePlaygroundEvaluationPassThreshold(sourceSet.passThreshold),
+            metadata: runOptions.metadata && typeof runOptions.metadata === "object" && !Array.isArray(runOptions.metadata)
+              ? runOptions.metadata
+              : null,
           };
           const normalizedBackendUrl = String(backendUrl || "").replace(/\/+$/, "");
           if (!normalizedBackendUrl) {

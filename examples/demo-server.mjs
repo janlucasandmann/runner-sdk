@@ -52900,21 +52900,24 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         {
           id: "boost",
           name: "Boost Pack",
-          price: 39,
+          price: 25,
+          creditsUsd: 25,
           computeTokens: 2500,
           description: "One-time extra budget for short bursts, overages, and deadline weeks.",
         },
         {
           id: "growth",
           name: "Growth Pack",
-          price: 149,
+          price: 100,
+          creditsUsd: 100,
           computeTokens: 10000,
           description: "A larger top-up for heavier agent workloads and multi-step automation.",
         },
         {
           id: "scale",
           name: "Scale Pack",
-          price: 359,
+          price: 250,
+          creditsUsd: 250,
           computeTokens: 25000,
           description: "High-volume one-time capacity for production spikes and larger pipelines.",
         },
@@ -54106,6 +54109,23 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       function formatSettingsComputeTokens(value) {
         const numericValue = Math.max(0, Math.round(Number.isFinite(Number(value)) ? Number(value) : 0));
         return formatSettingsCurrency(numericValue / SETTINGS_CT_PER_DOLLAR);
+      }
+
+      function formatSettingsUsdCredits(value) {
+        const numericValue = Math.max(0, Number.isFinite(Number(value)) ? Number(value) : 0);
+        return formatSettingsCurrency(numericValue);
+      }
+
+      function readSettingsTopUpCreditsUsd(pkg) {
+        const directCredits = Number(pkg?.creditsUsd);
+        if (Number.isFinite(directCredits) && directCredits > 0) {
+          return directCredits;
+        }
+
+        const legacyTokens = Number(pkg?.computeTokens);
+        return Number.isFinite(legacyTokens) && legacyTokens > 0
+          ? legacyTokens / SETTINGS_CT_PER_DOLLAR
+          : 0;
       }
 
       function formatSettingsAxisComputeTokens(value) {
@@ -119239,7 +119259,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setAgentPublishMenuOpen(false);
           setAgentVersionsHeaderMenuOpen(false);
           finishCloseAgentVersionModal();
-          setAgentVersionChangesState(null);
           setOpenAgentVersionMenuId("");
         }
 
@@ -119762,17 +119781,55 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               id: AGENT_VERSION_COMPARE_CURRENT_EDITOR_ID,
               label: "Current editor",
               snapshot: buildPlaygroundAgentVersionSnapshot(draftAgent),
+              version: null,
             },
           ].concat(normalizedVersions.map((version) => ({
             id: getAgentVersionCompareVersionSourceId(version.id),
             label: getAgentVersionCompareVersionLabel(version),
             snapshot: normalizePlaygroundAgentVersion(version).snapshot,
+            version,
           })));
         }
 
         function resolveAgentVersionCompareSource(sourceId, sources, fallbackSource) {
           const normalizedSourceId = String(sourceId || "").trim();
           return sources.find((source) => source.id === normalizedSourceId) || fallbackSource || sources[0] || null;
+        }
+
+        function compareAgentVersionCompareSourceChronology(leftSource, rightSource) {
+          const leftVersionId = getAgentVersionCompareVersionId(leftSource?.id);
+          const rightVersionId = getAgentVersionCompareVersionId(rightSource?.id);
+          if (!leftVersionId || !rightVersionId) {
+            return 0;
+          }
+          const leftVersionNumber = Number(leftSource?.version?.version || 0);
+          const rightVersionNumber = Number(rightSource?.version?.version || 0);
+          if (leftVersionNumber && rightVersionNumber && leftVersionNumber !== rightVersionNumber) {
+            return leftVersionNumber - rightVersionNumber;
+          }
+          const leftTimestamp = Date.parse(String(leftSource?.version?.publishedAt || leftSource?.version?.updatedAt || leftSource?.version?.createdAt || ""));
+          const rightTimestamp = Date.parse(String(rightSource?.version?.publishedAt || rightSource?.version?.updatedAt || rightSource?.version?.createdAt || ""));
+          if (Number.isFinite(leftTimestamp) && Number.isFinite(rightTimestamp) && leftTimestamp !== rightTimestamp) {
+            return leftTimestamp - rightTimestamp;
+          }
+          return String(leftVersionId).localeCompare(String(rightVersionId));
+        }
+
+        function orderAgentVersionCompareSourcesForDiff(leftSource, rightSource) {
+          if (compareAgentVersionCompareSourceChronology(leftSource, rightSource) > 0) {
+            return {
+              leftSource: rightSource,
+              rightSource: leftSource,
+              leftStateSide: "right",
+              rightStateSide: "left",
+            };
+          }
+          return {
+            leftSource,
+            rightSource,
+            leftStateSide: "left",
+            rightStateSide: "right",
+          };
         }
 
         function getDefaultAgentVersionCompareLeftSourceId(versions) {
@@ -124492,7 +124549,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!leftSource || !rightSource) {
             return null;
           }
-          const diffFiles = buildAgentVersionDiffFilesFromSnapshots(leftSource.snapshot, rightSource.snapshot);
+          const orderedCompareSources = orderAgentVersionCompareSourcesForDiff(leftSource, rightSource);
+          const displayLeftSource = orderedCompareSources.leftSource;
+          const displayRightSource = orderedCompareSources.rightSource;
+          const diffFiles = buildAgentVersionDiffFilesFromSnapshots(displayLeftSource.snapshot, displayRightSource.snapshot);
           const compareOptions = sources.map((source) =>
             React.createElement("option", { key: source.id, value: source.id }, source.label)
           );
@@ -124510,9 +124570,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return renderPlaygroundVersionChangesPage({
             title: "Changes",
             compareControls: React.createElement(React.Fragment, null,
-              renderCompareSelect(leftSource.id, "left"),
+              renderCompareSelect(displayLeftSource.id, orderedCompareSources.leftStateSide),
               React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
-              renderCompareSelect(rightSource.id, "right")
+              renderCompareSelect(displayRightSource.id, orderedCompareSources.rightStateSide)
             ),
             files: diffFiles,
             backIcon: ArrowLeft,
@@ -180831,6 +180891,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           React.createElement("div", { className: "playground-settings-topup-package-grid" },
                           SETTINGS_TOP_UP_CATALOG.map((pkg) => {
                             const isSelected = pkg.id === selectedTopUpPackage.id;
+                            const packageCreditsUsd = readSettingsTopUpCreditsUsd(pkg);
                             return React.createElement("button", {
                                 key: pkg.id,
                                 type: "button",
@@ -180839,7 +180900,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 disabled: settingsTopUpActionId === selectedTopUpPackage.id,
                               },
                                 React.createElement("span", { className: "playground-settings-topup-package-card-name" }, pkg.name),
-                                React.createElement("span", { className: "playground-settings-topup-package-card-tokens" }, formatSettingsComputeTokens(pkg.computeTokens)),
+                                React.createElement("span", { className: "playground-settings-topup-package-card-tokens" }, formatSettingsUsdCredits(packageCreditsUsd) + " credits"),
                                 React.createElement("span", { className: "playground-settings-topup-package-card-price" }, "$" + pkg.price + " one-time"),
                                 React.createElement("span", { className: "playground-settings-topup-package-card-copy" }, pkg.description)
                               );
@@ -180848,7 +180909,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           React.createElement("div", { className: "playground-settings-topup-summary" },
                             React.createElement("div", { className: "playground-settings-topup-summary-copy" },
                               React.createElement("div", { className: "playground-settings-topup-summary-label" }, "Selected purchase"),
-                              React.createElement("div", { className: "playground-settings-topup-summary-value" }, formatSettingsComputeTokens(selectedTopUpPackage.computeTokens) + " for $" + selectedTopUpPackage.price),
+                              React.createElement("div", { className: "playground-settings-topup-summary-value" }, formatSettingsUsdCredits(readSettingsTopUpCreditsUsd(selectedTopUpPackage)) + " credits for $" + selectedTopUpPackage.price),
                               React.createElement("div", { className: "playground-settings-topup-summary-description" }, selectedTopUpPackage.description)
                             ),
                             React.createElement("div", { className: "playground-settings-topup-summary-badge" },
@@ -197289,6 +197350,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setFineTuningCreateForm,
             defaultAgentId: resolvedComposerAgentId || resolvedPreferredAgentId || "",
             defaultEnvironmentId: resolvedEnvironmentId || environmentId || "",
+            currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
+            currentUserName: hasSessionAuth ? accountName : "Me",
+            currentUserEmail: hasSessionAuth ? accountEmail : "",
+            currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
             onOpenThread: handleThreadSelect,
             onOpenEvaluationRun: (evaluationId, evaluationRunId) => {
               openEvaluationsPage({

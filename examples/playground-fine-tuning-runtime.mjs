@@ -4,6 +4,17 @@ function normalizeString(value) {
   return String(value || "").trim();
 }
 
+function normalizePersonIdentity(rawValue = {}) {
+  const source = rawValue && typeof rawValue === "object" && !Array.isArray(rawValue) ? rawValue : {};
+  return {
+    id: normalizeString(source.id || source.userId || source.user_id || source.uid || source.email),
+    userId: normalizeString(source.userId || source.user_id || source.uid),
+    name: normalizeString(source.name || source.displayName || source.display_name || source.label || source.title),
+    email: normalizeString(source.email || source.mail),
+    avatarUrl: normalizeString(source.avatarUrl || source.avatar_url || source.photoUrl || source.photoURL || source.imageUrl || source.imageURL || source.avatar),
+  };
+}
+
 function createRuntimeError(message, status = 500) {
   const error = new Error(message);
   error.status = status;
@@ -763,9 +774,6 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
     if (!agent?.id || !versionId) {
       throw createRuntimeError("Agent version publish failed because no version id was returned.", 502);
     }
-    if (normalizeString(version?.status).toLowerCase() === "published") {
-      return version;
-    }
     const { requestContext, upstreamUrl, apiKey, body } = record;
     const payload = snapshot && typeof snapshot === "object" && !Array.isArray(snapshot)
       ? { snapshot }
@@ -867,6 +875,7 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
       }
       const nowIso = new Date().toISOString();
       const jobId = normalizeString(body.id || body.jobId || body.job_id) || createFineTuningId();
+      const conductedBy = normalizePersonIdentity(body.conductedBy || body.conducted_by || body.createdBy || body.created_by || {});
       const metadata = {
         fineTuning: {
           jobId,
@@ -956,6 +965,8 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
         targetAgentName: targetAgent.name,
         agentPhotoUrl: normalizeString(targetAgent.photoUrl || targetAgent.photoURL || targetAgent.avatarUrl || targetAgent.avatarURL),
         targetAgentPhotoUrl: normalizeString(targetAgent.photoUrl || targetAgent.photoURL || targetAgent.avatarUrl || targetAgent.avatarURL),
+        conductedBy,
+        createdBy: conductedBy,
         fineTunerAgentId: fineTunerAgent.id,
         fineTunerAgentName: fineTunerAgent.name,
         fineTunerAgentPhotoUrl: normalizeString(fineTunerAgent.photoUrl || fineTunerAgent.photoURL || fineTunerAgent.avatarUrl || fineTunerAgent.avatarURL),

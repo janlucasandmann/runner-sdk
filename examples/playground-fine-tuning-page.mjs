@@ -72,61 +72,40 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
       .playground-fine-tuning-detail {
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 24px;
       }
 
       .playground-fine-tuning-detail-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.46fr);
-        gap: 18px;
-        align-items: start;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
       }
 
       .playground-fine-tuning-kpi-card.playground-project-overview-progress-combo-card {
         margin-top: 0;
       }
 
-      .playground-fine-tuning-kpi-card .playground-project-overview-progress-combo-chart-wrap {
-        min-height: 178px;
+      .playground-fine-tuning-kpi-card.playground-evaluations-analytics-card .playground-project-overview-progress-combo-metric-dot.is-improvement {
+        background: #c5a3ff;
+      }
+
+      .playground-fine-tuning-kpi-card.playground-evaluations-analytics-card .playground-project-overview-progress-combo-metric-dot.is-after {
+        background: #9ff6ce;
+      }
+
+      .playground-fine-tuning-kpi-card.playground-evaluations-analytics-card .playground-project-overview-progress-combo-metric-dot.is-before {
+        background: #7effff;
       }
 
       .playground-fine-tuning-score-chart {
-        min-height: 178px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        align-items: end;
-        gap: 28px;
-        padding: 18px 54px 4px;
+        min-height: 224px;
+        height: 224px;
       }
 
-      .playground-fine-tuning-score-bar {
-        min-width: 0;
-        height: 148px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-      }
-
-      .playground-fine-tuning-score-bar-fill {
-        width: min(54px, 70%);
-        min-height: 4px;
-        border-radius: 999px 999px 3px 3px;
-        background: rgba(115, 183, 255, 0.95);
-        box-shadow: 0 0 22px rgba(115, 183, 255, 0.2);
-      }
-
-      .playground-fine-tuning-score-bar.is-after .playground-fine-tuning-score-bar-fill {
-        background: rgba(60, 242, 163, 0.95);
-        box-shadow: 0 0 22px rgba(60, 242, 163, 0.2);
-      }
-
-      .playground-fine-tuning-score-bar-label {
-        color: rgba(255, 255, 255, 0.58);
-        font-size: 11px;
-        line-height: 1.2;
-        font-weight: 400;
+      .playground-fine-tuning-progress-combo-canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
       }
 
       .playground-fine-tuning-section.playground-plugins-section {
@@ -139,29 +118,32 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
 
       .playground-fine-tuning-reference-table {
         width: 100%;
-        display: flex;
-        flex-direction: column;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        max-width: 100%;
+        min-width: 0;
+        overflow: visible !important;
       }
 
-      .playground-fine-tuning-reference-row {
-        min-height: 44px;
+      .playground-fine-tuning-reference-table .playground-evaluations-cases-header,
+      .playground-fine-tuning-reference-table .playground-evaluations-cases-row {
+        grid-template-columns: minmax(170px, 1fr) minmax(118px, 0.55fr) minmax(118px, 0.55fr) minmax(76px, 0.34fr);
+      }
+
+      .playground-fine-tuning-detail-table .playground-evaluations-cases-header,
+      .playground-fine-tuning-detail-table .playground-evaluations-cases-row {
+        grid-template-columns: minmax(120px, 0.34fr) minmax(0, 1fr);
+      }
+
+      .playground-fine-tuning-detail-table .playground-evaluations-cases-row {
+        cursor: default;
+      }
+
+      .playground-fine-tuning-detail-value {
+        min-width: 0;
         display: grid;
-        grid-template-columns: minmax(160px, 1fr) minmax(112px, 0.55fr) minmax(112px, 0.55fr) minmax(76px, 0.35fr);
-        gap: 12px;
-        align-items: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        color: rgba(255, 255, 255, 0.78);
-        font-size: 12px;
-        line-height: 1.35;
-      }
-
-      .playground-fine-tuning-reference-row.is-header {
-        min-height: 34px;
-        color: rgba(255, 255, 255, 0.42);
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0;
+        justify-content: start;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .playground-fine-tuning-reference-link {
@@ -438,7 +420,7 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
 
       .playground-fine-tuning-page .playground-evaluations-overview-section .playground-project-overview-threads-table-header,
       .playground-fine-tuning-page .playground-evaluations-overview-section .playground-project-overview-threads-table-row {
-        grid-template-columns: minmax(160px, 1.18fr) minmax(112px, 0.72fr) minmax(112px, 0.58fr) minmax(138px, 0.72fr) minmax(82px, 0.5fr) 20px;
+        grid-template-columns: minmax(170px, 1.12fr) minmax(140px, 0.72fr) minmax(80px, 0.34fr) minmax(122px, 0.58fr) minmax(150px, 0.74fr) 20px;
         gap: 12px;
       }
 
@@ -524,6 +506,51 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         return String(value || "").trim();
       }
 
+      function normalizePlaygroundFineTuningPersonIdentity(rawValue = {}) {
+        const source = rawValue && typeof rawValue === "object" && !Array.isArray(rawValue) ? rawValue : {};
+        return {
+          id: normalizePlaygroundFineTuningString(source.id || source.userId || source.user_id || source.uid || source.email),
+          userId: normalizePlaygroundFineTuningString(source.userId || source.user_id || source.uid),
+          name: normalizePlaygroundFineTuningString(source.name || source.displayName || source.display_name || source.label || source.title),
+          email: normalizePlaygroundFineTuningString(source.email || source.mail),
+          avatarUrl: normalizePlaygroundFineTuningString(source.avatarUrl || source.avatar_url || source.photoUrl || source.photoURL || source.imageUrl || source.imageURL || source.avatar),
+        };
+      }
+
+      function getPlaygroundFineTuningInitials(value) {
+        const words = normalizePlaygroundFineTuningString(value)
+          .split(/\s+/)
+          .filter(Boolean);
+        if (!words.length) return "CA";
+        return words.slice(0, 2).map((word) => word.charAt(0).toUpperCase()).join("");
+      }
+
+      function getPlaygroundFineTuningPersonLabel(person) {
+        const identity = normalizePlaygroundFineTuningPersonIdentity(person);
+        return normalizePlaygroundFineTuningString(identity.name || identity.email || identity.id || identity.userId);
+      }
+
+      function getPlaygroundFineTuningConductorIdentity(source = {}) {
+        const record = source && typeof source === "object" && !Array.isArray(source) ? source : {};
+        const metadata = record.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
+        const nested = record.conductedBy || record.conducted_by || record.startedBy || record.started_by || record.createdBy || record.created_by || metadata.conductedBy || metadata.conducted_by || metadata.startedBy || metadata.started_by || metadata.createdBy || metadata.created_by || null;
+        const direct = normalizePlaygroundFineTuningPersonIdentity({
+          id: record.conductedById || record.conducted_by_id || record.startedById || record.started_by_id || record.createdById || record.created_by_id || metadata.conductedById || metadata.conducted_by_id || metadata.startedById || metadata.started_by_id || metadata.createdById || metadata.created_by_id || record.userId || record.user_id,
+          userId: record.conductedByUserId || record.conducted_by_user_id || record.startedByUserId || record.started_by_user_id || record.createdByUserId || record.created_by_user_id || metadata.conductedByUserId || metadata.conducted_by_user_id || metadata.startedByUserId || metadata.started_by_user_id || metadata.createdByUserId || metadata.created_by_user_id || record.userId || record.user_id,
+          name: record.conductedByName || record.conducted_by_name || record.startedByName || record.started_by_name || record.createdByName || record.created_by_name || metadata.conductedByName || metadata.conducted_by_name || metadata.startedByName || metadata.started_by_name || metadata.createdByName || metadata.created_by_name,
+          email: record.conductedByEmail || record.conducted_by_email || record.startedByEmail || record.started_by_email || record.createdByEmail || record.created_by_email || metadata.conductedByEmail || metadata.conducted_by_email || metadata.startedByEmail || metadata.started_by_email || metadata.createdByEmail || metadata.created_by_email,
+          avatarUrl: record.conductedByAvatarUrl || record.conducted_by_avatar_url || record.startedByAvatarUrl || record.started_by_avatar_url || record.createdByAvatarUrl || record.created_by_avatar_url || metadata.conductedByAvatarUrl || metadata.conducted_by_avatar_url || metadata.startedByAvatarUrl || metadata.started_by_avatar_url || metadata.createdByAvatarUrl || metadata.created_by_avatar_url,
+        });
+        const nestedIdentity = normalizePlaygroundFineTuningPersonIdentity(nested || {});
+        return {
+          id: nestedIdentity.id || direct.id,
+          userId: nestedIdentity.userId || direct.userId,
+          name: nestedIdentity.name || direct.name,
+          email: nestedIdentity.email || direct.email,
+          avatarUrl: nestedIdentity.avatarUrl || direct.avatarUrl,
+        };
+      }
+
       function isPlaygroundFineTuningAgentVersionReady(status) {
         const normalizedStatus = normalizePlaygroundFineTuningString(status).toLowerCase();
         return normalizedStatus === "saved" || normalizedStatus === "published";
@@ -579,6 +606,40 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
       function normalizePlaygroundFineTuningTokenCount(value) {
         const numeric = Number(value);
         return Number.isFinite(numeric) ? Math.max(0, Math.round(numeric)) : 0;
+      }
+
+      function isPlaygroundFineTuningActiveStatus(status) {
+        return new Set(["queued", "running", "running_case", "waiting_for_case_summary", "running_evaluator", "scoring", "verifying", "pending"]).has(
+          normalizePlaygroundFineTuningString(status).toLowerCase()
+        );
+      }
+
+      function isPlaygroundFineTuningTerminalStatus(status) {
+        return new Set(["completed", "complete", "saved", "published", "error", "failed", "cancelled", "canceled"]).has(
+          normalizePlaygroundFineTuningString(status).toLowerCase()
+        );
+      }
+
+      function hasPlaygroundFineTuningAfterResult(job) {
+        const source = job && typeof job === "object" && !Array.isArray(job) ? job : {};
+        const status = normalizePlaygroundFineTuningString(source.status).toLowerCase();
+        const references = Array.isArray(source.evaluationRuns)
+          ? source.evaluationRuns
+          : Array.isArray(source.evaluation_runs)
+            ? source.evaluation_runs
+            : [];
+        if (references.some((reference) => {
+          const referenceStatus = normalizePlaygroundFineTuningString(reference?.status).toLowerCase();
+          if (!normalizePlaygroundFineTuningString(reference?.afterRunId || reference?.after_run_id)) return false;
+          if (referenceStatus === "not_run" || referenceStatus === "pending") return false;
+          return !isPlaygroundFineTuningActiveStatus(referenceStatus);
+        })) {
+          return true;
+        }
+        if (!references.length && isPlaygroundFineTuningTerminalStatus(status)) {
+          return Object.prototype.hasOwnProperty.call(source, "afterScore") || Object.prototype.hasOwnProperty.call(source, "after_score");
+        }
+        return false;
       }
 
       function formatPlaygroundFineTuningDate(value) {
@@ -650,6 +711,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             ? source.evaluation_runs
             : []
         ).map((reference, index) => normalizePlaygroundFineTuningRunReference(reference, index));
+        const conductedBy = getPlaygroundFineTuningConductorIdentity(source);
         return {
           id: normalizePlaygroundFineTuningString(source.id || source.jobId || source.job_id) || createPlaygroundFineTuningId(),
           name: normalizePlaygroundFineTuningString(source.name || source.title || "Fine-Tune Job " + (fallbackIndex + 1)),
@@ -662,6 +724,8 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           targetAgentName: normalizePlaygroundFineTuningString(source.targetAgentName || source.target_agent_name || source.agentName || source.agent_name || "Agent"),
           agentPhotoUrl: normalizePlaygroundFineTuningString(source.agentPhotoUrl || source.agent_photo_url || source.photoUrl || source.photoURL),
           targetAgentPhotoUrl: normalizePlaygroundFineTuningString(source.targetAgentPhotoUrl || source.target_agent_photo_url || source.agentPhotoUrl || source.agent_photo_url || source.photoUrl || source.photoURL),
+          conductedBy,
+          createdBy: conductedBy,
           fineTunerAgentId: normalizePlaygroundFineTuningString(source.fineTunerAgentId || source.fine_tuner_agent_id || source.runnerAgentId || source.runner_agent_id),
           fineTunerAgentName: normalizePlaygroundFineTuningString(source.fineTunerAgentName || source.fine_tuner_agent_name || source.runnerAgentName || source.runner_agent_name),
           fineTunerAgentPhotoUrl: normalizePlaygroundFineTuningString(source.fineTunerAgentPhotoUrl || source.fine_tuner_agent_photo_url || source.runnerAgentPhotoUrl || source.runner_agent_photo_url),
@@ -732,6 +796,42 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         return normalized;
       }
 
+      function mergePlaygroundFineTuningEvaluationRuns(...runLists) {
+        const byId = new Map();
+        runLists.flatMap((runs) => Array.isArray(runs) ? runs : []).forEach((run, index) => {
+          const source = run && typeof run === "object" && !Array.isArray(run) ? run : {};
+          const cases = Array.isArray(source.cases) ? source.cases : [];
+          const averageScore = Number(source.averageScore ?? source.average_score);
+          const normalizedRun = typeof normalizePlaygroundEvaluationRun === "function"
+            ? normalizePlaygroundEvaluationRun(source, index)
+            : {
+                ...source,
+                id: normalizePlaygroundFineTuningString(source.id || source.runId || source.run_id),
+                label: normalizePlaygroundFineTuningString(source.label || source.name || "Run"),
+                averageScore: Number.isFinite(averageScore)
+                  ? normalizePlaygroundFineTuningScore(averageScore)
+                  : cases.length
+                    ? normalizePlaygroundFineTuningScore(cases.reduce((sum, item) => sum + Number(item?.score || 0), 0) / cases.length)
+                    : 0,
+                costTokens: normalizePlaygroundFineTuningTokenCount(source.costTokens ?? source.cost_tokens ?? source.costCT ?? source.cost_ct),
+                status: normalizePlaygroundFineTuningString(source.status || "queued") || "queued",
+              };
+          const id = normalizePlaygroundFineTuningString(normalizedRun.id || run?.id || run?.runId || run?.run_id || "run_" + (index + 1));
+          if (!id) return;
+          byId.set(id, {
+            ...(byId.get(id) || {}),
+            ...run,
+            ...normalizedRun,
+            id,
+          });
+        });
+        return Array.from(byId.values()).sort((left, right) => {
+          const leftTime = Date.parse(left?.createdAt || left?.created_at || left?.completedAt || left?.completed_at || left?.updatedAt || left?.updated_at || 0) || 0;
+          const rightTime = Date.parse(right?.createdAt || right?.created_at || right?.completedAt || right?.completed_at || right?.updatedAt || right?.updated_at || 0) || 0;
+          return rightTime - leftTime;
+        });
+      }
+
       function resolvePlaygroundFineTuningPublishedEvaluationSource(set, fallbackIndex = 0) {
         const normalizedSet = normalizePlaygroundFineTuningEvaluationSet(set, fallbackIndex);
         const versions = getPlaygroundFineTuningEvaluationVersions(normalizedSet);
@@ -740,8 +840,10 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           || null;
         if (activeVersion?.snapshot && typeof createPlaygroundEvaluationFromVersionSnapshot === "function") {
           const versionedSet = createPlaygroundEvaluationFromVersionSnapshot(normalizedSet, activeVersion, versions, activeVersion.id);
+          const normalizedVersionedSet = normalizePlaygroundFineTuningEvaluationSet(versionedSet, fallbackIndex);
           return {
-            ...normalizePlaygroundFineTuningEvaluationSet(versionedSet, fallbackIndex),
+            ...normalizedVersionedSet,
+            runs: mergePlaygroundFineTuningEvaluationRuns(normalizedVersionedSet.runs, normalizedSet.runs),
             activeVersionId: normalizePlaygroundFineTuningString(activeVersion.id),
             activeVersionNumber: Math.max(0, Number(activeVersion.version || 0) || 0),
             activeVersionLabel: normalizePlaygroundFineTuningString(activeVersion.label || (activeVersion.version ? "Version " + activeVersion.version : "")),
@@ -842,6 +944,247 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         }).filter(Boolean);
       }
 
+      function PlaygroundFineTuningPerformanceChart({ job }) {
+        const canvasRef = useRef(null);
+        const chartRef = useRef(null);
+        const normalizedJob = normalizePlaygroundFineTuningJob(job);
+        const references = normalizedJob.evaluationRuns.length
+          ? normalizedJob.evaluationRuns
+          : [{
+              evaluationSetName: "Fine-Tune",
+              beforeScore: normalizedJob.beforeScore,
+              afterScore: normalizedJob.afterScore || normalizedJob.beforeScore,
+            }];
+        const labels = references.map((reference, index) => normalizePlaygroundFineTuningString(reference.evaluationSetName || "Set " + (index + 1)));
+        const beforeValues = references.map((reference) => Math.round(normalizePlaygroundFineTuningScore(reference.beforeScore) * 100));
+        const afterValues = references.map((reference) => {
+          const afterScore = Number(reference.afterScore);
+          const fallbackScore = Number(reference.beforeScore);
+          const hasReferenceResult = hasPlaygroundFineTuningAfterResult({
+            status: normalizedJob.status,
+            evaluationRuns: [reference],
+          });
+          return Math.round(normalizePlaygroundFineTuningScore(hasReferenceResult && Number.isFinite(afterScore) ? afterScore : fallbackScore) * 100);
+        });
+        const improvementValues = afterValues.map((value, index) => Math.max(0, value - (beforeValues[index] || 0)));
+        const chartSignature = JSON.stringify({ labels, beforeValues, afterValues, improvementValues });
+
+        useEffect(() => () => {
+          if (chartRef.current) {
+            chartRef.current.destroy();
+            chartRef.current = null;
+          }
+        }, []);
+
+        useEffect(() => {
+          const canvas = canvasRef.current;
+          if (!canvas || typeof Chart !== "function" || !labels.length) {
+            if (chartRef.current) {
+              chartRef.current.destroy();
+              chartRef.current = null;
+            }
+            return undefined;
+          }
+          const visibleLabelIndexes = (() => {
+            const next = new Set();
+            const targetCount = Math.min(6, Math.max(2, labels.length));
+            for (let index = 0; index < targetCount; index += 1) {
+              next.add(Math.round(((labels.length - 1) * index) / Math.max(1, targetCount - 1)));
+            }
+            return next;
+          })();
+          const makeVerticalGradient = (context, stops, fallback) => {
+            const chart = context?.chart;
+            const chartArea = chart?.chartArea;
+            const ctx = chart?.ctx;
+            if (!ctx || !chartArea) return fallback;
+            const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            stops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
+            return gradient;
+          };
+          const hoverGuidePlugin = {
+            id: "fineTuningPerformanceHoverGuide",
+            afterDatasetsDraw: (chartInstance) => {
+              const activeElements = chartInstance?.tooltip?.getActiveElements?.() || [];
+              if (!activeElements.length) return;
+              const activeElement = activeElements[0]?.element;
+              const chartArea = chartInstance.chartArea;
+              const ctx = chartInstance.ctx;
+              if (!ctx || !chartArea || !activeElement) return;
+              ctx.save();
+              ctx.setLineDash([4, 4]);
+              ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(activeElement.x, chartArea.top + 8);
+              ctx.lineTo(activeElement.x, chartArea.bottom);
+              ctx.stroke();
+              ctx.restore();
+            },
+          };
+          const chartData = {
+            labels,
+            datasets: [
+              {
+                id: "before",
+                type: "bar",
+                label: "Before",
+                data: beforeValues,
+                yAxisID: "score",
+                backgroundColor: (context) => makeVerticalGradient(context, [
+                  [0, "rgba(126, 255, 255, 0.72)"],
+                  [1, "rgba(91, 103, 230, 0.46)"],
+                ], "rgba(126, 255, 255, 0.58)"),
+                borderWidth: 0,
+                borderRadius: 2,
+                barPercentage: 0.62,
+                categoryPercentage: 0.72,
+                maxBarThickness: 10,
+                order: 4,
+              },
+              {
+                id: "after",
+                type: "bar",
+                label: "After",
+                data: afterValues,
+                yAxisID: "score",
+                backgroundColor: (context) => makeVerticalGradient(context, [
+                  [0, "rgba(159, 246, 206, 0.84)"],
+                  [1, "rgba(84, 229, 166, 0.42)"],
+                ], "rgba(159, 246, 206, 0.68)"),
+                borderWidth: 0,
+                borderRadius: 2,
+                barPercentage: 0.62,
+                categoryPercentage: 0.72,
+                maxBarThickness: 10,
+                order: 3,
+              },
+              {
+                id: "improvement",
+                type: "line",
+                label: "Improvement",
+                data: improvementValues,
+                yAxisID: "line",
+                borderColor: "#c5a3ff",
+                backgroundColor: "rgba(197, 163, 255, 0.08)",
+                borderWidth: 1.5,
+                fill: false,
+                pointBackgroundColor: "#c5a3ff",
+                pointBorderColor: "#050505",
+                pointBorderWidth: 2,
+                pointRadius: (context) => context.dataIndex === improvementValues.length - 1 ? 5 : 0,
+                pointHoverRadius: 5,
+                tension: 0.28,
+                order: 2,
+              },
+            ],
+          };
+          const chartOptions = {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            normalized: true,
+            interaction: { intersect: false, mode: "index" },
+            layout: { padding: { top: 12, right: 4, bottom: 0, left: 0 } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                enabled: true,
+                backgroundColor: "rgba(8, 8, 8, 0.96)",
+                borderColor: "rgba(255, 255, 255, 0.14)",
+                borderWidth: 1,
+                cornerRadius: 8,
+                displayColors: true,
+                titleColor: "rgba(255, 255, 255, 0.94)",
+                bodyColor: "rgba(255, 255, 255, 0.78)",
+                padding: 10,
+                callbacks: {
+                  label: (context) => {
+                    const datasetId = context.dataset?.id || "";
+                    const value = Math.max(0, Number(context.parsed?.y || 0));
+                    if (datasetId === "improvement") return "Improvement: +" + Math.round(value) + " pts";
+                    return context.dataset?.label + ": " + Math.round(value) + "%";
+                  },
+                },
+              },
+            },
+            scales: {
+              x: {
+                type: "category",
+                bounds: "data",
+                offset: false,
+                grid: { display: false, offset: false, drawBorder: false },
+                border: { display: false },
+                ticks: {
+                  align: "inner",
+                  autoSkip: false,
+                  color: "rgba(255, 255, 255, 0.38)",
+                  font: { size: 11, weight: "400", family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" },
+                  maxRotation: 0,
+                  minRotation: 0,
+                  padding: 10,
+                  callback: (_value, index) => visibleLabelIndexes.has(index) ? String(labels[index] || "") : "",
+                },
+              },
+              line: {
+                display: true,
+                type: "linear",
+                position: "left",
+                min: 0,
+                max: 100,
+                ticks: {
+                  display: true,
+                  maxTicksLimit: 4,
+                  color: "rgba(255, 255, 255, 0.34)",
+                  padding: 8,
+                  font: { size: 11, weight: "400", family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" },
+                  callback: (value) => String(Math.round(Number(value) || 0)) + "%",
+                },
+                grid: { display: false, drawTicks: false },
+                border: { display: false },
+              },
+              score: {
+                display: false,
+                type: "linear",
+                position: "left",
+                min: 0,
+                max: 100,
+                ticks: { display: false },
+                grid: { display: false, drawTicks: false },
+                border: { display: false },
+              },
+            },
+          };
+          if (chartRef.current) {
+            chartRef.current.data = chartData;
+            chartRef.current.options = chartOptions;
+            chartRef.current.update("none");
+            return undefined;
+          }
+          chartRef.current = new Chart(canvas, {
+            type: "bar",
+            data: chartData,
+            options: chartOptions,
+            plugins: [hoverGuidePlugin],
+          });
+          return undefined;
+        }, [chartSignature]);
+
+        if (!labels.length) {
+          return React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame playground-fine-tuning-score-chart" },
+            React.createElement("div", { className: "playground-settings-usage-chart-empty" }, "No evaluation runs yet")
+          );
+        }
+        return React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame playground-fine-tuning-score-chart" },
+          React.createElement("canvas", {
+            ref: canvasRef,
+            className: "playground-project-overview-progress-combo-canvas playground-evaluations-progress-combo-canvas playground-fine-tuning-progress-combo-canvas",
+            role: "img",
+            "aria-label": "Fine-tuning before and after evaluation scores",
+          })
+        );
+      }
+
       function renderPlaygroundFineTuningPage(props = {}) {
         const {
           backendUrl = "",
@@ -869,6 +1212,10 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           onFineTuningThreadStarted,
           onAgentsRefresh,
           onAgentVersionCreated,
+          currentUserId = "",
+          currentUserName = "",
+          currentUserEmail = "",
+          currentUserAvatarUrl = "",
         } = props;
 
         const modalFrameRef = useRef(null);
@@ -876,6 +1223,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         const fineTuningInstructionsTextareaRef = useRef(null);
         const evaluationSetPickerRef = useRef(null);
         const fineTuningVersionRetryRef = useRef(new Set());
+        const fineTuningRuntimeHydrationRef = useRef(new Set());
         const fineTuningThreadNotificationRef = useRef(new Set());
         const [modalVisible, setModalVisible] = useState(false);
         const [modalClosing, setModalClosing] = useState(false);
@@ -897,9 +1245,102 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         const normalizedEvaluationSets = useMemo(() => (Array.isArray(evaluationSets) ? evaluationSets : [])
           .map((set, index) => resolvePlaygroundFineTuningPublishedEvaluationSource(set, index))
           .filter((set) => normalizePlaygroundFineTuningString(set?.id)), [evaluationSets]);
-        const selectedJob = normalizedJobs.find((job) => job.id === selectedFineTuningJobId) || normalizedJobs[0] || null;
+        function getFineTuningRunTimestamp(run) {
+          return Date.parse(String(run?.createdAt || run?.created_at || run?.completedAt || run?.completed_at || run?.updatedAt || run?.updated_at || "")) || 0;
+        }
+        function findFineTuningVerificationRun(job, reference, set) {
+          const normalizedJob = normalizePlaygroundFineTuningJob(job);
+          const normalizedReference = normalizePlaygroundFineTuningRunReference(reference);
+          const normalizedSet = set && typeof set === "object" && !Array.isArray(set) ? set : null;
+          if (!normalizedSet) return null;
+          if (normalizedReference.afterRunId) {
+            const exactRun = getPlaygroundFineTuningRunById(normalizedSet, normalizedReference.afterRunId);
+            if (exactRun) return exactRun;
+          }
+          const versionId = normalizePlaygroundFineTuningString(normalizedJob.createdAgentVersion?.id || normalizedJob.createdAgentVersionId || normalizedJob.created_agent_version_id);
+          const jobCreatedAt = Date.parse(String(normalizedJob.createdAt || "")) || 0;
+          const candidates = getPlaygroundFineTuningRuns(normalizedSet)
+            .map((run) => normalizeFineTuningEvaluationRun(run))
+            .filter((run) => {
+              const runVersionId = normalizePlaygroundFineTuningString(run.targetAgentVersionId || run.target_agent_version_id || run.agentVersionId || run.agent_version_id);
+              const metadata = run.metadata && typeof run.metadata === "object" && !Array.isArray(run.metadata) ? run.metadata : {};
+              const runJobId = normalizePlaygroundFineTuningString(run.fineTuningJobId || run.fine_tuning_job_id || metadata.fineTuningJobId || metadata.fine_tuning_job_id);
+              const runLabel = normalizePlaygroundFineTuningString(run.label || run.name || run.title).toLowerCase();
+              const runTime = getFineTuningRunTimestamp(run);
+              const matchesJob = runJobId && runJobId === normalizedJob.id;
+              const matchesVersion = versionId && runVersionId && runVersionId === versionId;
+              const looksLikeVerification = runLabel.includes("fine-tune verification") || runLabel.includes("fine tuning verification") || runLabel.includes("verification");
+              const isAfterJob = !jobCreatedAt || !runTime || runTime >= jobCreatedAt - 60000;
+              return matchesJob || matchesVersion || (looksLikeVerification && isAfterJob);
+            })
+            .sort((left, right) => getFineTuningRunTimestamp(right) - getFineTuningRunTimestamp(left));
+          return candidates[0] || null;
+        }
+        function resolveFineTuningJobScoresFromEvaluationRuns(job) {
+          const normalizedJob = normalizePlaygroundFineTuningJob(job);
+          const nextReferences = normalizedJob.evaluationRuns.map((reference, index) => {
+            const normalizedReference = normalizePlaygroundFineTuningRunReference(reference, index);
+            const set = normalizedEvaluationSets.find((item) => normalizePlaygroundFineTuningString(item?.id) === normalizedReference.evaluationSetId) || null;
+            const beforeRun = normalizedReference.beforeRunId && set ? getPlaygroundFineTuningRunById(set, normalizedReference.beforeRunId) : null;
+            const afterRun = findFineTuningVerificationRun(normalizedJob, normalizedReference, set);
+            const nextReference = {
+              ...normalizedReference,
+              evaluationSetName: normalizedReference.evaluationSetName || normalizePlaygroundFineTuningString(set?.name),
+            };
+            if (beforeRun) {
+              nextReference.beforeRunId = normalizePlaygroundFineTuningString(beforeRun.id || nextReference.beforeRunId);
+              nextReference.beforeRunLabel = normalizePlaygroundFineTuningString(beforeRun.label || beforeRun.name || beforeRun.title || nextReference.beforeRunLabel);
+              nextReference.beforeScore = getFineTuningEvaluationRunScore(beforeRun);
+            }
+            if (afterRun) {
+              nextReference.afterRunId = normalizePlaygroundFineTuningString(afterRun.id || nextReference.afterRunId);
+              nextReference.afterRunLabel = normalizePlaygroundFineTuningString(afterRun.label || afterRun.name || afterRun.title || nextReference.afterRunLabel || "Verification Run");
+              nextReference.afterScore = getFineTuningEvaluationRunScore(afterRun);
+              nextReference.status = normalizePlaygroundFineTuningString(afterRun.status || nextReference.status || "completed");
+            }
+            return nextReference;
+          });
+          if (!nextReferences.length) return normalizedJob;
+          const beforeScores = nextReferences
+            .map((reference) => Number(reference.beforeScore))
+            .filter((score) => Number.isFinite(score));
+          const finishedAfterScores = nextReferences
+            .filter((reference) => hasPlaygroundFineTuningAfterResult({ status: normalizedJob.status, evaluationRuns: [reference] }))
+            .map((reference) => Number(reference.afterScore))
+            .filter((score) => Number.isFinite(score));
+          const hasActiveRuns = nextReferences.some((reference) => reference.afterRunId && isPlaygroundFineTuningActiveStatus(reference.status));
+          const allReferencesFinished = nextReferences.length > 0 && nextReferences.every((reference) => hasPlaygroundFineTuningAfterResult({ status: normalizedJob.status, evaluationRuns: [reference] }));
+          const beforeScore = beforeScores.length
+            ? normalizePlaygroundFineTuningScore(beforeScores.reduce((sum, score) => sum + score, 0) / beforeScores.length)
+            : normalizedJob.beforeScore;
+          const afterScore = finishedAfterScores.length
+            ? normalizePlaygroundFineTuningScore(finishedAfterScores.reduce((sum, score) => sum + score, 0) / finishedAfterScores.length)
+            : normalizedJob.afterScore;
+          const nextStatus = allReferencesFinished
+            ? "completed"
+            : hasActiveRuns
+              ? "verifying"
+              : normalizedJob.status;
+          return normalizePlaygroundFineTuningJob({
+            ...normalizedJob,
+            status: nextStatus,
+            beforeScore,
+            afterScore,
+            improvementScore: finishedAfterScores.length ? normalizePlaygroundFineTuningScore(Math.max(0, afterScore - beforeScore)) : normalizedJob.improvementScore,
+            evaluationRuns: nextReferences,
+          });
+        }
+        const scoredJobs = useMemo(() => normalizedJobs.map((job) => resolveFineTuningJobScoresFromEvaluationRuns(job)), [normalizedJobs, normalizedEvaluationSets]);
+        const currentFineTuningUser = useMemo(() => normalizePlaygroundFineTuningPersonIdentity({
+          id: currentUserId || currentUserEmail || "",
+          userId: currentUserId || "",
+          name: currentUserName || "",
+          email: currentUserEmail || "",
+          avatarUrl: currentUserAvatarUrl || "",
+        }), [currentUserId, currentUserName, currentUserEmail, currentUserAvatarUrl]);
+        const selectedJob = scoredJobs.find((job) => job.id === selectedFineTuningJobId) || scoredJobs[0] || null;
         const normalizedQuery = normalizePlaygroundFineTuningString(fineTuningSearchQuery).toLowerCase();
-        const filteredJobs = normalizedJobs.filter((job) => {
+        const filteredJobs = scoredJobs.filter((job) => {
           if (!normalizedQuery) return true;
           return [
             job.name,
@@ -1086,6 +1527,21 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             cancelled = true;
           };
         }, [backendUrl, selectedJob?.id, selectedJob?.agentVersionCreationStatus]);
+
+        useEffect(() => {
+          const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
+          if (!normalizedBackendUrl || !normalizedJobs.length) return undefined;
+          normalizedJobs
+            .filter((job) => job.id && !isFineTuningRuntimeJobComplete(job))
+            .forEach((job) => {
+              if (fineTuningRuntimeHydrationRef.current.has(job.id)) return;
+              fineTuningRuntimeHydrationRef.current.add(job.id);
+              void waitForFineTuningRuntimeJob(job.id, job).catch(() => {
+                fineTuningRuntimeHydrationRef.current.delete(job.id);
+              });
+            });
+          return undefined;
+        }, [backendUrl, normalizedJobs.map((job) => job.id + ":" + job.status).join("|")]);
 
         function updateCreateForm(patch) {
           if (typeof setFineTuningCreateForm === "function") {
@@ -1467,7 +1923,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           };
         }
 
-        function buildOptimisticFineTuningJob({ jobId, name, selectedSets, targetAgent, fineTunerAgent, selectedEnvironment, instructions }) {
+        function buildOptimisticFineTuningJob({ jobId, name, selectedSets, targetAgent, fineTunerAgent, selectedEnvironment, instructions, conductedBy }) {
           const nowIso = new Date().toISOString();
           const evaluationRuns = (Array.isArray(selectedSets) ? selectedSets : []).map((set) => {
             const beforeRun = getPlaygroundFineTuningRunById(set, set.fineTuningRunId || set.fine_tuning_run_id)
@@ -1503,6 +1959,8 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             targetAgentName: normalizePlaygroundFineTuningString(targetAgent?.name || targetAgent?.label || targetAgent?.title || "Agent"),
             agentPhotoUrl: normalizePlaygroundFineTuningString(targetAgent?.photoUrl || targetAgent?.photoURL || targetAgent?.avatarUrl || targetAgent?.avatarURL),
             targetAgentPhotoUrl: normalizePlaygroundFineTuningString(targetAgent?.photoUrl || targetAgent?.photoURL || targetAgent?.avatarUrl || targetAgent?.avatarURL),
+            conductedBy,
+            createdBy: conductedBy,
             fineTunerAgentId: normalizePlaygroundFineTuningString(fineTunerAgent?.id),
             fineTunerAgentName: normalizePlaygroundFineTuningString(fineTunerAgent?.name || fineTunerAgent?.label || fineTunerAgent?.title || "Agent"),
             fineTunerAgentPhotoUrl: normalizePlaygroundFineTuningString(fineTunerAgent?.photoUrl || fineTunerAgent?.photoURL || fineTunerAgent?.avatarUrl || fineTunerAgent?.avatarURL),
@@ -1724,6 +2182,8 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             const runRequestOptions = {
               id: createPlaygroundFineTuningId("eval_run"),
               label: "Fine-Tune Verification",
+              fineTuningJobId: normalizedJob.id,
+              fine_tuning_job_id: normalizedJob.id,
               evaluationVersionId: normalizePlaygroundFineTuningString(set.activeVersionId),
               evaluationVersionNumber: Math.max(0, Number(set.activeVersionNumber || 0) || 0),
               evaluationVersionLabel: normalizePlaygroundFineTuningString(set.activeVersionLabel),
@@ -1741,6 +2201,10 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               projectName: "",
               evaluator,
               passThreshold: set.passThreshold,
+              metadata: {
+                fineTuningJobId: normalizedJob.id,
+                fine_tuning_job_id: normalizedJob.id,
+              },
             };
             try {
               const response = await fetch(normalizedBackendUrl + "/evaluations/runs", {
@@ -1764,7 +2228,10 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                 }),
               });
               const data = await readFineTuningJsonResponse(response, "Failed to start verification run.");
-              const run = normalizeFineTuningEvaluationRun(data?.run || data?.data || data);
+              const run = normalizeFineTuningEvaluationRun({
+                ...runRequestOptions,
+                ...(data?.run || data?.data || data || {}),
+              });
               upsertFineTuningEvaluationRun(set.id, run);
               references.push({
                 evaluationSetId: set.id,
@@ -1802,9 +2269,6 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           const normalizedVersion = version && typeof version === "object" && !Array.isArray(version) ? version : {};
           const versionId = normalizePlaygroundFineTuningString(normalizedVersion.id || normalizedVersion.versionId || normalizedVersion.version_id);
           if (!backendUrl || !normalizedJob.agentId || !versionId) {
-            return normalizedVersion;
-          }
-          if (normalizePlaygroundFineTuningString(normalizedVersion.status).toLowerCase() === "published") {
             return normalizedVersion;
           }
           const response = await fetch(String(backendUrl).replace(/\/+$/, "") + "/agents/" + encodeURIComponent(normalizedJob.agentId) + "/versions/" + encodeURIComponent(versionId) + "/publish", {
@@ -1989,6 +2453,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             fineTunerAgent,
             selectedEnvironment,
             instructions: String(form.instructions || ""),
+            conductedBy: currentFineTuningUser,
           });
           setCreateBusy(true);
           setCreateError("");
@@ -2016,6 +2481,8 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                 instructions: String(form.instructions || ""),
                 verifyAfter: true,
                 nextAgentVersionNumber: getFineTuningNextAgentVersionNumber(targetAgent),
+                conductedBy: currentFineTuningUser,
+                createdBy: currentFineTuningUser,
               }),
             });
             const data = await response.json().catch(() => ({}));
@@ -2085,17 +2552,22 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
 
         function renderScoreChip(job) {
           const normalizedJob = normalizePlaygroundFineTuningJob(job);
-          const hasAfter = normalizedJob.afterScore > 0;
+          const normalizedStatus = normalizePlaygroundFineTuningString(normalizedJob.status).toLowerCase();
+          const hasAfter = hasPlaygroundFineTuningAfterResult(normalizedJob);
+          const isError = new Set(["error", "failed", "cancelled", "canceled"]).has(normalizedStatus);
+          const isActive = isPlaygroundFineTuningActiveStatus(normalizedStatus);
           const afterLabel = hasAfter
               ? formatPlaygroundFineTuningPercent(normalizedJob.afterScore)
-              : normalizedJob.status === "verifying" || normalizedJob.status === "running"
+              : isError
+                ? "Error"
+                : isActive
                 ? "Running"
                 : "Pending";
           return React.createElement("span", { className: "playground-fine-tuning-score-chip" },
             React.createElement("span", null, formatPlaygroundFineTuningPercent(normalizedJob.beforeScore)),
             React.createElement("span", { "aria-hidden": "true" }, "->"),
             React.createElement("span", null, afterLabel),
-            hasAfter ? React.createElement("span", { className: "is-improvement" }, "+" + Math.round(normalizedJob.improvementScore * 100) + " pts") : null
+            hasAfter && !isError ? React.createElement("span", { className: "is-improvement" }, "+" + Math.round(normalizedJob.improvementScore * 100)) : null
           );
         }
 
@@ -2163,6 +2635,31 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             );
           }
           function renderFineTuningJobRow(job) {
+            function renderIdentityCell(label, photoUrl) {
+              const resolvedLabel = normalizePlaygroundFineTuningString(label) || "-";
+              if (resolvedLabel === "-") {
+                return React.createElement("span", { className: "playground-evaluations-run-cell-label" }, "-");
+              }
+              return React.createElement("span", { className: "playground-evaluations-run-agent-cell", title: resolvedLabel },
+                React.createElement("span", { className: "playground-evaluations-run-agent-avatar", "aria-hidden": "true" },
+                  photoUrl
+                    ? React.createElement("img", { src: photoUrl, alt: "" })
+                    : getPlaygroundFineTuningInitials(resolvedLabel)
+                ),
+                React.createElement("span", { className: "playground-evaluations-run-cell-label" }, resolvedLabel)
+              );
+            }
+            function renderAgentCell() {
+              const agent = normalizedAgents.find((item) => normalizePlaygroundFineTuningString(item?.id) === normalizePlaygroundFineTuningString(job.targetAgentId || job.agentId)) || null;
+              const label = normalizePlaygroundFineTuningString(job.agentName || job.targetAgentName || agent?.name || agent?.label || agent?.title || "Agent");
+              const photoUrl = normalizePlaygroundFineTuningString(job.agentPhotoUrl || job.targetAgentPhotoUrl || agent?.photoUrl || agent?.photoURL || agent?.avatarUrl || agent?.avatarURL);
+              return renderIdentityCell(label, photoUrl);
+            }
+            function renderConductorCell() {
+              const explicitConductor = normalizePlaygroundFineTuningPersonIdentity(job.conductedBy || job.createdBy || job.created_by || {});
+              const conductor = getPlaygroundFineTuningPersonLabel(explicitConductor) ? explicitConductor : currentFineTuningUser;
+              return renderIdentityCell(getPlaygroundFineTuningPersonLabel(conductor), conductor.avatarUrl);
+            }
             return React.createElement("div", {
                 key: job.id,
                 className: "playground-project-overview-threads-table-row",
@@ -2177,12 +2674,11 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               },
               React.createElement("div", { className: "playground-project-overview-thread-cell is-run", title: job.name },
                 React.createElement("div", { className: "playground-guardrails-set-copy" },
-                  React.createElement("div", { className: "playground-plugin-row-title" }, job.name),
-                  renderStatus(job)
+                  React.createElement("div", { className: "playground-plugin-row-title" }, job.name)
                 )
               ),
               React.createElement("div", { className: "playground-project-overview-thread-cell is-triggered-by", title: job.agentName },
-                job.agentName || "Unknown"
+                renderAgentCell()
               ),
               React.createElement("div", { className: "playground-project-overview-thread-cell is-source" },
                 job.evaluationSets.length + " " + (job.evaluationSets.length === 1 ? "set" : "sets")
@@ -2190,8 +2686,8 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               React.createElement("div", { className: "playground-project-overview-thread-cell is-score" },
                 renderScoreChip(job)
               ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-date", title: formatPlaygroundFineTuningDate(job.updatedAt) },
-                formatPlaygroundFineTuningDate(job.updatedAt)
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
+                renderConductorCell()
               ),
               React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
                 React.createElement("div", {
@@ -2328,9 +2824,9 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                       React.createElement("div", { className: "playground-project-overview-threads-table-header" },
                         React.createElement("div", null, "Job"),
                         React.createElement("div", null, "Agent"),
-                        React.createElement("div", null, "Evaluation Sets"),
+                        React.createElement("div", null, "Sets"),
                         React.createElement("div", null, "Improvement"),
-                        React.createElement("div", null, "Updated"),
+                        React.createElement("div", null, "Conducted by"),
                         React.createElement("div", null)
                       ),
                       React.createElement("div", { className: "playground-project-overview-thread-list" },
@@ -2356,50 +2852,55 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         }
 
         function renderKpiCard(job) {
-          const hasAfter = job.afterScore > 0;
+          const hasAfter = hasPlaygroundFineTuningAfterResult(job);
           const afterScore = hasAfter ? job.afterScore : job.beforeScore;
           const improvement = hasAfter ? Math.max(0, afterScore - job.beforeScore) : 0;
-          return React.createElement("section", { className: "playground-evaluations-analytics-card playground-fine-tuning-kpi-card playground-project-overview-progress-combo-card" },
-            React.createElement("div", { className: "playground-project-overview-progress-combo-header" },
-              React.createElement("div", { className: "playground-project-overview-progress-combo-title" }, "Improvement"),
-              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-                React.createElement("button", { type: "button", className: "playground-project-overview-chart-tab is-active" }, "Job")
+          const metrics = [
+            { id: "before", label: "Before Avg", value: formatPlaygroundFineTuningPercent(job.beforeScore) },
+            { id: "after", label: "After Avg", value: hasAfter ? formatPlaygroundFineTuningPercent(job.afterScore) : "Pending" },
+            { id: "improvement", label: "Improvement", value: hasAfter ? "+" + Math.round(improvement * 100) + " pts" : "Not run" },
+            { id: "cost", label: "Cost in CT", value: formatPlaygroundFineTuningCost(job.costTokens) },
+          ];
+          const handleDownload = () => {
+            if (typeof document === "undefined") return;
+            const canvas = document.querySelector(".playground-fine-tuning-progress-combo-canvas");
+            if (!canvas || typeof canvas.toDataURL !== "function") return;
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png");
+            link.download = "fine-tuning-analytics.png";
+            link.click();
+          };
+          return React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-fine-tuning-kpi-card" },
+            React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
+              React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Analytics"),
+              React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-project-overview-progress-combo-download",
+                  onClick: handleDownload,
+                  title: "Download chart",
+                  "aria-label": "Download fine-tuning analytics chart",
+                }, React.createElement(Download, { width: 15, height: 15, strokeWidth: 1.8 }))
               )
             ),
             React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
-              React.createElement("div", { className: "playground-project-overview-progress-combo-metric" },
-                React.createElement("span", { className: "playground-project-overview-progress-combo-metric-label" }, "Before Avg"),
-                React.createElement("span", { className: "playground-project-overview-progress-combo-metric-value" }, formatPlaygroundFineTuningPercent(job.beforeScore))
-              ),
-              React.createElement("div", { className: "playground-project-overview-progress-combo-metric" },
-                React.createElement("span", { className: "playground-project-overview-progress-combo-metric-label" }, "After Avg"),
-                React.createElement("span", { className: "playground-project-overview-progress-combo-metric-value" }, hasAfter ? formatPlaygroundFineTuningPercent(job.afterScore) : "Pending")
-              ),
-              React.createElement("div", { className: "playground-project-overview-progress-combo-metric" },
-                React.createElement("span", { className: "playground-project-overview-progress-combo-metric-label" }, "Improvement"),
-                React.createElement("span", { className: "playground-project-overview-progress-combo-metric-value" }, hasAfter ? "+" + Math.round(improvement * 100) + " pts" : "Not run")
-              ),
-              React.createElement("div", { className: "playground-project-overview-progress-combo-metric" },
-                React.createElement("span", { className: "playground-project-overview-progress-combo-metric-label" }, "Cost"),
-                React.createElement("span", { className: "playground-project-overview-progress-combo-metric-value" }, formatPlaygroundFineTuningCost(job.costTokens))
-              )
-            ),
-            React.createElement("div", { className: "playground-project-overview-progress-combo-chart-wrap" },
-              React.createElement("div", { className: "playground-fine-tuning-score-chart" },
-                React.createElement("div", { className: "playground-fine-tuning-score-bar" },
-                  React.createElement("div", { className: "playground-fine-tuning-score-bar-fill", style: { height: Math.max(4, Math.round(job.beforeScore * 132)) + "px" } }),
-                  React.createElement("div", { className: "playground-fine-tuning-score-bar-label" }, "Before")
-                ),
-                React.createElement("div", { className: "playground-fine-tuning-score-bar is-after" },
-                  React.createElement("div", { className: "playground-fine-tuning-score-bar-fill", style: { height: Math.max(4, Math.round(afterScore * 132)) + "px" } }),
-                  React.createElement("div", { className: "playground-fine-tuning-score-bar-label" }, "After")
+              metrics.map((item) =>
+                React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+                    React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
+                    React.createElement("span", null, item.label)
+                  ),
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
                 )
               )
+            ),
+            React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
+              React.createElement(PlaygroundFineTuningPerformanceChart, { job })
             )
           );
         }
 
-        function renderFacts(job) {
+        function renderJobDetails(job) {
           const version = job.createdAgentVersion || {};
           const versionStatus = normalizePlaygroundFineTuningString(job.agentVersionCreationStatus || version.status || "pending").toLowerCase();
           const versionStatusLabel = versionStatus === "saved"
@@ -2428,20 +2929,36 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           if (versionError) {
             facts.push(["Version Error", versionError]);
           }
-          return React.createElement("aside", { className: "playground-fine-tuning-detail-card" },
-            React.createElement("div", { className: "playground-plugins-section-title" }, "Job Details"),
-            React.createElement("div", { className: "playground-fine-tuning-facts" },
-              facts.map(([label, value]) =>
-                React.createElement("div", { key: label, className: "playground-fine-tuning-fact" },
-                  React.createElement("div", { className: "playground-fine-tuning-fact-label" }, label),
-                  label === "Thread" && job.threadId && typeof onOpenThread === "function"
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: "playground-fine-tuning-reference-link playground-fine-tuning-fact-value",
-                        onClick: () => onOpenThread(job.threadId),
-                        title: job.threadId,
-                      }, job.threadId)
-                    : React.createElement("div", { className: "playground-fine-tuning-fact-value", title: String(value || "") }, value)
+          return React.createElement("section", {
+              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-evaluations-cases-section playground-fine-tuning-section",
+            },
+            React.createElement("div", { className: "playground-plugins-section-header" },
+              React.createElement("div", { className: "playground-plugins-section-copy" },
+                React.createElement("h3", { className: "playground-plugins-section-title" }, "Job Details")
+              )
+            ),
+            React.createElement("div", { className: "playground-evaluations-cases-table playground-fine-tuning-detail-table" },
+              React.createElement("div", { className: "playground-evaluations-cases-table-inner" },
+                React.createElement("div", { className: "playground-evaluations-cases-header" },
+                  React.createElement("div", { className: "playground-evaluations-cases-header-cell" }, "Field"),
+                  React.createElement("div", { className: "playground-evaluations-cases-header-cell" }, "Value")
+                ),
+                React.createElement("div", { className: "playground-evaluations-cases-list" },
+                  facts.map(([label, value]) =>
+                    React.createElement("div", { key: label, className: "playground-evaluations-cases-row" },
+                      React.createElement("div", { className: "playground-evaluations-cases-cell" }, label),
+                      React.createElement("div", { className: "playground-evaluations-cases-cell playground-fine-tuning-detail-value", title: String(value || "") },
+                        label === "Thread" && job.threadId && typeof onOpenThread === "function"
+                          ? React.createElement("button", {
+                              type: "button",
+                              className: "playground-fine-tuning-reference-link",
+                              onClick: () => onOpenThread(job.threadId),
+                              title: job.threadId,
+                            }, job.threadId)
+                          : value
+                      )
+                    )
+                  )
                 )
               )
             )
@@ -2449,57 +2966,68 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         }
 
         function renderEvaluationRunReferences(job) {
-          return React.createElement("section", { className: "playground-project-overview-panel-plain playground-plugins-section playground-fine-tuning-section" },
+          return React.createElement("section", {
+              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-evaluations-cases-section playground-fine-tuning-section",
+            },
             React.createElement("div", { className: "playground-plugins-section-header" },
-              React.createElement("div", { className: "playground-plugins-section-title" }, "Evaluation Runs")
+              React.createElement("div", { className: "playground-plugins-section-copy" },
+                React.createElement("h3", { className: "playground-plugins-section-title" }, "Evaluation Runs")
+              )
             ),
-            React.createElement("div", { className: "playground-fine-tuning-reference-table" },
-              React.createElement("div", { className: "playground-fine-tuning-reference-row is-header" },
-                React.createElement("span", null, "Evaluation"),
-                React.createElement("span", null, "Before"),
-                React.createElement("span", null, "After"),
-                React.createElement("span", null, "Delta")
-              ),
-              job.evaluationRuns.length
-                ? job.evaluationRuns.map((reference) =>
-                    React.createElement("div", { key: reference.evaluationSetId, className: "playground-fine-tuning-reference-row" },
-                      React.createElement("span", null, reference.evaluationSetName),
-                      reference.beforeRunId && typeof onOpenEvaluationRun === "function"
-                        ? React.createElement("button", {
-                            type: "button",
-                            className: "playground-fine-tuning-reference-link",
-                            onClick: () => onOpenEvaluationRun(reference.evaluationSetId, reference.beforeRunId),
-                          }, reference.beforeRunLabel || reference.beforeRunId)
-                        : React.createElement("span", { className: "playground-guardrails-table-muted" }, reference.beforeRunLabel || "-"),
-                      reference.afterRunId && typeof onOpenEvaluationRun === "function"
-                        ? React.createElement("button", {
-                            type: "button",
-                            className: "playground-fine-tuning-reference-link",
-                            onClick: () => onOpenEvaluationRun(reference.evaluationSetId, reference.afterRunId),
-                          }, reference.afterRunLabel || reference.afterRunId)
-                        : React.createElement("span", { className: "playground-guardrails-table-muted" }, reference.status === "not_run" ? "Not run" : (reference.afterRunLabel || "-")),
-                      React.createElement("span", null,
-                        reference.status === "not_run"
-                          ? "-"
-                          : "+" + Math.max(0, Math.round((reference.afterScore - reference.beforeScore) * 100)) + " pts"
+            job.evaluationRuns.length
+              ? React.createElement("div", { className: "playground-evaluations-cases-table playground-fine-tuning-reference-table" },
+                  React.createElement("div", { className: "playground-evaluations-cases-table-inner" },
+                    React.createElement("div", { className: "playground-evaluations-cases-header" },
+                      React.createElement("div", { className: "playground-evaluations-cases-header-cell" }, "Evaluation"),
+                      React.createElement("div", { className: "playground-evaluations-cases-header-cell" }, "Before"),
+                      React.createElement("div", { className: "playground-evaluations-cases-header-cell" }, "After"),
+                      React.createElement("div", { className: "playground-evaluations-cases-header-cell" }, "Delta")
+                    ),
+                    React.createElement("div", { className: "playground-evaluations-cases-list" },
+                      job.evaluationRuns.map((reference) =>
+                        React.createElement("div", { key: reference.evaluationSetId, className: "playground-evaluations-cases-row" },
+                          React.createElement("div", { className: "playground-evaluations-cases-cell is-thread", title: reference.evaluationSetName }, reference.evaluationSetName),
+                          React.createElement("div", { className: "playground-evaluations-cases-cell" },
+                            reference.beforeRunId && typeof onOpenEvaluationRun === "function"
+                              ? React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-fine-tuning-reference-link",
+                                  onClick: () => onOpenEvaluationRun(reference.evaluationSetId, reference.beforeRunId),
+                                }, reference.beforeRunLabel || reference.beforeRunId)
+                              : React.createElement("span", { className: "playground-guardrails-table-muted" }, reference.beforeRunLabel || "-")
+                          ),
+                          React.createElement("div", { className: "playground-evaluations-cases-cell" },
+                            reference.afterRunId && typeof onOpenEvaluationRun === "function"
+                              ? React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-fine-tuning-reference-link",
+                                  onClick: () => onOpenEvaluationRun(reference.evaluationSetId, reference.afterRunId),
+                                }, reference.afterRunLabel || reference.afterRunId)
+                              : React.createElement("span", { className: "playground-guardrails-table-muted" }, reference.status === "not_run" ? "Not run" : (reference.afterRunLabel || "-"))
+                          ),
+                          React.createElement("div", { className: "playground-evaluations-cases-cell is-score" },
+                            !hasPlaygroundFineTuningAfterResult({ status: job.status, evaluationRuns: [reference] })
+                              ? "-"
+                              : "+" + Math.max(0, Math.round((reference.afterScore - reference.beforeScore) * 100)) + " pts"
+                          )
+                        )
                       )
                     )
                   )
-                : React.createElement("div", { className: "playground-fine-tuning-reference-row" },
-                    React.createElement("span", null, "No evaluation runs captured."),
-                    React.createElement("span", null, "-"),
-                    React.createElement("span", null, "-"),
-                    React.createElement("span", null, "-")
-                  )
-            )
+                )
+              : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No evaluation runs captured.")
           );
         }
 
         function renderDiff(job) {
           const files = buildPlaygroundFineTuningDiffFiles(job);
-          return React.createElement("section", { className: "playground-project-overview-panel-plain playground-plugins-section playground-fine-tuning-section" },
+          return React.createElement("section", {
+              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-evaluations-cases-section playground-fine-tuning-section",
+            },
             React.createElement("div", { className: "playground-plugins-section-header" },
-              React.createElement("div", { className: "playground-plugins-section-title" }, "Agent Changes")
+              React.createElement("div", { className: "playground-plugins-section-copy" },
+                React.createElement("h3", { className: "playground-plugins-section-title" }, "Agent Changes")
+              )
             ),
             files.length
               ? React.createElement("div", { className: "playground-fine-tuning-diff-list" },
@@ -2528,15 +3056,17 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           const analysisSummary = sanitizePlaygroundFineTuningAnalysisSummary(job.analysisSummary);
           return React.createElement("div", { className: "playground-guardrails-detail playground-evaluations-detail playground-fine-tuning-detail" },
             React.createElement("div", { className: "playground-guardrails-editor" },
-              React.createElement("div", { className: "playground-fine-tuning-detail-grid" },
-                renderKpiCard(job),
-                renderFacts(job)
-              ),
+              renderKpiCard(job),
+              renderJobDetails(job),
               renderEvaluationRunReferences(job),
               analysisSummary
-                ? React.createElement("section", { className: "playground-project-overview-panel-plain playground-plugins-section playground-fine-tuning-section playground-fine-tuning-analysis-section" },
+                ? React.createElement("section", {
+                    className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-evaluations-cases-section playground-fine-tuning-section playground-fine-tuning-analysis-section",
+                  },
                     React.createElement("div", { className: "playground-plugins-section-header" },
-                      React.createElement("div", { className: "playground-plugins-section-title" }, "Analysis")
+                      React.createElement("div", { className: "playground-plugins-section-copy" },
+                        React.createElement("h3", { className: "playground-plugins-section-title" }, "Analysis")
+                      )
                     ),
                     typeof PlaygroundTaskDescriptionMarkdown === "function"
                       ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
