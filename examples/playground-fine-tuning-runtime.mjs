@@ -411,7 +411,7 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
         .map((set, index) => normalizeEvaluationSet(set, index))
         .filter((set) => set.id);
       const instructions = String(body.instructions || body.focus || "");
-      const verifyAfter = body.verifyAfter === true || body.verify_after === true;
+      const verifyAfter = true;
       if (!agent.id) {
         return sendJson(res, 400, { error: "Select an agent before starting fine-tuning." });
       }

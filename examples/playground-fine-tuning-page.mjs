@@ -261,6 +261,7 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
 
       .playground-fine-tuning-evaluation-picker .playground-tasks-detail-section-header {
         margin-bottom: 8px;
+        overflow: visible;
       }
 
       .playground-fine-tuning-evaluation-picker-body {
@@ -270,8 +271,7 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
       }
 
       .playground-fine-tuning-evaluation-list.playground-mission-control-modal-outcomes-list {
-        max-height: 190px;
-        overflow: auto;
+        overflow: visible;
         padding-right: 2px;
       }
 
@@ -285,6 +285,56 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
 
       .playground-fine-tuning-evaluation-option:not(.is-selected) .playground-mission-control-modal-outcome-menu-trigger svg {
         opacity: 0;
+      }
+
+      .playground-fine-tuning-evaluation-menu-shell {
+        position: relative;
+        flex: 0 0 auto;
+        overflow: visible;
+      }
+
+      .playground-fine-tuning-evaluation-menu-shell .playground-mission-control-modal-outcome-add {
+        position: relative;
+        z-index: 2;
+      }
+
+      .playground-fine-tuning-evaluation-menu-shell .playground-fine-tuning-evaluation-menu {
+        top: calc(100% + 6px);
+        right: 0;
+        left: auto;
+        width: min(320px, calc(100vw - 64px));
+        max-height: 270px;
+        overflow: auto;
+        z-index: 1600;
+      }
+
+      .playground-fine-tuning-evaluation-menu .tb-popup-row {
+        min-height: 42px;
+      }
+
+      .playground-fine-tuning-evaluation-menu .playground-fine-tuning-evaluation-meta {
+        white-space: normal;
+      }
+
+      .playground-fine-tuning-evaluation-menu-empty {
+        padding: 10px 12px;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-fine-tuning-page .playground-evaluations-overview-section .playground-project-overview-threads-table-header,
+      .playground-fine-tuning-page .playground-evaluations-overview-section .playground-project-overview-threads-table-row {
+        grid-template-columns: minmax(160px, 1.18fr) minmax(112px, 0.72fr) minmax(112px, 0.58fr) minmax(138px, 0.72fr) minmax(82px, 0.5fr) 20px;
+        gap: 12px;
+      }
+
+      .playground-fine-tuning-page .playground-evaluations-overview-section .playground-project-overview-thread-cell,
+      .playground-fine-tuning-page .playground-evaluations-overview-section .playground-plugin-row-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .playground-fine-tuning-create-modal .playground-fine-tuning-evaluation-name {
@@ -438,7 +488,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           environmentName: normalizePlaygroundFineTuningString(source.environmentName || source.environment_name || "Computer"),
           evaluationSets,
           instructions: String(source.instructions || ""),
-          verifyAfter: source.verifyAfter === true || source.verify_after === true,
+          verifyAfter: true,
           threadId: normalizePlaygroundFineTuningString(source.threadId || source.thread_id),
           threadTitle: normalizePlaygroundFineTuningString(source.threadTitle || source.thread_title || "Fine-Tuning Thread"),
           beforeScore: normalizePlaygroundFineTuningScore(source.beforeScore ?? source.before_score ?? 0),
@@ -620,11 +670,13 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         const modalFrameRef = useRef(null);
         const modalCloseTimerRef = useRef(null);
         const fineTuningInstructionsTextareaRef = useRef(null);
+        const evaluationSetPickerRef = useRef(null);
         const [modalVisible, setModalVisible] = useState(false);
         const [modalClosing, setModalClosing] = useState(false);
         const [createError, setCreateError] = useState("");
         const [createBusy, setCreateBusy] = useState(false);
         const [rowMenuId, setRowMenuId] = useState("");
+        const [evaluationSetPickerOpen, setEvaluationSetPickerOpen] = useState(false);
         const [isFineTuningInstructionsEditing, setIsFineTuningInstructionsEditing] = useState(false);
         const [fineTuningInstructionsHistory, setFineTuningInstructionsHistory] = useState({ past: [], future: [] });
 
@@ -653,6 +705,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           setCreateError("");
           setModalClosing(false);
           setModalVisible(false);
+          setEvaluationSetPickerOpen(false);
           setIsFineTuningInstructionsEditing(false);
           setFineTuningInstructionsHistory({ past: [], future: [] });
           if (modalFrameRef.current && typeof window !== "undefined") {
@@ -674,6 +727,23 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           if (modalFrameRef.current && typeof window !== "undefined") window.cancelAnimationFrame(modalFrameRef.current);
           if (modalCloseTimerRef.current && typeof window !== "undefined") window.clearTimeout(modalCloseTimerRef.current);
         }, []);
+
+        useEffect(() => {
+          if (!evaluationSetPickerOpen || typeof document === "undefined") return undefined;
+          const handlePointerDown = (event) => {
+            if (evaluationSetPickerRef.current && evaluationSetPickerRef.current.contains(event.target)) return;
+            setEvaluationSetPickerOpen(false);
+          };
+          const handleKeyDown = (event) => {
+            if (event.key === "Escape") setEvaluationSetPickerOpen(false);
+          };
+          document.addEventListener("pointerdown", handlePointerDown);
+          document.addEventListener("keydown", handleKeyDown);
+          return () => {
+            document.removeEventListener("pointerdown", handlePointerDown);
+            document.removeEventListener("keydown", handleKeyDown);
+          };
+        }, [evaluationSetPickerOpen]);
 
         function updateCreateForm(patch) {
           if (typeof setFineTuningCreateForm === "function") {
@@ -881,6 +951,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
 
         function closeCreateModal(options = {}) {
           if (createBusy) return;
+          setEvaluationSetPickerOpen(false);
           if (options.animate === false || typeof window === "undefined") {
             setModalVisible(false);
             setModalClosing(false);
@@ -907,7 +978,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               ? currentForm.evaluationSetIds
               : normalizedEvaluationSets[0]?.id ? [normalizedEvaluationSets[0].id] : [],
             instructions: currentForm.instructions || "",
-            verifyAfter: currentForm.verifyAfter !== false,
+            verifyAfter: true,
           });
           if (typeof setFineTuningCreateModalOpen === "function") setFineTuningCreateModalOpen(true);
         }
@@ -1076,7 +1147,6 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
 
         async function startFineTuningVerificationRuns(job, selectedSets, selectedAgent, selectedEnvironment) {
           const normalizedJob = normalizePlaygroundFineTuningJob(job);
-          if (!normalizedJob.verifyAfter) return normalizedJob;
           const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
           const version = normalizedJob.createdAgentVersion && typeof normalizedJob.createdAgentVersion === "object"
             ? normalizedJob.createdAgentVersion
@@ -1275,7 +1345,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                 environment: selectedEnvironment,
                 evaluationSets: selectedSets,
                 instructions: String(form.instructions || ""),
-                verifyAfter: form.verifyAfter === true,
+                verifyAfter: true,
               }),
             });
             const data = await response.json().catch(() => ({}));
@@ -1335,10 +1405,8 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
 
         function renderScoreChip(job) {
           const normalizedJob = normalizePlaygroundFineTuningJob(job);
-          const hasAfter = normalizedJob.verifyAfter && normalizedJob.afterScore > 0;
-          const afterLabel = !normalizedJob.verifyAfter
-            ? "Not run"
-            : hasAfter
+          const hasAfter = normalizedJob.afterScore > 0;
+          const afterLabel = hasAfter
               ? formatPlaygroundFineTuningPercent(normalizedJob.afterScore)
               : normalizedJob.status === "verifying"
                 ? "Running"
@@ -1358,92 +1426,148 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         }
 
         function renderOverview() {
-          const listContent = React.createElement("div", { className: "playground-guardrails-table-shell" },
-            React.createElement("div", { className: "playground-guardrails-table" },
-              React.createElement("div", { className: "playground-guardrails-table-header" },
-                React.createElement("span", null, "Job"),
-                React.createElement("span", null, "Agent"),
-                React.createElement("span", null, "Evaluation Sets"),
-                React.createElement("span", null, "Improvement"),
-                React.createElement("span", null, "Updated"),
-                React.createElement("span", null, "")
+          const hasFilters = Boolean(normalizedQuery);
+          function renderFineTuningJobRow(job) {
+            return React.createElement("div", {
+                key: job.id,
+                className: "playground-project-overview-threads-table-row",
+                role: "button",
+                tabIndex: 0,
+                onClick: () => openJob(job.id),
+                onKeyDown: (event) => {
+                  if (event.key !== "Enter" && event.key !== " ") return;
+                  event.preventDefault();
+                  openJob(job.id);
+                },
+              },
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-run", title: job.name },
+                React.createElement("div", { className: "playground-guardrails-set-copy" },
+                  React.createElement("div", { className: "playground-plugin-row-title" }, job.name),
+                  renderStatus(job)
+                )
               ),
-              filteredJobs.length > 0
-                ? filteredJobs.map((job) =>
-                    React.createElement("div", {
-                      key: job.id,
-                      className: "playground-guardrails-table-row",
-                      role: "button",
-                      tabIndex: 0,
-                      onClick: () => openJob(job.id),
-                      onKeyDown: (event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          openJob(job.id);
-                        }
-                      },
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-triggered-by", title: job.agentName },
+                job.agentName || "Unknown"
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-source" },
+                job.evaluationSets.length + " " + (job.evaluationSets.length === 1 ? "set" : "sets")
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-score" },
+                renderScoreChip(job)
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-date", title: formatPlaygroundFineTuningDate(job.updatedAt) },
+                formatPlaygroundFineTuningDate(job.updatedAt)
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
+                React.createElement("div", {
+                    className: "playground-tasks-toolbar-popup-shell",
+                    onClick: (event) => event.stopPropagation(),
+                  },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-thread-menu-button" + (rowMenuId === job.id ? " is-active" : ""),
+                    onClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setRowMenuId((current) => current === job.id ? "" : job.id);
                     },
-                      React.createElement("div", { className: "playground-guardrails-set-cell" },
-                        React.createElement("div", { className: "playground-guardrails-set-copy" },
-                          React.createElement("span", { className: "playground-guardrails-set-title" }, job.name),
-                          renderStatus(job)
-                        )
-                      ),
-                      React.createElement("span", { className: "playground-guardrails-table-muted" }, job.agentName),
-                      React.createElement("span", { className: "playground-guardrails-table-muted" }, job.evaluationSets.length + " " + (job.evaluationSets.length === 1 ? "set" : "sets")),
-                      renderScoreChip(job),
-                      React.createElement("span", { className: "playground-guardrails-table-muted" }, formatPlaygroundFineTuningDate(job.updatedAt)),
-                      React.createElement("span", { className: "playground-guardrails-action-menu-shell playground-guardrails-row-action-menu-shell", onClick: (event) => event.stopPropagation() },
+                    "aria-label": "Fine-tuning job actions",
+                    "aria-expanded": rowMenuId === job.id ? "true" : "false",
+                  }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
+                  rowMenuId === job.id
+                    ? React.createElement("div", {
+                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                        onClick: (event) => event.stopPropagation(),
+                      },
                         React.createElement("button", {
                           type: "button",
-                          className: "playground-guardrails-row-action" + (rowMenuId === job.id ? " is-active" : ""),
-                          onClick: () => setRowMenuId((current) => current === job.id ? "" : job.id),
-                          "aria-label": "Fine-tuning job actions",
-                        }, React.createElement(EllipsisVertical, { width: 14, height: 14, strokeWidth: 1.8 })),
-                        rowMenuId === job.id
-                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-guardrails-action-menu" },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-row",
-                                onClick: () => {
-                                  setRowMenuId("");
-                                  openJob(job.id);
-                                },
-                              },
-                                React.createElement(ExternalLink, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Open"))
-                              ),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-row is-danger",
-                                onClick: () => deleteJob(job.id),
-                              },
-                                React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Delete"))
-                              )
-                            )
-                          : null
+                          className: "tb-popup-row",
+                          onClick: () => {
+                            setRowMenuId("");
+                            openJob(job.id);
+                          },
+                        },
+                          React.createElement(ExternalLink, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, "Open")
+                          )
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-row",
+                          onClick: () => deleteJob(job.id),
+                        },
+                          React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, "Delete")
+                          )
+                        )
+                      )
+                    : null
+                )
+              )
+            );
+          }
+          return React.createElement("div", { className: "playground-guardrails-layout playground-evaluations-overview-layout" },
+            React.createElement("div", { className: "playground-guardrails-list-panel" },
+              React.createElement("section", {
+                  className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-evaluations-overview-section",
+                },
+                React.createElement("div", { className: "playground-plugins-search-row" },
+                  React.createElement("div", { className: "playground-plugins-search-shell" },
+                    React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("input", {
+                      type: "search",
+                      value: fineTuningSearchQuery || "",
+                      onChange: (event) => typeof setFineTuningSearchQuery === "function" ? setFineTuningSearchQuery(event.target.value) : undefined,
+                      className: "playground-plugins-search",
+                      placeholder: "Search fine-tuning jobs",
+                      "aria-label": "Search fine-tuning jobs",
+                    })
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-library-new-button playground-evaluations-overview-create-button",
+                    onClick: openCreateModal,
+                  },
+                    React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Fine-Tune")
+                  )
+                ),
+                filteredJobs.length > 0
+                  ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-evaluations-overview-table" },
+                      React.createElement("div", { className: "playground-project-overview-threads-table-header" },
+                        React.createElement("div", null, "Job"),
+                        React.createElement("div", null, "Agent"),
+                        React.createElement("div", null, "Evaluation Sets"),
+                        React.createElement("div", null, "Improvement"),
+                        React.createElement("div", null, "Updated"),
+                        React.createElement("div", null)
+                      ),
+                      React.createElement("div", { className: "playground-project-overview-thread-list" },
+                        filteredJobs.map((job) => renderFineTuningJobRow(job))
                       )
                     )
-                  )
-                : React.createElement("div", { className: "playground-guardrails-empty" },
-                    React.createElement("div", { className: "playground-guardrails-empty-icon" }, React.createElement(TestTubeDiagonal, { width: 18, height: 18, strokeWidth: 1.8 })),
-                    React.createElement("div", { className: "playground-guardrails-empty-title" }, "No fine-tuning jobs yet"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-library-new-button playground-guardrails-empty-button",
-                      onClick: openCreateModal,
-                    }, React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.8 }), React.createElement("span", null, "Fine-Tune"))
-                  )
+                  : normalizedJobs.length === 0
+                    ? React.createElement("div", { className: "playground-guardrails-empty" },
+                        React.createElement("div", { className: "playground-guardrails-empty-icon" }, React.createElement(TestTubeDiagonal, { width: 18, height: 18, strokeWidth: 1.8 })),
+                        React.createElement("div", { className: "playground-guardrails-empty-title" }, "No fine-tuning jobs yet"),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-library-new-button playground-guardrails-empty-button",
+                          onClick: openCreateModal,
+                        }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }), "Fine-Tune")
+                      )
+                    : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                        hasFilters ? "No matching fine-tuning jobs." : "No fine-tuning jobs yet."
+                      )
+              )
             )
-          );
-          return React.createElement("div", { className: "playground-guardrails-layout playground-evaluations-overview-layout" },
-            React.createElement("div", { className: "playground-guardrails-list-panel" }, listContent)
           );
         }
 
         function renderKpiCard(job) {
-          const hasAfter = job.verifyAfter && job.afterScore > 0;
+          const hasAfter = job.afterScore > 0;
           const afterScore = hasAfter ? job.afterScore : job.beforeScore;
           const improvement = hasAfter ? Math.max(0, afterScore - job.beforeScore) : 0;
           return React.createElement("section", { className: "playground-evaluations-analytics-card playground-fine-tuning-kpi-card playground-project-overview-progress-combo-card" },
@@ -1618,6 +1742,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           if (!fineTuningCreateModalOpen && !modalClosing) return null;
           const form = fineTuningCreateForm && typeof fineTuningCreateForm === "object" ? fineTuningCreateForm : {};
           const selectedSetIds = Array.isArray(form.evaluationSetIds) ? form.evaluationSetIds.map(String) : [];
+          const selectedEvaluationSets = normalizedEvaluationSets.filter((set) => selectedSetIds.includes(set.id));
           const canUndoInstructions = Array.isArray(fineTuningInstructionsHistory.past) && fineTuningInstructionsHistory.past.length > 0;
           const canRedoInstructions = Array.isArray(fineTuningInstructionsHistory.future) && fineTuningInstructionsHistory.future.length > 0;
           const renderInstructionsToolbarButton = (action) =>
@@ -1666,6 +1791,37 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               : Array.from(new Set([...selectedSetIds, normalizedSetId]));
             updateCreateForm({ evaluationSetIds: nextIds });
           };
+          const getEvaluationSetMeta = (set) => {
+            const caseCount = Array.isArray(set?.dataRows) ? set.dataRows.length : Number(set?.caseCount || 0) || 0;
+            const score = getPlaygroundFineTuningEvaluationScore(set);
+            return caseCount + " " + (caseCount === 1 ? "case" : "cases") + " · " + formatPlaygroundFineTuningPercent(score);
+          };
+          const renderEvaluationSetPickerMenu = () =>
+            React.createElement("div", {
+                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-fine-tuning-evaluation-menu",
+                onClick: (event) => event.stopPropagation(),
+              },
+              normalizedEvaluationSets.length
+                ? normalizedEvaluationSets.map((set) => {
+                    const checked = selectedSetIds.includes(set.id);
+                    return React.createElement("button", {
+                        key: set.id,
+                        type: "button",
+                        className: "tb-popup-row tb-popup-row-select" + (checked ? " selected" : ""),
+                        onClick: () => toggleEvaluationSet(set.id),
+                        "aria-pressed": checked ? "true" : "false",
+                      },
+                      React.createElement("span", { className: "tb-popup-check-slot" },
+                        checked ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
+                      ),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, set.name || "Untitled Evaluation"),
+                        React.createElement("span", { className: "playground-fine-tuning-evaluation-meta" }, getEvaluationSetMeta(set))
+                      )
+                    );
+                  })
+                : React.createElement("div", { className: "playground-fine-tuning-evaluation-menu-empty" }, "No evaluation sets available.")
+            );
           return React.createElement("div", {
               className: "playground-tasks-project-modal-backdrop playground-tasks-project-issue-backdrop playground-project-overview-outcome-editor-backdrop playground-evaluations-create-modal-backdrop playground-fine-tuning-create-modal-backdrop"
                 + (modalVisible ? " is-visible" : "")
@@ -1730,39 +1886,40 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                       : React.createElement("option", { value: "" }, "No computers available")
                   )
                 ),
-                React.createElement("label", { className: "playground-evaluations-field is-full" },
-                  React.createElement("span", null, "Verification"),
-                  React.createElement("select", {
-                    className: "playground-evaluations-select",
-                    value: form.verifyAfter === false ? "no" : "yes",
-                    onChange: (event) => updateCreateForm({ verifyAfter: event.target.value === "yes" }),
-                  },
-                    React.createElement("option", { value: "yes" }, "Run evaluation after"),
-                    React.createElement("option", { value: "no" }, "Skip verification")
-                  )
-                ),
                 React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-mission-control-modal-context-editor playground-mission-control-modal-outcomes-editor playground-fine-tuning-evaluation-picker" },
                   React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Evaluation Sets")
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Evaluation Sets"),
+                    React.createElement("div", {
+                        className: "playground-fine-tuning-evaluation-menu-shell playground-tasks-toolbar-popup-shell" + (evaluationSetPickerOpen ? " is-open" : ""),
+                        ref: evaluationSetPickerRef,
+                        onClick: (event) => event.stopPropagation(),
+                      },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-mission-control-modal-outcome-add",
+                        onClick: () => setEvaluationSetPickerOpen((current) => !current),
+                        title: "Add evaluation sets",
+                        "aria-label": "Add evaluation sets",
+                        "aria-expanded": evaluationSetPickerOpen ? "true" : "false",
+                      }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 })),
+                      evaluationSetPickerOpen ? renderEvaluationSetPickerMenu() : null
+                    )
                   ),
                   React.createElement("div", { className: "playground-fine-tuning-evaluation-picker-body" },
                     React.createElement("div", { className: "playground-fine-tuning-evaluation-list playground-mission-control-modal-outcomes-list" },
-                      normalizedEvaluationSets.length
-                        ? normalizedEvaluationSets.map((set) => {
-                            const checked = selectedSetIds.includes(set.id);
-                            const caseCount = Array.isArray(set.dataRows) ? set.dataRows.length : Number(set.caseCount || 0) || 0;
-                            const score = getPlaygroundFineTuningEvaluationScore(set);
+                      selectedEvaluationSets.length
+                        ? selectedEvaluationSets.map((set) => {
                             return React.createElement("button", {
                                 key: set.id,
                                 type: "button",
-                                className: "playground-fine-tuning-evaluation-option playground-mission-control-modal-outcome-row" + (checked ? " is-selected" : ""),
+                                className: "playground-fine-tuning-evaluation-option playground-mission-control-modal-outcome-row is-selected",
                                 onClick: () => toggleEvaluationSet(set.id),
-                                "aria-pressed": checked ? "true" : "false",
+                                "aria-pressed": "true",
                               },
                               React.createElement("div", { className: "playground-mission-control-modal-outcome-copy" },
                                 React.createElement("span", { className: "playground-mission-control-modal-outcome-input playground-fine-tuning-evaluation-name" }, set.name || "Untitled Evaluation"),
                                 React.createElement("span", { className: "playground-mission-control-modal-outcome-input playground-fine-tuning-evaluation-meta" },
-                                  caseCount + " " + (caseCount === 1 ? "case" : "cases") + " · " + formatPlaygroundFineTuningPercent(score)
+                                  getEvaluationSetMeta(set)
                                 )
                               ),
                               React.createElement("span", {
@@ -1776,8 +1933,8 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                         : React.createElement("button", {
                             type: "button",
                             className: "playground-mission-control-modal-outcomes-empty",
-                            disabled: true,
-                          }, "No evaluation sets available.")
+                            onClick: () => setEvaluationSetPickerOpen(true),
+                          }, normalizedEvaluationSets.length ? "Add evaluation sets" : "No evaluation sets available.")
                     )
                   )
                 ),
@@ -1893,25 +2050,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                     React.createElement("h1", { className: "playground-files-library-title" + (isDetailPage ? " playground-guardrails-detail-title" : "") }, pageTitle),
                     isDetailPage
                       ? React.createElement("div", { className: "playground-guardrails-detail-actions" }, renderStatus(selectedJob))
-                      : React.createElement("div", { className: "playground-fine-tuning-overview-toolbar" },
-                          React.createElement("label", { className: "playground-plugins-search-shell" },
-                            React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("input", {
-                              className: "playground-plugins-search",
-                              value: fineTuningSearchQuery || "",
-                              onChange: (event) => typeof setFineTuningSearchQuery === "function" ? setFineTuningSearchQuery(event.target.value) : undefined,
-                              placeholder: "Search jobs",
-                            })
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-files-library-new-button playground-evaluations-overview-create-button",
-                            onClick: openCreateModal,
-                          },
-                            React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Fine-Tune")
-                          )
-                        )
+                      : null
                   )
                 )
               ),

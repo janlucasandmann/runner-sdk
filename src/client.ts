@@ -19,12 +19,31 @@ import {
   RunnerEnvironmentVersionCompareResult,
   RunnerEnvironmentVersionCreateInput,
   RunnerEnvironmentVersionUpdateInput,
+  RunnerEvaluationRun,
+  RunnerEvaluationRunCreateInput,
+  RunnerEvaluationSet,
+  RunnerEvaluationSetCreateInput,
+  RunnerEvaluationSetUpdateInput,
+  RunnerEvaluationVersion,
+  RunnerEvaluationVersionCompareResult,
+  RunnerEvaluationVersionCreateInput,
+  RunnerEvaluationVersionUpdateInput,
   RunnerExecuteOptions,
   RunnerExecuteResult,
+  RunnerFineTuningJob,
+  RunnerFineTuningJobCreateInput,
   RunnerGuardrailSet,
   RunnerGuardrailSetCreateInput,
   RunnerGuardrailSetUpdateInput,
+  RunnerGuardrailVersion,
+  RunnerGuardrailVersionCompareResult,
+  RunnerGuardrailVersionCreateInput,
+  RunnerGuardrailVersionUpdateInput,
   RunnerLog,
+  RunnerMetronomeVersion,
+  RunnerMetronomeVersionCompareResult,
+  RunnerMetronomeVersionCreateInput,
+  RunnerMetronomeVersionUpdateInput,
   RunnerRunRequest,
   RunnerServerVersion,
   RunnerServerVersionCompareResult,
@@ -1219,6 +1238,729 @@ export class RunnerClient {
       signal: options.signal,
     });
     return payload ? this.readObjectResponse<RunnerAgentRecord>(payload, ["agent"]) : null;
+  }
+
+  async listGuardrailVersions(
+    options: RunnerApiRequestOptions & {
+      guardrailId: string;
+    },
+  ): Promise<RunnerGuardrailVersion[]> {
+    return this.listResourceVersions<RunnerGuardrailVersion>(
+      options,
+      `/guardrails/${encodeURIComponent(options.guardrailId)}`,
+      ["versions", "guardrailVersions", "guardrail_versions"],
+    );
+  }
+
+  async getGuardrailVersion(
+    options: RunnerApiRequestOptions & {
+      guardrailId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerGuardrailVersion> {
+    return this.getResourceVersion<RunnerGuardrailVersion>(
+      options,
+      `/guardrails/${encodeURIComponent(options.guardrailId)}`,
+      options.versionId,
+      ["version", "guardrailVersion", "guardrail_version"],
+    );
+  }
+
+  async createGuardrailVersion(
+    options: RunnerApiRequestOptions & {
+      guardrailId: string;
+      version: RunnerGuardrailVersionCreateInput;
+    },
+  ): Promise<RunnerGuardrailVersion> {
+    return this.createResourceVersion<RunnerGuardrailVersion>(
+      options,
+      `/guardrails/${encodeURIComponent(options.guardrailId)}`,
+      options.version,
+      ["version", "guardrailVersion", "guardrail_version"],
+    );
+  }
+
+  async updateGuardrailVersion(
+    options: RunnerApiRequestOptions & {
+      guardrailId: string;
+      versionId: string;
+      version: RunnerGuardrailVersionUpdateInput;
+    },
+  ): Promise<RunnerGuardrailVersion> {
+    return this.updateResourceVersion<RunnerGuardrailVersion>(
+      options,
+      `/guardrails/${encodeURIComponent(options.guardrailId)}`,
+      options.versionId,
+      options.version,
+      ["version", "guardrailVersion", "guardrail_version"],
+    );
+  }
+
+  async deleteGuardrailVersion(
+    options: RunnerApiRequestOptions & {
+      guardrailId: string;
+      versionId: string;
+    },
+  ): Promise<void> {
+    await this.deleteResourceVersion(options, `/guardrails/${encodeURIComponent(options.guardrailId)}`, options.versionId);
+  }
+
+  async publishGuardrailVersion(
+    options: RunnerApiRequestOptions & {
+      guardrailId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerGuardrailSet> {
+    return this.actionResourceVersion<RunnerGuardrailSet>(
+      options,
+      `/guardrails/${encodeURIComponent(options.guardrailId)}`,
+      options.versionId,
+      "publish",
+      ["guardrail", "set"],
+    );
+  }
+
+  async unpublishGuardrailVersion(
+    options: RunnerApiRequestOptions & {
+      guardrailId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerGuardrailSet> {
+    return this.actionResourceVersion<RunnerGuardrailSet>(
+      options,
+      `/guardrails/${encodeURIComponent(options.guardrailId)}`,
+      options.versionId,
+      "unpublish",
+      ["guardrail", "set"],
+    );
+  }
+
+  async restoreGuardrailVersion(
+    options: RunnerApiRequestOptions & {
+      guardrailId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerGuardrailSet> {
+    return this.actionResourceVersion<RunnerGuardrailSet>(
+      options,
+      `/guardrails/${encodeURIComponent(options.guardrailId)}`,
+      options.versionId,
+      "restore",
+      ["guardrail", "set"],
+    );
+  }
+
+  async compareGuardrailVersions(
+    options: RunnerApiRequestOptions & {
+      guardrailId: string;
+      baseVersionId: string;
+      targetVersionId: string;
+    },
+  ): Promise<RunnerGuardrailVersionCompareResult> {
+    return this.compareResourceVersions<RunnerGuardrailVersionCompareResult>(
+      options,
+      `/guardrails/${encodeURIComponent(options.guardrailId)}`,
+      options.baseVersionId,
+      options.targetVersionId,
+    );
+  }
+
+  async listEvaluations(
+    options: RunnerApiRequestOptions & {
+      q?: string;
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<RunnerEvaluationSet[]> {
+    const search = new URLSearchParams();
+    if (options.q) search.set("q", options.q);
+    if (options.limit !== undefined) search.set("limit", String(options.limit));
+    if (options.offset !== undefined) search.set("offset", String(options.offset));
+    const url = this.buildApiUrl(options.backendUrl, `/evaluations${search.size > 0 ? `?${search.toString()}` : ""}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerEvaluationSet>(payload, ["evaluations", "sets"]);
+  }
+
+  async getEvaluation(
+    options: RunnerApiRequestOptions & {
+      evaluationId: string;
+    },
+  ): Promise<RunnerEvaluationSet> {
+    const url = this.buildApiUrl(options.backendUrl, `/evaluations/${encodeURIComponent(options.evaluationId)}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readObjectResponse<RunnerEvaluationSet>(payload, ["evaluation", "set"]);
+  }
+
+  async createEvaluation(
+    options: RunnerApiRequestOptions & {
+      evaluation: RunnerEvaluationSetCreateInput;
+    },
+  ): Promise<RunnerEvaluationSet> {
+    const url = this.buildApiUrl(options.backendUrl, "/evaluations");
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.evaluation),
+    });
+    return this.readObjectResponse<RunnerEvaluationSet>(payload, ["evaluation", "set"]);
+  }
+
+  async updateEvaluation(
+    options: RunnerApiRequestOptions & {
+      evaluationId: string;
+      evaluation: RunnerEvaluationSetUpdateInput;
+    },
+  ): Promise<RunnerEvaluationSet> {
+    const url = this.buildApiUrl(options.backendUrl, `/evaluations/${encodeURIComponent(options.evaluationId)}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "PATCH",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.evaluation),
+    });
+    return this.readObjectResponse<RunnerEvaluationSet>(payload, ["evaluation", "set"]);
+  }
+
+  async deleteEvaluation(
+    options: RunnerApiRequestOptions & {
+      evaluationId: string;
+    },
+  ): Promise<void> {
+    const url = this.buildApiUrl(options.backendUrl, `/evaluations/${encodeURIComponent(options.evaluationId)}`);
+    await this.requestJsonOrEmpty<unknown>(url, {
+      method: "DELETE",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async runEvaluation(
+    options: RunnerApiRequestOptions & {
+      run: RunnerEvaluationRunCreateInput;
+    },
+  ): Promise<RunnerEvaluationRun> {
+    const { evaluationId, computerId, environmentId, ...run } = options.run;
+    const url = this.buildApiUrl(options.backendUrl, `/evaluations/${encodeURIComponent(evaluationId)}/runs`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({
+        ...run,
+        environmentId: environmentId ?? computerId,
+      }),
+    });
+    return this.readObjectResponse<RunnerEvaluationRun>(payload, ["run"]);
+  }
+
+  async listEvaluationRuns(
+    options: RunnerApiRequestOptions & {
+      evaluationId?: string;
+      agentId?: string;
+      status?: string;
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<RunnerEvaluationRun[]> {
+    const search = new URLSearchParams();
+    if (options.evaluationId) search.set("evaluationId", options.evaluationId);
+    if (options.agentId) search.set("agentId", options.agentId);
+    if (options.status) search.set("status", options.status);
+    if (options.limit !== undefined) search.set("limit", String(options.limit));
+    if (options.offset !== undefined) search.set("offset", String(options.offset));
+    const url = this.buildApiUrl(options.backendUrl, `/evaluations/runs${search.size > 0 ? `?${search.toString()}` : ""}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerEvaluationRun>(payload, ["runs"]);
+  }
+
+  async getEvaluationRun(
+    options: RunnerApiRequestOptions & {
+      runId: string;
+    },
+  ): Promise<RunnerEvaluationRun> {
+    const url = this.buildApiUrl(options.backendUrl, `/evaluations/runs/${encodeURIComponent(options.runId)}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readObjectResponse<RunnerEvaluationRun>(payload, ["run"]);
+  }
+
+  async listEvaluationVersions(
+    options: RunnerApiRequestOptions & {
+      evaluationId: string;
+    },
+  ): Promise<RunnerEvaluationVersion[]> {
+    return this.listResourceVersions<RunnerEvaluationVersion>(
+      options,
+      `/evaluations/${encodeURIComponent(options.evaluationId)}`,
+      ["versions", "evaluationVersions", "evaluation_versions"],
+    );
+  }
+
+  async getEvaluationVersion(
+    options: RunnerApiRequestOptions & {
+      evaluationId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerEvaluationVersion> {
+    return this.getResourceVersion<RunnerEvaluationVersion>(
+      options,
+      `/evaluations/${encodeURIComponent(options.evaluationId)}`,
+      options.versionId,
+      ["version", "evaluationVersion", "evaluation_version"],
+    );
+  }
+
+  async createEvaluationVersion(
+    options: RunnerApiRequestOptions & {
+      evaluationId: string;
+      version: RunnerEvaluationVersionCreateInput;
+    },
+  ): Promise<RunnerEvaluationVersion> {
+    return this.createResourceVersion<RunnerEvaluationVersion>(
+      options,
+      `/evaluations/${encodeURIComponent(options.evaluationId)}`,
+      options.version,
+      ["version", "evaluationVersion", "evaluation_version"],
+    );
+  }
+
+  async updateEvaluationVersion(
+    options: RunnerApiRequestOptions & {
+      evaluationId: string;
+      versionId: string;
+      version: RunnerEvaluationVersionUpdateInput;
+    },
+  ): Promise<RunnerEvaluationVersion> {
+    return this.updateResourceVersion<RunnerEvaluationVersion>(
+      options,
+      `/evaluations/${encodeURIComponent(options.evaluationId)}`,
+      options.versionId,
+      options.version,
+      ["version", "evaluationVersion", "evaluation_version"],
+    );
+  }
+
+  async deleteEvaluationVersion(
+    options: RunnerApiRequestOptions & {
+      evaluationId: string;
+      versionId: string;
+    },
+  ): Promise<void> {
+    await this.deleteResourceVersion(options, `/evaluations/${encodeURIComponent(options.evaluationId)}`, options.versionId);
+  }
+
+  async publishEvaluationVersion(
+    options: RunnerApiRequestOptions & {
+      evaluationId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerEvaluationSet> {
+    return this.actionResourceVersion<RunnerEvaluationSet>(
+      options,
+      `/evaluations/${encodeURIComponent(options.evaluationId)}`,
+      options.versionId,
+      "publish",
+      ["evaluation", "set"],
+    );
+  }
+
+  async unpublishEvaluationVersion(
+    options: RunnerApiRequestOptions & {
+      evaluationId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerEvaluationSet> {
+    return this.actionResourceVersion<RunnerEvaluationSet>(
+      options,
+      `/evaluations/${encodeURIComponent(options.evaluationId)}`,
+      options.versionId,
+      "unpublish",
+      ["evaluation", "set"],
+    );
+  }
+
+  async restoreEvaluationVersion(
+    options: RunnerApiRequestOptions & {
+      evaluationId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerEvaluationSet> {
+    return this.actionResourceVersion<RunnerEvaluationSet>(
+      options,
+      `/evaluations/${encodeURIComponent(options.evaluationId)}`,
+      options.versionId,
+      "restore",
+      ["evaluation", "set"],
+    );
+  }
+
+  async compareEvaluationVersions(
+    options: RunnerApiRequestOptions & {
+      evaluationId: string;
+      baseVersionId: string;
+      targetVersionId: string;
+    },
+  ): Promise<RunnerEvaluationVersionCompareResult> {
+    return this.compareResourceVersions<RunnerEvaluationVersionCompareResult>(
+      options,
+      `/evaluations/${encodeURIComponent(options.evaluationId)}`,
+      options.baseVersionId,
+      options.targetVersionId,
+    );
+  }
+
+  async listFineTuningJobs(
+    options: RunnerApiRequestOptions & {
+      agentId?: string;
+      evaluationSetId?: string;
+      status?: string;
+      q?: string;
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<RunnerFineTuningJob[]> {
+    const search = new URLSearchParams();
+    if (options.agentId) search.set("agentId", options.agentId);
+    if (options.evaluationSetId) search.set("evaluationSetId", options.evaluationSetId);
+    if (options.status) search.set("status", options.status);
+    if (options.q) search.set("q", options.q);
+    if (options.limit !== undefined) search.set("limit", String(options.limit));
+    if (options.offset !== undefined) search.set("offset", String(options.offset));
+    const url = this.buildApiUrl(options.backendUrl, `/fine-tuning/jobs${search.size > 0 ? `?${search.toString()}` : ""}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerFineTuningJob>(payload, ["jobs"]);
+  }
+
+  async getFineTuningJob(
+    options: RunnerApiRequestOptions & {
+      jobId: string;
+    },
+  ): Promise<RunnerFineTuningJob> {
+    const url = this.buildApiUrl(options.backendUrl, `/fine-tuning/jobs/${encodeURIComponent(options.jobId)}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readObjectResponse<RunnerFineTuningJob>(payload, ["job"]);
+  }
+
+  async createFineTuningJob(
+    options: RunnerApiRequestOptions & {
+      job: RunnerFineTuningJobCreateInput;
+    },
+  ): Promise<RunnerFineTuningJob> {
+    const { computerId, environmentId, ...job } = options.job;
+    const url = this.buildApiUrl(options.backendUrl, "/fine-tuning/jobs");
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({
+        ...job,
+        environmentId: environmentId ?? computerId,
+      }),
+    });
+    return this.readObjectResponse<RunnerFineTuningJob>(payload, ["job"]);
+  }
+
+  async cancelFineTuningJob(
+    options: RunnerApiRequestOptions & {
+      jobId: string;
+    },
+  ): Promise<RunnerFineTuningJob> {
+    const url = this.buildApiUrl(options.backendUrl, `/fine-tuning/jobs/${encodeURIComponent(options.jobId)}/cancel`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<RunnerFineTuningJob>(payload, ["job"]);
+  }
+
+  async deleteFineTuningJob(
+    options: RunnerApiRequestOptions & {
+      jobId: string;
+    },
+  ): Promise<void> {
+    const url = this.buildApiUrl(options.backendUrl, `/fine-tuning/jobs/${encodeURIComponent(options.jobId)}`);
+    await this.requestJsonOrEmpty<unknown>(url, {
+      method: "DELETE",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async listMetronomeVersions(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+    },
+  ): Promise<RunnerMetronomeVersion[]> {
+    return this.listResourceVersions<RunnerMetronomeVersion>(
+      options,
+      `/metronomes/${encodeURIComponent(options.metronomeId)}`,
+      ["versions", "metronomeVersions", "metronome_versions", "workflowVersions", "workflow_versions"],
+    );
+  }
+
+  async getMetronomeVersion(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      versionId: string;
+    },
+  ): Promise<RunnerMetronomeVersion> {
+    return this.getResourceVersion<RunnerMetronomeVersion>(
+      options,
+      `/metronomes/${encodeURIComponent(options.metronomeId)}`,
+      options.versionId,
+      ["version", "metronomeVersion", "metronome_version", "workflowVersion", "workflow_version"],
+    );
+  }
+
+  async createMetronomeVersion(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      version: RunnerMetronomeVersionCreateInput;
+    },
+  ): Promise<RunnerMetronomeVersion> {
+    return this.createResourceVersion<RunnerMetronomeVersion>(
+      options,
+      `/metronomes/${encodeURIComponent(options.metronomeId)}`,
+      options.version,
+      ["version", "metronomeVersion", "metronome_version", "workflowVersion", "workflow_version"],
+    );
+  }
+
+  async updateMetronomeVersion(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      versionId: string;
+      version: RunnerMetronomeVersionUpdateInput;
+    },
+  ): Promise<RunnerMetronomeVersion> {
+    return this.updateResourceVersion<RunnerMetronomeVersion>(
+      options,
+      `/metronomes/${encodeURIComponent(options.metronomeId)}`,
+      options.versionId,
+      options.version,
+      ["version", "metronomeVersion", "metronome_version", "workflowVersion", "workflow_version"],
+    );
+  }
+
+  async deleteMetronomeVersion(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      versionId: string;
+    },
+  ): Promise<void> {
+    await this.deleteResourceVersion(options, `/metronomes/${encodeURIComponent(options.metronomeId)}`, options.versionId);
+  }
+
+  async publishMetronomeVersion(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      versionId: string;
+    },
+  ): Promise<Record<string, unknown>> {
+    return this.actionResourceVersion<Record<string, unknown>>(
+      options,
+      `/metronomes/${encodeURIComponent(options.metronomeId)}`,
+      options.versionId,
+      "publish",
+      ["metronome", "workflow"],
+    );
+  }
+
+  async unpublishMetronomeVersion(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      versionId: string;
+    },
+  ): Promise<Record<string, unknown>> {
+    return this.actionResourceVersion<Record<string, unknown>>(
+      options,
+      `/metronomes/${encodeURIComponent(options.metronomeId)}`,
+      options.versionId,
+      "unpublish",
+      ["metronome", "workflow"],
+    );
+  }
+
+  async restoreMetronomeVersion(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      versionId: string;
+    },
+  ): Promise<Record<string, unknown>> {
+    return this.actionResourceVersion<Record<string, unknown>>(
+      options,
+      `/metronomes/${encodeURIComponent(options.metronomeId)}`,
+      options.versionId,
+      "restore",
+      ["metronome", "workflow"],
+    );
+  }
+
+  async compareMetronomeVersions(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      baseVersionId: string;
+      targetVersionId: string;
+    },
+  ): Promise<RunnerMetronomeVersionCompareResult> {
+    return this.compareResourceVersions<RunnerMetronomeVersionCompareResult>(
+      options,
+      `/metronomes/${encodeURIComponent(options.metronomeId)}`,
+      options.baseVersionId,
+      options.targetVersionId,
+    );
+  }
+
+  private async listResourceVersions<TVersion>(
+    options: RunnerApiRequestOptions,
+    resourcePath: string,
+    collectionKeys: string[],
+  ): Promise<TVersion[]> {
+    const url = this.buildApiUrl(options.backendUrl, `${resourcePath}/versions`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<TVersion>(payload, collectionKeys);
+  }
+
+  private async getResourceVersion<TVersion>(
+    options: RunnerApiRequestOptions,
+    resourcePath: string,
+    versionId: string,
+    objectKeys: string[],
+  ): Promise<TVersion> {
+    const url = this.buildApiUrl(options.backendUrl, `${resourcePath}/versions/${encodeURIComponent(versionId)}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readObjectResponse<TVersion>(payload, objectKeys);
+  }
+
+  private async createResourceVersion<TVersion>(
+    options: RunnerApiRequestOptions,
+    resourcePath: string,
+    version: Record<string, unknown>,
+    objectKeys: string[],
+  ): Promise<TVersion> {
+    const url = this.buildApiUrl(options.backendUrl, `${resourcePath}/versions`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(version),
+    });
+    return this.readObjectResponse<TVersion>(payload, objectKeys);
+  }
+
+  private async updateResourceVersion<TVersion>(
+    options: RunnerApiRequestOptions,
+    resourcePath: string,
+    versionId: string,
+    version: Record<string, unknown>,
+    objectKeys: string[],
+  ): Promise<TVersion> {
+    const url = this.buildApiUrl(options.backendUrl, `${resourcePath}/versions/${encodeURIComponent(versionId)}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "PATCH",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(version),
+    });
+    return this.readObjectResponse<TVersion>(payload, objectKeys);
+  }
+
+  private async deleteResourceVersion(options: RunnerApiRequestOptions, resourcePath: string, versionId: string): Promise<void> {
+    const url = this.buildApiUrl(options.backendUrl, `${resourcePath}/versions/${encodeURIComponent(versionId)}`);
+    await this.requestJsonOrEmpty<unknown>(url, {
+      method: "DELETE",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  private async actionResourceVersion<TResource>(
+    options: RunnerApiRequestOptions,
+    resourcePath: string,
+    versionId: string,
+    action: "publish" | "unpublish" | "restore",
+    objectKeys: string[],
+  ): Promise<TResource> {
+    const url = this.buildApiUrl(options.backendUrl, `${resourcePath}/versions/${encodeURIComponent(versionId)}/${action}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<TResource>(payload, objectKeys);
+  }
+
+  private async compareResourceVersions<TCompareResult>(
+    options: RunnerApiRequestOptions,
+    resourcePath: string,
+    baseVersionId: string,
+    targetVersionId: string,
+  ): Promise<TCompareResult> {
+    const search = new URLSearchParams({
+      baseVersionId,
+      targetVersionId,
+    });
+    const url = this.buildApiUrl(options.backendUrl, `${resourcePath}/versions/compare?${search.toString()}`);
+    return this.requestJson<TCompareResult>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
   }
 
   private async resolveRunRequest(options: RunnerExecuteOptions): Promise<RunnerRunRequest> {

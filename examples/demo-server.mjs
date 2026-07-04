@@ -42647,6 +42647,19 @@ ${METRONOME_PAGE_CSS}
         color: rgba(255, 255, 255, 0.9);
       }
 
+      .playground-agents-overview-list-section .playground-agents-overview-name-cell {
+        gap: 8px;
+      }
+
+      .playground-agents-overview-list-section .playground-agents-overview-table-avatar {
+        width: 20px;
+        height: 20px;
+      }
+
+      .playground-agents-overview-list-section .playground-agents-overview-table-avatar-fallback {
+        font-size: 10px;
+      }
+
       .playground-resources-overview-section > .playground-plugins-section-header {
         padding-bottom: 0;
         border-bottom: 0;
@@ -124180,8 +124193,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               || metadata.creator_name
               || metadata.createdByName
               || metadata.created_by_name
-              || accountName
-              || accountEmail
+              || currentUserName
+              || currentUserEmail
               || ""
             ).trim();
             const creatorAvatarUrl = String(
@@ -124199,14 +124212,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               || metadata.creator_avatar_url
               || metadata.createdByAvatarUrl
               || metadata.created_by_avatar_url
-              || accountAvatarUrl
+              || currentUserAvatarUrl
               || ""
             ).trim();
             return {
-              id: String(nested.id || record.creatorId || record.creator_id || record.createdById || record.created_by_id || metadata.creatorId || metadata.creator_id || metadata.createdById || metadata.created_by_id || accountEmail || "").trim(),
-              userId: String(nested.userId || nested.user_id || record.creatorUserId || record.creator_user_id || metadata.creatorUserId || metadata.creator_user_id || sessionState.userId || "").trim(),
+              id: String(nested.id || record.creatorId || record.creator_id || record.createdById || record.created_by_id || metadata.creatorId || metadata.creator_id || metadata.createdById || metadata.created_by_id || currentUserEmail || "").trim(),
+              userId: String(nested.userId || nested.user_id || record.creatorUserId || record.creator_user_id || metadata.creatorUserId || metadata.creator_user_id || currentUserId || "").trim(),
               name: creatorName,
-              email: String(nested.email || nested.mail || record.creatorEmail || record.creator_email || record.createdByEmail || record.created_by_email || metadata.creatorEmail || metadata.creator_email || metadata.createdByEmail || metadata.created_by_email || accountEmail || "").trim(),
+              email: String(nested.email || nested.mail || record.creatorEmail || record.creator_email || record.createdByEmail || record.created_by_email || metadata.creatorEmail || metadata.creator_email || metadata.createdByEmail || metadata.created_by_email || currentUserEmail || "").trim(),
               avatarUrl: creatorAvatarUrl,
               isSystem: false,
             };
@@ -159616,7 +159629,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
           environmentId: "",
           evaluationSetIds: [],
           instructions: "",
-          verifyAfter: true,
         });
         const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
         const [projectOverviewResourceSearchQuery, setProjectOverviewResourceSearchQuery] = useState("");

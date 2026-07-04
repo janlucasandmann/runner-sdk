@@ -319,6 +319,249 @@ export interface RunnerGuardrailSetUpdateInput {
   metadata?: Record<string, unknown> | null;
 }
 
+export type RunnerResourceVersionStatus = "saved" | "active" | "published" | "superseded" | "unpublished" | string;
+
+export interface RunnerResourceVersionSnapshot {
+  [key: string]: unknown;
+}
+
+export interface RunnerResourceVersion<TSnapshot extends RunnerResourceVersionSnapshot = RunnerResourceVersionSnapshot> {
+  id: string;
+  version: number;
+  label?: string;
+  name?: string;
+  description?: string | null;
+  status?: RunnerResourceVersionStatus;
+  lifecycleState?: string;
+  lifecycle_state?: string;
+  revisionId?: string;
+  revision_id?: string;
+  baseRevisionId?: string;
+  base_revision_id?: string;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+  publishedAt?: string | null;
+  published_at?: string | null;
+  unpublishedAt?: string | null;
+  unpublished_at?: string | null;
+  snapshot?: TSnapshot;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerResourceVersionCreateInput<TSnapshot extends RunnerResourceVersionSnapshot = RunnerResourceVersionSnapshot> {
+  label?: string;
+  name?: string;
+  description?: string | null;
+  status?: RunnerResourceVersionStatus;
+  snapshot?: TSnapshot;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerResourceVersionUpdateInput<TSnapshot extends RunnerResourceVersionSnapshot = RunnerResourceVersionSnapshot> {
+  label?: string;
+  name?: string;
+  description?: string | null;
+  status?: RunnerResourceVersionStatus;
+  snapshot?: TSnapshot;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerResourceVersionDiffFile {
+  id?: string;
+  filePath: string;
+  label?: string;
+  beforeContent?: string;
+  afterContent?: string;
+  fileContent?: string;
+  diffContent?: string;
+  diff?: string;
+  additions?: number;
+  deletions?: number;
+  [key: string]: unknown;
+}
+
+export interface RunnerResourceVersionCompareResult<TFile extends RunnerResourceVersionDiffFile = RunnerResourceVersionDiffFile> {
+  resourceId?: string;
+  baseVersionId?: string;
+  targetVersionId?: string;
+  files: TFile[];
+  additions?: number;
+  deletions?: number;
+  [key: string]: unknown;
+}
+
+export interface RunnerGuardrailVersionSnapshot extends RunnerResourceVersionSnapshot {
+  name?: string;
+  description?: string | null;
+  prompts?: RunnerGuardrailPrompt[];
+  metadata?: Record<string, unknown> | null;
+}
+
+export type RunnerGuardrailVersionStatus = RunnerResourceVersionStatus;
+export type RunnerGuardrailVersion = RunnerResourceVersion<RunnerGuardrailVersionSnapshot>;
+export interface RunnerGuardrailVersionCreateInput extends RunnerResourceVersionCreateInput<RunnerGuardrailVersionSnapshot> {
+  guardrail?: RunnerGuardrailSet;
+  set?: RunnerGuardrailSet;
+}
+export type RunnerGuardrailVersionUpdateInput = RunnerResourceVersionUpdateInput<RunnerGuardrailVersionSnapshot>;
+export type RunnerGuardrailVersionDiffFile = RunnerResourceVersionDiffFile;
+export interface RunnerGuardrailVersionCompareResult extends RunnerResourceVersionCompareResult<RunnerGuardrailVersionDiffFile> {
+  guardrailId?: string;
+}
+
+export interface RunnerEvaluationCase {
+  id?: string;
+  name?: string;
+  input: string;
+  expectedOutput?: string;
+  rubric?: string;
+  weight?: number;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerEvaluationSet {
+  id: string;
+  name: string;
+  description?: string | null;
+  cases: RunnerEvaluationCase[];
+  createdAt?: string;
+  updatedAt?: string;
+  publishedVersionId?: string | null;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerEvaluationSetCreateInput {
+  name: string;
+  description?: string | null;
+  cases?: RunnerEvaluationCase[];
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface RunnerEvaluationSetUpdateInput {
+  name?: string;
+  description?: string | null;
+  cases?: RunnerEvaluationCase[];
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface RunnerEvaluationRunCreateInput {
+  evaluationId: string;
+  agentId: string;
+  computerId?: string;
+  environmentId?: string;
+  versionId?: string;
+  label?: string;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface RunnerEvaluationRun {
+  id: string;
+  evaluationId?: string;
+  evaluationSetId?: string;
+  agentId?: string;
+  environmentId?: string;
+  versionId?: string | null;
+  status?: "queued" | "running" | "completed" | "failed" | "cancelled" | string;
+  averageScore?: number;
+  passRate?: number;
+  costCt?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  completedAt?: string | null;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerEvaluationVersionSnapshot extends RunnerResourceVersionSnapshot {
+  name?: string;
+  description?: string | null;
+  cases?: RunnerEvaluationCase[];
+  metadata?: Record<string, unknown> | null;
+}
+
+export type RunnerEvaluationVersionStatus = RunnerResourceVersionStatus;
+export type RunnerEvaluationVersion = RunnerResourceVersion<RunnerEvaluationVersionSnapshot>;
+export interface RunnerEvaluationVersionCreateInput extends RunnerResourceVersionCreateInput<RunnerEvaluationVersionSnapshot> {
+  evaluation?: RunnerEvaluationSet;
+  set?: RunnerEvaluationSet;
+}
+export type RunnerEvaluationVersionUpdateInput = RunnerResourceVersionUpdateInput<RunnerEvaluationVersionSnapshot>;
+export type RunnerEvaluationVersionDiffFile = RunnerResourceVersionDiffFile;
+export interface RunnerEvaluationVersionCompareResult extends RunnerResourceVersionCompareResult<RunnerEvaluationVersionDiffFile> {
+  evaluationId?: string;
+}
+
+export interface RunnerFineTuningJobEvaluationReference {
+  evaluationSetId: string;
+  beforeRunId?: string | null;
+  afterRunId?: string | null;
+  beforeScore?: number | null;
+  afterScore?: number | null;
+  status?: string;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerFineTuningJob {
+  id: string;
+  name?: string;
+  agentId: string;
+  environmentId?: string;
+  computerId?: string;
+  evaluationSetIds: string[];
+  instructions?: string;
+  status?: "queued" | "running" | "verifying" | "completed" | "failed" | "cancelled" | string;
+  threadId?: string | null;
+  createdAgentVersionId?: string | null;
+  beforeScore?: number | null;
+  afterScore?: number | null;
+  improvementScore?: number | null;
+  costCt?: number | null;
+  evaluationRuns?: RunnerFineTuningJobEvaluationReference[];
+  metadata?: Record<string, unknown> | null;
+  createdAt?: string;
+  updatedAt?: string;
+  completedAt?: string | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerFineTuningJobCreateInput {
+  agentId: string;
+  computerId?: string;
+  environmentId?: string;
+  evaluationSetIds: string[];
+  instructions?: string;
+  name?: string;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface RunnerMetronomeVersionSnapshot extends RunnerResourceVersionSnapshot {
+  name?: string;
+  description?: string | null;
+  nodes?: unknown[];
+  connections?: unknown[];
+  metadata?: Record<string, unknown> | null;
+}
+
+export type RunnerMetronomeVersionStatus = RunnerResourceVersionStatus;
+export type RunnerMetronomeVersion = RunnerResourceVersion<RunnerMetronomeVersionSnapshot>;
+export interface RunnerMetronomeVersionCreateInput extends RunnerResourceVersionCreateInput<RunnerMetronomeVersionSnapshot> {
+  metronome?: Record<string, unknown>;
+  workflow?: Record<string, unknown>;
+}
+export type RunnerMetronomeVersionUpdateInput = RunnerResourceVersionUpdateInput<RunnerMetronomeVersionSnapshot>;
+export type RunnerMetronomeVersionDiffFile = RunnerResourceVersionDiffFile;
+export interface RunnerMetronomeVersionCompareResult extends RunnerResourceVersionCompareResult<RunnerMetronomeVersionDiffFile> {
+  metronomeId?: string;
+}
+
 export interface RunnerGuardrailPromptAdaptation {
   id: string;
   title: string;
