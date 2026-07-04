@@ -593,6 +593,7 @@ export class RunnerClient {
     options: RunnerApiRequestOptions & {
       environmentId: string;
       versionId: string;
+      snapshot?: RunnerEnvironmentVersionCreateInput["snapshot"];
     },
   ): Promise<Record<string, unknown>> {
     const url = this.buildApiUrl(
@@ -604,7 +605,7 @@ export class RunnerClient {
       headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
-      body: JSON.stringify({}),
+      body: JSON.stringify(options.snapshot !== undefined ? { snapshot: options.snapshot } : {}),
     });
     return this.readObjectResponse<Record<string, unknown>>(payload, ["environment", "computer"]);
   }
@@ -766,6 +767,7 @@ export class RunnerClient {
     options: RunnerApiRequestOptions & {
       serverId: string;
       versionId: string;
+      snapshot?: RunnerServerVersionCreateInput["snapshot"];
     },
   ): Promise<Record<string, unknown>> {
     const url = this.buildApiUrl(
@@ -777,7 +779,7 @@ export class RunnerClient {
       headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
-      body: JSON.stringify({}),
+      body: JSON.stringify(options.snapshot !== undefined ? { snapshot: options.snapshot } : {}),
     });
     return this.readObjectResponse<Record<string, unknown>>(payload, ["server"]);
   }
@@ -1012,6 +1014,7 @@ export class RunnerClient {
     options: RunnerApiRequestOptions & {
       agentId: string;
       versionId: string;
+      snapshot?: RunnerAgentVersionCreateInput["snapshot"];
     },
   ): Promise<RunnerAgentRecord> {
     const url = this.buildApiUrl(
@@ -1023,7 +1026,7 @@ export class RunnerClient {
       headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
-      body: JSON.stringify({}),
+      body: JSON.stringify(options.snapshot !== undefined ? { snapshot: options.snapshot } : {}),
     });
     return this.readObjectResponse<RunnerAgentRecord>(payload, ["agent"]);
   }
@@ -1309,6 +1312,7 @@ export class RunnerClient {
     options: RunnerApiRequestOptions & {
       guardrailId: string;
       versionId: string;
+      snapshot?: RunnerGuardrailVersionCreateInput["snapshot"];
     },
   ): Promise<RunnerGuardrailSet> {
     return this.actionResourceVersion<RunnerGuardrailSet>(
@@ -1577,6 +1581,7 @@ export class RunnerClient {
     options: RunnerApiRequestOptions & {
       evaluationId: string;
       versionId: string;
+      snapshot?: RunnerEvaluationVersionCreateInput["snapshot"];
     },
   ): Promise<RunnerEvaluationSet> {
     return this.actionResourceVersion<RunnerEvaluationSet>(
@@ -1794,6 +1799,7 @@ export class RunnerClient {
     options: RunnerApiRequestOptions & {
       metronomeId: string;
       versionId: string;
+      snapshot?: RunnerMetronomeVersionCreateInput["snapshot"];
     },
   ): Promise<Record<string, unknown>> {
     return this.actionResourceVersion<Record<string, unknown>>(
@@ -1927,19 +1933,24 @@ export class RunnerClient {
   }
 
   private async actionResourceVersion<TResource>(
-    options: RunnerApiRequestOptions,
+    options: RunnerApiRequestOptions & {
+      snapshot?: unknown;
+    },
     resourcePath: string,
     versionId: string,
     action: "publish" | "unpublish" | "restore",
     objectKeys: string[],
   ): Promise<TResource> {
     const url = this.buildApiUrl(options.backendUrl, `${resourcePath}/versions/${encodeURIComponent(versionId)}/${action}`);
+    const body = action === "publish" && options.snapshot !== undefined
+      ? { snapshot: options.snapshot }
+      : {};
     const payload = await this.requestJson<unknown>(url, {
       method: "POST",
       headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
-      body: JSON.stringify({}),
+      body: JSON.stringify(body),
     });
     return this.readObjectResponse<TResource>(payload, objectKeys);
   }

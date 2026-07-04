@@ -12871,15 +12871,18 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           return true;
         }
 
-        async function publishMetronomeVersionApi(workflowId, versionId) {
+        async function publishMetronomeVersionApi(workflowId, versionId, options = {}) {
           const normalizedWorkflowId = String(workflowId || "").trim();
           const normalizedVersionId = String(versionId || "").trim();
           if (!normalizedWorkflowId || !normalizedVersionId) throw new Error("Missing workflow version");
+          const body = options && typeof options === "object" && !Array.isArray(options)
+            ? options
+            : {};
           const response = await fetch("/api/real/metronomes/" + encodeURIComponent(normalizedWorkflowId) + "/versions/" + encodeURIComponent(normalizedVersionId) + "/publish", {
             method: "POST",
             credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
-            body: "{}",
+            body: JSON.stringify(body),
           });
           const data = await readMetronomeApiJson(response, "Failed to publish workflow version");
           return normalizeMetronomeWorkflow(data?.data || data);
@@ -16797,6 +16800,56 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             const fallbackDeployment = selectedDeployment || activeDeployment || activeWorkflowDeployments[0] || null;
             return fallbackDeployment ? getMetronomeVersionCompareSourceId(fallbackDeployment.id) : "";
           };
+          const getSelectedMetronomeDeploymentVersion = () => {
+            const selectedDeploymentId = readMetronomeSelectedDeploymentId(activeWorkflow);
+            return selectedDeploymentId
+              ? activeWorkflowDeployments.find((deployment) => deployment.id === selectedDeploymentId) || null
+              : null;
+          };
+          const buildMetronomeDefinitionForVersionCompare = (workflow, sourceNodes, sourceEdges) => (
+            createMetronomeWorkflowDefinition(
+              workflow || {},
+              createMetronomePersistedNodes(sourceNodes || []),
+              createMetronomePersistedEdges(sourceEdges || [])
+            )
+          );
+          const getMetronomeDeploymentDefinitionForCompare = (deployment) => {
+            if (deployment?.definition && typeof deployment.definition === "object" && !Array.isArray(deployment.definition)) {
+              return deployment.definition;
+            }
+            return buildMetronomeDefinitionForVersionCompare(
+              activeWorkflow || {},
+              deployment?.nodes || [],
+              deployment?.edges || []
+            );
+          };
+          const hasSelectedMetronomeDeploymentEditorChanges = (deployment = null) => {
+            const selectedDeployment = deployment || getSelectedMetronomeDeploymentVersion();
+            if (!selectedDeployment || !activeWorkflow) {
+              return false;
+            }
+            const selectedDeploymentId = readMetronomeSelectedDeploymentId(activeWorkflow);
+            if (String(selectedDeployment.id || "") !== String(selectedDeploymentId || "")) {
+              return false;
+            }
+            const currentDefinition = buildMetronomeDefinitionForVersionCompare(activeWorkflow, nodes, edges);
+            const selectedDefinition = getMetronomeDeploymentDefinitionForCompare(selectedDeployment);
+            return stringifyPlaygroundVersionComparableValue(currentDefinition) !== stringifyPlaygroundVersionComparableValue(selectedDefinition);
+          };
+          const canPublishMetronomeDeploymentVersion = (deployment) => {
+            const normalizedDeploymentId = String(deployment?.id || "").trim();
+            if (!normalizedDeploymentId) {
+              return false;
+            }
+            const selectedDeployment = getSelectedMetronomeDeploymentVersion();
+            const hasSelectedEditorChanges = hasSelectedMetronomeDeploymentEditorChanges(selectedDeployment);
+            const isActiveDeployment = String(deployment?.status || "").toLowerCase() === "active"
+              || normalizedDeploymentId === String(activeWorkflowDeployment?.id || activeWorkflow?.activeDeploymentId || "").trim();
+            if (isActiveDeployment) {
+              return Boolean(selectedDeployment?.id === normalizedDeploymentId && hasSelectedEditorChanges);
+            }
+            return !hasSelectedEditorChanges;
+          };
           const buildMetronomeVersionDiffFilesFromSnapshots = (leftSnapshot, rightSnapshot) => {
             const leftFiles = new Map((Array.isArray(leftSnapshot?.files) ? leftSnapshot.files : []).map((file) => [String(file?.path || ""), file]));
             const rightFiles = new Map((Array.isArray(rightSnapshot?.files) ? rightSnapshot.files : []).map((file) => [String(file?.path || ""), file]));
@@ -17613,32 +17666,44 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 const savedWorkflow = await saveEditableMetronomeWorkflowApi(workflowToSave);
                 const workflowIdForVersion = savedWorkflow.id || nextWorkflow.id;
                 let versionIdForPublish = selectedDeployment.id;
-                try {
-                  await updateMetronomeVersionApi(
-                    workflowIdForVersion,
-                    selectedDeployment.id,
-                    { ...nextWorkflow, id: workflowIdForVersion },
-                    persistedNodes,
-                    persistedEdges,
-                    {
-                      label: updatedSelectedDeployment.label,
-                      description: updatedSelectedDeployment.description,
+                const selectedDeploymentIsPublished = String(selectedDeployment.status || "").toLowerCase() === "active"
+                  || Boolean(String(selectedDeployment.publishedAt || "").trim());
+                if (!selectedDeploymentIsPublished) {
+                  try {
+                    await updateMetronomeVersionApi(
+                      workflowIdForVersion,
+                      selectedDeployment.id,
+                      { ...nextWorkflow, id: workflowIdForVersion },
+                      persistedNodes,
+                      persistedEdges,
+                      {
+                        label: updatedSelectedDeployment.label,
+                        description: updatedSelectedDeployment.description,
+                      }
+                    );
+                  } catch (versionUpdateError) {
+                    if (versionUpdateError?.status === 404) {
+                      const createdVersion = await createMetronomeVersionApi(workflowIdForVersion, { ...nextWorkflow, id: workflowIdForVersion }, persistedNodes, persistedEdges, {
+                        label: updatedSelectedDeployment.label,
+                        description: updatedSelectedDeployment.description,
+                      });
+                      versionIdForPublish = createdVersion.id || versionIdForPublish;
+                    } else {
+                      throw versionUpdateError;
                     }
-                  );
-                } catch (versionUpdateError) {
-                  const message = String(versionUpdateError?.message || "").toLowerCase();
-                  const isImmutableVersion = versionUpdateError?.status === 400 && message.includes("immutable");
-                  if (versionUpdateError?.status === 404 || isImmutableVersion) {
-                    const createdVersion = await createMetronomeVersionApi(workflowIdForVersion, { ...nextWorkflow, id: workflowIdForVersion }, persistedNodes, persistedEdges, {
-                      label: updatedSelectedDeployment.label,
-                      description: updatedSelectedDeployment.description,
-                    });
-                    versionIdForPublish = createdVersion.id || versionIdForPublish;
-                  } else {
-                    throw versionUpdateError;
                   }
                 }
-                const publishedWorkflow = await publishMetronomeVersionApi(workflowIdForVersion, versionIdForPublish);
+                const publishedWorkflow = await publishMetronomeVersionApi(
+                  workflowIdForVersion,
+                  versionIdForPublish,
+                  selectedDeploymentIsPublished
+                    ? {
+                        definition: updatedSelectedDeployment.definition,
+                        label: updatedSelectedDeployment.label,
+                        description: updatedSelectedDeployment.description,
+                      }
+                    : {}
+                );
                 let versions = [];
                 try {
                   versions = await fetchMetronomeVersionsApi(publishedWorkflow.id || workflowIdForVersion);
@@ -18252,32 +18317,44 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               const savedWorkflow = await saveEditableMetronomeWorkflowApi(workflowToSave);
               const workflowIdForVersion = savedWorkflow.id || nextWorkflow.id;
               let versionIdForPublish = targetDeployment.id;
-              try {
-                await updateMetronomeVersionApi(
-                  workflowIdForVersion,
-                  targetDeployment.id,
-                  { ...nextWorkflow, id: workflowIdForVersion },
-                  nextNodes,
-                  nextEdges,
-                  {
-                    label: deploymentForPublish.label,
-                    description: deploymentForPublish.description,
+              const targetDeploymentIsPublished = String(targetDeployment.status || "").toLowerCase() === "active"
+                || Boolean(String(targetDeployment.publishedAt || "").trim());
+              if (!targetDeploymentIsPublished) {
+                try {
+                  await updateMetronomeVersionApi(
+                    workflowIdForVersion,
+                    targetDeployment.id,
+                    { ...nextWorkflow, id: workflowIdForVersion },
+                    nextNodes,
+                    nextEdges,
+                    {
+                      label: deploymentForPublish.label,
+                      description: deploymentForPublish.description,
+                    }
+                  );
+                } catch (versionUpdateError) {
+                  if (versionUpdateError?.status === 404) {
+                    const createdVersion = await createMetronomeVersionApi(workflowIdForVersion, { ...nextWorkflow, id: workflowIdForVersion }, nextNodes, nextEdges, {
+                      label: deploymentForPublish.label,
+                      description: deploymentForPublish.description,
+                    });
+                    versionIdForPublish = createdVersion.id || versionIdForPublish;
+                  } else {
+                    throw versionUpdateError;
                   }
-                );
-              } catch (versionUpdateError) {
-                const message = String(versionUpdateError?.message || "").toLowerCase();
-                const isImmutableVersion = versionUpdateError?.status === 400 && message.includes("immutable");
-                if (versionUpdateError?.status === 404 || isImmutableVersion) {
-                  const createdVersion = await createMetronomeVersionApi(workflowIdForVersion, { ...nextWorkflow, id: workflowIdForVersion }, nextNodes, nextEdges, {
-                    label: deploymentForPublish.label,
-                    description: deploymentForPublish.description,
-                  });
-                  versionIdForPublish = createdVersion.id || versionIdForPublish;
-                } else {
-                  throw versionUpdateError;
                 }
               }
-              const publishedWorkflow = await publishMetronomeVersionApi(workflowIdForVersion, versionIdForPublish);
+              const publishedWorkflow = await publishMetronomeVersionApi(
+                workflowIdForVersion,
+                versionIdForPublish,
+                targetDeploymentIsPublished && shouldPublishCurrentEditor
+                  ? {
+                      definition: definitionForPublish,
+                      label: deploymentForPublish.label,
+                      description: deploymentForPublish.description,
+                    }
+                  : {}
+              );
               let versions = [];
               try {
                 versions = await fetchMetronomeVersionsApi(publishedWorkflow.id || workflowIdForVersion);
@@ -24605,6 +24682,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               onSaveVersion: openCreateWorkflowVersionModal,
               onSelectVersion: (versionId) => void restoreActiveWorkflowVersion(versionId),
               onPublishVersion: (versionId) => void publishMetronomeDeploymentVersion(versionId),
+              canPublishVersion: (deployment) => canPublishMetronomeDeploymentVersion(deployment),
               stateContent,
               unpublishLabel: "Unpublish workflow",
               versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },

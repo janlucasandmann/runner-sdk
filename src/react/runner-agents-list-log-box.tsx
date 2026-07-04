@@ -43,6 +43,7 @@ export type ComputerAgentsListAvailableAgent = unknown;
 const DEFAULT_AGENT_MODEL_ID = "deepseek-v4-flash";
 const DEFAULT_AGENT_PHOTO_URL = "/img/agent-profile-pics/spark.webp";
 const AGENTS_LIST_PAGE_SIZE = 5;
+const AGENT_MODEL_PRICE_MARGIN_MULTIPLIER = 1.10;
 
 type AgentListMode = "agents" | "teams";
 type AgentListSort = "name" | "model" | "provider" | "context" | "cost";
@@ -476,18 +477,30 @@ function getAgentModelMeta(modelId: string): AgentModelMeta {
   };
 }
 
-function formatAgentModelComputeTokenCost(modelId: string): string {
-  const pricing = AGENT_MODEL_PRICING_BY_ID[normalizeModelId(modelId)];
-  if (!pricing) return "Custom";
-  const weightedUsdPerMillion = (pricing.input * 0.7) + (pricing.cached * 0.1) + (pricing.output * 0.2);
-  return `${Math.max(1, Math.round(weightedUsdPerMillion / 0.01)).toLocaleString("en-US")} CT / 1M`;
+function formatUsdPerMillion(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: value >= 10 ? 2 : 3,
+    maximumFractionDigits: value >= 10 ? 2 : 3,
+  }).format(value);
 }
 
-function getAgentModelComputeTokenCostValue(modelId: string): number | null {
+function getAgentModelRetailUsdCostValue(modelId: string): number | null {
   const pricing = AGENT_MODEL_PRICING_BY_ID[normalizeModelId(modelId)];
   if (!pricing) return null;
   const weightedUsdPerMillion = (pricing.input * 0.7) + (pricing.cached * 0.1) + (pricing.output * 0.2);
-  return Math.max(1, Math.round(weightedUsdPerMillion / 0.01));
+  return weightedUsdPerMillion * AGENT_MODEL_PRICE_MARGIN_MULTIPLIER;
+}
+
+function formatAgentModelComputeTokenCost(modelId: string): string {
+  const retailUsdPerMillion = getAgentModelRetailUsdCostValue(modelId);
+  if (retailUsdPerMillion === null) return "Custom";
+  return `${formatUsdPerMillion(retailUsdPerMillion)} / 1M`;
+}
+
+function getAgentModelComputeTokenCostValue(modelId: string): number | null {
+  return getAgentModelRetailUsdCostValue(modelId);
 }
 
 function normalizePhotoUrl(value: string): string {
@@ -1061,7 +1074,7 @@ export function ComputerAgentsListLogBox({
     { id: "model", label: "Model" },
     { id: "provider", label: "Provider" },
     { id: "context", label: "Context length" },
-    { id: "cost", label: "CT cost" },
+    { id: "cost", label: "USD cost" },
   ];
   const selectedSortLabel = sortOptions.find((option) => option.id === sortMode)?.label || "Name";
   const selectedProviderLabel = providerOptions.find((option) => option.id === providerFilter)?.label || "All providers";
@@ -1197,7 +1210,7 @@ export function ComputerAgentsListLogBox({
                   <th>Name</th>
                   <th>Model</th>
                   <th>Context length</th>
-                  <th className="is-right">CT cost per 1M tokens</th>
+                  <th className="is-right">USD cost per 1M tokens</th>
                 </tr>
               </thead>
               <tbody>

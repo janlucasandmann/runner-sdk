@@ -34,7 +34,7 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
 
       .playground-evaluations-runs-section .playground-project-overview-threads-table-header,
       .playground-evaluations-runs-section .playground-project-overview-threads-table-row {
-        grid-template-columns: minmax(124px, 1.2fr) minmax(96px, 0.78fr) minmax(126px, 0.98fr) minmax(70px, 0.48fr) minmax(46px, 0.32fr) minmax(78px, 0.48fr) 20px;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.78fr) minmax(0, 0.98fr) minmax(64px, 0.48fr) minmax(42px, 0.32fr) minmax(76px, 0.48fr) 28px;
         gap: 12px;
         width: 100%;
         max-width: 100%;
@@ -43,13 +43,13 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
 
       .playground-agents-detail-threads-section.playground-evaluations-runs-section .playground-project-overview-threads-table-header,
       .playground-agents-detail-threads-section.playground-evaluations-runs-section .playground-project-overview-threads-table-row {
-        grid-template-columns: minmax(124px, 1.2fr) minmax(96px, 0.78fr) minmax(126px, 0.98fr) minmax(70px, 0.48fr) minmax(46px, 0.32fr) minmax(78px, 0.48fr) 20px;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.78fr) minmax(0, 0.98fr) minmax(64px, 0.48fr) minmax(42px, 0.32fr) minmax(76px, 0.48fr) 28px;
         gap: 12px;
       }
 
       .playground-evaluations-page .playground-agents-detail-threads-section.playground-evaluations-runs-section .playground-project-overview-threads-table-header,
       .playground-evaluations-page .playground-agents-detail-threads-section.playground-evaluations-runs-section .playground-project-overview-threads-table-row {
-        grid-template-columns: minmax(124px, 1.2fr) minmax(96px, 0.78fr) minmax(126px, 0.98fr) minmax(70px, 0.48fr) minmax(46px, 0.32fr) minmax(78px, 0.48fr) 20px;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.78fr) minmax(0, 0.98fr) minmax(64px, 0.48fr) minmax(42px, 0.32fr) minmax(76px, 0.48fr) 28px;
         gap: 12px;
       }
 
@@ -78,6 +78,33 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .playground-evaluations-page .playground-evaluations-runs-section .playground-project-overview-threads-table,
+      .playground-evaluations-page .playground-evaluations-runs-section .playground-project-overview-thread-list,
+      .playground-evaluations-page .playground-evaluations-runs-section .playground-project-overview-threads-table-row,
+      .playground-evaluations-page .playground-evaluations-runs-section .playground-project-overview-thread-cell.is-actions {
+        overflow: visible !important;
+      }
+
+      .playground-evaluations-page .playground-evaluations-runs-section .playground-project-overview-thread-cell.is-actions {
+        position: relative;
+        z-index: 20;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .playground-evaluations-page .playground-evaluations-runs-section .playground-project-overview-thread-cell.is-actions .playground-tasks-toolbar-popup-shell {
+        position: relative;
+        z-index: 30;
+      }
+
+      .playground-evaluations-page .playground-evaluations-runs-section .playground-project-overview-thread-cell.is-actions .playground-tasks-toolbar-popup-menu {
+        top: auto;
+        bottom: calc(100% + 6px);
+        right: 0;
+        left: auto;
+        z-index: 1200;
       }
 
       .playground-evaluations-page .playground-evaluations-overview-layout,
@@ -124,7 +151,7 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
         width: 100%;
         max-width: 100%;
         min-width: 0;
-        overflow-x: auto;
+        overflow: visible !important;
       }
 
       .playground-evaluations-cases-table-inner {
@@ -132,13 +159,14 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
         min-width: 100%;
         display: flex;
         flex-direction: column;
+        overflow: visible !important;
       }
 
       .playground-evaluations-cases-header,
       .playground-evaluations-cases-row {
         display: grid;
-        grid-template-columns: var(--playground-evaluations-cases-grid-template, max-content max-content max-content max-content minmax(18px, 1fr));
-        gap: 18px;
+        grid-template-columns: minmax(0, 1.16fr) minmax(0, 1.16fr) minmax(70px, 0.36fr) minmax(86px, 0.46fr) 28px;
+        gap: 12px;
         width: 100%;
         min-width: 100%;
         align-items: center;
@@ -161,6 +189,19 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
         padding: 10px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         cursor: pointer;
+        overflow: visible !important;
+      }
+
+      .playground-evaluations-cases-section,
+      .playground-evaluations-cases-section.playground-plugins-section,
+      .playground-evaluations-cases-section.playground-project-overview-panel-plain,
+      .playground-evaluations-cases-section .playground-project-overview-thread-list {
+        overflow: visible !important;
+      }
+
+      .playground-evaluations-cases-row:has(.playground-tasks-toolbar-popup-menu) {
+        position: relative;
+        z-index: 180;
       }
 
       .playground-evaluations-cases-row:hover {
@@ -186,14 +227,29 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
 
       .playground-evaluations-cases-cell.is-thread,
       .playground-evaluations-cases-cell.is-evaluator {
-        overflow: visible;
-        text-overflow: clip;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .playground-evaluations-cases-cell.is-actions {
+        position: relative;
+        z-index: 20;
         display: flex;
         align-items: center;
         justify-content: flex-end;
+      }
+
+      .playground-evaluations-cases-cell.is-actions .playground-tasks-toolbar-popup-shell {
+        position: relative;
+        z-index: 30;
+      }
+
+      .playground-evaluations-cases-cell.is-actions .playground-tasks-toolbar-popup-menu {
+        top: auto;
+        bottom: calc(100% + 6px);
+        right: 0;
+        left: auto;
+        z-index: 1200;
       }
 
       .playground-evaluations-cases-cell.is-score,
@@ -1281,6 +1337,8 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
       .playground-evaluations-run-agent-cell,
       .playground-evaluations-run-environment-cell {
         min-width: 0;
+        width: 100%;
+        max-width: 100%;
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -1310,6 +1368,8 @@ export const PLAYGROUND_EVALUATIONS_CSS = String.raw`
 
       .playground-evaluations-run-cell-label {
         min-width: 0;
+        max-width: 100%;
+        display: block;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -3650,6 +3710,8 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         const [evaluationSetsToolbarPopover, setEvaluationSetsToolbarPopover] = useState("");
         const [evaluationSetsVisibleCount, setEvaluationSetsVisibleCount] = useState(10);
         const [evaluationSetRowMenuId, setEvaluationSetRowMenuId] = useState("");
+        const [evaluationRunRowMenuId, setEvaluationRunRowMenuId] = useState("");
+        const [evaluationCaseRowMenuId, setEvaluationCaseRowMenuId] = useState("");
         const [evaluationCreateModalVisible, setEvaluationCreateModalVisible] = useState(false);
         const [evaluationCreateModalClosing, setEvaluationCreateModalClosing] = useState(false);
         const [evaluationRunModalVisible, setEvaluationRunModalVisible] = useState(false);
@@ -3835,19 +3897,40 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             setEvaluationTopNavActionsContainer(null);
             return undefined;
           }
+          let disposed = false;
           const updateContainer = () => {
+            if (disposed) return;
             setEvaluationTopNavActionsContainer(document.getElementById(topNavActionsPortalId));
           };
           updateContainer();
-          const frameId = typeof window !== "undefined" && typeof window.requestAnimationFrame === "function"
-            ? window.requestAnimationFrame(updateContainer)
+          const frameIds = [];
+          if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+            const scheduleLookup = () => {
+              const frameId = window.requestAnimationFrame(() => {
+                updateContainer();
+                const container = document.getElementById(topNavActionsPortalId);
+                if (!container) {
+                  scheduleLookup();
+                }
+              });
+              frameIds.push(frameId);
+            };
+            scheduleLookup();
+          }
+          const observer = typeof MutationObserver !== "undefined"
+            ? new MutationObserver(updateContainer)
             : null;
+          if (observer && document.body) {
+            observer.observe(document.body, { childList: true, subtree: true });
+          }
           return () => {
-            if (frameId && typeof window !== "undefined" && typeof window.cancelAnimationFrame === "function") {
-              window.cancelAnimationFrame(frameId);
+            disposed = true;
+            if (typeof window !== "undefined" && typeof window.cancelAnimationFrame === "function") {
+              frameIds.forEach((frameId) => window.cancelAnimationFrame(frameId));
             }
+            if (observer) observer.disconnect();
           };
-        }, [topNavActionsPortalId, normalizedMode]);
+        }, [topNavActionsPortalId, normalizedMode, activeSet?.id]);
 
         useEffect(() => () => {
           if (evaluationCaseEditorFrameRef.current && typeof window !== "undefined") {
@@ -3925,6 +4008,8 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         useEffect(() => {
           if (!isEvaluationDetailPage) {
             setEvaluationActionsPopoverOpen(false);
+            setEvaluationRunRowMenuId("");
+            setEvaluationCaseRowMenuId("");
           }
         }, [isEvaluationDetailPage]);
 
@@ -4074,7 +4159,29 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
 
         function canPublishSelectedEvaluationVersion() {
           const selectedVersion = getSelectedEvaluationVersion();
-          return Boolean(selectedVersion && !hasSelectedEvaluationVersionChanges() && selectedVersion.status !== "active");
+          if (!selectedVersion) return false;
+          const hasChanges = hasSelectedEvaluationVersionChanges();
+          return selectedVersion.status === "active" ? hasChanges : !hasChanges;
+        }
+
+        function canPublishEvaluationVersion(version) {
+          const normalizedVersionId = String(version?.id || "").trim();
+          if (!normalizedVersionId) return false;
+          const selectedVersion = getSelectedEvaluationVersion();
+          const hasChanges = hasSelectedEvaluationVersionChanges();
+          const isActiveVersion = String(version?.status || "").toLowerCase() === "active";
+          if (isActiveVersion) {
+            return Boolean(selectedVersion?.id === normalizedVersionId && hasChanges);
+          }
+          return !hasChanges;
+        }
+
+        function buildEvaluationSetForRepublish() {
+          return normalizePlaygroundEvaluationSet({
+            ...activeSet,
+            runs: [],
+            updatedAt: new Date().toISOString(),
+          });
         }
 
         function applyEvaluationVersionResult(result, options = {}) {
@@ -4117,7 +4224,9 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
 
         function publishCurrentEvaluationVersion() {
           if (!activeSet || evaluationVersionState.status === "loading") return null;
-          if (hasSelectedEvaluationVersionChanges()) {
+          const selectedVersion = getSelectedEvaluationVersion();
+          const hasChanges = hasSelectedEvaluationVersionChanges();
+          if (hasChanges && selectedVersion?.status !== "active") {
             setEvaluationVersionState({
               status: "error",
               message: "",
@@ -4126,7 +4235,10 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             return null;
           }
           if (!canPublishSelectedEvaluationVersion()) return null;
-          const result = playgroundEvaluationVersionController.buildPublishSelectedResource(activeSet);
+          const sourceSet = hasChanges ? buildEvaluationSetForRepublish() : activeSet;
+          const result = playgroundEvaluationVersionController.buildPublishSelectedResource(sourceSet, {
+            updateFromResource: hasChanges,
+          });
           return applyEvaluationVersionResult(result, { clearRunSelection: true });
         }
 
@@ -4138,7 +4250,29 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
 
         function publishEvaluationVersion(versionId) {
           if (!activeSet || evaluationVersionState.status === "loading") return null;
-          const result = playgroundEvaluationVersionController.buildPublishVersionResource(activeSet, versionId);
+          const normalizedVersionId = String(versionId || "").trim();
+          const selectedVersion = getSelectedEvaluationVersion();
+          const targetVersion = readSelectedEvaluationVersions().find((version) => version.id === normalizedVersionId);
+          const hasChanges = hasSelectedEvaluationVersionChanges();
+          const shouldRepublishCurrentEditor = Boolean(
+            targetVersion
+            && targetVersion.status === "active"
+            && selectedVersion?.id === targetVersion.id
+            && hasChanges
+          );
+          if (hasChanges && !shouldRepublishCurrentEditor) {
+            setEvaluationVersionState({
+              status: "error",
+              message: "",
+              error: "Save this version before publishing.",
+            });
+            return null;
+          }
+          if (!canPublishEvaluationVersion(targetVersion)) return null;
+          const sourceSet = shouldRepublishCurrentEditor ? buildEvaluationSetForRepublish() : activeSet;
+          const result = playgroundEvaluationVersionController.buildPublishVersionResource(sourceSet, versionId, {
+            updateFromResource: shouldRepublishCurrentEditor,
+          });
           return applyEvaluationVersionResult(result, { clearRunSelection: true });
         }
 
@@ -5288,6 +5422,96 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           setEvaluationRenameError("");
         }
 
+        function openEvaluationRunRenameDialog(set, run) {
+          if (!set?.id || !run?.id) {
+            return;
+          }
+          setEvaluationRunRowMenuId("");
+          setEvaluationRenameState({
+            type: "run",
+            setId: set.id,
+            runId: run.id,
+            originalName: String(run.label || ""),
+          });
+          setEvaluationRenameValue(String(run.label || "Evaluation Run"));
+          setEvaluationRenameError("");
+        }
+
+        function updateEvaluationRunRecord(setId, runId, updater) {
+          const normalizedSetId = String(setId || "").trim();
+          const normalizedRunId = String(runId || "").trim();
+          if (!normalizedSetId || !normalizedRunId || typeof updater !== "function") {
+            return;
+          }
+          evaluationVersionDraftTouchedRef.current = true;
+          setEvaluationSets((current) => (Array.isArray(current) ? current : []).map((item) => {
+            const normalizedSet = normalizePlaygroundEvaluationSet(item);
+            if (normalizedSet.id !== normalizedSetId) return normalizedSet;
+            let updatedRun = null;
+            const nextRuns = normalizedSet.runs.map((run) => {
+              if (run.id !== normalizedRunId) return run;
+              updatedRun = normalizePlaygroundEvaluationRun(updater(run));
+              return updatedRun;
+            });
+            if (!updatedRun) return normalizedSet;
+            const now = new Date().toISOString();
+            const nextSet = normalizePlaygroundEvaluationSet({
+              ...normalizedSet,
+              runs: nextRuns,
+              updatedAt: now,
+            });
+            const versions = readSelectedEvaluationVersions(nextSet);
+            if (!versions.length) return nextSet;
+            const nextVersions = versions.map((version) => {
+              const versionRuns = Array.isArray(version.snapshot?.runs) ? version.snapshot.runs : [];
+              let versionChanged = false;
+              const nextVersionRuns = versionRuns.map((run) => {
+                const normalizedRun = normalizePlaygroundEvaluationRun(run);
+                if (normalizedRun.id !== normalizedRunId) return normalizedRun;
+                versionChanged = true;
+                return normalizePlaygroundEvaluationRun(updater(normalizedRun));
+              });
+              if (!versionChanged) return version;
+              return normalizePlaygroundEvaluationVersion({
+                ...version,
+                updatedAt: now,
+                updated_at: now,
+                runs: nextVersionRuns,
+                runCount: nextVersionRuns.length,
+                snapshot: {
+                  ...(version.snapshot || {}),
+                  runs: nextVersionRuns,
+                },
+              }, Math.max(0, Number(version.version || 1) - 1));
+            });
+            return createPlaygroundEvaluationWithVersionList(nextSet, nextVersions);
+          }));
+        }
+
+        function deleteEvaluationRunCase(setId, runId, caseId) {
+          const normalizedCaseId = String(caseId || "").trim();
+          if (!normalizedCaseId) return;
+          updateEvaluationRunRecord(setId, runId, (run) => {
+            const nextCases = (Array.isArray(run.cases) ? run.cases : []).filter((caseItem) => caseItem.id !== normalizedCaseId);
+            const activeCases = nextCases.filter((caseItem) => isPlaygroundEvaluationCaseActive(caseItem));
+            const errorCases = nextCases.filter((caseItem) => caseItem.status === "error");
+            const passThreshold = normalizePlaygroundEvaluationPassThreshold(run.passThreshold);
+            const completedCases = nextCases.filter((caseItem) => !isPlaygroundEvaluationCaseActive(caseItem) && caseItem.status !== "error");
+            return normalizePlaygroundEvaluationRun({
+              ...run,
+              cases: nextCases,
+              averageScore: nextCases.length > 0
+                ? nextCases.reduce((sum, caseItem) => sum + Number(caseItem.score || 0), 0) / nextCases.length
+                : 0,
+              passedCount: completedCases.filter((caseItem) => Number(caseItem.score || 0) >= passThreshold).length,
+              totalCount: nextCases.length,
+              costTokens: nextCases.reduce((sum, caseItem) => sum + normalizePlaygroundEvaluationTokenCount(caseItem.costTokens), 0),
+              status: activeCases.length > 0 ? "running" : errorCases.length === nextCases.length && nextCases.length > 0 ? "failed" : "completed",
+              updatedAt: new Date().toISOString(),
+            });
+          });
+        }
+
         function handleEvaluationRenameSubmit(event) {
           event.preventDefault();
           if (!evaluationRenameState?.setId) {
@@ -5302,11 +5526,64 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             closeEvaluationRenameDialog();
             return;
           }
+          if (evaluationRenameState.type === "run") {
+            updateEvaluationRunRecord(evaluationRenameState.setId, evaluationRenameState.runId, (run) => ({
+              ...run,
+              label: nextName,
+              updatedAt: new Date().toISOString(),
+            }));
+            closeEvaluationRenameDialog();
+            return;
+          }
           updateEvaluationSet(evaluationRenameState.setId, (set) => ({
             ...set,
             name: nextName,
           }));
           closeEvaluationRenameDialog();
+        }
+
+        function handleDeleteEvaluationRun(setId, runId) {
+          const normalizedSetId = String(setId || "").trim();
+          const normalizedRunId = String(runId || "").trim();
+          if (!normalizedSetId || !normalizedRunId) return;
+          setEvaluationRunRowMenuId("");
+          setEvaluationSets((current) => (Array.isArray(current) ? current : []).map((item) => {
+            const normalizedSet = normalizePlaygroundEvaluationSet(item);
+            if (normalizedSet.id !== normalizedSetId) return normalizedSet;
+            const now = new Date().toISOString();
+            const nextRuns = normalizedSet.runs.filter((run) => run.id !== normalizedRunId);
+            const nextSet = normalizePlaygroundEvaluationSet({
+              ...normalizedSet,
+              runs: nextRuns,
+              updatedAt: now,
+            });
+            const versions = readSelectedEvaluationVersions(nextSet);
+            if (!versions.length) return nextSet;
+            const nextVersions = versions.map((version) => {
+              const versionRuns = Array.isArray(version.snapshot?.runs) ? version.snapshot.runs : [];
+              const nextVersionRuns = versionRuns
+                .map((run) => normalizePlaygroundEvaluationRun(run))
+                .filter((run) => run.id !== normalizedRunId);
+              if (nextVersionRuns.length === versionRuns.length) return version;
+              return normalizePlaygroundEvaluationVersion({
+                ...version,
+                updatedAt: now,
+                updated_at: now,
+                runs: nextVersionRuns,
+                runCount: nextVersionRuns.length,
+                snapshot: {
+                  ...(version.snapshot || {}),
+                  runs: nextVersionRuns,
+                },
+              }, Math.max(0, Number(version.version || 1) - 1));
+            });
+            return createPlaygroundEvaluationWithVersionList(nextSet, nextVersions);
+          }));
+          if (selectedEvaluationSetId === normalizedSetId && selectedEvaluationRunId === normalizedRunId) {
+            setSelectedEvaluationRunId("");
+            if (typeof setSelectedEvaluationCaseId === "function") setSelectedEvaluationCaseId("");
+            setEvaluationsPageMode("detail");
+          }
         }
 
         function handleDeleteEvaluation(setId) {
@@ -6317,16 +6594,53 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               React.createElement("div", { className: "playground-project-overview-thread-cell is-source" }, String(run.totalCount || 0)),
               React.createElement("div", { className: "playground-project-overview-thread-cell is-date", title: dateLabel }, dateLabel),
               React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-thread-menu-button",
-                  "aria-label": "Open evaluation run",
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    openRunDetail(set.id, run.id);
+                React.createElement("div", {
+                    className: "playground-tasks-toolbar-popup-shell",
+                    onClick: (event) => event.stopPropagation(),
                   },
-                }, React.createElement(ChevronRight, { width: 15, height: 15, strokeWidth: 1.8 }))
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-thread-menu-button" + (evaluationRunRowMenuId === run.id ? " is-active" : ""),
+                    "aria-label": "Evaluation run actions",
+                    "aria-expanded": evaluationRunRowMenuId === run.id ? "true" : "false",
+                    onClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      closeToolbarPopover();
+                      setEvaluationRunRowMenuId((current) => current === run.id ? "" : run.id);
+                    },
+                  }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
+                  evaluationRunRowMenuId === run.id
+                    ? React.createElement("div", {
+                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                        onClick: (event) => event.stopPropagation(),
+                      },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-row",
+                          onClick: () => {
+                            setEvaluationRunRowMenuId("");
+                            openEvaluationRunRenameDialog(set, run);
+                          },
+                        },
+                          React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, "Rename")
+                          )
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-row",
+                          onClick: () => handleDeleteEvaluationRun(set.id, run.id),
+                        },
+                          React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, "Delete")
+                          )
+                        )
+                      )
+                    : null
+                )
               )
             );
           }
@@ -6720,19 +7034,6 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           const visibleCaseRecords = filteredCaseRecords.slice(0, visibleCount);
           const hasMoreCases = filteredCaseRecords.length > visibleCaseRecords.length;
           const hasFilters = Boolean(normalizedSearch || filterMode !== "all");
-          const widthCases = (filteredCaseRecords.length > 0 ? filteredCaseRecords : cases.map((caseItem, index) => ({ caseItem, index }))).map((record) => record.caseItem);
-          const readColumnCh = (values, minCh) => Math.max(minCh, ...values.map((value) => String(value || "-").length + 1));
-          const threadCh = readColumnCh(widthCases.map((caseItem) => caseItem.threadId || "Thread"), 7);
-          const evaluatorCh = readColumnCh(widthCases.map((caseItem) => caseItem.evaluatorThreadId || "Evaluator"), 10);
-          const scoreCh = readColumnCh(widthCases.map((caseItem) => getCaseScoreLabel(caseItem) || "Score"), 6);
-          const statusCh = readColumnCh(widthCases.map((caseItem) => getCaseDisplayStatus(caseItem) || "Status"), 8);
-          const casesGridTemplate = [
-            "minmax(" + threadCh + "ch, 1.18fr)",
-            "minmax(" + evaluatorCh + "ch, 1.18fr)",
-            "minmax(" + scoreCh + "ch, 0.36fr)",
-            "minmax(" + statusCh + "ch, 0.46fr)",
-            "18px",
-          ].join(" ");
           const closeCasesToolbarPopover = () => setEvaluationCasesToolbarPopover("");
           function renderCasesToolbarOption({ option, active, onClick }) {
             return React.createElement("button", {
@@ -6772,16 +7073,56 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                 React.createElement("span", { className: "playground-evaluations-status-pill" + (displayStatus === "failed" || displayStatus === "error" ? " is-failed" : "") }, displayStatus.replace(/_/g, " "))
               ),
               React.createElement("div", { className: "playground-evaluations-cases-cell is-actions" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-thread-menu-button",
-                  "aria-label": "Open evaluation case",
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    openCaseDetail(set.id, run.id, caseItem.id);
+                React.createElement("div", {
+                    className: "playground-tasks-toolbar-popup-shell",
+                    onClick: (event) => event.stopPropagation(),
                   },
-                }, React.createElement(ChevronRight, { width: 15, height: 15, strokeWidth: 1.8 }))
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-thread-menu-button" + (evaluationCaseRowMenuId === caseItem.id ? " is-active" : ""),
+                    "aria-label": "Evaluation case actions",
+                    "aria-expanded": evaluationCaseRowMenuId === caseItem.id ? "true" : "false",
+                    onClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      closeCasesToolbarPopover();
+                      setEvaluationCaseRowMenuId((current) => current === caseItem.id ? "" : caseItem.id);
+                    },
+                  }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
+                  evaluationCaseRowMenuId === caseItem.id
+                    ? React.createElement("div", {
+                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                        onClick: (event) => event.stopPropagation(),
+                      },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-row",
+                          onClick: () => {
+                            setEvaluationCaseRowMenuId("");
+                            openCaseDetail(set.id, run.id, caseItem.id);
+                          },
+                        },
+                          React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, "Rename")
+                          )
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-row",
+                          onClick: () => {
+                            setEvaluationCaseRowMenuId("");
+                            deleteEvaluationRunCase(set.id, run.id, caseItem.id);
+                          },
+                        },
+                          React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, "Delete")
+                          )
+                        )
+                      )
+                    : null
+                )
               )
             );
           }
@@ -6870,10 +7211,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               )
             ),
             visibleCaseRecords.length > 0
-              ? React.createElement("div", {
-                  className: "playground-evaluations-cases-table",
-                  style: { "--playground-evaluations-cases-grid-template": casesGridTemplate },
-                },
+              ? React.createElement("div", { className: "playground-evaluations-cases-table" },
                   React.createElement("div", { className: "playground-evaluations-cases-table-inner" },
                     React.createElement("div", { className: "playground-evaluations-cases-header" },
                       React.createElement("div", { className: "playground-evaluations-cases-header-cell" }, "Thread"),
@@ -7781,6 +8119,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             onSaveVersion: () => openCreateEvaluationVersionModal({ force: true }),
             onRestoreVersion: (versionId) => restoreEvaluationVersion(versionId),
             onPublishVersion: (versionId) => publishEvaluationVersion(versionId),
+            canPublishVersion: (version) => canPublishEvaluationVersion(version),
             onDeleteVersion: (versionId) => deleteEvaluationVersion(versionId),
             versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
               React.createElement("button", {
@@ -8181,6 +8520,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           if (!evaluationRenameState) {
             return null;
           }
+          const isRunRename = evaluationRenameState.type === "run";
 
           return React.createElement("div", {
               className: "sidebar-thread-rename-scrim",
@@ -8191,8 +8531,8 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                 onClick: (event) => event.stopPropagation(),
                 onSubmit: handleEvaluationRenameSubmit,
               },
-                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Rename Evaluation"),
-                React.createElement("div", { className: "sidebar-thread-rename-copy" }, "Choose a new name for this evaluation set."),
+                React.createElement("div", { className: "sidebar-thread-rename-title" }, isRunRename ? "Rename Evaluation Run" : "Rename Evaluation"),
+                React.createElement("div", { className: "sidebar-thread-rename-copy" }, isRunRename ? "Choose a new name for this evaluation run." : "Choose a new name for this evaluation set."),
                 React.createElement("input", {
                   ref: evaluationRenameInputRef,
                   className: "sidebar-thread-rename-input",
@@ -8201,7 +8541,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                     setEvaluationRenameValue(event.target.value);
                     setEvaluationRenameError("");
                   },
-                  placeholder: "Evaluation name",
+                  placeholder: isRunRename ? "Run name" : "Evaluation name",
                 }),
                 evaluationRenameError
                   ? React.createElement("div", { className: "sidebar-thread-rename-error" }, evaluationRenameError)
@@ -8404,7 +8744,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                 React.createElement("div", { className: "playground-mission-control-modal-context playground-project-overview-outcome-editor-body playground-evaluations-run-modal-body" },
                   React.createElement("div", { className: "playground-tasks-issue-modal-grid" },
                   React.createElement("label", { className: "playground-tasks-project-modal-field playground-tasks-issue-modal-field" },
-                    React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Agent"),
+                    React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Agent to evaluate"),
                     React.createElement("select", {
                       className: "playground-tasks-issue-modal-select",
                       value: selectedTargetAgentId,

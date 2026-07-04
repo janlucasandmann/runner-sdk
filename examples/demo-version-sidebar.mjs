@@ -138,6 +138,9 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
           const rowMenuItems = (getRowMenuItems(version, { isActiveVersion, isSelectedVersion, index, isBusy }) || [])
             .filter((item) => item && typeof item.onClick === "function")
             .filter((item) => !(versions.length <= minimumVersionCount && String(item.id || "").trim().toLowerCase() === "delete"));
+          const canPublishVersion = typeof props.canPublishVersion === "function"
+            ? Boolean(props.canPublishVersion(version, { isActiveVersion, isSelectedVersion, index, isBusy }))
+            : !isActiveVersion;
 
           const handleSelect = () => {
             if (!onSelectVersion || isBusy || isSelectedVersion) {
@@ -187,15 +190,18 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
                 : null
             ),
             React.createElement("div", { className: "playground-metronome-publish-row-actions" },
-              isActiveVersion || typeof props.onPublishVersion !== "function"
+              typeof props.onPublishVersion !== "function"
                 ? null
                 : React.createElement("button", {
                     type: "button",
                     className: "playground-metronome-secondary-button playground-metronome-publish-row-action",
-                    disabled: isBusy,
+                    disabled: isBusy || !canPublishVersion,
                     onClick: (event) => {
                       event.preventDefault();
                       event.stopPropagation();
+                      if (!canPublishVersion) {
+                        return;
+                      }
                       props.onPublishVersion(versionId, version);
                     },
                   },

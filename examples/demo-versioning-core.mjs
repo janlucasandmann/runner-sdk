@@ -436,12 +436,32 @@ export const VERSIONING_CORE_SCRIPT = String.raw`
               return null;
             }
             const now = new Date().toISOString();
+            const shouldUpdateTargetSnapshot = Boolean(options.updateFromResource) || (
+              options.snapshot && typeof options.snapshot === "object" && !Array.isArray(options.snapshot)
+            );
+            const updatedTargetVersion = shouldUpdateTargetSnapshot
+              ? (
+                  options.snapshot && typeof options.snapshot === "object" && !Array.isArray(options.snapshot)
+                    ? {
+                        ...targetVersion,
+                        snapshot: options.snapshot,
+                        updatedAt: now,
+                        updated_at: now,
+                      }
+                    : controller.updateVersionFromResource(targetVersion, options.resource || resource, {
+                        ...options,
+                        status: "active",
+                        updatedAt: now,
+                        publishedAt: now,
+                      })
+                )
+              : targetVersion;
             const nextVersions = controller.normalizeVersions(versions.map((version) => {
               if (version.id === targetVersion.id) {
                 return typeof config.publishVersion === "function"
-                  ? config.publishVersion(version, { ...options, publishedAt: now })
+                  ? config.publishVersion(updatedTargetVersion, { ...options, publishedAt: now })
                   : {
-                      ...version,
+                      ...updatedTargetVersion,
                       status: "active",
                       lifecycleState: "published",
                       lifecycle_state: "published",

@@ -1790,6 +1790,16 @@ const html = `<!doctype html>
         backdrop-filter: blur(10px);
       }
 
+      .sidebar-thread-popup.is-agent-list-action-menu {
+        transform-origin: top right;
+        animation: playground-tasks-toolbar-popup-fade-down-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      .sidebar-thread-popup.is-agent-list-action-menu.is-closing {
+        pointer-events: none;
+        animation: playground-agent-list-action-menu-fade-out 90ms ease both;
+      }
+
       .sidebar-thread-popup-title {
         padding: 12px 16px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -1837,6 +1847,18 @@ const html = `<!doctype html>
         font-size: 14px;
         font-weight: 500;
         line-height: 1.2;
+      }
+
+      @keyframes playground-agent-list-action-menu-fade-out {
+        from {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+
+        to {
+          opacity: 0;
+          transform: translateY(-4px) scale(0.98);
+        }
       }
 
       .sidebar-thread-rename-scrim {
@@ -10285,6 +10307,117 @@ const html = `<!doctype html>
         padding: 0;
       }
 
+      .playground-organization-billing-panel {
+        margin: 2px 0 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-organization-billing-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-organization-billing-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 14px;
+        line-height: 1.15;
+        font-weight: 500;
+      }
+
+      .playground-organization-billing-meta {
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+      }
+
+      .playground-organization-billing-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .playground-organization-billing-card {
+        min-height: 82px;
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.04);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 10px;
+        box-sizing: border-box;
+      }
+
+      .playground-organization-billing-card-label {
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 11px;
+        line-height: 1.2;
+        font-weight: 400;
+      }
+
+      .playground-organization-billing-card-value {
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 18px;
+        line-height: 1;
+        font-weight: 500;
+      }
+
+      .playground-organization-billing-card-subtitle {
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 11px;
+        line-height: 1.25;
+        font-weight: 400;
+      }
+
+      .playground-organization-billing-activity {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-organization-billing-activity-row {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-organization-billing-activity-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .playground-organization-billing-activity-title {
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 400;
+      }
+
+      .playground-organization-billing-activity-meta,
+      .playground-organization-billing-activity-amount {
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 11px;
+        line-height: 1.2;
+        font-weight: 400;
+      }
+
+      .playground-organization-billing-activity-amount {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
       .playground-team-roles-panel {
         overflow: visible;
       }
@@ -11280,6 +11413,10 @@ const html = `<!doctype html>
           align-items: stretch;
         }
 
+        .playground-organization-billing-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
         .playground-team-role-pages {
           grid-template-columns: minmax(0, 1fr);
         }
@@ -11291,6 +11428,16 @@ const html = `<!doctype html>
       }
 
       @media (max-width: 720px) {
+        .playground-organization-billing-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .playground-organization-billing-header,
+        .playground-organization-billing-activity-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
         .playground-team-role-list {
           grid-template-columns: minmax(0, 1fr);
         }
@@ -14800,6 +14947,11 @@ const html = `<!doctype html>
         width: min(360px, 100%);
         min-width: min(360px, 100%);
         max-width: 360px;
+      }
+
+      .playground-project-overview-threads-section .playground-plugins-search,
+      .playground-project-overview-threads-section .playground-plugins-search-shell {
+        background: transparent;
       }
 
       .playground-plugins-search-icon {
@@ -42567,12 +42719,41 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-agents-overview-page .playground-environments-home-content {
-        width: min(100%, var(--playground-centered-page-max-width));
-        max-width: var(--playground-centered-page-max-width);
+        width: min(100%, var(--playground-thread-content-max-width));
+        max-width: var(--playground-thread-content-max-width);
+      }
+
+      .playground-agents-configure-hero .playground-develop-server-kind-header {
+        margin-bottom: 12px;
+      }
+
+      .playground-project-overview-summary-title.playground-develop-title {
+        font-size: 16px !important;
+      }
+
+      .playground-agents-overview-page.is-develop-configure-page .playground-agents-configure-hero.playground-environments-home-hero {
+        padding-bottom: 0;
+      }
+
+      .playground-agents-overview-page.is-develop-configure-page .playground-develop-server-kind-metrics.playground-environments-home-metrics {
+        margin-bottom: 0;
       }
 
       .playground-agents-overview-analytics-card.playground-project-overview-progress-combo-card {
         margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        overflow: visible;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-agents-overview-analytics-card.playground-project-overview-progress-combo-card::before {
+        content: none;
+        display: none;
       }
 
       .playground-agents-overview-analytics-card .playground-project-overview-progress-combo-metric-dot.is-agents {
@@ -42596,7 +42777,7 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-agents-overview-list-section.playground-project-overview-panel-plain.playground-plugins-section {
-        margin-top: 24px !important;
+        margin-top: 0 !important;
         overflow: visible;
       }
 
@@ -42625,11 +42806,23 @@ ${METRONOME_PAGE_CSS}
         box-sizing: border-box;
       }
 
+      .playground-agents-overview-page .playground-agents-overview-list-section.playground-agents-detail-threads-section.playground-evaluations-runs-section .playground-project-overview-threads-table-header,
+      .playground-agents-overview-page .playground-agents-overview-list-section.playground-agents-detail-threads-section.playground-evaluations-runs-section .playground-project-overview-threads-table-row {
+        grid-template-columns: minmax(180px, 0.9fr) minmax(190px, 0.8fr) minmax(132px, 0.58fr) minmax(96px, 0.4fr) minmax(84px, 0.34fr) 28px !important;
+        gap: 12px;
+        padding-right: 0;
+      }
+
       .playground-agents-overview-list-section .playground-project-overview-threads-table-header,
       .playground-agents-overview-list-section .playground-project-overview-threads-table-row,
       .playground-agents-overview-list-section .playground-project-overview-threads-table-header *,
       .playground-agents-overview-list-section .playground-project-overview-threads-table-row * {
         font-size: 12px;
+      }
+
+      .playground-agents-overview-list-section .playground-project-overview-thread-list > .playground-project-overview-threads-table-row:last-child,
+      .playground-computers-overview-list-section .playground-project-overview-thread-list > .playground-project-overview-threads-table-row:last-child {
+        border-bottom: 0;
       }
 
       .playground-agents-overview-list-section .playground-project-overview-thread-cell,
@@ -42647,6 +42840,24 @@ ${METRONOME_PAGE_CSS}
         color: rgba(255, 255, 255, 0.9);
       }
 
+      .playground-agents-overview-list-section .playground-project-overview-threads-table-header > div:nth-child(4),
+      .playground-agents-overview-list-section .playground-project-overview-thread-cell.is-cost {
+        padding-left: 16px;
+        box-sizing: border-box;
+      }
+
+      .playground-agents-overview-list-section .playground-project-overview-thread-cell.is-actions,
+      .playground-agents-overview-list-section .playground-project-overview-threads-table-header > div:last-child {
+        justify-self: end;
+      }
+
+      .playground-agents-overview-list-section .playground-project-overview-thread-cell.is-actions {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
       .playground-agents-overview-list-section .playground-agents-overview-name-cell {
         gap: 8px;
       }
@@ -42658,6 +42869,149 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-overview-list-section .playground-agents-overview-table-avatar-fallback {
         font-size: 10px;
+      }
+
+      .playground-resources-page.is-develop-configure-page.is-computers-view .playground-environments-home-content {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+      }
+
+      .playground-resources-page.is-develop-configure-page.is-computers-view .playground-develop-server-kind-header {
+        margin-bottom: 12px;
+      }
+
+      .playground-computers-overview-analytics-card.playground-project-overview-progress-combo-card {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        overflow: visible;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-computers-overview-analytics-card.playground-project-overview-progress-combo-card::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-computers-overview-analytics-card .playground-project-overview-progress-combo-metric-dot.is-computers {
+        background: #7effff;
+      }
+
+      .playground-computers-overview-analytics-card .playground-project-overview-progress-combo-metric-dot.is-resources {
+        background: #c5a3ff;
+      }
+
+      .playground-computers-overview-analytics-card .playground-project-overview-progress-combo-metric-dot.is-computer-ct {
+        background: #8fc4ff;
+      }
+
+      .playground-computers-overview-analytics-card .playground-project-overview-progress-combo-metric-dot.is-resource-ct {
+        background: #6750ff;
+      }
+
+      .playground-computers-overview-analytics-card .playground-project-overview-progress-combo-metric-dot.is-total-ct {
+        background: #9ff6ce;
+      }
+
+      .playground-computers-overview-analytics-card .playground-computers-overview-chart-card.playground-settings-usage-chart-card {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .playground-computers-overview-analytics-card .playground-computers-overview-chart-card .playground-project-overview-chart-shell {
+        height: 270px;
+        border: 0;
+        background: transparent;
+      }
+
+      .playground-computers-overview-list-section.playground-project-overview-panel-plain.playground-plugins-section {
+        margin-top: 0 !important;
+        overflow: visible;
+      }
+
+      .playground-computers-overview-list-section,
+      .playground-computers-overview-list-section .playground-project-overview-threads-table,
+      .playground-computers-overview-list-section .playground-project-overview-thread-list,
+      .playground-computers-overview-list-section .playground-project-overview-threads-table-row,
+      .playground-computers-overview-list-section .playground-project-overview-thread-cell.is-actions {
+        overflow: visible !important;
+      }
+
+      .playground-resources-page.is-develop-configure-page .playground-computers-overview-list-section.playground-agents-detail-threads-section.playground-evaluations-runs-section .playground-project-overview-threads-table-header,
+      .playground-resources-page.is-develop-configure-page .playground-computers-overview-list-section.playground-agents-detail-threads-section.playground-evaluations-runs-section .playground-project-overview-threads-table-row {
+        grid-template-columns: minmax(180px, 1fr) minmax(150px, 0.68fr) minmax(92px, 0.4fr) minmax(92px, 0.4fr) 28px !important;
+        gap: 12px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding-right: 0;
+      }
+
+      .playground-computers-overview-list-section .playground-project-overview-threads-table-header,
+      .playground-computers-overview-list-section .playground-project-overview-threads-table-row,
+      .playground-computers-overview-list-section .playground-project-overview-threads-table-header *,
+      .playground-computers-overview-list-section .playground-project-overview-threads-table-row * {
+        font-size: 12px;
+      }
+
+      .playground-computers-overview-list-section .playground-project-overview-thread-cell,
+      .playground-computers-overview-list-section .playground-resources-overview-name-title,
+      .playground-computers-overview-list-section .playground-agents-overview-table-value {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-computers-overview-list-section .playground-agents-overview-table-value.is-right {
+        text-align: left;
+      }
+
+      .playground-computers-overview-list-section .playground-resources-overview-name-cell {
+        gap: 8px;
+        padding-right: 0;
+      }
+
+      .playground-computers-overview-list-section .playground-resources-overview-table-icon {
+        width: 20px;
+        height: 20px;
+        flex-basis: 20px;
+      }
+
+      .playground-computers-overview-list-section .playground-resources-overview-table-icon svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .playground-computers-overview-list-section .playground-resources-overview-name-copy {
+        gap: 0;
+      }
+
+      .playground-computers-overview-list-section .playground-resources-overview-name-description {
+        display: none;
+      }
+
+      .playground-computers-overview-list-section .playground-project-overview-thread-cell.is-name {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-computers-overview-list-section .playground-project-overview-thread-cell.is-actions,
+      .playground-computers-overview-list-section .playground-project-overview-threads-table-header > div:last-child {
+        justify-self: end;
+      }
+
+      .playground-computers-overview-list-section .playground-project-overview-thread-cell.is-actions {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
       }
 
       .playground-resources-overview-section > .playground-plugins-section-header {
@@ -44087,8 +44441,9 @@ ${METRONOME_PAGE_CSS}
 
 	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-metrics.playground-environments-home-metrics,
 	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-metrics.playground-environments-home-metrics {
-	        margin-top: 0;
-	        margin-bottom: 18px;
+	        margin-top: 12px;
+	        margin-bottom: 0;
+	        max-height: 364px;
 	        gap: 10px;
 	      }
 
@@ -44195,11 +44550,11 @@ ${METRONOME_PAGE_CSS}
 		        isolation: isolate;
 		        gap: 0;
 		        margin-bottom: 24px;
-		        padding: 0;
-		        border: 0;
-		        border-radius: 0;
-		        overflow: hidden;
-		        background: transparent;
+		        padding: 18px;
+		        border: 1px solid rgba(255, 255, 255, 0.05);
+		        border-radius: 10px;
+		        overflow: visible;
+		        background: rgba(255, 255, 255, 0.05);
 		        -webkit-backdrop-filter: none;
 		        backdrop-filter: none;
 		      }
@@ -44242,7 +44597,7 @@ ${METRONOME_PAGE_CSS}
 		      }
 
 		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section {
-		        margin-top: 24px !important;
+		        margin-top: 0 !important;
 		        overflow: visible !important;
 		      }
 
@@ -44257,11 +44612,11 @@ ${METRONOME_PAGE_CSS}
 		        isolation: isolate;
 		        gap: 0;
 		        margin-bottom: 24px;
-		        padding: 0;
-		        border: 0;
-		        border-radius: 0;
-		        overflow: hidden;
-		        background: transparent;
+		        padding: 18px;
+		        border: 1px solid rgba(255, 255, 255, 0.05);
+		        border-radius: 10px;
+		        overflow: visible;
+		        background: rgba(255, 255, 255, 0.05);
 		        -webkit-backdrop-filter: none;
 		        backdrop-filter: none;
 		      }
@@ -44373,6 +44728,11 @@ ${METRONOME_PAGE_CSS}
 		      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-search-shell .playground-plugins-search {
 		        border: 0;
 		        background: rgba(255, 255, 255, 0.04);
+		      }
+
+		      .playground-project-overview-threads-section .playground-plugins-search,
+		      .playground-project-overview-threads-section .playground-plugins-search-shell {
+		        background: transparent !important;
 		      }
 
 			      .playground-resources-page.is-develop-server-kind-page .is-develop-server-kind-list .playground-resources-overview-table-shell,
@@ -53745,16 +54105,12 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 
       function formatSettingsComputeTokens(value) {
         const numericValue = Math.max(0, Math.round(Number.isFinite(Number(value)) ? Number(value) : 0));
-        if (numericValue >= 1000) {
-          const compact = (numericValue / 1000).toFixed(numericValue >= 10000 ? 0 : 1).replace(".0", "");
-          return compact + "k CT";
-        }
-
-        return numericValue + " CT";
+        return formatSettingsCurrency(numericValue / SETTINGS_CT_PER_DOLLAR);
       }
 
       function formatSettingsAxisComputeTokens(value) {
-        return Math.max(0, Math.round(Number.isFinite(Number(value)) ? Number(value) : 0)).toLocaleString("en-US") + " CT";
+        const numericValue = Math.max(0, Math.round(Number.isFinite(Number(value)) ? Number(value) : 0));
+        return formatSettingsCurrency(numericValue / SETTINGS_CT_PER_DOLLAR);
       }
 
       function getSettingsSourceLabel(sourceId) {
@@ -53796,11 +54152,11 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 
       function getSettingsPlanFeatures(tierId, computeTokens) {
         const normalizedTierId = normalizeSettingsTierId(tierId) || "free";
-        const formattedTokens = Number(computeTokens || 0).toLocaleString("en-US");
-        const seatTokenText = formattedTokens + " Compute Tokens included per seat";
+        const formattedCredits = formatSettingsComputeTokens(Number(computeTokens || 0));
+        const seatTokenText = formattedCredits + " included credits per seat";
         const featuresByTier = {
           free: [
-            { text: formattedTokens + " Compute Tokens included", icon: SETTINGS_TIER_USAGE_ICONS.free || Coins },
+            { text: formattedCredits + " included credits", icon: SETTINGS_TIER_USAGE_ICONS.free || Coins },
             { text: "Run your first persistent agent task", icon: Check },
             { text: "One cloud computer workspace", icon: Monitor },
             { text: "Files, documents, and app connectors", icon: FileText },
@@ -53808,7 +54164,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             { text: "No credit card required", icon: Shield },
           ],
           individual: [
-            { text: formattedTokens + " Compute Tokens included", icon: SETTINGS_TIER_USAGE_ICONS.individual || Coins },
+            { text: formattedCredits + " included credits", icon: SETTINGS_TIER_USAGE_ICONS.individual || Coins },
             { text: "Custom agents and cloud computers", icon: User },
             { text: "Premium models for research, coding, and images", icon: Telescope },
             { text: "Calendar and scheduled tasks", icon: Clock },
@@ -56821,7 +57177,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           id: "gpt-image-2",
           label: "GPT Image 2",
           provider: "OpenAI",
-          description: "Highest-fidelity OpenAI image model with CT-based billing by output quality.",
+          description: "Highest-fidelity OpenAI image model with USD-credit billing by output quality.",
           pricing: {
             textInputUsdPerMillion: 5,
             imageInputUsdPerMillion: 8,
@@ -56837,7 +57193,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           id: "gemini-3.1-flash-image-preview",
           label: "Gemini 3.1 Flash Image",
           provider: "Google DeepMind",
-          description: "Fast multimodal image generation and editing preview with a flat CT estimate per image.",
+          description: "Fast multimodal image generation and editing preview with a flat USD-credit estimate per image.",
           computeTokensPerImage: 7,
         },
       ];
@@ -57306,7 +57662,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           { icon: Plus, title: "Custom agents", copy: "Create specialized agents with their own instructions, skills, permissions, and models." },
           { icon: UsersRound, title: "Agent teams", copy: "Coordinate fixed teams with orchestrators and subagents for repeatable workflows." },
           { icon: Brain, title: "Premium models", copy: "Access the managed model catalog beyond Spark, including long-context and frontier models." },
-          { icon: Sparkles, title: "Compute included", copy: "Start with 1,500 Compute Tokens and upgrade controls built into settings." },
+          { icon: Sparkles, title: "Credits included", copy: "Start with $15.00 in included credits and upgrade controls built into settings." },
           { icon: Key, title: "API access", copy: "Use Computer Agents APIs and budget controls for production workflows." },
         ];
 
@@ -57814,7 +58170,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         if (!weightedCost) {
           return "Custom";
         }
-        return Math.max(1, Math.round(weightedCost / 0.01)).toLocaleString("en-US") + " CT / 1M";
+        return formatSettingsCurrency(weightedCost * 1.1) + " / 1M";
       }
 
       function formatPlaygroundAgentModelCostMultiplier(multiplier) {
@@ -57851,7 +58207,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           memoryMb: 1536,
           guiEnabled: false,
           officeAppsEnabled: false,
-          minutePrice: 0.002,
+          minutePrice: 0.0026,
         },
         {
           id: "standard",
@@ -57861,7 +58217,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           memoryMb: 2048,
           guiEnabled: false,
           officeAppsEnabled: false,
-          minutePrice: 0.004,
+          minutePrice: 0.0052,
         },
         {
           id: "power",
@@ -57871,7 +58227,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           memoryMb: 4096,
           guiEnabled: false,
           officeAppsEnabled: false,
-          minutePrice: 0.0075,
+          minutePrice: 0.00975,
         },
         {
           id: "desktop",
@@ -57881,7 +58237,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           memoryMb: 4096,
           guiEnabled: true,
           officeAppsEnabled: false,
-          minutePrice: 0.01,
+          minutePrice: 0.013,
         },
       ];
       const PLAYGROUND_DEFAULT_USER_ENVIRONMENT_COMPUTE_PROFILE = "lite";
@@ -88310,17 +88666,32 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setEnvironmentListActionMenuState(null);
         }
 
-        function getOverviewActionMenuPosition(event, menuHeight = 184) {
+        function getOverviewActionMenuPosition(event, menuHeight = 184, options = {}) {
+          if (options?.openLeft) {
+            const rect = event.currentTarget.getBoundingClientRect();
+            const menuWidth = 220;
+            const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
+            const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+            const gutter = 12;
+            const sideGap = 8;
+            const maxRight = Math.max(gutter, viewportWidth - menuWidth - gutter);
+            const maxTop = Math.max(gutter, viewportHeight - menuHeight - gutter);
+            const preferredRight = viewportWidth - rect.left + sideGap;
+            return {
+              top: Math.max(gutter, Math.min(maxTop, rect.top + rect.height / 2 - menuHeight / 2)),
+              right: Math.max(gutter, Math.min(maxRight, preferredRight)),
+            };
+          }
           return getSideActionMenuPosition(event, menuHeight, 220);
         }
 
-        function openEnvironmentListActionMenu(event, environment) {
+        function openEnvironmentListActionMenu(event, environment, options = {}) {
           if (!environment?.id) {
             return;
           }
           event.preventDefault();
           event.stopPropagation();
-          const position = getOverviewActionMenuPosition(event);
+          const position = getOverviewActionMenuPosition(event, 184, options);
           setEnvironmentListActionMenuState((current) =>
             current?.environmentId === environment.id
               ? null
@@ -88337,14 +88708,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setServerResourceActionMenuState(null);
         }
 
-        function openServerResourceActionMenu(event, resource) {
+        function openServerResourceActionMenu(event, resource, options = {}) {
           if (!resource?.id) {
             return;
           }
           event.preventDefault();
           event.stopPropagation();
           const normalizedResourceType = resource.resourceType === "database" ? "database" : "server";
-          const position = getOverviewActionMenuPosition(event);
+          const position = getOverviewActionMenuPosition(event, 184, options);
           setServerResourceActionMenuState((current) =>
             current?.resourceId === resource.id && current?.resourceType === normalizedResourceType
               ? null
@@ -93511,7 +93882,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         function canPublishDraftEnvironmentSelectedVersion() {
           const selectedVersion = getDraftEnvironmentSelectedVersion();
-          return Boolean(selectedVersion && !hasDraftEnvironmentVersionChanges() && selectedVersion.status !== "active");
+          if (!selectedVersion) return false;
+          const hasChanges = hasDraftEnvironmentVersionChanges();
+          return selectedVersion.status === "active" ? hasChanges : !hasChanges;
+        }
+
+        function canPublishEnvironmentVersion(version) {
+          const normalizedVersionId = String(version?.id || "").trim();
+          if (!normalizedVersionId) return false;
+          const selectedVersion = getDraftEnvironmentSelectedVersion();
+          const hasChanges = hasDraftEnvironmentVersionChanges();
+          const isActiveVersion = String(version?.status || "").toLowerCase() === "active";
+          if (isActiveVersion) {
+            return Boolean(selectedVersion?.id === normalizedVersionId && hasChanges);
+          }
+          return !hasChanges;
         }
 
         function getEnvironmentVersionPrimaryActionKind() {
@@ -93875,7 +94260,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftEnvironment || environmentVersionState.status === "loading") {
             return;
           }
-          if (hasDraftEnvironmentVersionChanges()) {
+          const selectedVersion = getDraftEnvironmentSelectedVersion();
+          const hasChanges = hasDraftEnvironmentVersionChanges();
+          if (hasChanges && selectedVersion?.status !== "active") {
             setEnvironmentVersionState({
               status: "error",
               message: "",
@@ -93883,8 +94270,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             });
             return;
           }
+          if (!canPublishDraftEnvironmentSelectedVersion()) {
+            return;
+          }
           const actor = getEnvironmentVersionActor();
-          const result = environmentVersionController.buildPublishSelectedResource(draftEnvironment, { actor });
+          const result = environmentVersionController.buildPublishSelectedResource(draftEnvironment, {
+            actor,
+            updateFromResource: hasChanges,
+          });
           if (!result?.resource) {
             return;
           }
@@ -93918,8 +94311,31 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftEnvironment || environmentVersionState.status === "loading") {
             return;
           }
+          const targetVersion = readDraftEnvironmentVersions().find((version) => version.id === String(versionId || "").trim());
+          const selectedVersion = getDraftEnvironmentSelectedVersion();
+          const hasChanges = hasDraftEnvironmentVersionChanges();
+          const shouldRepublishCurrentEditor = Boolean(
+            targetVersion
+            && targetVersion.status === "active"
+            && selectedVersion?.id === targetVersion.id
+            && hasChanges
+          );
+          if (hasChanges && !shouldRepublishCurrentEditor) {
+            setEnvironmentVersionState({
+              status: "error",
+              message: "",
+              error: "Save the current version before publishing.",
+            });
+            return;
+          }
+          if (!canPublishEnvironmentVersion(targetVersion)) {
+            return;
+          }
           const actor = getEnvironmentVersionActor();
-          const result = environmentVersionController.buildPublishVersionResource(draftEnvironment, versionId, { actor });
+          const result = environmentVersionController.buildPublishVersionResource(draftEnvironment, versionId, {
+            actor,
+            updateFromResource: shouldRepublishCurrentEditor,
+          });
           if (!result?.resource) {
             return;
           }
@@ -94855,7 +95271,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         function canPublishDraftServerSelectedVersion() {
           const selectedVersion = getDraftServerSelectedVersion();
-          return Boolean(selectedVersion && !hasDraftServerVersionChanges() && selectedVersion.status !== "active");
+          if (!selectedVersion) return false;
+          const hasChanges = hasDraftServerVersionChanges();
+          return selectedVersion.status === "active" ? hasChanges : !hasChanges;
+        }
+
+        function canPublishServerVersion(version) {
+          const normalizedVersionId = String(version?.id || "").trim();
+          if (!normalizedVersionId) return false;
+          const selectedVersion = getDraftServerSelectedVersion();
+          const hasChanges = hasDraftServerVersionChanges();
+          const isActiveVersion = String(version?.status || "").toLowerCase() === "active";
+          if (isActiveVersion) {
+            return Boolean(selectedVersion?.id === normalizedVersionId && hasChanges);
+          }
+          return !hasChanges;
         }
 
         function getServerVersionPrimaryActionKind() {
@@ -95329,7 +95759,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftServer || serverVersionState.status === "loading") {
             return;
           }
-          if (hasDraftServerVersionChanges()) {
+          const selectedVersion = getDraftServerSelectedVersion();
+          const hasChanges = hasDraftServerVersionChanges();
+          if (hasChanges && selectedVersion?.status !== "active") {
             setServerVersionState({
               status: "error",
               message: "",
@@ -95337,8 +95769,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             });
             return;
           }
+          if (!canPublishDraftServerSelectedVersion()) {
+            return;
+          }
           const actor = getServerVersionActor();
-          const result = serverVersionController.buildPublishSelectedResource(draftServer, { actor });
+          const result = serverVersionController.buildPublishSelectedResource(draftServer, {
+            actor,
+            updateFromResource: hasChanges,
+          });
           if (!result?.resource) {
             return;
           }
@@ -95375,8 +95813,31 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftServer || serverVersionState.status === "loading") {
             return;
           }
+          const targetVersion = readDraftServerVersions().find((version) => version.id === String(versionId || "").trim());
+          const selectedVersion = getDraftServerSelectedVersion();
+          const hasChanges = hasDraftServerVersionChanges();
+          const shouldRepublishCurrentEditor = Boolean(
+            targetVersion
+            && targetVersion.status === "active"
+            && selectedVersion?.id === targetVersion.id
+            && hasChanges
+          );
+          if (hasChanges && !shouldRepublishCurrentEditor) {
+            setServerVersionState({
+              status: "error",
+              message: "",
+              error: "Save the current version before publishing.",
+            });
+            return;
+          }
+          if (!canPublishServerVersion(targetVersion)) {
+            return;
+          }
           const actor = getServerVersionActor();
-          const result = serverVersionController.buildPublishVersionResource(draftServer, versionId, { actor });
+          const result = serverVersionController.buildPublishVersionResource(draftServer, versionId, {
+            actor,
+            updateFromResource: shouldRepublishCurrentEditor,
+          });
           if (!result?.resource) {
             return;
           }
@@ -95742,17 +96203,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }
 
         function formatPlaygroundEnvironmentProfileRate(profile) {
-          const rate = Number(profile?.minutePrice || 0) * 100;
+          const rate = Number(profile?.minutePrice || 0);
           if (!Number.isFinite(rate) || rate <= 0) {
-            return "0 CT / min";
+            return "$0.00 / min";
           }
-          if (Math.abs(rate - Math.round(rate)) < 0.001) {
-            return String(Math.round(rate)) + " CT / min";
-          }
-          if (Math.abs(rate * 10 - Math.round(rate * 10)) < 0.001) {
-            return rate.toFixed(1) + " CT / min";
-          }
-          return rate.toFixed(2) + " CT / min";
+          return "$" + rate.toFixed(rate < 0.01 ? 4 : 3) + " / min";
         }
 
         function formatPlaygroundEnvironmentProfileResources(profile) {
@@ -96045,17 +96500,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const isProtected = Boolean(environmentListActionTarget.isSystem || environmentListActionTarget.isDefault);
           const isDeleting = saveState.isSaving && environmentListActionTarget.id === selectedEnvironmentId;
           const isCopying = fileEnvironmentMutationState.action === "fork" && fileEnvironmentMutationState.environmentId === environmentListActionTarget.id;
+          const menuStyle = {
+            top: environmentListActionMenuState.top + "px",
+          };
+          if (Number.isFinite(environmentListActionMenuState.right)) {
+            menuStyle.right = environmentListActionMenuState.right + "px";
+          } else {
+            menuStyle.left = environmentListActionMenuState.left + "px";
+          }
 
           return React.createElement("div", {
               className: "sidebar-thread-popup-scrim",
               onClick: closeEnvironmentListActionMenu,
             },
               React.createElement("div", {
-                className: "sidebar-thread-popup",
-                style: {
-                  top: environmentListActionMenuState.top + "px",
-                  left: environmentListActionMenuState.left + "px",
-                },
+                className: "sidebar-thread-popup is-agent-list-action-menu",
+                style: menuStyle,
                 onClick: (event) => event.stopPropagation(),
               },
                 React.createElement("div", { className: "sidebar-thread-popup-title" }, "Computer"),
@@ -96111,17 +96571,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               ? selectedDatabaseId === serverResourceActionTarget.id
               : selectedServerId === serverResourceActionTarget.id
           );
+          const menuStyle = {
+            top: serverResourceActionMenuState.top + "px",
+          };
+          if (Number.isFinite(serverResourceActionMenuState.right)) {
+            menuStyle.right = serverResourceActionMenuState.right + "px";
+          } else {
+            menuStyle.left = serverResourceActionMenuState.left + "px";
+          }
 
           return React.createElement("div", {
               className: "sidebar-thread-popup-scrim",
               onClick: closeServerResourceActionMenu,
             },
               React.createElement("div", {
-                className: "sidebar-thread-popup",
-                style: {
-                  top: serverResourceActionMenuState.top + "px",
-                  left: serverResourceActionMenuState.left + "px",
-                },
+                className: "sidebar-thread-popup is-agent-list-action-menu",
+                style: menuStyle,
                 onClick: (event) => event.stopPropagation(),
               },
                 React.createElement("div", { className: "sidebar-thread-popup-title" }, isDatabaseResource ? "Database" : "Server"),
@@ -100828,6 +101293,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               onSaveVersion: () => openCreateServerVersionModal({ force: true }),
               onRestoreVersion: (versionId) => void restoreServerVersion(versionId),
               onPublishVersion: (versionId) => void publishServerVersion(versionId),
+              canPublishVersion: (version) => canPublishServerVersion(version),
               onDeleteVersion: (versionId) => void deleteServerVersion(versionId),
               versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
                 React.createElement("button", {
@@ -105357,6 +105823,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               onSaveVersion: () => openCreateEnvironmentVersionModal({ force: true }),
               onRestoreVersion: (versionId) => void restoreEnvironmentVersion(versionId),
               onPublishVersion: (versionId) => void publishEnvironmentVersion(versionId),
+              canPublishVersion: (version) => canPublishEnvironmentVersion(version),
               onDeleteVersion: (versionId) => void deleteEnvironmentVersion(versionId),
               versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
                 React.createElement("button", {
@@ -106228,10 +106695,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               ? resourcesOverviewHomeTab
               : "general";
           }
+          if (embeddedInResources) {
+            return "general";
+          }
           return resourcesOverviewHomeTab === "profiles" ? "profiles" : "general";
         }
 
         function renderResourcesOverviewHomeTabs() {
+          if (embeddedInResources && !isServersMode) {
+            return null;
+          }
           const activeTab = getActiveResourcesOverviewHomeTab();
           const tabs = isServersMode
             ? (normalizedEmbeddedServerKind
@@ -106512,7 +106985,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             );
           };
 
-          const renderHomeStackedUsageChart = ({ ariaLabel, labels, series, emptyText, emptyContent, title, timescaleControl, tickFormatter, isLoading, controlsInFooter = false }) => {
+          const renderHomeStackedUsageChart = ({ ariaLabel, labels, series, emptyText, emptyContent, title, timescaleControl, tickFormatter, isLoading, controlsInFooter = false, showLegend = true, hideHeader = false, chartCardClassName = "" }) => {
             const normalizedLabels = Array.isArray(labels) ? labels : [];
             const normalizedSeries = Array.isArray(series)
               ? series.filter((entry) => entry && Array.isArray(entry.values))
@@ -106551,7 +107024,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               return new Set(next);
             })();
 
-            const chartLegend = React.createElement("div", {
+            const chartLegend = showLegend ? React.createElement("div", {
                 className: controlsInFooter
                   ? "playground-develop-server-metrics-footer-left playground-develop-server-metrics-legend"
                   : "playground-settings-usage-inline-legend",
@@ -106566,15 +107039,18 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     React.createElement("span", null, entry.label)
                   )
                 )
-              );
+              ) : null;
 
-            return React.createElement("div", { className: "playground-settings-usage-chart-card" },
-              React.createElement("div", { className: "playground-project-overview-chart-header" },
-                React.createElement("div", { className: "playground-project-overview-chart-header-main" },
-                  React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Activity comparison"),
-                  controlsInFooter ? null : (timescaleControl || null)
+            return React.createElement("div", { className: "playground-settings-usage-chart-card" + (chartCardClassName ? " " + chartCardClassName : "") },
+              hideHeader
+                ? null
+                : React.createElement("div", { className: "playground-project-overview-chart-header" },
+                    React.createElement("div", { className: "playground-project-overview-chart-header-main" },
+                      React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Activity comparison"),
+                      controlsInFooter ? null : (timescaleControl || null)
+                    )
                 )
-              ),
+              ,
               isLoading
                 ? React.createElement("div", {
                     className: "playground-project-overview-chart-shell",
@@ -106675,10 +107151,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   ),
               controlsInFooter
                 ? React.createElement("div", { className: "playground-develop-server-metrics-footer" },
-                    !isLoading && !shouldShowEmptyState ? chartLegend : null,
+                    !isLoading && !shouldShowEmptyState && showLegend ? chartLegend : null,
                     timescaleControl || null
                   )
-                : (!isLoading && !shouldShowEmptyState ? chartLegend : null)
+                : (!isLoading && !shouldShowEmptyState && showLegend ? chartLegend : null)
             );
           };
 
@@ -106701,7 +107177,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 },
               ],
               emptyText: emptyText || "No usage data yet",
-              title: "Daily CT by Resource Type",
+              title: "Daily cost by Resource Type",
               timescaleControl: React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
                 React.createElement("select", {
                   className: "playground-environments-home-comparison-timescale-select",
@@ -106806,7 +107282,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             { id: "resources", value: String(environmentsHomeSummary.totalResources), label: "Resources" },
             { id: "computer-ct", value: formatSettingsComputeTokens(totalComputerRuntimeCT), label: "Spent on Computers" },
             { id: "resource-ct", value: formatSettingsComputeTokens(totalResourceRuntimeCT), label: "Spent on Resources" },
-            { id: "total-ct", value: formatSettingsComputeTokens(totalEnvironmentRuntimeCT), label: "Total CT" },
+            { id: "total-ct", value: formatSettingsComputeTokens(totalEnvironmentRuntimeCT), label: "Total cost" },
           ];
           const environmentOverviewChartSeries = isServersMode
             ? [
@@ -106831,8 +107307,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               ? "Weekly"
               : "Monthly";
 	          const environmentOverviewChartTitle = isServersMode
-	            ? environmentOverviewPeriodLabel + " CT by Server Type"
-	            : environmentOverviewPeriodLabel + " CT by Computer Type";
+	            ? environmentOverviewPeriodLabel + " cost by Server Type"
+	            : environmentOverviewPeriodLabel + " cost by Computer Type";
 	          const environmentOverviewChartLabel = isServersMode ? "server" : "computer";
 	          const activeResourcesOverviewHomeTab = getActiveResourcesOverviewHomeTab();
 	          const isDevelopServerKindHome = embeddedInResources && isServersMode && Boolean(normalizedEmbeddedServerKind);
@@ -106897,13 +107373,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            {
 	              id: "compute-tokens",
 	              key: "computeTokens",
-	              label: "CT Consumption",
-	              title: "CT Consumption",
+	              label: "Usage cost",
+	              title: "Usage cost",
 	              tone: "compute",
-	              legend: "Compute Tokens",
+	              legend: "USD credits",
 	              resourceCountKey,
-	              valueSuffix: "CT",
-	              emptyText: "No compute token usage in the last 24 hours",
+	              valueSuffix: "",
+	              emptyText: "No usage cost in the last 24 hours",
 	            },
 	            {
 	              id: "resources",
@@ -107231,91 +107707,136 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              )
 	            );
 	          };
+	          const environmentHomeTimescaleOptions = [
+	            { id: "day", label: "1D" },
+	            { id: "week", label: "1W" },
+	            { id: "month", label: "1M" },
+	          ];
+	          const activeEnvironmentHomeTimescaleId = environmentHomeTimescaleOptions.some((option) => option.id === normalizedEnvironmentHomeChartTimescale)
+	            ? normalizedEnvironmentHomeChartTimescale
+	            : "month";
+	          const environmentHomeTimescaleControl = React.createElement("div", { className: "playground-project-overview-progress-combo-ranges", role: "group", "aria-label": "Computer analytics time frame" },
+	            environmentHomeTimescaleOptions.map((option) =>
+	              React.createElement("button", {
+	                key: option.id,
+	                type: "button",
+	                className: "playground-project-overview-progress-combo-range" + (activeEnvironmentHomeTimescaleId === option.id ? " is-active" : ""),
+	                onClick: () => setEnvironmentHomeChartTimescale(option.id),
+	                "aria-pressed": activeEnvironmentHomeTimescaleId === option.id ? "true" : "false",
+	              }, option.label)
+	            )
+	          );
+	          const environmentHomeAnalyticsOptions = isDevelopConfigureHome && !isDevelopServerKindHome
+	            ? React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-content-menu-button",
+	                  "aria-label": "Analytics options",
+	                  "aria-expanded": developAnalyticsMenuOpen ? "true" : "false",
+	                  onClick: toggleDevelopServerKindAnalyticsMenu,
+	                }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+	                developAnalyticsMenuOpen
+	                  ? React.createElement("div", {
+	                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	                    },
+	                      React.createElement("button", {
+	                        type: "button",
+	                        className: "tb-popup-row",
+	                        onClick: openDevelopServerKindUsage,
+	                      },
+	                        React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                          React.createElement("span", null, "Show Usage")
+	                        )
+	                      )
+	                    )
+	                  : null
+	              )
+	            : null;
+	          const renderComputerOverviewAnalyticsSection = () =>
+	            React.createElement("div", {
+	              className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-computers-overview-metrics",
+	            },
+	              React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-computers-overview-analytics-card" },
+	                React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
+	                  environmentsHomeKpis.map((item) =>
+	                    React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+	                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+	                        React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
+	                        React.createElement("span", null, item.label)
+	                      ),
+	                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
+	                    )
+	                  )
+	                ),
+	                React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
+	                  renderHomeStackedUsageChart({
+	                    ariaLabel: "Overall computer activity",
+	                    labels: homeActivityBuckets.map((bucket) => String(bucket?.label || "")),
+	                    series: environmentOverviewChartSeries,
+	                    emptyText: "No usage data yet",
+	                    emptyContent: renderPlaygroundConfigureUsageEmptyState(
+	                      "no-computer-usage.avif",
+	                      "No Computer Usage yet",
+	                      "Computer usage appears here once agents run work inside connected computers."
+	                    ),
+	                    title: environmentOverviewChartTitle,
+	                    isLoading: isEnvironmentHomeChartLoading,
+	                    tickFormatter: formatSettingsComputeTokens,
+	                    showLegend: false,
+	                    hideHeader: true,
+	                    chartCardClassName: "playground-computers-overview-chart-card",
+	                  })
+	                )
+	              )
+	            );
 	          const environmentOverviewMetricsSection = activeResourcesOverviewHomeTab === "general"
 	            ? isDevelopServerKindHome
 	              ? renderDevelopServerKindOperationalMetrics()
-	              : React.createElement("div", {
-	                className: "playground-environments-home-metrics" + (isDevelopConfigureHome ? " playground-develop-server-metrics playground-develop-server-kind-metrics" : ""),
-	              },
-	                isDevelopConfigureHome && !isDevelopServerKindHome
-	                  ? React.createElement("div", { className: "playground-develop-server-metrics-title-row" },
-	                      React.createElement("h2", { className: "playground-develop-server-metrics-title" }, "Analytics"),
-	                      React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
-	                        React.createElement("button", {
-	                          type: "button",
-	                          className: "playground-content-menu-button",
-	                          "aria-label": "Analytics options",
-	                          "aria-expanded": developAnalyticsMenuOpen ? "true" : "false",
-	                          onClick: toggleDevelopServerKindAnalyticsMenu,
-	                        }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-	                        developAnalyticsMenuOpen
-	                          ? React.createElement("div", {
-	                              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-	                            },
-	                              React.createElement("button", {
-	                                type: "button",
-	                                className: "tb-popup-row",
-	                                onClick: openDevelopServerKindUsage,
-	                              },
-	                                React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                                  React.createElement("span", null, "Show Usage")
+	              : isDevelopConfigureHome && !isDevelopServerKindHome
+	                ? renderComputerOverviewAnalyticsSection()
+	                : React.createElement("div", {
+	                    className: "playground-environments-home-metrics",
+	                  },
+	                    React.createElement("section", { className: "playground-tasks-detail-facts" },
+	                      React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+	                        React.createElement("div", { className: "playground-database-overview" },
+	                          React.createElement("div", { className: "playground-database-overview-chart-block" },
+	                            React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
+	                              environmentsHomeKpis.map((item) =>
+	                                React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
+	                                  React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+	                                    React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+	                                  ),
+	                                  React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
 	                                )
 	                              )
-	                            )
-	                          : null
-	                      )
-	                    )
-	                  : null,
-	                React.createElement("section", { className: "playground-tasks-detail-facts" },
-	                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-	                    React.createElement("div", { className: "playground-database-overview" },
-	                      React.createElement("div", {
-	                        className: "playground-database-overview-chart-block" + (isDevelopConfigureHome ? " playground-settings-usage-chart-block playground-develop-server-metrics-chart-block" : ""),
-	                      },
-	                        React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" + (isDevelopConfigureHome ? " playground-settings-usage-chart-kpis playground-develop-server-metrics-kpis" : "") },
-	                          environmentsHomeKpis.map((item) =>
-	                            React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" + (isDevelopConfigureHome ? " playground-develop-server-metrics-kpi" : "") },
-	                              React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-	                                React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+	                            ),
+	                            renderHomeStackedUsageChart({
+	                              ariaLabel: "Overall " + environmentOverviewChartLabel + " activity",
+	                              labels: homeActivityBuckets.map((bucket) => String(bucket?.label || "")),
+	                              series: environmentOverviewChartSeries,
+	                              emptyText: "No usage data yet",
+	                              title: environmentOverviewChartTitle,
+	                              isLoading: isEnvironmentHomeChartLoading,
+	                              timescaleControl: React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
+	                                React.createElement("select", {
+	                                  className: "playground-environments-home-comparison-timescale-select",
+	                                  value: normalizedEnvironmentHomeChartTimescale,
+	                                  "aria-label": "Environment chart timescale",
+	                                  onChange: (event) => setEnvironmentHomeChartTimescale(String(event.target.value || "month")),
+	                                },
+	                                  React.createElement("option", { value: "day" }, "Daily"),
+	                                  React.createElement("option", { value: "week" }, "Weekly"),
+	                                  React.createElement("option", { value: "month" }, "Monthly")
+	                                )
 	                              ),
-	                              React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-	                            )
+	                            })
 	                          )
-	                        ),
-	                        renderHomeStackedUsageChart({
-	                          ariaLabel: "Overall " + environmentOverviewChartLabel + " activity",
-	                          labels: homeActivityBuckets.map((bucket) => String(bucket?.label || "")),
-	                          series: environmentOverviewChartSeries,
-	                          emptyText: "No usage data yet",
-	                          emptyContent: isDevelopConfigureHome && !isDevelopServerKindHome
-	                            ? renderPlaygroundConfigureUsageEmptyState(
-	                                "no-computer-usage.avif",
-	                                "No Computer Usage yet",
-	                                "Computer usage appears here once agents run work inside connected computers."
-	                              )
-	                            : null,
-	                          title: environmentOverviewChartTitle,
-	                          isLoading: isEnvironmentHomeChartLoading,
-	                          timescaleControl: React.createElement("div", { className: "playground-environments-home-comparison-timescale" + (isDevelopConfigureHome ? " playground-develop-server-metrics-timescale" : "") },
-	                            React.createElement("select", {
-	                              className: "playground-environments-home-comparison-timescale-select",
-	                              value: normalizedEnvironmentHomeChartTimescale,
-	                              "aria-label": "Environment chart timescale",
-	                              onChange: (event) => setEnvironmentHomeChartTimescale(String(event.target.value || "month")),
-	                            },
-	                              React.createElement("option", { value: "day" }, "Daily"),
-	                              React.createElement("option", { value: "week" }, "Weekly"),
-	                              React.createElement("option", { value: "month" }, "Monthly")
-	                            )
-	                          ),
-	                          controlsInFooter: isDevelopConfigureHome,
-	                        })
+	                        )
 	                      )
 	                    )
 	                  )
-	                )
-	              )
 	            : null;
 	          const developServerKindToolbar = React.createElement("div", {
 	              className: "playground-develop-server-metrics-toolbar playground-develop-api-keys-toolbar playground-develop-server-kind-toolbar",
@@ -107886,18 +108407,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header" },
 	                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, isDevelopServerKindHome ? developConfigureTitle : "Configure your Computers"),
 	                  React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
-	                    React.createElement("button", {
-	                      type: "button",
-	                      className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
-	                      onClick: () => window.open(${JSON.stringify(aiosOrigin + "/pricing")}, "_blank", "noopener,noreferrer"),
-	                    }, "Pricing", React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 })),
 	                    isDevelopServerKindHome
-	                      ? null
-	                      : React.createElement("button", {
+	                      ? React.createElement("button", {
 	                          type: "button",
-	                          className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button",
-	                          onClick: handleCreateEnvironment,
-	                        }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), "Add Computer")
+	                          className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
+	                          onClick: () => window.open(${JSON.stringify(aiosOrigin + "/pricing")}, "_blank", "noopener,noreferrer"),
+	                        }, "Pricing", React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 }))
+	                      : null,
+	                    isDevelopServerKindHome ? null : environmentHomeTimescaleControl,
+	                    isDevelopServerKindHome ? null : environmentHomeAnalyticsOptions
 	                  )
 	                ),
 	                isDevelopServerKindHome
@@ -108329,22 +108847,26 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             className: "playground-agents-overview-table-value is-right",
             title: value ? formatPlaygroundExactDate(value) : "",
           }, value ? formatPlaygroundFileDate(value) : emptyLabel);
-          const renderOverviewResourceActionCell = (item) => {
+          const renderOverviewResourceActionCell = (item, elementTag = "td", options = {}) => {
             const isMenuOpen = isServersMode
               ? (
                   serverResourceActionMenuState?.resourceId === item.id
                   && serverResourceActionMenuState?.resourceType === (item.resourceType === "database" ? "database" : "server")
                 )
               : environmentListActionMenuState?.environmentId === item.id;
-            return React.createElement("td", { className: "playground-overview-table-action-cell" },
+            const Tag = elementTag || "td";
+            const className = Tag === "td"
+              ? "playground-overview-table-action-cell"
+              : "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell";
+            return React.createElement(Tag, { className },
               React.createElement("button", {
                 type: "button",
                 className: "playground-overview-table-action-button" + (isMenuOpen ? " is-open" : ""),
                 onClick: (event) => {
                   if (isServersMode) {
-                    openServerResourceActionMenu(event, item);
+                    openServerResourceActionMenu(event, item, options);
                   } else {
-                    openEnvironmentListActionMenu(event, item);
+                    openEnvironmentListActionMenu(event, item, options);
                   }
                 },
                 onKeyDown: (event) => event.stopPropagation(),
@@ -108353,6 +108875,34 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               },
                 React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
               )
+            );
+          };
+          const renderComputerOverviewGridRow = (item) => {
+            const profile = getPlaygroundEnvironmentComputeProfileConfig(item?.computeProfile);
+            const createdAt = getOverviewResourceCreatedAt(item);
+            const lastUsedAt = getOverviewResourceLastUsedAt(item);
+            const itemName = item?.name || "Untitled Computer";
+            return React.createElement("div", {
+                key: item.id,
+                tabIndex: 0,
+                role: "button",
+                className: "playground-project-overview-threads-table-row",
+                "aria-label": "Open " + itemName,
+                onClick: () => openOverviewResourceItem(item),
+                onKeyDown: (event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openOverviewResourceItem(item);
+                  }
+                },
+              },
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-name" }, renderOverviewResourceNameCell(item)),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-profile" },
+                React.createElement("div", { className: "playground-agents-overview-table-value" }, profile?.label || "Standard")
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, renderOverviewDateCell(createdAt)),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, renderOverviewDateCell(lastUsedAt, "Never")),
+              renderOverviewResourceActionCell(item, "div", { openLeft: true })
             );
           };
           const renderComputerOverviewRow = (item) => {
@@ -108429,8 +108979,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     React.createElement("th", null, "Resources"),
                     React.createElement("th", null, "GUI"),
                     React.createElement("th", null, "Office Apps"),
-                    React.createElement("th", { className: "is-right" }, "CT cost"),
-                    React.createElement("th", { className: "is-right" }, "USD cost")
+                    React.createElement("th", { className: "is-right" }, "USD / min"),
+                    React.createElement("th", { className: "is-right" }, "USD / hr")
                   )
                 ),
                 React.createElement("tbody", null,
@@ -108689,7 +109239,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                             disabled: !canEditResourceLimit || resourceBillingSaving,
                             placeholder: "None",
                           }),
-                          React.createElement("span", { className: "playground-settings-plans-resource-cap-suffix" }, "CT / month")
+                          React.createElement("span", { className: "playground-settings-plans-resource-cap-suffix" }, "USD / month")
                         )
                       )
                     ),
@@ -108762,31 +109312,41 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                    ? (isServersMode ? "No matching " + currentServerResourcesLabel.toLowerCase() + " found." : "No matching computers found.")
 	                    : (isServersMode ? "No " + currentServerResourcesLabel.toLowerCase() + " available." : "No computers available.")
 	                )
-	            : React.createElement("div", { className: "playground-resources-overview-table-shell" },
-	                React.createElement("table", { className: "playground-resources-overview-table" },
-	                  React.createElement("colgroup", null,
-	                    overviewTableColumns.map((column) =>
-	                      React.createElement("col", { key: column.id, style: { width: column.width } })
-	                    )
+	            : !isServersMode
+	              ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-computers-overview-list-table" },
+	                  React.createElement("div", { className: "playground-project-overview-threads-table-header" },
+	                    React.createElement("div", null, "Name"),
+	                    React.createElement("div", null, "Computer Profile"),
+	                    React.createElement("div", null, "Created"),
+	                    React.createElement("div", null, "Last used"),
+	                    React.createElement("div", null)
 	                  ),
-	                  React.createElement("thead", null,
-	                    React.createElement("tr", null,
-	                      overviewTableColumns.map((column) =>
-	                        React.createElement("th", {
-	                          key: column.id,
-	                          className: column.align === "right" ? "is-right" : column.align === "action" ? "is-action" : "",
-	                        }, column.label)
-	                      )
-	                    )
-	                  ),
-	                  React.createElement("tbody", null,
-	                    overviewItems.map((item) => isServersMode
-	                      ? renderServerOverviewRow(item)
-	                      : renderComputerOverviewRow(item)
-	                    )
+	                  React.createElement("div", { className: "playground-project-overview-thread-list" },
+	                    overviewItems.map((item) => renderComputerOverviewGridRow(item))
 	                  )
-		                )
-		              );
+	                )
+	              : React.createElement("div", { className: "playground-resources-overview-table-shell" },
+	                  React.createElement("table", { className: "playground-resources-overview-table" },
+	                    React.createElement("colgroup", null,
+	                      overviewTableColumns.map((column) =>
+	                        React.createElement("col", { key: column.id, style: { width: column.width } })
+	                      )
+	                    ),
+	                    React.createElement("thead", null,
+	                      React.createElement("tr", null,
+	                        overviewTableColumns.map((column) =>
+	                          React.createElement("th", {
+	                            key: column.id,
+	                            className: column.align === "right" ? "is-right" : column.align === "action" ? "is-action" : "",
+	                          }, column.label)
+	                        )
+	                      )
+	                    ),
+	                    React.createElement("tbody", null,
+	                      overviewItems.map((item) => renderServerOverviewRow(item))
+	                    )
+		                  )
+		                );
 			          const developConfigureResourcesLabel = isServersMode ? currentServerResourcesLabel : "Computers";
 			          const overviewSearchSortFilterRow = React.createElement("div", {
 			              className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar",
@@ -108881,7 +109441,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 			          );
 		          if (isDevelopConfigureOverview && activeResourcesOverviewHomeTab === "general") {
 		            return React.createElement("section", {
-		              className: "playground-plugins-section playground-resources-overview-section " + (isServersMode ? "is-servers-overview" : "is-computers-overview") + " is-develop-server-kind-list",
+		              className: isServersMode
+		                ? "playground-plugins-section playground-resources-overview-section is-servers-overview is-develop-server-kind-list"
+		                : "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-resources-overview-section is-computers-overview is-develop-server-kind-list playground-computers-overview-list-section",
 		            }, overviewSearchSortFilterRow, overviewResourceTable);
 		          }
 	          return React.createElement("section", { className: "playground-plugins-section playground-resources-overview-section " + (isServersMode ? "is-servers-overview" : "is-computers-overview") },
@@ -109480,7 +110042,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         onVersionsSidebarOpenChange,
         onOpenSettingsUsage,
         backRequestToken = 0,
-        overviewTabRequest = null,
       }) {
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
@@ -109535,7 +110096,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentsOverviewToolbarRef = useRef(null);
         const agentsObservabilityToolbarRef = useRef(null);
         const lastAppliedFocusedAgentSelectionTokenRef = useRef("");
-        const lastAppliedOverviewTabRequestRef = useRef("");
         const handledBackRequestTokenRef = useRef(backRequestToken);
         const [selectedAgentId, setSelectedAgentId] = useState(initialAgentId || "");
         const [agentDetailsById, setAgentDetailsById] = useState(() => {
@@ -109549,7 +110109,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [draftAgent, setDraftAgent] = useState(null);
         const [toolbarPopover, setToolbarPopover] = useState("");
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
-        const [agentsOverviewHomeTab, setAgentsOverviewHomeTab] = useState("general");
         const [agentDetailTab, setAgentDetailTab] = useState("general");
         const [agentDetailSidebarCollapsed, setAgentDetailSidebarCollapsed] = useState(false);
         const [agentDetailCopiedFact, setAgentDetailCopiedFact] = useState("");
@@ -109727,6 +110286,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentComposerModelPopover, setAgentComposerModelPopover] = useState("");
         const [deepResearchSkillDefaultModel, setDeepResearchSkillDefaultModel] = useState(() => getDemoDefaultDeepResearchModel(readDemoSettingsPlatformConfig()));
         const [agentListActionMenuState, setAgentListActionMenuState] = useState(null);
+        const [agentListActionMenuClosing, setAgentListActionMenuClosing] = useState(false);
+        const agentListActionMenuCloseTimerRef = useRef(null);
         const [collapsedAgentListSections, setCollapsedAgentListSections] = useState(() => ({
           system: false,
           custom: false,
@@ -109738,27 +110299,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             : PLAYGROUND_AGENT_MODEL_OPTIONS
         ), [agentModelOptions]);
         const isFreeAgentPlan = (normalizeSettingsTierId(subscriptionTierId) || "free") === "free";
-
-        useEffect(() => {
-          const requestToken = String(overviewTabRequest?.token || "").trim();
-          if (!requestToken || lastAppliedOverviewTabRequestRef.current === requestToken) {
-            return;
-          }
-          lastAppliedOverviewTabRequestRef.current = requestToken;
-          const normalizedTab = String(overviewTabRequest?.tab || "").trim();
-          const nextTab = normalizedTab === "observability" ? normalizedTab : "general";
-          selectedAgentIdRef.current = "";
-          setSelectedAgentId("");
-          setDraftAgent(null);
-          setToolbarPopover("");
-          setSearchPopupQuery("");
-          setAgentListActionMenuState(null);
-          setAgentActionsPopoverOpen(false);
-          setAgentComposerOpen(false);
-          setAgentsObservabilityToolbarPopover("");
-          setAgentsOverviewHomeTab(nextTab);
-          setIsHomeViewActive(true);
-        }, [overviewTabRequest]);
 
         async function flushQueuedAgentAutosave() {
           if (agentAutosaveInFlightRef.current) {
@@ -109909,6 +110449,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             || agentListActionMenuState.agentRecord
             || null;
         }, [agentListActionMenuState, orderedAgents]);
+
+        useEffect(() => () => {
+          if (agentListActionMenuCloseTimerRef.current !== null) {
+            window.clearTimeout(agentListActionMenuCloseTimerRef.current);
+            agentListActionMenuCloseTimerRef.current = null;
+          }
+        }, []);
 
         const allKnownAgents = useMemo(() => {
           const next = {};
@@ -111980,13 +112527,43 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               throw new Error("Agent response was empty.");
             }
 
+            let normalizedWithVersions = normalized;
+            if (
+              normalized.id
+              && normalized.id !== PLAYGROUND_AGENT_DRAFT_ID
+              && !normalized.isSystem
+              && !normalized.isDefault
+            ) {
+              try {
+                const versionsResponse = await fetch(backendUrl + "/agents/" + encodeURIComponent(normalized.id) + "/versions", {
+                  method: "GET",
+                  headers: requestHeaders,
+                });
+                const versionsData = await versionsResponse.json().catch(() => ({}));
+                if (versionsResponse.ok) {
+                  const versionItems = Array.isArray(versionsData?.data)
+                    ? versionsData.data
+                    : Array.isArray(versionsData?.versions)
+                      ? versionsData.versions
+                      : Array.isArray(versionsData?.items)
+                        ? versionsData.items
+                        : [];
+                  if (versionItems.length > 0) {
+                    normalizedWithVersions = createPlaygroundAgentWithVersionList(normalized, versionItems);
+                  }
+                }
+              } catch (error) {
+                console.warn("[agents] Failed to load authoritative agent versions", error);
+              }
+            }
+
 	            setAgentDetailsById((current) => ({
 	              ...current,
-	              [agentId]: normalized,
+	              [agentId]: normalizedWithVersions,
 	            }));
 	            if (selectedAgentIdRef.current === agentId && !editorDirtyRef.current) {
-	              rememberAgentVersionBaseline(normalized);
-	              setDraftAgent(normalized);
+	              rememberAgentVersionBaseline(normalizedWithVersions);
+	              setDraftAgent(normalizedWithVersions);
 	            }
           } catch (error) {
             if (selectedAgentIdRef.current === agentId) {
@@ -112247,7 +112824,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setAgentCreationInstructionContext(null);
           setAgentAssistantOpen(false);
           setAgentAssistantCommandRequest(null);
-          setAgentsOverviewHomeTab("general");
           setAgentsObservabilityToolbarPopover("");
           setIsHomeViewActive(true);
         }
@@ -113221,14 +113797,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         useEffect(() => {
           setAgentsObservabilityVisibleThreadLimit(20);
-        }, [agentsOverviewHomeTab, agentsObservabilitySort, agentsObservabilityStatusFilter, searchPopupQuery]);
-
-        useEffect(() => {
-          if (agentsOverviewHomeTab !== "observability" || !selectedAgentsObservabilityThreadId) {
-            return;
-          }
-          void loadAgentsObservabilityThreadDetails(selectedAgentsObservabilityThreadId);
-        }, [agentsOverviewHomeTab, loadAgentsObservabilityThreadDetails, selectedAgentsObservabilityThreadId]);
+        }, [agentsObservabilitySort, agentsObservabilityStatusFilter, searchPopupQuery]);
 
         useEffect(() => {
           const normalizedSelectedAgentId = String(selectedAgentId || "").trim();
@@ -114768,7 +115337,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const isCustomModel = getPlaygroundAgentModelProviderFilterKey(option) === "custom";
             const intelligenceLevel = Math.max(1, Math.min(4, getPlaygroundAgentIntelligenceLevel(option.intelligence || option.intelligenceLabel || "")));
             const costMultiplier = getPlaygroundAgentModelCostMultiplier(option.id);
-            const costBadgeLabel = formatPlaygroundAgentModelComputeTokenCost(option.id).replace(" CT / 1M", " CT / mTok");
+            const costBadgeLabel = formatPlaygroundAgentModelComputeTokenCost(option.id).replace(" / 1M", " / mTok");
             const costBadgeClass = costMultiplier < 1
               ? " is-low"
               : costMultiplier > 1
@@ -115450,37 +116019,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           );
         };
 
-        function renderAgentsOverviewHomeTabs() {
-          const tabs = [
-            { id: "general", label: "General" },
-            { id: "observability", label: "Traces" },
-          ];
-          return React.createElement("div", {
-              className: "playground-agents-overview-tabs"
-                + (embeddedInResources ? " playground-project-overview-tabs playground-develop-tabs playground-develop-server-kind-tabs" : ""),
-            },
-            React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-              tabs.map((tab) =>
-                React.createElement("button", {
-                  key: tab.id,
-                  type: "button",
-                  className: "playground-project-overview-chart-tab" + (agentsOverviewHomeTab === tab.id ? " is-active" : ""),
-                  onClick: () => {
-                    setAgentsOverviewHomeTab(tab.id);
-                    setAgentsOverviewToolbarPopover("");
-                    setAgentsObservabilityToolbarPopover("");
-                    setAgentsAnalyticsMenuOpen(false);
-                    if (tab.id === "observability") {
-                      void loadAgentsHomeThreads();
-                    }
-                  },
-                  "aria-pressed": agentsOverviewHomeTab === tab.id ? "true" : "false",
-                }, tab.label)
-              )
-            )
-          );
-        }
-
         function getAgentsObservabilityThreadTimestamp(thread) {
           const safeThread = normalizeThreadItem(thread || {});
           const timestamp = Date.parse(String(safeThread.updatedAt || safeThread.completedAt || safeThread.finishedAt || safeThread.endedAt || safeThread.startedAt || safeThread.createdAt || ""));
@@ -115547,7 +116085,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const sortOptions = [
             { id: "newest", label: "Newest first" },
             { id: "oldest", label: "Oldest first" },
-            { id: "cost", label: "Highest CT" },
+            { id: "cost", label: "Highest cost" },
             { id: "duration", label: "Longest duration" },
           ];
           const normalizedQuery = String(searchPopupQuery || "").trim().toLowerCase();
@@ -115878,7 +116416,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             { id: "provider", label: "Provider" },
             { id: "name", label: "Name (A-Z)" },
             { id: "intelligence", label: "Highest intelligence" },
-            { id: "cost", label: "Lowest CT cost" },
+            { id: "cost", label: "Lowest USD cost" },
             { id: "context", label: "Largest context" },
             { id: "speed", label: "Fastest" },
           ];
@@ -116167,7 +116705,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             { id: "teams", value: String(teamAgents.length), label: "Teams" },
             { id: "agent-ct", value: formatSettingsComputeTokens(totalSingleAgentCT), label: "Spent on Agents" },
             { id: "team-ct", value: formatSettingsComputeTokens(totalTeamAgentCT), label: "Spent on Teams" },
-            { id: "total-ct", value: formatSettingsComputeTokens(totalAgentsCT), label: "Total CT" },
+            { id: "total-ct", value: formatSettingsComputeTokens(totalAgentsCT), label: "Total cost" },
           ];
 
           const buildAgentsHomeActivityBuckets = (period) => {
@@ -116623,7 +117161,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               ],
               emptyText: emptyText || "No activity data yet",
               emptyContent,
-              title: "Daily CT by Agent Type",
+              title: "Daily cost by Agent Type",
               isLoading: agentsHomeThreadsLoading,
               usesComputeTokenValues,
               timescaleControl: React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
@@ -116640,16 +117178,23 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             });
 
           const isDevelopConfigureAgentsHome = embeddedInResources;
-          const agentsHomeTimescaleControl = React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
-            React.createElement("select", {
-              className: "playground-environments-home-comparison-timescale-select",
-              value: agentsHomeChartTimescale,
-              onChange: (event) => setAgentsHomeChartTimescale(String(event.target.value || "month")),
-              "aria-label": "Agent analytics timescale",
-            },
-              React.createElement("option", { value: "day" }, "Daily"),
-              React.createElement("option", { value: "week" }, "Weekly"),
-              React.createElement("option", { value: "month" }, "Monthly")
+          const agentsHomeTimescaleOptions = [
+            { id: "day", label: "1D" },
+            { id: "week", label: "1W" },
+            { id: "month", label: "1M" },
+          ];
+          const activeAgentsHomeTimescaleId = agentsHomeTimescaleOptions.some((option) => option.id === agentsHomeChartTimescale)
+            ? agentsHomeChartTimescale
+            : "month";
+          const agentsHomeTimescaleControl = React.createElement("div", { className: "playground-project-overview-progress-combo-ranges", role: "group", "aria-label": "Agent analytics time frame" },
+            agentsHomeTimescaleOptions.map((option) =>
+              React.createElement("button", {
+                key: option.id,
+                type: "button",
+                className: "playground-project-overview-progress-combo-range" + (activeAgentsHomeTimescaleId === option.id ? " is-active" : ""),
+                onClick: () => setAgentsHomeChartTimescale(option.id),
+                "aria-pressed": activeAgentsHomeTimescaleId === option.id ? "true" : "false",
+              }, option.label)
             )
           );
           const agentsHomeAnalyticsOptions = isDevelopConfigureAgentsHome
@@ -116692,68 +117237,50 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               ? React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header" },
                   React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, "Configure your Agents"),
                   React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
-                      onClick: () => window.open(${JSON.stringify(aiosOrigin + "/pricing")}, "_blank", "noopener,noreferrer"),
-                    }, "Pricing", React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 })),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button",
-                      onClick: handleCreateAgent,
-                    }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), "Add Agent")
+                    agentsHomeTimescaleControl,
+                    agentsHomeAnalyticsOptions
                   )
                 )
               : React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your AI workforce."),
-            renderAgentsOverviewHomeTabs(),
-            agentsOverviewHomeTab === "observability"
-              ? renderAgentsObservabilitySection()
-              : React.createElement(React.Fragment, null,
-                  React.createElement("div", {
-                    className: "playground-environments-home-metrics" + (isDevelopConfigureAgentsHome ? " playground-develop-server-metrics playground-develop-server-kind-metrics" : ""),
-                  },
-                    React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-agents-overview-analytics-card" },
-                      React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
-                        React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Analytics"),
-                        React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
-                          agentsHomeTimescaleControl,
-                          agentsHomeAnalyticsOptions
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
-                        agentsHomeKpis.map((item) =>
-                          React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
-                            React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
-                              React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
-                              React.createElement("span", null, item.label)
-                            ),
-                            React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
-                          )
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
-                        renderAgentsHomeUsageChart({
-                          ariaLabel: "Agent and team activity over time",
-                          labels: activityBuckets.map((bucket) => String(bucket?.label || "")),
-                          singleValues: agentsHomeHasCostActivity ? singleAgentCostActivity : singleAgentActivity,
-                          teamValues: agentsHomeHasCostActivity ? teamAgentCostActivity : teamActivity,
-                          singleCountValues: singleAgentActivity,
-                          teamCountValues: teamActivity,
-                          usesComputeTokenValues: agentsHomeHasCostActivity,
-                          emptyText: agentsHomeThreadsLoading ? "Loading activity..." : (agentsHomeThreadsError || "No activity data yet"),
-                          emptyContent: isDevelopConfigureAgentsHome
-                            ? renderAgentsConfigureUsageEmptyState(
-                                "no-agent-usage.avif",
-                                "No Agent Usage yet",
-                                "Agent usage appears here once agents start running and consuming compute tokens."
-                              )
-                            : null,
-                        })
+            React.createElement(React.Fragment, null,
+              React.createElement("div", {
+                className: "playground-environments-home-metrics" + (isDevelopConfigureAgentsHome ? " playground-develop-server-metrics playground-develop-server-kind-metrics" : ""),
+              },
+                React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-agents-overview-analytics-card" },
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
+                    agentsHomeKpis.map((item) =>
+                      React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+                        React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+                          React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
+                          React.createElement("span", null, item.label)
+                        ),
+                        React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
                       )
                     )
                   ),
-                  overviewListContent
+                  React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
+                    renderAgentsHomeUsageChart({
+                      ariaLabel: "Agent and team activity over time",
+                      labels: activityBuckets.map((bucket) => String(bucket?.label || "")),
+                      singleValues: agentsHomeHasCostActivity ? singleAgentCostActivity : singleAgentActivity,
+                      teamValues: agentsHomeHasCostActivity ? teamAgentCostActivity : teamActivity,
+                      singleCountValues: singleAgentActivity,
+                      teamCountValues: teamActivity,
+                      usesComputeTokenValues: agentsHomeHasCostActivity,
+                      emptyText: agentsHomeThreadsLoading ? "Loading activity..." : (agentsHomeThreadsError || "No activity data yet"),
+                      emptyContent: isDevelopConfigureAgentsHome
+                        ? renderAgentsConfigureUsageEmptyState(
+                            "no-agent-usage.avif",
+                            "No Agent Usage yet",
+                            "Agent usage appears here once agents start running and consuming credits."
+                          )
+                        : null,
+                    })
+                  )
                 )
+              ),
+              overviewListContent
+            )
           );
 
           return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-home-scroll" },
@@ -116763,30 +117290,68 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           );
         }
 
-        function closeAgentListActionMenu() {
-          setAgentListActionMenuState(null);
+        function clearAgentListActionMenuCloseTimer() {
+          if (agentListActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
+            window.clearTimeout(agentListActionMenuCloseTimerRef.current);
+            agentListActionMenuCloseTimerRef.current = null;
+          }
         }
 
-        function getAgentOverviewActionMenuPosition(event, menuHeight = 184) {
+        function closeAgentListActionMenu(options = {}) {
+          if (!agentListActionMenuState) {
+            return;
+          }
+          clearAgentListActionMenuCloseTimer();
+          if (options?.animate === false || typeof window === "undefined") {
+            setAgentListActionMenuClosing(false);
+            setAgentListActionMenuState(null);
+            return;
+          }
+          setAgentListActionMenuClosing(true);
+          agentListActionMenuCloseTimerRef.current = window.setTimeout(() => {
+            agentListActionMenuCloseTimerRef.current = null;
+            setAgentListActionMenuClosing(false);
+            setAgentListActionMenuState(null);
+          }, 90);
+        }
+
+        function getAgentOverviewActionMenuPosition(event, menuHeight = 184, options = {}) {
+          if (options?.openLeft) {
+            const rect = event.currentTarget.getBoundingClientRect();
+            const menuWidth = 220;
+            const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
+            const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+            const gutter = 12;
+            const sideGap = 8;
+            const maxRight = Math.max(gutter, viewportWidth - menuWidth - gutter);
+            const maxTop = Math.max(gutter, viewportHeight - menuHeight - gutter);
+            const preferredRight = viewportWidth - rect.left + sideGap;
+            return {
+              top: Math.max(gutter, Math.min(maxTop, rect.top + rect.height / 2 - menuHeight / 2)),
+              right: Math.max(gutter, Math.min(maxRight, preferredRight)),
+            };
+          }
           return getSideActionMenuPosition(event, menuHeight, 220);
         }
 
-        function openAgentListActionMenu(event, agent) {
+        function openAgentListActionMenu(event, agent, options = {}) {
           if (!agent?.id) {
             return;
           }
           event.preventDefault();
           event.stopPropagation();
-          const position = getAgentOverviewActionMenuPosition(event);
-          setAgentListActionMenuState((current) =>
-            current?.agentId === agent.id
-              ? null
-              : {
-                  agentId: agent.id,
-                  agentRecord: agent,
-                  ...position,
-                }
-          );
+          const position = getAgentOverviewActionMenuPosition(event, 184, options);
+          if (agentListActionMenuState?.agentId === agent.id && !agentListActionMenuClosing) {
+            closeAgentListActionMenu();
+            return;
+          }
+          clearAgentListActionMenuCloseTimer();
+          setAgentListActionMenuClosing(false);
+          setAgentListActionMenuState({
+            agentId: agent.id,
+            agentRecord: agent,
+            ...position,
+          });
         }
 
         function closeAgentRenameDialog() {
@@ -118500,7 +119065,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         function canPublishDraftAgentSelectedVersion() {
           const selectedVersion = getDraftAgentSelectedVersion();
-          return Boolean(selectedVersion && !hasDraftAgentVersionChanges() && selectedVersion.status !== "active");
+          if (!selectedVersion) return false;
+          const hasChanges = hasDraftAgentVersionChanges();
+          return selectedVersion.status === "active" ? hasChanges : !hasChanges;
+        }
+
+        function canPublishAgentVersion(version) {
+          const normalizedVersionId = String(version?.id || "").trim();
+          if (!normalizedVersionId) return false;
+          const selectedVersion = getDraftAgentSelectedVersion();
+          const hasChanges = hasDraftAgentVersionChanges();
+          const isActiveVersion = String(version?.status || "").toLowerCase() === "active";
+          if (isActiveVersion) {
+            return Boolean(selectedVersion?.id === normalizedVersionId && hasChanges);
+          }
+          return !hasChanges;
         }
 
         function getAgentVersionPrimaryActionKind() {
@@ -118860,7 +119439,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!draftAgent || agentVersionState.status === "loading") {
             return;
           }
-          if (hasDraftAgentVersionChanges()) {
+          const selectedVersion = getDraftAgentSelectedVersion();
+          const hasChanges = hasDraftAgentVersionChanges();
+          if (hasChanges && selectedVersion?.status !== "active") {
             setAgentVersionState({
               status: "error",
               message: "",
@@ -118868,7 +119449,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             });
             return;
           }
-          const selectedVersion = getDraftAgentSelectedVersion();
           const validation = validateAgentVersionForPublish(draftAgent, selectedVersion);
           if (!validation.ok) {
             setAgentVersionState({
@@ -118879,7 +119459,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return;
           }
           const actor = getAgentVersionActor();
-          const result = agentVersionController.buildPublishSelectedResource(draftAgent, { actor });
+          const result = agentVersionController.buildPublishSelectedResource(draftAgent, {
+            actor,
+            updateFromResource: hasChanges,
+          });
           if (!result?.resource) {
             return;
           }
@@ -118914,6 +119497,25 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return;
           }
           const targetVersion = readDraftAgentVersions().find((version) => version.id === String(versionId || "").trim());
+          const selectedVersion = getDraftAgentSelectedVersion();
+          const hasChanges = hasDraftAgentVersionChanges();
+          const shouldRepublishCurrentEditor = Boolean(
+            targetVersion
+            && targetVersion.status === "active"
+            && selectedVersion?.id === targetVersion.id
+            && hasChanges
+          );
+          if (hasChanges && !shouldRepublishCurrentEditor) {
+            setAgentVersionState({
+              status: "error",
+              message: "",
+              error: "Save the current version before publishing.",
+            });
+            return;
+          }
+          if (!canPublishAgentVersion(targetVersion)) {
+            return;
+          }
           const validation = validateAgentVersionForPublish(draftAgent, targetVersion);
           if (!validation.ok) {
             setAgentVersionState({
@@ -118924,7 +119526,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return;
           }
           const actor = getAgentVersionActor();
-          const result = agentVersionController.buildPublishVersionResource(draftAgent, versionId, { actor });
+          const result = agentVersionController.buildPublishVersionResource(draftAgent, versionId, {
+            actor,
+            updateFromResource: shouldRepublishCurrentEditor,
+          });
           if (!result?.resource) {
             return;
           }
@@ -119270,17 +119875,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const isDeleting = saveState.isSaving && agentListActionTarget.id === selectedAgentId;
           const targetIsTeam = agentListActionTarget.agentType === "team" || isPlaygroundTeamAgent(agentListActionTarget);
           const isProtected = Boolean(agentListActionTarget.isDefault || agentListActionTarget.isSystem);
+          const menuStyle = {
+            top: agentListActionMenuState.top + "px",
+          };
+          if (Number.isFinite(agentListActionMenuState.right)) {
+            menuStyle.right = agentListActionMenuState.right + "px";
+          } else {
+            menuStyle.left = agentListActionMenuState.left + "px";
+          }
 
           return React.createElement("div", {
               className: "sidebar-thread-popup-scrim",
               onClick: closeAgentListActionMenu,
             },
               React.createElement("div", {
-                className: "sidebar-thread-popup",
-                style: {
-                  top: agentListActionMenuState.top + "px",
-                  left: agentListActionMenuState.left + "px",
-                },
+                className: "sidebar-thread-popup is-agent-list-action-menu" + (agentListActionMenuClosing ? " is-closing" : ""),
+                style: menuStyle,
                 onClick: (event) => event.stopPropagation(),
               },
                 React.createElement("div", { className: "sidebar-thread-popup-title" }, targetIsTeam ? "Team" : "Agent"),
@@ -119881,8 +120491,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               : "30 days";
           const agentDetailKpis = [
             { id: "runs", value: String(totalAgentDetailRuns), label: "Runs " + agentDetailPeriodLabel },
-            { id: "total-ct", value: formatSettingsComputeTokens(totalAgentDetailCT), label: "Total CT" },
-            { id: "avg-ct", value: formatSettingsComputeTokens(averageAgentDetailCT), label: "Avg CT / Run" },
+            { id: "total-ct", value: formatSettingsComputeTokens(totalAgentDetailCT), label: "Total cost" },
+            { id: "avg-ct", value: formatSettingsComputeTokens(averageAgentDetailCT), label: "Avg cost / Run" },
             { id: "success", value: formatPlaygroundServerRate(resolvedAgentAnalyticsSummary.successRate24h), label: "Success Rate (24h)" },
             { id: "last-used", value: lastAgentDetailThread ? formatPlaygroundFileDate(lastAgentDetailThread.updatedAt || lastAgentDetailThread.createdAt) : "Never", label: "Last Used" },
           ];
@@ -120232,7 +120842,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return React.createElement(React.Fragment, null,
               React.createElement("div", { className: "playground-project-overview-chart-header" },
                 React.createElement("div", { className: "playground-project-overview-chart-header-main" },
-                  React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Daily CT by Agent"),
+                  React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Daily cost by Agent"),
                   timescaleControl || null
                 )
               ),
@@ -120254,7 +120864,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                       React.createElement("div", {
                           className: "playground-project-overview-chart-shell playground-agents-home-chartjs-frame",
                           role: "img",
-                          "aria-label": ariaLabel || "Agent compute token cost over time",
+                          "aria-label": ariaLabel || "Agent usage cost over time",
                         },
                         React.createElement("canvas", {
                           ref: canvasRef,
@@ -120290,7 +120900,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }),
             React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "No Agent Usage yet"),
             React.createElement("div", { className: "playground-auth-users-empty-state-copy" },
-              "Agent usage appears here once this agent starts running and consuming compute tokens."
+              "Agent usage appears here once this agent starts running and consuming credits."
             )
           );
           const renderAgentDetailCostChart = () => {
@@ -120313,7 +120923,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               series: agentDetailComputeSeries,
               yMax: maxAgentDetailDailyCt,
               tickFormatter: formatSettingsComputeTokens,
-              ariaLabel: "Agent compute token usage by resource type",
+              ariaLabel: "Agent usage cost by resource type",
               emptyText: agentsHomeThreadsError || "No agent compute usage yet",
               emptyContent: renderAgentDetailCostEmptyState(),
             });
@@ -120975,7 +121585,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const agentDetailPerformanceKpis = [
             { id: "total-runs", label: "Total Runs", value: formatAgentDetailPerformanceInteger(agentDetailPerformanceRunCount) },
             { id: "cost", label: "Cost", value: formatSettingsComputeTokens(agentDetailPerformanceCost) },
-            { id: "avg-ct", label: "Avg CT / Run", value: formatSettingsComputeTokens(agentDetailPerformanceAvgCost) },
+            { id: "avg-ct", label: "Avg cost / Run", value: formatSettingsComputeTokens(agentDetailPerformanceAvgCost) },
             { id: "success-rate", label: "Success Rate", value: String(agentDetailPerformanceSuccessRate) + "%" },
           ];
           const maxAgentDetailPerformanceValue = Math.max(
@@ -121307,7 +121917,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 ref: canvasRef,
                 className: "playground-project-overview-progress-combo-canvas playground-agents-detail-progress-combo-canvas",
                 role: "img",
-                "aria-label": "Agent analytics: runs and compute token usage",
+                "aria-label": "Agent analytics: runs and usage cost",
               })
             );
           }
@@ -123787,6 +124397,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             onSaveVersion: () => openCreateAgentVersionModal({ force: true }),
             onRestoreVersion: (versionId) => void restoreAgentVersion(versionId),
             onPublishVersion: (versionId) => void publishAgentVersion(versionId),
+            canPublishVersion: (version) => canPublishAgentVersion(version),
             onDeleteVersion: (versionId) => void deleteAgentVersion(versionId),
             versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
               React.createElement("button", {
@@ -124460,7 +125071,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                           React.createElement("button", {
                             type: "button",
                             className: "playground-overview-table-action-button" + (isMenuOpen ? " is-open" : ""),
-                            onClick: (event) => openAgentListActionMenu(event, agent),
+                            onClick: (event) => openAgentListActionMenu(event, agent, { openLeft: true }),
                             onKeyDown: (event) => event.stopPropagation(),
                             "aria-label": "Agent actions",
                             "aria-expanded": isMenuOpen ? "true" : "false",
@@ -153694,7 +154305,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
           const calendarUpgradeFeatures = [
             { icon: CalendarIcon, label: "Calendar and scheduled tasks" },
-            { icon: Coins, label: "1,500 Compute Tokens included" },
+            { icon: Coins, label: "$15.00 included credits" },
             { icon: User, label: "Custom agents and cloud computers" },
             { icon: Telescope, label: "Premium models for research, coding, and images" },
             { icon: Code, label: "API access for agent workflows" },
@@ -156502,7 +157113,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const isOnPaidPlan = normalizedPlanId !== "free";
         const individualPlan = SETTINGS_PLAN_CATALOG.find((plan) => plan.id === "individual") || SETTINGS_PLAN_CATALOG[0];
         const individualPlanFeatures = [
-          { text: "1,500 Compute Tokens included", icon: BatteryLow },
+          { text: "$15.00 included credits", icon: BatteryLow },
           { text: "Custom agents and cloud computers", icon: User },
           { text: "Premium models for research, coding, and images", icon: Telescope },
           { text: "Calendar and scheduled tasks", icon: Clock },
@@ -156999,17 +157610,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         function formatOnboardingComputerProfileRate(profile) {
-          const rate = Number(profile?.minutePrice || 0) * 100;
+          const rate = Number(profile?.minutePrice || 0);
           if (!Number.isFinite(rate) || rate <= 0) {
-            return "0 CT / min";
+            return "$0.00 / min";
           }
-          if (Math.abs(rate - Math.round(rate)) < 0.001) {
-            return String(Math.round(rate)) + " CT / min";
-          }
-          if (Math.abs(rate * 10 - Math.round(rate * 10)) < 0.001) {
-            return rate.toFixed(1) + " CT / min";
-          }
-          return rate.toFixed(2) + " CT / min";
+          return "$" + rate.toFixed(rate < 0.01 ? 4 : 3) + " / min";
         }
 
         function formatOnboardingComputerProfileHourlyPrice(profile) {
@@ -160083,6 +160688,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [organizationPageSelectedOrganizationId, setOrganizationPageSelectedOrganizationId] = useState("");
         const [organizationPageMembers, setOrganizationPageMembers] = useState([]);
         const [organizationPageInvitations, setOrganizationPageInvitations] = useState([]);
+        const [organizationPageBillingSummary, setOrganizationPageBillingSummary] = useState(null);
+        const [organizationPageBillingError, setOrganizationPageBillingError] = useState("");
         const [organizationPageCreateName, setOrganizationPageCreateName] = useState("");
         const [organizationPageCreateModalOpen, setOrganizationPageCreateModalOpen] = useState(false);
         const [organizationPageRenameModalOpen, setOrganizationPageRenameModalOpen] = useState(false);
@@ -160310,7 +160917,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
         const [sidebarWorkspaceMode, setSidebarWorkspaceMode] = useState(initialSidebarWorkspaceMode);
         const [sidebarWorkspaceMenuOpen, setSidebarWorkspaceMenuOpen] = useState(false);
-        const [agentsOverviewTabRequest, setAgentsOverviewTabRequest] = useState(null);
         const [selectedPluginId, setSelectedPluginId] = useState("");
         const [toolsSkillsHeaderState, setToolsSkillsHeaderState] = useState({
           mode: "overview",
@@ -163292,6 +163898,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setOrganizationPageOrganizations([]);
             setOrganizationPageMembers([]);
             setOrganizationPageInvitations([]);
+            setOrganizationPageBillingSummary(null);
+            setOrganizationPageBillingError("");
             return;
           }
           if (organizationPageLoadAbortControllerRef.current) {
@@ -163344,9 +163952,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
             if (!selectedOrganizationId || listOnly) {
               setOrganizationPageMembers([]);
               setOrganizationPageInvitations([]);
+              setOrganizationPageBillingSummary(null);
+              setOrganizationPageBillingError("");
               return;
             }
-            const [membersResult, invitationsResult] = await Promise.allSettled([
+            const selectedOrganizationHeaders = {
+              ...baseAuthRequestHeaders,
+              [PLAYGROUND_ORGANIZATION_HEADER]: selectedOrganizationId,
+            };
+            const [membersResult, invitationsResult, billingSummaryResult] = await Promise.allSettled([
               fetchJsonWithTimeout(proxyBackendBase + "/organizations/" + encodeURIComponent(selectedOrganizationId) + "/members", {
                 method: "GET",
                 credentials: "include",
@@ -163360,6 +163974,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 cache: "no-store",
                 signal: loadAbortController.signal,
                 headers: baseAuthRequestHeaders,
+              }, 10000),
+              fetchJsonWithTimeout(proxyBackendBase + "/billing/organization/summary?activityLimit=6", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                signal: loadAbortController.signal,
+                headers: selectedOrganizationHeaders,
               }, 10000),
             ]);
             if (!isCurrentLoad()) {
@@ -163379,6 +164000,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ? invitationsResult.value.data.data
                 : []
             );
+            if (billingSummaryResult.status === "fulfilled" && billingSummaryResult.value.response.ok) {
+              setOrganizationPageBillingSummary(billingSummaryResult.value.data || null);
+              setOrganizationPageBillingError("");
+            } else {
+              const billingData = billingSummaryResult.status === "fulfilled" ? billingSummaryResult.value.data : null;
+              const billingStatus = billingSummaryResult.status === "fulfilled" ? billingSummaryResult.value.response.status : 0;
+              const billingMessage = billingStatus === 404
+                ? "Organization billing summary is not available on this backend yet. Redeploy the backend, then refresh this page."
+                : billingSummaryResult.status === "rejected"
+                ? (billingSummaryResult.reason instanceof Error ? billingSummaryResult.reason.message : "")
+                : getOrganizationPageApiErrorMessage(billingData, "Billing summary is not available for this organization yet.");
+              setOrganizationPageBillingSummary(null);
+              setOrganizationPageBillingError(billingMessage || "Billing summary is not available for this organization yet.");
+            }
           } catch (error) {
             if (!isCurrentLoad() || loadAbortController.signal.aborted) {
               return;
@@ -164943,6 +165578,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setOrganizationPageOrganizations([]);
             setOrganizationPageMembers([]);
             setOrganizationPageInvitations([]);
+            setOrganizationPageBillingSummary(null);
+            setOrganizationPageBillingError("");
             return;
           }
           void loadOrganizationPageData({
@@ -175680,7 +176317,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     y: cy - 16,
                     textAnchor: "middle",
                     className: "playground-settings-usage-donut-center-label",
-                  }, config?.centerLabel || "Total CT"),
+                  }, config?.centerLabel || "Total cost"),
                   React.createElement("text", {
                     x: cx,
                     y: cy + 6,
@@ -177277,7 +177914,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const tagPerformanceKpis = [
             { id: "total-runs", label: "Total Threads", value: formatTagPerformanceInteger(tagRunCount) },
             { id: "cost", label: "Cost", value: formatSettingsComputeTokens(tagTotalCT) },
-            { id: "avg-ct", label: "Avg CT / Thread", value: formatSettingsComputeTokens(tagAvgCT) },
+            { id: "avg-ct", label: "Avg cost / Thread", value: formatSettingsComputeTokens(tagAvgCT) },
             { id: "success-rate", label: "Success Rate", value: String(tagSuccessRate) + "%" },
           ];
           const tagPerformanceSeries = [
@@ -177496,7 +178133,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ref: canvasRef,
                 className: "playground-project-overview-progress-combo-canvas playground-agents-detail-progress-combo-canvas playground-tags-detail-progress-combo-canvas",
                 role: "img",
-                "aria-label": selectedTag.label + " analytics: threads and compute token usage",
+                "aria-label": selectedTag.label + " analytics: threads and usage cost",
               })
             );
           }
@@ -180175,8 +180812,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               "aria-hidden": "true",
                             }, React.createElement(Coins, { width: 18, height: 18, strokeWidth: 1.9 })),
                             React.createElement("div", { className: "playground-settings-topup-modal-title-shell" },
-                              React.createElement("div", { className: "playground-settings-topup-modal-title" }, "Add Compute Tokens"),
-                              React.createElement("div", { className: "playground-settings-topup-modal-subtitle" }, "Buy a one-time Compute Token add-on without changing your subscription.")
+                              React.createElement("div", { className: "playground-settings-topup-modal-title" }, "Add USD credits"),
+                              React.createElement("div", { className: "playground-settings-topup-modal-subtitle" }, "Buy a one-time USD credit add-on without changing your subscription.")
                             )
                           ),
                           React.createElement("button", {
@@ -180234,7 +180871,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             },
                               settingsTopUpActionId === selectedTopUpPackage.id
                                 ? React.createElement("span", null, "Loading...")
-                                : "Buy Compute Tokens"
+                                : "Buy USD credits"
                             )
                           ),
                       )
@@ -180307,7 +180944,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           renderSettingsBanner("success", settingsBillingSuccess),
                           currentCancelledSubscription
                             ? React.createElement("div", { className: "playground-settings-plan-system-note is-cancelled" },
-                                React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "CT"),
+                                React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "$"),
                                 React.createElement("div", null,
                                   React.createElement("div", { className: "playground-settings-plan-system-note-title" }, "Subscription cancelled"),
                                   React.createElement("div", { className: "playground-settings-plan-system-note-copy" }, currentCancelledSubscriptionCopy)
@@ -180403,7 +181040,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                         }, React.createElement(CircleHelp, { width: 14, height: 14, strokeWidth: 1.9 })),
                                         settingsResourceCapInfoOpen
                                           ? React.createElement("div", { className: "playground-settings-plans-resource-cap-info-popover" },
-                                              "Limits how many Compute Tokens persistent resources like servers, functions, databases, and environments can consume each month, so more budget remains available for active agent threads."
+                                              "Limits how much persistent resources like servers, functions, databases, and environments can spend each month, so more budget remains available for active agent threads."
                                             )
                                           : null
                                       )
@@ -180427,7 +181064,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                           disabled: !settingsCanConfigureBusinessFeatures || settingsPlatformConfigSaving,
                                           placeholder: "None",
                                         }),
-                                        React.createElement("span", { className: "playground-settings-plans-resource-cap-suffix" }, "CT / month")
+                                        React.createElement("span", { className: "playground-settings-plans-resource-cap-suffix" }, "USD / month")
                                       )
                                     )
                                   ),
@@ -180480,7 +181117,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           usagePercent >= 100 && !hasTopUpBalance
                             ? React.createElement("div", { className: "playground-settings-plan-action-warning" },
                                 React.createElement("strong", null, "Action Required:"),
-                                " You've used all your Compute Tokens. Upgrade your plan or buy a one-time add-on to continue using agents."
+                                " You've used all your included credits. Upgrade your plan or buy a one-time add-on to continue using agents."
                               )
                             : null,
                           settingsBudgetStatus?.subscriptionSource === "apple" && settingsCurrentTierId !== "free"
@@ -181681,13 +182318,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   const usageChartTabs = [
                     buildUsageChartTab({
                       id: "overall",
-                      label: "Overall CT Usage",
+                      label: "Overall usage cost",
                       value: formatSettingsComputeTokens(totalUsedCT),
-                      title: "Overall CT Usage",
+                      title: "Overall usage cost",
                       labels: dailyLabels,
                       series: resourceSeries,
                       emptyText: "No usage in this period",
-                      ariaLabel: "Overall compute token usage by day",
+                      ariaLabel: "Overall usage cost by day",
                     }),
                     buildUsageChartTab({
                       id: "agents",
@@ -181838,7 +182475,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     React.createElement("tr", null,
                                       React.createElement("th", null, "Resource"),
                                       React.createElement("th", null, "Type"),
-                                      React.createElement("th", { className: "is-numeric" }, "CT")
+                                      React.createElement("th", { className: "is-numeric" }, "Cost")
                                     )
                                   ),
                                   React.createElement("tbody", null,
@@ -183442,6 +184079,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setOrganizationPageSelectedOrganizationId(normalizedOrganizationId);
             setOrganizationPageMembers([]);
             setOrganizationPageInvitations([]);
+            setOrganizationPageBillingSummary(null);
+            setOrganizationPageBillingError("");
           };
           const renderOrganizationCreateModal = () => organizationPageCreateModalOpen
             ? React.createElement("div", {
@@ -183644,6 +184283,103 @@ ${PROJECT_OVERVIEW_SCRIPT}
               )
             );
           };
+          const formatOrganizationBillingUsd = (value) => formatSettingsCurrency(Number(value || 0));
+          const formatOrganizationBillingSignedUsd = (value) => {
+            const amount = Number(value || 0);
+            const prefix = amount > 0 ? "+" : amount < 0 ? "-" : "";
+            return prefix + formatOrganizationBillingUsd(Math.abs(amount));
+          };
+          const formatOrganizationBillingLabel = (value) => {
+            const normalized = String(value || "").trim().replace(/[_-]+/g, " ");
+            if (!normalized) return "Ledger activity";
+            return normalized.replace(/\b\w/g, (character) => character.toUpperCase());
+          };
+          const renderOrganizationBillingMetric = (label, value, subtitle) => React.createElement("div", {
+              className: "playground-organization-billing-card",
+            },
+              React.createElement("div", { className: "playground-organization-billing-card-label" }, label),
+              React.createElement("div", null,
+                React.createElement("div", { className: "playground-organization-billing-card-value" }, value),
+                subtitle ? React.createElement("div", { className: "playground-organization-billing-card-subtitle" }, subtitle) : null
+              )
+            );
+          const renderOrganizationBillingSection = () => {
+            const summary = organizationPageBillingSummary && typeof organizationPageBillingSummary === "object" && !Array.isArray(organizationPageBillingSummary)
+              ? organizationPageBillingSummary
+              : null;
+            const budget = summary?.budget && typeof summary.budget === "object" && !Array.isArray(summary.budget) ? summary.budget : {};
+            const ledger = summary?.ledger && typeof summary.ledger === "object" && !Array.isArray(summary.ledger) ? summary.ledger : {};
+            const reservationStats = ledger.reservationStats && typeof ledger.reservationStats === "object" && !Array.isArray(ledger.reservationStats)
+              ? ledger.reservationStats
+              : {};
+            const activity = ledger.activity && typeof ledger.activity === "object" && !Array.isArray(ledger.activity) ? ledger.activity : {};
+            const ledgerEntries = Array.isArray(activity.ledgerEntries) ? activity.ledgerEntries.slice(0, 4) : [];
+            const availableBudget = Number(budget.availableBudget || 0);
+            const currentPeriodUsage = Number(budget.currentPeriodUsage || 0);
+            const includedTierQuota = Number(budget.includedTierQuota || budget.tierQuota || 0);
+            const topUpBalance = Number(budget.topUpBalance || 0);
+            const pendingHold = Number(ledger.pendingReservationHoldUsd || reservationStats.totalPendingHoldUsd || 0);
+            const reconciliation = ledger.reconciliation && typeof ledger.reconciliation === "object" && !Array.isArray(ledger.reconciliation)
+              ? ledger.reconciliation
+              : null;
+            const modeLabel = reconciliation?.mismatch
+              ? "Ledger mirror needs reconciliation"
+              : "Usage and ledger are in sync";
+
+            return React.createElement("section", { className: "playground-team-detail-panel playground-organization-billing-panel" },
+              React.createElement("div", { className: "playground-organization-billing-header" },
+                React.createElement("div", null,
+                  React.createElement("h2", { className: "playground-organization-billing-title" }, "Billing"),
+                  React.createElement("div", { className: "playground-organization-billing-meta" },
+                    summary
+                      ? (formatSubscriptionTier(budget.tier) + " workspace · " + modeLabel)
+                      : (organizationPageBillingError || (organizationPageLoading ? "Loading billing summary..." : "Billing summary is not available yet."))
+                  )
+                )
+              ),
+              summary
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("div", { className: "playground-organization-billing-grid" },
+                      renderOrganizationBillingMetric(
+                        "Available",
+                        formatOrganizationBillingUsd(availableBudget),
+                        "Current spendable balance"
+                      ),
+                      renderOrganizationBillingMetric(
+                        "Period usage",
+                        formatOrganizationBillingUsd(currentPeriodUsage),
+                        includedTierQuota > 0 ? "of " + formatOrganizationBillingUsd(includedTierQuota) + " included" : "No included quota"
+                      ),
+                      renderOrganizationBillingMetric(
+                        "Top-up balance",
+                        formatOrganizationBillingUsd(topUpBalance),
+                        "Purchased credit balance"
+                      ),
+                      renderOrganizationBillingMetric(
+                        "Pending holds",
+                        formatOrganizationBillingUsd(pendingHold),
+                        String(reservationStats.pendingCount || 0) + " pending reservation" + (Number(reservationStats.pendingCount || 0) === 1 ? "" : "s")
+                      )
+                    ),
+                    ledgerEntries.length > 0
+                      ? React.createElement("div", { className: "playground-organization-billing-activity" },
+                          ledgerEntries.map((entry, index) => React.createElement("div", {
+                              key: String(entry?.id || entry?.createdAt || "billing-entry-" + index),
+                              className: "playground-organization-billing-activity-row",
+                            },
+                              React.createElement("div", { className: "playground-organization-billing-activity-copy" },
+                                React.createElement("div", { className: "playground-organization-billing-activity-title" }, formatOrganizationBillingLabel(entry?.entryType)),
+                                React.createElement("div", { className: "playground-organization-billing-activity-meta" }, formatDate(entry?.createdAt) || "Recent activity")
+                              ),
+                              React.createElement("div", { className: "playground-organization-billing-activity-amount" }, formatOrganizationBillingSignedUsd(entry?.amountUsd))
+                            )
+                          )
+                        )
+                      : null
+                  )
+                : null
+            );
+          };
           const renderOverview = () => React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-team-page-header" },
               React.createElement("div", null,
@@ -183792,6 +184528,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         setOrganizationPageSelectedOrganizationId("");
                         setOrganizationPageMembers([]);
                         setOrganizationPageInvitations([]);
+                        setOrganizationPageBillingSummary(null);
+                        setOrganizationPageBillingError("");
                       },
                     }, React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }), "Organization"),
                     React.createElement("div", { className: "playground-team-detail-header" },
@@ -183819,6 +184557,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       )
                     ),
                     organizationPageError ? React.createElement("div", { className: "playground-team-error" }, organizationPageError) : null,
+                    renderOrganizationBillingSection(),
                     renderMembers(),
                     renderOrganizationRenameModal(),
                     renderOrganizationInviteModal()
@@ -190525,7 +191264,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
           const welcomeUsageWidget = React.createElement("div", {
               className: "playground-thread-widget playground-thread-widget-usage",
-              "aria-label": "Open compute token usage details",
+              "aria-label": "Open usage cost details",
               role: "button",
               tabIndex: 0,
               style: { "--usage-remaining": welcomeRemainingStyleValue },
@@ -194739,7 +195478,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
                   onOpenSettingsUsage: () => openSettingsPage("costs-overview"),
                   backRequestToken: resourcesBackRequestToken,
-                  overviewTabRequest: agentsOverviewTabRequest,
                 })
               : hasDemoAccess
                 ? renderDemoFeaturePage("agents")
@@ -195164,7 +195902,21 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           function canPublishSelectedGuardrailVersion() {
             const selectedVersion = getSelectedGuardrailVersion();
-            return Boolean(selectedVersion && !hasSelectedGuardrailVersionChanges() && selectedVersion.status !== "active");
+            if (!selectedVersion) return false;
+            const hasChanges = hasSelectedGuardrailVersionChanges();
+            return selectedVersion.status === "active" ? hasChanges : !hasChanges;
+          }
+
+          function canPublishGuardrailVersion(version) {
+            const normalizedVersionId = String(version?.id || "").trim();
+            if (!normalizedVersionId) return false;
+            const selectedVersion = getSelectedGuardrailVersion();
+            const hasChanges = hasSelectedGuardrailVersionChanges();
+            const isActiveVersion = String(version?.status || "").toLowerCase() === "active";
+            if (isActiveVersion) {
+              return Boolean(selectedVersion?.id === normalizedVersionId && hasChanges);
+            }
+            return !hasChanges;
           }
 
           function getGuardrailVersionPrimaryActionKind() {
@@ -195410,7 +196162,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           function publishCurrentGuardrailVersion() {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
-            if (hasSelectedGuardrailVersionChanges()) {
+            const selectedVersion = getSelectedGuardrailVersion();
+            const hasChanges = hasSelectedGuardrailVersionChanges();
+            if (hasChanges && selectedVersion?.status !== "active") {
               setGuardrailVersionState({
                 status: "error",
                 message: "",
@@ -195419,7 +196173,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return null;
             }
             if (!canPublishSelectedGuardrailVersion()) return null;
-            const result = playgroundGuardrailVersionController.buildPublishSelectedResource(selectedGuardrailSet);
+            const result = playgroundGuardrailVersionController.buildPublishSelectedResource(selectedGuardrailSet, {
+              updateFromResource: hasChanges,
+            });
             if (!result?.resource) return null;
             return commitVersionedGuardrailSet(result.resource, {
               loadingMessage: "Publishing current version...",
@@ -195441,7 +196197,27 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           function publishGuardrailVersion(versionId) {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
-            const result = playgroundGuardrailVersionController.buildPublishVersionResource(selectedGuardrailSet, versionId);
+            const targetVersion = readSelectedGuardrailVersions().find((version) => version.id === String(versionId || "").trim());
+            const selectedVersion = getSelectedGuardrailVersion();
+            const hasChanges = hasSelectedGuardrailVersionChanges();
+            const shouldRepublishCurrentEditor = Boolean(
+              targetVersion
+              && targetVersion.status === "active"
+              && selectedVersion?.id === targetVersion.id
+              && hasChanges
+            );
+            if (hasChanges && !shouldRepublishCurrentEditor) {
+              setGuardrailVersionState({
+                status: "error",
+                message: "",
+                error: "Save the current version before publishing.",
+              });
+              return null;
+            }
+            if (!canPublishGuardrailVersion(targetVersion)) return null;
+            const result = playgroundGuardrailVersionController.buildPublishVersionResource(selectedGuardrailSet, versionId, {
+              updateFromResource: shouldRepublishCurrentEditor,
+            });
             if (!result?.resource) return null;
             return commitVersionedGuardrailSet(result.resource, {
               loadingMessage: "Publishing guardrail version...",
@@ -195587,6 +196363,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               onSaveVersion: () => openCreateGuardrailVersionModal({ force: true }),
               onRestoreVersion: (versionId) => restoreGuardrailVersion(versionId),
               onPublishVersion: (versionId) => publishGuardrailVersion(versionId),
+              canPublishVersion: (version) => canPublishGuardrailVersion(version),
               onDeleteVersion: (versionId) => deleteGuardrailVersion(versionId),
               versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
                 React.createElement("button", {
@@ -196526,6 +197303,34 @@ ${PROJECT_OVERVIEW_SCRIPT}
               }
               void refreshThreads(undefined, String(threadRecord?.id || "").trim(), { silent: true });
             },
+            onAgentVersionCreated: (agentId, version) => {
+              const normalizedAgentId = String(agentId || "").trim();
+              const sourceVersion = version && typeof version === "object" && !Array.isArray(version) ? version : null;
+              if (!normalizedAgentId || !sourceVersion?.id) return;
+              setRealAgents((current) => (Array.isArray(current) ? current : []).map((agent) => {
+                if (String(agent?.id || "").trim() !== normalizedAgentId) return agent;
+                const normalizedVersion = typeof normalizePlaygroundAgentVersion === "function"
+                  ? normalizePlaygroundAgentVersion(sourceVersion)
+                  : sourceVersion;
+                const existingVersions = typeof readPlaygroundAgentVersions === "function"
+                  ? readPlaygroundAgentVersions(agent)
+                  : (Array.isArray(agent?.agentVersions) ? agent.agentVersions : Array.isArray(agent?.versions) ? agent.versions : []);
+                const nextVersions = [normalizedVersion]
+                  .concat((Array.isArray(existingVersions) ? existingVersions : []).filter((existingVersion) => String(existingVersion?.id || "").trim() !== String(normalizedVersion.id || "").trim()));
+                if (typeof createPlaygroundAgentWithVersionList === "function") {
+                  return createPlaygroundAgentWithVersionList(agent, nextVersions, normalizedVersion.id);
+                }
+                const metadata = agent?.metadata && typeof agent.metadata === "object" && !Array.isArray(agent.metadata) ? { ...agent.metadata } : {};
+                metadata.agentVersions = nextVersions;
+                metadata.agent_versions = nextVersions;
+                return {
+                  ...agent,
+                  agentVersions: nextVersions,
+                  versions: nextVersions,
+                  metadata,
+                };
+              }));
+            },
             onAgentsRefresh: refreshAgents,
           });
         }
@@ -196967,7 +197772,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               emptyContent: renderConfigureUsageEmptyState(
                 "no-agent-usage.avif",
                 "No Agent Usage yet",
-                "Agent usage appears here once agents start running and consuming compute tokens."
+                "Agent usage appears here once agents start running and consuming credits."
               ),
               ariaLabel: "Compute token usage by agent",
             }),
@@ -198279,12 +199084,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (sidebarWorkspaceMode === "configure") {
             return [
               {
-                id: "new-thread",
-                label: "New Thread",
-                Icon: SquarePen,
-                onClick: hasShellAccess ? handleNewThread : handleSignInWithComputerAgents,
-              },
-              {
                 id: "configure-home",
                 label: "Home",
                 Icon: House,
@@ -198307,7 +199106,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               },
               {
                 id: "organization",
-                label: "Organization",
+                label: "Organizations",
                 Icon: Building2,
                 active: activePage === "organization",
                 onClick: () => openOrganizationPage(),
@@ -198409,12 +199208,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           if (sidebarWorkspaceMode === "develop") {
             return [
-              {
-                id: "new-thread",
-                label: "New Thread",
-                Icon: SquarePen,
-                onClick: hasShellAccess ? handleNewThread : handleSignInWithComputerAgents,
-              },
               {
                 id: "develop-home",
                 label: "Home",
@@ -207842,19 +208635,19 @@ function serveProductUsageSummaryPageV2(res) {
         },
         models: {
           title: "Models",
-          copy: "LLMs used by users, including request volume, active users, and available token or CT totals.",
+          copy: "LLMs used by users, including request volume, active users, token totals, and USD-credit cost totals.",
           primaryTitle: "LLM Usage",
           primaryNote: "Model usage by day",
           chartSeries: [
             { key: "modelRequests", label: "Model calls", color: "#66a6ff", type: "bar" },
             { key: "modelTokens", label: "LLM tokens", color: "#45d483", type: "line" },
-            { key: "modelTotalCT", label: "Compute Tokens", color: "#8f7cff", type: "line" },
+            { key: "modelTotalCT", label: "Usage cost", color: "#8f7cff", type: "line" },
           ],
           kpis: [
             ["Models used", "modelSummary.modelCount", "Distinct LLMs"],
             ["Model calls", "modelSummary.requests", "LLM requests"],
             ["LLM tokens", "modelSummary.tokens", "Actual model tokens"],
-            ["Compute Tokens", "modelSummary.totalCT", "Model CT"],
+            ["Usage cost", "modelSummary.totalCT", "Model cost", null, "usdCredits"],
           ],
           breakdown: "models",
           table: "models",
@@ -207971,6 +208764,15 @@ function serveProductUsageSummaryPageV2(res) {
         return new Intl.NumberFormat(undefined, { maximumFractionDigits: digits == null ? 0 : digits }).format(numberValue(value));
       }
 
+      function formatUsdCredits(value) {
+        return new Intl.NumberFormat(undefined, {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(numberValue(value) / 100);
+      }
+
       function formatPercent(value) {
         return Math.round(numberValue(value) * 100) + "%";
       }
@@ -207999,6 +208801,7 @@ function serveProductUsageSummaryPageV2(res) {
         if (mode === "minutes") return formatMinutes(value);
         if (mode === "seconds") return formatSeconds(value);
         if (mode === "decimal") return formatNumber(value, 1);
+        if (mode === "usdCredits") return formatUsdCredits(value);
         return formatNumber(value);
       }
 
@@ -208565,7 +209368,7 @@ function serveProductUsageSummaryPageV2(res) {
                 row.provider || "",
                 row.tokens ? formatNumber(row.tokens) + " tokens" : "",
                 row.users ? formatNumber(row.users) + " users" : "",
-                row.totalCT ? formatNumber(row.totalCT) + " CT" : "",
+                row.totalCT ? formatUsdCredits(row.totalCT) : "",
               ].filter(Boolean).join(" · ");
               return {
                 label: row.label,
@@ -208828,7 +209631,7 @@ function serveProductUsageSummaryPageV2(res) {
         if (!rows || !rows.length) {
           return '<div class="usage-empty">No model usage data in this period.</div>';
         }
-        return '<table><thead><tr><th>Model</th><th>Provider</th><th>Runs</th><th>Users</th><th>Input tokens</th><th>Output tokens</th><th>Cache tokens</th><th>Total tokens</th><th>Compute Tokens</th></tr></thead><tbody>' +
+        return '<table><thead><tr><th>Model</th><th>Provider</th><th>Runs</th><th>Users</th><th>Input tokens</th><th>Output tokens</th><th>Cache tokens</th><th>Total tokens</th><th>Usage cost</th></tr></thead><tbody>' +
           rows.map(function(row) {
             return '<tr>' +
               '<td title="' + escapeHtml(row.id || row.label) + '">' + escapeHtml(row.label || row.id || "Unknown model") + '</td>' +
@@ -208839,7 +209642,7 @@ function serveProductUsageSummaryPageV2(res) {
               '<td>' + formatNumber(row.outputTokens) + '</td>' +
               '<td>' + formatNumber(row.cacheTokens) + '</td>' +
               '<td>' + formatNumber(row.tokens) + '</td>' +
-              '<td>' + formatNumber(row.totalCT) + '</td>' +
+              '<td>' + formatUsdCredits(row.totalCT) + '</td>' +
             '</tr>';
           }).join("") +
           '</tbody></table>';
@@ -209106,6 +209909,7 @@ const playgroundEvaluationsRuntime = createPlaygroundEvaluationsRuntime({
   withProxyOrganizationHeader,
   hasAiosSession,
   fetchAiosApi,
+  fetchAiosCloud,
   enrichThreadPayloadWithAgentGuardrails,
 });
 
@@ -209117,6 +209921,7 @@ const playgroundFineTuningRuntime = createPlaygroundFineTuningRuntime({
   withProxyOrganizationHeader,
   hasAiosSession,
   fetchAiosApi,
+  fetchAiosCloud,
   enrichThreadPayloadWithAgentGuardrails,
 });
 
@@ -210757,6 +211562,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/real/billing/budget") {
     void proxyUpstreamGet(req, res, "/billing/budget");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/real/billing/organization/summary") {
+    void proxyUpstreamGet(req, res, "/billing/organization/summary");
     return;
   }
 

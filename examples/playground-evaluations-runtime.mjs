@@ -856,6 +856,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     withProxyOrganizationHeader,
     hasAiosSession,
     fetchAiosApi,
+    fetchAiosCloud,
     enrichThreadPayloadWithAgentGuardrails,
   } = deps;
   const runsById = new Map();
@@ -958,7 +959,14 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         body: JSON.stringify(enrichedPayload),
       });
     } else if (hasAiosSession(requestContext)) {
-      response = await fetchAiosApi(requestContext, "/api/threads", {
+      const cloudFetch = typeof fetchAiosCloud === "function" ? fetchAiosCloud : null;
+      response = cloudFetch
+        ? await cloudFetch(requestContext, "/threads", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(enrichedPayload),
+          })
+        : await fetchAiosApi(requestContext, "/api/threads", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(enrichedPayload),
@@ -1017,7 +1025,14 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         body: JSON.stringify(payload),
       });
     } else if (hasAiosSession(requestContext)) {
-      response = await fetchAiosApi(requestContext, `/api/threads/${encodeURIComponent(threadId)}/messages`, {
+      const cloudFetch = typeof fetchAiosCloud === "function" ? fetchAiosCloud : null;
+      response = cloudFetch
+        ? await cloudFetch(requestContext, `/threads/${encodeURIComponent(threadId)}/messages`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+        : await fetchAiosApi(requestContext, `/api/threads/${encodeURIComponent(threadId)}/messages`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
