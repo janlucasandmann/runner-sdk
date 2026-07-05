@@ -85,6 +85,51 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         margin-top: 0;
       }
 
+      .playground-fine-tuning-detail-time {
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+
+      .playground-fine-tuning-detail-stop-button {
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 0 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.92);
+        font: inherit;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-fine-tuning-detail-stop-button svg {
+        color: #ff6b6b;
+      }
+
+      .playground-fine-tuning-detail-stop-button:disabled {
+        cursor: default;
+        opacity: 0.56;
+      }
+
+      .playground-fine-tuning-detail-stop-button .is-spinning {
+        animation: playgroundFineTuningSpin 0.9s linear infinite;
+      }
+
+      @keyframes playgroundFineTuningSpin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
       .playground-fine-tuning-kpi-card.playground-evaluations-analytics-card .playground-project-overview-progress-combo-metric-dot.is-improvement {
         background: #c5a3ff;
       }
@@ -106,6 +151,71 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         display: block;
         width: 100% !important;
         height: 100% !important;
+      }
+
+      .playground-fine-tuning-analytics-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 28px;
+        margin-top: 12px;
+      }
+
+      .playground-fine-tuning-analytics-agent {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 500;
+      }
+
+      .playground-fine-tuning-analytics-agent .playground-evaluations-run-agent-avatar {
+        width: 22px;
+        height: 22px;
+        flex: 0 0 22px;
+        font-size: 9px;
+      }
+
+      .playground-fine-tuning-analytics-agent-main,
+      .playground-fine-tuning-analytics-agent-meta {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-fine-tuning-analytics-agent-meta {
+        color: rgba(255, 255, 255, 0.52);
+        font-weight: 400;
+      }
+
+      .playground-fine-tuning-thread-link {
+        min-width: 0;
+        max-width: 280px;
+        display: inline-flex;
+        justify-content: flex-end;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: #73b7ff;
+        font: inherit;
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 400;
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+      }
+
+      .playground-fine-tuning-thread-link:disabled {
+        color: rgba(255, 255, 255, 0.42);
+        cursor: default;
       }
 
       .playground-fine-tuning-section.playground-plugins-section {
@@ -218,13 +328,13 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
 
       .playground-fine-tuning-analysis-section {
         min-width: 0;
-        overflow: hidden;
+        overflow: visible;
       }
 
       .playground-fine-tuning-analysis-content {
         min-width: 0;
-        max-height: 260px;
-        overflow: auto;
+        max-height: none;
+        overflow: visible;
         padding: 0;
         color: rgba(255, 255, 255, 0.84);
         font-size: 12px;
@@ -236,6 +346,14 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
 
       .playground-fine-tuning-analysis-content::-webkit-scrollbar {
         display: none;
+      }
+
+      .playground-fine-tuning-detail-tabs.playground-evaluations-detail-tabs {
+        margin-top: 24px;
+      }
+
+      .playground-fine-tuning-tab-panel.playground-plugins-section {
+        min-height: 0;
       }
 
       .playground-fine-tuning-create-modal.playground-project-overview-outcome-editor-modal {
@@ -496,7 +614,7 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
 `;
 
 export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
-      const PLAYGROUND_FINE_TUNING_STORAGE_KEY = "runner.playground.fineTuning.jobs.v1";
+      const PLAYGROUND_FINE_TUNING_CT_PER_DOLLAR = 100;
 
       function createPlaygroundFineTuningId(prefix = "fine_tune_job") {
         return prefix + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 9);
@@ -504,6 +622,62 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
 
       function normalizePlaygroundFineTuningString(value) {
         return String(value || "").trim();
+      }
+
+      function readPlaygroundFineTuningPlainObject(value) {
+        return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      }
+
+      function isPlaygroundFineTuningPlainObject(value) {
+        return value && typeof value === "object" && !Array.isArray(value);
+      }
+
+      function hasPlaygroundFineTuningObjectContent(value) {
+        return isPlaygroundFineTuningPlainObject(value) && Object.keys(value).length > 0;
+      }
+
+      function readFirstPlaygroundFineTuningObject(...values) {
+        for (const value of values) {
+          if (hasPlaygroundFineTuningObjectContent(value)) return value;
+        }
+        return {};
+      }
+
+      function readFirstPlaygroundFineTuningArray(...values) {
+        for (const value of values) {
+          if (Array.isArray(value) && value.length) return value;
+        }
+        return [];
+      }
+
+      function truncatePlaygroundFineTuningReferenceText(value, maxLength = 12000) {
+        const text = String(value || "");
+        if (!maxLength || text.length <= maxLength) return text;
+        return text.slice(0, maxLength).trimEnd() + "\n\n...";
+      }
+
+      function compactPlaygroundFineTuningReferenceMetadata(metadata) {
+        const source = readPlaygroundFineTuningPlainObject(metadata);
+        const blockedKeys = new Set([
+          "beforeAgentSnapshot",
+          "before_agent_snapshot",
+          "afterAgentSnapshot",
+          "after_agent_snapshot",
+          "beforeSnapshot",
+          "before_snapshot",
+          "afterSnapshot",
+          "after_snapshot",
+          "baseAgentSnapshot",
+          "base_agent_snapshot",
+          "snapshot",
+          "diffFiles",
+          "diff_files",
+          "diffs",
+          "files",
+        ]);
+        return Object.fromEntries(
+          Object.entries(source).filter(([key]) => !blockedKeys.has(key))
+        );
       }
 
       function normalizePlaygroundFineTuningPersonIdentity(rawValue = {}) {
@@ -608,8 +782,111 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         return Number.isFinite(numeric) ? Math.max(0, Math.round(numeric)) : 0;
       }
 
+      function normalizePlaygroundFineTuningUsdCost(value) {
+        const numeric = Number(value);
+        return Number.isFinite(numeric) ? Math.max(0, numeric) : 0;
+      }
+
+      function readPlaygroundFineTuningUsdCost(source, keys = []) {
+        const record = source && typeof source === "object" && !Array.isArray(source) ? source : {};
+        const metadata = record.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
+        const usage = record.usage && typeof record.usage === "object" && !Array.isArray(record.usage) ? record.usage : {};
+        const candidates = keys.length
+          ? keys.flatMap((key) => [record[key], metadata[key], usage[key]])
+          : [
+              record.costUsd,
+              record.costUSD,
+              record.cost_usd,
+              record.usdCost,
+              record.usd_cost,
+              record.totalUsd,
+              record.totalUSD,
+              record.total_usd,
+              record.totalCostUsd,
+              record.total_cost_usd,
+              usage.costUsd,
+              usage.costUSD,
+              usage.cost_usd,
+              usage.usdCost,
+              usage.usd_cost,
+              usage.totalUsd,
+              usage.totalUSD,
+              usage.total_usd,
+              metadata.costUsd,
+              metadata.costUSD,
+              metadata.cost_usd,
+              metadata.usdCost,
+              metadata.usd_cost,
+              metadata.totalUsd,
+              metadata.totalUSD,
+              metadata.total_usd,
+            ];
+        for (const candidate of candidates) {
+          const numeric = Number(candidate);
+          if (Number.isFinite(numeric) && numeric > 0) {
+            return numeric;
+          }
+        }
+        return 0;
+      }
+
+      function readPlaygroundFineTuningUsdCostWithLegacyCt(source, keys = []) {
+        const usdCost = readPlaygroundFineTuningUsdCost(source, keys);
+        if (usdCost > 0) return usdCost;
+        const record = source && typeof source === "object" && !Array.isArray(source) ? source : {};
+        const tokenCost = normalizePlaygroundFineTuningTokenCount(
+          record.costTokens
+          ?? record.cost_tokens
+          ?? record.costCt
+          ?? record.costCT
+          ?? record.cost_ct
+          ?? record.computeTokens
+          ?? record.compute_tokens
+          ?? record.totalCT
+          ?? record.totalCt
+          ?? record.total_ct
+          ?? record.ct
+        );
+        return tokenCost > 0 ? tokenCost / PLAYGROUND_FINE_TUNING_CT_PER_DOLLAR : 0;
+      }
+
+      function formatPlaygroundFineTuningUsdCost(value) {
+        return new Intl.NumberFormat(undefined, {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(normalizePlaygroundFineTuningUsdCost(value));
+      }
+
       function isPlaygroundFineTuningActiveStatus(status) {
-        return new Set(["queued", "running", "running_case", "waiting_for_case_summary", "running_evaluator", "scoring", "verifying", "pending"]).has(
+        return new Set([
+          "active",
+          "analysis",
+          "analyzing",
+          "creating_agent_version",
+          "creating-version",
+          "creating_version",
+          "evaluating",
+          "fine-tuning",
+          "fine_tuning",
+          "in-progress",
+          "in_progress",
+          "pending",
+          "processing",
+          "publishing",
+          "publishing_version",
+          "queued",
+          "running",
+          "running_case",
+          "running_evaluator",
+          "scoring",
+          "started",
+          "verification",
+          "verifying",
+          "verifying_evaluation",
+          "waiting_for_case_summary",
+        ]).has(
           normalizePlaygroundFineTuningString(status).toLowerCase()
         );
       }
@@ -642,6 +919,19 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         return false;
       }
 
+      function canStopPlaygroundFineTuningJob(job) {
+        const normalizedJob = normalizePlaygroundFineTuningJob(job);
+        const status = normalizePlaygroundFineTuningString(normalizedJob.status).toLowerCase();
+        if (new Set(["error", "failed", "cancelled", "canceled"]).has(status)) return false;
+        const hasActiveReference = normalizedJob.evaluationRuns.some((reference) => {
+          const referenceStatus = normalizePlaygroundFineTuningString(reference?.status).toLowerCase();
+          return referenceStatus === "pending" || isPlaygroundFineTuningActiveStatus(referenceStatus);
+        });
+        if (hasActiveReference) return true;
+        if (isPlaygroundFineTuningTerminalStatus(status)) return false;
+        return isPlaygroundFineTuningActiveStatus(status);
+      }
+
       function formatPlaygroundFineTuningDate(value) {
         const date = new Date(value || "");
         if (!Number.isFinite(date.getTime())) return "-";
@@ -659,7 +949,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
       }
 
       function formatPlaygroundFineTuningCost(value) {
-        return normalizePlaygroundFineTuningTokenCount(value).toLocaleString() + " CT";
+        return formatPlaygroundFineTuningUsdCost(normalizePlaygroundFineTuningTokenCount(value) / PLAYGROUND_FINE_TUNING_CT_PER_DOLLAR);
       }
 
       function formatPlaygroundFineTuningDefaultJobName(date = new Date()) {
@@ -680,15 +970,115 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           beforeRunId: normalizePlaygroundFineTuningString(source.beforeRunId || source.before_run_id),
           beforeRunLabel: normalizePlaygroundFineTuningString(source.beforeRunLabel || source.before_run_label || "Before"),
           beforeScore: normalizePlaygroundFineTuningScore(source.beforeScore ?? source.before_score ?? 0),
+          beforeCostUsd: normalizePlaygroundFineTuningUsdCost(source.beforeCostUsd ?? source.before_cost_usd ?? 0),
           afterRunId: normalizePlaygroundFineTuningString(source.afterRunId || source.after_run_id),
           afterRunLabel: normalizePlaygroundFineTuningString(source.afterRunLabel || source.after_run_label || "After"),
           afterScore: normalizePlaygroundFineTuningScore(source.afterScore ?? source.after_score ?? 0),
+          afterCostUsd: normalizePlaygroundFineTuningUsdCost(source.afterCostUsd ?? source.after_cost_usd ?? 0),
           status: normalizePlaygroundFineTuningString(source.status || "not_run") || "not_run",
         };
       }
 
       function normalizePlaygroundFineTuningJob(rawJob = {}, fallbackIndex = 0) {
         const source = rawJob && typeof rawJob === "object" && !Array.isArray(rawJob) ? rawJob : {};
+        const metadata = readPlaygroundFineTuningPlainObject(source.metadata);
+        const fineTuningMetadata = readPlaygroundFineTuningPlainObject(metadata.fineTuning);
+        const runnerPlaygroundMetadata = readPlaygroundFineTuningPlainObject(metadata.runnerPlayground);
+        const createdAgentVersion = isPlaygroundFineTuningPlainObject(source.createdAgentVersion)
+          ? source.createdAgentVersion
+          : isPlaygroundFineTuningPlainObject(source.created_agent_version)
+            ? source.created_agent_version
+            : null;
+        const createdAgentVersionMetadata = readPlaygroundFineTuningPlainObject(createdAgentVersion?.metadata);
+        const createdAgentVersionSnapshot = readPlaygroundFineTuningPlainObject(createdAgentVersion?.snapshot);
+        const beforeAgentSnapshot = readFirstPlaygroundFineTuningObject(
+          source.beforeAgentSnapshot,
+          source.before_agent_snapshot,
+          source.beforeSnapshot,
+          source.before_snapshot,
+          source.baseAgentSnapshot,
+          source.base_agent_snapshot,
+          metadata.beforeAgentSnapshot,
+          metadata.before_agent_snapshot,
+          metadata.beforeSnapshot,
+          metadata.before_snapshot,
+          metadata.baseAgentSnapshot,
+          metadata.base_agent_snapshot,
+          fineTuningMetadata.beforeAgentSnapshot,
+          fineTuningMetadata.before_agent_snapshot,
+          fineTuningMetadata.beforeSnapshot,
+          fineTuningMetadata.before_snapshot,
+          fineTuningMetadata.baseAgentSnapshot,
+          fineTuningMetadata.base_agent_snapshot,
+          createdAgentVersionMetadata.beforeAgentSnapshot,
+          createdAgentVersionMetadata.before_agent_snapshot,
+          createdAgentVersionMetadata.beforeSnapshot,
+          createdAgentVersionMetadata.before_snapshot,
+          createdAgentVersionMetadata.baseAgentSnapshot,
+          createdAgentVersionMetadata.base_agent_snapshot
+        );
+        const afterAgentSnapshot = readFirstPlaygroundFineTuningObject(
+          source.afterAgentSnapshot,
+          source.after_agent_snapshot,
+          source.afterSnapshot,
+          source.after_snapshot,
+          metadata.afterAgentSnapshot,
+          metadata.after_agent_snapshot,
+          metadata.afterSnapshot,
+          metadata.after_snapshot,
+          fineTuningMetadata.afterAgentSnapshot,
+          fineTuningMetadata.after_agent_snapshot,
+          fineTuningMetadata.afterSnapshot,
+          fineTuningMetadata.after_snapshot,
+          createdAgentVersionSnapshot,
+          createdAgentVersionMetadata.afterAgentSnapshot,
+          createdAgentVersionMetadata.after_agent_snapshot,
+          createdAgentVersionMetadata.afterSnapshot,
+          createdAgentVersionMetadata.after_snapshot
+        );
+        const diffFiles = readFirstPlaygroundFineTuningArray(
+          source.diffFiles,
+          source.diff_files,
+          metadata.diffFiles,
+          metadata.diff_files,
+          fineTuningMetadata.diffFiles,
+          fineTuningMetadata.diff_files,
+          runnerPlaygroundMetadata.diffFiles,
+          runnerPlaygroundMetadata.diff_files,
+          createdAgentVersion?.diffFiles,
+          createdAgentVersion?.diff_files,
+          createdAgentVersionMetadata.diffFiles,
+          createdAgentVersionMetadata.diff_files
+        );
+        const threadId = normalizePlaygroundFineTuningString(
+          source.threadId
+          || source.thread_id
+          || source.fineTuningThreadId
+          || source.fine_tuning_thread_id
+          || source.thread?.id
+          || source.thread?.threadId
+          || source.thread?.thread_id
+          || metadata.threadId
+          || metadata.thread_id
+          || metadata.fineTuningThreadId
+          || metadata.fine_tuning_thread_id
+          || fineTuningMetadata.threadId
+          || fineTuningMetadata.thread_id
+          || fineTuningMetadata.fineTuningThreadId
+          || fineTuningMetadata.fine_tuning_thread_id
+          || runnerPlaygroundMetadata.threadId
+          || runnerPlaygroundMetadata.thread_id
+          || runnerPlaygroundMetadata.fineTuningThreadId
+          || runnerPlaygroundMetadata.fine_tuning_thread_id
+          || createdAgentVersion?.threadId
+          || createdAgentVersion?.thread_id
+          || createdAgentVersion?.fineTuningThreadId
+          || createdAgentVersion?.fine_tuning_thread_id
+          || createdAgentVersionMetadata.threadId
+          || createdAgentVersionMetadata.thread_id
+          || createdAgentVersionMetadata.fineTuningThreadId
+          || createdAgentVersionMetadata.fine_tuning_thread_id
+        );
         const nowIso = new Date().toISOString();
         const evaluationSets = (Array.isArray(source.evaluationSets)
           ? source.evaluationSets
@@ -712,6 +1102,32 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             : []
         ).map((reference, index) => normalizePlaygroundFineTuningRunReference(reference, index));
         const conductedBy = getPlaygroundFineTuningConductorIdentity(source);
+        const explicitVerificationCostUsd = normalizePlaygroundFineTuningUsdCost(
+          source.verificationCostUsd
+          ?? source.verification_cost_usd
+          ?? source.evaluationCostUsd
+          ?? source.evaluation_cost_usd
+          ?? 0
+        );
+        const verificationCostUsd = explicitVerificationCostUsd
+          || evaluationRuns.reduce((sum, reference) => sum + normalizePlaygroundFineTuningUsdCost(reference.afterCostUsd), 0);
+        const fineTuningCostUsd = readPlaygroundFineTuningUsdCostWithLegacyCt(source, [
+          "fineTuningCostUsd",
+          "fine_tuning_cost_usd",
+          "analysisCostUsd",
+          "analysis_cost_usd",
+          "threadCostUsd",
+          "thread_cost_usd",
+          "costUsd",
+          "cost_usd",
+        ]);
+        const explicitTotalCostUsd = normalizePlaygroundFineTuningUsdCost(
+          source.totalCostUsd
+          ?? source.total_cost_usd
+          ?? source.totalUsd
+          ?? source.total_usd
+          ?? 0
+        );
         return {
           id: normalizePlaygroundFineTuningString(source.id || source.jobId || source.job_id) || createPlaygroundFineTuningId(),
           name: normalizePlaygroundFineTuningString(source.name || source.title || "Fine-Tune Job " + (fallbackIndex + 1)),
@@ -734,44 +1150,201 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           evaluationSets,
           instructions: String(source.instructions || ""),
           verifyAfter: true,
-          threadId: normalizePlaygroundFineTuningString(source.threadId || source.thread_id),
+          threadId,
           threadTitle: normalizePlaygroundFineTuningString(source.threadTitle || source.thread_title || "Fine-Tuning Thread"),
           beforeScore: normalizePlaygroundFineTuningScore(source.beforeScore ?? source.before_score ?? 0),
           afterScore: normalizePlaygroundFineTuningScore(source.afterScore ?? source.after_score ?? 0),
           improvementScore: normalizePlaygroundFineTuningScore(source.improvementScore ?? source.improvement_score ?? 0),
           costTokens: normalizePlaygroundFineTuningTokenCount(source.costTokens ?? source.cost_tokens ?? source.costCT ?? source.cost_ct),
+          costUsd: explicitTotalCostUsd || fineTuningCostUsd + verificationCostUsd,
+          fineTuningCostUsd,
+          verificationCostUsd,
           analysisSummary: sanitizePlaygroundFineTuningAnalysisSummary(source.analysisSummary || source.analysis_summary || ""),
           evaluationRuns,
-          beforeAgentSnapshot: source.beforeAgentSnapshot || source.before_agent_snapshot || {},
-          afterAgentSnapshot: source.afterAgentSnapshot || source.after_agent_snapshot || {},
-          diffFiles: Array.isArray(source.diffFiles) ? source.diffFiles : Array.isArray(source.diff_files) ? source.diff_files : [],
-          createdAgentVersion: source.createdAgentVersion || source.created_agent_version || null,
-          agentVersionCreationStatus: normalizePlaygroundFineTuningString(source.agentVersionCreationStatus || source.agent_version_creation_status || source.createdAgentVersion?.status || "proposed") || "proposed",
-          agentVersionError: normalizePlaygroundFineTuningString(source.agentVersionError || source.agent_version_error || source.createdAgentVersion?.error),
+          beforeAgentSnapshot,
+          afterAgentSnapshot,
+          diffFiles,
+          createdAgentVersion,
+          createdAgentVersionId: normalizePlaygroundFineTuningString(source.createdAgentVersionId || source.created_agent_version_id || createdAgentVersion?.id || createdAgentVersion?.versionId || createdAgentVersion?.version_id),
+          agentVersionCreationStatus: normalizePlaygroundFineTuningString(source.agentVersionCreationStatus || source.agent_version_creation_status || createdAgentVersion?.status || "proposed") || "proposed",
+          agentVersionError: normalizePlaygroundFineTuningString(source.agentVersionError || source.agent_version_error || createdAgentVersion?.error),
+          metadata,
           error: normalizePlaygroundFineTuningString(source.error || source.message),
         };
       }
 
-      function readPlaygroundFineTuningJobsFromStorage() {
-        if (typeof window === "undefined" || !window.localStorage) return [];
-        try {
-          const parsed = JSON.parse(window.localStorage.getItem(PLAYGROUND_FINE_TUNING_STORAGE_KEY) || "[]");
-          return Array.isArray(parsed) ? parsed.map((job, index) => normalizePlaygroundFineTuningJob(job, index)) : [];
-        } catch {
-          return [];
-        }
+      function mergePlaygroundFineTuningAgentVersionRecords(existingVersion, incomingVersion) {
+        const existing = isPlaygroundFineTuningPlainObject(existingVersion) ? existingVersion : {};
+        const incoming = isPlaygroundFineTuningPlainObject(incomingVersion) ? incomingVersion : {};
+        if (!Object.keys(existing).length) return Object.keys(incoming).length ? incoming : null;
+        if (!Object.keys(incoming).length) return existing;
+        const existingMetadata = readPlaygroundFineTuningPlainObject(existing.metadata);
+        const incomingMetadata = readPlaygroundFineTuningPlainObject(incoming.metadata);
+        return {
+          ...existing,
+          ...incoming,
+          id: normalizePlaygroundFineTuningString(incoming.id || incoming.versionId || incoming.version_id || existing.id || existing.versionId || existing.version_id),
+          snapshot: hasPlaygroundFineTuningObjectContent(incoming.snapshot) ? incoming.snapshot : existing.snapshot,
+          metadata: {
+            ...existingMetadata,
+            ...incomingMetadata,
+          },
+        };
       }
 
-      function writePlaygroundFineTuningJobsToStorage(jobs) {
-        if (typeof window === "undefined" || !window.localStorage) return;
-        try {
-          window.localStorage.setItem(
-            PLAYGROUND_FINE_TUNING_STORAGE_KEY,
-            JSON.stringify((Array.isArray(jobs) ? jobs : []).map((job, index) => normalizePlaygroundFineTuningJob(job, index)))
-          );
-        } catch {
-          // Keep the in-memory page usable when local storage is unavailable.
+      function mergePlaygroundFineTuningJobRecords(existingJob, incomingJob) {
+        const incomingSource = incomingJob && typeof incomingJob === "object" && !Array.isArray(incomingJob) ? incomingJob : {};
+        const incomingHasExplicitStatus = Object.prototype.hasOwnProperty.call(incomingSource, "status")
+          || Object.prototype.hasOwnProperty.call(incomingSource, "fineTuningStatus")
+          || Object.prototype.hasOwnProperty.call(incomingSource, "fine_tuning_status");
+        const existing = normalizePlaygroundFineTuningJob(existingJob);
+        const incoming = normalizePlaygroundFineTuningJob(incomingJob);
+        const mergedVersion = mergePlaygroundFineTuningAgentVersionRecords(existing.createdAgentVersion, incoming.createdAgentVersion);
+        return normalizePlaygroundFineTuningJob({
+          ...existing,
+          ...incoming,
+          status: incomingHasExplicitStatus ? incoming.status : existing.status || incoming.status,
+          metadata: {
+            ...readPlaygroundFineTuningPlainObject(existing.metadata),
+            ...readPlaygroundFineTuningPlainObject(incoming.metadata),
+          },
+          threadId: incoming.threadId || existing.threadId,
+          threadTitle: incoming.threadTitle || existing.threadTitle,
+          beforeAgentSnapshot: hasPlaygroundFineTuningObjectContent(incoming.beforeAgentSnapshot) ? incoming.beforeAgentSnapshot : existing.beforeAgentSnapshot,
+          afterAgentSnapshot: hasPlaygroundFineTuningObjectContent(incoming.afterAgentSnapshot) ? incoming.afterAgentSnapshot : existing.afterAgentSnapshot,
+          diffFiles: Array.isArray(incoming.diffFiles) && incoming.diffFiles.length ? incoming.diffFiles : existing.diffFiles,
+          createdAgentVersion: mergedVersion,
+          createdAgentVersionId: incoming.createdAgentVersionId || existing.createdAgentVersionId || normalizePlaygroundFineTuningString(mergedVersion?.id),
+          analysisSummary: incoming.analysisSummary || existing.analysisSummary,
+          evaluationRuns: Array.isArray(incoming.evaluationRuns) && incoming.evaluationRuns.length ? incoming.evaluationRuns : existing.evaluationRuns,
+        });
+      }
+
+      function hasPlaygroundFineTuningChangeArtifacts(job) {
+        const normalizedJob = normalizePlaygroundFineTuningJob(job);
+        if (Array.isArray(normalizedJob.diffFiles) && normalizedJob.diffFiles.length) return true;
+        const beforeSnapshot = readPlaygroundFineTuningPlainObject(normalizedJob.beforeAgentSnapshot);
+        const afterSnapshot = readPlaygroundFineTuningPlainObject(normalizedJob.afterAgentSnapshot);
+        if (!hasPlaygroundFineTuningObjectContent(beforeSnapshot) && !hasPlaygroundFineTuningObjectContent(afterSnapshot)) return false;
+        if (String(beforeSnapshot.instructions || "") !== String(afterSnapshot.instructions || "")) return true;
+        return JSON.stringify({
+          model: beforeSnapshot.model || "",
+          enabledSkills: beforeSnapshot.enabledSkills || [],
+          guardrails: beforeSnapshot.guardrails || [],
+          guardrailSetIds: beforeSnapshot.guardrailSetIds || [],
+          promptAdaptations: beforeSnapshot.promptAdaptations || [],
+          invisiblePromptAdaptations: beforeSnapshot.invisiblePromptAdaptations || [],
+        }) !== JSON.stringify({
+          model: afterSnapshot.model || "",
+          enabledSkills: afterSnapshot.enabledSkills || [],
+          guardrails: afterSnapshot.guardrails || [],
+          guardrailSetIds: afterSnapshot.guardrailSetIds || [],
+          promptAdaptations: afterSnapshot.promptAdaptations || [],
+          invisiblePromptAdaptations: afterSnapshot.invisiblePromptAdaptations || [],
+        });
+      }
+
+      function needsPlaygroundFineTuningRuntimeDetailsHydration(job) {
+        const normalizedJob = normalizePlaygroundFineTuningJob(job);
+        if (!normalizedJob.id) return false;
+        const status = normalizePlaygroundFineTuningString(normalizedJob.status).toLowerCase();
+        if (!new Set(["completed", "error", "failed", "cancelled", "canceled"]).has(status)) return true;
+        if (!normalizedJob.threadId) return true;
+        if (!normalizedJob.analysisSummary || normalizePlaygroundFineTuningString(normalizedJob.analysisSummary) === "Fine-tuning analysis is running.") return true;
+        if (!hasPlaygroundFineTuningChangeArtifacts(normalizedJob)) return true;
+        return !Array.isArray(normalizedJob.evaluationRuns) || normalizedJob.evaluationRuns.length === 0;
+      }
+
+      function buildPlaygroundFineTuningJobReferencePayload(job) {
+        const normalizedJob = normalizePlaygroundFineTuningJob(job);
+        const version = readPlaygroundFineTuningPlainObject(normalizedJob.createdAgentVersion);
+        const versionMetadata = compactPlaygroundFineTuningReferenceMetadata(version.metadata);
+        const metadata = compactPlaygroundFineTuningReferenceMetadata(normalizedJob.metadata);
+        return {
+          id: normalizedJob.id,
+          name: normalizedJob.name,
+          status: normalizedJob.status,
+          createdAt: normalizedJob.createdAt,
+          updatedAt: normalizedJob.updatedAt,
+          agentId: normalizedJob.agentId,
+          targetAgentId: normalizedJob.targetAgentId,
+          agentName: normalizedJob.agentName,
+          targetAgentName: normalizedJob.targetAgentName,
+          agentPhotoUrl: normalizedJob.agentPhotoUrl,
+          targetAgentPhotoUrl: normalizedJob.targetAgentPhotoUrl,
+          conductedBy: normalizedJob.conductedBy,
+          createdBy: normalizedJob.createdBy,
+          fineTunerAgentId: normalizedJob.fineTunerAgentId,
+          fineTunerAgentName: normalizedJob.fineTunerAgentName,
+          fineTunerAgentPhotoUrl: normalizedJob.fineTunerAgentPhotoUrl,
+          environmentId: normalizedJob.environmentId,
+          environmentName: normalizedJob.environmentName,
+          evaluationSets: normalizedJob.evaluationSets,
+          evaluationSetIds: normalizedJob.evaluationSets.map((set) => set.id).filter(Boolean),
+          instructions: truncatePlaygroundFineTuningReferenceText(normalizedJob.instructions, 4000),
+          verifyAfter: true,
+          threadId: normalizedJob.threadId,
+          threadTitle: normalizedJob.threadTitle,
+          beforeScore: normalizedJob.beforeScore,
+          afterScore: normalizedJob.afterScore,
+          improvementScore: normalizedJob.improvementScore,
+          costTokens: normalizedJob.costTokens,
+          costUsd: normalizedJob.costUsd,
+          fineTuningCostUsd: normalizedJob.fineTuningCostUsd,
+          verificationCostUsd: normalizedJob.verificationCostUsd,
+          analysisSummary: truncatePlaygroundFineTuningReferenceText(normalizedJob.analysisSummary, 2400),
+          evaluationRuns: normalizedJob.evaluationRuns,
+          createdAgentVersion: version.id ? {
+            id: normalizePlaygroundFineTuningString(version.id || version.versionId || version.version_id),
+            version: version.version,
+            versionNumber: version.versionNumber || version.version_number,
+            label: version.label,
+            status: version.status,
+            createdAt: version.createdAt || version.created_at,
+            updatedAt: version.updatedAt || version.updated_at,
+            publishedAt: version.publishedAt || version.published_at,
+            metadata: {
+              ...versionMetadata,
+              fineTuningJobId: normalizedJob.id,
+              fine_tuning_job_id: normalizedJob.id,
+              threadId: normalizedJob.threadId || versionMetadata.threadId || versionMetadata.thread_id,
+              thread_id: normalizedJob.threadId || versionMetadata.thread_id || versionMetadata.threadId,
+              fineTuningThreadId: normalizedJob.threadId || versionMetadata.fineTuningThreadId || versionMetadata.fine_tuning_thread_id,
+              fine_tuning_thread_id: normalizedJob.threadId || versionMetadata.fine_tuning_thread_id || versionMetadata.fineTuningThreadId,
+            },
+          } : normalizedJob.createdAgentVersion,
+          createdAgentVersionId: normalizedJob.createdAgentVersionId,
+          agentVersionCreationStatus: normalizedJob.agentVersionCreationStatus,
+          agentVersionError: normalizedJob.agentVersionError,
+          metadata: {
+            ...metadata,
+            fineTuningJobId: normalizedJob.id,
+            fine_tuning_job_id: normalizedJob.id,
+          },
+          error: normalizedJob.error,
+        };
+      }
+
+      function readPlaygroundFineTuningJobListFromPayload(payload) {
+        const source = payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
+        const candidates = [
+          source.jobs,
+          source.fineTuningJobs,
+          source.fine_tuning_jobs,
+          source.data?.jobs,
+          source.data?.fineTuningJobs,
+          source.data?.fine_tuning_jobs,
+          source.items,
+          source.data,
+          source.records,
+          payload,
+        ];
+        for (const candidate of candidates) {
+          if (Array.isArray(candidate)) {
+            return candidate.map((job, index) => normalizePlaygroundFineTuningJob(job, index));
+          }
         }
+        return [];
       }
 
       function getPlaygroundFineTuningEvaluationVersions(set) {
@@ -814,6 +1387,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                     ? normalizePlaygroundFineTuningScore(cases.reduce((sum, item) => sum + Number(item?.score || 0), 0) / cases.length)
                     : 0,
                 costTokens: normalizePlaygroundFineTuningTokenCount(source.costTokens ?? source.cost_tokens ?? source.costCT ?? source.cost_ct),
+                costUsd: readPlaygroundFineTuningUsdCostWithLegacyCt(source),
                 status: normalizePlaygroundFineTuningString(source.status || "queued") || "queued",
               };
           const id = normalizePlaygroundFineTuningString(normalizedRun.id || run?.id || run?.runId || run?.run_id || "run_" + (index + 1));
@@ -948,26 +1522,14 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         const canvasRef = useRef(null);
         const chartRef = useRef(null);
         const normalizedJob = normalizePlaygroundFineTuningJob(job);
-        const references = normalizedJob.evaluationRuns.length
-          ? normalizedJob.evaluationRuns
-          : [{
-              evaluationSetName: "Fine-Tune",
-              beforeScore: normalizedJob.beforeScore,
-              afterScore: normalizedJob.afterScore || normalizedJob.beforeScore,
-            }];
-        const labels = references.map((reference, index) => normalizePlaygroundFineTuningString(reference.evaluationSetName || "Set " + (index + 1)));
-        const beforeValues = references.map((reference) => Math.round(normalizePlaygroundFineTuningScore(reference.beforeScore) * 100));
-        const afterValues = references.map((reference) => {
-          const afterScore = Number(reference.afterScore);
-          const fallbackScore = Number(reference.beforeScore);
-          const hasReferenceResult = hasPlaygroundFineTuningAfterResult({
-            status: normalizedJob.status,
-            evaluationRuns: [reference],
-          });
-          return Math.round(normalizePlaygroundFineTuningScore(hasReferenceResult && Number.isFinite(afterScore) ? afterScore : fallbackScore) * 100);
-        });
-        const improvementValues = afterValues.map((value, index) => Math.max(0, value - (beforeValues[index] || 0)));
-        const chartSignature = JSON.stringify({ labels, beforeValues, afterValues, improvementValues });
+        const hasAfter = hasPlaygroundFineTuningAfterResult(normalizedJob);
+        const labels = ["Before", "After"];
+        const rawValues = [
+          Math.round(normalizePlaygroundFineTuningScore(normalizedJob.beforeScore) * 100),
+          Math.round(normalizePlaygroundFineTuningScore(hasAfter ? normalizedJob.afterScore : normalizedJob.beforeScore) * 100),
+        ];
+        const values = rawValues.map((value) => value <= 0 ? 1 : value);
+        const chartSignature = JSON.stringify({ rawValues, values, hasAfter });
 
         useEffect(() => () => {
           if (chartRef.current) {
@@ -978,27 +1540,19 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
 
         useEffect(() => {
           const canvas = canvasRef.current;
-          if (!canvas || typeof Chart !== "function" || !labels.length) {
+          if (!canvas || typeof Chart !== "function") {
             if (chartRef.current) {
               chartRef.current.destroy();
               chartRef.current = null;
             }
             return undefined;
           }
-          const visibleLabelIndexes = (() => {
-            const next = new Set();
-            const targetCount = Math.min(6, Math.max(2, labels.length));
-            for (let index = 0; index < targetCount; index += 1) {
-              next.add(Math.round(((labels.length - 1) * index) / Math.max(1, targetCount - 1)));
-            }
-            return next;
-          })();
-          const makeVerticalGradient = (context, stops, fallback) => {
+          const makeHorizontalGradient = (context, stops, fallback) => {
             const chart = context?.chart;
             const chartArea = chart?.chartArea;
             const ctx = chart?.ctx;
             if (!ctx || !chartArea) return fallback;
-            const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
             stops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
             return gradient;
           };
@@ -1016,8 +1570,8 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
               ctx.lineWidth = 1;
               ctx.beginPath();
-              ctx.moveTo(activeElement.x, chartArea.top + 8);
-              ctx.lineTo(activeElement.x, chartArea.bottom);
+              ctx.moveTo(chartArea.left, activeElement.y);
+              ctx.lineTo(chartArea.right, activeElement.y);
               ctx.stroke();
               ctx.restore();
             },
@@ -1026,56 +1580,28 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             labels,
             datasets: [
               {
-                id: "before",
+                id: "performance",
                 type: "bar",
-                label: "Before",
-                data: beforeValues,
-                yAxisID: "score",
-                backgroundColor: (context) => makeVerticalGradient(context, [
-                  [0, "rgba(126, 255, 255, 0.72)"],
-                  [1, "rgba(91, 103, 230, 0.46)"],
-                ], "rgba(126, 255, 255, 0.58)"),
+                label: "Performance",
+                data: values,
+                backgroundColor: (context) => {
+                  const index = context?.dataIndex || 0;
+                  return makeHorizontalGradient(context, index === 0
+                    ? [
+                        [0, "rgba(126, 255, 255, 0.72)"],
+                        [1, "rgba(91, 103, 230, 0.46)"],
+                      ]
+                    : [
+                        [0, "rgba(159, 246, 206, 0.84)"],
+                        [1, "rgba(84, 229, 166, 0.42)"],
+                      ],
+                    index === 0 ? "rgba(126, 255, 255, 0.58)" : "rgba(159, 246, 206, 0.68)");
+                },
                 borderWidth: 0,
-                borderRadius: 2,
-                barPercentage: 0.62,
-                categoryPercentage: 0.72,
-                maxBarThickness: 10,
-                order: 4,
-              },
-              {
-                id: "after",
-                type: "bar",
-                label: "After",
-                data: afterValues,
-                yAxisID: "score",
-                backgroundColor: (context) => makeVerticalGradient(context, [
-                  [0, "rgba(159, 246, 206, 0.84)"],
-                  [1, "rgba(84, 229, 166, 0.42)"],
-                ], "rgba(159, 246, 206, 0.68)"),
-                borderWidth: 0,
-                borderRadius: 2,
-                barPercentage: 0.62,
-                categoryPercentage: 0.72,
-                maxBarThickness: 10,
-                order: 3,
-              },
-              {
-                id: "improvement",
-                type: "line",
-                label: "Improvement",
-                data: improvementValues,
-                yAxisID: "line",
-                borderColor: "#c5a3ff",
-                backgroundColor: "rgba(197, 163, 255, 0.08)",
-                borderWidth: 1.5,
-                fill: false,
-                pointBackgroundColor: "#c5a3ff",
-                pointBorderColor: "#050505",
-                pointBorderWidth: 2,
-                pointRadius: (context) => context.dataIndex === improvementValues.length - 1 ? 5 : 0,
-                pointHoverRadius: 5,
-                tension: 0.28,
-                order: 2,
+                borderRadius: 4,
+                barPercentage: 0.56,
+                categoryPercentage: 0.66,
+                maxBarThickness: 24,
               },
             ],
           };
@@ -1083,8 +1609,9 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             animation: false,
             responsive: true,
             maintainAspectRatio: false,
+            indexAxis: "y",
             normalized: true,
-            interaction: { intersect: false, mode: "index" },
+            interaction: { intersect: false, mode: "nearest" },
             layout: { padding: { top: 12, right: 4, bottom: 0, left: 0 } },
             plugins: {
               legend: { display: false },
@@ -1100,36 +1627,15 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                 padding: 10,
                 callbacks: {
                   label: (context) => {
-                    const datasetId = context.dataset?.id || "";
-                    const value = Math.max(0, Number(context.parsed?.y || 0));
-                    if (datasetId === "improvement") return "Improvement: +" + Math.round(value) + " pts";
-                    return context.dataset?.label + ": " + Math.round(value) + "%";
+                    const value = Math.max(0, Number(rawValues[context.dataIndex] || 0));
+                    return String(context.label || "Performance") + ": " + Math.round(value) + "%";
                   },
                 },
               },
             },
             scales: {
               x: {
-                type: "category",
-                bounds: "data",
-                offset: false,
-                grid: { display: false, offset: false, drawBorder: false },
-                border: { display: false },
-                ticks: {
-                  align: "inner",
-                  autoSkip: false,
-                  color: "rgba(255, 255, 255, 0.38)",
-                  font: { size: 11, weight: "400", family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" },
-                  maxRotation: 0,
-                  minRotation: 0,
-                  padding: 10,
-                  callback: (_value, index) => visibleLabelIndexes.has(index) ? String(labels[index] || "") : "",
-                },
-              },
-              line: {
-                display: true,
                 type: "linear",
-                position: "left",
                 min: 0,
                 max: 100,
                 ticks: {
@@ -1140,18 +1646,20 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                   font: { size: 11, weight: "400", family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" },
                   callback: (value) => String(Math.round(Number(value) || 0)) + "%",
                 },
-                grid: { display: false, drawTicks: false },
+                grid: { color: "rgba(255, 255, 255, 0.07)", drawTicks: false },
                 border: { display: false },
               },
-              score: {
-                display: false,
-                type: "linear",
-                position: "left",
-                min: 0,
-                max: 100,
-                ticks: { display: false },
-                grid: { display: false, drawTicks: false },
+              y: {
+                type: "category",
+                bounds: "data",
+                offset: true,
+                grid: { display: false, drawBorder: false },
                 border: { display: false },
+                ticks: {
+                  color: "rgba(255, 255, 255, 0.58)",
+                  font: { size: 11, weight: "500", family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" },
+                  padding: 8,
+                },
               },
             },
           };
@@ -1170,11 +1678,6 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           return undefined;
         }, [chartSignature]);
 
-        if (!labels.length) {
-          return React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame playground-fine-tuning-score-chart" },
-            React.createElement("div", { className: "playground-settings-usage-chart-empty" }, "No evaluation runs yet")
-          );
-        }
         return React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame playground-fine-tuning-score-chart" },
           React.createElement("canvas", {
             ref: canvasRef,
@@ -1225,17 +1728,22 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         const fineTuningVersionRetryRef = useRef(new Set());
         const fineTuningRuntimeHydrationRef = useRef(new Set());
         const fineTuningThreadNotificationRef = useRef(new Set());
+        const fineTuningJobListLoadRef = useRef("");
         const [modalVisible, setModalVisible] = useState(false);
         const [modalClosing, setModalClosing] = useState(false);
         const [createError, setCreateError] = useState("");
         const [createBusy, setCreateBusy] = useState(false);
+        const [fineTuningJobsLoading, setFineTuningJobsLoading] = useState(false);
         const [rowMenuId, setRowMenuId] = useState("");
         const [fineTuningSortMode, setFineTuningSortMode] = useState("updated-desc");
         const [fineTuningFilterMode, setFineTuningFilterMode] = useState("all");
         const [fineTuningToolbarPopover, setFineTuningToolbarPopover] = useState("");
+        const [fineTuningDetailTab, setFineTuningDetailTab] = useState("analysis");
+        const [fineTuningStopJobId, setFineTuningStopJobId] = useState("");
         const [evaluationSetPickerOpen, setEvaluationSetPickerOpen] = useState(false);
         const [isFineTuningInstructionsEditing, setIsFineTuningInstructionsEditing] = useState(false);
         const [fineTuningInstructionsHistory, setFineTuningInstructionsHistory] = useState({ past: [], future: [] });
+        const requestHeadersSignature = useMemo(() => JSON.stringify(requestHeaders || {}), [requestHeaders]);
 
         const normalizedJobs = useMemo(() => (Array.isArray(fineTuningJobs) ? fineTuningJobs : [])
           .map((job, index) => normalizePlaygroundFineTuningJob(job, index))
@@ -1291,11 +1799,13 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               nextReference.beforeRunId = normalizePlaygroundFineTuningString(beforeRun.id || nextReference.beforeRunId);
               nextReference.beforeRunLabel = normalizePlaygroundFineTuningString(beforeRun.label || beforeRun.name || beforeRun.title || nextReference.beforeRunLabel);
               nextReference.beforeScore = getFineTuningEvaluationRunScore(beforeRun);
+              nextReference.beforeCostUsd = getFineTuningEvaluationRunCostUsd(beforeRun);
             }
             if (afterRun) {
               nextReference.afterRunId = normalizePlaygroundFineTuningString(afterRun.id || nextReference.afterRunId);
               nextReference.afterRunLabel = normalizePlaygroundFineTuningString(afterRun.label || afterRun.name || afterRun.title || nextReference.afterRunLabel || "Verification Run");
               nextReference.afterScore = getFineTuningEvaluationRunScore(afterRun);
+              nextReference.afterCostUsd = getFineTuningEvaluationRunCostUsd(afterRun);
               nextReference.status = normalizePlaygroundFineTuningString(afterRun.status || nextReference.status || "completed");
             }
             return nextReference;
@@ -1321,16 +1831,26 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             : hasActiveRuns
               ? "verifying"
               : normalizedJob.status;
+          const verificationCostUsd = nextReferences
+            .filter((reference) => hasPlaygroundFineTuningAfterResult({ status: nextStatus, evaluationRuns: [reference] }))
+            .reduce((sum, reference) => sum + normalizePlaygroundFineTuningUsdCost(reference.afterCostUsd), 0);
+          const fineTuningCostUsd = normalizePlaygroundFineTuningUsdCost(normalizedJob.fineTuningCostUsd || readPlaygroundFineTuningUsdCostWithLegacyCt(normalizedJob));
           return normalizePlaygroundFineTuningJob({
             ...normalizedJob,
             status: nextStatus,
             beforeScore,
             afterScore,
             improvementScore: finishedAfterScores.length ? normalizePlaygroundFineTuningScore(Math.max(0, afterScore - beforeScore)) : normalizedJob.improvementScore,
+            fineTuningCostUsd,
+            verificationCostUsd,
+            totalCostUsd: fineTuningCostUsd + verificationCostUsd,
             evaluationRuns: nextReferences,
           });
         }
-        const scoredJobs = useMemo(() => normalizedJobs.map((job) => resolveFineTuningJobScoresFromEvaluationRuns(job)), [normalizedJobs, normalizedEvaluationSets]);
+        const versionRecoveredJobs = useMemo(() => buildFineTuningJobsFromAgentVersions(), [normalizedAgents]);
+        const displaySourceJobs = useMemo(() => mergeFineTuningJobLists(normalizedJobs, versionRecoveredJobs), [normalizedJobs, versionRecoveredJobs]);
+        const versionEnrichedJobs = useMemo(() => displaySourceJobs.map((job) => enrichFineTuningJobFromAgentVersions(job)), [displaySourceJobs, normalizedAgents]);
+        const scoredJobs = useMemo(() => versionEnrichedJobs.map((job) => resolveFineTuningJobScoresFromEvaluationRuns(job)), [versionEnrichedJobs, normalizedEvaluationSets]);
         const currentFineTuningUser = useMemo(() => normalizePlaygroundFineTuningPersonIdentity({
           id: currentUserId || currentUserEmail || "",
           userId: currentUserId || "",
@@ -1467,6 +1987,138 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           };
         }
 
+        function findFineTunedAgentVersionForJob(job) {
+          const normalizedJob = normalizePlaygroundFineTuningJob(job);
+          if (!normalizedJob.id) return null;
+          const targetAgentId = normalizePlaygroundFineTuningString(normalizedJob.agentId || normalizedJob.targetAgentId);
+          const targetAgent = normalizedAgents.find((agent) => normalizePlaygroundFineTuningString(agent?.id || agent?.agentId || agent?.agent_id) === targetAgentId) || null;
+          const versions = getFineTuningAgentVersionList(targetAgent);
+          return (Array.isArray(versions) ? versions : []).find((version) => {
+            const metadata = readPlaygroundFineTuningPlainObject(version?.metadata);
+            return normalizePlaygroundFineTuningString(version?.fineTuningJobId || version?.fine_tuning_job_id || metadata.fineTuningJobId || metadata.fine_tuning_job_id) === normalizedJob.id;
+          }) || null;
+        }
+
+        function enrichFineTuningJobFromAgentVersions(job) {
+          const normalizedJob = normalizePlaygroundFineTuningJob(job);
+          const version = findFineTunedAgentVersionForJob(normalizedJob);
+          if (!version) return normalizedJob;
+          const metadata = readPlaygroundFineTuningPlainObject(version.metadata);
+          return mergePlaygroundFineTuningJobRecords(normalizedJob, {
+            createdAgentVersion: version,
+            createdAgentVersionId: normalizePlaygroundFineTuningString(version.id || version.versionId || version.version_id),
+            agentVersionCreationStatus: normalizePlaygroundFineTuningString(version.status || normalizedJob.agentVersionCreationStatus || "published"),
+            threadId: normalizePlaygroundFineTuningString(metadata.threadId || metadata.thread_id || metadata.fineTuningThreadId || metadata.fine_tuning_thread_id),
+            beforeAgentSnapshot: readFirstPlaygroundFineTuningObject(
+              metadata.beforeAgentSnapshot,
+              metadata.before_agent_snapshot,
+              metadata.beforeSnapshot,
+              metadata.before_snapshot,
+              metadata.baseAgentSnapshot,
+              metadata.base_agent_snapshot
+            ),
+            afterAgentSnapshot: readFirstPlaygroundFineTuningObject(
+              version.snapshot,
+              metadata.afterAgentSnapshot,
+              metadata.after_agent_snapshot,
+              metadata.afterSnapshot,
+              metadata.after_snapshot
+            ),
+            diffFiles: readFirstPlaygroundFineTuningArray(metadata.diffFiles, metadata.diff_files, version.diffFiles, version.diff_files),
+          });
+        }
+
+        function buildFineTuningJobFromAgentVersion(agent, version, fallbackIndex = 0) {
+          const metadata = readPlaygroundFineTuningPlainObject(version?.metadata);
+          const fineTuningJobId = normalizePlaygroundFineTuningString(version?.fineTuningJobId || version?.fine_tuning_job_id || metadata.fineTuningJobId || metadata.fine_tuning_job_id);
+          if (!fineTuningJobId) return null;
+          const agentId = normalizePlaygroundFineTuningString(metadata.targetAgentId || metadata.target_agent_id || agent?.id || agent?.agentId || agent?.agent_id);
+          const createdAt = normalizePlaygroundFineTuningString(metadata.fineTuningCreatedAt || metadata.fine_tuning_created_at || version?.createdAt || version?.created_at || version?.publishedAt || version?.published_at || new Date().toISOString());
+          const updatedAt = normalizePlaygroundFineTuningString(metadata.fineTuningUpdatedAt || metadata.fine_tuning_updated_at || version?.updatedAt || version?.updated_at || version?.publishedAt || version?.published_at || createdAt);
+          const beforeSnapshot = readFirstPlaygroundFineTuningObject(
+            metadata.beforeAgentSnapshot,
+            metadata.before_agent_snapshot,
+            metadata.beforeSnapshot,
+            metadata.before_snapshot,
+            metadata.baseAgentSnapshot,
+            metadata.base_agent_snapshot
+          );
+          const afterSnapshot = readFirstPlaygroundFineTuningObject(
+            version?.snapshot,
+            metadata.afterAgentSnapshot,
+            metadata.after_agent_snapshot,
+            metadata.afterSnapshot,
+            metadata.after_snapshot
+          );
+          const evaluationSetIds = Array.isArray(metadata.evaluationSetIds)
+            ? metadata.evaluationSetIds
+            : Array.isArray(metadata.evaluation_set_ids)
+              ? metadata.evaluation_set_ids
+              : [];
+          return normalizePlaygroundFineTuningJob({
+            id: fineTuningJobId,
+            name: normalizePlaygroundFineTuningString(metadata.fineTuningJobName || metadata.fine_tuning_job_name || version?.fineTuningJobName || version?.label)
+              || ("Fine-Tune " + formatPlaygroundFineTuningDateTime(createdAt)),
+            status: normalizePlaygroundFineTuningString(metadata.fineTuningStatus || metadata.fine_tuning_status || "completed") || "completed",
+            createdAt,
+            updatedAt,
+            agentId,
+            targetAgentId: agentId,
+            agentName: normalizePlaygroundFineTuningString(metadata.targetAgentName || metadata.target_agent_name || agent?.name || agent?.label || agent?.title || "Agent"),
+            targetAgentName: normalizePlaygroundFineTuningString(metadata.targetAgentName || metadata.target_agent_name || agent?.name || agent?.label || agent?.title || "Agent"),
+            agentPhotoUrl: normalizePlaygroundFineTuningString(metadata.targetAgentPhotoUrl || metadata.target_agent_photo_url || agent?.photoUrl || agent?.photoURL || agent?.avatarUrl || agent?.avatarURL),
+            targetAgentPhotoUrl: normalizePlaygroundFineTuningString(metadata.targetAgentPhotoUrl || metadata.target_agent_photo_url || agent?.photoUrl || agent?.photoURL || agent?.avatarUrl || agent?.avatarURL),
+            conductedBy: metadata.conductedBy || metadata.conducted_by || {},
+            createdBy: metadata.createdBy || metadata.created_by || metadata.conductedBy || metadata.conducted_by || {},
+            fineTunerAgentId: normalizePlaygroundFineTuningString(metadata.fineTunerAgentId || metadata.fine_tuner_agent_id),
+            fineTunerAgentName: normalizePlaygroundFineTuningString(metadata.fineTunerAgentName || metadata.fine_tuner_agent_name),
+            fineTunerAgentPhotoUrl: normalizePlaygroundFineTuningString(metadata.fineTunerAgentPhotoUrl || metadata.fine_tuner_agent_photo_url),
+            environmentId: normalizePlaygroundFineTuningString(metadata.environmentId || metadata.environment_id),
+            environmentName: normalizePlaygroundFineTuningString(metadata.environmentName || metadata.environment_name || "Computer"),
+            evaluationSets: evaluationSetIds.map((setId, index) => ({
+              id: normalizePlaygroundFineTuningString(setId || "evaluation_" + (index + 1)),
+              name: "Evaluation " + (index + 1),
+            })),
+            threadId: normalizePlaygroundFineTuningString(metadata.threadId || metadata.thread_id || metadata.fineTuningThreadId || metadata.fine_tuning_thread_id),
+            threadTitle: normalizePlaygroundFineTuningString(metadata.threadTitle || metadata.thread_title || "Fine-Tuning Thread"),
+            beforeScore: normalizePlaygroundFineTuningScore(metadata.beforeScore ?? metadata.before_score ?? 0),
+            afterScore: normalizePlaygroundFineTuningScore(metadata.afterScore ?? metadata.after_score ?? 0),
+            improvementScore: normalizePlaygroundFineTuningScore(metadata.improvementScore ?? metadata.improvement_score ?? 0),
+            costUsd: normalizePlaygroundFineTuningUsdCost(metadata.totalCostUsd ?? metadata.total_cost_usd ?? metadata.costUsd ?? metadata.cost_usd ?? 0),
+            fineTuningCostUsd: normalizePlaygroundFineTuningUsdCost(metadata.fineTuningCostUsd ?? metadata.fine_tuning_cost_usd ?? 0),
+            verificationCostUsd: normalizePlaygroundFineTuningUsdCost(metadata.verificationCostUsd ?? metadata.verification_cost_usd ?? 0),
+            analysisSummary: sanitizePlaygroundFineTuningAnalysisSummary(metadata.analysisSummary || metadata.analysis_summary || ""),
+            evaluationRuns: Array.isArray(metadata.evaluationRuns) ? metadata.evaluationRuns : Array.isArray(metadata.evaluation_runs) ? metadata.evaluation_runs : [],
+            beforeAgentSnapshot: beforeSnapshot,
+            afterAgentSnapshot: afterSnapshot,
+            diffFiles: readFirstPlaygroundFineTuningArray(metadata.diffFiles, metadata.diff_files, version?.diffFiles, version?.diff_files),
+            createdAgentVersion: version,
+            createdAgentVersionId: normalizePlaygroundFineTuningString(version?.id || version?.versionId || version?.version_id),
+            agentVersionCreationStatus: normalizePlaygroundFineTuningString(version?.status || "published") || "published",
+            metadata,
+          }, fallbackIndex);
+        }
+
+        function buildFineTuningJobsFromAgentVersions() {
+          return normalizedAgents.flatMap((agent, agentIndex) => {
+            const versions = getFineTuningAgentVersionList(agent);
+            return (Array.isArray(versions) ? versions : [])
+              .map((version, versionIndex) => buildFineTuningJobFromAgentVersion(agent, version, agentIndex + versionIndex))
+              .filter(Boolean);
+          });
+        }
+
+        function mergeFineTuningJobLists(primaryJobs, recoveredJobs) {
+          const byId = new Map();
+          [...(Array.isArray(recoveredJobs) ? recoveredJobs : []), ...(Array.isArray(primaryJobs) ? primaryJobs : [])].forEach((job) => {
+            const normalizedJob = normalizePlaygroundFineTuningJob(job);
+            if (!normalizedJob.id) return;
+            const existingJob = byId.get(normalizedJob.id);
+            byId.set(normalizedJob.id, existingJob ? mergePlaygroundFineTuningJobRecords(existingJob, normalizedJob) : normalizedJob);
+          });
+          return Array.from(byId.values()).sort((left, right) => (Date.parse(right.updatedAt || right.createdAt || 0) || 0) - (Date.parse(left.updatedAt || left.createdAt || 0) || 0));
+        }
+
         useEffect(() => {
           if (!fineTuningCreateModalOpen) return;
           setCreateError("");
@@ -1496,6 +2148,37 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         }, []);
 
         useEffect(() => {
+          const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
+          if (!normalizedBackendUrl || typeof setFineTuningJobs !== "function") return undefined;
+          const loadKey = normalizedBackendUrl + "|" + requestHeadersSignature;
+          if (fineTuningJobListLoadRef.current === loadKey) return undefined;
+          fineTuningJobListLoadRef.current = loadKey;
+          let cancelled = false;
+          setFineTuningJobsLoading(true);
+          void (async () => {
+            try {
+              const response = await fetch(normalizedBackendUrl + "/fine-tuning/jobs", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders || {},
+              });
+              const data = await readFineTuningJsonResponse(response, "Failed to load fine-tuning jobs.");
+              if (cancelled) return;
+              const backendJobs = readPlaygroundFineTuningJobListFromPayload(data);
+              setFineTuningJobs((current) => mergeFineTuningJobLists(current, backendJobs));
+            } catch {
+              if (!cancelled) fineTuningJobListLoadRef.current = "";
+            } finally {
+              if (!cancelled) setFineTuningJobsLoading(false);
+            }
+          })();
+          return () => {
+            cancelled = true;
+          };
+        }, [backendUrl, requestHeadersSignature, setFineTuningJobs]);
+
+        useEffect(() => {
           if (!evaluationSetPickerOpen || typeof document === "undefined") return undefined;
           const handlePointerDown = (event) => {
             if (evaluationSetPickerRef.current && evaluationSetPickerRef.current.contains(event.target)) return;
@@ -1521,7 +2204,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           void (async () => {
             const persistedJob = await tryPersistFineTunedAgentVersion(job);
             if (cancelled || !isPlaygroundFineTuningAgentVersionReady(persistedJob.agentVersionCreationStatus)) return;
-            patchFineTuningJob(job.id, () => persistedJob);
+            patchFineTuningJob(job.id, () => persistedJob, { persist: true });
           })();
           return () => {
             cancelled = true;
@@ -1530,18 +2213,23 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
 
         useEffect(() => {
           const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
-          if (!normalizedBackendUrl || !normalizedJobs.length) return undefined;
-          normalizedJobs
-            .filter((job) => job.id && !isFineTuningRuntimeJobComplete(job))
+          if (!normalizedBackendUrl || !displaySourceJobs.length) return undefined;
+          displaySourceJobs
+            .filter((job) => job.id && needsPlaygroundFineTuningRuntimeDetailsHydration(job))
             .forEach((job) => {
-              if (fineTuningRuntimeHydrationRef.current.has(job.id)) return;
-              fineTuningRuntimeHydrationRef.current.add(job.id);
-              void waitForFineTuningRuntimeJob(job.id, job).catch(() => {
-                fineTuningRuntimeHydrationRef.current.delete(job.id);
+              const isComplete = isFineTuningRuntimeJobComplete(job);
+              const hydrationKey = job.id + ":" + (isComplete ? "details" : "poll");
+              if (fineTuningRuntimeHydrationRef.current.has(hydrationKey)) return;
+              fineTuningRuntimeHydrationRef.current.add(hydrationKey);
+              const hydrationPromise = isComplete
+                ? fetchFineTuningRuntimeJob(job.id, job)
+                : waitForFineTuningRuntimeJob(job.id, job);
+              void hydrationPromise.catch(() => {
+                if (!isComplete) fineTuningRuntimeHydrationRef.current.delete(hydrationKey);
               });
             });
           return undefined;
-        }, [backendUrl, normalizedJobs.map((job) => job.id + ":" + job.status).join("|")]);
+        }, [backendUrl, displaySourceJobs.map((job) => job.id + ":" + job.status + ":" + (job.threadId || "") + ":" + (Array.isArray(job.diffFiles) ? job.diffFiles.length : 0)).join("|")]);
 
         function updateCreateForm(patch) {
           if (typeof setFineTuningCreateForm === "function") {
@@ -1792,25 +2480,104 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           if (typeof setFineTuningCreateModalOpen === "function") setFineTuningCreateModalOpen(true);
         }
 
-        function upsertFineTuningJob(job) {
+        function upsertFineTuningJob(job, options = {}) {
           const normalizedJob = normalizePlaygroundFineTuningJob(job);
           if (!normalizedJob.id || typeof setFineTuningJobs !== "function") return normalizedJob;
           setFineTuningJobs((current) => {
             const jobs = Array.isArray(current) ? current.map((item, index) => normalizePlaygroundFineTuningJob(item, index)) : [];
-            return [normalizedJob, ...jobs.filter((item) => item.id !== normalizedJob.id)];
+            const existingJob = jobs.find((item) => item.id === normalizedJob.id) || null;
+            const mergedJob = existingJob ? mergePlaygroundFineTuningJobRecords(existingJob, normalizedJob) : normalizedJob;
+            if (options.persist) {
+              void persistFineTuningRuntimeJob(mergedJob).catch(() => {});
+            }
+            return [mergedJob, ...jobs.filter((item) => item.id !== normalizedJob.id)];
           });
           if (typeof setSelectedFineTuningJobId === "function") setSelectedFineTuningJobId(normalizedJob.id);
           if (typeof setFineTuningPageMode === "function") setFineTuningPageMode("detail");
           return normalizedJob;
         }
 
-        function patchFineTuningJob(jobId, updater) {
+        function patchFineTuningJob(jobId, updater, options = {}) {
           const normalizedJobId = normalizePlaygroundFineTuningString(jobId);
           if (!normalizedJobId || typeof setFineTuningJobs !== "function" || typeof updater !== "function") return;
           setFineTuningJobs((current) => (Array.isArray(current) ? current : []).map((item, index) => {
             const normalizedItem = normalizePlaygroundFineTuningJob(item, index);
-            return normalizedItem.id === normalizedJobId ? normalizePlaygroundFineTuningJob(updater(normalizedItem)) : item;
+            if (normalizedItem.id !== normalizedJobId) return item;
+            const nextJob = mergePlaygroundFineTuningJobRecords(normalizedItem, updater(normalizedItem));
+            if (options.persist) {
+              void persistFineTuningRuntimeJob(nextJob).catch(() => {});
+            }
+            return nextJob;
           }));
+        }
+
+        function buildStoppedFineTuningJob(job) {
+          const normalizedJob = normalizePlaygroundFineTuningJob(job);
+          const cancellationReferences = normalizedJob.evaluationRuns.map((reference) => ({
+            ...reference,
+            status: isFineTuningEvaluationRunActive(reference.status) || reference.status === "pending"
+              ? "cancelled"
+              : reference.status,
+          }));
+          return normalizePlaygroundFineTuningJob({
+            ...mergeFineTuningVerificationReferences(normalizedJob, cancellationReferences, "cancelled"),
+            status: "cancelled",
+            error: "",
+            updatedAt: new Date().toISOString(),
+          });
+        }
+
+        async function stopFineTuningJob(job) {
+          const normalizedJob = normalizePlaygroundFineTuningJob(job);
+          const normalizedJobId = normalizePlaygroundFineTuningString(normalizedJob.id);
+          const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
+          if (!normalizedJobId || !normalizedBackendUrl || fineTuningStopJobId === normalizedJobId) return;
+          const stoppedJob = buildStoppedFineTuningJob(normalizedJob);
+          setFineTuningStopJobId(normalizedJobId);
+          patchFineTuningJob(normalizedJobId, () => stoppedJob);
+          try {
+            const headers = {
+              ...(requestHeaders || {}),
+              "Content-Type": "application/json",
+            };
+            const threadId = normalizePlaygroundFineTuningString(normalizedJob.threadId);
+            const stopRequests = [
+              fetch(normalizedBackendUrl + "/fine-tuning/jobs/" + encodeURIComponent(normalizedJobId) + "/cancel", {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers,
+                body: JSON.stringify({}),
+              }),
+            ];
+            if (threadId) {
+              stopRequests.push(fetch(normalizedBackendUrl + "/threads/" + encodeURIComponent(threadId) + "/cancel", {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers,
+                body: JSON.stringify({}),
+              }));
+            }
+            const [jobResult] = await Promise.allSettled(stopRequests);
+            let backendJob = null;
+            if (jobResult.status === "fulfilled") {
+              const data = await jobResult.value.json().catch(() => ({}));
+              if (jobResult.value.ok) {
+                backendJob = normalizePlaygroundFineTuningJob(data?.job || data?.data || data);
+              }
+            }
+            const nextJob = backendJob?.id
+              ? mergePlaygroundFineTuningJobRecords(stoppedJob, {
+                  ...backendJob,
+                  status: "cancelled",
+                  evaluationRuns: stoppedJob.evaluationRuns,
+                })
+              : stoppedJob;
+            patchFineTuningJob(normalizedJobId, () => nextJob, { persist: true });
+          } finally {
+            setFineTuningStopJobId("");
+          }
         }
 
         function normalizeFineTuningEvaluationRun(rawRun = {}) {
@@ -1830,6 +2597,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                 ? normalizePlaygroundFineTuningScore(cases.reduce((sum, item) => sum + Number(item?.score || 0), 0) / cases.length)
                 : 0,
             costTokens: normalizePlaygroundFineTuningTokenCount(source.costTokens ?? source.cost_tokens ?? source.costCT ?? source.cost_ct),
+            costUsd: readPlaygroundFineTuningUsdCostWithLegacyCt(source),
             status: normalizePlaygroundFineTuningString(source.status || "queued") || "queued",
           };
         }
@@ -1843,6 +2611,11 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         function getFineTuningEvaluationRunScore(run) {
           const normalizedRun = normalizeFineTuningEvaluationRun(run);
           return normalizePlaygroundFineTuningScore(normalizedRun.averageScore ?? normalizedRun.average_score ?? 0);
+        }
+
+        function getFineTuningEvaluationRunCostUsd(run) {
+          const normalizedRun = normalizeFineTuningEvaluationRun(run);
+          return readPlaygroundFineTuningUsdCostWithLegacyCt(normalizedRun);
         }
 
         function upsertFineTuningEvaluationRun(setId, run) {
@@ -1893,12 +2666,19 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             : normalizedJob.afterScore || beforeScore;
           const status = statusOverride
             || (hasActiveRuns || hasPendingRuns ? "verifying" : normalizedJob.status || "completed");
+          const verificationCostUsd = nextReferences
+            .filter((reference) => reference.afterRunId && !isFineTuningEvaluationRunActive(reference.status) && reference.status !== "error")
+            .reduce((sum, reference) => sum + normalizePlaygroundFineTuningUsdCost(reference.afterCostUsd), 0);
+          const fineTuningCostUsd = normalizePlaygroundFineTuningUsdCost(normalizedJob.fineTuningCostUsd || readPlaygroundFineTuningUsdCostWithLegacyCt(normalizedJob));
           return normalizePlaygroundFineTuningJob({
             ...normalizedJob,
             status,
             beforeScore,
             afterScore,
             improvementScore: finishedAfterScores.length ? normalizePlaygroundFineTuningScore(Math.max(0, afterScore - beforeScore)) : 0,
+            fineTuningCostUsd,
+            verificationCostUsd,
+            totalCostUsd: fineTuningCostUsd + verificationCostUsd,
             evaluationRuns: nextReferences,
             updatedAt: new Date().toISOString(),
           });
@@ -1923,6 +2703,14 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           };
         }
 
+        function preservePlaygroundFineTuningAgentName(job, snapshot = {}) {
+          const source = snapshot && typeof snapshot === "object" && !Array.isArray(snapshot) ? snapshot : {};
+          return {
+            ...source,
+            name: normalizePlaygroundFineTuningString(job?.targetAgentName || job?.agentName || source.name || "Agent") || "Agent",
+          };
+        }
+
         function buildOptimisticFineTuningJob({ jobId, name, selectedSets, targetAgent, fineTunerAgent, selectedEnvironment, instructions, conductedBy }) {
           const nowIso = new Date().toISOString();
           const evaluationRuns = (Array.isArray(selectedSets) ? selectedSets : []).map((set) => {
@@ -1934,9 +2722,11 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               beforeRunId: normalizePlaygroundFineTuningString(beforeRun?.id || set.fineTuningRunId || set.fine_tuning_run_id),
               beforeRunLabel: normalizePlaygroundFineTuningString(beforeRun?.label || beforeRun?.name || beforeRun?.title || "Before"),
               beforeScore: getFineTuningEvaluationRunScore(beforeRun),
+              beforeCostUsd: getFineTuningEvaluationRunCostUsd(beforeRun),
               afterRunId: "",
               afterRunLabel: "",
               afterScore: 0,
+              afterCostUsd: 0,
               status: "pending",
             };
           });
@@ -1988,6 +2778,9 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             afterScore: 0,
             improvementScore: 0,
             costTokens: 0,
+            costUsd: 0,
+            fineTuningCostUsd: 0,
+            verificationCostUsd: 0,
             analysisSummary: "",
             evaluationRuns,
             beforeAgentSnapshot: beforeSnapshot,
@@ -2041,6 +2834,26 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           return data;
         }
 
+        async function persistFineTuningRuntimeJob(job) {
+          const normalizedJob = normalizePlaygroundFineTuningJob(job);
+          const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
+          if (!normalizedBackendUrl || !normalizedJob.id) return normalizedJob;
+          const response = await fetch(normalizedBackendUrl + "/fine-tuning/jobs/" + encodeURIComponent(normalizedJob.id), {
+            method: "PATCH",
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+              ...(requestHeaders || {}),
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              job: buildPlaygroundFineTuningJobReferencePayload(normalizedJob),
+            }),
+          });
+          const data = await readFineTuningJsonResponse(response, "Failed to save fine-tuning job.");
+          return mergePlaygroundFineTuningJobRecords(normalizedJob, data?.job || data?.data || data);
+        }
+
         function isFineTuningRuntimeJobComplete(job) {
           const normalizedJob = normalizePlaygroundFineTuningJob(job);
           const status = normalizePlaygroundFineTuningString(normalizedJob.status).toLowerCase();
@@ -2089,6 +2902,25 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           });
         }
 
+        async function fetchFineTuningRuntimeJob(jobId, seedJob) {
+          const normalizedJobId = normalizePlaygroundFineTuningString(jobId);
+          const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
+          if (!normalizedBackendUrl || !normalizedJobId) return normalizePlaygroundFineTuningJob(seedJob);
+          const response = await fetch(normalizedBackendUrl + "/fine-tuning/jobs/" + encodeURIComponent(normalizedJobId), {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+            headers: requestHeaders || {},
+          });
+          const data = await readFineTuningJsonResponse(response, "Failed to load fine-tuning job.");
+          const latestJob = mergePlaygroundFineTuningJobRecords(seedJob, data?.job || data?.data || data);
+          if (latestJob.id) {
+            patchFineTuningJob(normalizedJobId, () => latestJob);
+            notifyFineTuningThreadStarted(latestJob);
+          }
+          return latestJob;
+        }
+
         async function waitForFineTuningRuntimeJob(jobId, seedJob) {
           const normalizedJobId = normalizePlaygroundFineTuningString(jobId);
           const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
@@ -2096,18 +2928,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           if (!normalizedBackendUrl || !normalizedJobId || isFineTuningRuntimeJobComplete(latestJob)) return latestJob;
           for (let attempt = 0; attempt < 240; attempt += 1) {
             await delayFineTuningPoll(attempt < 10 ? 1000 : 1500);
-            const response = await fetch(normalizedBackendUrl + "/fine-tuning/jobs/" + encodeURIComponent(normalizedJobId), {
-              method: "GET",
-              credentials: "include",
-              cache: "no-store",
-              headers: requestHeaders || {},
-            });
-            const data = await readFineTuningJsonResponse(response, "Failed to load fine-tuning job.");
-            latestJob = normalizePlaygroundFineTuningJob(data?.job || data?.data || data);
-            if (latestJob.id) {
-              patchFineTuningJob(normalizedJobId, () => latestJob);
-              notifyFineTuningThreadStarted(latestJob);
-            }
+            latestJob = await fetchFineTuningRuntimeJob(normalizedJobId, latestJob);
             if (isFineTuningRuntimeJobComplete(latestJob)) return latestJob;
           }
           return latestJob;
@@ -2136,18 +2957,22 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                   afterRunId: run.id,
                   afterRunLabel: run.label || "Verification Run",
                   afterScore: getFineTuningEvaluationRunScore(run),
-                  status: run.status || "completed",
-                }]));
+                  afterCostUsd: getFineTuningEvaluationRunCostUsd(run),
+                  status: normalizePlaygroundFineTuningString(currentJob?.status).toLowerCase() === "cancelled" ? "cancelled" : (run.status || "completed"),
+                }]), { persist: true });
               }
               if (run.id && isFineTuningEvaluationRunActive(run.status) && attempts < 120 && typeof window !== "undefined") {
                 window.setTimeout(poll, 1500);
               }
             } catch (error) {
-              patchFineTuningJob(jobId, (currentJob) => mergeFineTuningVerificationReferences(currentJob, [{
-                evaluationSetId: setId,
-                afterRunId: normalizedRunId,
-                status: "error",
-              }], "error"));
+              patchFineTuningJob(jobId, (currentJob) => {
+                if (normalizePlaygroundFineTuningString(currentJob?.status).toLowerCase() === "cancelled") return currentJob;
+                return mergeFineTuningVerificationReferences(currentJob, [{
+                  evaluationSetId: setId,
+                  afterRunId: normalizedRunId,
+                  status: "error",
+                }], "error");
+              }, { persist: true });
             }
           };
           if (typeof window !== "undefined") {
@@ -2242,6 +3067,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                 afterRunId: run.id,
                 afterRunLabel: run.label || "Verification Run",
                 afterScore: getFineTuningEvaluationRunScore(run),
+                afterCostUsd: getFineTuningEvaluationRunCostUsd(run),
                 status: run.status || "queued",
               });
               if (run.id) {
@@ -2271,6 +3097,9 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           if (!backendUrl || !normalizedJob.agentId || !versionId) {
             return normalizedVersion;
           }
+          const safeSnapshot = snapshot && typeof snapshot === "object" && !Array.isArray(snapshot)
+            ? preservePlaygroundFineTuningAgentName(normalizedJob, snapshot)
+            : null;
           const response = await fetch(String(backendUrl).replace(/\/+$/, "") + "/agents/" + encodeURIComponent(normalizedJob.agentId) + "/versions/" + encodeURIComponent(versionId) + "/publish", {
             method: "POST",
             credentials: "include",
@@ -2279,7 +3108,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               ...(requestHeaders || {}),
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(snapshot && typeof snapshot === "object" && !Array.isArray(snapshot) ? { snapshot } : {}),
+            body: JSON.stringify(safeSnapshot ? { snapshot: safeSnapshot } : {}),
           });
           const data = await response.json().catch(() => ({}));
           if (!response.ok) {
@@ -2291,6 +3120,11 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             ...(publishedVersion && typeof publishedVersion === "object" && !Array.isArray(publishedVersion) ? publishedVersion : {}),
             id: normalizePlaygroundFineTuningString(publishedVersion?.id || versionId),
             status: normalizePlaygroundFineTuningString(publishedVersion?.status || "published") || "published",
+            snapshot: preservePlaygroundFineTuningAgentName(normalizedJob, publishedVersion?.snapshot || normalizedVersion.snapshot || safeSnapshot || {}),
+            metadata: {
+              ...readPlaygroundFineTuningPlainObject(normalizedVersion.metadata),
+              ...readPlaygroundFineTuningPlainObject(publishedVersion?.metadata),
+            },
             publishedAt: normalizePlaygroundFineTuningString(publishedVersion?.publishedAt || publishedVersion?.published_at || new Date().toISOString()),
             published_at: normalizePlaygroundFineTuningString(publishedVersion?.published_at || publishedVersion?.publishedAt || new Date().toISOString()),
           };
@@ -2321,7 +3155,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             return nextJob;
           }
           try {
-            const snapshot = normalizedJob.createdAgentVersion.snapshot;
+            const snapshot = preservePlaygroundFineTuningAgentName(normalizedJob, normalizedJob.createdAgentVersion.snapshot);
             const response = await fetch(String(backendUrl).replace(/\/+$/, "") + "/agents/" + encodeURIComponent(normalizedJob.agentId) + "/versions", {
               method: "POST",
               credentials: "include",
@@ -2340,7 +3174,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                 agent: {
                   id: normalizedJob.agentId,
                   agentId: normalizedJob.agentId,
-                  name: snapshot.name || normalizedJob.agentName,
+                  name: normalizePlaygroundFineTuningString(normalizedJob.agentName || snapshot.name || "Agent") || "Agent",
                   description: snapshot.description || "",
                   model: snapshot.model || "",
                   instructions: snapshot.instructions || "",
@@ -2354,8 +3188,58 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                 metadata: {
                   fineTuningJobId: normalizedJob.id,
                   fine_tuning_job_id: normalizedJob.id,
+                  fineTuningJobName: normalizedJob.name,
+                  fine_tuning_job_name: normalizedJob.name,
+                  fineTuningCreatedAt: normalizedJob.createdAt,
+                  fine_tuning_created_at: normalizedJob.createdAt,
+                  fineTuningUpdatedAt: normalizedJob.updatedAt,
+                  fine_tuning_updated_at: normalizedJob.updatedAt,
+                  fineTuningStatus: normalizedJob.status,
+                  fine_tuning_status: normalizedJob.status,
+                  threadId: normalizedJob.threadId,
+                  thread_id: normalizedJob.threadId,
+                  fineTuningThreadId: normalizedJob.threadId,
+                  fine_tuning_thread_id: normalizedJob.threadId,
+                  threadTitle: normalizedJob.threadTitle,
+                  thread_title: normalizedJob.threadTitle,
+                  targetAgentId: normalizedJob.agentId,
+                  target_agent_id: normalizedJob.agentId,
+                  targetAgentName: normalizedJob.agentName,
+                  target_agent_name: normalizedJob.agentName,
+                  targetAgentPhotoUrl: normalizedJob.agentPhotoUrl,
+                  target_agent_photo_url: normalizedJob.agentPhotoUrl,
+                  fineTunerAgentId: normalizedJob.fineTunerAgentId,
+                  fine_tuner_agent_id: normalizedJob.fineTunerAgentId,
+                  fineTunerAgentName: normalizedJob.fineTunerAgentName,
+                  fine_tuner_agent_name: normalizedJob.fineTunerAgentName,
+                  fineTunerAgentPhotoUrl: normalizedJob.fineTunerAgentPhotoUrl,
+                  fine_tuner_agent_photo_url: normalizedJob.fineTunerAgentPhotoUrl,
+                  environmentId: normalizedJob.environmentId,
+                  environment_id: normalizedJob.environmentId,
+                  environmentName: normalizedJob.environmentName,
+                  environment_name: normalizedJob.environmentName,
+                  beforeScore: normalizedJob.beforeScore,
+                  before_score: normalizedJob.beforeScore,
+                  afterScore: normalizedJob.afterScore,
+                  after_score: normalizedJob.afterScore,
+                  improvementScore: normalizedJob.improvementScore,
+                  improvement_score: normalizedJob.improvementScore,
+                  costUsd: normalizedJob.costUsd,
+                  cost_usd: normalizedJob.costUsd,
+                  fineTuningCostUsd: normalizedJob.fineTuningCostUsd,
+                  fine_tuning_cost_usd: normalizedJob.fineTuningCostUsd,
+                  verificationCostUsd: normalizedJob.verificationCostUsd,
+                  verification_cost_usd: normalizedJob.verificationCostUsd,
                   evaluationSetIds: normalizedJob.evaluationSets.map((set) => set.id),
                   evaluation_set_ids: normalizedJob.evaluationSets.map((set) => set.id),
+                  evaluationRuns: normalizedJob.evaluationRuns,
+                  evaluation_runs: normalizedJob.evaluationRuns,
+                  conductedBy: normalizedJob.conductedBy,
+                  conducted_by: normalizedJob.conductedBy,
+                  createdBy: normalizedJob.createdBy,
+                  created_by: normalizedJob.createdBy,
+                  beforeAgentSnapshot: normalizedJob.beforeAgentSnapshot,
+                  before_agent_snapshot: normalizedJob.beforeAgentSnapshot,
                 },
               }),
             });
@@ -2499,11 +3383,29 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               patchFineTuningJob(jobId, () => completedRuntimeJob);
               return;
             }
-            if (new Set(["error", "failed", "cancelled", "canceled"]).has(normalizePlaygroundFineTuningString(completedRuntimeJob.status).toLowerCase())) {
+            const completedRuntimeStatus = normalizePlaygroundFineTuningString(completedRuntimeJob.status).toLowerCase();
+            if (new Set(["cancelled", "canceled"]).has(completedRuntimeStatus)) {
+              patchFineTuningJob(jobId, () => buildStoppedFineTuningJob(completedRuntimeJob), { persist: true });
+              return;
+            }
+            if (new Set(["error", "failed"]).has(completedRuntimeStatus)) {
               throw new Error(completedRuntimeJob.error || completedRuntimeJob.agentVersionError || completedRuntimeJob.createdAgentVersion?.error || "Fine-tuning job failed.");
             }
+            if (typeof onAgentsRefresh === "function") {
+              await onAgentsRefresh();
+            }
+            const runtimeVerificationAlreadyHandled = completedRuntimeJob.evaluationRuns.some((reference) => {
+              const status = normalizePlaygroundFineTuningString(reference?.status).toLowerCase();
+              return Boolean(reference?.afterRunId || reference?.after_run_id)
+                || (status && status !== "pending" && status !== "not_run");
+            });
+            if (runtimeVerificationAlreadyHandled) {
+              upsertFineTuningJob(completedRuntimeJob, { persist: true });
+              notifyFineTuningThreadStarted(completedRuntimeJob);
+              return;
+            }
             const persistedJob = await tryPersistFineTunedAgentVersion(completedRuntimeJob);
-            patchFineTuningJob(jobId, () => persistedJob);
+            patchFineTuningJob(jobId, () => persistedJob, { persist: true });
             const verifiedJob = isPlaygroundFineTuningAgentVersionReady(persistedJob.agentVersionCreationStatus)
               ? await startFineTuningVerificationRuns(persistedJob, selectedSets, targetAgent, selectedEnvironment)
               : normalizePlaygroundFineTuningJob({
@@ -2511,7 +3413,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                   status: "error",
                   error: persistedJob.agentVersionError || persistedJob.createdAgentVersion?.error || "Fine-tuning finished, but no agent version was created.",
                 });
-            upsertFineTuningJob(verifiedJob);
+            upsertFineTuningJob(verifiedJob, { persist: true });
             notifyFineTuningThreadStarted(verifiedJob);
           } catch (error) {
             const message = error?.message || String(error);
@@ -2528,26 +3430,42 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                     ...(currentJob.createdAgentVersion || {}),
                     status: "error",
                     error: message,
-                  },
+                },
               updatedAt: new Date().toISOString(),
-            }));
+            }), { persist: true });
           }
           })();
         }
 
         function openJob(jobId) {
-          if (typeof setSelectedFineTuningJobId === "function") setSelectedFineTuningJobId(jobId);
+          const normalizedJobId = normalizePlaygroundFineTuningString(jobId);
+          const recoveredJob = scoredJobs.find((job) => job.id === normalizedJobId) || displaySourceJobs.find((job) => job.id === normalizedJobId) || null;
+          if (recoveredJob && !(Array.isArray(fineTuningJobs) ? fineTuningJobs : []).some((job) => normalizePlaygroundFineTuningJob(job).id === normalizedJobId)) {
+            upsertFineTuningJob(recoveredJob);
+            return;
+          }
+          if (typeof setSelectedFineTuningJobId === "function") setSelectedFineTuningJobId(normalizedJobId);
           if (typeof setFineTuningPageMode === "function") setFineTuningPageMode("detail");
         }
 
         function deleteJob(jobId) {
           if (typeof setFineTuningJobs !== "function") return;
-          setFineTuningJobs((current) => (Array.isArray(current) ? current : []).filter((job) => normalizePlaygroundFineTuningJob(job).id !== jobId));
-          if (selectedFineTuningJobId === jobId) {
+          const normalizedJobId = normalizePlaygroundFineTuningString(jobId);
+          setFineTuningJobs((current) => (Array.isArray(current) ? current : []).filter((job) => normalizePlaygroundFineTuningJob(job).id !== normalizedJobId));
+          if (selectedFineTuningJobId === normalizedJobId) {
             if (typeof setSelectedFineTuningJobId === "function") setSelectedFineTuningJobId("");
             if (typeof setFineTuningPageMode === "function") setFineTuningPageMode("overview");
           }
           setRowMenuId("");
+          const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
+          if (normalizedBackendUrl && normalizedJobId) {
+            void fetch(normalizedBackendUrl + "/fine-tuning/jobs/" + encodeURIComponent(normalizedJobId), {
+              method: "DELETE",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders || {},
+            }).catch(() => {});
+          }
         }
 
         function renderScoreChip(job) {
@@ -2819,7 +3737,9 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                     React.createElement("span", null, "Fine-Tune")
                   )
                 ),
-                visibleJobs.length > 0
+                fineTuningJobsLoading && scoredJobs.length === 0
+                  ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Loading fine-tuning jobs...")
+                  : visibleJobs.length > 0
                   ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-evaluations-overview-table" },
                       React.createElement("div", { className: "playground-project-overview-threads-table-header" },
                         React.createElement("div", null, "Job"),
@@ -2833,7 +3753,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                         visibleJobs.map((job) => renderFineTuningJobRow(job))
                       )
                     )
-                  : normalizedJobs.length === 0
+                  : scoredJobs.length === 0
                     ? React.createElement("div", { className: "playground-guardrails-empty" },
                         React.createElement("div", { className: "playground-guardrails-empty-icon" }, React.createElement(TestTubeDiagonal, { width: 18, height: 18, strokeWidth: 1.8 })),
                         React.createElement("div", { className: "playground-guardrails-empty-title" }, "No fine-tuning jobs yet"),
@@ -2856,11 +3776,16 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           const afterScore = hasAfter ? job.afterScore : job.beforeScore;
           const improvement = hasAfter ? Math.max(0, afterScore - job.beforeScore) : 0;
           const metrics = [
-            { id: "before", label: "Before Avg", value: formatPlaygroundFineTuningPercent(job.beforeScore) },
-            { id: "after", label: "After Avg", value: hasAfter ? formatPlaygroundFineTuningPercent(job.afterScore) : "Pending" },
-            { id: "improvement", label: "Improvement", value: hasAfter ? "+" + Math.round(improvement * 100) + " pts" : "Not run" },
-            { id: "cost", label: "Cost in CT", value: formatPlaygroundFineTuningCost(job.costTokens) },
+            { id: "before", label: "Before", value: formatPlaygroundFineTuningPercent(job.beforeScore) },
+            { id: "after", label: "After", value: hasAfter ? formatPlaygroundFineTuningPercent(job.afterScore) : "Pending" },
+            { id: "improvement", label: "Improvement", value: hasAfter ? "+" + Math.round(improvement * 100) : "Not run" },
+            { id: "cost", label: "Cost", value: formatPlaygroundFineTuningUsdCost(job.costUsd) },
           ];
+          const agent = normalizedAgents.find((item) => normalizePlaygroundFineTuningString(item?.id) === normalizePlaygroundFineTuningString(job.targetAgentId || job.agentId)) || null;
+          const agentName = normalizePlaygroundFineTuningString(job.agentName || job.targetAgentName || agent?.name || agent?.label || agent?.title || "Agent");
+          const agentPhotoUrl = normalizePlaygroundFineTuningString(job.agentPhotoUrl || job.targetAgentPhotoUrl || agent?.photoUrl || agent?.photoURL || agent?.avatarUrl || agent?.avatarURL);
+          const computerName = normalizePlaygroundFineTuningString(job.environmentName || "Computer");
+          const threadId = normalizePlaygroundFineTuningString(job.threadId);
           const handleDownload = () => {
             if (typeof document === "undefined") return;
             const canvas = document.querySelector(".playground-fine-tuning-progress-combo-canvas");
@@ -2896,6 +3821,26 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             ),
             React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
               React.createElement(PlaygroundFineTuningPerformanceChart, { job })
+            ),
+            React.createElement("div", { className: "playground-fine-tuning-analytics-footer" },
+              React.createElement("div", { className: "playground-fine-tuning-analytics-agent", title: agentName + " on " + computerName },
+                React.createElement("span", { className: "playground-evaluations-run-agent-avatar", "aria-hidden": "true" },
+                  agentPhotoUrl
+                    ? React.createElement("img", { src: agentPhotoUrl, alt: "" })
+                    : getPlaygroundFineTuningInitials(agentName)
+                ),
+                React.createElement("span", { className: "playground-fine-tuning-analytics-agent-main" }, agentName),
+                React.createElement("span", { className: "playground-fine-tuning-analytics-agent-meta" }, "on " + computerName)
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-fine-tuning-thread-link",
+                onClick: () => {
+                  if (threadId && typeof onOpenThread === "function") onOpenThread(threadId);
+                },
+                disabled: !threadId || typeof onOpenThread !== "function",
+                title: threadId || "Fine-tune thread is not available yet",
+              }, threadId || "Thread pending")
             )
           );
         }
@@ -2992,7 +3937,10 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                               ? React.createElement("button", {
                                   type: "button",
                                   className: "playground-fine-tuning-reference-link",
-                                  onClick: () => onOpenEvaluationRun(reference.evaluationSetId, reference.beforeRunId),
+                                  onClick: () => onOpenEvaluationRun(reference.evaluationSetId, reference.beforeRunId, {
+                                    page: "fine-tuning",
+                                    fineTuneJobId: job.id,
+                                  }),
                                 }, reference.beforeRunLabel || reference.beforeRunId)
                               : React.createElement("span", { className: "playground-guardrails-table-muted" }, reference.beforeRunLabel || "-")
                           ),
@@ -3001,7 +3949,10 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                               ? React.createElement("button", {
                                   type: "button",
                                   className: "playground-fine-tuning-reference-link",
-                                  onClick: () => onOpenEvaluationRun(reference.evaluationSetId, reference.afterRunId),
+                                  onClick: () => onOpenEvaluationRun(reference.evaluationSetId, reference.afterRunId, {
+                                    page: "fine-tuning",
+                                    fineTuneJobId: job.id,
+                                  }),
                                 }, reference.afterRunLabel || reference.afterRunId)
                               : React.createElement("span", { className: "playground-guardrails-table-muted" }, reference.status === "not_run" ? "Not run" : (reference.afterRunLabel || "-"))
                           ),
@@ -3019,16 +3970,57 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           );
         }
 
-        function renderDiff(job) {
-          const files = buildPlaygroundFineTuningDiffFiles(job);
-          return React.createElement("section", {
-              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-evaluations-cases-section playground-fine-tuning-section",
-            },
-            React.createElement("div", { className: "playground-plugins-section-header" },
-              React.createElement("div", { className: "playground-plugins-section-copy" },
-                React.createElement("h3", { className: "playground-plugins-section-title" }, "Agent Changes")
+        function renderFineTuningDetailTabs() {
+          const tabs = [
+            { id: "analysis", label: "Analysis" },
+            { id: "changes", label: "Agent Changes" },
+          ];
+          return React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-evaluations-detail-tabs playground-fine-tuning-detail-tabs", role: "tablist", "aria-label": "Fine-tuning details tabs" },
+            React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+              tabs.map((tab) =>
+                React.createElement("button", {
+                  key: tab.id,
+                  type: "button",
+                  role: "tab",
+                  "aria-selected": fineTuningDetailTab === tab.id ? "true" : "false",
+                  className: "playground-project-overview-chart-tab" + (fineTuningDetailTab === tab.id ? " is-active" : ""),
+                  onClick: () => setFineTuningDetailTab(tab.id),
+                }, tab.label)
               )
-            ),
+            )
+          );
+        }
+
+        function renderAnalysis(analysisSummary) {
+          return React.createElement("section", {
+              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-evaluations-cases-section playground-fine-tuning-section playground-fine-tuning-analysis-section playground-fine-tuning-tab-panel",
+            },
+            analysisSummary
+              ? (
+                  typeof PlaygroundTaskDescriptionMarkdown === "function"
+                    ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                        content: analysisSummary,
+                        className: "playground-fine-tuning-analysis-content tb-message-markdown",
+                      })
+                    : React.createElement("div", { className: "playground-fine-tuning-analysis-content tb-message-markdown" }, analysisSummary)
+                )
+              : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No analysis captured.")
+          );
+        }
+
+        function renderDiff(job, options = {}) {
+          const files = buildPlaygroundFineTuningDiffFiles(job);
+          const showHeader = options.showHeader !== false;
+          return React.createElement("section", {
+              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-evaluations-cases-section playground-fine-tuning-section playground-fine-tuning-tab-panel",
+            },
+            showHeader
+              ? React.createElement("div", { className: "playground-plugins-section-header" },
+                  React.createElement("div", { className: "playground-plugins-section-copy" },
+                    React.createElement("h3", { className: "playground-plugins-section-title" }, "Agent Changes")
+                  )
+                )
+              : null,
             files.length
               ? React.createElement("div", { className: "playground-fine-tuning-diff-list" },
                   files.map((file) =>
@@ -3057,26 +4049,11 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           return React.createElement("div", { className: "playground-guardrails-detail playground-evaluations-detail playground-fine-tuning-detail" },
             React.createElement("div", { className: "playground-guardrails-editor" },
               renderKpiCard(job),
-              renderJobDetails(job),
               renderEvaluationRunReferences(job),
-              analysisSummary
-                ? React.createElement("section", {
-                    className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-evaluations-cases-section playground-fine-tuning-section playground-fine-tuning-analysis-section",
-                  },
-                    React.createElement("div", { className: "playground-plugins-section-header" },
-                      React.createElement("div", { className: "playground-plugins-section-copy" },
-                        React.createElement("h3", { className: "playground-plugins-section-title" }, "Analysis")
-                      )
-                    ),
-                    typeof PlaygroundTaskDescriptionMarkdown === "function"
-                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                          content: analysisSummary,
-                          className: "playground-fine-tuning-analysis-content tb-message-markdown",
-                        })
-                      : React.createElement("div", { className: "playground-fine-tuning-analysis-content tb-message-markdown" }, analysisSummary)
-                  )
-                : null,
-              renderDiff(job)
+              renderFineTuningDetailTabs(),
+              fineTuningDetailTab === "changes"
+                ? renderDiff(job, { showHeader: false })
+                : renderAnalysis(analysisSummary)
             )
           );
         }
@@ -3420,6 +4397,9 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
 
         const isDetailPage = fineTuningPageMode === "detail" && selectedJob;
         const pageTitle = isDetailPage ? selectedJob.name : "Fine-Tuning";
+        const detailJob = isDetailPage ? normalizePlaygroundFineTuningJob(selectedJob) : null;
+        const showStopButton = detailJob ? canStopPlaygroundFineTuningJob(detailJob) : false;
+        const isStoppingDetailJob = detailJob ? fineTuningStopJobId === detailJob.id : false;
         return React.createElement("section", { className: "playground-files-page playground-guardrails-page playground-evaluations-page playground-fine-tuning-page" },
           React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" },
             React.createElement("section", { className: "playground-files-browser playground-guardrails-browser" },
@@ -3439,11 +4419,28 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                       )
                     : null,
                   React.createElement("div", { className: "playground-files-library-title-row" + (isDetailPage ? " playground-guardrails-detail-title-row" : "") },
-                    React.createElement("h1", { className: "playground-files-library-title" + (isDetailPage ? " playground-guardrails-detail-title" : "") }, pageTitle),
-                    isDetailPage
-                      ? React.createElement("div", { className: "playground-guardrails-detail-actions" }, renderStatus(selectedJob))
-                      : null
-                  )
+	                    React.createElement("h1", { className: "playground-files-library-title" + (isDetailPage ? " playground-guardrails-detail-title" : "") }, pageTitle),
+	                    isDetailPage
+	                      ? React.createElement("div", { className: "playground-guardrails-detail-actions" },
+	                          React.createElement("div", { className: "playground-fine-tuning-detail-time" }, formatPlaygroundFineTuningDateTime(detailJob.createdAt)),
+                            showStopButton
+                              ? React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-fine-tuning-detail-stop-button",
+                                  onClick: () => stopFineTuningJob(detailJob),
+                                  disabled: isStoppingDetailJob,
+                                  title: "Stop fine-tune run",
+                                  "aria-label": "Stop fine-tune run",
+                                },
+                                  isStoppingDetailJob
+                                    ? React.createElement(Loader2, { className: "is-spinning", width: 13, height: 13, strokeWidth: 1.8 })
+                                    : React.createElement(Square, { width: 12, height: 12, strokeWidth: 2 }),
+                                  React.createElement("span", null, isStoppingDetailJob ? "Stopping" : "Stop")
+                                )
+                              : null
+	                        )
+	                      : null
+	                  )
                 )
               ),
               React.createElement("div", { className: "playground-files-browser-body playground-guardrails-browser-body" },

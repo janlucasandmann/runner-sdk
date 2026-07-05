@@ -162,26 +162,38 @@ export const VERSIONING_CORE_SCRIPT = String.raw`
         const leftLabel = String(props.leftLabel || "").trim();
         const rightLabel = String(props.rightLabel || "").trim();
         const compareControls = props.compareControls || null;
+        const actions = props.actions || null;
+        const canGoBack = typeof props.onBack === "function";
         const fileCountLabel = files.length + " " + (files.length === 1 ? "file" : "files");
         const totalAdditions = files.reduce((total, file) => total + Math.max(0, Number(file.additions || 0)), 0);
         const totalDeletions = files.reduce((total, file) => total + Math.max(0, Number(file.deletions || 0)), 0);
+        const compareContent = compareControls
+          ? React.createElement("div", { className: "playground-version-changes-compare-selectors" }, compareControls)
+          : leftLabel || rightLabel
+          ? React.createElement("div", { className: "playground-version-changes-compare-labels" },
+              leftLabel ? React.createElement("span", null, leftLabel) : null,
+              leftLabel && rightLabel ? React.createElement("span", { "aria-hidden": "true" }, "→") : null,
+              rightLabel ? React.createElement("span", null, rightLabel) : null
+            )
+          : null;
 
         return React.createElement("section", {
             className: "playground-version-changes-page" + (props.className ? " " + props.className : ""),
           },
           React.createElement("div", { className: "playground-version-changes-header" },
-            React.createElement("button", {
-              type: "button",
-              className: "playground-resource-detail-back-button playground-version-changes-back-button",
-              onClick: props.onBack,
-              "aria-label": props.backLabel || "Back",
-            },
-              React.createElement(BackIcon, { width: 12, height: 12, strokeWidth: 1.8 }),
-              React.createElement("span", null, props.backText || "Back")
-            ),
             React.createElement("div", { className: "playground-version-changes-title-row" },
               React.createElement("div", { className: "playground-version-changes-title-copy" },
-                React.createElement("h2", { className: "playground-version-changes-title" }, title),
+                canGoBack
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-version-changes-title-link",
+                      onClick: props.onBack,
+                      "aria-label": props.backLabel || "Back",
+                    },
+                    React.createElement(BackIcon, { className: "playground-version-changes-title-back-icon", width: 16, height: 16, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    React.createElement("span", { className: "playground-version-changes-title" }, title)
+                  )
+                  : React.createElement("h2", { className: "playground-version-changes-title" }, title),
                 subtitle
                   ? React.createElement("div", { className: "playground-version-changes-subtitle" }, subtitle)
                   : null
@@ -192,13 +204,12 @@ export const VERSIONING_CORE_SCRIPT = String.raw`
                 React.createElement("span", { className: "is-deletions" }, "-" + totalDeletions)
               )
             ),
-            compareControls
-              ? React.createElement("div", { className: "playground-version-changes-compare-selectors" }, compareControls)
-              : leftLabel || rightLabel
-              ? React.createElement("div", { className: "playground-version-changes-compare-labels" },
-                  leftLabel ? React.createElement("span", null, leftLabel) : null,
-                  leftLabel && rightLabel ? React.createElement("span", { "aria-hidden": "true" }, "→") : null,
-                  rightLabel ? React.createElement("span", null, rightLabel) : null
+            compareContent || actions
+              ? React.createElement("div", { className: "playground-version-changes-compare-row" },
+                  compareContent,
+                  actions
+                    ? React.createElement("div", { className: "playground-version-changes-compare-actions" }, actions)
+                    : null
                 )
               : null
           ),

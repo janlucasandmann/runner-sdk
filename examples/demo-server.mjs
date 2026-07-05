@@ -2608,8 +2608,7 @@ const html = `<!doctype html>
         padding-right: calc(6px + var(--playground-thread-task-detail-width));
       }
 
-      .playground-content-shell.is-thread-side-detail-open > .playground-content-nav,
-      .playground-content-shell:has(> .playground-agent-versions-node-drawer.is-open) > .playground-content-nav {
+      .playground-content-shell.is-thread-side-detail-open > .playground-content-nav {
         pointer-events: none;
       }
 
@@ -6241,6 +6240,21 @@ const html = `<!doctype html>
         box-shadow: none;
       }
 
+      .tb-runner-diff-surface,
+      .playground-thread-runner.is-project-wallpaper-active .tb-runner-diff-surface {
+        background: transparent !important;
+      }
+
+      .tb-runner-diff-surface-topbar,
+      .playground-thread-runner.is-project-wallpaper-active .tb-runner-diff-surface-topbar {
+        background: rgba(255, 255, 255, 0.05) !important;
+      }
+
+      .tb-runner-diff-surface-body,
+      .playground-thread-runner.is-project-wallpaper-active .tb-runner-diff-surface-body {
+        background: rgba(255, 255, 255, 0.1) !important;
+      }
+
       .playground-thread-runner.is-project-wallpaper-active .task-input-box {
         --tb-task-input-base-bg: rgba(255, 255, 255, 0.1);
       }
@@ -8683,17 +8697,20 @@ const html = `<!doctype html>
         min-height: 0;
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px;
-        overflow: hidden;
+        overflow: visible;
         background: transparent;
       }
 
       .changes-diff-box-header {
+        position: relative;
+        z-index: 2;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
         padding: 12px 14px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px 12px 0 0;
         background: rgba(255, 255, 255, 0.1);
       }
 
@@ -8756,8 +8773,99 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.98);
       }
 
+      .changes-diff-view-menu-shell {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+      }
+
+      .changes-diff-menu-trigger {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .changes-diff-menu-trigger:hover,
+      .changes-diff-menu-trigger.is-active {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .changes-diff-menu-trigger svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .changes-diff-view-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 30;
+        min-width: 148px;
+        padding: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        background: rgba(20, 20, 20, 0.9);
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
+        -webkit-backdrop-filter: blur(18px);
+        backdrop-filter: blur(18px);
+      }
+
+      .changes-diff-view-menu::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      .changes-diff-view-menu-item {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 8px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.2;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 150ms ease, color 150ms ease;
+      }
+
+      .changes-diff-view-menu-item:hover,
+      .changes-diff-view-menu-item.is-active {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .changes-diff-view-menu-check {
+        width: 14px;
+        height: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
       .changes-diff-box-body {
         overflow: auto;
+        border-radius: 0 0 12px 12px;
         background: transparent;
       }
 
@@ -33355,10 +33463,6 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
-      .playground-version-changes-back-button.playground-resource-detail-back-button {
-        align-self: flex-start;
-      }
-
       .playground-version-changes-title-row {
         min-width: 0;
         display: flex;
@@ -33374,6 +33478,31 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         gap: 5px;
       }
 
+      .playground-version-changes-title-link {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        align-self: flex-start;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-version-changes-title-link:hover .playground-version-changes-title,
+      .playground-version-changes-title-link:hover .playground-version-changes-title-back-icon {
+        color: rgba(255, 255, 255, 1);
+      }
+
+      .playground-version-changes-title-back-icon {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.72);
+        transition: color 160ms ease;
+      }
+
       .playground-version-changes-title {
         margin: 0;
         color: rgba(255, 255, 255, 0.96);
@@ -33381,6 +33510,7 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         line-height: 1.15;
         font-weight: 500;
         letter-spacing: 0;
+        transition: color 160ms ease;
       }
 
       .playground-version-changes-subtitle,
@@ -33417,12 +33547,31 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         min-width: 0;
       }
 
+      .playground-version-changes-compare-row {
+        min-width: 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
       .playground-version-changes-compare-selectors {
         min-width: 0;
         display: flex;
         align-items: flex-end;
         gap: 10px;
         flex-wrap: wrap;
+        flex: 1 1 auto;
+      }
+
+      .playground-version-changes-compare-actions {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex: 0 0 auto;
       }
 
       .playground-version-changes-select-shell {
@@ -33495,6 +33644,8 @@ ${PLAYGROUND_EVALUATIONS_CSS}
       }
 
       .playground-version-changes-file-card .tb-runner-diff-surface {
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 10px;
       }
 
@@ -39194,7 +39345,7 @@ ${PLAYGROUND_EVALUATIONS_CSS}
       .playground-tasks-detail-section-title {
         margin: 0 0 10px;
         color: rgba(255, 255, 255, 0.92);
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 500;
         line-height: 1.3;
       }
@@ -45008,11 +45159,13 @@ ${METRONOME_PAGE_CSS}
       .playground-agents-detail-content .playground-environments-mcp-card,
       .playground-agents-detail-content .playground-environments-editor-surface,
       .playground-agents-detail-content .playground-tasks-detail-description.playground-environments-editor-description {
+        margin-top: 0;
         padding: 0;
-        border: 0;
-        border-radius: 0;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
         background: transparent;
         box-shadow: none;
+        overflow: hidden;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
       }
@@ -45158,10 +45311,49 @@ ${METRONOME_PAGE_CSS}
         min-width: 0;
       }
 
+      .playground-agents-detail-version-selector-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+        margin: 0;
+        min-width: 0;
+      }
+
       .playground-agents-detail-publish-split-shell.playground-tasks-toolbar-popup-shell {
         z-index: 74;
         display: inline-flex;
         align-items: center;
+      }
+
+      .playground-agents-detail-version-selector-shell.playground-agents-detail-publish-split-shell.playground-tasks-toolbar-popup-shell {
+        z-index: 73;
+      }
+
+      .playground-agents-detail-version-selector-shell {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        width: max-content;
+        max-width: 100%;
+        min-width: 0;
+      }
+
+      .playground-agents-detail-version-selector-control {
+        flex: 0 0 auto;
+        width: auto;
+        max-width: 100%;
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+      }
+
+      .playground-agents-detail-top-controls-actions.playground-agents-detail-sidebar-controls {
+        width: auto;
+        margin: 0;
+        justify-content: flex-end;
+        gap: 6px;
       }
 
       .playground-agents-detail-publish-split-control.playground-metronome-create-button {
@@ -45196,6 +45388,195 @@ ${METRONOME_PAGE_CSS}
       .playground-agents-detail-publish-main {
         gap: 8px;
         padding: 0 10px 0 14px;
+      }
+
+      .playground-agents-detail-version-selector-main.playground-agents-detail-publish-main {
+        min-width: 0;
+        max-width: min(260px, 52vw);
+      }
+
+      .playground-agents-detail-version-selector-icon {
+        width: 13px;
+        height: 13px;
+        flex: 0 0 auto;
+        color: currentColor;
+      }
+
+      .playground-agents-detail-version-selector-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-agents-tags-control-shell.playground-tasks-toolbar-popup-shell {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 4px;
+        width: auto;
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+      }
+
+      .playground-agents-tags-control-button {
+        height: 30px;
+        min-height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.82);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .playground-agents-tags-control-button::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-agents-tags-control-button:hover,
+      .playground-agents-tags-control-button.is-active {
+        color: white;
+        background: transparent;
+      }
+
+      .playground-agents-tags-control-icon {
+        width: 13px;
+        height: 13px;
+        flex: 0 0 auto;
+      }
+
+      .playground-agents-tags-count {
+        min-width: 16px;
+        height: 16px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 16px;
+        text-align: center;
+      }
+
+      .playground-agents-tags-control-shell.playground-tasks-toolbar-popup-shell .playground-agents-tags-menu {
+        right: auto;
+        left: 0;
+        width: 260px;
+        min-width: 260px;
+        padding: 10px;
+        transform-origin: top left;
+      }
+
+      .playground-agents-tags-menu-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-agents-tags-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-agents-tags-input {
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.92);
+        font: inherit;
+        font-size: 12px;
+        outline: none;
+      }
+
+      .playground-agents-tags-input::placeholder {
+        color: rgba(255, 255, 255, 0.36);
+      }
+
+      .playground-agents-tags-add-button {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .playground-agents-tags-add-button:disabled {
+        opacity: 0.42;
+        cursor: not-allowed;
+      }
+
+      .playground-agents-tags-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .playground-agents-tags-chip {
+        max-width: 100%;
+        min-height: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 0 6px 0 9px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        line-height: 1;
+      }
+
+      .playground-agents-tags-chip-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-agents-tags-chip-remove {
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.58);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .playground-agents-tags-chip-remove:hover {
+        color: white;
+      }
+
+      .playground-agents-tags-empty {
+        color: rgba(255, 255, 255, 0.44);
+        font-size: 12px;
+        line-height: 1.4;
       }
 
       .playground-agents-detail-publish-chevron {
@@ -45236,6 +45617,60 @@ ${METRONOME_PAGE_CSS}
 	        padding: 10px 14px;
 	      }
 
+	      .playground-agents-detail-version-selector-shell .playground-agents-detail-version-selector-menu.playground-agents-detail-publish-menu {
+	        right: auto !important;
+	        left: 0 !important;
+	        width: 284px;
+	        min-width: 284px;
+	        max-height: min(340px, calc(100vh - 190px));
+	        overflow-y: auto;
+	        transform-origin: top left;
+	      }
+
+      .playground-agents-detail-version-selector-option.tb-popup-row {
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-agents-detail-version-selector-option-check {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 14px;
+        color: rgba(255, 255, 255, 0.9);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-agents-detail-version-selector-option-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-agents-detail-version-selector-option-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.25;
+      }
+
+      .playground-agents-detail-version-selector-option-meta {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.25;
+      }
+
 	      .playground-agents-detail-publish-menu .playground-agents-detail-publish-menu-shortcut {
 	        margin-left: auto;
 	        flex: 0 0 auto;
@@ -45257,19 +45692,40 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-agents-detail-content .playground-agents-profile-name-wrap {
-        width: 100%;
-        max-width: 620px;
+        width: auto;
+        max-width: 100%;
+        align-items: center;
+        gap: 12px;
         justify-content: flex-start;
         margin-top: 0;
       }
 
       .playground-agents-detail-content .playground-agents-profile-name-wrap .playground-agents-profile-name-input {
-        width: 100%;
+        width: auto;
+        max-width: min(620px, 100%);
+        min-width: 2ch;
+        flex: 0 1 auto;
+        field-sizing: content;
         font-size: 18px;
         line-height: 1;
         font-weight: 500;
         letter-spacing: 0;
         text-align: left;
+      }
+
+      .playground-agents-visibility-label {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 22px;
+        padding: 0 9px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        color: white;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
       }
 
       .playground-tags-detail-profile-title.playground-agents-profile-name-input {
@@ -45371,6 +45827,8 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-detail-overview-main.playground-project-overview-main {
         gap: 20px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
       }
 
       .playground-agents-detail-chart-surface.playground-project-overview-chart-surface {
@@ -45617,7 +46075,7 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-project-overview-progress-combo-card {
-        margin-top: -7px;
+        margin-top: 0;
       }
 
       .playground-agents-detail-progress-combo-card .playground-project-overview-progress-combo-metric-dot.is-total-runs {
@@ -45671,15 +46129,20 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-detail-instructions-section {
         margin-bottom: 42px;
+        overflow: visible !important;
+      }
+
+      .playground-agents-detail-instructions-section.is-header-stuck {
+        border-top-left-radius: 0 !important;
+        border-top-right-radius: 0 !important;
       }
 
       .playground-agents-detail-instructions-section .playground-tasks-detail-section-header {
         position: sticky;
         top: 0;
         z-index: 8;
-        background: #000;
-        padding-top: 12px;
-        padding-bottom: 10px;
+        background: #0a0a0a;
+        padding: 12px 20px 10px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
@@ -45687,6 +46150,8 @@ ${METRONOME_PAGE_CSS}
         display: block;
         height: auto;
         min-height: 0;
+        padding-left: 20px;
+        padding-right: 20px;
         overflow: visible;
       }
 
@@ -45790,6 +46255,19 @@ ${METRONOME_PAGE_CSS}
       .playground-agents-detail-sidebar > .playground-project-overview-sidebar-card {
         -webkit-backdrop-filter: blur(20px);
         backdrop-filter: blur(20px);
+      }
+
+      .playground-agents-detail-sidebar > .playground-agents-detail-about-card,
+      .playground-agents-detail-sidebar > .playground-agents-detail-owner-card,
+      .playground-agents-detail-sidebar > .playground-agents-detail-actions-card,
+      .playground-agents-detail-sidebar > .playground-agents-detail-permissions-card {
+        padding: 10px 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
       }
 
       .playground-agents-detail-sidebar > .playground-tags-detail-properties-card {
@@ -46392,9 +46870,175 @@ ${METRONOME_PAGE_CSS}
         grid-template-columns: 18px minmax(0, 1fr);
       }
 
+      .playground-agents-detail-sidebar .playground-project-overview-sidebar-row,
+      .playground-agents-detail-sidebar .playground-project-overview-sidebar-resource-row,
+      .playground-agents-detail-sidebar .playground-agents-detail-permission-meter {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+
+      .playground-agents-detail-sidebar .playground-project-overview-sidebar-row:hover,
+      .playground-agents-detail-sidebar .playground-project-overview-sidebar-row:focus-visible,
+      .playground-agents-detail-sidebar .playground-project-overview-sidebar-resource-row:hover,
+      .playground-agents-detail-sidebar .playground-project-overview-sidebar-resource-row:focus-visible,
+      .playground-agents-detail-sidebar .playground-agents-detail-permission-meter:hover,
+      .playground-agents-detail-sidebar .playground-agents-detail-permission-meter:focus-visible,
+      .playground-agents-detail-sidebar .playground-environments-runtime-value-button:hover,
+      .playground-agents-detail-sidebar .playground-environments-runtime-value-button:focus-visible {
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
+      .playground-agents-detail-about-row.playground-project-overview-sidebar-resource-row {
+        min-height: 32px;
+        grid-template-columns: 18px minmax(0, 1fr);
+      }
+
+      .playground-agents-detail-about-row.is-agent-id.playground-project-overview-sidebar-resource-row,
+      .playground-agents-detail-about-row.is-model.playground-project-overview-sidebar-resource-row {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .playground-agents-detail-about-value {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-agents-detail-about-row.is-model .playground-agents-detail-about-value,
+      .playground-agents-detail-about-row.is-model .playground-environments-runtime-value-button {
+        width: auto;
+        margin-left: 0;
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .playground-agents-detail-about-row.is-model .playground-agents-model-picker-trigger-copy,
+      .playground-agents-detail-about-row.is-model .playground-agents-model-picker-trigger-labels,
+      .playground-agents-detail-about-row.is-model .playground-environments-runtime-value-label {
+        text-align: left;
+      }
+
+      .playground-agents-detail-about-model-readonly {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+      }
+
+      .playground-agents-detail-about-model-readonly-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+      }
+
+      .playground-agents-detail-about-email {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+      }
+
+      .playground-agents-detail-about-email {
+        color: #5ea2ff;
+      }
+
+      .playground-agents-detail-about-row.is-email .playground-project-overview-sidebar-resource-label,
+      .playground-agents-detail-about-row.is-email .playground-agents-detail-about-email {
+        padding-left: 0;
+        padding-right: 0;
+      }
+
       .playground-agents-detail-sidebar-action:disabled {
         opacity: 0.42;
         cursor: default;
+      }
+
+      .playground-agents-detail-permissions-card .playground-project-overview-sidebar-card-header {
+        margin-bottom: 2px;
+      }
+
+      .playground-agents-detail-permission-bars {
+        display: flex;
+        align-items: flex-start;
+        gap: 4px;
+        margin-bottom: 2px;
+      }
+
+      .playground-agents-detail-permission-meter {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        cursor: pointer;
+      }
+
+      .playground-agents-detail-permission-meter:focus-visible {
+        outline: none;
+      }
+
+      .playground-agents-detail-permission-meter-copy {
+        min-width: 0;
+        margin-top: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 5px;
+      }
+
+      .playground-agents-detail-permission-meter-swatch {
+        width: 8px;
+        height: 8px;
+        flex: 0 0 8px;
+        border-radius: 2px;
+        background: var(--agent-permission-bar-active);
+      }
+
+      .playground-agents-detail-permission-meter-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .playground-agents-detail-permission-meter-title {
+        color: rgba(255, 255, 255, 0.72);
+        font-weight: 500;
+      }
+
+      .playground-agents-detail-permission-meter-track {
+        width: 100%;
+        height: 6px;
+        border-radius: 2px;
+        overflow: hidden;
+        background: linear-gradient(
+          90deg,
+          var(--agent-permission-bar-active) 0%,
+          var(--agent-permission-bar-active) var(--agent-permission-bar-progress),
+          var(--agent-permission-bar-muted) var(--agent-permission-bar-progress),
+          var(--agent-permission-bar-muted) 100%
+        );
       }
 
       .playground-agents-detail-owner-popup-shell {
@@ -46410,6 +47054,15 @@ ${METRONOME_PAGE_CSS}
         font: inherit;
         text-align: left;
         cursor: pointer;
+      }
+
+      .playground-agents-detail-sidebar-owner-row.is-compact.playground-project-overview-sidebar-row {
+        grid-template-columns: minmax(0, 1fr);
+        min-height: 32px;
+      }
+
+      .playground-agents-detail-sidebar-owner-row.is-compact .playground-agents-detail-owner-value {
+        justify-content: flex-start;
       }
 
       .playground-agents-detail-sidebar-owner-row:hover .playground-project-overview-sidebar-row-label,
@@ -46457,6 +47110,19 @@ ${METRONOME_PAGE_CSS}
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .playground-agents-detail-sidebar-owner-row.is-compact .playground-agents-detail-owner-value {
+        justify-content: flex-start !important;
+      }
+
+      .playground-agents-detail-sidebar-owner-row.is-compact .playground-agents-detail-owner-member-cell.playground-team-member-cell {
+        justify-content: flex-start;
+      }
+
+      .playground-agents-detail-sidebar-owner-row.is-compact .playground-agents-detail-owner-member-cell .playground-team-member-copy,
+      .playground-agents-detail-sidebar-owner-row.is-compact .playground-agents-detail-owner-member-cell .playground-team-table-title {
+        text-align: left;
       }
 
       .playground-agents-detail-owner-avatar,
@@ -46701,6 +47367,40 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-detail-tabs.playground-agents-overview-tabs {
         margin: -4px 0 0;
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+
+      .playground-agents-detail-tabs .playground-project-overview-chart-tabs {
+        width: 100%;
+      }
+
+      .playground-agents-detail-top-controls {
+        grid-column: 1 / -1;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+        align-items: center;
+        column-gap: 42px;
+      }
+
+      .playground-agents-detail-overview-layout.is-sidebar-collapsed > .playground-agents-detail-top-controls {
+        grid-template-columns: minmax(0, 1fr) auto;
+        column-gap: 12px;
+      }
+
+      .playground-agents-detail-tabs .playground-project-overview-chart-tabs {
+        gap: 22px;
+      }
+
+      .playground-agents-detail-tabs .playground-project-overview-chart-tab {
+        gap: 6px;
+      }
+
+      .playground-agents-detail-tab-icon {
+        width: 13px;
+        height: 13px;
+        flex: 0 0 auto;
       }
 
       .playground-computer-detail-filebase-tab.playground-project-overview-chart-tab {
@@ -48563,6 +49263,41 @@ ${METRONOME_PAGE_CSS}
 
       .playground-tasks-toolbar-popup-item-copy .playground-team-access-option-description {
         color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-agents-detail-action-menu-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-agents-detail-action-menu-meta-row {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 70px minmax(0, 1fr);
+        gap: 12px;
+        align-items: baseline;
+      }
+
+      .playground-agents-detail-action-menu-meta-label {
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 11px;
+        line-height: 1.3;
+        font-weight: 400;
+      }
+
+      .playground-agents-detail-action-menu-meta-value {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 11px;
+        line-height: 1.3;
+        font-weight: 400;
+        text-align: right;
       }
 
       .playground-tasks-backlog-list {
@@ -52194,12 +52929,16 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
-      import { RunnerClient } from "/dist/index.js";
-      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
-      import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
+		      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { RunnerClient } from "/dist/index.js";
+	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
+	      import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
 
-      const PLAYGROUND_RESOLVED_EN_US_LOCALE = enUSLocale.enUS || enUSLocale.default || enUSLocale;
+	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {
+	        return typeof Icon === "function" || (Icon && typeof Icon === "object") ? Icon : fallbackIcon;
+	      }
+
+	      const PLAYGROUND_RESOLVED_EN_US_LOCALE = enUSLocale.enUS || enUSLocale.default || enUSLocale;
 
       const PLAYGROUND_CALENDAR_LOCALES = {
         "en-US": PLAYGROUND_RESOLVED_EN_US_LOCALE,
@@ -62197,6 +62936,90 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           : null;
       }
 
+      const PLAYGROUND_VOICE_AGENT_MODE_OPTIONS = [
+        { id: "off", label: "Off" },
+        { id: "web", label: "Web" },
+        { id: "phone", label: "Phone" },
+        { id: "web_and_phone", label: "Web + Phone" },
+      ];
+
+      const PLAYGROUND_VOICE_AGENT_MODEL_OPTIONS = [
+        { id: "grok-voice-latest", label: "grok-voice-latest" },
+        { id: "grok-voice-think-fast-1.0", label: "grok-voice-think-fast-1.0" },
+        { id: "grok-voice-fast-1.0", label: "grok-voice-fast-1.0" },
+      ];
+
+      function normalizePlaygroundVoiceAgentMode(value) {
+        const normalized = String(value || "off").trim().toLowerCase().replace(/[\s-]+/g, "_");
+        if (normalized === "web_phone") return "web_and_phone";
+        return PLAYGROUND_VOICE_AGENT_MODE_OPTIONS.some((option) => option.id === normalized)
+          ? normalized
+          : "off";
+      }
+
+      function isPlaygroundVoiceAgentWebEnabled(mode) {
+        const normalizedMode = normalizePlaygroundVoiceAgentMode(mode);
+        return normalizedMode === "web" || normalizedMode === "web_and_phone";
+      }
+
+      function isPlaygroundVoiceAgentPhoneEnabled(mode) {
+        const normalizedMode = normalizePlaygroundVoiceAgentMode(mode);
+        return normalizedMode === "phone" || normalizedMode === "web_and_phone";
+      }
+
+      function normalizePlaygroundVoiceAgentRecord(record) {
+        const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
+        const voiceSource = source.voice && typeof source.voice === "object" && !Array.isArray(source.voice) ? source.voice : {};
+        const agentSource = source.agent && typeof source.agent === "object" && !Array.isArray(source.agent) ? source.agent : source;
+        const agent = normalizePlaygroundAgentRecord(agentSource);
+        const voiceMode = normalizePlaygroundVoiceAgentMode(voiceSource.mode || agent.voiceMode);
+        const voiceModel = String(voiceSource.model || agent.voiceModel || "grok-voice-latest").trim() || "grok-voice-latest";
+        const voiceId = String(voiceSource.voiceId || agent.voiceId || "eve").trim() || "eve";
+        const languageHint = String(voiceSource.languageHint || agent.voiceLanguageHint || "").trim();
+        const phoneNumber = source.phoneNumber && typeof source.phoneNumber === "object" && !Array.isArray(source.phoneNumber)
+          ? source.phoneNumber
+          : null;
+        return {
+          ...source,
+          agent,
+          voice: {
+            mode: voiceMode,
+            provider: "xai",
+            model: voiceModel,
+            voiceId,
+            languageHint,
+            enabled: voiceMode !== "off",
+          },
+          phoneNumber,
+          recentSessions: Array.isArray(source.recentSessions) ? source.recentSessions : [],
+        };
+      }
+
+      function buildPlaygroundVoiceAgentDraft(record) {
+        const normalizedRecord = normalizePlaygroundVoiceAgentRecord(record);
+        const agent = normalizedRecord.agent || {};
+        return {
+          agentId: String(agent.id || "").trim(),
+          voiceMode: normalizePlaygroundVoiceAgentMode(normalizedRecord.voice?.mode || agent.voiceMode),
+          voiceModel: String(normalizedRecord.voice?.model || agent.voiceModel || "grok-voice-latest").trim() || "grok-voice-latest",
+          voiceId: String(normalizedRecord.voice?.voiceId || agent.voiceId || "eve").trim() || "eve",
+          voiceLanguageHint: String(normalizedRecord.voice?.languageHint || agent.voiceLanguageHint || "").trim(),
+          voiceInstructions: typeof agent.voiceInstructions === "string" ? agent.voiceInstructions : "",
+        };
+      }
+
+      function buildPlaygroundVoiceAgentUpdatePayload(draft) {
+        const normalizedDraft = draft && typeof draft === "object" && !Array.isArray(draft) ? draft : {};
+        return {
+          voiceMode: normalizePlaygroundVoiceAgentMode(normalizedDraft.voiceMode),
+          voiceProvider: "xai",
+          voiceModel: String(normalizedDraft.voiceModel || "grok-voice-latest").trim() || "grok-voice-latest",
+          voiceId: String(normalizedDraft.voiceId || "").trim() || null,
+          voiceLanguageHint: String(normalizedDraft.voiceLanguageHint || "").trim() || null,
+          voiceInstructions: String(normalizedDraft.voiceInstructions || "").trim() || null,
+        };
+      }
+
       const PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID = "__playground_unscheduled_sprint__";
       const PLAYGROUND_PROJECT_VIEW_OPTIONS = [
         { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -68076,6 +68899,26 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         return backendUrl + "/agents/" + encodeURIComponent(agentId) + "/analytics";
       }
 
+      function buildPlaygroundVoiceAgentsUrl(backendUrl) {
+        if (!backendUrl) return "";
+        return backendUrl + "/voice-agents";
+      }
+
+      function buildPlaygroundVoiceAgentUrl(backendUrl, agentId) {
+        if (!backendUrl || !agentId) return "";
+        return backendUrl + "/voice-agents/agents/" + encodeURIComponent(agentId);
+      }
+
+      function buildPlaygroundVoiceAgentPhoneNumberUrl(backendUrl, agentId) {
+        if (!backendUrl || !agentId) return "";
+        return backendUrl + "/voice-agents/agents/" + encodeURIComponent(agentId) + "/phone-number";
+      }
+
+      function buildPlaygroundVoiceAgentSessionsUrl(backendUrl, agentId) {
+        if (!backendUrl || !agentId) return "";
+        return backendUrl + "/voice-agents/agents/" + encodeURIComponent(agentId) + "/sessions";
+      }
+
       function buildPlaygroundServerFilesListUrl(backendUrl, serverId, folderPath = "", depth = 1) {
         if (!backendUrl || !serverId) return "";
         const normalizedFolderPath = normalizeHistoryPath(folderPath);
@@ -68256,6 +69099,8 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         if (normalizedKind === "auth") return "auth";
         if (normalizedKind === "agent runtime") return "agent_runtime";
         if (normalizedKind === "agent_runtime") return "agent_runtime";
+        if (normalizedKind === "voice agent" || normalizedKind === "voice agents") return "voice_agent";
+        if (normalizedKind === "voice_agent" || normalizedKind === "voice_agents") return "voice_agent";
         if (normalizedKind === "secrets") return "secrets";
         if (normalizedKind === "payments" || normalizedKind === "payment") return "payments";
         return "web_app";
@@ -68268,6 +69113,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 	        if (normalizedKind === "api") return "API";
 	        if (normalizedKind === "auth") return "Authentication";
 	        if (normalizedKind === "agent_runtime") return "Agent Runtime";
+	        if (normalizedKind === "voice_agent") return "Voice Agent";
 	        if (normalizedKind === "secrets") return "Secrets";
 	        if (normalizedKind === "payments") return "Payments";
 	        return "Web App";
@@ -68279,11 +69125,11 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           return "";
         }
         const normalizedRawKind = rawKind.toLowerCase();
-        if (!["web_app", "web app", "website", "function", "database", "api", "auth", "agent_runtime", "agent runtime", "secrets", "payments", "payment"].includes(normalizedRawKind)) {
+        if (!["web_app", "web app", "website", "function", "database", "api", "auth", "agent_runtime", "agent runtime", "voice_agent", "voice_agents", "voice agent", "voice agents", "secrets", "payments", "payment"].includes(normalizedRawKind)) {
           return "";
         }
         const normalizedKind = canonicalizePlaygroundServerKind(rawKind);
-        return ["web_app", "function", "database", "api", "auth", "agent_runtime", "secrets", "payments"].includes(normalizedKind)
+        return ["web_app", "function", "database", "api", "auth", "agent_runtime", "voice_agent", "secrets", "payments"].includes(normalizedKind)
           ? normalizedKind
           : "";
       }
@@ -68294,6 +69140,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 	        if (normalizedKind === "api") return "API";
 	        if (normalizedKind === "auth") return "Authentication";
 	        if (normalizedKind === "agent_runtime") return "Agent Runtime";
+	        if (normalizedKind === "voice_agent") return "Voice Agents";
 	        if (normalizedKind === "secrets") return "Secrets";
 	        if (normalizedKind === "payments") return "Payments";
 	        return formatPlaygroundServerKindLabel(normalizedKind) + "s";
@@ -72154,9 +73001,11 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       function HistorySplitDiffViewer({ diffText, fileContent, filePath, emptyMessage, additions, deletions }) {
         const [DiffEditorComponent, setDiffEditorComponent] = useState(null);
         const [viewMode, setViewMode] = useState("split");
+        const [viewMenuOpen, setViewMenuOpen] = useState(false);
         const [hideUnchanged, setHideUnchanged] = useState(true);
         const [editorHeight, setEditorHeight] = useState(180);
         const [diffEditorInstance, setDiffEditorInstance] = useState(null);
+        const viewMenuRef = useRef(null);
 
         useEffect(() => {
           let cancelled = false;
@@ -72170,6 +73019,28 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             cancelled = true;
           };
         }, []);
+
+        useEffect(() => {
+          if (!viewMenuOpen) {
+            return undefined;
+          }
+          const handlePointerDown = (event) => {
+            if (viewMenuRef.current && !viewMenuRef.current.contains(event.target)) {
+              setViewMenuOpen(false);
+            }
+          };
+          const handleKeyDown = (event) => {
+            if (event.key === "Escape") {
+              setViewMenuOpen(false);
+            }
+          };
+          document.addEventListener("pointerdown", handlePointerDown);
+          document.addEventListener("keydown", handleKeyDown);
+          return () => {
+            document.removeEventListener("pointerdown", handlePointerDown);
+            document.removeEventListener("keydown", handleKeyDown);
+          };
+        }, [viewMenuOpen]);
 
         if (!(diffText && diffText.trim())) {
           return React.createElement("div", { className: "changes-code-block is-empty" }, emptyMessage);
@@ -72213,20 +73084,49 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
                 React.createElement("span", { className: "changes-diff-stat additions" }, "+" + additions),
                 React.createElement("span", { className: "changes-diff-stat deletions" }, "-" + deletions)
               ),
-              React.createElement("div", { className: "changes-diff-toggle-group" },
-                React.createElement(HistoryDiffToggleButton, {
-                  isActive: viewMode === "split",
-                  onClick: () => setViewMode("split"),
-                }, "Split"),
-                React.createElement(HistoryDiffToggleButton, {
-                  isActive: viewMode === "unified",
-                  onClick: () => setViewMode("unified"),
-                }, "Unified")
-              ),
               React.createElement(HistoryDiffToggleButton, {
                 isActive: hideUnchanged,
                 onClick: () => setHideUnchanged((current) => !current),
-              }, hideUnchanged ? "Collapsed" : "Expanded")
+              }, hideUnchanged ? "Collapsed" : "Expanded"),
+              React.createElement("div", { className: "changes-diff-view-menu-shell", ref: viewMenuRef },
+                React.createElement("button", {
+                    type: "button",
+                    className: "changes-diff-menu-trigger" + (viewMenuOpen ? " is-active" : ""),
+                    onClick: () => setViewMenuOpen((current) => !current),
+                    "aria-haspopup": "menu",
+                    "aria-expanded": viewMenuOpen ? "true" : "false",
+                    "aria-label": "Diff view options",
+                  },
+                  React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })
+                ),
+                viewMenuOpen
+                  ? React.createElement("div", { className: "changes-diff-view-menu", role: "menu" },
+                      [
+                        { id: "split", label: "Split view" },
+                        { id: "unified", label: "Unified view" },
+                      ].map((item) =>
+                        React.createElement("button", {
+                            key: item.id,
+                            type: "button",
+                            role: "menuitemradio",
+                            "aria-checked": viewMode === item.id ? "true" : "false",
+                            className: "changes-diff-view-menu-item" + (viewMode === item.id ? " is-active" : ""),
+                            onClick: () => {
+                              setViewMode(item.id);
+                              setViewMenuOpen(false);
+                            },
+                          },
+                          React.createElement("span", { className: "changes-diff-view-menu-check" },
+                            viewMode === item.id
+                              ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 2 })
+                              : null
+                          ),
+                          React.createElement("span", null, item.label)
+                        )
+                      )
+                    )
+                  : null
+              )
             )
           ),
           React.createElement("div", { className: "changes-diff-box-body" },
@@ -83282,6 +84182,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [serverSecretsById, setServerSecretsById] = useState({});
         const [serverAgentRuntimeRunsById, setServerAgentRuntimeRunsById] = useState({});
         const [serverAgentOptions, setServerAgentOptions] = useState([]);
+        const [voiceAgentRecordsById, setVoiceAgentRecordsById] = useState({});
+        const [voiceAgentDraftsById, setVoiceAgentDraftsById] = useState({});
+        const [voiceAgentSessionResultsById, setVoiceAgentSessionResultsById] = useState({});
         const [databaseAnalyticsById, setDatabaseAnalyticsById] = useState({});
         const [draftEnvironment, setDraftEnvironment] = useState(null);
         const [draftServer, setDraftServer] = useState(null);
@@ -83310,6 +84213,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [loadingServerSecretsId, setLoadingServerSecretsId] = useState("");
         const [loadingServerAgentRuntimeRunsId, setLoadingServerAgentRuntimeRunsId] = useState("");
         const [serverAgentOptionsLoading, setServerAgentOptionsLoading] = useState(false);
+        const [voiceAgentsLoading, setVoiceAgentsLoading] = useState(false);
         const [loadingDatabaseAnalyticsId, setLoadingDatabaseAnalyticsId] = useState("");
         const [saveState, setSaveState] = useState({
           isSaving: false,
@@ -83331,6 +84235,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [serverAgentRuntimeRunsState, setServerAgentRuntimeRunsState] = useState({
           error: "",
           message: "",
+        });
+        const [voiceAgentsState, setVoiceAgentsState] = useState({
+          error: "",
+          message: "",
+          savingAgentId: "",
+          provisioningAgentId: "",
+          disablingAgentId: "",
+          testingAgentId: "",
         });
         const [serverRuntimePreviewState, setServerRuntimePreviewState] = useState({
           open: false,
@@ -83583,6 +84495,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           cancelled: true,
         });
         const [hasLoadedServers, setHasLoadedServers] = useState(false);
+        const [hasLoadedVoiceAgents, setHasLoadedVoiceAgents] = useState(false);
         const [hasLoadedDatabases, setHasLoadedDatabases] = useState(false);
         const [databaseCollectionsById, setDatabaseCollectionsById] = useState({});
         const [databaseDocumentsByCollectionKey, setDatabaseDocumentsByCollectionKey] = useState({});
@@ -84238,6 +85151,43 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return haystack.includes(normalizedResourcesSearchQuery);
           });
         }, [normalizedResourcesSearchQuery, visibleDisplayServerResources]);
+        const voiceAgentRecords = useMemo(() => {
+          const loadedRecords = Object.values(voiceAgentRecordsById)
+            .map((record) => normalizePlaygroundVoiceAgentRecord(record))
+            .filter((record) => record?.agent?.id);
+          const sourceRecords = loadedRecords.length > 0 || hasLoadedVoiceAgents
+            ? loadedRecords
+            : (Array.isArray(agents) ? agents : [])
+                .map((agent) => normalizePlaygroundVoiceAgentRecord({ agent }))
+                .filter((record) => record?.agent?.id && record.agent.id !== PLAYGROUND_AGENT_DRAFT_ID);
+          return sourceRecords.slice().sort((left, right) =>
+            String(left?.agent?.name || left?.agent?.id || "").localeCompare(String(right?.agent?.name || right?.agent?.id || ""))
+          );
+        }, [agents, hasLoadedVoiceAgents, voiceAgentRecordsById]);
+        const filteredVoiceAgentRecords = useMemo(() => {
+          if (!normalizedResourcesSearchQuery) {
+            return voiceAgentRecords;
+          }
+          return voiceAgentRecords.filter((record) => {
+            const agent = record?.agent || {};
+            const phoneNumber = record?.phoneNumber || {};
+            const haystack = [
+              agent.name || "",
+              agent.description || "",
+              agent.id || "",
+              phoneNumber.phoneNumber || "",
+              record?.voice?.voiceId || "",
+              record?.voice?.model || "",
+            ].join(" ").toLowerCase();
+            return haystack.includes(normalizedResourcesSearchQuery);
+          });
+        }, [normalizedResourcesSearchQuery, voiceAgentRecords]);
+        const voiceEnabledAgentCount = useMemo(() => (
+          voiceAgentRecords.filter((record) => {
+            const mode = normalizePlaygroundVoiceAgentMode(record?.voice?.mode || record?.agent?.voiceMode);
+            return mode !== "off" || Boolean(record?.phoneNumber?.phoneNumber);
+          }).length
+        ), [voiceAgentRecords]);
 
         useEffect(() => {
           if (resourceMode !== "servers" || !normalizedEmbeddedServerKind) {
@@ -84255,10 +85205,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const apiCount = orderedServers.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === "api").length;
           const authCount = orderedServers.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === "auth").length;
           const agentRuntimeCount = orderedServers.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === "agent_runtime").length;
+          const voiceAgentCount = voiceEnabledAgentCount;
           const secretsCount = orderedServers.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === "secrets").length;
           const paymentsCount = orderedServers.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === "payments").length;
           const databaseCount = orderedDatabases.length;
-          const managedResourceCount = databaseCount + authCount + agentRuntimeCount + secretsCount + paymentsCount;
+          const managedResourceCount = databaseCount + authCount + agentRuntimeCount + voiceAgentCount + secretsCount + paymentsCount;
           return {
             computers: orderedEnvironments.length,
             webApps: webAppCount,
@@ -84266,13 +85217,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             apis: apiCount,
             auth: authCount,
             agentRuntimes: agentRuntimeCount,
+            voiceAgents: voiceAgentCount,
             secrets: secretsCount,
             payments: paymentsCount,
             databases: databaseCount,
             managedResources: managedResourceCount,
             totalResources: webAppCount + functionCount + apiCount + managedResourceCount,
           };
-        }, [orderedDatabases, orderedEnvironments, orderedServers]);
+        }, [orderedDatabases, orderedEnvironments, orderedServers, voiceEnabledAgentCount]);
 
 	        const selectedResourcesDetailTitle = useMemo(() => {
 	          if (serverComposerOpen && isServersMode && normalizedEmbeddedServerKind) {
@@ -85454,6 +86406,269 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             setRuntimeCustomSkillsLoading(false);
           }
         }, [hasLoadedRuntimeCustomSkills, requestHeaders, runtimeCustomSkills, runtimeCustomSkillsLoading]);
+
+        function commitVoiceAgentRecordPayload(payload, fallbackAgentId = "") {
+          const normalizedRecord = normalizePlaygroundVoiceAgentRecord(payload);
+          const agentId = String(normalizedRecord?.agent?.id || fallbackAgentId || "").trim();
+          if (!agentId) {
+            return null;
+          }
+          setVoiceAgentRecordsById((current) => ({
+            ...current,
+            [agentId]: normalizedRecord,
+          }));
+          setVoiceAgentDraftsById((current) => ({
+            ...current,
+            [agentId]: buildPlaygroundVoiceAgentDraft(normalizedRecord),
+          }));
+          return normalizedRecord;
+        }
+
+        const loadVoiceAgents = useCallback(async (options = {}) => {
+          if (voiceAgentsLoading && !options?.force) {
+            return [];
+          }
+          if (hasLoadedVoiceAgents && !options?.force) {
+            return [];
+          }
+
+          setVoiceAgentsLoading(true);
+          setVoiceAgentsState((current) => ({
+            ...current,
+            error: "",
+          }));
+          try {
+            const response = await fetch(buildPlaygroundVoiceAgentsUrl(backendUrl), {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load voice agents.");
+            }
+            const items = Array.isArray(data?.voiceAgents)
+              ? data.voiceAgents
+              : Array.isArray(data?.data)
+                ? data.data
+                : Array.isArray(data?.items)
+                  ? data.items
+                  : [];
+            const nextRecordsById = {};
+            const nextDraftsById = {};
+            const nextRecords = items
+              .map((item) => normalizePlaygroundVoiceAgentRecord(item))
+              .filter((record) => record?.agent?.id);
+            nextRecords.forEach((record) => {
+              const agentId = String(record.agent.id || "").trim();
+              if (!agentId) return;
+              nextRecordsById[agentId] = record;
+              nextDraftsById[agentId] = buildPlaygroundVoiceAgentDraft(record);
+            });
+            setVoiceAgentRecordsById(nextRecordsById);
+            setVoiceAgentDraftsById(nextDraftsById);
+            setHasLoadedVoiceAgents(true);
+            return nextRecords;
+          } catch (error) {
+            setVoiceAgentsState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to load voice agents.",
+            }));
+            setHasLoadedVoiceAgents(true);
+            return [];
+          } finally {
+            setVoiceAgentsLoading(false);
+          }
+        }, [backendUrl, hasLoadedVoiceAgents, requestHeaders, voiceAgentsLoading]);
+
+        function updateVoiceAgentDraft(agentId, patch) {
+          const normalizedAgentId = String(agentId || "").trim();
+          if (!normalizedAgentId) {
+            return;
+          }
+          setVoiceAgentDraftsById((current) => {
+            const baseRecord = voiceAgentRecordsById[normalizedAgentId] || { agent: { id: normalizedAgentId } };
+            const baseDraft = current[normalizedAgentId] || buildPlaygroundVoiceAgentDraft(baseRecord);
+            return {
+              ...current,
+              [normalizedAgentId]: {
+                ...baseDraft,
+                ...(patch && typeof patch === "object" ? patch : {}),
+              },
+            };
+          });
+          setVoiceAgentsState((current) => ({
+            ...current,
+            error: "",
+            message: "",
+          }));
+        }
+
+        async function saveVoiceAgentConfig(agentId) {
+          const normalizedAgentId = String(agentId || "").trim();
+          if (!normalizedAgentId) {
+            return null;
+          }
+          const draft = voiceAgentDraftsById[normalizedAgentId] || buildPlaygroundVoiceAgentDraft(voiceAgentRecordsById[normalizedAgentId] || { agent: { id: normalizedAgentId } });
+
+          setVoiceAgentsState((current) => ({
+            ...current,
+            error: "",
+            message: "",
+            savingAgentId: normalizedAgentId,
+          }));
+          try {
+            const response = await fetch(buildPlaygroundVoiceAgentUrl(backendUrl, normalizedAgentId), {
+              method: "PATCH",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(buildPlaygroundVoiceAgentUpdatePayload(draft)),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to save voice configuration.");
+            }
+            const normalizedRecord = commitVoiceAgentRecordPayload(data, normalizedAgentId);
+            setVoiceAgentsState((current) => ({
+              ...current,
+              message: "Voice configuration saved.",
+              savingAgentId: "",
+            }));
+            return normalizedRecord;
+          } catch (error) {
+            setVoiceAgentsState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to save voice configuration.",
+              savingAgentId: "",
+            }));
+            return null;
+          }
+        }
+
+        async function provisionVoiceAgentPhoneNumber(agentId) {
+          const normalizedAgentId = String(agentId || "").trim();
+          if (!normalizedAgentId) {
+            return null;
+          }
+          setVoiceAgentsState((current) => ({
+            ...current,
+            error: "",
+            message: "",
+            provisioningAgentId: normalizedAgentId,
+          }));
+          try {
+            const response = await fetch(buildPlaygroundVoiceAgentPhoneNumberUrl(backendUrl, normalizedAgentId), {
+              method: "POST",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ origin: "xai_provisioned" }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to provision phone number.");
+            }
+            const normalizedRecord = commitVoiceAgentRecordPayload(data, normalizedAgentId);
+            setVoiceAgentsState((current) => ({
+              ...current,
+              message: "Phone number provisioned.",
+              provisioningAgentId: "",
+            }));
+            return normalizedRecord;
+          } catch (error) {
+            setVoiceAgentsState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to provision phone number.",
+              provisioningAgentId: "",
+            }));
+            return null;
+          }
+        }
+
+        async function disableVoiceAgentPhoneNumber(agentId) {
+          const normalizedAgentId = String(agentId || "").trim();
+          if (!normalizedAgentId) {
+            return null;
+          }
+          setVoiceAgentsState((current) => ({
+            ...current,
+            error: "",
+            message: "",
+            disablingAgentId: normalizedAgentId,
+          }));
+          try {
+            const response = await fetch(buildPlaygroundVoiceAgentPhoneNumberUrl(backendUrl, normalizedAgentId), {
+              method: "DELETE",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to disable phone number.");
+            }
+            const normalizedRecord = commitVoiceAgentRecordPayload(data, normalizedAgentId);
+            setVoiceAgentsState((current) => ({
+              ...current,
+              message: "Phone number disabled.",
+              disablingAgentId: "",
+            }));
+            return normalizedRecord;
+          } catch (error) {
+            setVoiceAgentsState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to disable phone number.",
+              disablingAgentId: "",
+            }));
+            return null;
+          }
+        }
+
+        async function createVoiceAgentTestSession(agentId) {
+          const normalizedAgentId = String(agentId || "").trim();
+          if (!normalizedAgentId) {
+            return null;
+          }
+          setVoiceAgentsState((current) => ({
+            ...current,
+            error: "",
+            message: "",
+            testingAgentId: normalizedAgentId,
+          }));
+          try {
+            const response = await fetch(buildPlaygroundVoiceAgentSessionsUrl(backendUrl, normalizedAgentId), {
+              method: "POST",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                title: "Voice session",
+              }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create voice session.");
+            }
+            setVoiceAgentSessionResultsById((current) => ({
+              ...current,
+              [normalizedAgentId]: data,
+            }));
+            setVoiceAgentsState((current) => ({
+              ...current,
+              message: "Web voice session created.",
+              testingAgentId: "",
+            }));
+            return data;
+          } catch (error) {
+            setVoiceAgentsState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to create voice session.",
+              testingAgentId: "",
+            }));
+            return null;
+          }
+        }
 
         const loadServers = useCallback(async (options = {}) => {
           setHasLoadedServers(true);
@@ -86824,6 +88039,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [loadServerAgentOptions, resourceMode, serverAgentOptions.length, serverAgentOptionsLoading]);
 
         useEffect(() => {
+          if (!embeddedInResources || resourceMode !== "servers" || normalizedEmbeddedServerKind !== "voice_agent") {
+            return;
+          }
+          void loadVoiceAgents();
+        }, [embeddedInResources, loadVoiceAgents, normalizedEmbeddedServerKind, resourceMode]);
+
+        useEffect(() => {
           if (resourceMode !== "servers") {
             return;
           }
@@ -87117,7 +88339,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setDraftServer(seedServer ? normalizePlaygroundServerRecord(seedServer) : null);
           void loadServerDetails(selectedServerId);
           const seedServerKind = canonicalizePlaygroundServerKind(seedServer?.kind);
-          if (!["auth", "agent_runtime", "secrets", "payments"].includes(seedServerKind)) {
+          if (!["auth", "agent_runtime", "voice_agent", "secrets", "payments"].includes(seedServerKind)) {
             void loadServerFiles(selectedServerId);
           }
           if (seedServerKind === "secrets") {
@@ -87193,7 +88415,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!activeServer?.id) {
             return;
           }
-          if (["auth", "agent_runtime", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(activeServer.kind))) {
+          if (["auth", "agent_runtime", "voice_agent", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(activeServer.kind))) {
             return;
           }
           if (!activeServer.cloudRunServiceName && !activeServer.serviceUrl) {
@@ -87230,7 +88452,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return;
           }
           const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
-          if (["auth", "agent_runtime", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(activeServer?.kind))) {
+          if (["auth", "agent_runtime", "voice_agent", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(activeServer?.kind))) {
             return;
           }
           void loadServerAnalytics(selectedServerId);
@@ -93971,7 +95193,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               onClick: () => {
                 setEnvironmentPublishMenuOpen(false);
                 setEnvironmentVersionsHeaderMenuOpen(false);
-                setEnvironmentVersionsSidebarOpen(true);
+                openEnvironmentVersionChangesPage();
               },
             });
           }
@@ -95551,7 +96773,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               onClick: () => {
                 setServerPublishMenuOpen(false);
                 setServerVersionsHeaderMenuOpen(false);
-                setServerVersionsSidebarOpen(true);
+                openServerVersionChangesPage();
               },
             });
           }
@@ -100916,7 +102138,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             && !isServerTemplatePreview
             && Boolean(draftServer?.id)
             && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID;
-          const serverVersionPopupActions = getServerVersionPopupActions({ includeVersionHistory: false });
+          const serverVersionPopupActions = getServerVersionPopupActions();
           const isServerPublishControlDisabled = !canShowServerVersionPublish || serverSaveState.isSaving || serverVersionState.status === "loading";
           const isServerPublishMenuDisabled = isServerPublishControlDisabled || serverDeploymentState.isDeploying;
           const renderServerPublishSplitButton = () => canShowServerVersionPublish
@@ -100979,7 +102201,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                         void action.onClick();
                       },
                     },
-                    React.createElement(action.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                    React.createElement(getPlaygroundSafeIconComponent(action.Icon, Circle), { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
                     React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                       React.createElement("span", null, action.label)
                     ),
@@ -101430,6 +102652,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               backLabel: "Back to " + serverKindLabel,
               onBack: closeServerVersionChangesPage,
               compareControls,
+              actions: renderServerPublishSplitButton(),
               files: diffFiles,
               emptyMessage: "No changes between these versions.",
             });
@@ -105395,7 +106618,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     void action.onClick();
                   },
                 },
-                React.createElement(action.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                React.createElement(getPlaygroundSafeIconComponent(action.Icon, Circle), { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
                 React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                   React.createElement("span", null, action.label)
                 ),
@@ -105957,6 +107180,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
                 renderCompareSelect(rightSource.id, "right")
               ),
+              actions: renderEnvironmentPublishSplitButton(),
               files: diffFiles,
               backIcon: ArrowLeft,
               backText: "Back",
@@ -107341,6 +108565,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            database: "/developers/libraries/databases",
 	            auth: "/developers/libraries/authentication",
 	            agent_runtime: "/developers/libraries/agent-runtimes",
+	            voice_agent: "/developers/libraries/voice-agents",
 	            secrets: "/developers/libraries/secrets",
 	            payments: "/developers/libraries/payments",
 	          };
@@ -107348,7 +108573,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	          const developConfigureTitle = isDevelopServerKindHome ? developServerKindTitle : "Computers";
 	          const developConfigureSingularTitle = isDevelopServerKindHome ? developServerKindSingularTitle : "Computer";
 	          const developConfigureCount = Math.max(0, Math.round(Number(
-	            isDevelopServerKindHome ? filteredOverviewServerResources?.length : filteredOverviewEnvironments?.length
+	            isDevelopServerKindHome
+	              ? (normalizedEmbeddedServerKind === "voice_agent" ? filteredVoiceAgentRecords?.length : filteredOverviewServerResources?.length)
+	              : filteredOverviewEnvironments?.length
 	          ) || 0));
 	          const formatDevelopResourceOperationalMetricValue = (value) => {
 	            const numericValue = Math.max(0, Math.round(Number.isFinite(Number(value)) ? Number(value) : 0));
@@ -107491,6 +108718,31 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                  emptyText: "No runtime runs in the last 24 hours",
 	                },
 	                ...buildDevelopServerKindSharedMetricTabs("agentRuntimes", "Agent runtimes"),
+	              ];
+	            }
+	            if (normalizedEmbeddedServerKind === "voice_agent") {
+	              return [
+	                {
+	                  id: "voice-calls",
+	                  key: "voiceCalls",
+	                  label: "Voice Calls",
+	                  title: "Voice Calls",
+	                  tone: "success",
+	                  legend: "Calls",
+	                  resourceCountKey: "voiceAgents",
+	                  emptyText: "No voice calls in the last 24 hours",
+	                },
+	                {
+	                  id: "voice-minutes",
+	                  key: "voiceMinutes",
+	                  label: "Voice Minutes",
+	                  title: "Voice Minutes",
+	                  tone: "latency",
+	                  legend: "Minutes",
+	                  resourceCountKey: "voiceAgents",
+	                  emptyText: "No voice minutes in the last 24 hours",
+	                },
+	                ...buildDevelopServerKindSharedMetricTabs("voiceAgents", "Voice agents"),
 	              ];
 	            }
 	            if (normalizedEmbeddedServerKind === "secrets") {
@@ -107858,6 +109110,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                    )
 	                  )
 	            : null;
+	          const canCreateDevelopServerKindResource = normalizedEmbeddedServerKind !== "voice_agent";
 	          const developServerKindToolbar = React.createElement("div", {
 	              className: "playground-develop-server-metrics-toolbar playground-develop-api-keys-toolbar playground-develop-server-kind-toolbar",
 	            },
@@ -107866,11 +109119,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              React.createElement("span", { className: "playground-develop-server-metrics-resource-label" }, developConfigureCount === 1 ? developConfigureSingularTitle : developConfigureTitle),
 	              React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 })
 	            ),
-	            React.createElement("button", {
+	            canCreateDevelopServerKindResource ? React.createElement("button", {
 	              type: "button",
 	              className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button",
 	              onClick: isDevelopServerKindHome ? () => handleCreateServer(normalizedEmbeddedServerKind) : handleCreateEnvironment,
-	            }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), isDevelopServerKindHome ? "Add Resource" : "Add Computer")
+	            }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), isDevelopServerKindHome ? "Add Resource" : "Add Computer") : null
 	          );
 	          const shouldShowDevelopFunctionsEmptyLanding = isDevelopServerKindHome
 	            && normalizedEmbeddedServerKind === "function"
@@ -108162,7 +109415,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                      style: { backgroundImage: "url(" + example.background + ")" },
 	                    },
 	                      React.createElement("div", { className: "playground-functions-example-icon-box" },
-	                        React.createElement(example.Icon, { width: 22, height: 22, strokeWidth: 1.7 })
+	                        React.createElement(getPlaygroundSafeIconComponent(example.Icon, Code2), { width: 22, height: 22, strokeWidth: 1.7 })
 	                      )
 	                    ),
 	                    React.createElement("div", { className: "playground-functions-example-body" },
@@ -108228,7 +109481,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                functionEmptyFeatures.map((feature) =>
 	                  React.createElement("div", { key: feature.title, className: "playground-functions-empty-feature" },
 	                    React.createElement("div", { className: "playground-functions-empty-icon-box" },
-	                      React.createElement(feature.Icon, { width: 18, height: 18, strokeWidth: 1.8 })
+	                      React.createElement(getPlaygroundSafeIconComponent(feature.Icon, Circle), { width: 18, height: 18, strokeWidth: 1.8 })
 	                    ),
 	                    React.createElement("div", { className: "playground-functions-empty-feature-title" }, feature.title),
 	                    React.createElement("div", { className: "playground-functions-empty-feature-copy" }, feature.description)
@@ -108280,7 +109533,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                webAppEmptyFeatures.map((feature) =>
 	                  React.createElement("div", { key: feature.title, className: "playground-functions-empty-feature" },
 	                    React.createElement("div", { className: "playground-functions-empty-icon-box" },
-	                      React.createElement(feature.Icon, { width: 18, height: 18, strokeWidth: 1.8 })
+	                      React.createElement(getPlaygroundSafeIconComponent(feature.Icon, Circle), { width: 18, height: 18, strokeWidth: 1.8 })
 	                    ),
 	                    React.createElement("div", { className: "playground-functions-empty-feature-title" }, feature.title),
 	                    React.createElement("div", { className: "playground-functions-empty-feature-copy" }, feature.description)
@@ -108332,7 +109585,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                databaseEmptyFeatures.map((feature) =>
 	                  React.createElement("div", { key: feature.title, className: "playground-functions-empty-feature" },
 	                    React.createElement("div", { className: "playground-functions-empty-icon-box" },
-	                      React.createElement(feature.Icon, { width: 18, height: 18, strokeWidth: 1.8 })
+	                      React.createElement(getPlaygroundSafeIconComponent(feature.Icon, Circle), { width: 18, height: 18, strokeWidth: 1.8 })
 	                    ),
 	                    React.createElement("div", { className: "playground-functions-empty-feature-title" }, feature.title),
 	                    React.createElement("div", { className: "playground-functions-empty-feature-copy" }, feature.description)
@@ -108377,7 +109630,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                features.map((feature) =>
 	                  React.createElement("div", { key: feature.title, className: "playground-functions-empty-feature" },
 	                    React.createElement("div", { className: "playground-functions-empty-icon-box" },
-	                      React.createElement(feature.Icon, { width: 18, height: 18, strokeWidth: 1.8 })
+	                      React.createElement(getPlaygroundSafeIconComponent(feature.Icon, Circle), { width: 18, height: 18, strokeWidth: 1.8 })
 	                    ),
 	                    React.createElement("div", { className: "playground-functions-empty-feature-title" }, feature.title),
 	                    React.createElement("div", { className: "playground-functions-empty-feature-copy" }, feature.description)
@@ -108469,10 +109722,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                            ? renderDevelopSecretsEmptyLanding()
 	                            : shouldShowDevelopPaymentsEmptyLanding
 	                              ? renderDevelopPaymentsEmptyLanding()
-	                  : React.createElement(React.Fragment, null,
-	                      environmentOverviewMetricsSection,
-	                      overviewListContent
-	                    )
+	                  : normalizedEmbeddedServerKind === "voice_agent"
+	                    ? React.createElement(React.Fragment, null,
+	                        environmentOverviewMetricsSection,
+	                        overviewListContent
+	                      )
+	                    : React.createElement(React.Fragment, null,
+	                        environmentOverviewMetricsSection,
+	                        overviewListContent
+	                      )
 	              )
 	            : React.createElement("section", { className: "playground-environments-home-hero" },
 	                React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your full AI app stack."),
@@ -108538,6 +109796,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const normalizedKind = canonicalizePlaygroundServerKind(activeServer.kind);
             const isAuthResource = normalizedKind === "auth";
             const isAgentRuntimeResource = normalizedKind === "agent_runtime";
+            const isVoiceAgentResource = normalizedKind === "voice_agent";
             const isSecretsResource = normalizedKind === "secrets";
             const isPaymentsResource = normalizedKind === "payments";
             return React.createElement("div", {
@@ -108568,7 +109827,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                         React.createElement("span", null, "Rename")
                       )
                     ),
-                    !isAuthResource && !isAgentRuntimeResource && !isSecretsResource && !isPaymentsResource
+                    !isAuthResource && !isAgentRuntimeResource && !isVoiceAgentResource && !isSecretsResource && !isPaymentsResource
                       ? React.createElement("button", {
                           type: "button",
                           className: "tb-popup-row",
@@ -108661,6 +109920,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return null;
         };
         const renderCurrentResourceCreateControl = (buttonClassName) => {
+          if (isServersMode && normalizedEmbeddedServerKind === "voice_agent") {
+            return null;
+          }
           const shouldShowCreateLabel = String(buttonClassName || "").includes("playground-top-nav-private-chat-button");
           return React.createElement("div", { className: "playground-files-toolbar-anchor" },
             React.createElement("button", {
@@ -108830,6 +110092,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             if (normalizedKind === "agent_runtime") {
               return React.createElement(Bot, { width: 17, height: 17, strokeWidth: 1.8 });
             }
+            if (normalizedKind === "voice_agent") {
+              return React.createElement(Mic, { width: 17, height: 17, strokeWidth: 1.8 });
+            }
             if (normalizedKind === "auth") {
               return React.createElement(Users, { width: 17, height: 17, strokeWidth: 1.8 });
             }
@@ -108867,6 +110132,290 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             className: "playground-agents-overview-table-value is-right",
             title: value ? formatPlaygroundExactDate(value) : "",
           }, value ? formatPlaygroundFileDate(value) : emptyLabel);
+          const getVoiceAgentModeLabel = (mode) => {
+            const normalizedMode = normalizePlaygroundVoiceAgentMode(mode);
+            return PLAYGROUND_VOICE_AGENT_MODE_OPTIONS.find((option) => option.id === normalizedMode)?.label || "Off";
+          };
+          const renderVoiceAgentSessionResult = (agentId) => {
+            const result = voiceAgentSessionResultsById[agentId];
+            if (!result) {
+              return null;
+            }
+            const threadId = String(result?.thread?.id || result?.voiceSession?.threadId || "").trim();
+            const realtimeUrl = String(result?.xai?.realtimeUrl || "").trim();
+            return React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" },
+              React.createElement("span", null, "Web voice session ready"),
+              threadId && typeof onThreadOpen === "function"
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "playground-server-detail-docs-tab",
+                    onClick: () => onThreadOpen(threadId),
+                  },
+                    React.createElement(MessageSquare, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Open Thread")
+                  )
+                : null,
+              realtimeUrl
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "playground-server-detail-docs-tab",
+                    onClick: () => {
+                      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+                        void navigator.clipboard.writeText(realtimeUrl);
+                      }
+                    },
+                  },
+                    React.createElement(Copy, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Copy Realtime URL")
+                  )
+                : null
+            );
+          };
+          const renderVoiceAgentsOverviewSection = () => {
+            const hasVoiceAgentRows = filteredVoiceAgentRecords.length > 0;
+            const shouldShowVoiceLoading = voiceAgentsLoading && !hasVoiceAgentRows;
+            return React.createElement("section", {
+                className: "playground-plugins-section playground-resources-overview-section is-servers-overview is-develop-server-kind-list",
+              },
+              React.createElement("div", {
+                  className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar",
+                  ref: resourcesOverviewToolbarRef,
+                },
+                React.createElement("h2", { className: "playground-develop-server-metrics-title playground-develop-server-kind-table-title" }, "All Voice Agents"),
+                React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
+                  React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
+                    React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("input", {
+                      type: "search",
+                      value: searchPopupQuery,
+                      onChange: (event) => setSearchPopupQuery(event.target.value),
+                      className: "playground-plugins-search",
+                      placeholder: "Search voice agents",
+                    })
+                  ),
+                  React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button is-bare",
+                      onClick: () => void loadVoiceAgents({ force: true }),
+                      disabled: voiceAgentsLoading,
+                    },
+                      React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, voiceAgentsLoading ? "Refreshing" : "Refresh")
+                    )
+                  )
+                )
+              ),
+              voiceAgentsState.error
+                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, voiceAgentsState.error)
+                : null,
+              voiceAgentsState.message
+                ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, voiceAgentsState.message)
+                : null,
+              shouldShowVoiceLoading
+                ? React.createElement("div", { className: "playground-plugins-empty playground-resources-overview-loading" },
+                    React.createElement(Loader2, { className: "playground-files-state-loader", width: 16, height: 16, strokeWidth: 1.75 }),
+                    React.createElement("span", null, "Loading voice agents")
+                  )
+                : hasVoiceAgentRows
+                  ? React.createElement("div", { className: "playground-auth-users-table-shell" },
+                      React.createElement("table", { className: "playground-auth-users-table" },
+                        React.createElement("colgroup", null,
+                          React.createElement("col", { style: { width: "22%" } }),
+                          React.createElement("col", { style: { width: "130px" } }),
+                          React.createElement("col", { style: { width: "150px" } }),
+                          React.createElement("col", { style: { width: "210px" } }),
+                          React.createElement("col", { style: { width: "190px" } }),
+                          React.createElement("col", { style: { width: "130px" } })
+                        ),
+                        React.createElement("thead", null,
+                          React.createElement("tr", null,
+                            React.createElement("th", null, "Agent"),
+                            React.createElement("th", null, "Mode"),
+                            React.createElement("th", null, "Voice"),
+                            React.createElement("th", null, "Model"),
+                            React.createElement("th", null, "Phone"),
+                            React.createElement("th", { className: "is-actions" }, "")
+                          )
+                        ),
+                        React.createElement("tbody", null,
+                          filteredVoiceAgentRecords.map((record) => {
+                            const agent = record.agent || {};
+                            const agentId = String(agent.id || "").trim();
+                            const draft = voiceAgentDraftsById[agentId] || buildPlaygroundVoiceAgentDraft(record);
+                            const phoneRecord = record.phoneNumber || null;
+                            const isSaving = voiceAgentsState.savingAgentId === agentId;
+                            const isProvisioning = voiceAgentsState.provisioningAgentId === agentId;
+                            const isDisabling = voiceAgentsState.disablingAgentId === agentId;
+                            const isTesting = voiceAgentsState.testingAgentId === agentId;
+                            const hasPhoneNumber = Boolean(String(phoneRecord?.phoneNumber || "").trim());
+                            const phoneStatus = String(phoneRecord?.status || (hasPhoneNumber ? "active" : "")).trim();
+                            return React.createElement(React.Fragment, { key: agentId },
+                              React.createElement("tr", null,
+                                React.createElement("td", { className: "playground-auth-users-cell is-identifier" },
+                                  React.createElement("div", { className: "playground-resources-overview-name-cell" },
+                                    React.createElement("span", { className: "playground-resources-overview-table-icon", "aria-hidden": "true" },
+                                      React.createElement(Mic, { width: 17, height: 17, strokeWidth: 1.8 })
+                                    ),
+                                    React.createElement("div", { className: "playground-resources-overview-name-copy" },
+                                      React.createElement("div", { className: "playground-resources-overview-name-title" }, agent.name || "Untitled Agent"),
+                                      React.createElement("div", {
+                                        className: "playground-resources-overview-name-description",
+                                        title: agent.description || agent.id || "",
+                                      }, agent.description || agent.id || "Agent")
+                                    )
+                                  )
+                                ),
+                                React.createElement("td", { className: "playground-auth-users-cell" },
+                                  React.createElement("select", {
+                                    className: "playground-settings-select",
+                                    value: normalizePlaygroundVoiceAgentMode(draft.voiceMode),
+                                    onChange: (event) => updateVoiceAgentDraft(agentId, { voiceMode: event.target.value }),
+                                    "aria-label": "Voice mode for " + (agent.name || agentId),
+                                  },
+                                    PLAYGROUND_VOICE_AGENT_MODE_OPTIONS.map((option) =>
+                                      React.createElement("option", { key: option.id, value: option.id }, option.label)
+                                    )
+                                  )
+                                ),
+                                React.createElement("td", { className: "playground-auth-users-cell" },
+                                  React.createElement("input", {
+                                    type: "text",
+                                    className: "playground-settings-input",
+                                    value: draft.voiceId,
+                                    onChange: (event) => updateVoiceAgentDraft(agentId, { voiceId: event.target.value }),
+                                    placeholder: "eve",
+                                    "aria-label": "Voice id for " + (agent.name || agentId),
+                                  })
+                                ),
+                                React.createElement("td", { className: "playground-auth-users-cell" },
+                                  React.createElement("select", {
+                                    className: "playground-settings-select",
+                                    value: draft.voiceModel,
+                                    onChange: (event) => updateVoiceAgentDraft(agentId, { voiceModel: event.target.value }),
+                                    "aria-label": "Voice model for " + (agent.name || agentId),
+                                  },
+                                    PLAYGROUND_VOICE_AGENT_MODEL_OPTIONS.map((option) =>
+                                      React.createElement("option", { key: option.id, value: option.id }, option.label)
+                                    )
+                                  )
+                                ),
+                                React.createElement("td", { className: "playground-auth-users-cell" },
+                                  hasPhoneNumber
+                                    ? React.createElement("div", { className: "playground-agents-overview-model-copy" },
+                                        React.createElement("div", { className: "playground-agents-overview-name-title" }, phoneRecord.phoneNumber),
+                                        React.createElement("div", { className: "playground-agents-overview-name-description" }, phoneStatus || "active")
+                                      )
+                                    : React.createElement("span", { className: "playground-agents-model-access is-locked" }, "No number")
+                                ),
+                                React.createElement("td", { className: "playground-auth-users-cell is-actions" },
+                                  React.createElement("div", { className: "playground-auth-users-actions" },
+                                    React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-auth-users-refresh-button",
+                                      onClick: () => void saveVoiceAgentConfig(agentId),
+                                      disabled: isSaving,
+                                      title: "Save voice configuration",
+                                      "aria-label": "Save voice configuration for " + (agent.name || agentId),
+                                    }, isSaving
+                                      ? React.createElement(Loader2, { className: "playground-files-state-loader", width: 14, height: 14, strokeWidth: 1.8 })
+                                      : React.createElement(Save, { width: 14, height: 14, strokeWidth: 1.8 })
+                                    ),
+                                    React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-auth-users-refresh-button",
+                                      onClick: async () => {
+                                        const savedRecord = await saveVoiceAgentConfig(agentId);
+                                        if (savedRecord) {
+                                          await createVoiceAgentTestSession(agentId);
+                                        }
+                                      },
+                                      disabled: isTesting || !isPlaygroundVoiceAgentWebEnabled(draft.voiceMode),
+                                      title: isPlaygroundVoiceAgentWebEnabled(draft.voiceMode) ? "Create web voice session" : "Enable web voice mode first",
+                                      "aria-label": "Create web voice session for " + (agent.name || agentId),
+                                    }, isTesting
+                                      ? React.createElement(Loader2, { className: "playground-files-state-loader", width: 14, height: 14, strokeWidth: 1.8 })
+                                      : React.createElement(MessageSquare, { width: 14, height: 14, strokeWidth: 1.8 })
+                                    )
+                                  )
+                                )
+                              ),
+                              React.createElement("tr", null,
+                                React.createElement("td", { className: "playground-auth-users-cell" }),
+                                React.createElement("td", { className: "playground-auth-users-cell", colSpan: 5 },
+                                  React.createElement("div", { className: "playground-settings-detail-stack", style: { gap: 10 } },
+                                    React.createElement("div", { style: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 180px", gap: 12, alignItems: "start" } },
+                                      React.createElement("label", { className: "playground-settings-field" },
+                                        React.createElement("span", { className: "playground-settings-label" }, "Voice instructions"),
+                                        React.createElement("textarea", {
+                                          className: "playground-settings-textarea",
+                                          rows: 3,
+                                          value: draft.voiceInstructions,
+                                          onChange: (event) => updateVoiceAgentDraft(agentId, { voiceInstructions: event.target.value }),
+                                          placeholder: "Use the agent instructions",
+                                        })
+                                      ),
+                                      React.createElement("label", { className: "playground-settings-field" },
+                                        React.createElement("span", { className: "playground-settings-label" }, "Language hint"),
+                                        React.createElement("input", {
+                                          type: "text",
+                                          className: "playground-settings-input",
+                                          value: draft.voiceLanguageHint,
+                                          onChange: (event) => updateVoiceAgentDraft(agentId, { voiceLanguageHint: event.target.value }),
+                                          placeholder: "en",
+                                        })
+                                      )
+                                    ),
+                                    React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
+                                      hasPhoneNumber
+                                        ? React.createElement("button", {
+                                            type: "button",
+                                            className: "playground-server-detail-docs-tab",
+                                            onClick: () => void disableVoiceAgentPhoneNumber(agentId),
+                                            disabled: isDisabling,
+                                          },
+                                            isDisabling
+                                              ? React.createElement(Loader2, { className: "playground-server-detail-docs-tab-icon playground-files-state-loader", width: 12, height: 12, strokeWidth: 1.8 })
+                                              : React.createElement(Trash2, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
+                                            React.createElement("span", null, isDisabling ? "Disabling..." : "Disable Number")
+                                          )
+                                        : React.createElement("button", {
+                                            type: "button",
+                                            className: "playground-server-detail-docs-tab",
+                                            onClick: async () => {
+                                              const savedRecord = await saveVoiceAgentConfig(agentId);
+                                              if (savedRecord) {
+                                                await provisionVoiceAgentPhoneNumber(agentId);
+                                              }
+                                            },
+                                            disabled: isProvisioning || !isPlaygroundVoiceAgentPhoneEnabled(draft.voiceMode),
+                                            title: isPlaygroundVoiceAgentPhoneEnabled(draft.voiceMode) ? "Provision phone number" : "Enable phone voice mode first",
+                                          },
+                                            isProvisioning
+                                              ? React.createElement(Loader2, { className: "playground-server-detail-docs-tab-icon playground-files-state-loader", width: 12, height: 12, strokeWidth: 1.8 })
+                                              : React.createElement(Webhook, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
+                                            React.createElement("span", null, isProvisioning ? "Provisioning..." : "Provision Number")
+                                          ),
+                                      React.createElement("span", { className: "playground-agents-model-access" + (normalizePlaygroundVoiceAgentMode(draft.voiceMode) === "off" ? " is-locked" : " is-available") },
+                                        getVoiceAgentModeLabel(draft.voiceMode)
+                                      )
+                                    ),
+                                    renderVoiceAgentSessionResult(agentId)
+                                  )
+                                )
+                              )
+                            );
+                          })
+                        )
+                      )
+                    )
+                  : React.createElement("div", { className: "playground-plugins-empty" },
+                      normalizedResourcesSearchQuery
+                        ? "No matching voice agents found."
+                        : "No agents are available for voice configuration."
+                    )
+            );
+          };
           const renderOverviewResourceActionCell = (item, elementTag = "td", options = {}) => {
             const isMenuOpen = isServersMode
               ? (
@@ -109459,7 +111008,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 			            )
 			            )
 			          );
-		          if (isDevelopConfigureOverview && activeResourcesOverviewHomeTab === "general") {
+			          if (isDevelopConfigureOverview && activeResourcesOverviewHomeTab === "general" && normalizedEmbeddedServerKind === "voice_agent") {
+			            return renderVoiceAgentsOverviewSection();
+			          }
+			          if (isDevelopConfigureOverview && activeResourcesOverviewHomeTab === "general") {
 		            return React.createElement("section", {
 		              className: isServersMode
 		                ? "playground-plugins-section playground-resources-overview-section is-servers-overview is-develop-server-kind-list"
@@ -109563,7 +111115,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     : null
                 )
               ),
-              React.createElement("button", {
+              normalizedEmbeddedServerKind === "voice_agent" ? null : React.createElement("button", {
                 type: "button",
                 className: "playground-overview-new-button playground-resources-overview-create-button",
                 onClick: () => {
@@ -109588,7 +111140,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
 	        if (embeddedInResources) {
 	          const shouldShowEnvironmentCreationSetup = !isServersMode && environmentComposerOpen;
-	          const shouldShowServerCreationSetup = isServersMode && serverComposerOpen && normalizedEmbeddedServerKind;
+	          const shouldShowServerCreationSetup = isServersMode && serverComposerOpen && normalizedEmbeddedServerKind && normalizedEmbeddedServerKind !== "voice_agent";
 	          const normalizedEmbeddedDatabaseDetailTab = ["data", "general"].includes(databaseDetailTab) ? databaseDetailTab : "data";
 	          const isEmbeddedDatabaseDataTab = Boolean(isServersMode && selectedDatabaseId && !selectedServerId && normalizedEmbeddedDatabaseDetailTab === "data");
 	          const embeddedActiveServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
@@ -109752,6 +111304,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                                                         ? React.createElement(Code2, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
                                                       : canonicalizePlaygroundServerKind(item.kind) === "agent_runtime"
                                                         ? React.createElement(Bot, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
+                                                      : canonicalizePlaygroundServerKind(item.kind) === "voice_agent"
+                                                        ? React.createElement(Mic, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
                                                       : canonicalizePlaygroundServerKind(item.kind) === "auth"
                                                         ? React.createElement(Users, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
                                                       : canonicalizePlaygroundServerKind(item.kind) === "secrets"
@@ -109804,7 +111358,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                             const isDatabaseResource = resource.resourceType === "database";
                             const isActive = !shouldShowEnvironmentHome && (isDatabaseResource ? (!selectedServerId && selectedDatabaseId === resource.id) : selectedServerId === resource.id);
                             const normalizedKind = canonicalizePlaygroundServerKind(resource.kind);
-                            const serverListMetaLabel = normalizedKind === "web_app" || normalizedKind === "function" || normalizedKind === "database" || normalizedKind === "api" || normalizedKind === "auth" || normalizedKind === "agent_runtime" || normalizedKind === "secrets" || normalizedKind === "payments"
+                            const serverListMetaLabel = normalizedKind === "web_app" || normalizedKind === "function" || normalizedKind === "database" || normalizedKind === "api" || normalizedKind === "auth" || normalizedKind === "agent_runtime" || normalizedKind === "voice_agent" || normalizedKind === "secrets" || normalizedKind === "payments"
                                 ? ""
                                 : String(resource.kind || "").replace(/_/g, " ");
                             return React.createElement("div", {
@@ -109824,6 +111378,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                                         ? React.createElement(Code2, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
                                       : normalizedKind === "agent_runtime"
                                         ? React.createElement(Bot, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
+                                      : normalizedKind === "voice_agent"
+                                        ? React.createElement(Mic, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
                                       : normalizedKind === "auth"
                                         ? React.createElement(Users, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
                                       : normalizedKind === "secrets"
@@ -109844,8 +111400,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                           })
                         : React.createElement("div", { className: "playground-environments-empty-state" },
                             React.createElement("div", { className: "playground-environments-empty-title" }, "No " + currentServerResourcesLabel.toLowerCase()),
-                            React.createElement("div", { className: "playground-environments-empty-copy" }, normalizedEmbeddedServerKind ? "Create your first " + currentServerResourcesLabel.toLowerCase() + " resource." : "Create your first web app, function, auth module, agent runtime, secrets vault, payments resource, API, or database."),
-                            React.createElement("button", {
+                            React.createElement("div", { className: "playground-environments-empty-copy" }, normalizedEmbeddedServerKind === "voice_agent" ? "Configure voice on an existing agent to make it available for web or phone calls." : normalizedEmbeddedServerKind ? "Create your first " + currentServerResourcesLabel.toLowerCase() + " resource." : "Create your first web app, function, auth module, agent runtime, secrets vault, payments resource, API, or database."),
+                            normalizedEmbeddedServerKind === "voice_agent" ? null : React.createElement("button", {
                               type: "button",
                               className: "playground-environments-action-button is-primary",
                               onClick: () => handleCreateServer(normalizedEmbeddedServerKind),
@@ -110073,12 +111629,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentAutosaveInFlightRef = useRef(false);
         const agentDetailMainRef = useRef(null);
         const agentResourcesDetailScrollRef = useRef(null);
+        const agentInstructionsSectionRef = useRef(null);
         const agentInstructionsTextareaRef = useRef(null);
         const agentCreationInstructionsTextareaRef = useRef(null);
         const agentComposerInstructionsTextareaRef = useRef(null);
         const agentProfileAvatarPickerRef = useRef(null);
         const agentActionsPopoverRef = useRef(null);
         const agentPublishMenuRef = useRef(null);
+        const agentVersionSelectorMenuRef = useRef(null);
+        const agentTagsMenuRef = useRef(null);
         const agentOwnerPopoverRef = useRef(null);
         const agentVersionDescriptionTextareaRef = useRef(null);
         const agentVersionModalCloseTimerRef = useRef(null);
@@ -110218,6 +111777,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           message: "",
         });
         const [isAgentInstructionsEditing, setIsAgentInstructionsEditing] = useState(false);
+        const [agentInstructionsHeaderStuck, setAgentInstructionsHeaderStuck] = useState(false);
         const [agentInstructionsHistory, setAgentInstructionsHistory] = useState({
           past: [],
           future: [],
@@ -110264,6 +111824,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentAssistantCommandRequest, setAgentAssistantCommandRequest] = useState(null);
         const [agentAssistantThreadByAgentId, setAgentAssistantThreadByAgentId] = useState({});
         const [agentPublishMenuOpen, setAgentPublishMenuOpen] = useState(false);
+        const [agentVersionSelectorMenuOpen, setAgentVersionSelectorMenuOpen] = useState(false);
+        const [agentTagsMenuOpen, setAgentTagsMenuOpen] = useState(false);
+        const [agentTagInputValue, setAgentTagInputValue] = useState("");
         const [agentVersionsHeaderMenuOpen, setAgentVersionsHeaderMenuOpen] = useState(false);
         const [agentCreationSetupOpen, setAgentCreationSetupOpen] = useState(false);
         const [agentCreationSetupError, setAgentCreationSetupError] = useState("");
@@ -110718,6 +112281,29 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return Array.from(new Set(
             source.map((teamId) => String(teamId || "").trim()).filter(Boolean)
           ));
+        }
+        function normalizeAgentTagLabel(value) {
+          return String(value || "").trim().replace(/\s+/g, " ");
+        }
+        function getAgentTagLabels(agentRecord) {
+          const metadata = getAgentMetadataRecord(agentRecord);
+          const source = Array.isArray(metadata.tags)
+            ? metadata.tags
+            : Array.isArray(metadata.labels)
+              ? metadata.labels
+              : Array.isArray(agentRecord?.tags)
+                ? agentRecord.tags
+                : [];
+          const seen = new Set();
+          return source
+            .map((tag) => normalizeAgentTagLabel(tag))
+            .filter((tag) => {
+              if (!tag) return false;
+              const key = tag.toLowerCase();
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
         }
         function normalizeAgentWorkspaceTeamOption(team) {
           const source = team && typeof team === "object" && !Array.isArray(team) ? team : {};
@@ -111862,6 +113448,31 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             ...current,
             [field]: value,
           }));
+        }
+
+        function updateAgentTagLabels(nextLabels) {
+          const normalizedLabels = [];
+          const seen = new Set();
+          (Array.isArray(nextLabels) ? nextLabels : []).forEach((label) => {
+            const normalized = normalizeAgentTagLabel(label);
+            if (!normalized) return;
+            const key = normalized.toLowerCase();
+            if (seen.has(key)) return;
+            seen.add(key);
+            normalizedLabels.push(normalized);
+          });
+          updateDraftAgent((current) => {
+            const metadata = {
+              ...getAgentMetadataRecord(current),
+              tags: normalizedLabels,
+              labels: normalizedLabels,
+            };
+            return {
+              ...current,
+              tags: normalizedLabels,
+              metadata,
+            };
+          });
         }
 
         function updateAgentPermissionAccess(resourceType, access) {
@@ -113702,6 +115313,55 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [isHomeViewActive, selectedAgentId]);
 
         useEffect(() => {
+          const sectionNode = agentInstructionsSectionRef.current;
+          const currentAgentDetailTab = agentDetailTab === "threads" ? "insights" : agentDetailTab;
+          if (!sectionNode || currentAgentDetailTab !== "general") {
+            setAgentInstructionsHeaderStuck(false);
+            return undefined;
+          }
+
+          const headerNode = sectionNode.querySelector(".playground-tasks-detail-section-header");
+          if (!headerNode) {
+            setAgentInstructionsHeaderStuck(false);
+            return undefined;
+          }
+
+          const scrollNode = agentResourcesDetailScrollRef.current
+            || agentDetailMainRef.current?.querySelector(".playground-environments-detail-scroll")
+            || null;
+          let frameId = 0;
+          const updateStickyState = () => {
+            frameId = 0;
+            const sectionRect = sectionNode.getBoundingClientRect();
+            const headerRect = headerNode.getBoundingClientRect();
+            const containerRect = scrollNode && typeof scrollNode.getBoundingClientRect === "function"
+              ? scrollNode.getBoundingClientRect()
+              : { top: 0 };
+            const topEdge = Number(containerRect.top || 0);
+            const nextIsStuck = headerRect.top <= topEdge + 1 && sectionRect.bottom > topEdge + headerRect.height + 1;
+            setAgentInstructionsHeaderStuck((current) => current === nextIsStuck ? current : nextIsStuck);
+          };
+          const scheduleUpdate = () => {
+            if (frameId) {
+              return;
+            }
+            frameId = window.requestAnimationFrame(updateStickyState);
+          };
+
+          scheduleUpdate();
+          const eventTarget = scrollNode || window;
+          eventTarget.addEventListener("scroll", scheduleUpdate, { passive: true });
+          window.addEventListener("resize", scheduleUpdate);
+          return () => {
+            if (frameId) {
+              window.cancelAnimationFrame(frameId);
+            }
+            eventTarget.removeEventListener("scroll", scheduleUpdate);
+            window.removeEventListener("resize", scheduleUpdate);
+          };
+        }, [agentDetailTab, selectedAgentId, draftAgent?.id, isHomeViewActive]);
+
+        useEffect(() => {
           if (!normalizedFocusedAgentSelectionToken || !normalizedFocusedAgentId) {
             return;
           }
@@ -114423,6 +116083,60 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             window.removeEventListener("keydown", handleAgentPublishMenuEscape);
           };
         }, [agentPublishMenuOpen]);
+
+        useEffect(() => {
+          if (!agentVersionSelectorMenuOpen) {
+            return undefined;
+          }
+
+          function handleAgentVersionSelectorMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !agentVersionSelectorMenuRef.current || agentVersionSelectorMenuRef.current.contains(target)) {
+              return;
+            }
+            setAgentVersionSelectorMenuOpen(false);
+          }
+
+          function handleAgentVersionSelectorMenuEscape(event) {
+            if (event.key === "Escape") {
+              setAgentVersionSelectorMenuOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleAgentVersionSelectorMenuPointerDown);
+          window.addEventListener("keydown", handleAgentVersionSelectorMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleAgentVersionSelectorMenuPointerDown);
+            window.removeEventListener("keydown", handleAgentVersionSelectorMenuEscape);
+          };
+        }, [agentVersionSelectorMenuOpen]);
+
+        useEffect(() => {
+          if (!agentTagsMenuOpen) {
+            return undefined;
+          }
+
+          function handleAgentTagsMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !agentTagsMenuRef.current || agentTagsMenuRef.current.contains(target)) {
+              return;
+            }
+            setAgentTagsMenuOpen(false);
+          }
+
+          function handleAgentTagsMenuEscape(event) {
+            if (event.key === "Escape") {
+              setAgentTagsMenuOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleAgentTagsMenuPointerDown);
+          window.addEventListener("keydown", handleAgentTagsMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleAgentTagsMenuPointerDown);
+            window.removeEventListener("keydown", handleAgentTagsMenuEscape);
+          };
+        }, [agentTagsMenuOpen]);
 
         useEffect(() => {
           if (!agentRenameState || !agentRenameInputRef.current) {
@@ -119154,7 +120868,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               onClick: () => {
                 setAgentPublishMenuOpen(false);
                 setAgentVersionsHeaderMenuOpen(false);
-                setAgentVersionsSidebarOpen(true);
+                openAgentVersionChangesPage();
               },
             });
           }
@@ -119243,6 +120957,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
           setAgentActionsPopoverOpen(false);
           setAgentPublishMenuOpen(false);
+          setAgentVersionSelectorMenuOpen(false);
+          setAgentTagsMenuOpen(false);
           setAgentVersionsHeaderMenuOpen(false);
           setAgentAssistantOpen(false);
           setOpenAgentVersionMenuId("");
@@ -119257,6 +120973,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         function closeAgentVersionsSidebar() {
           setAgentVersionsSidebarOpen(false);
           setAgentPublishMenuOpen(false);
+          setAgentVersionSelectorMenuOpen(false);
+          setAgentTagsMenuOpen(false);
           setAgentVersionsHeaderMenuOpen(false);
           finishCloseAgentVersionModal();
           setOpenAgentVersionMenuId("");
@@ -121038,7 +122756,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               fallbackLabel,
               photoUrl,
             });
-          const renderAgentOwnerRow = () => {
+          const renderAgentOwnerRow = (options = {}) => {
+            const isCompact = Boolean(options.compact);
             const ownerIdentityForDisplay = resolvedAgentOwnerIdentity || agentOwnerIdentity || {};
             const ownerLabel = String(ownerIdentityForDisplay?.name || ownerIdentityForDisplay?.email || "Owner").trim();
             const ownerEmail = String(ownerIdentityForDisplay?.email || "").trim();
@@ -121055,12 +122774,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               trigger: React.createElement("button", {
                   key: "Owner",
                   type: "button",
-                  className: "playground-project-overview-sidebar-row playground-agents-detail-sidebar-owner-row",
+                  className: "playground-project-overview-sidebar-row playground-agents-detail-sidebar-owner-row"
+                    + (isCompact ? " is-compact" : ""),
                   onClick: openAgentOwnerPopover,
                   "aria-label": "Choose agent owner",
                   "aria-expanded": agentOwnerPopoverOpen ? "true" : "false",
                 },
-                React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, "Owner"),
+                isCompact
+                  ? null
+                  : React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, "Owner"),
                 React.createElement("div", { className: "playground-project-overview-sidebar-row-value playground-agents-detail-owner-value" },
                   React.createElement("span", { className: "playground-team-member-cell playground-agents-detail-owner-member-cell" },
                     renderAgentOwnerAvatar(
@@ -121126,17 +122848,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               )
             });
           };
-          const draftAgentActiveVersion = getDraftAgentActiveVersion();
-          const draftAgentVersionMetadata = getAgentVersionMetadata();
-          const publishedAgentVersionNumber = Number(
-            draftAgentActiveVersion?.version
-            || draftAgentVersionMetadata.activeAgentVersionNumber
-            || draftAgentVersionMetadata.active_agent_version_number
-            || 0
-          );
-          const publishedAgentVersionLabel = publishedAgentVersionNumber > 0
-            ? String(publishedAgentVersionNumber) + ".0"
-            : "1.0";
           const renderAgentPermissionRings = (permissionSet) => {
             const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "agent");
             return React.createElement("span", {
@@ -121291,10 +123002,209 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             && !draftAgent.isDefault
             && !isDefaultAgentConfigurationLocked
           );
-		          const isAgentVersionControlBusy = saveState.isSaving || agentVersionState.status === "loading";
-		          const isAgentPublishControlDisabled = Boolean(!draftAgent || isAgentVersionControlBusy);
-		          const isAgentPublishMenuDisabled = Boolean(!draftAgent || isAgentVersionControlBusy);
-	          const agentVersionPopupActions = getAgentVersionPopupActions();
+          const isAgentVersionControlBusy = saveState.isSaving || agentVersionState.status === "loading";
+          const isAgentPublishControlDisabled = Boolean(!draftAgent || isAgentVersionControlBusy);
+          const isAgentPublishMenuDisabled = Boolean(!draftAgent || isAgentVersionControlBusy);
+          const agentVersionPopupActions = getAgentVersionPopupActions();
+          const agentDetailVersions = readDraftAgentVersions();
+          const selectedAgentDetailVersion = getDraftAgentSelectedVersion() || getDraftAgentActiveVersion() || agentDetailVersions[0] || null;
+          const activeAgentDetailVersion = getDraftAgentActiveVersion();
+          const selectedAgentDetailVersionId = String(selectedAgentDetailVersion?.id || "").trim();
+          const activeAgentDetailVersionId = String(activeAgentDetailVersion?.id || "").trim();
+          const agentTagLabels = getAgentTagLabels(draftAgent);
+          const getAgentDetailVersionTitle = (version) => {
+            if (!version) return "No versions";
+            return String(version.label || ("Version " + (version.version || ""))).trim() || "Version";
+          };
+          const getAgentDetailVersionMeta = (version) => {
+            if (!version) return "";
+            const versionId = String(version.id || "").trim();
+            const status = versionId && versionId === activeAgentDetailVersionId
+              ? "Published"
+              : (String(version.status || "").toLowerCase() === "active" ? "Published" : "Saved");
+            const timestamp = String(version.publishedAt || version.updatedAt || version.createdAt || "").trim();
+            const formattedTimestamp = timestamp ? formatPlaygroundFileDate(timestamp) : "";
+            return status + (formattedTimestamp ? " · " + formattedTimestamp : "");
+          };
+          const renderAgentVersionSelector = () => {
+            const hasVersions = agentDetailVersions.length > 0;
+            const currentTitle = getAgentDetailVersionTitle(selectedAgentDetailVersion);
+            const selectorDisabled = isAgentVersionControlBusy || !hasVersions;
+            const toggleSelectorMenu = (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (selectorDisabled) {
+                return;
+              }
+              setAgentPublishMenuOpen(false);
+              setAgentVersionsHeaderMenuOpen(false);
+              setAgentTagsMenuOpen(false);
+              setAgentVersionSelectorMenuOpen((current) => !current);
+            };
+            return React.createElement("div", { className: "playground-agents-detail-version-selector-row" },
+              renderPlaygroundPlatformPopup({
+                open: agentVersionSelectorMenuOpen && hasVersions,
+                shellRef: agentVersionSelectorMenuRef,
+                shellClassName: "playground-agents-detail-publish-split-shell playground-agents-detail-version-selector-shell",
+                menuClassName: "playground-agents-detail-publish-menu playground-agents-detail-version-selector-menu",
+                trigger: React.createElement("div", {
+                    className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control playground-agents-detail-version-selector-control"
+                      + (agentVersionSelectorMenuOpen ? " is-active" : "")
+                      + (selectorDisabled ? " is-disabled" : ""),
+                  },
+                  React.createElement("button", {
+                      type: "button",
+                      className: "playground-agents-detail-publish-main playground-agents-detail-version-selector-main",
+                      title: currentTitle,
+                      "aria-label": "Choose agent version",
+                      "aria-haspopup": "menu",
+                      "aria-expanded": agentVersionSelectorMenuOpen ? "true" : "false",
+                      disabled: selectorDisabled,
+                      onClick: toggleSelectorMenu,
+                    },
+                    React.createElement(GitBranch, { className: "playground-agents-detail-version-selector-icon", strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "playground-agents-detail-version-selector-label" }, currentTitle)
+                  ),
+                  React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
+                  React.createElement("button", {
+                      type: "button",
+                      className: "playground-agents-detail-publish-chevron",
+                      title: "Choose agent version",
+                      "aria-label": "Choose agent version",
+                      "aria-haspopup": "menu",
+                      "aria-expanded": agentVersionSelectorMenuOpen ? "true" : "false",
+                      disabled: selectorDisabled,
+                      onClick: toggleSelectorMenu,
+                    },
+                    React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                  )
+                ),
+                menuProps: {
+                  role: "menu",
+                  onClick: (event) => event.stopPropagation(),
+                },
+                children: React.createElement(React.Fragment, null,
+                  agentDetailVersions.map((version, index) => {
+                    const versionId = String(version?.id || "").trim() || "version-" + index;
+                    const isSelected = versionId === selectedAgentDetailVersionId;
+                    return React.createElement("button", {
+                        key: versionId,
+                        type: "button",
+                        className: "tb-popup-row playground-agents-detail-version-selector-option" + (isSelected ? " is-selected" : ""),
+                        role: "menuitemradio",
+                        "aria-checked": isSelected ? "true" : "false",
+                        disabled: isAgentVersionControlBusy || isSelected,
+                        onClick: () => {
+                          if (isAgentVersionControlBusy || isSelected) {
+                            return;
+                          }
+                          setAgentVersionSelectorMenuOpen(false);
+                          void restoreAgentVersion(versionId);
+                        },
+                      },
+                      React.createElement("span", { className: "playground-agents-detail-version-selector-option-check" },
+                        isSelected
+                          ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 2.2 })
+                          : null
+                      ),
+                      React.createElement("span", { className: "playground-agents-detail-version-selector-option-copy" },
+                        React.createElement("span", { className: "playground-agents-detail-version-selector-option-title" }, getAgentDetailVersionTitle(version)),
+                        React.createElement("span", { className: "playground-agents-detail-version-selector-option-meta" }, getAgentDetailVersionMeta(version))
+                      )
+                    );
+                  })
+                )
+              }),
+              renderAgentTagsControl()
+            );
+          };
+          const handleAgentTagSubmit = (event) => {
+            event.preventDefault();
+            const nextLabel = normalizeAgentTagLabel(agentTagInputValue);
+            if (!nextLabel) {
+              return;
+            }
+            const existingKey = nextLabel.toLowerCase();
+            if (agentTagLabels.some((label) => label.toLowerCase() === existingKey)) {
+              setAgentTagInputValue("");
+              return;
+            }
+            updateAgentTagLabels([...agentTagLabels, nextLabel]);
+            setAgentTagInputValue("");
+          };
+          const removeAgentTagLabel = (labelToRemove) => {
+            const removeKey = normalizeAgentTagLabel(labelToRemove).toLowerCase();
+            if (!removeKey) {
+              return;
+            }
+            updateAgentTagLabels(agentTagLabels.filter((label) => label.toLowerCase() !== removeKey));
+          };
+          const renderAgentTagsControl = () => renderPlaygroundPlatformPopup({
+            open: agentTagsMenuOpen,
+            shellRef: agentTagsMenuRef,
+            shellClassName: "playground-agents-tags-control-shell playground-tasks-toolbar-popup-shell",
+            menuClassName: "playground-agents-tags-menu",
+            trigger: React.createElement("button", {
+                type: "button",
+                className: "playground-agents-tags-control-button" + (agentTagsMenuOpen ? " is-active" : ""),
+                "aria-label": "Edit agent tags",
+                "aria-haspopup": "menu",
+                "aria-expanded": agentTagsMenuOpen ? "true" : "false",
+                onClick: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setAgentPublishMenuOpen(false);
+                  setAgentVersionSelectorMenuOpen(false);
+                  setAgentVersionsHeaderMenuOpen(false);
+                  setAgentTagsMenuOpen((current) => !current);
+                },
+              },
+              React.createElement(Tag, { className: "playground-agents-tags-control-icon", strokeWidth: 1.8 }),
+              React.createElement("span", null, "Tags"),
+              React.createElement("span", { className: "playground-agents-tags-count" }, String(agentTagLabels.length))
+            ),
+            menuProps: {
+              role: "menu",
+              onClick: (event) => event.stopPropagation(),
+            },
+            children: React.createElement("div", { className: "playground-agents-tags-menu-content" },
+              React.createElement("form", {
+                  className: "playground-agents-tags-form",
+                  onSubmit: handleAgentTagSubmit,
+                },
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-agents-tags-input",
+                  value: agentTagInputValue,
+                  placeholder: "Add label",
+                  "aria-label": "Add agent tag",
+                  onChange: (event) => setAgentTagInputValue(event.target.value),
+                  onKeyDown: (event) => event.stopPropagation(),
+                }),
+                React.createElement("button", {
+                  type: "submit",
+                  className: "playground-agents-tags-add-button",
+                  disabled: !normalizeAgentTagLabel(agentTagInputValue),
+                  "aria-label": "Add tag",
+                }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
+              ),
+              agentTagLabels.length > 0
+                ? React.createElement("div", { className: "playground-agents-tags-list" },
+                    agentTagLabels.map((label) =>
+                      React.createElement("span", { key: label, className: "playground-agents-tags-chip" },
+                        React.createElement("span", { className: "playground-agents-tags-chip-label" }, label),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-agents-tags-chip-remove",
+                          "aria-label": "Remove " + label,
+                          onClick: () => removeAgentTagLabel(label),
+                        }, React.createElement(X, { width: 12, height: 12, strokeWidth: 2 }))
+                      )
+                    )
+                  )
+                : React.createElement("div", { className: "playground-agents-tags-empty" }, "No tags yet.")
+            )
+          });
           const renderAgentPublishSplitButton = () => renderPlaygroundPlatformPopup({
             open: agentPublishMenuOpen,
             shellRef: agentPublishMenuRef,
@@ -121314,6 +123224,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 		                  disabled: isAgentPublishControlDisabled,
 		                  onClick: () => {
 		                    setAgentPublishMenuOpen(false);
+                        setAgentVersionSelectorMenuOpen(false);
+                        setAgentTagsMenuOpen(false);
 		                    setAgentVersionsHeaderMenuOpen(false);
 		                    setAgentVersionsSidebarOpen(true);
 		                  },
@@ -121332,6 +123244,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   disabled: isAgentPublishMenuDisabled,
                   onClick: (event) => {
                     event.stopPropagation();
+                    setAgentVersionSelectorMenuOpen(false);
+                    setAgentTagsMenuOpen(false);
                     setAgentPublishMenuOpen((current) => !current);
                   },
                 },
@@ -121354,7 +123268,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     void action.onClick();
                   },
                 },
-	                React.createElement(action.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+	                React.createElement(getPlaygroundSafeIconComponent(action.Icon, Circle), { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
 	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
 	                  React.createElement("span", null, action.label)
 	                ),
@@ -121382,6 +123296,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             })
           );
 
+          const agentSharedTeamIds = getAgentSharedTeamIds(draftAgent);
+          const agentVisibilityLabel = agentSharedTeamIds.length > 0 ? "Public" : "Private";
 	          const agentProfileSection = React.createElement("div", { className: "playground-agents-profile-section" },
 	            React.createElement("div", { className: "profile-editor-avatar-wrap playground-agents-profile-avatar-wrap" },
               React.createElement("div", {
@@ -121450,84 +123366,56 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   title: draftAgent.name || (isTeamAgent ? "Team" : "Agent"),
                   onKeyDown: (event) => event.stopPropagation(),
                   onChange: (event) => updateAgentField("name", event.target.value),
-                })
+                }),
+                React.createElement("span", {
+                  className: "playground-agents-visibility-label" + (agentVisibilityLabel === "Public" ? " is-public" : " is-private"),
+                  title: agentVisibilityLabel === "Public" ? "Shared with a team" : "Not shared with a team",
+                }, agentVisibilityLabel)
               )
-            ),
-            agentDetailSidebarCollapsed
-              ? React.createElement("div", { className: "playground-agents-detail-profile-actions" },
-                  canShowAgentDetailHeaderPublish
-                    ? renderAgentPublishSplitButton()
-                    : null,
-                  renderAgentSidebarToggleButton()
-                )
-              : null
+            )
           );
-          const agentDetailSidebarControls = !agentDetailSidebarCollapsed
-            ? React.createElement("div", { className: "playground-agents-detail-sidebar-controls" },
-                canShowAgentDetailHeaderPublish
-                  ? renderAgentPublishSplitButton()
-                  : null,
-                renderAgentSidebarToggleButton()
-              )
-            : null;
+          const agentDetailSidebarControls = React.createElement("div", { className: "playground-agents-detail-sidebar-controls playground-agents-detail-top-controls-actions" },
+            canShowAgentDetailHeaderPublish
+              ? renderAgentPublishSplitButton()
+              : null,
+            renderAgentSidebarToggleButton()
+          );
+          const agentDetailTopControls = React.createElement("div", { className: "playground-agents-detail-top-controls" },
+            renderAgentVersionSelector(),
+            agentDetailSidebarControls
+          );
 
-          const agentModelDetailRows = isTeamAgent
-            ? React.createElement(React.Fragment, null,
-                renderAgentFactRow("Model",
-                  renderAgentFactValue(teamDerivedModelMeta?.label || "Select orchestrator first")
-                )
-              )
-            : React.createElement(React.Fragment, null,
-                renderAgentFactRow("Model",
-                  isDefaultAgentConfigurationLocked
-                    ? renderAgentFactValue(selectedAgentModel?.label || "Select model")
-                    : renderPlaygroundAgentModelButton(
-                        selectedAgentModel,
-                        () => openAgentModelPicker("detail"),
-                        false,
-                        true
-                      )
-                ),
-                hasDeepResearchSkillEnabled
-                  ? renderAgentFactRow("Deep Research Model",
-                      isDefaultAgentConfigurationLocked
-                        ? renderAgentFactValue(selectedDeepResearchModel?.label || "Gemini 3.1 Flash")
-                        : React.createElement("div", {
-                            className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup" + (agentModelPopover === "deep-research" ? " is-open" : ""),
-                            ref: agentModelPopover === "deep-research" ? agentModelPopoverRef : null,
-                          },
-                          React.createElement("button", {
-                            ref: agentDeepResearchModelTriggerRef,
-                            type: "button",
-                            className: "playground-environments-runtime-value-button",
-                            onClick: () => {
-                              setAgentModelPopover((current) => current === "deep-research" ? "" : "deep-research");
-                            },
-                          },
-                            React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedDeepResearchModel?.label || "Gemini 3.1 Flash"),
-                            React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                          ),
-                          agentModelPopover === "deep-research"
-                            ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                                PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.map((option) =>
-                                  React.createElement("button", {
-                                      key: option.id,
-                                      type: "button",
-                                      className: "tb-popup-row tb-popup-row-select" + ((draftAgent.deepResearchModel || "") === option.id ? " selected" : ""),
-                                      onClick: () => {
-                                        updateAgentField("deepResearchModel", option.id);
-                                        setAgentModelPopover("");
-                                      },
-                                    },
-                                    React.createElement("span", null, option.label)
-                                  )
-                                )
-                              )
-                            : null
-                        )
-                    )
-                  : null
-              );
+          const renderAgentReadonlyModelValue = (modelMeta) => {
+            const providerIcon = getPlaygroundAgentModelProviderIcon(modelMeta);
+            return React.createElement("span", {
+                className: "playground-agents-detail-about-model-readonly",
+                title: modelMeta?.label || "Select model",
+              },
+              providerIcon
+                ? React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
+                    React.createElement("img", {
+                      src: providerIcon.src,
+                      alt: "",
+                      draggable: "false",
+                      className: "playground-agents-model-provider-icon" + (providerIcon.className ? " " + providerIcon.className : ""),
+                    })
+                  )
+                : React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
+                    React.createElement(Bot, { width: 14, height: 14, strokeWidth: 1.8 })
+                  ),
+              React.createElement("span", { className: "playground-agents-detail-about-model-readonly-label" }, modelMeta?.label || "Select model")
+            );
+          };
+          const agentPrimaryModelControl = isTeamAgent
+            ? renderAgentFactValue(teamDerivedModelMeta?.label || "Select orchestrator first")
+            : isDefaultAgentConfigurationLocked
+              ? renderAgentReadonlyModelValue(selectedAgentModel)
+              : renderPlaygroundAgentModelButton(
+                  selectedAgentModel,
+                  () => openAgentModelPicker("detail"),
+                  false,
+                  true
+                );
 
           const agentDetailPerformanceRangeOptions = [
             { id: "5d", label: "5D", bucketCount: 5 },
@@ -122046,50 +123934,95 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             )
           );
 
+          const renderAgentAboutRow = (key, icon, content, options = {}) => {
+            const isButton = typeof options.onClick === "function";
+            const Element = isButton ? "button" : "div";
+            const rowProps = {
+              key,
+              className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-agents-detail-about-row"
+                + (options.extraClassName ? " " + options.extraClassName : ""),
+              title: options.title,
+            };
+            if (isButton) {
+              rowProps.type = "button";
+              rowProps.onClick = options.onClick;
+              rowProps["aria-label"] = options.ariaLabel || options.title;
+            }
+            return React.createElement(Element, rowProps,
+              icon
+                ? React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" }, icon)
+                : null,
+              React.createElement("span", { className: "playground-project-overview-sidebar-resource-label playground-agents-detail-about-value" }, content)
+            );
+          };
+          const renderAgentPermissionBars = () => {
+            const normalizedPermissionSet = normalizePlaygroundPermissionSet(draftAgent.permissionSet, "agent");
+            return React.createElement("div", { className: "playground-agents-detail-permission-bars" },
+              PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
+                const ringAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
+                const progress = getPlaygroundPermissionAccessProgress(ringAccess);
+                const accessLabel = getPlaygroundPermissionAccessLabel(ringAccess);
+                return React.createElement("button", {
+                    key: ring.id,
+                    type: "button",
+                    className: "playground-agents-detail-permission-meter is-" + ring.id.replace("_", "-"),
+                    title: ring.shortLabel + ": " + accessLabel,
+                    "aria-label": "Open permissions tab. " + ring.shortLabel + ": " + accessLabel,
+                    onClick: () => setAgentDetailTab("permissions"),
+                  },
+                  React.createElement("span", {
+                    className: "playground-agents-detail-permission-meter-track",
+                    "aria-hidden": "true",
+                    style: {
+                      "--agent-permission-bar-progress": progress + "%",
+                      "--agent-permission-bar-active": getPlaygroundPermissionRingEndColor(ring.id, 1),
+                      "--agent-permission-bar-muted": getPlaygroundPermissionRingEndColor(ring.id, 0.2),
+                    },
+                  }),
+                  React.createElement("span", { className: "playground-agents-detail-permission-meter-copy" },
+                    React.createElement("span", {
+                      className: "playground-agents-detail-permission-meter-swatch",
+                      "aria-hidden": "true",
+                      style: {
+                        "--agent-permission-bar-active": getPlaygroundPermissionRingEndColor(ring.id, 1),
+                      },
+                    }),
+                    React.createElement("span", { className: "playground-agents-detail-permission-meter-title" }, ring.shortLabel)
+                  )
+                );
+              })
+            );
+          };
           const agentPropertiesSidebar = React.createElement("aside", {
               className: "playground-project-overview-sidebar playground-agents-detail-sidebar"
                 + (agentModelPopover || agentOwnerPopoverOpen ? " is-popover-open" : ""),
               "aria-label": isTeamAgent ? "Team settings" : "Agent settings",
             },
-            agentDetailSidebarControls,
             React.createElement("section", {
-                className: "playground-project-overview-sidebar-card",
+                className: "playground-project-overview-sidebar-card playground-agents-detail-about-card",
               },
               React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties")
+                React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "About")
               ),
-              React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
-                renderAgentOwnerRow(),
-                agentModelDetailRows,
-                renderAgentFactRow("Email",
-                  renderAgentCopyableFactValue("email", agentEmailAddress, "email", "", agentEmailAddress || "No email address available")
-                ),
-                renderAgentFactRow("Agent ID",
-                  renderAgentCopyableFactValue("agent-id", draftAgent.id, "agent ID", "is-id", draftAgent.id || "Unsaved agent")
-                ),
-                renderAgentFactRow("Published Version",
+              React.createElement("div", { className: "playground-agents-detail-sidebar-actions playground-agents-detail-about-list" },
+                renderAgentAboutRow(
+                  "email",
+                  React.createElement(Mail, { width: 14, height: 14, strokeWidth: 1.85 }),
                   React.createElement("span", {
-                    className: "playground-environments-editor-fact-value",
-                    title: publishedAgentVersionLabel,
-                  }, publishedAgentVersionLabel)
+                    className: "playground-agents-detail-about-email",
+                    title: agentEmailAddress || "No email address available",
+                  }, agentEmailAddress || "No email address available"),
+                  {
+                    extraClassName: "is-email",
+                    title: agentEmailAddress || "No email address available",
+                  }
                 ),
-                renderAgentFactRow("Created",
-                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftAgent.createdAt))
-                ),
-                renderAgentFactRow("Updated",
-                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftAgent.updatedAt))
-                ),
-                renderAgentPermissionRow(),
-                isTeamAgent
-                  ? renderAgentFactRow("Orchestrator",
-                      React.createElement("span", { className: "playground-environments-editor-fact-value" }, selectedTeamOrchestrator?.name || "Not selected")
-                    )
-                  : null,
-                isTeamAgent
-                  ? renderAgentFactRow("Subagents",
-                      React.createElement("span", { className: "playground-environments-editor-fact-value" }, String(selectedTeamSubagentIds.length))
-                    )
-                  : null
+                renderAgentAboutRow(
+                  "model",
+                  null,
+                  agentPrimaryModelControl,
+                  { extraClassName: "is-model" }
+                )
               )
             ),
             React.createElement("section", { className: "playground-project-overview-sidebar-card playground-agents-detail-actions-card" },
@@ -122128,45 +124061,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     React.createElement(Split, { width: 14, height: 14, strokeWidth: 1.85 })
                   ),
                   React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Copy Agent")
-                ),
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
-                    onClick: () => {
-                      setAgentActionsPopoverOpen(false);
-                      if (agentAssistantOpen) {
-                        setAgentAssistantOpen(false);
-                        return;
-                      }
-                      openAgentAssistant(selectedAgentAssistantCommandType);
-                    },
-                  },
-                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                    React.createElement(ChartColumnIncreasing, { width: 14, height: 14, strokeWidth: 1.85 })
-                  ),
-                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Improve Instructions")
-                ),
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
-                    onClick: openTeamComposerFromCurrentAgent,
-                  },
-                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.85 })
-                  ),
-                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Add to Agent Team")
-                ),
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
-                    onClick: handleAgentProfileNewThread,
-                  },
-                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                    React.createElement(MessageCircle, { width: 14, height: 14, strokeWidth: 1.85 })
-                  ),
-                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Start Thread")
                 )
               )
+            ),
+            React.createElement("section", { className: "playground-project-overview-sidebar-card playground-agents-detail-owner-card" },
+              React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Owner")
+              ),
+              React.createElement("div", { className: "playground-agents-detail-sidebar-actions playground-agents-detail-owner-section-body" },
+                renderAgentOwnerRow({ compact: true })
+              )
+            ),
+            React.createElement("section", { className: "playground-project-overview-sidebar-card playground-agents-detail-permissions-card" },
+              React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
+                React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Permissions")
+              ),
+              renderAgentPermissionBars()
             )
           );
 
@@ -123047,11 +124957,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               ? formatPlaygroundEvaluationDate(value)
               : (formatPlaygroundFileDate(value) || "Never")
           );
-          const formatAgentEvaluationCt = (value) => (
-            typeof formatPlaygroundEvaluationCostCt === "function"
-              ? formatPlaygroundEvaluationCostCt(value)
-              : formatSettingsComputeTokens(value)
-          );
           const getAgentEvaluationActiveVersion = () => {
             const selectedVersion = typeof getDraftAgentSelectedVersion === "function" ? getDraftAgentSelectedVersion(draftAgent) : null;
             const activeVersion = typeof getDraftAgentActiveVersion === "function" ? getDraftAgentActiveVersion(draftAgent) : null;
@@ -123831,25 +125736,28 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const agentEvaluationsSection = selectedAgentEvaluationRow
             ? renderAgentEvaluationDetailSection(selectedAgentEvaluationRow)
             : renderAgentEvaluationListSection();
+          const normalizedAgentDetailTab = agentDetailTab === "threads" ? "insights" : agentDetailTab;
           const agentDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs" },
             React.createElement("div", { className: "playground-project-overview-chart-tabs" },
               [
-                { id: "general", label: "General" },
-                { id: "threads", label: "Threads" },
-                { id: "evaluation", label: "Evaluation" },
-                { id: "guardrails", label: "Guardrails" },
-                { id: "permissions", label: "Permissions" },
-              ].map((tab) =>
-                React.createElement("button", {
+                { id: "general", label: "General", Icon: LayoutGrid },
+                { id: "insights", label: "Insights", Icon: ChartNoAxesColumnIncreasing },
+                { id: "evaluation", label: "Evaluation", Icon: ChartColumnIncreasing },
+                { id: "guardrails", label: "Guardrails", Icon: Shield },
+                { id: "permissions", label: "Permissions", Icon: FingerprintPattern },
+              ].map((tab) => {
+                const TabIcon = tab.Icon;
+                return React.createElement("button", {
                     key: tab.id,
                     type: "button",
-                    className: "playground-project-overview-chart-tab" + (agentDetailTab === tab.id ? " is-active" : ""),
+                    className: "playground-project-overview-chart-tab" + (normalizedAgentDetailTab === tab.id ? " is-active" : ""),
                     onClick: () => setAgentDetailTab(tab.id),
-                    "aria-pressed": agentDetailTab === tab.id ? "true" : "false",
+                    "aria-pressed": normalizedAgentDetailTab === tab.id ? "true" : "false",
                   },
-                  tab.label
-                )
-              )
+                  TabIcon ? React.createElement(TabIcon, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.7 }) : null,
+                  React.createElement("span", null, tab.label)
+                );
+              })
             )
           );
 
@@ -123948,7 +125856,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             { id: "code", label: "Code", icon: CodeXml },
             { id: "link", label: "Link", icon: Link2 },
           ];
-          const instructionsSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section" },
+          const instructionsSection = React.createElement("div", {
+              ref: agentInstructionsSectionRef,
+              className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section"
+                + (agentInstructionsHeaderStuck ? " is-header-stuck" : ""),
+            },
             React.createElement("div", { className: "playground-tasks-detail-section-header" },
               React.createElement("div", { className: "playground-tasks-detail-section-title" }, isTeamAgent ? "Team Instructions" : "Instructions"),
               isDefaultAgentConfigurationLocked
@@ -124042,16 +125954,19 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             )
           );
 
-          const agentDetailActiveSection = agentDetailTab === "permissions"
+          const agentInsightsSection = React.createElement(React.Fragment, null,
+            agentUsageChartSection,
+            agentThreadsSection
+          );
+          const agentDetailActiveSection = normalizedAgentDetailTab === "permissions"
             ? agentPermissionsSection
-            : agentDetailTab === "guardrails"
+            : normalizedAgentDetailTab === "guardrails"
               ? agentGuardrailsSection
-            : agentDetailTab === "evaluation"
+            : normalizedAgentDetailTab === "evaluation"
               ? agentEvaluationsSection
-            : agentDetailTab === "threads"
-              ? agentThreadsSection
+            : normalizedAgentDetailTab === "insights"
+              ? agentInsightsSection
               : React.createElement(React.Fragment, null,
-                  agentUsageChartSection,
                   isTeamAgent
                     ? renderEditorSection("team", "Team Setup", "", teamSection, null, false)
                     : null,
@@ -124060,8 +125975,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const agentDetailWorkspaceSection = React.createElement("div", {
               className: "playground-project-overview-layout playground-agents-detail-overview-layout" + (agentDetailSidebarCollapsed ? " is-sidebar-collapsed" : ""),
             },
+            agentDetailTabs,
+            agentDetailTopControls,
             React.createElement("div", { className: "playground-project-overview-main playground-agents-detail-overview-main" },
-              agentDetailTabs,
               agentDetailActiveSection
             ),
             agentPropertiesSidebar
@@ -124076,7 +125992,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
 	          return React.createElement("div", { className: agentDetailMainClassName, ref: agentDetailMainRef, style: agentDetailMainStyle },
 	            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-	              React.createElement("div", { className: "playground-agents-detail-content" + ((agentDetailTab === "general" || agentDetailTab === "permissions" || agentDetailTab === "threads" || agentDetailTab === "evaluation" || agentDetailTab === "guardrails") ? " is-agent-overview-general" : "") },
+	              React.createElement("div", { className: "playground-agents-detail-content" + ((normalizedAgentDetailTab === "general" || normalizedAgentDetailTab === "insights" || normalizedAgentDetailTab === "permissions" || normalizedAgentDetailTab === "evaluation" || normalizedAgentDetailTab === "guardrails") ? " is-agent-overview-general" : "") },
 		                agentResourceDetailBackButton,
 		                agentProfileSection,
 	                agentDetailWorkspaceSection
@@ -124193,6 +126109,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                            className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
 	                            onClick: (event) => event.stopPropagation(),
 	                          },
+                              React.createElement("div", { className: "playground-agents-detail-action-menu-meta" },
+                                [
+                                  ["ID", draftAgent.id || "Unsaved agent"],
+                                  ["Created", formatPlaygroundFileDate(draftAgent.createdAt)],
+                                  ["Updated", formatPlaygroundFileDate(draftAgent.updatedAt)],
+                                ].map(([label, value]) =>
+                                  React.createElement("div", { key: label, className: "playground-agents-detail-action-menu-meta-row" },
+                                    React.createElement("span", { className: "playground-agents-detail-action-menu-meta-label" }, label),
+                                    React.createElement("span", {
+                                      className: "playground-agents-detail-action-menu-meta-value",
+                                      title: value,
+                                    }, value)
+                                  )
+                                )
+                              ),
 		                            React.createElement("button", {
 		                              type: "button",
 		                              className: "tb-popup-row",
@@ -124530,6 +126461,100 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           );
         }
 
+        function renderAgentVersionChangesPublishAction() {
+          const canShowPublish = Boolean(
+            !agentCreationSetupOpen
+            && draftAgent?.id
+            && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
+            && !draftAgent.isSystem
+            && !draftAgent.isDefault
+            && !isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
+          );
+          if (!canShowPublish) {
+            return null;
+          }
+          const isVersionControlBusy = saveState.isSaving || agentVersionState.status === "loading";
+          const isPublishControlDisabled = Boolean(!draftAgent || isVersionControlBusy);
+          const isPublishMenuDisabled = Boolean(!draftAgent || isVersionControlBusy);
+          const versionPopupActions = getAgentVersionPopupActions();
+          return renderPlaygroundPlatformPopup({
+            open: agentPublishMenuOpen,
+            shellRef: agentPublishMenuRef,
+            shellClassName: "playground-agents-detail-publish-split-shell",
+            menuClassName: "playground-agents-detail-publish-menu",
+            trigger: React.createElement("div", {
+                className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control"
+                  + (agentVersionsSidebarOpen ? " is-active" : "")
+                  + (isPublishControlDisabled ? " is-disabled" : ""),
+              },
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-detail-publish-main",
+                  title: "Open agent versions",
+                  "aria-label": "Open agent versions",
+                  "aria-expanded": agentVersionsSidebarOpen ? "true" : "false",
+                  disabled: isPublishControlDisabled,
+                  onClick: () => {
+                    setAgentPublishMenuOpen(false);
+                    setAgentVersionSelectorMenuOpen(false);
+                    setAgentTagsMenuOpen(false);
+                    setAgentVersionsHeaderMenuOpen(false);
+                    setAgentVersionsSidebarOpen(true);
+                  },
+                },
+                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Publish")
+              ),
+              React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-detail-publish-chevron",
+                  title: "Version save options",
+                  "aria-label": "Version save options",
+                  "aria-haspopup": "menu",
+                  "aria-expanded": agentPublishMenuOpen ? "true" : "false",
+                  disabled: isPublishMenuDisabled,
+                  onClick: (event) => {
+                    event.stopPropagation();
+                    setAgentVersionSelectorMenuOpen(false);
+                    setAgentTagsMenuOpen(false);
+                    setAgentPublishMenuOpen((current) => !current);
+                  },
+                },
+                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+              )
+            ),
+            menuProps: {
+              role: "menu",
+              onClick: (event) => event.stopPropagation(),
+            },
+            children: React.createElement(React.Fragment, null,
+              versionPopupActions.map((action) => React.createElement("button", {
+                  key: action.label,
+                  type: "button",
+                  className: "tb-popup-row",
+                  role: "menuitem",
+                  disabled: isPublishMenuDisabled || action.disabled,
+                  onClick: () => {
+                    setAgentPublishMenuOpen(false);
+                    void action.onClick();
+                  },
+                },
+                React.createElement(getPlaygroundSafeIconComponent(action.Icon, Circle), { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, action.label)
+                ),
+                action.shortcut
+                  ? React.createElement("span", {
+                      className: "playground-agents-detail-publish-menu-shortcut",
+                      "aria-hidden": "true",
+                    }, action.shortcut)
+                  : null
+              ))
+            )
+          });
+        }
+
         function renderAgentVersionChangesPage() {
           if (!agentVersionChangesState) {
             return null;
@@ -124574,6 +126599,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
               renderCompareSelect(displayRightSource.id, orderedCompareSources.rightStateSide)
             ),
+            actions: renderAgentVersionChangesPublishAction(),
             files: diffFiles,
             backIcon: ArrowLeft,
             backText: "Back",
@@ -154490,7 +156516,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             React.createElement("div", { className: "playground-mission-control-capability-list" },
               capabilities.map((capability) =>
                 React.createElement("div", { key: capability.title, className: "playground-mission-control-capability-item" },
-                  React.createElement(capability.Icon, { className: "playground-mission-control-capability-icon", strokeWidth: 1.8 }),
+                  React.createElement(getPlaygroundSafeIconComponent(capability.Icon, Circle), { className: "playground-mission-control-capability-icon", strokeWidth: 1.8 }),
                   React.createElement("div", { className: "playground-mission-control-capability-copy-shell" },
                     React.createElement("div", { className: "playground-mission-control-capability-title" }, capability.title),
                     React.createElement("div", { className: "playground-mission-control-capability-copy" }, capability.copy)
@@ -155201,7 +157227,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                         metric.label
                                           ? React.createElement("div", { className: "playground-mission-control-status-label " + metric.toneClassName },
                                               React.createElement("span", null, metric.label),
-                                              React.createElement(metric.Icon, { strokeWidth: 1.8 })
+                                              React.createElement(getPlaygroundSafeIconComponent(metric.Icon, Circle), { strokeWidth: 1.8 })
                                             )
                                           : null
                                       )
@@ -160249,6 +162275,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         });
         const [selectedEvaluationRunId, setSelectedEvaluationRunId] = useState("");
         const [selectedEvaluationCaseId, setSelectedEvaluationCaseId] = useState("");
+        const [evaluationRunReturnTarget, setEvaluationRunReturnTarget] = useState(null);
         const [evaluationsPageMode, setEvaluationsPageMode] = useState("overview");
         const [evaluationDetailTab, setEvaluationDetailTab] = useState("general");
         const [evaluationsSearchQuery, setEvaluationsSearchQuery] = useState("");
@@ -160280,11 +162307,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [evaluationJsonlImportOpen, setEvaluationJsonlImportOpen] = useState(false);
         const [evaluationJsonlImportValue, setEvaluationJsonlImportValue] = useState("");
         const [evaluationJsonlImportError, setEvaluationJsonlImportError] = useState("");
-        const [fineTuningJobs, setFineTuningJobs] = useState(() => readPlaygroundFineTuningJobsFromStorage());
-        const [selectedFineTuningJobId, setSelectedFineTuningJobId] = useState(() => {
-          const storedJobs = readPlaygroundFineTuningJobsFromStorage();
-          return storedJobs[0]?.id || "";
-        });
+        const [fineTuningJobs, setFineTuningJobs] = useState([]);
+        const [selectedFineTuningJobId, setSelectedFineTuningJobId] = useState("");
         const [fineTuningPageMode, setFineTuningPageMode] = useState("overview");
         const [fineTuningSearchQuery, setFineTuningSearchQuery] = useState("");
         const [fineTuningCreateModalOpen, setFineTuningCreateModalOpen] = useState(false);
@@ -160623,9 +162647,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
           writePlaygroundEvaluationSetsToStorage(evaluationSets);
         }, [evaluationSets]);
         useEffect(() => {
-          writePlaygroundFineTuningJobsToStorage(fineTuningJobs);
-        }, [fineTuningJobs]);
-        useEffect(() => {
           if (selectedGuardrailSetId && allGuardrailSets.some((set) => set.id === selectedGuardrailSetId)) {
             return;
           }
@@ -160674,6 +162695,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setEvaluationsPageMode(evaluationSets[0]?.id ? "detail" : "overview");
           }
         }, [evaluationSets, evaluationsPageMode, selectedEvaluationSetId]);
+        useEffect(() => {
+          if (activePage === "evaluations" || !evaluationRunReturnTarget) {
+            return;
+          }
+          setEvaluationRunReturnTarget(null);
+        }, [activePage, evaluationRunReturnTarget]);
         useEffect(() => {
           if (selectedFineTuningJobId && fineTuningJobs.some((job) => normalizePlaygroundFineTuningJob(job).id === selectedFineTuningJobId)) {
             return;
@@ -174800,6 +176827,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            { id: "databases", kind: "database", label: "Databases", Icon: Database },
 	            { id: "authentication", kind: "auth", label: "Authentication", Icon: UsersRound },
 	            { id: "agent-runtime", kind: "agent_runtime", label: "Agent Runtime", Icon: Bot },
+	            { id: "voice-agents", kind: "voice_agent", label: "Voice Agents", Icon: AudioLines },
 	            { id: "secrets", kind: "secrets", label: "Secrets", Icon: Shield },
 	            { id: "payments", kind: "payments", label: "Payments", Icon: ReceiptText },
 	          ];
@@ -174931,6 +176959,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
           const requestedEvaluationId = String(options.evaluationId || "").trim();
           const requestedRunId = String(options.evaluationRunId || "").trim();
+          const sourceReturnTarget = options.returnTarget && typeof options.returnTarget === "object" && !Array.isArray(options.returnTarget)
+            ? options.returnTarget
+            : null;
+          const returnFineTuneJobId = String(sourceReturnTarget?.fineTuneJobId || sourceReturnTarget?.jobId || "").trim();
+          setEvaluationRunReturnTarget(
+            sourceReturnTarget?.page === "fine-tuning" && returnFineTuneJobId
+              ? {
+                  page: "fine-tuning",
+                  fineTuneJobId: returnFineTuneJobId,
+                }
+              : null
+          );
           if (requestedEvaluationId) {
             setSelectedEvaluationSetId(requestedEvaluationId);
           }
@@ -181072,7 +183112,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     className: "playground-settings-plans-quick-link",
                                     onClick: link.onClick,
                                   },
-                                    React.createElement(link.Icon, { className: "playground-settings-plans-quick-link-icon", strokeWidth: 1.8 }),
+                                    React.createElement(getPlaygroundSafeIconComponent(link.Icon, Circle), { className: "playground-settings-plans-quick-link-icon", strokeWidth: 1.8 }),
                                     React.createElement("span", { className: "playground-settings-plans-quick-link-label" }, link.title)
                                   )
                                 )
@@ -181318,7 +183358,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       React.createElement("div", { key: target.id, className: "playground-settings-runtime-target" },
                         React.createElement("div", { className: "playground-settings-runtime-target-header" },
                           React.createElement("div", { className: "playground-settings-runtime-target-title" },
-                            React.createElement(target.Icon, { className: "playground-settings-runtime-target-icon", strokeWidth: 1.8 }),
+                            React.createElement(getPlaygroundSafeIconComponent(target.Icon, Circle), { className: "playground-settings-runtime-target-icon", strokeWidth: 1.8 }),
                             React.createElement("span", null, target.title)
                           ),
                           React.createElement("span", { className: "playground-settings-runtime-status" + target.statusClass }, target.statusLabel)
@@ -188431,6 +190471,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           developHomeSection,
           environmentId,
           evaluationsPageMode,
+          fineTuningPageMode,
           filesPageTopNav?.contentMode,
           filesPageTopNav?.environmentId,
           filesPageTopNav?.path,
@@ -188455,6 +190496,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           selectedGuardrailSetId,
           selectedEvaluationRunId,
           selectedEvaluationSetId,
+          selectedFineTuningJobId,
           settingsSection,
           tasksHeaderState.detailMode,
           tasksHeaderState.mode,
@@ -196032,7 +198074,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 onClick: () => {
                   setGuardrailPublishMenuOpen(false);
                   setGuardrailVersionsHeaderMenuOpen(false);
-                  setGuardrailVersionsSidebarOpen(true);
+                  openGuardrailVersionChangesPage();
                 },
               });
             }
@@ -196560,7 +198602,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       action.onClick();
                     },
                   },
-                  React.createElement(action.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
+                  React.createElement(getPlaygroundSafeIconComponent(action.Icon, Circle), { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
                   React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                     React.createElement("span", null, action.label)
                   ),
@@ -196613,6 +198655,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
                 renderCompareSelect(rightSource.id, "right")
               ),
+              actions: renderGuardrailPublishSplitButton(),
               files: diffFiles,
               backIcon: ArrowLeft,
               backText: "Back",
@@ -197310,6 +199353,21 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setSelectedEvaluationCaseId,
             evaluationsPageMode,
             setEvaluationsPageMode,
+            evaluationRunReturnTarget,
+            onEvaluationRunBack: (target) => {
+              const fineTuneJobId = String(target?.fineTuneJobId || target?.jobId || "").trim();
+              setEvaluationRunReturnTarget(null);
+              if (target?.page === "fine-tuning" && fineTuneJobId) {
+                openFineTuningPage({
+                  mode: "detail",
+                  jobId: fineTuneJobId,
+                });
+                return;
+              }
+              setSelectedEvaluationRunId("");
+              if (typeof setSelectedEvaluationCaseId === "function") setSelectedEvaluationCaseId("");
+              setEvaluationsPageMode("detail");
+            },
             evaluationDetailTab,
             setEvaluationDetailTab,
             evaluationsSearchQuery,
@@ -197355,11 +199413,23 @@ ${PROJECT_OVERVIEW_SCRIPT}
             currentUserEmail: hasSessionAuth ? accountEmail : "",
             currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
             onOpenThread: handleThreadSelect,
-            onOpenEvaluationRun: (evaluationId, evaluationRunId) => {
+            onOpenEvaluationRun: (evaluationId, evaluationRunId, sourceContext = {}) => {
+              const fineTuneJobId = String(
+                sourceContext?.fineTuneJobId
+                || sourceContext?.jobId
+                || selectedFineTuningJobId
+                || ""
+              ).trim();
               openEvaluationsPage({
                 mode: "run",
                 evaluationId,
                 evaluationRunId,
+                returnTarget: fineTuneJobId
+                  ? {
+                      page: "fine-tuning",
+                      fineTuneJobId,
+                    }
+                  : null,
               });
             },
             onFineTuningThreadStarted: (threadRecord) => {
@@ -198043,10 +200113,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     className: "playground-configure-overview-card",
                     onClick: card.onClick,
                   },
-                  React.createElement("div", { className: "playground-configure-overview-card-top" },
-                    React.createElement("span", { className: "playground-configure-overview-card-icon", "aria-hidden": "true" },
-                      React.createElement(card.Icon, { strokeWidth: 1.8 })
-                    ),
+	                  React.createElement("div", { className: "playground-configure-overview-card-top" },
+	                    React.createElement("span", { className: "playground-configure-overview-card-icon", "aria-hidden": "true" },
+	                      React.createElement(getPlaygroundSafeIconComponent(card.Icon, Circle), { strokeWidth: 1.8 })
+	                    ),
                     React.createElement(ArrowUpRight, { className: "playground-configure-overview-card-arrow", strokeWidth: 1.8 })
                   ),
                   React.createElement("div", { className: "playground-configure-overview-card-copy" },
@@ -198863,10 +200933,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ),
                 React.createElement("section", { className: "playground-develop-section" },
                   React.createElement("h2", { className: "playground-develop-section-title" }, "Quick Links"),
-                  React.createElement("div", { className: "playground-develop-quick-links" },
-                    quickLinks.map((link) => {
-                      const Icon = link.Icon;
-                      return React.createElement("button", {
+	                  React.createElement("div", { className: "playground-develop-quick-links" },
+	                    quickLinks.map((link) => {
+	                      const Icon = getPlaygroundSafeIconComponent(link.Icon, Circle);
+	                      return React.createElement("button", {
                         key: link.label,
                         type: "button",
                         className: "playground-develop-quick-link",
@@ -199100,9 +201170,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
         }
 
-        function renderSidebarWorkspaceSwitcher() {
-          const activeOption = getSidebarWorkspaceOption(sidebarWorkspaceMode);
-          const ActiveIcon = activeOption.Icon;
+	        function renderSidebarWorkspaceSwitcher() {
+	          const activeOption = getSidebarWorkspaceOption(sidebarWorkspaceMode);
+	          const ActiveIcon = getPlaygroundSafeIconComponent(activeOption.Icon, Circle);
 
           return React.createElement("div", { className: "sidebar-workspace-switcher", ref: sidebarWorkspaceMenuRef },
             React.createElement("button", {
@@ -199118,10 +201188,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
               React.createElement("span", { className: "sidebar-workspace-label" }, activeOption.label),
               React.createElement(ChevronsUpDown, { className: "sidebar-workspace-trigger-chevron", strokeWidth: 1.8 })
             ),
-            sidebarWorkspaceMenuOpen
-              ? React.createElement("div", { className: "sidebar-workspace-menu" },
-                  getSidebarWorkspaceOptions().map((option) => {
-                    const OptionIcon = option.Icon;
+	            sidebarWorkspaceMenuOpen
+	              ? React.createElement("div", { className: "sidebar-workspace-menu" },
+	                  getSidebarWorkspaceOptions().map((option) => {
+	                    const OptionIcon = getPlaygroundSafeIconComponent(option.Icon, Circle);
                     const isActive = option.id === sidebarWorkspaceMode;
                     return React.createElement("button", {
                       key: option.id,
@@ -199272,6 +201342,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
 
           if (sidebarWorkspaceMode === "develop") {
+            const developServerPageItems = getDevelopServerPageItems().filter((item) => item.kind !== "api");
+            const buildDevelopServerSidebarItem = (item) => ({
+              id: "server-" + item.id,
+              label: item.label,
+              Icon: item.Icon,
+              active: isResourcesPage && activeResourcesView === "servers" && activeResourcesServerKind === item.kind,
+              onClick: () => openResourcesView("servers", { serverKind: item.kind }),
+            });
+            const agentDevelopServerPageItems = developServerPageItems.filter((item) => item.kind === "agent_runtime" || item.kind === "voice_agent");
+            const mainDevelopServerPageItems = developServerPageItems.filter((item) => item.kind !== "agent_runtime" && item.kind !== "voice_agent");
             return [
               {
                 id: "develop-home",
@@ -199285,13 +201365,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 type: "subtitle",
                 label: "Resources",
               },
-              ...getDevelopServerPageItems().filter((item) => item.kind !== "api").map((item) => ({
-                id: "server-" + item.id,
-                label: item.label,
-                Icon: item.Icon,
-                active: isResourcesPage && activeResourcesView === "servers" && activeResourcesServerKind === item.kind,
-                onClick: () => openResourcesView("servers", { serverKind: item.kind }),
-              })),
+              ...mainDevelopServerPageItems.map((item) => buildDevelopServerSidebarItem(item)),
+              {
+                id: "develop-agents-label",
+                type: "subcategory",
+                label: "Agents",
+              },
+              ...agentDevelopServerPageItems.map((item) => buildDevelopServerSidebarItem(item)),
             ];
           }
 
@@ -199351,7 +201431,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
               className: "sidebar-action-subtitle",
             }, item.label);
           }
-          const Icon = item.Icon;
+          if (item?.type === "subcategory") {
+            return React.createElement("div", {
+              key: item.id,
+              className: "sidebar-action-subtitle",
+            }, item.label);
+          }
+          const Icon = getPlaygroundSafeIconComponent(item.Icon, Circle);
           return React.createElement("button", {
             key: item.id,
             type: "button",
@@ -199494,8 +201580,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               )
             ),
             React.createElement("div", { className: "sidebar-rail-actions" },
-              sidebarNavigationItems.filter((item) => item?.type !== "subtitle").map((item) => {
-                const Icon = item.Icon;
+              sidebarNavigationItems.filter((item) => item?.type !== "subtitle" && item?.type !== "subcategory").map((item) => {
+                const Icon = getPlaygroundSafeIconComponent(item.Icon, Circle);
                 return React.createElement("button", {
                   key: item.id,
                   type: "button",
@@ -199507,8 +201593,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               })
             ),
             React.createElement("div", { className: "sidebar-rail-footer" },
-              sidebarFooterNavigationItems.filter((item) => item?.type !== "subtitle").map((item) => {
-                const Icon = item.Icon;
+              sidebarFooterNavigationItems.filter((item) => item?.type !== "subtitle" && item?.type !== "subcategory").map((item) => {
+                const Icon = getPlaygroundSafeIconComponent(item.Icon, Circle);
                 return React.createElement("button", {
                   key: item.id,
                   type: "button",

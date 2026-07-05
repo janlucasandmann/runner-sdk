@@ -304,6 +304,21 @@ export const MODELS_PAGE_CSS = String.raw`
 `;
 
 export const MODELS_PAGE_SCRIPT = String.raw`
+      const PLAYGROUND_MANAGED_MODELS_CT_PER_DOLLAR = 100;
+
+      function formatPlaygroundManagedLegacyCtPrice(value, unitLabel) {
+        const numericValue = Math.max(0, Number(value || 0));
+        const dollars = Number.isFinite(numericValue) ? numericValue / PLAYGROUND_MANAGED_MODELS_CT_PER_DOLLAR : 0;
+        const smallValue = dollars > 0 && dollars < 1;
+        const formatted = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: smallValue ? 4 : 2,
+          maximumFractionDigits: smallValue ? 4 : 2,
+        }).format(dollars);
+        return formatted + (unitLabel ? " / " + unitLabel : "");
+      }
+
       function normalizePlaygroundManagedModelsTab(tabId) {
         const normalizedTabId = String(tabId || "").trim();
         return normalizedTabId === "image" || normalizedTabId === "video" || normalizedTabId === "deep_research"
@@ -330,7 +345,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
             maxDuration: "15s",
             resolutions: "480p, 720p",
             inputModalities: "Text, Image, Video",
-            pricingLabel: "5.5 CT / s",
+            pricingLabel: formatPlaygroundManagedLegacyCtPrice(5.5, "sec"),
             pricingRank: 5.5,
           },
           {
@@ -342,7 +357,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
             maxDuration: "12s",
             resolutions: "480p, 720p",
             inputModalities: "Text, Image, Video",
-            pricingLabel: "8.8 CT / s",
+            pricingLabel: formatPlaygroundManagedLegacyCtPrice(8.8, "sec"),
             pricingRank: 8.8,
           },
           {
@@ -367,7 +382,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
             maxDuration: "12s",
             resolutions: "480p, 720p",
             inputModalities: "Text, Image, Video",
-            pricingLabel: "24.2 CT / s",
+            pricingLabel: formatPlaygroundManagedLegacyCtPrice(24.2, "sec"),
             pricingRank: 24.2,
             subrowRank: 0,
             isPricingSubrow: true,
@@ -381,7 +396,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
             maxDuration: "12s",
             resolutions: "1080p",
             inputModalities: "Text, Image, Video",
-            pricingLabel: "60.5 CT / s",
+            pricingLabel: formatPlaygroundManagedLegacyCtPrice(60.5, "sec"),
             pricingRank: 60.5,
             subrowRank: 1,
             isPricingSubrow: true,
@@ -401,7 +416,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
             mode: isPro ? "Higher-depth research" : "Fast research",
             contextWindow: "Web, files, sources",
             speed: isPro ? "Fast" : "Very Fast",
-            pricingLabel: isPro ? "Higher CT / research run" : "Lower CT / research run",
+            pricingLabel: isPro ? "Higher cost / research run" : "Lower cost / research run",
             pricingRank: isPro ? 2 : 1,
           };
         });
@@ -412,9 +427,11 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         const medium = getPlaygroundImageGenerationComputeTokensPerImage(modelId, "medium");
         const high = getPlaygroundImageGenerationComputeTokensPerImage(modelId, "high");
         if (low === medium && medium === high) {
-          return String(medium) + " CT / image";
+          return formatPlaygroundManagedLegacyCtPrice(medium, "image");
         }
-        return "Low " + low + " CT · Medium " + medium + " CT · High " + high + " CT / image";
+        return "Low " + formatPlaygroundManagedLegacyCtPrice(low, "image")
+          + " · Medium " + formatPlaygroundManagedLegacyCtPrice(medium, "image")
+          + " · High " + formatPlaygroundManagedLegacyCtPrice(high, "image");
       }
 
       function getPlaygroundManagedImageModelOptions() {
@@ -447,7 +464,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
               label: String(qualityLabel || qualityId).trim() || qualityId,
               description: "Quality tier for GPT Image 2",
               contextWindow: String(qualityLabel || "").trim() + " quality",
-              pricingLabel: String(computeTokens) + " CT / image",
+              pricingLabel: formatPlaygroundManagedLegacyCtPrice(computeTokens, "image"),
               hidePricingLabel: false,
               pricingRank: computeTokens,
               subrowRank: qualityId === "low" ? 0 : qualityId === "medium" ? 1 : qualityId === "high" ? 2 : 99,
@@ -523,7 +540,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
             { id: "provider", label: "Provider" },
             { id: "name", label: "Name (A-Z)" },
             { id: "intelligence", label: "Highest intelligence" },
-            { id: "cost", label: "Lowest CT cost" },
+            { id: "cost", label: "Lowest cost" },
             { id: "context", label: "Largest context" },
             { id: "speed", label: "Fastest" },
           ];
@@ -531,7 +548,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         return [
           { id: "provider", label: "Provider" },
           { id: "name", label: "Name (A-Z)" },
-          { id: "cost", label: "Lowest CT cost" },
+          { id: "cost", label: "Lowest cost" },
           { id: "speed", label: "Fastest" },
         ];
       }
@@ -571,7 +588,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         if (normalizePlaygroundManagedModelsTab(tabId) === "agent") {
           return formatPlaygroundAgentModelComputeTokenCost(model?.id);
         }
-        return String(model?.pricingLabel || "Usage-based CT").trim() || "Usage-based CT";
+        return String(model?.pricingLabel || "Usage-based pricing").trim() || "Usage-based pricing";
       }
 
       function getPlaygroundManagedModelsSkillSettingsMeta(tabId) {
@@ -856,7 +873,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         const capabilityLabel = isVideoTab ? "Max Duration" : activeTab === "agent" ? "Intelligence" : "Mode";
         const scopeLabel = activeTab === "agent" ? "Context" : activeTab === "image" ? "Quality" : activeTab === "video" ? "Resolutions" : "Scope";
         const speedLabel = isVideoTab ? "Input Modalities" : "Speed";
-        const pricingLabel = activeTab === "agent" ? "Cost / mTok" : "CT pricing";
+        const pricingLabel = activeTab === "agent" ? "Cost / mTok" : "Pricing";
 
         const skillSettingsMeta = getPlaygroundManagedModelsSkillSettingsMeta(activeTab);
         const getCapabilityValue = (model) => {

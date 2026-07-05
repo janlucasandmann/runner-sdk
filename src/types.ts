@@ -263,12 +263,23 @@ export interface RunnerApiRequestOptions {
   organizationId?: string | null;
 }
 
+export type RunnerAgentVoiceMode = "off" | "web" | "phone" | "web_and_phone" | string;
+export type RunnerAgentVoiceProvider = "xai" | string;
+
 export interface RunnerAgentCreateInput {
   name: string;
   instructions?: string;
   description?: string;
   model?: string;
   guardrailSetIds?: string[];
+  voiceMode?: RunnerAgentVoiceMode;
+  voiceProvider?: RunnerAgentVoiceProvider;
+  voiceModel?: string | null;
+  voiceId?: string | null;
+  voiceInstructions?: string | null;
+  voiceLanguageHint?: string | null;
+  voiceTurnDetection?: Record<string, unknown> | null;
+  voicePronunciationReplacements?: Record<string, unknown> | null;
   metadata?: Record<string, unknown> | null;
   [key: string]: unknown;
 }
@@ -279,6 +290,14 @@ export interface RunnerAgentUpdateInput {
   description?: string;
   model?: string;
   guardrailSetIds?: string[];
+  voiceMode?: RunnerAgentVoiceMode;
+  voiceProvider?: RunnerAgentVoiceProvider;
+  voiceModel?: string | null;
+  voiceId?: string | null;
+  voiceInstructions?: string | null;
+  voiceLanguageHint?: string | null;
+  voiceTurnDetection?: Record<string, unknown> | null;
+  voicePronunciationReplacements?: Record<string, unknown> | null;
   metadata?: Record<string, unknown> | null;
   [key: string]: unknown;
 }
@@ -523,8 +542,15 @@ export interface RunnerFineTuningJob {
   beforeScore?: number | null;
   afterScore?: number | null;
   improvementScore?: number | null;
+  costUsd?: number | null;
+  fineTuningCostUsd?: number | null;
+  verificationCostUsd?: number | null;
   costCt?: number | null;
   evaluationRuns?: RunnerFineTuningJobEvaluationReference[];
+  threadTitle?: string | null;
+  targetAgentId?: string | null;
+  fineTunerAgentId?: string | null;
+  createdAgentVersion?: Record<string, unknown> | null;
   metadata?: Record<string, unknown> | null;
   createdAt?: string;
   updatedAt?: string;
@@ -534,9 +560,12 @@ export interface RunnerFineTuningJob {
 
 export interface RunnerFineTuningJobCreateInput {
   agentId: string;
+  targetAgentId?: string;
+  fineTunerAgentId?: string;
   computerId?: string;
   environmentId?: string;
   evaluationSetIds: string[];
+  evaluationSets?: unknown[];
   instructions?: string;
   name?: string;
   metadata?: Record<string, unknown> | null;
@@ -577,11 +606,102 @@ export interface RunnerAgentRecord {
   name?: string;
   instructions?: string;
   model?: string;
+  voiceMode?: RunnerAgentVoiceMode;
+  voiceProvider?: RunnerAgentVoiceProvider;
+  voiceModel?: string | null;
+  voiceId?: string | null;
+  voiceInstructions?: string | null;
+  voiceLanguageHint?: string | null;
+  voiceTurnDetection?: Record<string, unknown> | null;
+  voicePronunciationReplacements?: Record<string, unknown> | null;
   guardrailSetIds?: string[];
   guardrails?: RunnerGuardrailSet[];
   promptAdaptations?: RunnerGuardrailPromptAdaptation[];
   invisiblePromptAdaptations?: RunnerGuardrailPromptAdaptation[];
   metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerVoiceAgentPhoneNumber {
+  id: string;
+  status?: string;
+  origin?: "xai_provisioned" | "byo_trunk" | string;
+  phoneNumber?: string | null;
+  sipUri?: string | null;
+  provider?: RunnerAgentVoiceProvider;
+  channel?: "phone" | string;
+  lastError?: string | null;
+  metadata?: Record<string, unknown> | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface RunnerVoiceSession {
+  id: string;
+  agentId?: string;
+  threadId?: string | null;
+  bindingId?: string | null;
+  provider?: RunnerAgentVoiceProvider;
+  channel?: "web" | "phone" | string;
+  status?: string;
+  xaiCallId?: string | null;
+  xaiSessionId?: string | null;
+  fromNumber?: string | null;
+  toNumber?: string | null;
+  startedAt?: string | null;
+  endedAt?: string | null;
+  durationSeconds?: number | null;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerVoiceAgentRecord {
+  agent: RunnerAgentRecord;
+  voice?: {
+    mode?: RunnerAgentVoiceMode;
+    provider?: RunnerAgentVoiceProvider;
+    model?: string | null;
+    voiceId?: string | null;
+    languageHint?: string | null;
+    enabled?: boolean;
+    [key: string]: unknown;
+  };
+  phoneNumber?: RunnerVoiceAgentPhoneNumber | null;
+  recentSessions?: RunnerVoiceSession[];
+  [key: string]: unknown;
+}
+
+export interface RunnerVoiceAgentPhoneNumberInput {
+  origin?: "xai_provisioned" | "byo_trunk";
+  name?: string;
+  phoneNumber?: string;
+  webhookUrl?: string;
+  webhookName?: string;
+  sipAuth?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerVoiceAgentSessionCreateInput {
+  threadId?: string;
+  environmentId?: string;
+  title?: string;
+  [key: string]: unknown;
+}
+
+export interface RunnerVoiceAgentSessionCreateResult {
+  voiceSession: RunnerVoiceSession;
+  thread?: Record<string, unknown>;
+  xai: {
+    realtimeUrl: string;
+    clientSecret: {
+      value: string;
+      expiresAt: number;
+      [key: string]: unknown;
+    };
+    websocketProtocol: string;
+    sessionUpdate: Record<string, unknown>;
+    [key: string]: unknown;
+  };
   [key: string]: unknown;
 }
 

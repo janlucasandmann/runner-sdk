@@ -5764,20 +5764,18 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 export const PROJECT_OVERVIEW_SCRIPT = String.raw`
         function formatProjectOverviewCt(value) {
           const numericValue = Math.max(0, Number(value || 0));
-          if (!Number.isFinite(numericValue) || numericValue <= 0) {
-            return "0";
-          }
-          if (numericValue >= 1000) {
-            const compactValue = numericValue >= 10000
-              ? Math.round(numericValue / 1000)
-              : Math.round((numericValue / 1000) * 10) / 10;
-            return String(compactValue).replace(/\.0$/, "") + "k";
-          }
-          return String(Math.round(numericValue));
+          const dollars = Number.isFinite(numericValue) ? numericValue / 100 : 0;
+          const smallValue = dollars > 0 && dollars < 0.01;
+          return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            minimumFractionDigits: smallValue ? 4 : 2,
+            maximumFractionDigits: smallValue ? 4 : 2,
+          }).format(dollars);
         }
 
         function formatProjectOverviewAxisCt(value) {
-          return formatProjectOverviewCt(value) + " CT";
+          return formatProjectOverviewCt(value);
         }
 
         function formatProjectOverviewInteger(value) {
@@ -6148,7 +6146,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               frameHeight,
               svgHeight: baseSvgHeight,
               fallbackWidth: 1200,
-              ariaLabel: config?.ariaLabel || "Project compute usage chart",
+              ariaLabel: config?.ariaLabel || "Project cost chart",
             }, ({ svgWidth, svgHeight }) => {
               const plotWidth = svgWidth - marginLeft - marginRight;
               const plotHeight = svgHeight - marginTop - marginBottom;
@@ -6240,7 +6238,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             }),
             React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "No Project Cost yet"),
             React.createElement("div", { className: "playground-auth-users-empty-state-copy" },
-              "Project costs will appear here once agents, computers, or connected resources consume compute tokens."
+              "Project costs will appear here once agents, computers, or connected resources consume credits."
             )
           );
         }
@@ -6741,7 +6739,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             if (projectOverviewChartTimescale === "day") {
               return {
                 key: "day",
-                title: "Daily CT by Resource Type",
+                title: "Daily Cost by Resource Type",
                 bucketCount: 14,
                 unit: "day",
               };
@@ -6749,14 +6747,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             if (projectOverviewChartTimescale === "week") {
               return {
                 key: "week",
-                title: "Weekly CT by Resource Type",
+                title: "Weekly Cost by Resource Type",
                 bucketCount: 8,
                 unit: "week",
               };
             }
             return {
               key: "month",
-              title: "Monthly CT by Resource Type",
+              title: "Monthly Cost by Resource Type",
               bucketCount: 6,
               unit: "month",
             };
@@ -7580,7 +7578,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             },
             {
               id: "ct",
-              value: formatProjectOverviewCt(projectTotalCt) + " CT",
+              value: formatProjectOverviewCt(projectTotalCt),
               label: "Spent on Project",
             },
             {
@@ -9036,8 +9034,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                       yMax: maxProjectDailyCt,
                       tickFormatter: formatProjectOverviewAxisCt,
                       tall: true,
-                      ariaLabel: "Project compute token usage by resource type",
-                      emptyText: "No project compute usage yet",
+                      ariaLabel: "Project cost by resource type",
+                      emptyText: "No project cost yet",
                       emptyContent: renderProjectOverviewCostEmptyState(),
                     }),
                     React.createElement("div", { className: "playground-project-overview-chart-footer-row" },
@@ -10067,7 +10065,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   {
                     id: "dailyCT",
                     type: "bar",
-                    label: "Compute Tokens",
+                    label: "Cost",
                     data: dailyCtValues,
                     yAxisID: "ct",
                     backgroundColor: (context) => makeVerticalGradient(context, [
@@ -10180,7 +10178,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         const datasetId = context.dataset?.id || "";
                         const value = Math.max(0, Number(context.parsed?.y || 0));
                         if (datasetId === "dailyCT") {
-                          return "Compute Tokens: " + formatProjectOverviewCt(value) + " CT";
+                          return "Cost: " + formatProjectOverviewCt(value);
                         }
                         return String(context.dataset?.label || "Progress") + ": " + formatProjectOverviewInteger(value);
                       },
@@ -10298,7 +10296,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 ref: canvasRef,
                 className: "playground-project-overview-progress-combo-canvas",
                 role: "img",
-                "aria-label": "Project progress and daily compute token usage",
+                "aria-label": "Project progress and daily cost",
               })
             );
           }
@@ -10341,7 +10339,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               .concat({
                 id: "cost",
                 label: "Cost",
-                value: formatProjectOverviewCt(totalDailyCt) + " CT",
+                value: formatProjectOverviewCt(totalDailyCt),
               });
             const handlePerformanceRangeSelect = (nextRangeId) => {
               if (typeof setProjectOverviewPerformanceRange === "function") {
@@ -10586,10 +10584,10 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 onClick: () => typeof setProjectOverviewHomeTab === "function" && setProjectOverviewHomeTab("general"),
               }),
               React.createElement("div", { className: "playground-project-overview-cost-widget-main" },
-                React.createElement("div", { className: "playground-project-overview-cost-widget-value" }, formatProjectOverviewCt(projectTotalCt) + " CT"),
+                React.createElement("div", { className: "playground-project-overview-cost-widget-value" }, formatProjectOverviewCt(projectTotalCt)),
                 React.createElement("div", { className: "playground-project-overview-cost-widget-label" }, "Spent on project"),
                 projectHasCostData
-                  ? React.createElement("div", { className: "playground-project-overview-cost-widget-bars", "aria-label": "Project compute usage by resource type" },
+                  ? React.createElement("div", { className: "playground-project-overview-cost-widget-bars", "aria-label": "Project cost by resource type" },
                       visibleBuckets.map((bucket, bucketIndex) => {
                         const total = Math.max(0, Number(bucket?.totalCT || 0));
                         return React.createElement("div", {

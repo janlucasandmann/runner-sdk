@@ -1507,6 +1507,63 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         return Number.isFinite(numericValue) ? Math.max(0, Math.round(numericValue)) : 0;
       }
 
+      function normalizePlaygroundEvaluationUsdCost(value) {
+        const numericValue = Number(value);
+        return Number.isFinite(numericValue) ? Math.max(0, numericValue) : 0;
+      }
+
+      function readPlaygroundEvaluationUsdCost(source) {
+        const record = source && typeof source === "object" && !Array.isArray(source) ? source : {};
+        const usage = record.usage && typeof record.usage === "object" && !Array.isArray(record.usage) ? record.usage : {};
+        const metadata = record.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
+        const candidates = [
+          record.costUsd,
+          record.costUSD,
+          record.cost_usd,
+          record.usdCost,
+          record.usd_cost,
+          record.totalUsd,
+          record.totalUSD,
+          record.total_usd,
+          usage.costUsd,
+          usage.costUSD,
+          usage.cost_usd,
+          usage.usdCost,
+          usage.usd_cost,
+          usage.totalUsd,
+          usage.totalUSD,
+          usage.total_usd,
+          metadata.costUsd,
+          metadata.costUSD,
+          metadata.cost_usd,
+          metadata.usdCost,
+          metadata.usd_cost,
+          metadata.totalUsd,
+          metadata.totalUSD,
+          metadata.total_usd,
+        ];
+        for (const candidate of candidates) {
+          const numericValue = Number(candidate);
+          if (Number.isFinite(numericValue) && numericValue > 0) {
+            return numericValue;
+          }
+        }
+        const legacyTokens = normalizePlaygroundEvaluationTokenCount(
+          record.costTokens
+          ?? record.cost_tokens
+          ?? record.costCt
+          ?? record.costCT
+          ?? record.cost_ct
+          ?? record.computeTokens
+          ?? record.compute_tokens
+          ?? record.totalCT
+          ?? record.totalCt
+          ?? record.total_ct
+          ?? record.ct
+        );
+        return legacyTokens > 0 ? legacyTokens / 100 : 0;
+      }
+
       function normalizePlaygroundEvaluationCaseRunCount(value, fallback = 1) {
         const fallbackCount = Math.max(1, Math.min(50, Math.round(Number(fallback) || 1)));
         const numericValue = Number(value);
@@ -1666,6 +1723,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             ?? source.usage?.total_ct
             ?? source.usage?.ct
           ),
+          costUsd: readPlaygroundEvaluationUsdCost(source),
           costSource: String(source.costSource || source.cost_source || ""),
           status: ["queued", "running", "running_case", "waiting_for_case_summary", "running_evaluator", "scoring", "completed", "passed", "failed", "error"].includes(String(source.status || "").trim().toLowerCase())
             ? String(source.status || "").trim().toLowerCase()
@@ -1702,6 +1760,10 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           ?? source.ct
           ?? cases.reduce((sum, item) => sum + normalizePlaygroundEvaluationTokenCount(item.costTokens), 0)
         );
+        const costUsd = normalizePlaygroundEvaluationUsdCost(
+          readPlaygroundEvaluationUsdCost(source)
+          || cases.reduce((sum, item) => sum + normalizePlaygroundEvaluationUsdCost(item.costUsd), 0)
+        );
         return {
           id: String(source.id || source.runId || source.run_id || "").trim() || createPlaygroundEvaluationId("eval_run"),
           evaluationSetId: String(source.evaluationSetId || source.evaluation_set_id || "").trim(),
@@ -1736,6 +1798,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           passedCount,
           totalCount: cases.length,
           costTokens,
+          costUsd,
           costSource: String(source.costSource || source.cost_source || ""),
           metadata: Object.keys(metadata).length ? metadata : null,
           cases,
@@ -1751,10 +1814,24 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             ? source.data_rows
             : Array.isArray(source.data)
               ? source.data
-              : [];
-        const runs = Array.isArray(source.runs) ? source.runs : [];
-        const passThreshold = normalizePlaygroundEvaluationPassThreshold(source.passThreshold ?? source.pass_threshold ?? source.threshold ?? 0.8);
+              : Array.isArray(source.cases)
+                ? source.cases
+                : [];
         const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : null;
+        const runs = Array.isArray(source.runs)
+          ? source.runs
+          : Array.isArray(source.evaluationRuns)
+            ? source.evaluationRuns
+            : Array.isArray(source.evaluation_runs)
+              ? source.evaluation_runs
+              : Array.isArray(metadata?.runs)
+                ? metadata.runs
+                : Array.isArray(metadata?.evaluationRuns)
+                  ? metadata.evaluationRuns
+                  : Array.isArray(metadata?.evaluation_runs)
+                    ? metadata.evaluation_runs
+                    : [];
+        const passThreshold = normalizePlaygroundEvaluationPassThreshold(source.passThreshold ?? source.pass_threshold ?? source.threshold ?? 0.8);
         const creator = getPlaygroundEvaluationCreatorIdentity(source);
         return {
           id: String(source.id || source.evaluationId || source.evaluation_id || "").trim() || createPlaygroundEvaluationId("eval_set"),
@@ -3262,9 +3339,15 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         return Math.round(score * 100) + "%";
       }
 
-      function formatPlaygroundEvaluationCostCt(value) {
-        const tokens = normalizePlaygroundEvaluationTokenCount(value);
-        return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(tokens);
+      function formatPlaygroundEvaluationCostUsd(value) {
+        const cost = normalizePlaygroundEvaluationUsdCost(value);
+        const formatter = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: cost > 0 && cost < 0.01 ? 4 : 2,
+          maximumFractionDigits: cost > 0 && cost < 0.01 ? 4 : 2,
+        });
+        return formatter.format(cost);
       }
 
       function isPlaygroundEvaluationCaseActive(caseItem) {
@@ -3677,6 +3760,8 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           setEvaluationRunsVisibleCount,
           onOpenThread,
           onEvaluationThreadStarted,
+          evaluationRunReturnTarget,
+          onEvaluationRunBack,
           topNavActionsPortalId,
           versionsDrawerPortalId,
           onVersionsSidebarOpenChange,
@@ -3750,6 +3835,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         const [isEvaluationVersionDescriptionEditing, setIsEvaluationVersionDescriptionEditing] = useState(false);
         const [evaluationVersionChangesState, setEvaluationVersionChangesState] = useState(null);
         const [openEvaluationVersionMenuId, setOpenEvaluationVersionMenuId] = useState("");
+        const requestHeadersSignature = useMemo(() => JSON.stringify(requestHeaders || {}), [requestHeaders]);
         const currentEvaluationCreator = normalizePlaygroundEvaluationPersonIdentity({
           id: currentUserId || currentUserEmail || "",
           userId: currentUserId || "",
@@ -3777,6 +3863,59 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               : "overview";
         const isEvaluationDetailPage = normalizedMode === "detail" && Boolean(activeSet);
         const nowIso = new Date().toISOString();
+
+        useEffect(() => {
+          const normalizedBackendUrl = String(backendUrl || "").replace(/\/+$/, "");
+          const normalizedRunId = String(selectedEvaluationRunId || "").trim();
+          const normalizedSetId = String(selectedEvaluationSetId || "").trim();
+          if (!normalizedBackendUrl || !normalizedRunId || (evaluationsPageMode !== "run" && evaluationsPageMode !== "case")) {
+            return undefined;
+          }
+          if (activeRun?.id === normalizedRunId && Array.isArray(activeRun.cases) && activeRun.cases.length > 0) {
+            return undefined;
+          }
+          let cancelled = false;
+          void (async () => {
+            try {
+              const response = await fetch(normalizedBackendUrl + "/evaluations/runs/" + encodeURIComponent(normalizedRunId), {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders || {},
+              });
+              const data = await readPlaygroundEvaluationBackendJson(response, "Failed to load evaluation run.");
+              if (cancelled) return;
+              const run = normalizePlaygroundEvaluationRun(data?.run || data?.data || data);
+              if (!run.id) return;
+              const runSetId = String(run.evaluationSetId || run.evaluationId || normalizedSetId || "").trim();
+              if (!runSetId) return;
+              if (typeof setSelectedEvaluationSetId === "function" && runSetId !== normalizedSetId) {
+                setSelectedEvaluationSetId(runSetId);
+              }
+              upsertEvaluationRun(runSetId, run, {
+                targetAgentId: run.targetAgentId,
+                environmentType: run.environmentType,
+                environmentId: run.environmentId,
+                projectId: run.projectId,
+                evaluator: run.evaluator,
+                passThreshold: run.passThreshold,
+              });
+            } catch (error) {
+              console.warn("[evaluations] Failed to hydrate selected evaluation run", error);
+            }
+          })();
+          return () => {
+            cancelled = true;
+          };
+        }, [
+          backendUrl,
+          selectedEvaluationRunId,
+          selectedEvaluationSetId,
+          evaluationsPageMode,
+          activeRun?.id,
+          activeRun?.cases?.length,
+          requestHeadersSignature,
+        ]);
 
         useEffect(() => {
           if (typeof onVersionsSidebarOpenChange !== "function") {
@@ -4342,7 +4481,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                   onClick: () => {
                     setEvaluationPublishMenuOpen(false);
                     setEvaluationVersionsHeaderMenuOpen(false);
-                    setEvaluationVersionsSidebarOpen(true);
+                    openEvaluationVersionChangesPage();
                   },
                 }
               : null,
@@ -4859,6 +4998,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                 passedCount: cases.filter((caseItem) => !isPlaygroundEvaluationCaseActive(caseItem) && caseItem.status !== "error" && Number(caseItem.score || 0) >= passThreshold).length,
                 totalCount: cases.length,
                 costTokens: cases.reduce((sum, caseItem) => sum + normalizePlaygroundEvaluationTokenCount(caseItem.costTokens), 0),
+                costUsd: cases.reduce((sum, caseItem) => sum + normalizePlaygroundEvaluationUsdCost(caseItem.costUsd), 0),
                 status: activeCases.length > 0 ? "running" : errorCases.length === cases.length ? "failed" : "completed",
                 completedAt: activeCases.length > 0 ? run.completedAt : new Date().toISOString(),
               });
@@ -5019,6 +5159,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               passedCount: nextCases.filter((caseItem) => !isPlaygroundEvaluationCaseActive(caseItem) && caseItem.status !== "error" && Number(caseItem.score || 0) >= passThreshold).length,
               totalCount: nextCases.length,
               costTokens: nextCases.reduce((sum, caseItem) => sum + normalizePlaygroundEvaluationTokenCount(caseItem.costTokens), 0),
+              costUsd: nextCases.reduce((sum, caseItem) => sum + normalizePlaygroundEvaluationUsdCost(caseItem.costUsd), 0),
               status: activeCases.length > 0 ? "running" : errorCases.length === nextCases.length && nextCases.length > 0 ? "failed" : "completed",
               completedAt: activeCases.length > 0 ? sourceRun.completedAt : new Date().toISOString(),
             });
@@ -5518,6 +5659,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               passedCount: completedCases.filter((caseItem) => Number(caseItem.score || 0) >= passThreshold).length,
               totalCount: nextCases.length,
               costTokens: nextCases.reduce((sum, caseItem) => sum + normalizePlaygroundEvaluationTokenCount(caseItem.costTokens), 0),
+              costUsd: nextCases.reduce((sum, caseItem) => sum + normalizePlaygroundEvaluationUsdCost(caseItem.costUsd), 0),
               status: activeCases.length > 0 ? "running" : errorCases.length === nextCases.length && nextCases.length > 0 ? "failed" : "completed",
               updatedAt: new Date().toISOString(),
             });
@@ -6105,7 +6247,6 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             : (Array.isArray(runs) ? runs : [])
                 .map((item, index) => normalizePlaygroundEvaluationRun(item, index))
                 .slice(-12);
-          const passThreshold = normalizePlaygroundEvaluationPassThreshold(normalizedRun?.passThreshold ?? 0.8);
           const runCases = normalizedRun ? normalizedRun.cases : [];
           const labels = normalizedRun
             ? runCases.map((_caseItem, index) => "Case " + (index + 1))
@@ -6113,25 +6254,12 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           const scoreValues = normalizedRun
             ? runCases.map((caseItem) => Math.round(Math.max(0, Math.min(1, Number(caseItem.score || 0))) * 100))
             : normalizedRuns.map((item) => Math.round(Math.max(0, Math.min(1, Number(item.averageScore || 0))) * 100));
-          const lineValues = normalizedRun
-            ? runCases.reduce((state, caseItem) => {
-                const completed = !isPlaygroundEvaluationCaseActive(caseItem) && caseItem.status !== "error";
-                const completedCount = state.completedCount + (completed ? 1 : 0);
-                const passedCount = state.passedCount + (completed && Number(caseItem.score || 0) >= passThreshold ? 1 : 0);
-                const value = completedCount > 0 ? Math.round((passedCount / completedCount) * 100) : 0;
-                state.values.push(value);
-                state.completedCount = completedCount;
-                state.passedCount = passedCount;
-                return state;
-              }, { completedCount: 0, passedCount: 0, values: [] }).values
-            : normalizedRuns.map((item) => {
-                const totalCount = Math.max(0, Number(item.totalCount || item.cases?.length || 0));
-                if (!totalCount) return 0;
-                return Math.round((Math.max(0, Number(item.passedCount || 0)) / totalCount) * 100);
-              });
-          const lineDatasetId = "pass-rate";
-          const lineLabel = "Pass Rate";
-          const chartSignature = JSON.stringify({ mode: normalizedRun ? "run" : "set", labels, scoreValues, lineValues, passThreshold });
+          const costValues = normalizedRun
+            ? runCases.map((caseItem) => normalizePlaygroundEvaluationUsdCost(caseItem.costUsd))
+            : normalizedRuns.map((item) => normalizePlaygroundEvaluationUsdCost(item.costUsd));
+          const scoreLineLabel = normalizedRun ? "Score" : "Avg Score";
+          const costBarLabel = normalizedRun ? "Cost / Case" : "Cost / Run";
+          const chartSignature = JSON.stringify({ mode: normalizedRun ? "run" : "set", labels, scoreValues, costValues });
 
           useEffect(() => () => {
             if (chartRef.current) {
@@ -6150,14 +6278,6 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               }
               return undefined;
             }
-            const visibleLabelIndexes = (() => {
-              const next = new Set();
-              const targetCount = Math.min(6, Math.max(2, labels.length));
-              for (let index = 0; index < targetCount; index += 1) {
-                next.add(Math.round(((labels.length - 1) * index) / Math.max(1, targetCount - 1)));
-              }
-              return next;
-            })();
             const makeVerticalGradient = (context, stops, fallback) => {
               const chart = context?.chart;
               const chartArea = chart?.chartArea;
@@ -6193,15 +6313,15 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               labels,
               datasets: [
                 {
-                  id: "score",
+                  id: "cost",
                   type: "bar",
-                  label: "Score",
-                  data: scoreValues,
-                  yAxisID: "score",
+                  label: costBarLabel,
+                  data: costValues,
+                  yAxisID: "cost",
                   backgroundColor: (context) => makeVerticalGradient(context, [
-                    [0, "rgba(102, 166, 255, 0.82)"],
-                    [1, "rgba(91, 103, 230, 0.64)"],
-                  ], "rgba(95, 112, 230, 0.72)"),
+                    [0, "rgba(159, 246, 206, 0.82)"],
+                    [1, "rgba(42, 165, 123, 0.56)"],
+                  ], "rgba(92, 212, 163, 0.68)"),
                   borderWidth: 0,
                   borderRadius: 2,
                   barPercentage: 0.72,
@@ -6210,11 +6330,11 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                   order: 4,
                 },
                 {
-                  id: lineDatasetId,
+                  id: "score",
                   type: "line",
-                  label: lineLabel,
-                  data: lineValues,
-                  yAxisID: "line",
+                  label: scoreLineLabel,
+                  data: scoreValues,
+                  yAxisID: "score",
                   borderColor: "#7EFFFF",
                   backgroundColor: "rgba(126, 255, 255, 0.08)",
                   borderWidth: 1.5,
@@ -6222,7 +6342,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                   pointBackgroundColor: "#7EFFFF",
                   pointBorderColor: "#050505",
                   pointBorderWidth: 2,
-                  pointRadius: (context) => context.dataIndex === lineValues.length - 1 ? 5 : 0,
+                  pointRadius: (context) => context.dataIndex === scoreValues.length - 1 ? 5 : 0,
                   pointHoverRadius: 5,
                   tension: 0.28,
                   order: 2,
@@ -6252,8 +6372,9 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                     label: (context) => {
                       const datasetId = context.dataset?.id || "";
                       const value = Math.max(0, Number(context.parsed?.y || 0));
-                      if (datasetId === "score") return "Score: " + Math.round(value) + "%";
-                      return datasetId === "pass-rate" ? "Pass Rate: " + Math.round(value) + "%" : "Cases: " + Math.round(value);
+                      if (datasetId === "score") return scoreLineLabel + ": " + Math.round(value) + "%";
+                      if (datasetId === "cost") return costBarLabel + ": " + formatPlaygroundEvaluationCostUsd(value);
+                      return String(context.dataset?.label || "Value") + ": " + value;
                     },
                   },
                 },
@@ -6266,17 +6387,11 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                   grid: { display: false, offset: false, drawBorder: false },
                   border: { display: false },
                   ticks: {
-                    align: "inner",
+                    display: false,
                     autoSkip: false,
-                    color: "rgba(255, 255, 255, 0.38)",
-                    font: { size: 11, weight: "400", family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" },
-                    maxRotation: 0,
-                    minRotation: 0,
-                    padding: 10,
-                    callback: (_value, index) => visibleLabelIndexes.has(index) ? String(labels[index] || "") : "",
                   },
                 },
-                line: {
+                score: {
                   display: true,
                   type: "linear",
                   position: "left",
@@ -6293,12 +6408,12 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                   grid: { display: false, drawTicks: false },
                   border: { display: false },
                 },
-                score: {
+                cost: {
                   display: false,
                   type: "linear",
-                  position: "left",
+                  position: "right",
                   min: 0,
-                  max: 100,
+                  suggestedMax: Math.max(0.01, ...costValues) * 1.2,
                   ticks: { display: false },
                   grid: { display: false, drawTicks: false },
                   border: { display: false },
@@ -6330,7 +6445,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               ref: canvasRef,
               className: "playground-project-overview-progress-combo-canvas playground-evaluations-progress-combo-canvas",
               role: "img",
-              "aria-label": normalizedRun ? "Evaluation case scores and pass rate" : "Evaluation run scores and pass rates",
+              "aria-label": normalizedRun ? "Evaluation case scores and costs" : "Evaluation average scores and costs per run",
             })
           );
         }
@@ -6356,9 +6471,9 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               state.caseCount += item.totalCount;
               state.passedCount += Math.max(0, Number(item.passedCount || 0));
             }
-            state.costTokens += normalizePlaygroundEvaluationTokenCount(item.costTokens);
+            state.costUsd += normalizePlaygroundEvaluationUsdCost(item.costUsd);
             return state;
-          }, { scoreSum: 0, caseCount: 0, passedCount: 0, costTokens: 0 });
+          }, { scoreSum: 0, caseCount: 0, passedCount: 0, costUsd: 0 });
           const setAverageScore = setAnalytics.caseCount > 0 ? setAnalytics.scoreSum / setAnalytics.caseCount : null;
           const setPassRate = setAnalytics.caseCount > 0 ? Math.round((setAnalytics.passedCount / setAnalytics.caseCount) * 100) + "%" : "-";
           const values = run
@@ -6366,13 +6481,13 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                 { id: "score", label: "Average Score", value: latestRun ? formatPlaygroundEvaluationPercent(latestRun.averageScore) : "-" },
                 { id: "pass-rate", label: "Pass Rate", value: runPassRate },
                 { id: "cases", label: "Cases", value: String(latestRun?.totalCount || latestRun?.cases?.length || 0) },
-                { id: "cost", label: "Cost in CT", value: formatPlaygroundEvaluationCostCt(latestRun?.costTokens) },
+                { id: "cost", label: "Cost (USD)", value: formatPlaygroundEvaluationCostUsd(latestRun?.costUsd) },
               ]
             : [
                 { id: "score", label: "Average Score", value: setAverageScore === null ? "-" : formatPlaygroundEvaluationPercent(setAverageScore) },
                 { id: "pass-rate", label: "Pass Rate", value: setPassRate },
                 { id: "runs", label: "Runs", value: String(normalizedSetRuns.length) },
-                { id: "cost", label: "Cost in CT", value: formatPlaygroundEvaluationCostCt(setAnalytics.costTokens) },
+                { id: "cost", label: "Cost (USD)", value: formatPlaygroundEvaluationCostUsd(setAnalytics.costUsd) },
               ];
           const handleDownload = () => {
             if (typeof document === "undefined") return;
@@ -8319,6 +8434,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
               renderCompareSelect(rightSource.id, "right")
             ),
+            actions: renderEvaluationPublishSplitButton(),
             files: diffFiles,
             backIcon: ArrowLeft,
             backText: "Back",
@@ -8997,6 +9113,14 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                             return;
                           }
                           if (isEvaluationRunPage) {
+                            if (
+                              evaluationRunReturnTarget?.page === "fine-tuning"
+                              && String(evaluationRunReturnTarget?.fineTuneJobId || evaluationRunReturnTarget?.jobId || "").trim()
+                              && typeof onEvaluationRunBack === "function"
+                            ) {
+                              onEvaluationRunBack(evaluationRunReturnTarget);
+                              return;
+                            }
                             setSelectedEvaluationRunId("");
                             if (typeof setSelectedEvaluationCaseId === "function") setSelectedEvaluationCaseId("");
                             setEvaluationsPageMode("detail");

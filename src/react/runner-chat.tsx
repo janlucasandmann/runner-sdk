@@ -1452,9 +1452,16 @@ function getRunnerAdCreationQualityComputeTokensPerImage(quality: RunnerAdCreati
 function formatRunnerAdCreationComputeTokens(value: number): string {
   const normalized = Number(value);
   if (!Number.isFinite(normalized) || normalized <= 0) {
-    return "0 CT";
+    return "$0.00";
   }
-  return `${Math.round(normalized).toLocaleString("en-US")} CT`;
+  const dollars = normalized / RUNNER_AD_CT_PER_DOLLAR;
+  const smallValue = dollars > 0 && dollars < 0.01;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: smallValue ? 4 : 2,
+    maximumFractionDigits: smallValue ? 4 : 2,
+  }).format(dollars);
 }
 
 function buildStagedRunnerAdCreationCommand(settings?: Partial<RunnerAdCreationSettings> | null): StagedAdCreationCommand {
@@ -1692,12 +1699,13 @@ function sanitizeRunnerBudgetMessage(value: string): string {
   return String(value || "")
     .replace(
       /Insufficient budget:\s*Insufficient balance:\s*\$-?\d+(?:\.\d+)?\.?\s*Please add funds\.?/gi,
-      "Insufficient budget: Insufficient balance. Please add Compute Tokens or upgrade your plan to continue."
+      "Insufficient budget: Insufficient balance. Please add credits or upgrade your plan to continue."
     )
     .replace(
       /Insufficient balance:\s*\$-?\d+(?:\.\d+)?\.?\s*Please add funds\.?/gi,
-      "Insufficient balance. Please add Compute Tokens or upgrade your plan to continue."
-    );
+      "Insufficient balance. Please add credits or upgrade your plan to continue."
+    )
+    .replace(/\bcompute tokens\b/gi, "credits");
 }
 
 const AGENT_RUNTIME_INTERRUPTED_MESSAGE =
@@ -4726,7 +4734,7 @@ function eventGlyph(eventType?: string): string {
   if (eventType === "reasoning" || eventType === "planning") return "↺";
   if (eventType === "command_execution") return ">_";
   if (eventType === "agent_message" || eventType === "llm_response") return "AI";
-  if (eventType === "turn_completed") return "CT";
+  if (eventType === "turn_completed") return "$";
   if (eventType === "setup" || eventType === "startup") return "⚙";
   if (eventType === "file_change") return "FI";
   return "•";
@@ -13011,13 +13019,13 @@ export function RunnerChat({
 
   function renderComputeTokenUpgradeLogBox(message: string) {
     const normalizedMessage = sanitizeRunnerBudgetMessage(stripSystemTags(message)).trim()
-      || "Add Compute Tokens or upgrade your plan to continue.";
+      || "Add credits or upgrade your plan to continue.";
     return (
       <div className="tb-compute-token-log-box" role="status">
         <div className="tb-compute-token-log-copy">
           <div className="tb-compute-token-log-heading">
             <LucideZap className="tb-compute-token-log-icon" strokeWidth={1.8} />
-            <span>No Compute Tokens left</span>
+            <span>No credits left</span>
           </div>
           <div className="tb-compute-token-log-message">{normalizedMessage}</div>
         </div>

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Component } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, EllipsisVertical } from "lucide-react";
 import { DiffModeEnum, DiffView } from "@git-diff-view/react";
 import { generateDiffFile } from "@git-diff-view/file";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
@@ -734,7 +734,9 @@ export function RunnerFileDiffSurface({
   mountRunnerChatStyles();
 
   const [viewMode, setViewMode] = useState<"split" | "unified">(defaultViewMode);
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded ?? !defaultHideUnchanged);
+  const viewMenuRef = useRef<HTMLDivElement | null>(null);
 
   const normalizedDiff = String(diffContent || "").trim();
   const models = useMemo(() => buildRunnerDiffModels(normalizedDiff, fileContent), [normalizedDiff, fileContent]);
@@ -761,6 +763,31 @@ export function RunnerFileDiffSurface({
     () => hashRunnerDiffResetValue([patchFileName, language, viewMode, models.original, models.modified, normalizedDiff]),
     [language, models.modified, models.original, normalizedDiff, patchFileName, viewMode]
   );
+
+  useEffect(() => {
+    if (!viewMenuOpen) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (viewMenuRef.current && target instanceof Node && !viewMenuRef.current.contains(target)) {
+        setViewMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setViewMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [viewMenuOpen]);
 
   const appliedMaxHeight = typeof maxHeight === "number" ? maxHeight : null;
   const collapsedHeight = appliedMaxHeight !== null ? Math.min(collapsedBodyMaxHeight, appliedMaxHeight) : collapsedBodyMaxHeight;
@@ -798,27 +825,48 @@ export function RunnerFileDiffSurface({
             </span>
           </div>
           <div className="tb-runner-diff-surface-controls">
-            <div className="tb-runner-diff-surface-view-switch">
-              <button
-                type="button"
-                className={`tb-runner-diff-surface-view-button${viewMode === "split" ? " is-active" : ""}`.trim()}
-                onClick={() => setViewMode("split")}
-              >
-                Split
-              </button>
-              <button
-                type="button"
-                className={`tb-runner-diff-surface-view-button${viewMode === "unified" ? " is-active" : ""}`.trim()}
-                onClick={() => setViewMode("unified")}
-              >
-                Unified
-              </button>
-            </div>
             <span className="tb-runner-diff-surface-diff-stats">
               <span className="tb-runner-diff-surface-diff-count is-added">+{resolvedStats.additions}</span>
               <span className="tb-runner-diff-surface-diff-count is-removed">-{resolvedStats.deletions}</span>
             </span>
             {controlsAccessory}
+            <div className="tb-runner-diff-surface-view-menu-shell" ref={viewMenuRef}>
+              <button
+                type="button"
+                className={`tb-runner-diff-surface-menu-trigger${viewMenuOpen ? " is-active" : ""}`.trim()}
+                onClick={() => setViewMenuOpen((current) => !current)}
+                aria-haspopup="menu"
+                aria-expanded={viewMenuOpen ? "true" : "false"}
+                aria-label="Diff view options"
+              >
+                <EllipsisVertical className="tb-runner-diff-surface-action-icon" strokeWidth={1.8} />
+              </button>
+              {viewMenuOpen ? (
+                <div className="tb-runner-diff-surface-view-menu" role="menu">
+                  {[
+                    { id: "split" as const, label: "Split view" },
+                    { id: "unified" as const, label: "Unified view" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={viewMode === item.id ? "true" : "false"}
+                      className={`tb-runner-diff-surface-view-menu-item${viewMode === item.id ? " is-active" : ""}`.trim()}
+                      onClick={() => {
+                        setViewMode(item.id);
+                        setViewMenuOpen(false);
+                      }}
+                    >
+                      <span className="tb-runner-diff-surface-view-menu-check">
+                        {viewMode === item.id ? <Check strokeWidth={2} /> : null}
+                      </span>
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       ) : null}

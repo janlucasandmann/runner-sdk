@@ -268,11 +268,12 @@ function formatEnvironmentStatusLabel(value: string, isActive: boolean | null): 
 
 function formatComputeTokenMinuteCost(value: number | null): string {
   if (!Number.isFinite(value || NaN) || (value || 0) <= 0) return "Custom";
-  const computeTokens = Math.max(0.01, (value || 0) / 0.01);
-  return `${computeTokens.toLocaleString("en-US", {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: computeTokens < 1 ? 1 : 0,
-  })} CT / min`;
+  return `${new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4,
+  }).format(Math.max(0, value || 0))} / min`;
 }
 
 function getEnvironmentMinutePrice(record: Record<string, unknown>, profile: EnvironmentComputeProfile): number | null {
@@ -586,7 +587,7 @@ export function ComputerAgentsEnvironmentsListLogBox({
     { id: "name", label: "Name" },
     { id: "profile", label: "Profile" },
     { id: "status", label: "Status" },
-    { id: "cost", label: "CT cost" },
+    { id: "cost", label: "Cost" },
   ];
   const selectedSortLabel = sortOptions.find((option) => option.id === sortMode)?.label || "Name";
   const selectedProfileLabel = profileOptions.find((option) => option.id === profileFilter)?.label || "All profiles";
@@ -704,7 +705,7 @@ export function ComputerAgentsEnvironmentsListLogBox({
                   <th>Name</th>
                   <th>Profile</th>
                   <th>Status</th>
-                  <th className="is-right">CT per minute</th>
+                  <th className="is-right">Cost / minute</th>
                 </tr>
               </thead>
               <tbody>

@@ -10,6 +10,11 @@ import {
   RunnerAgentVersionCreateInput,
   RunnerAgentVersionUpdateInput,
   RunnerApiRequestOptions,
+  RunnerVoiceAgentPhoneNumberInput,
+  RunnerVoiceAgentRecord,
+  RunnerVoiceAgentSessionCreateInput,
+  RunnerVoiceAgentSessionCreateResult,
+  RunnerVoiceSession,
   RunnerEnvironmentForkResult,
   RunnerEnvironmentSnapshotInitializeResult,
   RunnerEnvironmentSnapshot,
@@ -918,6 +923,153 @@ export class RunnerClient {
       credentials: options.credentials,
       signal: options.signal,
     });
+  }
+
+  async listVoiceAgents(options: RunnerApiRequestOptions): Promise<RunnerVoiceAgentRecord[]> {
+    const url = this.buildApiUrl(options.backendUrl, "/voice-agents");
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerVoiceAgentRecord>(payload, ["voiceAgents", "voice_agents"]);
+  }
+
+  async getVoiceAgent(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+    },
+  ): Promise<RunnerVoiceAgentRecord> {
+    const url = this.buildApiUrl(options.backendUrl, `/voice-agents/agents/${encodeURIComponent(options.agentId)}`);
+    return this.requestJson<RunnerVoiceAgentRecord>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async updateVoiceAgent(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      voice: RunnerAgentUpdateInput;
+    },
+  ): Promise<RunnerVoiceAgentRecord> {
+    const url = this.buildApiUrl(options.backendUrl, `/voice-agents/agents/${encodeURIComponent(options.agentId)}`);
+    return this.requestJson<RunnerVoiceAgentRecord>(url, {
+      method: "PATCH",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.voice),
+    });
+  }
+
+  async provisionVoiceAgentPhoneNumber(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      phoneNumber?: RunnerVoiceAgentPhoneNumberInput;
+    },
+  ): Promise<RunnerVoiceAgentRecord> {
+    const url = this.buildApiUrl(options.backendUrl, `/voice-agents/agents/${encodeURIComponent(options.agentId)}/phone-number`);
+    return this.requestJson<RunnerVoiceAgentRecord>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.phoneNumber || {}),
+    });
+  }
+
+  async disableVoiceAgentPhoneNumber(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+    },
+  ): Promise<RunnerVoiceAgentRecord> {
+    const url = this.buildApiUrl(options.backendUrl, `/voice-agents/agents/${encodeURIComponent(options.agentId)}/phone-number`);
+    return this.requestJson<RunnerVoiceAgentRecord>(url, {
+      method: "DELETE",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async createVoiceAgentSession(
+    options: RunnerApiRequestOptions & {
+      agentId: string;
+      session?: RunnerVoiceAgentSessionCreateInput;
+    },
+  ): Promise<RunnerVoiceAgentSessionCreateResult> {
+    const url = this.buildApiUrl(options.backendUrl, `/voice-agents/agents/${encodeURIComponent(options.agentId)}/sessions`);
+    return this.requestJson<RunnerVoiceAgentSessionCreateResult>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.session || {}),
+    });
+  }
+
+  async appendVoiceAgentSessionMessage(
+    options: RunnerApiRequestOptions & {
+      sessionId: string;
+      role: "user" | "assistant";
+      content: string;
+      event?: Record<string, unknown> | null;
+    },
+  ): Promise<{ created: boolean }> {
+    const url = this.buildApiUrl(options.backendUrl, `/voice-agents/sessions/${encodeURIComponent(options.sessionId)}/messages`);
+    return this.requestJson<{ created: boolean }>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({ role: options.role, content: options.content, event: options.event || null }),
+    });
+  }
+
+  async endVoiceAgentSession(
+    options: RunnerApiRequestOptions & {
+      sessionId: string;
+    },
+  ): Promise<RunnerVoiceSession> {
+    const url = this.buildApiUrl(options.backendUrl, `/voice-agents/sessions/${encodeURIComponent(options.sessionId)}/end`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({}),
+    });
+    return this.readObjectResponse<RunnerVoiceSession>(payload, ["voiceSession", "voice_session"]);
+  }
+
+  async listVoiceAgentSessions(
+    options: RunnerApiRequestOptions & {
+      agentId?: string;
+      threadId?: string;
+      channel?: "web" | "phone";
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<RunnerVoiceSession[]> {
+    const search = new URLSearchParams();
+    if (options.agentId) search.set("agentId", options.agentId);
+    if (options.threadId) search.set("threadId", options.threadId);
+    if (options.channel) search.set("channel", options.channel);
+    if (options.limit !== undefined) search.set("limit", String(options.limit));
+    if (options.offset !== undefined) search.set("offset", String(options.offset));
+    const suffix = search.toString() ? `?${search.toString()}` : "";
+    const url = this.buildApiUrl(options.backendUrl, `/voice-agents/sessions${suffix}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerVoiceSession>(payload, ["voiceSessions", "voice_sessions"]);
   }
 
   async listAgentVersions(

@@ -7690,7 +7690,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               { id: "approve_deploy", label: "Approve deploy" },
               { id: "approve_external_message", label: "Approve external message" },
               { id: "approve_project_write", label: "Approve project update" },
-              { id: "approve_ct_spend", label: "Approve CT spend" },
+              { id: "approve_ct_spend", label: "Approve spend" },
               { id: "approve_team_resource", label: "Approve team resource write" },
             ],
           },
@@ -23298,7 +23298,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               const isCredentialSecretsLoading = credentialVaultId && metronomeSecretVaultSecretsLoadingId === credentialVaultId;
               return React.createElement(React.Fragment, null,
                 React.createElement("div", { className: "playground-metronome-field" },
-                  renderMetronomeFieldTitle("Firecrawl credential", "Use the managed Computer Agents Firecrawl credential by default, billed in Compute Tokens. Choose a Secrets resource to use your own key."),
+                  renderMetronomeFieldTitle("Firecrawl credential", "Use the managed Computer Agents Firecrawl credential by default, billed as usage. Choose a Secrets resource to use your own key."),
                   React.createElement("select", {
                     className: "playground-metronome-select",
                     value: credentialVaultId,
@@ -23355,7 +23355,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   ? React.createElement("p", { className: "playground-metronome-field-hint" }, "No credentials found in this secrets resource yet.")
                   : null,
                 !credentialVaultId
-                  ? React.createElement("p", { className: "playground-metronome-field-hint" }, "Managed by Computer Agents and billed in Compute Tokens.")
+                  ? React.createElement("p", { className: "playground-metronome-field-hint" }, "Managed by Computer Agents and billed as usage.")
                   : null,
                 !metronomeSecretVaultOptions.length
                   ? React.createElement("p", { className: "playground-metronome-field-hint" }, "Create a Secrets resource in Develop mode to use your own Firecrawl key.")
@@ -24482,6 +24482,13 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 disabled: isBusy || isActiveWorkflowBuiltIn || !activeWorkflowDeployments.length,
                 onClick: () => void revertActiveWorkflowToLastSavedVersion(),
               },
+              {
+                id: "version-history",
+                label: "Version history",
+                Icon: History,
+                disabled: isBusy || isActiveWorkflowBuiltIn,
+                onClick: () => openMetronomeVersionChangesPage(),
+              },
             ];
           };
 
@@ -24772,6 +24779,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
                 renderCompareSelect(rightSource.id, "right", "Compare version")
               ),
+              actions: renderMetronomePublishControl(),
               files: diffFiles,
               emptyMessage: "No changes between these versions.",
             });
@@ -25155,14 +25163,14 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 
           const formatMetronomeRunCostCt = (value) => {
             const numeric = Number(value);
-            if (!Number.isFinite(numeric) || numeric <= 0) return "0 CT";
-            if (numeric >= 1000000) {
-              return (numeric / 1000000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + "M CT";
-            }
-            if (numeric >= 1000) {
-              return (numeric / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 }) + "k CT";
-            }
-            return numeric.toLocaleString(undefined, { maximumFractionDigits: 2 }) + " CT";
+            const dollars = Number.isFinite(numeric) ? Math.max(0, numeric) / 100 : 0;
+            const smallValue = dollars > 0 && dollars < 0.01;
+            return new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "USD",
+              minimumFractionDigits: smallValue ? 4 : 2,
+              maximumFractionDigits: smallValue ? 4 : 2,
+            }).format(dollars);
           };
 
           const normalizeMetronomeMarkdownText = (value) => String(value || "")

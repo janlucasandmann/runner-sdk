@@ -3043,7 +3043,7 @@ export const IMAGINE_TEMPLATE_PAGE_SCRIPT = String.raw`
                       React.createElement("div", { className: "playground-calendar-upgrade-modal-offer" }, "14 day trial")
                     ),
                     React.createElement("p", { className: "playground-calendar-upgrade-modal-copy" },
-                      "Video generation is available on paid plans because it uses premium video models and Compute Tokens."
+                      "Video generation is available on paid plans because it uses premium video models and usage-based credits."
                     ),
                     React.createElement("button", {
                       type: "button",

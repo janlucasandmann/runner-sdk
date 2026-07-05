@@ -1,4 +1,5 @@
 const EVALUATION_RUN_TTL_MS = 1000 * 60 * 60 * 6;
+const EVALUATION_CT_PER_DOLLAR = 100;
 
 function createEvaluationId(prefix = "eval") {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -73,6 +74,11 @@ function normalizeTokenCount(value) {
   return Number.isFinite(numericValue) ? Math.max(0, Math.round(numericValue)) : 0;
 }
 
+function normalizeUsdCost(value) {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? Math.max(0, numericValue) : 0;
+}
+
 function normalizeRunCount(value, fallback = 1) {
   const fallbackCount = Math.max(1, Math.min(50, Math.round(Number(fallback) || 1)));
   const numericValue = Number(value);
@@ -124,6 +130,44 @@ function readComputeTokenValue(source) {
     if (tokenCount > 0) return tokenCount;
   }
   return 0;
+}
+
+function readUsdCostValue(source) {
+  if (!source || typeof source !== "object") return 0;
+  const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : {};
+  const usage = source.usage && typeof source.usage === "object" && !Array.isArray(source.usage) ? source.usage : {};
+  const candidates = [
+    source.costUsd,
+    source.costUSD,
+    source.cost_usd,
+    source.usdCost,
+    source.usd_cost,
+    source.totalUsd,
+    source.totalUSD,
+    source.total_usd,
+    usage.costUsd,
+    usage.costUSD,
+    usage.cost_usd,
+    usage.usdCost,
+    usage.usd_cost,
+    usage.totalUsd,
+    usage.totalUSD,
+    usage.total_usd,
+    metadata.costUsd,
+    metadata.costUSD,
+    metadata.cost_usd,
+    metadata.usdCost,
+    metadata.usd_cost,
+    metadata.totalUsd,
+    metadata.totalUSD,
+    metadata.total_usd,
+  ];
+  for (const candidate of candidates) {
+    const usdCost = normalizeUsdCost(candidate);
+    if (usdCost > 0) return usdCost;
+  }
+  const tokenCount = readComputeTokenValue(source);
+  return tokenCount > 0 ? tokenCount / EVALUATION_CT_PER_DOLLAR : 0;
 }
 
 function normalizeDataRow(row, fallbackIndex = 0) {
@@ -229,6 +273,7 @@ function normalizeRunCase(rawCase = {}, fallbackIndex = 0) {
     snapshotVersion: String(source.snapshotVersion || source.snapshot_version || ""),
     score: score === null ? 0 : score,
     costTokens: readComputeTokenValue(source),
+    costUsd: readUsdCostValue(source),
     costSource: normalizeString(source.costSource || source.cost_source),
     status: [
       "queued",
@@ -259,6 +304,7 @@ function recomputeRun(nextRun) {
     ? cases.reduce((sum, item) => sum + Number(item.score || 0), 0) / cases.length
     : 0;
   const costTokens = cases.reduce((sum, item) => sum + normalizeTokenCount(item.costTokens), 0);
+  const costUsd = cases.reduce((sum, item) => sum + normalizeUsdCost(item.costUsd), 0);
   const costSource = costTokens > 0 && cases.some((item) => item.costSource === "thread_usage_ct")
     ? "thread_usage_ct"
     : normalizeString(nextRun.costSource || nextRun.cost_source);
@@ -267,6 +313,7 @@ function recomputeRun(nextRun) {
     cases,
     passThreshold,
     costTokens,
+    costUsd,
     costSource,
     averageScore: Math.max(0, Math.min(1, averageScore)),
     passedCount: cases.filter((item) => !activeStatuses.has(item.status) && item.status !== "error" && Number(item.score || 0) >= passThreshold).length,
@@ -298,6 +345,8 @@ function createEvaluationRun(evaluationSet, options = {}) {
     targetAgentVersionNumber: Math.max(0, Number(options.targetAgentVersionNumber || options.target_agent_version_number || options.agentVersionNumber || options.agent_version_number || 0) || 0),
     targetAgentVersionLabel: normalizeString(options.targetAgentVersionLabel || options.target_agent_version_label || options.agentVersionLabel || options.agent_version_label),
     targetAgentVersionRevisionId: normalizeString(options.targetAgentVersionRevisionId || options.target_agent_version_revision_id || options.agentVersionRevisionId || options.agent_version_revision_id),
+    fineTuningJobId: normalizeString(options.fineTuningJobId || options.fine_tuning_job_id),
+    fine_tuning_job_id: normalizeString(options.fine_tuning_job_id || options.fineTuningJobId),
     environmentType: normalizeString(options.environmentType || evaluationSet.environmentType).toLowerCase() === "project" ? "project" : "computer",
     environmentId: normalizeString(options.environmentId || evaluationSet.environmentId),
     environmentName: normalizeString(options.environmentName || options.environment_name),
@@ -307,6 +356,11 @@ function createEvaluationRun(evaluationSet, options = {}) {
     passThreshold: normalizePassThreshold(options.passThreshold ?? options.pass_threshold ?? evaluationSet.passThreshold ?? evaluationSet.pass_threshold ?? 0.8),
     datasetVersion,
     evaluatorVersion,
+    metadata: {
+      ...(options.metadata && typeof options.metadata === "object" && !Array.isArray(options.metadata) ? options.metadata : {}),
+      fineTuningJobId: normalizeString(options.fineTuningJobId || options.fine_tuning_job_id),
+      fine_tuning_job_id: normalizeString(options.fine_tuning_job_id || options.fineTuningJobId),
+    },
     cases: evaluationSet.dataRows
       .flatMap((row) => {
         const runCount = normalizeRunCount(row.runCount);
@@ -626,6 +680,31 @@ function readNestedComputeTokenValue(value, depth = 0, seen = new Set()) {
   return candidates.length > 0 ? Math.max(...candidates) : 0;
 }
 
+function readNestedUsdCostValue(value, depth = 0, seen = new Set()) {
+  if (!value || typeof value !== "object" || depth > 5 || seen.has(value)) {
+    return 0;
+  }
+  seen.add(value);
+  const directValue = readUsdCostValue(value);
+  if (directValue > 0) return directValue;
+  const candidates = [];
+  [
+    value.usage,
+    value.tokenUsage,
+    value.token_usage,
+    value.metrics,
+    value.billing,
+    value.cost,
+    value.result,
+    value.response,
+    value.metadata,
+  ].forEach((candidate) => {
+    const usdCost = readNestedUsdCostValue(candidate, depth + 1, seen);
+    if (usdCost > 0) candidates.push(usdCost);
+  });
+  return candidates.length > 0 ? Math.max(...candidates) : 0;
+}
+
 function extractThreadCostTokens(records) {
   const sourceRecords = (Array.isArray(records) ? records : []).filter((record) => record && typeof record === "object");
   const explicitThreadTotals = sourceRecords
@@ -672,6 +751,57 @@ function extractThreadCostTokens(records) {
     seenCostKeys.add(key);
     return sum + tokenCount;
   }, 0);
+}
+
+function extractThreadCostUsd(records) {
+  const sourceRecords = (Array.isArray(records) ? records : []).filter((record) => record && typeof record === "object");
+  const explicitThreadTotals = sourceRecords
+    .map((record) => {
+      const metadata = record.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
+      return normalizeUsdCost(
+        record.totalUsd
+        ?? record.totalUSD
+        ?? record.total_usd
+        ?? record.totalCostUsd
+        ?? record.total_cost_usd
+        ?? record.threadUsd
+        ?? record.threadUSD
+        ?? record.thread_usd
+        ?? metadata.totalUsd
+        ?? metadata.totalUSD
+        ?? metadata.total_usd
+        ?? metadata.totalCostUsd
+        ?? metadata.total_cost_usd
+        ?? metadata.threadUsd
+        ?? metadata.threadUSD
+        ?? metadata.thread_usd
+      );
+    })
+    .filter((cost) => cost > 0);
+  if (explicitThreadTotals.length > 0) {
+    return Math.max(...explicitThreadTotals);
+  }
+  const preferredRecords = sourceRecords.filter((record) => {
+    const type = getRecordType(record);
+    return type === "turn_completed" || type === "run_summary" || type.includes("summary") || type === "llm_response";
+  });
+  const recordsForCost = preferredRecords.length > 0 ? preferredRecords : sourceRecords;
+  const seenCostKeys = new Set();
+  const directUsd = recordsForCost.reduce((sum, record, index) => {
+    const usdCost = readNestedUsdCostValue(record);
+    if (usdCost <= 0) return sum;
+    const timestamp = getRecordTimestamp(record);
+    const type = getRecordType(record);
+    const key = timestamp || type
+      ? [timestamp, type, String(usdCost)].join("|")
+      : [normalizeString(record.id || record.logId || record.log_id || record.stepId || record.step_id) || String(index), String(usdCost)].join("|");
+    if (seenCostKeys.has(key)) return sum;
+    seenCostKeys.add(key);
+    return sum + usdCost;
+  }, 0);
+  if (directUsd > 0) return directUsd;
+  const tokenCost = extractThreadCostTokens(recordsForCost);
+  return tokenCost > 0 ? tokenCost / EVALUATION_CT_PER_DOLLAR : 0;
 }
 
 function parseEvaluatorResult(value) {
@@ -875,6 +1005,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       ...record,
       updatedAtMs: Date.now(),
     });
+    void persistBackendEvaluationRun(record, record.run).catch(() => {});
   }
 
   function patchRun(runId, updater) {
@@ -883,6 +1014,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     const nextRun = recomputeRun(typeof updater === "function" ? updater(record.run) : record.run);
     const nextRecord = { ...record, run: nextRun, updatedAtMs: Date.now() };
     runsById.set(runId, nextRecord);
+    void persistBackendEvaluationRun(nextRecord, nextRun).catch(() => {});
     return nextRecord;
   }
 
@@ -925,6 +1057,99 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       return await readJsonResponse(response, "Failed to load evaluation thread data.");
     }
     throw createRuntimeError("Sign in to Computer Agents or provide an API key.", 401);
+  }
+
+  async function requestBackendJson(record, path, options = {}, fallbackMessage = "Backend request failed.") {
+    const { requestContext, upstreamUrl, apiKey, body } = record;
+    if (apiKey) {
+      const response = await fetch(`${upstreamUrl}${path}`, {
+        method: options.method || "GET",
+        headers: withProxyOrganizationHeader(requestContext, body, {
+          ...(options.headers || {}),
+          "X-API-Key": apiKey,
+        }),
+        body: options.body,
+      });
+      return await readJsonResponse(response, fallbackMessage);
+    }
+    if (hasAiosSession(requestContext)) {
+      const response = await fetchAiosApi(requestContext, `/api${path}`, {
+        method: options.method || "GET",
+        headers: options.headers,
+        body: options.body,
+      });
+      return await readJsonResponse(response, fallbackMessage);
+    }
+    throw createRuntimeError("Sign in to Computer Agents or provide an API key.", 401);
+  }
+
+  function buildEvaluationRunPersistencePayload(run) {
+    const normalizedRun = recomputeRun(run);
+    return {
+      id: normalizedRun.id,
+      runId: normalizedRun.id,
+      run_id: normalizedRun.id,
+      agentId: normalizedRun.targetAgentId,
+      agent_id: normalizedRun.targetAgentId,
+      environmentId: normalizedRun.environmentId,
+      environment_id: normalizedRun.environmentId,
+      computerId: normalizedRun.environmentType === "computer" ? normalizedRun.environmentId : "",
+      computer_id: normalizedRun.environmentType === "computer" ? normalizedRun.environmentId : "",
+      versionId: normalizedRun.evaluationVersionId,
+      version_id: normalizedRun.evaluationVersionId,
+      status: normalizedRun.status,
+      averageScore: normalizedRun.averageScore,
+      average_score: normalizedRun.averageScore,
+      passRate: normalizedRun.totalCount > 0 ? normalizedRun.passedCount / normalizedRun.totalCount : 0,
+      pass_rate: normalizedRun.totalCount > 0 ? normalizedRun.passedCount / normalizedRun.totalCount : 0,
+      costCt: normalizedRun.costTokens,
+      cost_ct: normalizedRun.costTokens,
+      costUsd: normalizedRun.costUsd,
+      cost_usd: normalizedRun.costUsd,
+      metadata: {
+        ...(normalizedRun.metadata && typeof normalizedRun.metadata === "object" && !Array.isArray(normalizedRun.metadata) ? normalizedRun.metadata : {}),
+        fineTuningJobId: normalizedRun.fineTuningJobId,
+        fine_tuning_job_id: normalizedRun.fine_tuning_job_id,
+        targetAgentVersionId: normalizedRun.targetAgentVersionId,
+        target_agent_version_id: normalizedRun.targetAgentVersionId,
+        targetAgentVersionNumber: normalizedRun.targetAgentVersionNumber,
+        target_agent_version_number: normalizedRun.targetAgentVersionNumber,
+        targetAgentVersionLabel: normalizedRun.targetAgentVersionLabel,
+        target_agent_version_label: normalizedRun.targetAgentVersionLabel,
+        run: normalizedRun,
+      },
+      run: normalizedRun,
+    };
+  }
+
+  async function persistBackendEvaluationRun(record, run) {
+    const normalizedRun = recomputeRun(run);
+    if (!normalizedRun.id || !normalizedRun.evaluationSetId) return null;
+    const payload = buildEvaluationRunPersistencePayload(normalizedRun);
+    try {
+      return await requestBackendJson(
+        record,
+        `/evaluations/runs/${encodeURIComponent(normalizedRun.id)}`,
+        {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+        "Failed to persist evaluation run."
+      );
+    } catch (error) {
+      if (Number(error?.status || 0) !== 404) throw error;
+      return await requestBackendJson(
+        record,
+        `/evaluations/${encodeURIComponent(normalizedRun.evaluationSetId)}/runs`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+        "Failed to create persisted evaluation run."
+      );
+    }
   }
 
   async function createHiddenThread(record, { title, agentId, environmentId, projectId, metadata }) {
@@ -1110,6 +1335,23 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     return extractThreadCostTokens([thread, ...steps, ...logs, ...messages].filter(Boolean));
   }
 
+  async function fetchThreadCostUsd(record, threadId) {
+    const normalizedThreadId = normalizeString(threadId);
+    if (!normalizedThreadId) return 0;
+    const encodedThreadId = encodeURIComponent(normalizedThreadId);
+    const [threadResult, stepsResult, logsResult, messagesResult] = await Promise.allSettled([
+      fetchBackendJson(record, `/threads/${encodedThreadId}`),
+      fetchBackendJson(record, `/threads/${encodedThreadId}/steps?limit=160&compact=1`),
+      fetchBackendJson(record, `/threads/${encodedThreadId}/logs?compact=1&includeConversation=0&limit=160`),
+      fetchBackendJson(record, `/threads/${encodedThreadId}/messages?limit=80&compact=1`),
+    ]);
+    const thread = threadResult.status === "fulfilled" ? (threadResult.value?.thread || threadResult.value?.data || threadResult.value) : null;
+    const steps = stepsResult.status === "fulfilled" ? normalizeResponseArray(stepsResult.value, ["steps"]) : [];
+    const logs = logsResult.status === "fulfilled" ? normalizeResponseArray(logsResult.value, ["logs"]) : [];
+    const messages = messagesResult.status === "fulfilled" ? normalizeResponseArray(messagesResult.value, ["messages"]) : [];
+    return extractThreadCostUsd([thread, ...steps, ...logs, ...messages].filter(Boolean));
+  }
+
   async function buildThreadSnapshot(record, { threadId, row, evaluationSet, actualOutput }) {
     const encodedThreadId = encodeURIComponent(threadId);
     const [threadResult, stepsResult, logsResult, messagesResult] = await Promise.allSettled([
@@ -1124,11 +1366,13 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     const messages = messagesResult.status === "fulfilled" ? normalizeResponseArray(messagesResult.value, ["messages"]) : [];
     const finalSummary = extractFinalSummaryFromRecords([...steps, ...logs]) || normalizeString(actualOutput);
     const costTokens = extractThreadCostTokens([thread, ...steps, ...logs, ...messages].filter(Boolean));
+    const costUsd = extractThreadCostUsd([thread, ...steps, ...logs, ...messages].filter(Boolean));
     return {
       version: "evaluation_snapshot_v1",
       generatedAt: new Date().toISOString(),
       threadId,
       costTokens,
+      costUsd,
       thread: thread && typeof thread === "object" ? {
         id: normalizeString(thread.id || thread.threadId || thread.thread_id) || threadId,
         title: normalizeString(thread.title || thread.name),
@@ -1380,6 +1624,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     let evaluatorReason = "";
     let evaluatorParseStatus = "not_required";
     let costTokens = normalizeTokenCount(snapshot.costTokens);
+    let costUsd = normalizeUsdCost(snapshot.costUsd) || (costTokens > 0 ? costTokens / EVALUATION_CT_PER_DOLLAR : 0);
     if (evaluator.type === "exact") {
       score = snapshot.finalSummary && expected.trim()
         ? (normalizeComparable(snapshot.finalSummary) === normalizeComparable(expected) ? 1 : 0)
@@ -1434,6 +1679,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         snapshot,
       }));
       costTokens += await fetchThreadCostTokens(record, evaluatorThreadId).catch(() => 0);
+      costUsd += await fetchThreadCostUsd(record, evaluatorThreadId).catch(() => 0);
       const evaluatorResult = await waitForEvaluatorResult(record, evaluatorThreadId, evaluatorMessageSummary);
       evaluatorOutput = evaluatorResult.output || evaluatorMessageSummary;
       patchRunCase(run.id, caseRun.id, { status: "scoring", evaluatorOutput });
@@ -1455,6 +1701,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       snapshotVersion: snapshot.version,
       score,
       costTokens,
+      costUsd,
       costSource: "thread_usage_ct",
       status,
       latencyMs: Date.now() - startedAt,
@@ -1494,9 +1741,12 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     for (const caseItem of run.cases) {
       const caseThreadCost = await fetchThreadCostTokens(record, caseItem.threadId).catch(() => 0);
       const evaluatorThreadCost = await fetchThreadCostTokens(record, caseItem.evaluatorThreadId).catch(() => 0);
+      const caseThreadCostUsd = await fetchThreadCostUsd(record, caseItem.threadId).catch(() => 0);
+      const evaluatorThreadCostUsd = await fetchThreadCostUsd(record, caseItem.evaluatorThreadId).catch(() => 0);
       cases.push(normalizeRunCase({
         ...caseItem,
         costTokens: caseThreadCost + evaluatorThreadCost,
+        costUsd: caseThreadCostUsd + evaluatorThreadCostUsd,
         costSource: "thread_usage_ct",
       }));
     }
@@ -1705,14 +1955,32 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     }
   }
 
-  function handleGetRun(_req, res, runId) {
+  async function handleGetRun(req, res, runId) {
     pruneRuns();
-    const record = runsById.get(normalizeString(runId));
+    const normalizedRunId = normalizeString(runId);
+    const record = runsById.get(normalizedRunId);
     if (!record) {
-      return sendJson(res, 404, {
-        error: "Evaluation run not found",
-        message: "The evaluation run is no longer available in the local runtime.",
-      });
+      try {
+        const body = {};
+        const requestRecord = {
+          requestContext: cloneRequestContext(req),
+          upstreamUrl: parseUpstreamUrl(req, body),
+          apiKey: readOptionalApiKey(req, body),
+          body,
+        };
+        const data = await requestBackendJson(
+          requestRecord,
+          `/evaluations/runs/${encodeURIComponent(normalizedRunId)}`,
+          { method: "GET" },
+          "Failed to load persisted evaluation run."
+        );
+        return sendJson(res, 200, data);
+      } catch (error) {
+        return sendJson(res, Number(error?.status || 404), {
+          error: "Evaluation run not found",
+          message: error instanceof Error ? error.message : "The evaluation run is no longer available in the local runtime.",
+        });
+      }
     }
     return sendJson(res, 200, {
       object: "evaluation_run",
@@ -1735,7 +2003,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     }
     const runMatch = url.pathname.match(/^\/api\/real\/evaluations\/runs\/([^/]+)$/);
     if (req.method === "GET" && runMatch) {
-      handleGetRun(req, res, decodeURIComponent(runMatch[1]));
+      void handleGetRun(req, res, decodeURIComponent(runMatch[1]));
       return true;
     }
     return false;

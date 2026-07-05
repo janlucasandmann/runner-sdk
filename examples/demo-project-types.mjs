@@ -58,7 +58,7 @@ export const PROJECT_TYPE_REGISTRY = Object.freeze([
     },
     dashboardProfile: {
       widgets: ["progress", "files", "resources", "cost"],
-      primaryMetrics: ["Scope", "Started", "Completed", "CT usage"],
+      primaryMetrics: ["Scope", "Started", "Completed", "Cost"],
       activityFocus: ["Task creation", "Resource changes", "Agent handoffs"],
     },
     missionControlProfile: {
@@ -99,7 +99,7 @@ export const PROJECT_TYPE_REGISTRY = Object.freeze([
     },
     dashboardProfile: {
       widgets: ["progress", "resources", "functions", "cost"],
-      primaryMetrics: ["Open issues", "In progress", "Merged changes", "Deployments", "CT usage"],
+      primaryMetrics: ["Open issues", "In progress", "Merged changes", "Deployments", "Cost"],
       activityFocus: ["Pull requests", "Task status changes", "Deployments", "Code file edits"],
     },
     missionControlProfile: {
@@ -143,7 +143,7 @@ export const PROJECT_TYPE_REGISTRY = Object.freeze([
     },
     dashboardProfile: {
       widgets: ["progress", "files", "resources", "cost"],
-      primaryMetrics: ["Sources collected", "Reports produced", "Open questions", "CT usage"],
+      primaryMetrics: ["Sources collected", "Reports produced", "Open questions", "Cost"],
       activityFocus: ["Source additions", "Report updates", "Research decisions", "Open questions"],
     },
     missionControlProfile: {
@@ -187,7 +187,7 @@ export const PROJECT_TYPE_REGISTRY = Object.freeze([
     },
     dashboardProfile: {
       widgets: ["progress", "imagine-resources", "files", "cost"],
-      primaryMetrics: ["Assets produced", "Launch readiness", "Open approvals", "CT usage"],
+      primaryMetrics: ["Assets produced", "Launch readiness", "Open approvals", "Cost"],
       activityFocus: ["Creative updates", "Copy updates", "Launch tasks", "Performance notes"],
     },
     missionControlProfile: {
@@ -231,7 +231,7 @@ export const PROJECT_TYPE_REGISTRY = Object.freeze([
     },
     dashboardProfile: {
       widgets: ["progress", "resources", "metronomes", "functions"],
-      primaryMetrics: ["Recurring tasks", "Process exceptions", "Reports completed", "CT usage"],
+      primaryMetrics: ["Recurring tasks", "Process exceptions", "Reports completed", "Cost"],
       activityFocus: ["Scheduled runs", "Automation updates", "Exceptions", "Process changes"],
     },
     missionControlProfile: {
@@ -275,7 +275,7 @@ export const PROJECT_TYPE_REGISTRY = Object.freeze([
     },
     dashboardProfile: {
       widgets: ["progress", "earnings", "files", "cost"],
-      primaryMetrics: ["Data files", "Assumptions", "Reports", "CT usage"],
+      primaryMetrics: ["Data files", "Assumptions", "Reports", "Cost"],
       activityFocus: ["Model changes", "Data imports", "Report updates", "Assumption changes"],
     },
     missionControlProfile: {
@@ -318,7 +318,7 @@ export const PROJECT_TYPE_REGISTRY = Object.freeze([
     },
     dashboardProfile: {
       widgets: ["progress", "users", "files", "earnings"],
-      primaryMetrics: ["Open follow-ups", "Proposal status", "Account tasks", "CT usage"],
+      primaryMetrics: ["Open follow-ups", "Proposal status", "Account tasks", "Cost"],
       activityFocus: ["Email-driven tasks", "Proposal updates", "Customer research", "Follow-up status"],
     },
     missionControlProfile: {
