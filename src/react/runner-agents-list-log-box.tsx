@@ -14,7 +14,7 @@ type AgentModelMeta = {
 
 type AgentModelPricing = {
   input: number;
-  cached: number;
+  cached: number | null;
   output: number;
 };
 
@@ -155,6 +155,27 @@ const AGENT_MODEL_CATALOG: AgentModelMeta[] = [
     providerType: "kimi",
     contextWindow: "262k",
   },
+  {
+    id: "kimi-k2.7-code",
+    label: "Kimi K2.7 Code",
+    description: "Moonshot coding model for long-horizon software engineering and agentic execution.",
+    providerType: "kimi",
+    contextWindow: "262k",
+  },
+  {
+    id: "glm-5.2",
+    label: "ZAI GLM 5.2",
+    description: "Z.ai flagship agentic coding model for software engineering, planning, and tool use.",
+    providerType: "zai",
+    contextWindow: "262k",
+  },
+  {
+    id: "qwen3.5-397b-a17b",
+    label: "Qwen 3.5 397B A17B",
+    description: "Alibaba Qwen mixture-of-experts model for reasoning, coding, and multimodal agent work.",
+    providerType: "qwen",
+    contextWindow: "262k",
+  },
 ];
 
 const AGENT_MODEL_PRICING_BY_ID: Record<string, AgentModelPricing> = {
@@ -162,17 +183,22 @@ const AGENT_MODEL_PRICING_BY_ID: Record<string, AgentModelPricing> = {
   "claude-sonnet-4-5": { input: 3.0, cached: 0.3, output: 15.0 },
   "claude-opus-4-6": { input: 5.0, cached: 0.5, output: 25.0 },
   "claude-opus-4-7": { input: 5.0, cached: 0.5, output: 25.0 },
-  "gpt-5.5-pro": { input: 30.0, cached: 30.0, output: 180.0 },
+  "claude-opus-4-8": { input: 5.0, cached: 0.5, output: 25.0 },
+  "gpt-5.5-pro": { input: 30.0, cached: null, output: 180.0 },
   "gpt-5.5": { input: 5.0, cached: 0.5, output: 30.0 },
   "gpt-5.4": { input: 2.5, cached: 0.25, output: 15.0 },
   "gpt-5.4-mini": { input: 0.75, cached: 0.075, output: 4.5 },
   "gpt-5.4-nano": { input: 0.2, cached: 0.02, output: 1.25 },
-  "gemini-3-flash": { input: 1.0, cached: 0.1, output: 5.0 },
-  "gemini-3-1-flash": { input: 1.0, cached: 0.1, output: 5.0 },
-  "gemini-3-1-pro": { input: 3.0, cached: 0.3, output: 15.0 },
-  "deepseek-v4-pro": { input: 0.435, cached: 0.03625, output: 0.87 },
-  "deepseek-v4-flash": { input: 0.14, cached: 0.028, output: 0.28 },
+  "gemini-3-flash": { input: 0.5, cached: 0.05, output: 3.0 },
+  "gemini-3-1-flash": { input: 0.5, cached: 0.05, output: 3.0 },
+  "gemini-3-1-pro": { input: 2.0, cached: 0.2, output: 12.0 },
+  "deepseek-v4-pro": { input: 0.435, cached: 0.003625, output: 0.87 },
+  "deepseek-v4-flash": { input: 0.14, cached: 0.0028, output: 0.28 },
+  "minimax-m3": { input: 0.6, cached: 0.12, output: 2.4 },
   "kimi-k2.6": { input: 0.95, cached: 0.16, output: 4.0 },
+  "kimi-k2.7-code": { input: 0.95, cached: 0.19, output: 4.0 },
+  "glm-5.2": { input: 1.4, cached: 0.26, output: 4.4 },
+  "qwen3.5-397b-a17b": { input: 0.6, cached: 0.6, output: 3.6 },
 };
 
 const AGENT_MODEL_ALIAS_BY_ID: Record<string, string> = {
@@ -189,6 +215,18 @@ const AGENT_MODEL_ALIAS_BY_ID: Record<string, string> = {
   "deepseek-v4flash": "deepseek-v4-flash",
   "deepseek-chat": "deepseek-v4-flash",
   "deepseek-reasoner": "deepseek-v4-flash",
+  "kimi-k2-6": "kimi-k2.6",
+  "@cf/moonshotai/kimi-k2.6": "kimi-k2.6",
+  "kimi-k2-7-code": "kimi-k2.7-code",
+  "@cf/moonshotai/kimi-k2.7-code": "kimi-k2.7-code",
+  "glm-5-2": "glm-5.2",
+  "zai-glm-5.2": "glm-5.2",
+  "zai-glm-5-2": "glm-5.2",
+  "@cf/zai-org/glm-5.2": "glm-5.2",
+  "qwen3-5-397b-a17b": "qwen3.5-397b-a17b",
+  "qwen-3.5-397b-a17b": "qwen3.5-397b-a17b",
+  "qwen-3-5-397b-a17b": "qwen3.5-397b-a17b",
+  "alibaba/qwen3.5-397b-a17b": "qwen3.5-397b-a17b",
 };
 
 type StructuredCommandExecutionOutput = {
@@ -419,6 +457,8 @@ function getProviderLabel(providerType: string): string {
   if (normalized === "openai") return "OpenAI";
   if (normalized === "deepseek") return "DeepSeek";
   if (normalized === "kimi" || normalized === "moonshot" || normalized === "cloudflare") return "Moonshot";
+  if (normalized === "zai" || normalized === "z-ai" || normalized === "zhipu") return "ZAI";
+  if (normalized === "qwen" || normalized === "alibaba") return "Qwen";
   return normalized ? titleCaseProvider(normalized) : "Provider";
 }
 
@@ -441,7 +481,25 @@ function inferProviderTypeFromModelId(modelId: string): string {
   if (normalized.startsWith("gpt-")) return "openai";
   if (normalized.startsWith("deepseek-")) return "deepseek";
   if (normalized.startsWith("kimi-")) return "kimi";
+  if (normalized.startsWith("glm-") || normalized.includes("zai") || normalized.includes("zhipu")) return "zai";
+  if (normalized.startsWith("qwen") || normalized.includes("alibaba/qwen")) return "qwen";
   return "generic";
+}
+
+function resolveProviderTypeForModel(modelMeta: AgentModelMeta, explicitProvider: string): string {
+  const normalizedExplicitProvider = explicitProvider.trim().toLowerCase();
+  const inferredProvider = inferProviderTypeFromModelId(modelMeta.id);
+  if (
+    normalizedExplicitProvider
+    && normalizedExplicitProvider !== "cloudflare"
+    && normalizedExplicitProvider !== "cloudflare_openai_compatible"
+  ) {
+    return explicitProvider;
+  }
+  if (inferredProvider && inferredProvider !== "generic") {
+    return inferredProvider;
+  }
+  return modelMeta.providerType || explicitProvider || inferredProvider;
 }
 
 function buildExternalModelMeta(modelId: string): AgentModelMeta {
@@ -489,7 +547,7 @@ function formatUsdPerMillion(value: number): string {
 function getAgentModelRetailUsdCostValue(modelId: string): number | null {
   const pricing = AGENT_MODEL_PRICING_BY_ID[normalizeModelId(modelId)];
   if (!pricing) return null;
-  const weightedUsdPerMillion = (pricing.input * 0.7) + (pricing.cached * 0.1) + (pricing.output * 0.2);
+  const weightedUsdPerMillion = (pricing.input * 0.7) + ((pricing.cached ?? pricing.input) * 0.1) + (pricing.output * 0.2);
   return weightedUsdPerMillion * AGENT_MODEL_PRICE_MARGIN_MULTIPLIER;
 }
 
@@ -638,7 +696,7 @@ function normalizeAgentRecord(record: Record<string, unknown>): ComputerAgentsLi
     "providerType",
     "provider_type",
   ]);
-  const providerType = explicitProvider || modelMeta.providerType || inferProviderTypeFromModelId(modelMeta.id);
+  const providerType = resolveProviderTypeForModel(modelMeta, explicitProvider);
   const description =
     readRecordString(record, ["description", "summary", "purpose"]) ||
     readNestedRecordString(record, [
@@ -851,6 +909,8 @@ function getProviderIcon(providerType: string): { src: string; alt: string; clas
   if (normalized === "deepseek") return { src: "/img/05-model-provider-icons/deepseek.png", alt: "DeepSeek" };
   if (normalized === "minimax") return { src: "/img/05-model-provider-icons/minimax.svg", alt: "MiniMax" };
   if (normalized === "kimi" || normalized === "moonshot" || normalized === "cloudflare") return { src: "/img/05-model-provider-icons/kimi.png", alt: "Moonshot" };
+  if (normalized === "zai" || normalized === "z-ai" || normalized === "zhipu") return { src: "/img/05-model-provider-icons/zai.webp", alt: "ZAI" };
+  if (normalized === "qwen" || normalized === "alibaba") return { src: "/img/05-model-provider-icons/qwen.svg", alt: "Qwen", className: "is-openai" };
   return null;
 }
 
@@ -892,7 +952,7 @@ function enrichAgentWithAvailableRecord(
     "providerType",
     "provider_type",
   ]);
-  const providerType = explicitProvider || modelMeta.providerType || inferProviderTypeFromModelId(modelMeta.id);
+  const providerType = resolveProviderTypeForModel(modelMeta, explicitProvider);
   const explicitPhotoUrl = getExplicitAgentPhotoUrl(availableRecord);
   const description =
     readRecordString(availableRecord, ["description", "summary", "purpose"]) ||

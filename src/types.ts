@@ -150,7 +150,7 @@ export interface RunnerLog {
       timestamp?: string;
     };
     metronomeWorkflow?: unknown;
-    actionType?: "compact" | "clear" | "fork" | "btw" | "revert" | "reapply";
+    actionType?: "compact" | "clear" | "fork" | "btw" | "revert" | "reapply" | "voice";
     isPending?: boolean;
     failed?: boolean;
     revertedChangeStepId?: string | null;

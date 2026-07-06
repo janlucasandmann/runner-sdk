@@ -216,6 +216,8 @@ function compactFineTuningJobRecord(job) {
       : [];
   const id = normalizeString(source.id || source.jobId || source.job_id || metadata.fineTuningJobId || metadata.fine_tuning_job_id);
   const nowIso = new Date().toISOString();
+  const jobCostUsd = readUsdCostValue(source);
+  const jobCostTokens = readComputeTokenValue(source) || normalizeTokenCount(jobCostUsd * FINE_TUNING_CT_PER_DOLLAR);
   return {
     id,
     name: normalizeString(source.name || source.title || metadata.fineTuningJobName || metadata.fine_tuning_job_name || "Fine-Tune Job"),
@@ -244,8 +246,8 @@ function compactFineTuningJobRecord(job) {
     beforeScore: clampScore(source.beforeScore ?? source.before_score ?? metadata.beforeScore ?? metadata.before_score ?? 0),
     afterScore: clampScore(source.afterScore ?? source.after_score ?? metadata.afterScore ?? metadata.after_score ?? 0),
     improvementScore: clampScore(source.improvementScore ?? source.improvement_score ?? metadata.improvementScore ?? metadata.improvement_score ?? 0),
-    costTokens: normalizeTokenCount(source.costTokens ?? source.cost_tokens ?? source.costCt ?? source.cost_ct),
-    costUsd: normalizeUsdCost(source.costUsd ?? source.cost_usd ?? source.totalCostUsd ?? source.total_cost_usd ?? metadata.totalCostUsd ?? metadata.total_cost_usd ?? metadata.costUsd ?? metadata.cost_usd),
+    costTokens: jobCostTokens,
+    costUsd: jobCostUsd || computeTokensToUsd(jobCostTokens),
     fineTuningCostUsd: normalizeUsdCost(source.fineTuningCostUsd ?? source.fine_tuning_cost_usd ?? metadata.fineTuningCostUsd ?? metadata.fine_tuning_cost_usd),
     verificationCostUsd: normalizeUsdCost(source.verificationCostUsd ?? source.verification_cost_usd ?? metadata.verificationCostUsd ?? metadata.verification_cost_usd),
     analysisSummary: sanitizeReferenceText(source.analysisSummary || source.analysis_summary || metadata.analysisSummary || metadata.analysis_summary || "", 2400),
@@ -441,6 +443,9 @@ function readUsdCostValue(source) {
     source.cost_usd,
     source.usdCost,
     source.usd_cost,
+    source.totalCostUsd,
+    source.totalCostUSD,
+    source.total_cost_usd,
     source.totalUsd,
     source.totalUSD,
     source.total_usd,
@@ -449,6 +454,9 @@ function readUsdCostValue(source) {
     usage.cost_usd,
     usage.usdCost,
     usage.usd_cost,
+    usage.totalCostUsd,
+    usage.totalCostUSD,
+    usage.total_cost_usd,
     usage.totalUsd,
     usage.totalUSD,
     usage.total_usd,
@@ -457,6 +465,9 @@ function readUsdCostValue(source) {
     metadata.cost_usd,
     metadata.usdCost,
     metadata.usd_cost,
+    metadata.totalCostUsd,
+    metadata.totalCostUSD,
+    metadata.total_cost_usd,
     metadata.totalUsd,
     metadata.totalUSD,
     metadata.total_usd,
@@ -528,6 +539,8 @@ function normalizeEvaluationRun(rawRun = {}) {
   const source = rawRun && typeof rawRun === "object" && !Array.isArray(rawRun) ? rawRun : {};
   const cases = Array.isArray(source.cases) ? source.cases : [];
   const averageScore = source.averageScore ?? source.average_score;
+  const runCostUsd = readUsdCostValue(source);
+  const runCostTokens = readComputeTokenValue(source) || normalizeTokenCount(runCostUsd * FINE_TUNING_CT_PER_DOLLAR);
   return {
     id: normalizeString(source.id || source.runId || source.run_id),
     label: normalizeString(source.label || source.name || source.title || "Run"),
@@ -535,9 +548,8 @@ function normalizeEvaluationRun(rawRun = {}) {
       ? cases.reduce((sum, item) => sum + Number(item?.score || 0), 0) / cases.length
       : 0
     ),
-    costTokens: normalizeTokenCount(source.costTokens ?? source.cost_tokens ?? source.costCT ?? source.cost_ct),
-    costUsd: normalizeUsdCost(source.costUsd ?? source.cost_usd ?? source.usage?.costUsd ?? source.usage?.cost_usd)
-      || computeTokensToUsd(source.costTokens ?? source.cost_tokens ?? source.costCT ?? source.cost_ct),
+    costTokens: runCostTokens,
+    costUsd: runCostUsd || computeTokensToUsd(runCostTokens),
     createdAt: normalizeString(source.createdAt || source.created_at || source.completedAt || source.completed_at),
     status: normalizeString(source.status || "completed") || "completed",
     targetAgentId: normalizeString(source.targetAgentId || source.target_agent_id || source.agentId || source.agent_id),

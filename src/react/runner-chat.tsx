@@ -2,6 +2,7 @@ import { CSSProperties, ChangeEvent, ClipboardEvent, DragEvent as ReactDragEvent
 import { createPortal } from "react-dom";
 import {
   ArrowUp as LucideArrowUp,
+  AudioLines as LucideAudioLines,
   Bookmark as LucideBookmark,
   Bot as LucideBot,
   Brain as LucideBrain,
@@ -273,6 +274,54 @@ function getRunnerEmailAttachmentFilename(value: string): string {
   return segments[segments.length - 1] || normalized || "Attachment";
 }
 
+function normalizeRunnerEmailAttachmentIdentityPart(value: string): string {
+  return String(value || "")
+    .trim()
+    .replace(/[?#].*$/, "")
+    .replace(/\\/g, "/")
+    .replace(/\/+/g, "/")
+    .toLowerCase();
+}
+
+function getRunnerEmailDeliveryAttachmentIdentityKeys(
+  file: RunnerEmailDeliveryAttachmentFile
+): string[] {
+  const keys = new Set<string>();
+  const workspacePath = normalizeRunnerEmailAttachmentIdentityPart(file.workspacePath || "");
+  const url = normalizeRunnerEmailAttachmentIdentityPart(file.url || "");
+  const filename = normalizeRunnerEmailAttachmentIdentityPart(file.filename || "");
+  if (workspacePath) {
+    keys.add(`path:${workspacePath}`);
+  }
+  if (url) {
+    keys.add(`url:${url}`);
+  }
+  if (filename) {
+    keys.add(`filename:${filename}`);
+  }
+  return Array.from(keys);
+}
+
+function mergeRunnerEmailDeliveryAttachmentFile(
+  existing: RunnerEmailDeliveryAttachmentFile,
+  incoming: RunnerEmailDeliveryAttachmentFile
+): RunnerEmailDeliveryAttachmentFile {
+  const kind = existing.kind === "attachment" || incoming.kind === "attachment"
+    ? "attachment"
+    : existing.kind || incoming.kind;
+  return {
+    filename: existing.filename || incoming.filename,
+    ...(existing.workspacePath || incoming.workspacePath ? { workspacePath: existing.workspacePath || incoming.workspacePath } : {}),
+    ...(existing.mimeType || incoming.mimeType ? { mimeType: existing.mimeType || incoming.mimeType } : {}),
+    ...(typeof existing.sizeBytes === "number" || typeof incoming.sizeBytes === "number"
+      ? { sizeBytes: typeof existing.sizeBytes === "number" ? existing.sizeBytes : incoming.sizeBytes }
+      : {}),
+    ...(existing.url || incoming.url ? { url: existing.url || incoming.url } : {}),
+    ...(existing.reason || incoming.reason ? { reason: existing.reason || incoming.reason } : {}),
+    ...(kind ? { kind } : {}),
+  };
+}
+
 function normalizeRunnerEmailDeliveryAttachmentFile(
   value: unknown,
   kind: RunnerEmailDeliveryAttachmentFile["kind"] = "attachment"
@@ -371,20 +420,30 @@ function extractRunnerEmailAttachmentFilesFromSummary(summaryText?: string | nul
 function dedupeRunnerEmailDeliveryAttachmentFiles(
   files: RunnerEmailDeliveryAttachmentFile[]
 ): RunnerEmailDeliveryAttachmentFile[] {
-  const seen = new Set<string>();
+  const keyToIndex = new Map<string, number>();
   const deduped: RunnerEmailDeliveryAttachmentFile[] = [];
   for (const file of files) {
-    const key = [
-      file.kind || "attachment",
-      file.workspacePath || "",
-      file.url || "",
-      file.filename,
-    ].join("|").toLowerCase();
-    if (seen.has(key)) {
+    const keys = getRunnerEmailDeliveryAttachmentIdentityKeys(file);
+    let existingIndex: number | undefined;
+    for (const key of keys) {
+      const index = keyToIndex.get(key);
+      if (typeof index === "number") {
+        existingIndex = index;
+        break;
+      }
+    }
+    if (typeof existingIndex === "number") {
+      deduped[existingIndex] = mergeRunnerEmailDeliveryAttachmentFile(deduped[existingIndex], file);
+      for (const key of getRunnerEmailDeliveryAttachmentIdentityKeys(deduped[existingIndex])) {
+        keyToIndex.set(key, existingIndex);
+      }
       continue;
     }
-    seen.add(key);
+    const nextIndex = deduped.length;
     deduped.push(file);
+    for (const key of keys) {
+      keyToIndex.set(key, nextIndex);
+    }
   }
   return deduped;
 }
@@ -425,11 +484,13 @@ function getRunnerEmailDeliveryDisplay(
     ...metadataDownloadLinks,
     ...manifestAttachmentFiles,
   ]);
+  const dedupedAttachmentCount = attachmentFiles.filter((file) => (file.kind || "attachment") === "attachment").length;
+  const dedupedDownloadLinkCount = attachmentFiles.filter((file) => file.kind === "download_link").length;
   const effectiveAttachmentCount = Math.max(
     0,
-    Math.round(attachmentCount || metadataAttachmentFiles.length || manifestAttachmentFiles.length || 0)
+    Math.round(dedupedAttachmentCount || attachmentCount || metadataAttachmentFiles.length || manifestAttachmentFiles.length || 0)
   );
-  const effectiveDownloadLinkCount = Math.max(0, Math.round(downloadLinkCount || metadataDownloadLinks.length || 0));
+  const effectiveDownloadLinkCount = Math.max(0, Math.round(dedupedDownloadLinkCount || downloadLinkCount || metadataDownloadLinks.length || 0));
   const detailParts: string[] = [];
   if (issue && ["deferred", "failed", "bounced", "dropped", "spam_report"].includes(status)) {
     detailParts.push(issue);
@@ -1410,13 +1471,23 @@ function getRunnerAgentGuardrailTexts(option: RunnerChatOption | null | undefine
   return texts;
 }
 
+const RUNNER_AGENT_GUARDRAILS_HIDDEN_PROMPT_MARKER = "Invisible guardrails for the selected agent:";
+
+function isRunnerInternalHiddenExecutionPromptContent(value: unknown): boolean {
+  const normalizedValue = stripSystemTags(String(value || "")).trim();
+  if (!normalizedValue) {
+    return false;
+  }
+  return normalizedValue.includes(RUNNER_AGENT_GUARDRAILS_HIDDEN_PROMPT_MARKER);
+}
+
 function buildRunnerAgentGuardrailsHiddenPrompt(option: RunnerChatOption | null | undefined): string {
   const guardrailTexts = getRunnerAgentGuardrailTexts(option);
   if (guardrailTexts.length === 0) {
     return "";
   }
   return [
-    "Invisible guardrails for the selected agent:",
+    RUNNER_AGENT_GUARDRAILS_HIDDEN_PROMPT_MARKER,
     "Follow these guardrails for every response in this thread unless a higher-priority system or safety instruction conflicts with them.",
     guardrailTexts.map((text, index) => `Guardrail ${index + 1}:\n${text}`).join("\n\n"),
   ].join("\n\n");
@@ -1857,15 +1928,24 @@ function normalizeRunnerConversationMessage(value: unknown): RunnerConversationM
   }
 
   const content = normalizeRunnerConversationMessageContent(record.content ?? record.message ?? record.text);
+  if (role === "user" && isRunnerInternalHiddenExecutionPromptContent(content)) {
+    return null;
+  }
   const logMetadataCandidate =
     getRecordObject(record, ["logMetadata", "log_metadata", "metadata"]);
   const usageRecord = getRecordObject(record, ["usage", "tokenUsage", "token_usage"]);
   const directAttachments = Array.isArray(record.attachments) ? record.attachments : null;
   const directModel = getRecordString(record, ["model", "modelName", "model_name", "modelId", "model_id", "runModel"]);
   const directProvider = getRecordString(record, ["provider", "providerName", "provider_name", "modelProvider", "model_provider"]);
-  const directComputeTokens =
+  const directCostUsd =
+    getRecordNumber(record, ["costUsd", "costUSD", "cost_usd", "totalCostUsd", "total_cost_usd", "usdCost", "usd_cost"]) ??
+    getRecordNumber(usageRecord, ["costUsd", "costUSD", "cost_usd", "totalCostUsd", "total_cost_usd", "usdCost", "usd_cost"]);
+  const explicitComputeTokens =
     getRecordNumber(record, ["computeTokens", "compute_tokens", "costCT", "costCt", "cost_ct", "ct", "totalComputeTokens", "total_compute_tokens"]) ??
     getRecordNumber(usageRecord, ["computeTokens", "compute_tokens", "costCT", "costCt", "cost_ct", "ct", "totalComputeTokens", "total_compute_tokens"]);
+  const directComputeTokens =
+    explicitComputeTokens ??
+    (directCostUsd !== null ? Math.round(directCostUsd * RUNNER_AD_CT_PER_DOLLAR) : null);
   const inputTokens =
     getRecordNumber(record, ["inputTokens", "input_tokens"]) ??
     getRecordNumber(usageRecord, ["inputTokens", "input_tokens"]);
@@ -1880,6 +1960,11 @@ function normalizeRunnerConversationMessage(value: unknown): RunnerConversationM
   }
   if (directProvider) {
     directRunMetadata.provider = directProvider;
+  }
+  if (directCostUsd !== null) {
+    directRunMetadata.costUsd = directCostUsd;
+    directRunMetadata.costUSD = directCostUsd;
+    directRunMetadata.cost_usd = directCostUsd;
   }
   if (directComputeTokens !== null) {
     directRunMetadata.computeTokens = directComputeTokens;
@@ -2304,11 +2389,91 @@ export interface RunnerChatOption {
   name: string;
   description?: string;
   isDefault?: boolean;
+  voiceMode?: RunnerChatVoiceMode | string | null;
+  voiceProvider?: string | null;
+  voiceModel?: string | null;
+  voiceId?: string | null;
+  voiceInstructions?: string | null;
+  voiceLanguageHint?: string | null;
 }
 
+type RunnerChatVoiceMode = "off" | "web" | "phone" | "web_and_phone";
 type RunnerAgentSelectorMode = "agents" | "teams" | "humans";
 type RunnerWorkspaceSelectorMode = "computers" | "projects";
 type RunnerReasoningEffortId = "minimal" | "low" | "medium" | "high";
+
+function normalizeRunnerChatVoiceMode(value: unknown): RunnerChatVoiceMode {
+  const normalized = String(value || "off").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (normalized === "web_phone") return "web_and_phone";
+  if (normalized === "web" || normalized === "phone" || normalized === "web_and_phone") {
+    return normalized;
+  }
+  return "off";
+}
+
+function isRunnerChatWebVoiceMode(mode: unknown): boolean {
+  const normalizedMode = normalizeRunnerChatVoiceMode(mode);
+  return normalizedMode === "web" || normalizedMode === "web_and_phone";
+}
+
+const RUNNER_CHAT_VOICE_SAMPLE_RATE = 24000;
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    const chunk = bytes.subarray(index, index + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+  return btoa(binary);
+}
+
+function base64ToBytes(value: string): Uint8Array {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+}
+
+function float32ToBase64Pcm16(samples: Float32Array): string {
+  const pcm16 = new Int16Array(samples.length);
+  for (let index = 0; index < samples.length; index += 1) {
+    const sample = Math.max(-1, Math.min(1, samples[index] || 0));
+    pcm16[index] = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
+  }
+  return bytesToBase64(new Uint8Array(pcm16.buffer));
+}
+
+function resampleFloat32ToSampleRate(samples: Float32Array, sourceSampleRate: number, targetSampleRate: number): Float32Array {
+  if (!samples.length || sourceSampleRate === targetSampleRate) {
+    return samples;
+  }
+  const ratio = sourceSampleRate / targetSampleRate;
+  const targetLength = Math.max(1, Math.round(samples.length / ratio));
+  const resampled = new Float32Array(targetLength);
+  for (let index = 0; index < targetLength; index += 1) {
+    const sourceIndex = index * ratio;
+    const leftIndex = Math.floor(sourceIndex);
+    const rightIndex = Math.min(samples.length - 1, leftIndex + 1);
+    const fraction = sourceIndex - leftIndex;
+    const left = samples[leftIndex] || 0;
+    const right = samples[rightIndex] || left;
+    resampled[index] = left + (right - left) * fraction;
+  }
+  return resampled;
+}
+
+function base64Pcm16ToFloat32(value: string): Float32Array {
+  const bytes = base64ToBytes(value);
+  const pcm16 = new Int16Array(bytes.buffer, bytes.byteOffset, Math.floor(bytes.byteLength / 2));
+  const samples = new Float32Array(pcm16.length);
+  for (let index = 0; index < pcm16.length; index += 1) {
+    samples[index] = pcm16[index] / 32768;
+  }
+  return samples;
+}
 
 const RUNNER_REASONING_EFFORT_OPTIONS: Array<{
   id: RunnerReasoningEffortId;
@@ -2670,6 +2835,8 @@ function inferRunnerAgentProviderTypeFromModelId(modelId: string): string {
   if (normalized.startsWith("gpt-") || normalized.startsWith("o1") || normalized.startsWith("o3") || normalized.startsWith("o4") || normalized.includes("openai")) return "openai";
   if (normalized.startsWith("deepseek-") || normalized.includes("deepseek")) return "deepseek";
   if (normalized.startsWith("kimi-") || normalized.includes("moonshot") || normalized.includes("kimi")) return "kimi";
+  if (normalized.startsWith("glm-") || normalized.includes("zai") || normalized.includes("zhipu")) return "zai";
+  if (normalized.startsWith("qwen") || normalized.includes("alibaba/qwen")) return "qwen";
   if (normalized.startsWith("grok-") || normalized.includes("xai")) return "xai";
   return "";
 }
@@ -2690,6 +2857,8 @@ function getRunnerAgentOptionProviderType(option: RunnerChatOption | null | unde
   if (explicitProvider.includes("openai") || explicitProvider === "open-ai") return "openai";
   if (explicitProvider.includes("deepseek")) return "deepseek";
   if (explicitProvider.includes("moonshot") || explicitProvider.includes("kimi")) return "kimi";
+  if (explicitProvider.includes("zai") || explicitProvider.includes("zhipu")) return "zai";
+  if (explicitProvider.includes("qwen") || explicitProvider.includes("alibaba")) return "qwen";
   if (explicitProvider.includes("xai") || explicitProvider.includes("grok")) return "xai";
   if (explicitProvider.includes("cloudflare")) {
     return modelProvider || "kimi";
@@ -2705,6 +2874,8 @@ function getRunnerAgentProviderIcon(providerType: string): { src: string; alt: s
   if (normalized === "deepseek") return { src: "/img/05-model-provider-icons/deepseek.png", alt: "DeepSeek" };
   if (normalized === "minimax") return { src: "/img/05-model-provider-icons/minimax.svg", alt: "MiniMax" };
   if (normalized === "kimi" || normalized === "moonshot" || normalized === "cloudflare") return { src: "/img/05-model-provider-icons/kimi.png", alt: "Moonshot" };
+  if (normalized === "zai" || normalized === "z-ai" || normalized === "zhipu") return { src: "/img/05-model-provider-icons/zai.webp", alt: "ZAI" };
+  if (normalized === "qwen" || normalized === "alibaba") return { src: "/img/05-model-provider-icons/qwen.svg", alt: "Qwen", className: "is-openai" };
   if (normalized === "xai" || normalized === "grok") return { src: "/img/05-model-provider-icons/xai.svg", alt: "xAI" };
   return null;
 }
@@ -3077,7 +3248,7 @@ export interface RunnerChatProps {
 }
 
 export interface RunnerChatActionSummaryClickPayload {
-  actionType?: "compact" | "clear" | "fork" | "btw" | "revert" | "reapply";
+  actionType?: "compact" | "clear" | "fork" | "btw" | "revert" | "reapply" | "voice";
   message: string;
   revertedChangeStepId?: string | null;
   revertedFilePath?: string | null;
@@ -10358,6 +10529,9 @@ function buildHydratedTurnsFromLogs(
 
     if (log.eventType === "user_message" || (log as RunnerLog & { isUserMessage?: boolean }).isUserMessage) {
       const prompt = stripSystemTags(log.message || "");
+      if (isRunnerInternalHiddenExecutionPromptContent(prompt)) {
+        continue;
+      }
       const startedAtMs = getSafeTimestamp(log, index);
       const messageAttachments = normalizeTurnAttachments(
         (log.metadata as Record<string, unknown> | undefined)?.attachments,
@@ -10953,6 +11127,25 @@ export function RunnerChat({
   const rawTimelineItemCountsRef = useRef<Record<string, number>>({});
   const thinkingStatusEligibilityRef = useRef<Record<string, boolean>>({});
   const [isStoppingRun, setIsStoppingRun] = useState(false);
+  const [voiceModeState, setVoiceModeState] = useState<{
+    status: "idle" | "starting" | "connected" | "closing" | "error";
+    error: string;
+    sessionId: string;
+    threadId: string;
+    agentId: string;
+    agentName: string;
+    lastUserTranscript: string;
+    lastAssistantTranscript: string;
+  }>({
+    status: "idle",
+    error: "",
+    sessionId: "",
+    threadId: "",
+    agentId: "",
+    agentName: "",
+    lastUserTranscript: "",
+    lastAssistantTranscript: "",
+  });
   const [activeThreadHistoryItemId, setActiveThreadHistoryItemId] = useState<string | null>(null);
   const [hoveredThreadHistoryItemId, setHoveredThreadHistoryItemId] = useState<string | null>(null);
   const [isThreadHistoryRailHovered, setIsThreadHistoryRailHovered] = useState(false);
@@ -10963,6 +11156,14 @@ export function RunnerChat({
   const previousLogsScrollHeightRef = useRef(0);
   const autoScrollSettleFramesRef = useRef(0);
   const screenFileDragActiveRef = useRef(false);
+  const voiceModeWebSocketRef = useRef<WebSocket | null>(null);
+  const voiceModeAudioContextRef = useRef<AudioContext | null>(null);
+  const voiceModeMediaStreamRef = useRef<MediaStream | null>(null);
+  const voiceModeSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const voiceModeProcessorRef = useRef<ScriptProcessorNode | null>(null);
+  const voiceModePlaybackTimeRef = useRef(0);
+  const voiceModeSessionIdRef = useRef<string | null>(null);
+  const voiceModePendingUserTranscriptRef = useRef("");
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
@@ -11024,18 +11225,23 @@ export function RunnerChat({
     }
   }
 
-  useEffect(() => {
-    const normalizedThreadId = String(currentThreadId || "").trim();
-    if (!normalizedThreadId || typeof onTaskListChange !== "function") {
-      return;
-    }
+	  useEffect(() => {
+	    const normalizedThreadId = String(currentThreadId || "").trim();
+	    if (!normalizedThreadId || typeof onTaskListChange !== "function") {
+	      return;
+	    }
     for (const turn of turns) {
       for (const log of turn.logs) {
         notifyTaskListChange(normalizedThreadId, normalizeHydratedLog(log));
-      }
-    }
-  }, [currentThreadId, onTaskListChange, turns]);
-  const currentThreadHasWorkspaceChanges = useMemo(
+	      }
+	    }
+	  }, [currentThreadId, onTaskListChange, turns]);
+  useEffect(() => {
+    return () => {
+      cleanupVoiceModeResources();
+    };
+  }, []);
+	  const currentThreadHasWorkspaceChanges = useMemo(
     () => turns.some((turn) => collectTurnChangedFiles(turn.logs).length > 0),
     [turns]
   );
@@ -11690,6 +11896,463 @@ export function RunnerChat({
       },
     ]);
     setExpandedTurns((prev) => ({ ...prev, [turnId]: true }));
+  }
+
+  function buildVoiceModeHeaders(): Headers {
+    const headers = new Headers(requestHeaders || {});
+    headers.set("Content-Type", "application/json");
+    if (apiKey.trim()) {
+      headers.set("X-API-Key", apiKey.trim());
+    }
+    return headers;
+  }
+
+  function buildVoiceModeSessionUpdate(sessionUpdatePayload: unknown, agentOption: RunnerChatOption | null | undefined): Record<string, unknown> {
+    const payloadRecord = sessionUpdatePayload && typeof sessionUpdatePayload === "object" && !Array.isArray(sessionUpdatePayload)
+      ? sessionUpdatePayload as Record<string, unknown>
+      : {};
+    const payloadSession = payloadRecord.session && typeof payloadRecord.session === "object" && !Array.isArray(payloadRecord.session)
+      ? payloadRecord.session as Record<string, unknown>
+      : {};
+    const payloadAudio = payloadSession.audio && typeof payloadSession.audio === "object" && !Array.isArray(payloadSession.audio)
+      ? payloadSession.audio as Record<string, unknown>
+      : {};
+    const payloadAudioInput = payloadAudio.input && typeof payloadAudio.input === "object" && !Array.isArray(payloadAudio.input)
+      ? payloadAudio.input as Record<string, unknown>
+      : {};
+    const payloadAudioOutput = payloadAudio.output && typeof payloadAudio.output === "object" && !Array.isArray(payloadAudio.output)
+      ? payloadAudio.output as Record<string, unknown>
+      : {};
+    const payloadTranscription = payloadAudioInput.transcription && typeof payloadAudioInput.transcription === "object" && !Array.isArray(payloadAudioInput.transcription)
+      ? payloadAudioInput.transcription as Record<string, unknown>
+      : {};
+    const languageHint = String(agentOption?.voiceLanguageHint || payloadTranscription.language_hint || "").trim();
+
+    return {
+      type: "session.update",
+      session: {
+        ...payloadSession,
+        voice: String(payloadSession.voice || agentOption?.voiceId || "eve").trim() || "eve",
+        turn_detection: payloadSession.turn_detection || { type: "server_vad" },
+        audio: {
+          ...payloadAudio,
+          input: {
+            ...payloadAudioInput,
+            format: {
+              type: "audio/pcm",
+              rate: RUNNER_CHAT_VOICE_SAMPLE_RATE,
+            },
+            transcription: {
+              model: "grok-transcribe",
+              ...payloadTranscription,
+              ...(languageHint ? { language_hint: languageHint } : {}),
+            },
+          },
+          output: {
+            ...payloadAudioOutput,
+            format: {
+              type: "audio/pcm",
+              rate: RUNNER_CHAT_VOICE_SAMPLE_RATE,
+            },
+          },
+        },
+      },
+    };
+  }
+
+  function cleanupVoiceModeResources() {
+    const websocket = voiceModeWebSocketRef.current;
+    voiceModeWebSocketRef.current = null;
+    if (websocket && websocket.readyState !== WebSocket.CLOSED && websocket.readyState !== WebSocket.CLOSING) {
+      try {
+        websocket.close();
+      } catch {}
+    }
+
+    if (voiceModeProcessorRef.current) {
+      try {
+        voiceModeProcessorRef.current.disconnect();
+      } catch {}
+      voiceModeProcessorRef.current.onaudioprocess = null;
+      voiceModeProcessorRef.current = null;
+    }
+
+    if (voiceModeSourceRef.current) {
+      try {
+        voiceModeSourceRef.current.disconnect();
+      } catch {}
+      voiceModeSourceRef.current = null;
+    }
+
+    if (voiceModeMediaStreamRef.current) {
+      voiceModeMediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      voiceModeMediaStreamRef.current = null;
+    }
+
+    const audioContext = voiceModeAudioContextRef.current;
+    voiceModeAudioContextRef.current = null;
+    voiceModePlaybackTimeRef.current = 0;
+    if (audioContext && audioContext.state !== "closed") {
+      void audioContext.close().catch(() => undefined);
+    }
+  }
+
+  async function endBackendVoiceSession(sessionId: string) {
+    const normalizedSessionId = String(sessionId || "").trim();
+    if (!normalizedSessionId || !normalizedBackendUrl || !hasApiKey) {
+      return;
+    }
+    await fetch(`${normalizedBackendUrl}/voice-agents/sessions/${encodeURIComponent(normalizedSessionId)}/end`, {
+      method: "POST",
+      credentials: "include",
+      headers: buildVoiceModeHeaders(),
+      body: JSON.stringify({}),
+    }).catch(() => undefined);
+  }
+
+  async function appendVoiceTranscriptMessage(role: "user" | "assistant", content: string, event: Record<string, unknown>) {
+    const normalizedSessionId = String(voiceModeSessionIdRef.current || "").trim();
+    const normalizedContent = String(content || "").trim();
+    if (!normalizedSessionId || !normalizedContent || !normalizedBackendUrl || !hasApiKey) {
+      return;
+    }
+
+    if (role === "user") {
+      voiceModePendingUserTranscriptRef.current = normalizedContent;
+    } else {
+      const promptText = String(voiceModePendingUserTranscriptRef.current || "Voice input").trim() || "Voice input";
+      voiceModePendingUserTranscriptRef.current = "";
+      appendSyntheticActionTurn(promptText, normalizedContent, "Voice mode");
+    }
+
+    setVoiceModeState((current) => ({
+      ...current,
+      lastUserTranscript: role === "user" ? normalizedContent : current.lastUserTranscript,
+      lastAssistantTranscript: role === "assistant" ? normalizedContent : current.lastAssistantTranscript,
+    }));
+
+    await fetch(`${normalizedBackendUrl}/voice-agents/sessions/${encodeURIComponent(normalizedSessionId)}/messages`, {
+      method: "POST",
+      credentials: "include",
+      headers: buildVoiceModeHeaders(),
+      body: JSON.stringify({
+        role,
+        content: normalizedContent,
+        event,
+      }),
+    }).catch(() => undefined);
+  }
+
+  function playVoiceAudioDelta(base64Audio: string) {
+    const audioContext = voiceModeAudioContextRef.current;
+    if (!audioContext || audioContext.state === "closed") {
+      return;
+    }
+    const samples = base64Pcm16ToFloat32(base64Audio);
+    if (samples.length === 0) {
+      return;
+    }
+    const buffer = audioContext.createBuffer(1, samples.length, RUNNER_CHAT_VOICE_SAMPLE_RATE);
+    buffer.copyToChannel(samples as Float32Array<ArrayBuffer>, 0);
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContext.destination);
+    const startAt = Math.max(audioContext.currentTime, voiceModePlaybackTimeRef.current);
+    source.start(startAt);
+    voiceModePlaybackTimeRef.current = startAt + buffer.duration;
+  }
+
+  function handleVoiceRealtimeEvent(event: Record<string, unknown>) {
+    const type = String(event.type || "");
+    if (type === "response.output_audio.delta") {
+      const audioDelta = String(event.delta || event.audio || "");
+      if (audioDelta) {
+        playVoiceAudioDelta(audioDelta);
+      }
+      return;
+    }
+    if (type === "conversation.item.input_audio_transcription.completed") {
+      const transcript = String(event.transcript || "");
+      void appendVoiceTranscriptMessage("user", transcript, event);
+      return;
+    }
+    if (type === "response.output_audio_transcript.done") {
+      const transcript = String(event.transcript || "");
+      void appendVoiceTranscriptMessage("assistant", transcript, event);
+      return;
+    }
+    if (type === "error") {
+      const errorRecord = event.error && typeof event.error === "object" && !Array.isArray(event.error)
+        ? event.error as Record<string, unknown>
+        : {};
+      const message = String(errorRecord.message || event.message || "Voice mode error.").trim();
+      setVoiceModeState((current) => ({
+        ...current,
+        status: "error",
+        error: message,
+      }));
+      setInlineError(message);
+    }
+  }
+
+  async function stopVoiceModeSession(options: { silent?: boolean } = {}) {
+    const sessionId = String(voiceModeSessionIdRef.current || voiceModeState.sessionId || "").trim();
+    if (!options.silent) {
+      setVoiceModeState((current) => ({
+        ...current,
+        status: current.status === "idle" ? "idle" : "closing",
+        error: "",
+      }));
+    }
+    cleanupVoiceModeResources();
+    voiceModeSessionIdRef.current = null;
+    voiceModePendingUserTranscriptRef.current = "";
+    if (sessionId) {
+      await endBackendVoiceSession(sessionId);
+    }
+    if (!options.silent) {
+      setVoiceModeState({
+        status: "idle",
+        error: "",
+        sessionId: "",
+        threadId: "",
+        agentId: "",
+        agentName: "",
+        lastUserTranscript: "",
+        lastAssistantTranscript: "",
+      });
+    }
+  }
+
+  async function startVoiceModeSession() {
+    if (disabled || isPreparingRun || voiceModeState.status === "starting" || voiceModeState.status === "connected") {
+      return;
+    }
+    if (!hasApiKey) {
+      setInlineError("Enter an API key to start voice mode.");
+      return;
+    }
+    if (!normalizedBackendUrl) {
+      setInlineError("backendUrl is required.");
+      return;
+    }
+    if (typeof window === "undefined" || typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setInlineError("Voice mode is not supported in this browser.");
+      return;
+    }
+
+    const selectedAgentOption = selectedAgent || (effectiveAgentId ? agents.find((agent) => agent.id === effectiveAgentId) : null) || null;
+    const normalizedAgentId = String(selectedAgentOption?.id || effectiveAgentId || agentId || "").trim();
+    if (!normalizedAgentId) {
+      setInlineError("Select an agent before starting voice mode.");
+      return;
+    }
+    if (!isRunnerChatWebVoiceMode(selectedAgentOption?.voiceMode)) {
+      setInlineError("Enable Web voice mode for this agent before starting voice mode.");
+      return;
+    }
+
+    setVoiceModeState({
+      status: "starting",
+      error: "",
+      sessionId: "",
+      threadId: String(currentThreadId || ""),
+      agentId: normalizedAgentId,
+      agentName: selectedAgentOption?.name || displayedAgentLabel,
+      lastUserTranscript: "",
+      lastAssistantTranscript: "",
+    });
+    setInlineError(null);
+
+    try {
+      if (isListening) {
+        await stopSpeechToText();
+      }
+      cleanupVoiceModeResources();
+
+      const response = await fetch(`${normalizedBackendUrl}/voice-agents/agents/${encodeURIComponent(normalizedAgentId)}/sessions`, {
+        method: "POST",
+        credentials: "include",
+        headers: buildVoiceModeHeaders(),
+        body: JSON.stringify({
+          ...(currentThreadId ? { threadId: currentThreadId } : {}),
+          ...(effectiveEnvironmentId ? { environmentId: effectiveEnvironmentId } : {}),
+          title: `Voice session with ${selectedAgentOption?.name || "Agent"}`,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.message || payload?.error || "Failed to create voice session.");
+      }
+
+      const sessionId = String(payload?.voiceSession?.id || payload?.voiceSessionId || "").trim();
+      const sessionThreadId = String(payload?.thread?.id || payload?.voiceSession?.threadId || currentThreadId || "").trim();
+      const realtimeUrl = String(payload?.xai?.realtimeUrl || "").trim();
+      const websocketProtocol = String(payload?.xai?.websocketProtocol || "").trim();
+      if (!sessionId || !realtimeUrl || !websocketProtocol) {
+        throw new Error("Voice session was created without realtime credentials.");
+      }
+      voiceModePendingUserTranscriptRef.current = "";
+
+      if (sessionThreadId && sessionThreadId !== currentThreadId) {
+        setLocalThreadId(sessionThreadId);
+        try {
+          onThreadIdChange?.(sessionThreadId);
+        } catch (callbackError) {
+          reportRunnerLifecycleCallbackError("onThreadIdChange", callbackError);
+        }
+      }
+
+      const AudioContextCtor = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextCtor) {
+        throw new Error("Voice mode is not supported in this browser.");
+      }
+      const audioContext = new AudioContextCtor({ sampleRate: RUNNER_CHAT_VOICE_SAMPLE_RATE });
+      voiceModeAudioContextRef.current = audioContext;
+      if (audioContext.state === "suspended") {
+        await audioContext.resume();
+      }
+
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+      voiceModeMediaStreamRef.current = mediaStream;
+
+      const websocket = new WebSocket(realtimeUrl, [websocketProtocol]);
+      voiceModeWebSocketRef.current = websocket;
+      voiceModeSessionIdRef.current = sessionId;
+
+      websocket.addEventListener("open", () => {
+        if (voiceModeWebSocketRef.current !== websocket) {
+          return;
+        }
+        const sessionUpdate = buildVoiceModeSessionUpdate(payload?.xai?.sessionUpdate, selectedAgentOption);
+        websocket.send(JSON.stringify(sessionUpdate));
+
+        const source = audioContext.createMediaStreamSource(mediaStream);
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+        processor.onaudioprocess = (event) => {
+          const output = event.outputBuffer.getChannelData(0);
+          output.fill(0);
+          if (voiceModeWebSocketRef.current !== websocket || websocket.readyState !== WebSocket.OPEN) {
+            return;
+          }
+          const inputSamples = event.inputBuffer.getChannelData(0);
+          const voiceSamples = resampleFloat32ToSampleRate(inputSamples, audioContext.sampleRate, RUNNER_CHAT_VOICE_SAMPLE_RATE);
+          const audio = float32ToBase64Pcm16(voiceSamples);
+          if (audio) {
+            websocket.send(JSON.stringify({
+              type: "input_audio_buffer.append",
+              audio,
+            }));
+          }
+        };
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+        voiceModeSourceRef.current = source;
+        voiceModeProcessorRef.current = processor;
+
+        setVoiceModeState({
+          status: "connected",
+          error: "",
+          sessionId,
+          threadId: sessionThreadId,
+          agentId: normalizedAgentId,
+          agentName: selectedAgentOption?.name || displayedAgentLabel,
+          lastUserTranscript: "",
+          lastAssistantTranscript: "",
+        });
+        appendVoiceModeNotice(
+          "Voice mode is active for " + (selectedAgentOption?.name || "this agent") + ". Speak naturally; transcripts will be saved to this thread."
+        );
+      });
+
+      websocket.addEventListener("message", (messageEvent) => {
+        if (typeof messageEvent.data !== "string") {
+          return;
+        }
+        try {
+          const event = JSON.parse(messageEvent.data) as Record<string, unknown>;
+          handleVoiceRealtimeEvent(event);
+        } catch {}
+      });
+
+      websocket.addEventListener("error", () => {
+        if (voiceModeWebSocketRef.current !== websocket) {
+          return;
+        }
+        setVoiceModeState((current) => ({
+          ...current,
+          status: "error",
+          error: "Voice mode connection failed.",
+        }));
+        setInlineError("Voice mode connection failed.");
+      });
+
+      websocket.addEventListener("close", () => {
+        if (voiceModeWebSocketRef.current !== websocket) {
+          return;
+        }
+        cleanupVoiceModeResources();
+        setVoiceModeState((current) => (
+          current.status === "closing"
+            ? current
+            : {
+                ...current,
+                status: "error",
+                error: "Voice mode disconnected.",
+              }
+        ));
+      });
+    } catch (error) {
+      cleanupVoiceModeResources();
+      voiceModeSessionIdRef.current = null;
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setVoiceModeState((current) => ({
+        ...current,
+        status: "error",
+        error: normalizedError.message || "Failed to start voice mode.",
+      }));
+      setInlineError(normalizedError.message || "Failed to start voice mode.");
+    }
+  }
+
+  function appendVoiceModeNotice(message: string) {
+    const turnId = generateId("turn");
+    const now = Date.now();
+    const timestamp = new Date(now).toISOString();
+    setTurns((prev) => [
+      ...prev,
+      {
+        id: turnId,
+        prompt: "",
+        logs: [
+          {
+            time: timestamp,
+            message,
+            type: "info",
+            eventType: "action_summary",
+            metadata: {
+              actionType: "voice",
+            },
+          },
+        ],
+        startedAtMs: now,
+        completedAtMs: now,
+        durationSeconds: 0,
+        status: "completed",
+        animateOnRender: true,
+        isInitialTurn: prev.length === 0,
+        agentName: selectedAgent?.name || displayedAgentLabel,
+        environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
+        presentation: "context-action-notice",
+      },
+    ]);
   }
 
   function appendThreadContextActionNotice(action: RunnerChatThreadContextAction, message: string) {
@@ -20453,15 +21116,89 @@ export function RunnerChat({
     workspaceSelectorMode === "projects"
       ? "No projects available."
       : "No computers available.";
-  const speechToTextTitle = !hasApiKey
-    ? "Enter an API key to enable speech-to-text"
-    : supportsSpeechToText
-      ? isListening
-        ? "Stop speech to text"
-        : "Start speech to text"
-      : "Speech-to-text is not supported in this browser";
+	  const speechToTextTitle = !hasApiKey
+	    ? "Enter an API key to enable speech-to-text"
+	    : supportsSpeechToText
+	      ? isListening
+	        ? "Stop speech to text"
+	        : "Start speech to text"
+	      : "Speech-to-text is not supported in this browser";
+  const selectedAgentVoiceMode = normalizeRunnerChatVoiceMode(selectedAgent?.voiceMode);
+  const selectedAgentWebVoiceEnabled = useComputerAgentsMode && isRunnerChatWebVoiceMode(selectedAgentVoiceMode);
+  const isVoiceModeActive = voiceModeState.status === "connected";
+  const isVoiceModeBusy = voiceModeState.status === "starting" || voiceModeState.status === "closing";
+  const shouldShowVoiceModeButton = useComputerAgentsMode && (selectedAgentWebVoiceEnabled || isVoiceModeActive || isVoiceModeBusy || voiceModeState.status === "error");
+  const voiceModeButtonTitle = isVoiceModeActive
+    ? "End voice mode"
+    : selectedAgentWebVoiceEnabled
+      ? "Start voice mode"
+      : "Enable Web voice mode on this agent first";
 
-  function renderComposerOrganizationSelector() {
+  function renderVoiceModeControl(isFull = false) {
+    if (!shouldShowVoiceModeButton) {
+      return null;
+    }
+    const isDisabled = Boolean(disabled || (isVoiceModeBusy && !isVoiceModeActive) || (!isVoiceModeActive && !selectedAgentWebVoiceEnabled));
+    return (
+      <button
+        type="button"
+        className={`task-voice-button ${isFull ? "task-voice-button-full" : ""} ${isVoiceModeActive ? "active" : ""}`.trim()}
+        onClick={() => {
+          if (isVoiceModeActive) {
+            void stopVoiceModeSession();
+          } else {
+            void startVoiceModeSession();
+          }
+        }}
+        disabled={isDisabled}
+        aria-label={isVoiceModeActive ? "End voice mode" : "Start voice mode"}
+        title={voiceModeButtonTitle}
+      >
+        {isVoiceModeBusy ? (
+          <LucideLoaderCircle className="task-voice-icon task-voice-icon-spinner" strokeWidth={1.9} />
+        ) : (
+          <LucideAudioLines className="task-voice-icon" strokeWidth={1.9} />
+        )}
+      </button>
+    );
+  }
+
+  function renderVoiceModeStatusBar() {
+    if (!useComputerAgentsMode || voiceModeState.status === "idle") {
+      return null;
+    }
+    const voiceModeLabel =
+      voiceModeState.status === "starting"
+        ? "Starting voice mode"
+        : voiceModeState.status === "closing"
+          ? "Ending voice mode"
+          : voiceModeState.status === "error"
+            ? "Voice mode error"
+            : "Voice mode active";
+    const transcript = voiceModeState.lastAssistantTranscript || voiceModeState.lastUserTranscript || "";
+    return (
+      <div className={`tb-voice-session-strip ${voiceModeState.status === "error" ? "is-error" : ""}`.trim()}>
+        <LucideAudioLines className="tb-voice-session-strip-icon" strokeWidth={1.8} />
+        <div className="tb-voice-session-strip-copy">
+          <span className="tb-voice-session-strip-title">{voiceModeLabel}</span>
+          <span className="tb-voice-session-strip-meta">
+            {voiceModeState.error || transcript || voiceModeState.agentName || "Live voice session"}
+          </span>
+        </div>
+        {isVoiceModeActive || voiceModeState.status === "error" ? (
+          <button
+            type="button"
+            className="tb-voice-session-strip-action"
+            onClick={() => void stopVoiceModeSession()}
+          >
+            End
+          </button>
+        ) : null}
+      </div>
+    );
+  }
+
+	  function renderComposerOrganizationSelector() {
     return (
       <div className="tb-composer-organization-anchor">
         <button
@@ -21974,10 +22711,11 @@ export function RunnerChat({
                 </div>
               ) : null;
 
-              if (actionSummaryLog) {
-                const actionType = actionSummaryLog.metadata?.actionType;
-                const isPendingActionSummary = Boolean(actionSummaryLog.metadata?.isPending);
-                const isActionSummaryClickable =
+	              if (actionSummaryLog) {
+	                const actionType = actionSummaryLog.metadata?.actionType;
+	                const isPendingActionSummary = Boolean(actionSummaryLog.metadata?.isPending);
+                const ActionSummaryIcon = actionType === "voice" ? LucideAudioLines : LucideFileText;
+	                const isActionSummaryClickable =
                   !isPendingActionSummary &&
                   typeof onActionSummaryClick === "function" &&
                   (actionType === "revert" || actionType === "reapply") &&
@@ -21996,20 +22734,20 @@ export function RunnerChat({
                       })
                     }
                   >
-                    {isPendingActionSummary ? (
-                      <LucideLoaderCircle className="tb-context-action-notice-icon tb-context-action-notice-icon-spinner" strokeWidth={1.5} />
-                    ) : (
-                      <LucideFileText className="tb-context-action-notice-icon" strokeWidth={1.5} />
-                    )}
+	                    {isPendingActionSummary ? (
+	                      <LucideLoaderCircle className="tb-context-action-notice-icon tb-context-action-notice-icon-spinner" strokeWidth={1.5} />
+	                    ) : (
+	                      <ActionSummaryIcon className="tb-context-action-notice-icon" strokeWidth={1.5} />
+	                    )}
                     <span>{actionSummaryLog.message}</span>
                   </button>
                 ) : (
                   <span className="tb-context-action-notice-copy">
-                    {isPendingActionSummary ? (
-                      <LucideLoaderCircle className="tb-context-action-notice-icon tb-context-action-notice-icon-spinner" strokeWidth={1.5} />
-                    ) : (
-                      <LucideFileText className="tb-context-action-notice-icon" strokeWidth={1.5} />
-                    )}
+	                    {isPendingActionSummary ? (
+	                      <LucideLoaderCircle className="tb-context-action-notice-icon tb-context-action-notice-icon-spinner" strokeWidth={1.5} />
+	                    ) : (
+	                      <ActionSummaryIcon className="tb-context-action-notice-icon" strokeWidth={1.5} />
+	                    )}
                     <span>{actionSummaryLog.message}</span>
                   </span>
                 );
@@ -23228,11 +23966,12 @@ export function RunnerChat({
                       </div>
                     ) : null}
 
-                    <div className="task-input-spacer" />
+	                    <div className="task-input-spacer" />
 
-                    {renderEnvironmentSelectorControl()}
+	                    {renderEnvironmentSelectorControl()}
+                    {renderVoiceModeControl(true)}
 
-                    {showRunPreparationIndicator ? (
+	                    {showRunPreparationIndicator ? (
                       <button type="button" className="task-run-button task-run-button-full" disabled>
                         <span className="runner-spinner" />
                       </button>
@@ -23286,9 +24025,10 @@ export function RunnerChat({
                     >
                       <IconPlus className="task-attachment-icon" />
                     </button>
-                    {renderContextIndicatorControl()}
-                    <div className="task-input-spacer" />
-                    {showRunPreparationIndicator ? (
+	                    {renderContextIndicatorControl()}
+	                    <div className="task-input-spacer" />
+                    {renderVoiceModeControl(false)}
+	                    {showRunPreparationIndicator ? (
                       <button type="button" className="task-run-button" disabled>
                         <span className="runner-spinner" />
                       </button>
@@ -23326,8 +24066,9 @@ export function RunnerChat({
                           {isListening ? <IconStop className="task-mic-icon" /> : <IconMic className="task-mic-icon" />}
                         </button>
                       </>
-                    )}
-                  </div>
+	                )}
+                {renderVoiceModeStatusBar()}
+	              </div>
                 )}
               </div>
               {useComputerAgentsMode && shouldRenderInlineComposerWithEmptyState ? (

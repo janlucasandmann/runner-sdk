@@ -803,12 +803,16 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               record.totalUSD,
               record.total_usd,
               record.totalCostUsd,
+              record.totalCostUSD,
               record.total_cost_usd,
               usage.costUsd,
               usage.costUSD,
               usage.cost_usd,
               usage.usdCost,
               usage.usd_cost,
+              usage.totalCostUsd,
+              usage.totalCostUSD,
+              usage.total_cost_usd,
               usage.totalUsd,
               usage.totalUSD,
               usage.total_usd,
@@ -817,6 +821,9 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               metadata.cost_usd,
               metadata.usdCost,
               metadata.usd_cost,
+              metadata.totalCostUsd,
+              metadata.totalCostUSD,
+              metadata.total_cost_usd,
               metadata.totalUsd,
               metadata.totalUSD,
               metadata.total_usd,
@@ -1128,6 +1135,21 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           ?? source.total_usd
           ?? 0
         );
+        const explicitOrComponentCostUsd = explicitTotalCostUsd || fineTuningCostUsd + verificationCostUsd;
+        const totalCostTokens = normalizePlaygroundFineTuningTokenCount(
+          source.costTokens
+          ?? source.cost_tokens
+          ?? source.costCt
+          ?? source.costCT
+          ?? source.cost_ct
+          ?? source.computeTokens
+          ?? source.compute_tokens
+          ?? source.totalCT
+          ?? source.totalCt
+          ?? source.total_ct
+          ?? source.ct
+        ) || normalizePlaygroundFineTuningTokenCount(explicitOrComponentCostUsd * PLAYGROUND_FINE_TUNING_CT_PER_DOLLAR);
+        const totalCostUsd = explicitOrComponentCostUsd || (totalCostTokens / PLAYGROUND_FINE_TUNING_CT_PER_DOLLAR);
         return {
           id: normalizePlaygroundFineTuningString(source.id || source.jobId || source.job_id) || createPlaygroundFineTuningId(),
           name: normalizePlaygroundFineTuningString(source.name || source.title || "Fine-Tune Job " + (fallbackIndex + 1)),
@@ -1155,8 +1177,8 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           beforeScore: normalizePlaygroundFineTuningScore(source.beforeScore ?? source.before_score ?? 0),
           afterScore: normalizePlaygroundFineTuningScore(source.afterScore ?? source.after_score ?? 0),
           improvementScore: normalizePlaygroundFineTuningScore(source.improvementScore ?? source.improvement_score ?? 0),
-          costTokens: normalizePlaygroundFineTuningTokenCount(source.costTokens ?? source.cost_tokens ?? source.costCT ?? source.cost_ct),
-          costUsd: explicitTotalCostUsd || fineTuningCostUsd + verificationCostUsd,
+          costTokens: totalCostTokens,
+          costUsd: totalCostUsd,
           fineTuningCostUsd,
           verificationCostUsd,
           analysisSummary: sanitizePlaygroundFineTuningAnalysisSummary(source.analysisSummary || source.analysis_summary || ""),
@@ -1375,6 +1397,20 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           const source = run && typeof run === "object" && !Array.isArray(run) ? run : {};
           const cases = Array.isArray(source.cases) ? source.cases : [];
           const averageScore = Number(source.averageScore ?? source.average_score);
+          const fallbackRunCostUsd = readPlaygroundFineTuningUsdCostWithLegacyCt(source);
+          const fallbackRunCostTokens = normalizePlaygroundFineTuningTokenCount(
+            source.costTokens
+            ?? source.cost_tokens
+            ?? source.costCt
+            ?? source.costCT
+            ?? source.cost_ct
+            ?? source.computeTokens
+            ?? source.compute_tokens
+            ?? source.totalCT
+            ?? source.totalCt
+            ?? source.total_ct
+            ?? source.ct
+          ) || normalizePlaygroundFineTuningTokenCount(fallbackRunCostUsd * PLAYGROUND_FINE_TUNING_CT_PER_DOLLAR);
           const normalizedRun = typeof normalizePlaygroundEvaluationRun === "function"
             ? normalizePlaygroundEvaluationRun(source, index)
             : {
@@ -1386,8 +1422,8 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                   : cases.length
                     ? normalizePlaygroundFineTuningScore(cases.reduce((sum, item) => sum + Number(item?.score || 0), 0) / cases.length)
                     : 0,
-                costTokens: normalizePlaygroundFineTuningTokenCount(source.costTokens ?? source.cost_tokens ?? source.costCT ?? source.cost_ct),
-                costUsd: readPlaygroundFineTuningUsdCostWithLegacyCt(source),
+                costTokens: fallbackRunCostTokens,
+                costUsd: fallbackRunCostUsd,
                 status: normalizePlaygroundFineTuningString(source.status || "queued") || "queued",
               };
           const id = normalizePlaygroundFineTuningString(normalizedRun.id || run?.id || run?.runId || run?.run_id || "run_" + (index + 1));
@@ -2587,6 +2623,20 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           const source = rawRun && typeof rawRun === "object" && !Array.isArray(rawRun) ? rawRun : {};
           const cases = Array.isArray(source.cases) ? source.cases : [];
           const averageScore = Number(source.averageScore ?? source.average_score);
+          const runCostUsd = readPlaygroundFineTuningUsdCostWithLegacyCt(source);
+          const runCostTokens = normalizePlaygroundFineTuningTokenCount(
+            source.costTokens
+            ?? source.cost_tokens
+            ?? source.costCt
+            ?? source.costCT
+            ?? source.cost_ct
+            ?? source.computeTokens
+            ?? source.compute_tokens
+            ?? source.totalCT
+            ?? source.totalCt
+            ?? source.total_ct
+            ?? source.ct
+          ) || normalizePlaygroundFineTuningTokenCount(runCostUsd * PLAYGROUND_FINE_TUNING_CT_PER_DOLLAR);
           return {
             ...source,
             id: normalizePlaygroundFineTuningString(source.id || source.runId || source.run_id),
@@ -2596,8 +2646,8 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               : cases.length
                 ? normalizePlaygroundFineTuningScore(cases.reduce((sum, item) => sum + Number(item?.score || 0), 0) / cases.length)
                 : 0,
-            costTokens: normalizePlaygroundFineTuningTokenCount(source.costTokens ?? source.cost_tokens ?? source.costCT ?? source.cost_ct),
-            costUsd: readPlaygroundFineTuningUsdCostWithLegacyCt(source),
+            costTokens: runCostTokens,
+            costUsd: runCostUsd,
             status: normalizePlaygroundFineTuningString(source.status || "queued") || "queued",
           };
         }

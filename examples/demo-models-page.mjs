@@ -1,15 +1,46 @@
 export const MODELS_PAGE_CSS = String.raw`
+      .playground-models-page {
+        overflow: auto;
+        padding: 0 44px 56px;
+        box-sizing: border-box;
+      }
+
       .playground-models-page .playground-files-shell {
+        width: min(100%, var(--playground-centered-page-max-width));
+        height: auto;
+        min-height: calc(100vh - 98px);
+        margin: 0 auto;
         grid-template-columns: minmax(0, 1fr) 0 0;
       }
 
       .playground-models-page .playground-files-browser {
-        margin: 0 5px 5px 0;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-models-page .playground-files-browser-header,
+      .playground-models-page .playground-files-browser-body {
+        width: 100%;
+        max-width: none;
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      .playground-models-page .playground-files-browser-header {
+        position: sticky;
+        top: 0;
+        z-index: 180;
+        padding-top: 42px;
+        background: #000;
       }
 
       .playground-models-page .playground-files-browser-body {
         display: flex;
         flex-direction: column;
+        flex: 0 0 auto;
+        overflow: visible;
       }
 
       .playground-models-page .playground-files-library-title-row {
@@ -58,9 +89,26 @@ export const MODELS_PAGE_CSS = String.raw`
         column-gap: 14px;
       }
 
+      .playground-models-table-head.is-agent-pricing,
+      .playground-models-entry-row.is-agent-pricing {
+        grid-template-columns:
+          minmax(220px, 1.5fr)
+          minmax(102px, 0.62fr)
+          minmax(104px, 0.64fr)
+          minmax(88px, 0.52fr)
+          minmax(88px, 0.52fr)
+          minmax(92px, 0.54fr)
+          minmax(92px, 0.54fr)
+          minmax(92px, 0.54fr);
+        column-gap: 12px;
+      }
+
       .playground-models-table-head {
+        position: relative;
+        z-index: 1;
         margin-top: 14px;
-        padding: 0 0 8px;
+        padding: 8px 0 8px;
+        background: #000;
         color: rgba(255, 255, 255, 0.38);
         font-size: 11px;
         font-weight: 500;
@@ -137,6 +185,10 @@ export const MODELS_PAGE_CSS = String.raw`
         text-align: right;
       }
 
+      .playground-models-entry-value.is-price {
+        font-variant-numeric: tabular-nums;
+      }
+
       .playground-models-grid.playground-files-grid {
         grid-template-columns: repeat(auto-fill, minmax(218px, 1fr));
         align-items: stretch;
@@ -151,6 +203,10 @@ export const MODELS_PAGE_CSS = String.raw`
         border-color: rgba(255, 255, 255, 0.05);
         background: rgba(255, 255, 255, 0.05);
         cursor: default;
+      }
+
+      .playground-models-grid-item.is-agent-pricing {
+        min-height: 238px;
       }
 
       .playground-models-grid-card-top {
@@ -301,10 +357,49 @@ export const MODELS_PAGE_CSS = String.raw`
           text-align: left;
         }
       }
+
+      @media (max-width: 720px) {
+        .playground-models-page {
+          padding: 30px 18px 42px;
+        }
+      }
 `;
 
 export const MODELS_PAGE_SCRIPT = String.raw`
       const PLAYGROUND_MANAGED_MODELS_CT_PER_DOLLAR = 100;
+      const PLAYGROUND_MANAGED_AGENT_MODEL_TPS_BY_ID = {
+        "claude-haiku-4-5": 97.7,
+        "claude-sonnet-4-5": 41.9,
+        "claude-opus-4-6": 39.4,
+        "claude-opus-4-7": 56.4,
+        "claude-opus-4-8": 58.3,
+        "gpt-5.5-pro": null,
+        "gpt-5.5": 95.6,
+        "gpt-5.4": 174.5,
+        "gpt-5.4-mini": 180.6,
+        "gpt-5.4-nano": 147.0,
+        "gemini-3-flash": 176.9,
+        "gemini-3-1-flash": 176.9,
+        "gemini-3-1-pro": 132.2,
+        "deepseek-v4-pro": 46.0,
+        "deepseek-v4-flash": 116.4,
+        "minimax-m3": 41.1,
+        "kimi-k2.6": 60.1,
+        "kimi-k2.7-code": null,
+        "glm-5.2": 206.8,
+        "qwen3.5-397b-a17b": 137.9,
+      };
+      const PLAYGROUND_MANAGED_AGENT_MODEL_INTELLIGENCE_BY_ID = {
+        "gemini-3-flash": "Good",
+        "gemini-3-1-flash": "Good",
+        "gemini-3-1-pro": "High",
+        "deepseek-v4-pro": "High",
+        "minimax-m3": "High",
+        "kimi-k2.6": "High",
+        "kimi-k2.7-code": "High",
+        "glm-5.2": "Highest",
+        "qwen3.5-397b-a17b": "High",
+      };
 
       function formatPlaygroundManagedLegacyCtPrice(value, unitLabel) {
         const numericValue = Math.max(0, Number(value || 0));
@@ -489,7 +584,12 @@ export const MODELS_PAGE_SCRIPT = String.raw`
           return getPlaygroundManagedDeepResearchModelOptions();
         }
         return (Array.isArray(agentModelOptions) && agentModelOptions.length > 0 ? agentModelOptions : PLAYGROUND_AGENT_MODEL_OPTIONS)
-          .filter((model) => model?.id && model?.label);
+          .filter((model) => model?.id && model?.label)
+          .map((model) => {
+            const modelId = String(model?.id || "").trim();
+            const intelligence = PLAYGROUND_MANAGED_AGENT_MODEL_INTELLIGENCE_BY_ID[modelId];
+            return intelligence ? { ...model, intelligence, intelligenceLabel: intelligence } : model;
+          });
       }
 
       function getPlaygroundManagedModelProviderLabel(tabId, model) {
@@ -542,7 +642,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
             { id: "intelligence", label: "Highest intelligence" },
             { id: "cost", label: "Lowest cost" },
             { id: "context", label: "Largest context" },
-            { id: "speed", label: "Fastest" },
+            { id: "speed", label: "Highest TPS" },
           ];
         }
         return [
@@ -564,7 +664,27 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         return value;
       }
 
+      function hasPlaygroundManagedAgentModelTps(model) {
+        return Object.prototype.hasOwnProperty.call(PLAYGROUND_MANAGED_AGENT_MODEL_TPS_BY_ID, String(model?.id || "").trim());
+      }
+
+      function readPlaygroundManagedAgentModelTps(model) {
+        const modelId = String(model?.id || "").trim();
+        const value = PLAYGROUND_MANAGED_AGENT_MODEL_TPS_BY_ID[modelId];
+        const numericValue = Number(value);
+        return Number.isFinite(numericValue) ? numericValue : null;
+      }
+
+      function formatPlaygroundManagedAgentModelTps(model) {
+        const value = readPlaygroundManagedAgentModelTps(model);
+        return value === null ? "—" : value.toFixed(1) + " t/s";
+      }
+
       function readPlaygroundManagedModelSpeedRank(model) {
+        if (hasPlaygroundManagedAgentModelTps(model)) {
+          const tpsValue = readPlaygroundManagedAgentModelTps(model);
+          return tpsValue === null ? -1 : tpsValue;
+        }
         const normalized = String(model?.speed || "").trim().toLowerCase();
         if (normalized.includes("very")) return 4;
         if (normalized.includes("fast")) return 3;
@@ -589,6 +709,47 @@ export const MODELS_PAGE_SCRIPT = String.raw`
           return formatPlaygroundAgentModelComputeTokenCost(model?.id);
         }
         return String(model?.pricingLabel || "Usage-based pricing").trim() || "Usage-based pricing";
+      }
+
+      function readPlaygroundManagedAgentPricingNumber(value) {
+        const numericValue = Number(value);
+        return Number.isFinite(numericValue) ? numericValue : null;
+      }
+
+      function getPlaygroundManagedAgentModelPricing(model) {
+        const modelId = String(model?.id || "").trim();
+        if (!modelId || typeof PLAYGROUND_AGENT_MODEL_PRICING_BY_ID === "undefined") {
+          return null;
+        }
+        return PLAYGROUND_AGENT_MODEL_PRICING_BY_ID[modelId] || null;
+      }
+
+      function formatPlaygroundManagedAgentUsdPerMTok(value) {
+        const numericValue = readPlaygroundManagedAgentPricingNumber(value);
+        if (numericValue === null) {
+          return "—";
+        }
+        const retailValue = numericValue * 1.1;
+        const fractionDigits = retailValue > 0 && retailValue < 0.01
+          ? 4
+          : retailValue > 0 && retailValue < 1
+            ? 3
+            : 2;
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: fractionDigits,
+          maximumFractionDigits: fractionDigits,
+        }).format(retailValue);
+      }
+
+      function getPlaygroundManagedAgentPricingCells(model) {
+        const pricing = getPlaygroundManagedAgentModelPricing(model);
+        return {
+          input: formatPlaygroundManagedAgentUsdPerMTok(pricing?.input),
+          output: formatPlaygroundManagedAgentUsdPerMTok(pricing?.output),
+          cached: formatPlaygroundManagedAgentUsdPerMTok(pricing?.cached),
+        };
       }
 
       function getPlaygroundManagedModelsSkillSettingsMeta(tabId) {
@@ -847,6 +1008,8 @@ export const MODELS_PAGE_SCRIPT = String.raw`
               return false;
             }
             if (!normalizedSearchQuery) return true;
+            const agentPricingCells = activeTab === "agent" ? getPlaygroundManagedAgentPricingCells(model) : null;
+            const agentTpsValue = activeTab === "agent" ? formatPlaygroundManagedAgentModelTps(model) : null;
             const haystack = [
               model.id,
               model.label,
@@ -865,24 +1028,33 @@ export const MODELS_PAGE_SCRIPT = String.raw`
               model.providerType,
               getPlaygroundManagedModelProviderLabel(activeTab, model),
               getPlaygroundManagedModelPricingLabel(activeTab, model),
+              agentPricingCells?.input,
+              agentPricingCells?.output,
+              agentPricingCells?.cached,
+              agentTpsValue,
             ].join(" ").toLowerCase();
             return haystack.includes(normalizedSearchQuery);
           });
         const visibleRows = sortPlaygroundManagedModels(activeTab, filteredRows, props.sort);
+        const isAgentTab = activeTab === "agent";
         const isVideoTab = activeTab === "video";
-        const capabilityLabel = isVideoTab ? "Max Duration" : activeTab === "agent" ? "Intelligence" : "Mode";
-        const scopeLabel = activeTab === "agent" ? "Context" : activeTab === "image" ? "Quality" : activeTab === "video" ? "Resolutions" : "Scope";
-        const speedLabel = isVideoTab ? "Input Modalities" : "Speed";
-        const pricingLabel = activeTab === "agent" ? "Cost / mTok" : "Pricing";
+        const capabilityLabel = isVideoTab ? "Max Duration" : isAgentTab ? "Intelligence" : "Mode";
+        const scopeLabel = isAgentTab ? "Context" : activeTab === "image" ? "Quality" : activeTab === "video" ? "Resolutions" : "Scope";
+        const speedLabel = isVideoTab ? "Input Modalities" : isAgentTab ? "Speed in TPS" : "Speed";
+        const pricingLabel = "Pricing";
 
         const skillSettingsMeta = getPlaygroundManagedModelsSkillSettingsMeta(activeTab);
         const getCapabilityValue = (model) => {
           if (isVideoTab) return model.maxDuration || "Custom";
-          if (activeTab === "agent") return renderPlaygroundManagedModelIntelligence(model);
+          if (isAgentTab) return renderPlaygroundManagedModelIntelligence(model);
           return model.mode || "Managed";
         };
         const getScopeValue = (model) => isVideoTab ? model.resolutions || "Custom" : model.contextWindow || "Custom";
-        const getSpeedValue = (model) => isVideoTab ? model.inputModalities || "Custom" : model.speed || "Custom";
+        const getSpeedValue = (model) => {
+          if (isVideoTab) return model.inputModalities || "Custom";
+          if (isAgentTab) return formatPlaygroundManagedAgentModelTps(model);
+          return model.speed || "Custom";
+        };
         const getPricingValue = (model) => getPlaygroundManagedModelPricingLabel(activeTab, model) || (model?.isPricingSubrow ? "" : "Pricing tiers");
 
         const renderSortMenu = () => props.toolbarPopover === "sort"
@@ -937,9 +1109,12 @@ export const MODELS_PAGE_SCRIPT = String.raw`
 
         const renderModelRow = (model) => {
           const providerLabel = getPlaygroundManagedModelProviderLabel(activeTab, model);
+          const pricingCells = isAgentTab ? getPlaygroundManagedAgentPricingCells(model) : null;
           return React.createElement("div", {
               key: activeTab + ":table:" + model.id,
-              className: "playground-files-entry-row playground-models-entry-row" + (model.isPricingSubrow ? " is-pricing-subrow" : ""),
+              className: "playground-files-entry-row playground-models-entry-row"
+                + (isAgentTab ? " is-agent-pricing" : "")
+                + (model.isPricingSubrow ? " is-pricing-subrow" : ""),
             },
             React.createElement("div", { className: "playground-files-entry-main playground-models-entry-main" },
               model.isPricingSubrow ? null : renderPlaygroundManagedModelProviderIcon(activeTab, model),
@@ -948,28 +1123,34 @@ export const MODELS_PAGE_SCRIPT = String.raw`
                   className: "playground-files-entry-name",
                   title: model.label || model.id,
                 }, model.label || model.id),
-                model.isPricingSubrow
-                  ? null
-                  : React.createElement("div", {
-                      className: "playground-models-entry-description",
-                      title: model.description || model.id,
-                    }, model.description || model.id)
+                null
               )
             ),
             React.createElement("div", { className: "playground-models-entry-value is-strong", title: providerLabel }, providerLabel),
             React.createElement("div", { className: "playground-models-entry-value" }, getCapabilityValue(model)),
             React.createElement("div", { className: "playground-models-entry-value", title: getScopeValue(model) }, getScopeValue(model)),
             React.createElement("div", { className: "playground-models-entry-value", title: getSpeedValue(model) }, getSpeedValue(model)),
-            React.createElement("div", { className: "playground-models-entry-value is-right is-strong", title: getPricingValue(model) }, getPricingValue(model))
+            ...(isAgentTab
+              ? [
+                  React.createElement("div", { className: "playground-models-entry-value is-right is-strong is-price", title: pricingCells.input }, pricingCells.input),
+                  React.createElement("div", { className: "playground-models-entry-value is-right is-strong is-price", title: pricingCells.output }, pricingCells.output),
+                  React.createElement("div", { className: "playground-models-entry-value is-right is-strong is-price", title: pricingCells.cached }, pricingCells.cached),
+                ]
+              : [
+                  React.createElement("div", { className: "playground-models-entry-value is-right is-strong", title: getPricingValue(model) }, getPricingValue(model)),
+                ])
           );
         };
 
         const renderModelCard = (model) => {
           const providerLabel = getPlaygroundManagedModelProviderLabel(activeTab, model);
           const pricingValue = getPricingValue(model);
+          const pricingCells = isAgentTab ? getPlaygroundManagedAgentPricingCells(model) : null;
           return React.createElement("div", {
               key: activeTab + ":card:" + model.id,
-              className: "playground-files-grid-item playground-models-grid-item" + (model.isPricingSubrow ? " is-pricing-subrow" : ""),
+              className: "playground-files-grid-item playground-models-grid-item"
+                + (isAgentTab ? " is-agent-pricing" : "")
+                + (model.isPricingSubrow ? " is-pricing-subrow" : ""),
             },
             React.createElement("div", { className: "playground-models-grid-card-top" },
               React.createElement("div", { className: "playground-models-grid-provider", title: providerLabel },
@@ -996,8 +1177,46 @@ export const MODELS_PAGE_SCRIPT = String.raw`
               React.createElement("div", { className: "playground-models-grid-fact" },
                 React.createElement("span", null, speedLabel),
                 React.createElement("span", { title: getSpeedValue(model) }, getSpeedValue(model))
-              )
+              ),
+              ...(isAgentTab
+                ? [
+                    React.createElement("div", { className: "playground-models-grid-fact" },
+                      React.createElement("span", null, "Input / mTok"),
+                      React.createElement("span", { title: pricingCells.input }, pricingCells.input)
+                    ),
+                    React.createElement("div", { className: "playground-models-grid-fact" },
+                      React.createElement("span", null, "Output / mTok"),
+                      React.createElement("span", { title: pricingCells.output }, pricingCells.output)
+                    ),
+                    React.createElement("div", { className: "playground-models-grid-fact" },
+                      React.createElement("span", null, "Cached / mTok"),
+                      React.createElement("span", { title: pricingCells.cached }, pricingCells.cached)
+                    ),
+                  ]
+                : [])
             )
+          );
+        };
+
+        const renderTableHead = () => {
+          if (viewMode !== "table" || visibleRows.length === 0) {
+            return null;
+          }
+          return React.createElement("div", { className: "playground-models-table-head" + (isAgentTab ? " is-agent-pricing" : ""), role: "row" },
+              React.createElement("span", null, "Model"),
+              React.createElement("span", null, "Provider"),
+              React.createElement("span", null, capabilityLabel),
+              React.createElement("span", null, scopeLabel),
+              React.createElement("span", null, speedLabel),
+              ...(isAgentTab
+                ? [
+                    React.createElement("span", { className: "is-right" }, "Input / mTok"),
+                    React.createElement("span", { className: "is-right" }, "Output / mTok"),
+                    React.createElement("span", { className: "is-right" }, "Cached / mTok"),
+                  ]
+                : [
+                    React.createElement("span", { className: "is-right" }, pricingLabel),
+                  ])
           );
         };
 
@@ -1010,17 +1229,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
           if (viewMode === "cards") {
             return React.createElement("div", { className: "playground-files-grid playground-models-grid" }, visibleRows.map(renderModelCard));
           }
-          return React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-models-table-head", role: "row" },
-              React.createElement("span", null, "Model"),
-              React.createElement("span", null, "Provider"),
-              React.createElement("span", null, capabilityLabel),
-              React.createElement("span", null, scopeLabel),
-              React.createElement("span", null, speedLabel),
-              React.createElement("span", { className: "is-right" }, pricingLabel)
-            ),
-            React.createElement("div", { className: "playground-files-entry-list playground-models-entry-list" }, visibleRows.map(renderModelRow))
-          );
+          return React.createElement("div", { className: "playground-files-entry-list playground-models-entry-list" }, visibleRows.map(renderModelRow));
         };
 
         const skillSettingsSection = skillSettingsMeta
@@ -1144,7 +1353,8 @@ export const MODELS_PAGE_SCRIPT = String.raw`
                       "aria-label": "Table view",
                     }, React.createElement(List, { width: 21, height: 21, strokeWidth: 1.8 }))
                   )
-                )
+                ),
+                renderTableHead()
               )
             ),
             React.createElement("div", { className: "playground-files-browser-body playground-models-browser-body" },

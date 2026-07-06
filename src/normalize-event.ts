@@ -1,6 +1,7 @@
 import { RunnerEventHandleResult, RunnerLog, RunnerUsage, RawRunnerEvent } from "./types.js";
 
 type TimeProvider = () => number;
+const RUNNER_COST_CT_PER_DOLLAR = 100;
 
 type CompletedEvent = {
   type: "response.completed";
@@ -14,8 +15,18 @@ type CompletedEvent = {
       cached_tokens?: number;
       total_tokens?: number;
     };
+    costUsd?: number;
+    costUSD?: number;
     cost_usd?: number;
+    totalCostUsd?: number;
+    total_cost_usd?: number;
+    usdCost?: number;
+    usd_cost?: number;
+    costCt?: number;
+    costCT?: number;
     cost_ct?: number;
+    computeTokens?: number;
+    compute_tokens?: number;
   };
 };
 
@@ -892,7 +903,22 @@ export class RunnerEventNormalizer {
   private handleResponseCompleted(event: CompletedEvent): RunnerEventHandleResult {
     const usage = event.response?.usage;
     if (!usage) return { logs: [] };
-    const costCt = this.optionalNumber(event.response?.cost_ct);
+    const explicitCostUsd =
+      this.optionalNumber(event.response?.costUsd) ??
+      this.optionalNumber(event.response?.costUSD) ??
+      this.optionalNumber(event.response?.cost_usd) ??
+      this.optionalNumber(event.response?.totalCostUsd) ??
+      this.optionalNumber(event.response?.total_cost_usd) ??
+      this.optionalNumber(event.response?.usdCost) ??
+      this.optionalNumber(event.response?.usd_cost);
+    const explicitCostCt =
+      this.optionalNumber(event.response?.costCt) ??
+      this.optionalNumber(event.response?.costCT) ??
+      this.optionalNumber(event.response?.cost_ct) ??
+      this.optionalNumber(event.response?.computeTokens) ??
+      this.optionalNumber(event.response?.compute_tokens);
+    const costUsd = explicitCostUsd ?? (explicitCostCt !== undefined ? explicitCostCt / RUNNER_COST_CT_PER_DOLLAR : undefined);
+    const costCt = explicitCostCt ?? (explicitCostUsd !== undefined ? Math.round(explicitCostUsd * RUNNER_COST_CT_PER_DOLLAR) : undefined);
     const runMetadata = {
       ...this.responseRunMetadata,
       runId: this.optionalString(event.response?.id) || this.responseRunMetadata.runId,
@@ -905,7 +931,7 @@ export class RunnerEventNormalizer {
       outputTokens: usage.output_tokens ?? 0,
       cachedInputTokens: usage.cached_tokens ?? 0,
       totalTokens: usage.total_tokens ?? ((usage.input_tokens ?? 0) + (usage.output_tokens ?? 0)),
-      costUsd: event.response?.cost_usd,
+      costUsd,
       costCt,
     };
 

@@ -39335,7 +39335,7 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        margin-bottom: 10px;
+        margin-bottom: 20px;
       }
 
       .playground-tasks-detail-section-header .playground-tasks-detail-section-title {
@@ -42888,6 +42888,9 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-overview-page.is-develop-configure-page .playground-develop-server-kind-metrics.playground-environments-home-metrics {
         margin-bottom: 0;
+        overflow: hidden;
+        position: relative;
+        z-index: 0;
       }
 
       .playground-agents-overview-analytics-card.playground-project-overview-progress-combo-card {
@@ -42929,6 +42932,8 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-overview-list-section.playground-project-overview-panel-plain.playground-plugins-section {
         margin-top: 0 !important;
+        position: relative;
+        z-index: 2;
         overflow: visible;
       }
 
@@ -42938,6 +42943,22 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-overview-list-section .playground-plugins-search-row {
         margin-bottom: 12px;
+        position: relative;
+        z-index: 120;
+        align-items: center;
+      }
+
+      .playground-agents-overview-list-section .playground-project-overview-threads-table {
+        position: relative;
+        z-index: 0;
+      }
+
+      .playground-agents-overview-list-section .playground-plugins-search-row .playground-tasks-toolbar-popup-shell {
+        z-index: 130;
+      }
+
+      .playground-agents-overview-list-section .playground-plugins-search-row .playground-tasks-toolbar-popup-menu {
+        z-index: 131;
       }
 
       .playground-agents-overview-list-section,
@@ -44727,6 +44748,19 @@ ${METRONOME_PAGE_CSS}
 		        margin: 0;
 		        padding: 0 0 12px;
 		        border-bottom: 0;
+		        z-index: 200;
+		      }
+
+		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-table-section > .playground-agents-overview-list-table {
+		        z-index: 0;
+		      }
+
+		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-table-section > .playground-develop-server-kind-table-toolbar .playground-tasks-toolbar-popup-shell {
+		        z-index: 210;
+		      }
+
+		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-table-section > .playground-develop-server-kind-table-toolbar .playground-tasks-toolbar-popup-menu {
+		        z-index: 211;
 		      }
 
 		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-table-section > .playground-plugins-empty {
@@ -44823,6 +44857,8 @@ ${METRONOME_PAGE_CSS}
 		        width: 100%;
 		        margin-left: 0;
 		        justify-content: flex-start;
+		        align-items: center;
+		        flex-wrap: nowrap;
 		      }
 
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list > .playground-develop-server-kind-table-toolbar .playground-develop-server-kind-table-controls {
@@ -45165,7 +45201,7 @@ ${METRONOME_PAGE_CSS}
         border-radius: 10px;
         background: transparent;
         box-shadow: none;
-        overflow: hidden;
+        overflow: hidden !important;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
       }
@@ -45204,6 +45240,8 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-agents-detail-content .playground-agents-profile-section {
+        position: relative;
+        z-index: 320;
         width: 100%;
         min-width: 0;
         display: flex;
@@ -45214,12 +45252,17 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-agents-detail-content .playground-agents-profile-avatar-wrap {
+        position: relative;
+        z-index: 321;
         flex: 0 0 auto;
+        overflow: visible;
       }
 
       .playground-agents-detail-content .playground-agents-profile-avatar.profile-editor-avatar {
+        z-index: 322;
         width: 48px;
         height: 48px;
+        overflow: visible;
       }
 
       .playground-agents-detail-avatar-surface-button.profile-editor-avatar-surface {
@@ -45245,6 +45288,7 @@ ${METRONOME_PAGE_CSS}
         right: auto;
         top: 0;
         bottom: auto;
+        z-index: 2147482000;
         width: 100%;
         height: 100%;
         pointer-events: none;
@@ -45254,6 +45298,7 @@ ${METRONOME_PAGE_CSS}
         left: 0;
         right: auto;
         top: calc(100% + 8px);
+        z-index: 2147482001;
         pointer-events: auto;
       }
 
@@ -45316,7 +45361,7 @@ ${METRONOME_PAGE_CSS}
         display: flex;
         align-items: center;
         justify-content: flex-start;
-        gap: 12px;
+        gap: 24px;
         margin: 0;
         min-width: 0;
       }
@@ -45362,8 +45407,25 @@ ${METRONOME_PAGE_CSS}
         cursor: default;
       }
 
+      .playground-agents-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control):not(.playground-computer-detail-header-publish-button):not(.playground-server-detail-header-publish-button):not(.playground-guardrails-publish-button):not(.playground-evaluations-publish-button) {
+        background: linear-gradient(to top, #082673, #1D59BE);
+      }
+
+      .playground-computer-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control) {
+        background: linear-gradient(to top, #082673, #1D59BE);
+      }
+
+      .playground-agents-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control):not(.playground-computer-detail-header-publish-button):not(.playground-server-detail-header-publish-button):not(.playground-guardrails-publish-button):not(.playground-evaluations-publish-button):hover,
+      .playground-agents-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control):not(.playground-computer-detail-header-publish-button):not(.playground-server-detail-header-publish-button):not(.playground-guardrails-publish-button):not(.playground-evaluations-publish-button):focus-within,
+      .playground-agents-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control):not(.playground-computer-detail-header-publish-button):not(.playground-server-detail-header-publish-button):not(.playground-guardrails-publish-button):not(.playground-evaluations-publish-button).is-active,
+      .playground-computer-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control):hover,
+      .playground-computer-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control):focus-within,
+      .playground-computer-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control).is-active {
+        background: linear-gradient(to top, #082673, #1D59BE);
+      }
+
       .playground-agents-detail-publish-split-control.is-disabled {
-        opacity: 0.62;
+        opacity: 0.5;
       }
 
       .playground-agents-detail-publish-main,
@@ -45407,6 +45469,30 @@ ${METRONOME_PAGE_CSS}
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .playground-agents-version-count-label {
+        height: 30px;
+        min-height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-left: 6px;
+        color: rgba(255, 255, 255, 0.82);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        white-space: nowrap;
+        user-select: none;
+      }
+
+      .playground-agents-version-count-icon {
+        width: 13px;
+        height: 13px;
+        flex: 0 0 auto;
+        color: currentColor;
       }
 
       .playground-agents-tags-control-shell.playground-tasks-toolbar-popup-shell {
@@ -45623,9 +45709,33 @@ ${METRONOME_PAGE_CSS}
 	        width: 284px;
 	        min-width: 284px;
 	        max-height: min(340px, calc(100vh - 190px));
-	        overflow-y: auto;
+	        overflow: hidden;
 	        transform-origin: top left;
 	      }
+
+      .playground-agents-detail-version-selector-list {
+        max-height: min(278px, calc(100vh - 248px));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .playground-agents-detail-version-selector-empty {
+        padding: 12px 14px;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .playground-agents-detail-version-selector-footer {
+        margin-top: 4px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-agents-detail-version-selector-new-button.tb-popup-row {
+        width: 100%;
+        align-items: center;
+      }
 
       .playground-agents-detail-version-selector-option.tb-popup-row {
         align-items: center;
@@ -45795,6 +45905,38 @@ ${METRONOME_PAGE_CSS}
         width: auto;
         margin-left: auto;
         margin-top: 2px;
+      }
+
+      .playground-computer-detail-top-controls-actions.playground-computer-detail-sidebar-controls.playground-agents-detail-sidebar-controls {
+        width: auto;
+        margin: 0;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      .playground-computer-detail-tabs .playground-project-overview-chart-tabs {
+        width: 100%;
+        gap: 24px;
+      }
+
+      .playground-computer-detail-advanced-tab .playground-environments-section,
+      .playground-computer-detail-advanced-tab .playground-environments-mcp-card,
+      .playground-computer-detail-advanced-tab .playground-environments-editor-surface,
+      .playground-computer-detail-advanced-tab .playground-tasks-detail-description {
+        border: 0 !important;
+      }
+
+      .playground-computer-detail-advanced-tab .playground-environments-section {
+        margin-bottom: 24px;
+      }
+
+      .playground-computer-detail-advanced-tab .playground-environments-section-header,
+      .playground-computer-detail-advanced-tab .playground-environments-section-header.is-static {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+      }
+
+      .playground-computer-detail-advanced-tab .playground-environments-section-title {
+        font-size: 12px;
       }
 
       .playground-computer-detail-profile-actions .playground-plugin-detail-connect-button,
@@ -46132,6 +46274,10 @@ ${METRONOME_PAGE_CSS}
         overflow: visible !important;
       }
 
+      .playground-agents-detail-content .playground-tasks-detail-description.playground-environments-editor-description.playground-agents-detail-instructions-section {
+        overflow: visible !important;
+      }
+
       .playground-agents-detail-instructions-section.is-header-stuck {
         border-top-left-radius: 0 !important;
         border-top-right-radius: 0 !important;
@@ -46142,8 +46288,15 @@ ${METRONOME_PAGE_CSS}
         top: 0;
         z-index: 8;
         background: #0a0a0a;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
         padding: 12px 20px 10px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-agents-detail-instructions-section.is-header-stuck .playground-tasks-detail-section-header {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
       }
 
       .playground-agents-detail-instructions-section .playground-tasks-detail-description-editor {
@@ -46894,10 +47047,16 @@ ${METRONOME_PAGE_CSS}
         grid-template-columns: 18px minmax(0, 1fr);
       }
 
-      .playground-agents-detail-about-row.is-agent-id.playground-project-overview-sidebar-resource-row,
-      .playground-agents-detail-about-row.is-model.playground-project-overview-sidebar-resource-row {
-        grid-template-columns: minmax(0, 1fr);
-      }
+	      .playground-agents-detail-about-row.is-agent-id.playground-project-overview-sidebar-resource-row,
+	      .playground-agents-detail-about-row.is-model.playground-project-overview-sidebar-resource-row {
+	        grid-template-columns: minmax(0, 1fr);
+	      }
+
+	      .playground-agents-detail-about-row.is-voice.playground-project-overview-sidebar-resource-row {
+	        width: auto;
+	        grid-template-columns: max-content 14px;
+	        column-gap: 4px;
+	      }
 
       .playground-agents-detail-about-value {
         min-width: 0;
@@ -46907,19 +47066,78 @@ ${METRONOME_PAGE_CSS}
         color: rgba(255, 255, 255, 0.86);
       }
 
-      .playground-agents-detail-about-row.is-model .playground-agents-detail-about-value,
-      .playground-agents-detail-about-row.is-model .playground-environments-runtime-value-button {
-        width: auto;
-        margin-left: 0;
-        justify-content: flex-start;
-        text-align: left;
-      }
+	      .playground-agents-detail-about-row.is-model .playground-agents-detail-about-value,
+	      .playground-agents-detail-about-row.is-voice .playground-agents-detail-about-value,
+	      .playground-agents-detail-about-row.is-model .playground-environments-runtime-value-button {
+	        width: auto;
+	        margin-left: 0;
+	        justify-content: flex-start;
+	        text-align: left;
+	      }
 
-      .playground-agents-detail-about-row.is-model .playground-agents-model-picker-trigger-copy,
-      .playground-agents-detail-about-row.is-model .playground-agents-model-picker-trigger-labels,
-      .playground-agents-detail-about-row.is-model .playground-environments-runtime-value-label {
-        text-align: left;
-      }
+	      .playground-agents-detail-about-row.is-model .playground-agents-model-picker-trigger-copy,
+	      .playground-agents-detail-about-row.is-model .playground-agents-model-picker-trigger-labels,
+	      .playground-agents-detail-about-row.is-model .playground-environments-runtime-value-label,
+	      .playground-agents-detail-about-row.is-voice .playground-environments-runtime-value-label {
+	        text-align: left;
+	      }
+
+	      .playground-agents-detail-voice-select-popup.playground-environments-runtime-popup-shell {
+	        width: max-content;
+	        display: inline-flex;
+	        align-self: flex-start;
+	        justify-content: flex-start;
+	      }
+
+	      .playground-agents-detail-voice-select-popup .playground-agents-detail-about-row {
+	        width: auto;
+	      }
+
+	      .playground-agents-detail-voice-select-trigger {
+	        appearance: none;
+	        display: inline-grid;
+	        border: 0;
+	        background: transparent;
+	        color: rgba(255, 255, 255, 0.86);
+	        cursor: pointer;
+	      }
+
+	      .playground-agents-detail-voice-select-trigger:disabled {
+	        cursor: default;
+	        opacity: 0.48;
+	      }
+
+	      .playground-agents-detail-voice-select-value {
+	        width: auto;
+	        min-width: 0;
+	        display: inline-flex;
+	        align-items: center;
+	        gap: 8px;
+	      }
+
+	      .playground-agents-detail-voice-select-value .playground-project-overview-sidebar-resource-icon {
+	        width: 16px;
+	        height: 16px;
+	        display: inline-flex;
+	        align-items: center;
+	        justify-content: center;
+	        color: rgba(255, 255, 255, 0.68);
+	      }
+
+	      .playground-agents-detail-voice-select-chevron {
+	        width: 14px;
+	        height: 14px;
+	        flex: 0 0 auto;
+	        margin-left: 0;
+	        color: rgba(255, 255, 255, 0.46);
+	      }
+
+	      .playground-agents-detail-voice-select-menu.playground-tasks-toolbar-popup-menu {
+	        right: auto;
+	        left: 0;
+	        width: 220px;
+	        min-width: 220px;
+	      }
 
       .playground-agents-detail-about-model-readonly {
         min-width: 0;
@@ -46952,7 +47170,7 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-agents-detail-about-email {
-        color: #5ea2ff;
+        color: #fff;
       }
 
       .playground-agents-detail-about-row.is-email .playground-project-overview-sidebar-resource-label,
@@ -46974,6 +47192,7 @@ ${METRONOME_PAGE_CSS}
         display: flex;
         align-items: flex-start;
         gap: 4px;
+        margin-top: 16px;
         margin-bottom: 2px;
       }
 
@@ -47390,7 +47609,7 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-agents-detail-tabs .playground-project-overview-chart-tabs {
-        gap: 22px;
+        gap: 24px;
       }
 
       .playground-agents-detail-tabs .playground-project-overview-chart-tab {
@@ -54821,6 +55040,120 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         return Math.max(0, Math.round(numericValue * SETTINGS_CT_PER_DOLLAR));
       }
 
+      function normalizeSettingsCostKey(value) {
+        return String(value || "")
+          .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+          .replace(/[-\s]+/g, "_")
+          .replace(/__+/g, "_")
+          .replace(/^_+|_+$/g, "")
+          .toLowerCase();
+      }
+
+      function getSettingsRecordPathValue(record, path) {
+        if (!record || typeof record !== "object" || Array.isArray(record)) {
+          return undefined;
+        }
+        const parts = String(path || "").split(".").filter(Boolean);
+        let current = record;
+        for (const part of parts) {
+          if (!current || typeof current !== "object" || Array.isArray(current) || !(part in current)) {
+            return undefined;
+          }
+          current = current[part];
+        }
+        return current;
+      }
+
+      function readSettingsFiniteNumber(record, keys = []) {
+        const source = record && typeof record === "object" && !Array.isArray(record) ? record : null;
+        if (!source) return null;
+        for (const key of keys) {
+          const value = getSettingsRecordPathValue(source, key);
+          if (value == null || value === "") continue;
+          const numericValue = Number(value);
+          if (Number.isFinite(numericValue)) {
+            return numericValue;
+          }
+        }
+        return null;
+      }
+
+      function buildSettingsUsdAmountKeys(currencyKey, ctKey) {
+        const keys = [];
+        const add = (value) => {
+          const key = String(value || "").trim();
+          if (key && !keys.includes(key)) keys.push(key);
+        };
+        const addKeyGroup = (value) => {
+          const key = String(value || "").trim();
+          if (!key) return;
+          const snake = normalizeSettingsCostKey(key);
+          const camelUsd = key.endsWith("Usd") || key.endsWith("USD") ? key : key + "Usd";
+          const upperUsd = key.endsWith("Usd") || key.endsWith("USD") ? key : key + "USD";
+          add(camelUsd);
+          add(upperUsd);
+          if (snake) add(snake.endsWith("_usd") ? snake : snake + "_usd");
+          add(key);
+          if (snake) add(snake);
+        };
+
+        addKeyGroup(currencyKey);
+        const normalizedCurrencyKey = normalizeSettingsCostKey(currencyKey);
+        const normalizedCtKey = normalizeSettingsCostKey(ctKey);
+        if (normalizedCurrencyKey.includes("agent") || normalizedCtKey.includes("agent")) {
+          [
+            "agentCostUsd", "agent_cost_usd", "agentUsd", "agent_usd",
+            "llmCostUsd", "llm_cost_usd", "modelCostUsd", "model_cost_usd",
+            "inferenceCostUsd", "inference_cost_usd", "agentCost", "agent_cost",
+          ].forEach(add);
+        } else if (normalizedCurrencyKey.includes("environment") || normalizedCtKey.includes("environment")) {
+          [
+            "environmentCostUsd", "environment_cost_usd", "environmentUsd", "environment_usd",
+            "runtimeCostUsd", "runtime_cost_usd", "resourceCostUsd", "resource_cost_usd",
+            "computerCostUsd", "computer_cost_usd", "environmentCost", "environment_cost",
+          ].forEach(add);
+        } else {
+          [
+            "totalCostUsd", "total_cost_usd", "totalUsd", "total_usd",
+            "costUsd", "cost_usd", "usdCost", "usd_cost",
+            "amountUsd", "amount_usd", "totalCost", "total_cost", "cost", "amount",
+          ].forEach(add);
+        }
+
+        ["usage", "cost", "costs", "billing", "metadata"].forEach((prefix) => {
+          keys.slice().forEach((key) => add(prefix + "." + key));
+        });
+        return keys;
+      }
+
+      function buildSettingsLegacyComputeTokenKeys(ctKey) {
+        const keys = [];
+        const add = (value) => {
+          const key = String(value || "").trim();
+          if (key && !keys.includes(key)) keys.push(key);
+        };
+        const addKeyGroup = (value) => {
+          const key = String(value || "").trim();
+          if (!key) return;
+          const snake = normalizeSettingsCostKey(key);
+          add(key);
+          if (snake) add(snake);
+        };
+        addKeyGroup(ctKey);
+        const normalizedCtKey = normalizeSettingsCostKey(ctKey);
+        if (normalizedCtKey.includes("agent")) {
+          ["agentCT", "agentCt", "agent_ct", "llmCT", "llmCt", "llm_ct", "modelCT", "modelCt", "model_ct", "inferenceCT", "inferenceCt", "inference_ct"].forEach(add);
+        } else if (normalizedCtKey.includes("environment")) {
+          ["environmentCT", "environmentCt", "environment_ct", "runtimeCT", "runtimeCt", "runtime_ct", "resourceCT", "resourceCt", "resource_ct", "computerCT", "computerCt", "computer_ct"].forEach(add);
+        } else {
+          ["totalCT", "totalCt", "total_ct", "totalCostCT", "totalCostCt", "total_cost_ct", "costCT", "costCt", "cost_ct", "computeTokens", "compute_tokens", "ct"].forEach(add);
+        }
+        ["usage", "cost", "costs", "billing", "metadata"].forEach((prefix) => {
+          keys.slice().forEach((key) => add(prefix + "." + key));
+        });
+        return keys;
+      }
+
       function clampSettingsPercentage(value) {
         const numericValue = Number(value);
         if (!Number.isFinite(numericValue)) {
@@ -54831,18 +55164,36 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       }
 
       function readSettingsComputeTokens(record, ctKey, currencyKey) {
-        if (record && record[ctKey] != null) {
-          const ctValue = Number(record[ctKey]);
-          if (Number.isFinite(ctValue)) {
-            return Math.max(0, Math.round(ctValue));
-          }
+        const usdValue = readSettingsFiniteNumber(record, buildSettingsUsdAmountKeys(currencyKey, ctKey));
+        if (usdValue !== null) {
+          return settingsDollarsToComputeTokens(Math.max(0, usdValue));
         }
 
-        if (record && currencyKey && record[currencyKey] != null) {
-          return settingsDollarsToComputeTokens(record[currencyKey]);
-        }
+        const ctValue = readSettingsFiniteNumber(record, buildSettingsLegacyComputeTokenKeys(ctKey));
+        return ctValue !== null ? Math.max(0, Math.round(ctValue)) : 0;
+      }
 
-        return 0;
+      function readSettingsUsdAmount(record, keys = []) {
+        const candidates = [];
+        const add = (value) => {
+          const key = String(value || "").trim();
+          if (key && !candidates.includes(key)) candidates.push(key);
+        };
+        (Array.isArray(keys) ? keys : [keys]).forEach((key) => {
+          const normalizedKey = String(key || "").trim();
+          if (!normalizedKey) return;
+          const snake = normalizeSettingsCostKey(normalizedKey);
+          add(normalizedKey.endsWith("Usd") || normalizedKey.endsWith("USD") ? normalizedKey : normalizedKey + "Usd");
+          add(normalizedKey.endsWith("Usd") || normalizedKey.endsWith("USD") ? normalizedKey : normalizedKey + "USD");
+          if (snake) add(snake.endsWith("_usd") ? snake : snake + "_usd");
+          add(normalizedKey);
+          if (snake) add(snake);
+        });
+        ["billing", "usage", "metadata"].forEach((prefix) => {
+          candidates.slice().forEach((key) => add(prefix + "." + key));
+        });
+        const value = readSettingsFiniteNumber(record, candidates);
+        return value !== null ? Math.max(0, value) : 0;
       }
 
       function formatSettingsComputeTokens(value) {
@@ -57865,7 +58216,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           id: "gemini-3-flash",
           label: "Gemini 3 Flash",
           description: "Fast default model for broad agent execution.",
-          intelligence: "High",
+          intelligence: "Good",
           contextWindow: "1M",
           speed: "Very Fast",
         },
@@ -57873,7 +58224,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           id: "gemini-3-1-flash",
           label: "Gemini 3.1 Flash",
           description: "Fast Gemini tier that currently routes through the same runtime as Gemini 3 Flash.",
-          intelligence: "High",
+          intelligence: "Good",
           contextWindow: "1M",
           speed: "Very Fast",
         },
@@ -57881,7 +58232,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           id: "gemini-3-1-pro",
           label: "Gemini 3.1 Pro",
           description: "Long-context reasoning for deeper planning.",
-          intelligence: "Highest",
+          intelligence: "High",
           contextWindow: "1M",
           speed: "Fast",
         },
@@ -57889,7 +58240,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           id: "deepseek-v4-pro",
           label: "DeepSeek V4 Pro",
           description: "DeepSeek flagship on Clawcode for agentic coding and long-context reasoning.",
-          intelligence: "Highest",
+          intelligence: "High",
           contextWindow: "1M",
           speed: "Fast",
         },
@@ -57905,7 +58256,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           id: "minimax-m3",
           label: "MiniMax M3",
           description: "MiniMax long-context model via Cloudflare for efficient coding, tool use, and digital work.",
-          intelligence: "Highest",
+          intelligence: "High",
           contextWindow: "1M",
           speed: "Fast",
           providerType: "minimax",
@@ -57914,9 +58265,36 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           id: "kimi-k2.6",
           label: "Kimi K2.6",
           description: "Moonshot flagship via Cloudflare Workers AI running on Clawcode for long-horizon coding.",
-          intelligence: "Highest",
+          intelligence: "High",
           contextWindow: "262k",
           speed: "Fast",
+        },
+        {
+          id: "kimi-k2.7-code",
+          label: "Kimi K2.7 Code",
+          description: "Moonshot coding model via Cloudflare Workers AI for long-horizon software engineering.",
+          intelligence: "High",
+          contextWindow: "262k",
+          speed: "Fast",
+          providerType: "kimi",
+        },
+        {
+          id: "glm-5.2",
+          label: "ZAI GLM 5.2",
+          description: "Z.ai flagship agentic coding model via Cloudflare Workers AI for software engineering and planning.",
+          intelligence: "Highest",
+          contextWindow: "262k",
+          speed: "Very Fast",
+          providerType: "zai",
+        },
+        {
+          id: "qwen3.5-397b-a17b",
+          label: "Qwen 3.5 397B A17B",
+          description: "Alibaba Qwen mixture-of-experts model via Cloudflare AI for reasoning, coding, and multimodal agent work.",
+          intelligence: "High",
+          contextWindow: "262k",
+          speed: "Fast",
+          providerType: "qwen",
         },
       ];
       const PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS = [
@@ -58289,6 +58667,12 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         return normalized || "agent";
       }
 
+      function isPlaygroundGeneratedAgentEmailAddress(value) {
+        const normalizedEmail = String(value || "").trim().toLowerCase();
+        const suffix = "@" + PLAYGROUND_AGENT_EMAIL_DOMAIN.toLowerCase();
+        return Boolean(normalizedEmail && normalizedEmail.endsWith(suffix));
+      }
+
       function getPlaygroundAgentCreatorRole(agent) {
         const metadata = agent?.metadata && typeof agent.metadata === "object" && !Array.isArray(agent.metadata)
           ? agent.metadata
@@ -58540,7 +58924,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 
       function getPlaygroundAgentEmailAddress(agent) {
         const profileMetadata = getPlaygroundAgentProfileMetadata(agent?.metadata);
-        if (profileMetadata?.email) {
+        if (profileMetadata?.email && !isPlaygroundGeneratedAgentEmailAddress(profileMetadata.email)) {
           return profileMetadata.email;
         }
 
@@ -58815,6 +59199,9 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         const explicitProvider = String(model?.providerType || "").trim().toLowerCase();
         const modelId = String(model?.id || "").trim().toLowerCase();
         if (modelId.startsWith("minimax-") || modelId === "minimax/m3") return "minimax";
+        if (modelId.startsWith("kimi-") || modelId.includes("moonshot")) return "kimi";
+        if (modelId.startsWith("glm-") || modelId.includes("zai") || modelId.includes("zhipu")) return "zai";
+        if (modelId.startsWith("qwen") || modelId.includes("alibaba/qwen")) return "qwen";
         if (explicitProvider) {
           if (explicitProvider.includes("anthropic")) return "anthropic";
           if (explicitProvider.includes("google") || explicitProvider.includes("gemini")) return "google";
@@ -58822,6 +59209,8 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           if (explicitProvider.includes("deepseek")) return "deepseek";
           if (explicitProvider.includes("minimax")) return "minimax";
           if (explicitProvider.includes("moonshot") || explicitProvider.includes("kimi") || explicitProvider.includes("cloudflare")) return "kimi";
+          if (explicitProvider.includes("zai") || explicitProvider.includes("zhipu")) return "zai";
+          if (explicitProvider.includes("qwen") || explicitProvider.includes("alibaba")) return "qwen";
         }
         if (modelId.startsWith("claude-")) return "anthropic";
         if (modelId.startsWith("gemini-")) return "google";
@@ -58839,6 +59228,8 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         if (providerType === "deepseek") return "DeepSeek";
         if (providerType === "minimax") return "MiniMax";
         if (providerType === "kimi") return "Moonshot";
+        if (providerType === "zai") return "ZAI";
+        if (providerType === "qwen") return "Qwen";
         return "Provider";
       }
 
@@ -58848,7 +59239,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           return "custom";
         }
         const providerType = getPlaygroundAgentModelProviderType(model);
-        if (providerType === "anthropic" || providerType === "google" || providerType === "openai" || providerType === "deepseek" || providerType === "minimax" || providerType === "kimi") {
+        if (providerType === "anthropic" || providerType === "google" || providerType === "openai" || providerType === "deepseek" || providerType === "minimax" || providerType === "kimi" || providerType === "zai" || providerType === "qwen") {
           return providerType;
         }
         const normalizedSource = String(model?.source || "").trim().toLowerCase();
@@ -58884,6 +59275,12 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         if (providerType === "kimi") {
           return { src: "/img/05-model-provider-icons/kimi.png", alt: "Moonshot", className: "" };
         }
+        if (providerType === "zai") {
+          return { src: "/img/05-model-provider-icons/zai.webp", alt: "ZAI", className: "" };
+        }
+        if (providerType === "qwen") {
+          return { src: "/img/05-model-provider-icons/qwen.svg", alt: "Qwen", className: "is-openai" };
+        }
         return null;
       }
 
@@ -58893,26 +59290,44 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         "claude-opus-4-6": { input: 5.0, cached: 0.5, output: 25.0 },
         "claude-opus-4-7": { input: 5.0, cached: 0.5, output: 25.0 },
         "claude-opus-4-8": { input: 5.0, cached: 0.5, output: 25.0 },
-        "gpt-5.5-pro": { input: 30.0, cached: 30.0, output: 180.0 },
+        "gpt-5.5-pro": { input: 30.0, cached: null, output: 180.0 },
         "gpt-5.5": { input: 5.0, cached: 0.5, output: 30.0 },
         "gpt-5.4": { input: 2.5, cached: 0.25, output: 15.0 },
         "gpt-5.4-mini": { input: 0.75, cached: 0.075, output: 4.5 },
         "gpt-5.4-nano": { input: 0.2, cached: 0.02, output: 1.25 },
-        "gemini-3-flash": { input: 1.0, cached: 0.1, output: 5.0 },
-        "gemini-3-1-flash": { input: 1.0, cached: 0.1, output: 5.0 },
-        "gemini-3-1-pro": { input: 3.0, cached: 0.3, output: 15.0 },
-        "deepseek-v4-pro": { input: 0.435, cached: 0.03625, output: 0.87 },
-        "deepseek-v4-flash": { input: 0.14, cached: 0.028, output: 0.28 },
+        "gemini-3-flash": { input: 0.5, cached: 0.05, output: 3.0 },
+        "gemini-3-1-flash": { input: 0.5, cached: 0.05, output: 3.0 },
+        "gemini-3-1-pro": { input: 2.0, cached: 0.2, output: 12.0 },
+        "deepseek-v4-pro": { input: 0.435, cached: 0.003625, output: 0.87 },
+        "deepseek-v4-flash": { input: 0.14, cached: 0.0028, output: 0.28 },
         "minimax-m3": { input: 0.6, cached: 0.12, output: 2.4 },
         "kimi-k2.6": { input: 0.95, cached: 0.16, output: 4.0 },
+        "kimi-k2.7-code": { input: 0.95, cached: 0.19, output: 4.0 },
+        "glm-5.2": { input: 1.4, cached: 0.26, output: 4.4 },
+        "qwen3.5-397b-a17b": { input: 0.6, cached: 0.6, output: 3.6 },
       };
 
+      function getPlaygroundAgentModelPricing(modelId) {
+        return PLAYGROUND_AGENT_MODEL_PRICING_BY_ID[String(modelId || "").trim()] || null;
+      }
+
+      function readPlaygroundAgentModelPricingNumber(value) {
+        const numericValue = Number(value);
+        return Number.isFinite(numericValue) ? numericValue : null;
+      }
+
       function getPlaygroundAgentModelWeightedCost(modelId) {
-        const pricing = PLAYGROUND_AGENT_MODEL_PRICING_BY_ID[String(modelId || "").trim()];
+        const pricing = getPlaygroundAgentModelPricing(modelId);
         if (!pricing) {
           return 0;
         }
-        return (pricing.input * 0.7) + (pricing.cached * 0.1) + (pricing.output * 0.2);
+        const inputCost = readPlaygroundAgentModelPricingNumber(pricing.input);
+        const cachedCost = readPlaygroundAgentModelPricingNumber(pricing.cached);
+        const outputCost = readPlaygroundAgentModelPricingNumber(pricing.output);
+        if (inputCost === null || outputCost === null) {
+          return 0;
+        }
+        return (inputCost * 0.7) + ((cachedCost === null ? inputCost : cachedCost) * 0.1) + (outputCost * 0.2);
       }
 
       function getPlaygroundAgentModelCostMultiplier(modelId) {
@@ -59217,6 +59632,14 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           guardrailSetIds: [],
           deepResearchModel: defaultDeepResearchModel,
           permissionSet: createPlaygroundFullAccessPermissionSet("agent"),
+          voiceMode: "web",
+          voiceProvider: "xai",
+          voiceModel: "grok-voice-latest",
+          voiceId: "eve",
+          voiceInstructions: "",
+          voiceLanguageHint: "",
+          voiceTurnDetection: null,
+          voicePronunciationReplacements: null,
           agentType: kind === "team" ? "team" : "single",
           teamOrchestratorAgentId: "",
           teamSubagentIds: [],
@@ -60989,7 +61412,9 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         const id = String(version.id || version.versionId || version.version_id || ("environment_version_" + (fallbackIndex + 1))).trim();
         const versionNumber = Number(version.version || version.versionNumber || version.version_number || 0) || (fallbackIndex + 1);
         const rawStatus = String(version.status || "").trim().toLowerCase();
-        const status = ["active", "saved", "superseded", "unpublished"].includes(rawStatus) ? rawStatus : "saved";
+        const status = rawStatus === "published"
+          ? "active"
+          : ["active", "saved", "superseded", "unpublished"].includes(rawStatus) ? rawStatus : "saved";
         const rawLifecycleState = String(version.lifecycleState || version.lifecycle_state || "").trim().toLowerCase();
         const lifecycleState = ["published", "saved", "draft", "deprecated", "unpublished", "archived"].includes(rawLifecycleState)
           ? rawLifecycleState
@@ -62474,6 +62899,10 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         const reasoningEffort = ["minimal", "low", "medium", "high"].includes(agent.reasoningEffort)
           ? agent.reasoningEffort
           : draft.reasoningEffort;
+        const voiceMode = normalizePlaygroundVoiceAgentMode(agent.voiceMode);
+        const voiceModel = PLAYGROUND_VOICE_AGENT_MODEL_OPTIONS.some((option) => option.id === agent.voiceModel)
+          ? agent.voiceModel
+          : draft.voiceModel;
 
         return {
           ...draft,
@@ -62491,6 +62920,18 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           promptAdaptations,
           invisiblePromptAdaptations: promptAdaptations,
           deepResearchModel,
+          voiceMode,
+          voiceProvider: "xai",
+          voiceModel,
+          voiceId: typeof agent.voiceId === "string" && agent.voiceId.trim() ? agent.voiceId.trim() : draft.voiceId,
+          voiceInstructions: typeof agent.voiceInstructions === "string" ? agent.voiceInstructions : draft.voiceInstructions,
+          voiceLanguageHint: typeof agent.voiceLanguageHint === "string" ? agent.voiceLanguageHint : draft.voiceLanguageHint,
+          voiceTurnDetection: agent.voiceTurnDetection && typeof agent.voiceTurnDetection === "object" && !Array.isArray(agent.voiceTurnDetection)
+            ? agent.voiceTurnDetection
+            : null,
+          voicePronunciationReplacements: agent.voicePronunciationReplacements && typeof agent.voicePronunciationReplacements === "object" && !Array.isArray(agent.voicePronunciationReplacements)
+            ? agent.voicePronunciationReplacements
+            : null,
           agentType: teamMetadata ? "team" : "single",
           teamOrchestratorAgentId: teamMetadata?.team?.orchestratorAgentId || "",
           teamSubagentIds: teamMetadata?.team?.subagentIds || [],
@@ -62676,6 +63117,20 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             : PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.some((option) => option.id === snapshot.deepResearchModel)
               ? snapshot.deepResearchModel
               : null,
+          voiceMode: normalizePlaygroundVoiceAgentMode(version.voiceMode || snapshot.voiceMode),
+          voiceProvider: "xai",
+          voiceModel: PLAYGROUND_VOICE_AGENT_MODEL_OPTIONS.some((option) => option.id === version.voiceModel)
+            ? version.voiceModel
+            : PLAYGROUND_VOICE_AGENT_MODEL_OPTIONS.some((option) => option.id === snapshot.voiceModel)
+              ? snapshot.voiceModel
+              : "grok-voice-latest",
+          voiceId: String(version.voiceId || snapshot.voiceId || "eve").trim() || "eve",
+          voiceInstructions: typeof version.voiceInstructions === "string"
+            ? version.voiceInstructions
+            : typeof snapshot.voiceInstructions === "string"
+              ? snapshot.voiceInstructions
+              : "",
+          voiceLanguageHint: String(version.voiceLanguageHint || snapshot.voiceLanguageHint || "").trim(),
           permissionSet: normalizePlaygroundPermissionSet(version.permissionSet || snapshot.permissionSet, "agent"),
           agentType,
           teamOrchestratorAgentId: String(version.teamOrchestratorAgentId || snapshot.teamOrchestratorAgentId || "").trim(),
@@ -62778,6 +63233,14 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           deepResearchModel: PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.some((option) => option.id === normalizedAgent.deepResearchModel)
             ? normalizedAgent.deepResearchModel
             : null,
+          voiceMode: normalizePlaygroundVoiceAgentMode(normalizedAgent.voiceMode),
+          voiceProvider: "xai",
+          voiceModel: PLAYGROUND_VOICE_AGENT_MODEL_OPTIONS.some((option) => option.id === normalizedAgent.voiceModel)
+            ? normalizedAgent.voiceModel
+            : "grok-voice-latest",
+          voiceId: String(normalizedAgent.voiceId || "eve").trim() || "eve",
+          voiceInstructions: typeof normalizedAgent.voiceInstructions === "string" ? normalizedAgent.voiceInstructions : "",
+          voiceLanguageHint: String(normalizedAgent.voiceLanguageHint || "").trim(),
           permissionSet: normalizePlaygroundPermissionSet(normalizedAgent.permissionSet, "agent"),
           agentType: normalizedAgent.agentType === "team" ? "team" : "single",
           teamOrchestratorAgentId: String(normalizedAgent.teamOrchestratorAgentId || "").trim(),
@@ -62905,6 +63368,14 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           promptAdaptations: Array.isArray(snapshot.promptAdaptations) ? snapshot.promptAdaptations : baseAgent.promptAdaptations,
           invisiblePromptAdaptations: Array.isArray(snapshot.invisiblePromptAdaptations) ? snapshot.invisiblePromptAdaptations : baseAgent.invisiblePromptAdaptations,
           deepResearchModel: snapshot.deepResearchModel || baseAgent.deepResearchModel,
+          voiceMode: normalizePlaygroundVoiceAgentMode(snapshot.voiceMode || baseAgent.voiceMode),
+          voiceProvider: "xai",
+          voiceModel: PLAYGROUND_VOICE_AGENT_MODEL_OPTIONS.some((option) => option.id === snapshot.voiceModel)
+            ? snapshot.voiceModel
+            : baseAgent.voiceModel,
+          voiceId: String(snapshot.voiceId || baseAgent.voiceId || "eve").trim() || "eve",
+          voiceInstructions: typeof snapshot.voiceInstructions === "string" ? snapshot.voiceInstructions : baseAgent.voiceInstructions,
+          voiceLanguageHint: String(snapshot.voiceLanguageHint || baseAgent.voiceLanguageHint || "").trim(),
           permissionSet: snapshot.permissionSet || baseAgent.permissionSet,
           agentType: snapshot.agentType === "team" ? "team" : baseAgent.agentType,
           teamOrchestratorAgentId: snapshot.teamOrchestratorAgentId || baseAgent.teamOrchestratorAgentId,
@@ -62947,6 +63418,14 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         { id: "grok-voice-latest", label: "grok-voice-latest" },
         { id: "grok-voice-think-fast-1.0", label: "grok-voice-think-fast-1.0" },
         { id: "grok-voice-fast-1.0", label: "grok-voice-fast-1.0" },
+      ];
+
+      const PLAYGROUND_VOICE_AGENT_VOICE_OPTIONS = [
+        { id: "eve", label: "Eve Voice" },
+        { id: "ara", label: "Ara Voice" },
+        { id: "rex", label: "Rex Voice" },
+        { id: "sal", label: "Sal Voice" },
+        { id: "leo", label: "Leo Voice" },
       ];
 
       function normalizePlaygroundVoiceAgentMode(value) {
@@ -84094,6 +84573,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const environmentComposerRuntimePopoverRef = useRef(null);
         const environmentActionsPopoverRef = useRef(null);
         const environmentPublishMenuRef = useRef(null);
+        const environmentVersionSelectorMenuRef = useRef(null);
+        const environmentTagsMenuRef = useRef(null);
         const environmentVersionDescriptionTextareaRef = useRef(null);
         const environmentVersionModalCloseTimerRef = useRef(null);
         const environmentVersionModalFrameRef = useRef(null);
@@ -84278,6 +84759,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	        const [agentRuntimeDetailTab, setAgentRuntimeDetailTab] = useState("general");
         const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
         const [environmentPublishMenuOpen, setEnvironmentPublishMenuOpen] = useState(false);
+        const [environmentVersionSelectorMenuOpen, setEnvironmentVersionSelectorMenuOpen] = useState(false);
+        const [environmentTagsMenuOpen, setEnvironmentTagsMenuOpen] = useState(false);
+        const [environmentTagInputValue, setEnvironmentTagInputValue] = useState("");
         const [environmentVersionsHeaderMenuOpen, setEnvironmentVersionsHeaderMenuOpen] = useState(false);
         const [environmentVersionsSidebarOpen, setEnvironmentVersionsSidebarOpen] = useState(false);
         const [environmentVersionsDrawerContainer, setEnvironmentVersionsDrawerContainer] = useState(null);
@@ -85061,6 +85545,31 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             : {};
         }
 
+        function normalizeEnvironmentTagLabel(value) {
+          return String(value || "").trim().replace(/\s+/g, " ");
+        }
+
+        function getEnvironmentTagLabels(environmentRecord) {
+          const metadata = getEnvironmentMetadataRecord(environmentRecord);
+          const source = Array.isArray(metadata.tags)
+            ? metadata.tags
+            : Array.isArray(metadata.labels)
+              ? metadata.labels
+              : Array.isArray(environmentRecord?.tags)
+                ? environmentRecord.tags
+                : [];
+          const seen = new Set();
+          return source
+            .map((tag) => normalizeEnvironmentTagLabel(tag))
+            .filter((tag) => {
+              if (!tag) return false;
+              const key = tag.toLowerCase();
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
+        }
+
         function getEnvironmentSharedTeamIds(environmentRecord) {
           const metadata = getEnvironmentMetadataRecord(environmentRecord);
           const source = Array.isArray(metadata.sharedTeamIds)
@@ -85441,6 +85950,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setEnvironmentRuntimePopover("");
           setEnvironmentActionsPopoverOpen(false);
           setEnvironmentPublishMenuOpen(false);
+          setEnvironmentVersionSelectorMenuOpen(false);
+          setEnvironmentTagsMenuOpen(false);
+          setEnvironmentTagInputValue("");
           setEnvironmentVersionsHeaderMenuOpen(false);
           setEnvironmentVersionsSidebarOpen(false);
           environmentDetailsCollapsedBeforeVersionsRef.current = null;
@@ -88641,6 +89153,60 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [versionsDrawerPortalId]);
 
         useEffect(() => {
+          if (!environmentVersionSelectorMenuOpen) {
+            return undefined;
+          }
+
+          function handleEnvironmentVersionSelectorPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !environmentVersionSelectorMenuRef.current || environmentVersionSelectorMenuRef.current.contains(target)) {
+              return;
+            }
+            setEnvironmentVersionSelectorMenuOpen(false);
+          }
+
+          function handleEnvironmentVersionSelectorEscape(event) {
+            if (event.key === "Escape") {
+              setEnvironmentVersionSelectorMenuOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleEnvironmentVersionSelectorPointerDown);
+          window.addEventListener("keydown", handleEnvironmentVersionSelectorEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleEnvironmentVersionSelectorPointerDown);
+            window.removeEventListener("keydown", handleEnvironmentVersionSelectorEscape);
+          };
+        }, [environmentVersionSelectorMenuOpen]);
+
+        useEffect(() => {
+          if (!environmentTagsMenuOpen) {
+            return undefined;
+          }
+
+          function handleEnvironmentTagsMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !environmentTagsMenuRef.current || environmentTagsMenuRef.current.contains(target)) {
+              return;
+            }
+            setEnvironmentTagsMenuOpen(false);
+          }
+
+          function handleEnvironmentTagsMenuEscape(event) {
+            if (event.key === "Escape") {
+              setEnvironmentTagsMenuOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleEnvironmentTagsMenuPointerDown);
+          window.addEventListener("keydown", handleEnvironmentTagsMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleEnvironmentTagsMenuPointerDown);
+            window.removeEventListener("keydown", handleEnvironmentTagsMenuEscape);
+          };
+        }, [environmentTagsMenuOpen]);
+
+        useEffect(() => {
           if (typeof onVersionsSidebarOpenChange !== "function") {
             return undefined;
           }
@@ -89726,14 +90292,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }
 
             if (key === "s") {
-              if (getEnvironmentVersionPrimaryActionKind() === "save" && hasDraftEnvironmentVersionChanges()) {
-                void saveCurrentEnvironmentVersion();
+              if (hasDraftEnvironmentVersionChanges()) {
+                void saveAndPublishCurrentEnvironmentVersion();
               }
               return;
             }
 
-            if (key === "p" && !event.shiftKey && canPublishDraftEnvironmentSelectedVersion()) {
-              void publishCurrentEnvironmentVersion();
+            if (key === "p" && !event.shiftKey && hasDraftEnvironmentVersionChanges()) {
+              void saveAndPublishCurrentEnvironmentVersion();
             }
           }
 
@@ -95122,13 +95688,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           });
         }
 
-        function canPublishDraftEnvironmentSelectedVersion() {
-          const selectedVersion = getDraftEnvironmentSelectedVersion();
-          if (!selectedVersion) return false;
-          const hasChanges = hasDraftEnvironmentVersionChanges();
-          return selectedVersion.status === "active" ? hasChanges : !hasChanges;
-        }
-
         function canPublishEnvironmentVersion(version) {
           const normalizedVersionId = String(version?.id || "").trim();
           if (!normalizedVersionId) return false;
@@ -95141,33 +95700,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return !hasChanges;
         }
 
-        function getEnvironmentVersionPrimaryActionKind() {
-          return canPublishDraftEnvironmentSelectedVersion() ? "publish" : "save";
-        }
-
         function getEnvironmentVersionPopupActions(options = {}) {
-          const includeVersionHistory = options.includeVersionHistory !== false;
-          const environmentVersionPrimaryActionKind = getEnvironmentVersionPrimaryActionKind();
+          const includeVersionHistory = options.includeVersionHistory === true;
           const environmentVersionHasChanges = hasDraftEnvironmentVersionChanges();
-          const environmentVersionCanPublish = canPublishDraftEnvironmentSelectedVersion();
           const actions = [
-            environmentVersionPrimaryActionKind === "publish"
-              ? {
-                  id: "publish",
-                  label: "Publish",
-                  Icon: Rocket,
-                  shortcut: "⌘P",
-                  disabled: !environmentVersionCanPublish,
-                  onClick: publishCurrentEnvironmentVersion,
-                }
-              : {
-                  id: "save",
-                  label: "Save",
-                  Icon: Save,
-                  shortcut: "⌘S",
-                  disabled: !environmentVersionHasChanges,
-                  onClick: saveCurrentEnvironmentVersion,
-                },
             {
               id: "save-new-version",
               label: "Save to new Version",
@@ -95192,6 +95728,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               disabled: false,
               onClick: () => {
                 setEnvironmentPublishMenuOpen(false);
+                setEnvironmentVersionSelectorMenuOpen(false);
+                setEnvironmentTagsMenuOpen(false);
                 setEnvironmentVersionsHeaderMenuOpen(false);
                 openEnvironmentVersionChangesPage();
               },
@@ -95287,6 +95825,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
           setEnvironmentActionsPopoverOpen(false);
           setEnvironmentPublishMenuOpen(false);
+          setEnvironmentVersionSelectorMenuOpen(false);
+          setEnvironmentTagsMenuOpen(false);
           setEnvironmentVersionsHeaderMenuOpen(false);
           setOpenEnvironmentVersionMenuId("");
           setEnvironmentVersionState((current) => current.status === "loading" ? current : {
@@ -95300,31 +95840,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         function closeEnvironmentVersionsSidebar() {
           setEnvironmentVersionsSidebarOpen(false);
           setEnvironmentPublishMenuOpen(false);
+          setEnvironmentVersionSelectorMenuOpen(false);
+          setEnvironmentTagsMenuOpen(false);
           setEnvironmentVersionsHeaderMenuOpen(false);
           finishCloseEnvironmentVersionModal();
           setEnvironmentVersionChangesState(null);
           setOpenEnvironmentVersionMenuId("");
-        }
-
-        async function saveCurrentEnvironmentVersion() {
-          if (!draftEnvironment || environmentVersionState.status === "loading") {
-            return;
-          }
-          if (!hasDraftEnvironmentVersionChanges()) {
-            return;
-          }
-          const actor = getEnvironmentVersionActor();
-          const result = environmentVersionController.buildSaveCurrentResource(draftEnvironment, { status: "saved", actor });
-          if (!result?.resource) {
-            return;
-          }
-          await commitVersionedEnvironmentRecord(result.resource, {
-            operation: "save-current",
-            actor,
-            loadingMessage: "Saving current version...",
-            successMessage: "Current version saved",
-            errorMessage: "Failed to save current version.",
-          });
         }
 
         function cancelEnvironmentVersionModalAnimation() {
@@ -95354,6 +95875,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
           cancelEnvironmentVersionModalAnimation();
           setEnvironmentPublishMenuOpen(false);
+          setEnvironmentVersionSelectorMenuOpen(false);
+          setEnvironmentTagsMenuOpen(false);
           setEnvironmentVersionsHeaderMenuOpen(false);
           setOpenEnvironmentVersionMenuId("");
           setEnvironmentVersionState((current) => current.status === "loading" ? current : {
@@ -95498,37 +96021,43 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
         }
 
-        async function publishCurrentEnvironmentVersion() {
-          if (!draftEnvironment || environmentVersionState.status === "loading") {
+        async function saveAndPublishCurrentEnvironmentVersion() {
+          if (!draftEnvironment || saveState.isSaving || environmentVersionState.status === "loading") {
+            return;
+          }
+          if (!hasDraftEnvironmentVersionChanges()) {
             return;
           }
           const selectedVersion = getDraftEnvironmentSelectedVersion();
-          const hasChanges = hasDraftEnvironmentVersionChanges();
-          if (hasChanges && selectedVersion?.status !== "active") {
-            setEnvironmentVersionState({
-              status: "error",
-              message: "",
-              error: "Save the current version before publishing.",
-            });
-            return;
-          }
-          if (!canPublishDraftEnvironmentSelectedVersion()) {
-            return;
-          }
           const actor = getEnvironmentVersionActor();
-          const result = environmentVersionController.buildPublishSelectedResource(draftEnvironment, {
-            actor,
-            updateFromResource: hasChanges,
-          });
-          if (!result?.resource) {
+          const publishResult = selectedVersion
+            ? environmentVersionController.buildPublishSelectedResource(draftEnvironment, {
+                actor,
+                updateFromResource: true,
+              })
+            : (() => {
+                const saveResult = environmentVersionController.buildSaveCurrentResource(draftEnvironment, { status: "saved", actor });
+                if (!saveResult?.resource) {
+                  return null;
+                }
+                return environmentVersionController.buildPublishSelectedResource(saveResult.resource, {
+                  actor,
+                  updateFromResource: true,
+                });
+              })();
+          if (!publishResult?.resource) {
             return;
           }
-          await commitVersionedEnvironmentRecord(result.resource, {
-            operation: "publish",
+          setEnvironmentPublishMenuOpen(false);
+          setEnvironmentVersionSelectorMenuOpen(false);
+          setEnvironmentTagsMenuOpen(false);
+          setEnvironmentVersionsHeaderMenuOpen(false);
+          await commitVersionedEnvironmentRecord(publishResult.resource, {
+            operation: "save-publish",
             actor,
-            loadingMessage: "Publishing computer...",
-            successMessage: "Published",
-            errorMessage: "Failed to publish computer.",
+            loadingMessage: "Saving & publishing computer...",
+            successMessage: "Saved & published",
+            errorMessage: "Failed to save and publish computer.",
           });
         }
 
@@ -97358,6 +97887,34 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return {
               ...current,
               [field]: value,
+            };
+          });
+        }
+
+        function updateEnvironmentTagLabels(nextLabels) {
+          const normalizedLabels = [];
+          const seen = new Set();
+          (Array.isArray(nextLabels) ? nextLabels : []).forEach((label) => {
+            const normalized = normalizeEnvironmentTagLabel(label);
+            if (!normalized) return;
+            const key = normalized.toLowerCase();
+            if (seen.has(key)) return;
+            seen.add(key);
+            normalizedLabels.push(normalized);
+          });
+          updateDraftEnvironment((current) => {
+            if (!current) {
+              return current;
+            }
+            const metadata = {
+              ...getEnvironmentMetadataRecord(current),
+              tags: normalizedLabels,
+              labels: normalizedLabels,
+            };
+            return {
+              ...current,
+              tags: normalizedLabels,
+              metadata,
             };
           });
         }
@@ -105906,16 +106463,24 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
             React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
           );
-          const renderEnvironmentDetailTimescaleControl = () => React.createElement("div", { className: "playground-environments-home-comparison-timescale playground-develop-server-metrics-timescale" },
-            React.createElement("select", {
-              className: "playground-environments-home-comparison-timescale-select",
-              value: normalizedEnvironmentDetailChartTimescale,
-              onChange: (event) => setEnvironmentDetailChartTimescale(String(event.target.value || "day")),
+          const environmentDetailTimescaleOptions = [
+            { id: "day", label: "1D" },
+            { id: "week", label: "1W" },
+            { id: "month", label: "1M" },
+          ];
+          const renderEnvironmentDetailTimescaleControl = () => React.createElement("div", {
+              className: "playground-project-overview-progress-combo-ranges",
+              role: "group",
               "aria-label": "Computer detail chart timescale",
             },
-              React.createElement("option", { value: "day" }, "Daily"),
-              React.createElement("option", { value: "week" }, "Weekly"),
-              React.createElement("option", { value: "month" }, "Monthly")
+            environmentDetailTimescaleOptions.map((option) =>
+              React.createElement("button", {
+                key: option.id,
+                type: "button",
+                className: "playground-project-overview-progress-combo-range" + (normalizedEnvironmentDetailChartTimescale === option.id ? " is-active" : ""),
+                onClick: () => setEnvironmentDetailChartTimescale(option.id),
+                "aria-pressed": normalizedEnvironmentDetailChartTimescale === option.id ? "true" : "false",
+              }, option.label)
             )
           );
           const renderEnvironmentDetailActivityChart = () => renderHomeStackedUsageChartShared({
@@ -106556,9 +107121,270 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             && draftEnvironment.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
             && !draftEnvironment.isSystem
           );
-          const isEnvironmentPublishControlDisabled = saveState.isSaving || environmentVersionState.status === "loading";
-          const areEnvironmentPublishMenuActionsDisabled = saveState.isSaving || environmentVersionState.status === "loading";
-          const environmentVersionPopupActions = getEnvironmentVersionPopupActions();
+          const isEnvironmentVersionControlBusy = saveState.isSaving || environmentVersionState.status === "loading";
+          const environmentVersionHasChanges = hasDraftEnvironmentVersionChanges();
+          const isEnvironmentPublishControlDisabled = Boolean(isEnvironmentVersionControlBusy || !environmentVersionHasChanges);
+          const areEnvironmentPublishMenuActionsDisabled = isEnvironmentPublishControlDisabled;
+          const environmentVersionPopupActions = getEnvironmentVersionPopupActions({ includeVersionHistory: false });
+          const environmentDetailVersions = readDraftEnvironmentVersions();
+          const selectedEnvironmentDetailVersion = getDraftEnvironmentSelectedVersion() || getDraftEnvironmentActiveVersion() || environmentDetailVersions[0] || null;
+          const activeEnvironmentDetailVersion = getDraftEnvironmentActiveVersion();
+          const selectedEnvironmentDetailVersionId = String(selectedEnvironmentDetailVersion?.id || "").trim();
+          const activeEnvironmentDetailVersionId = String(activeEnvironmentDetailVersion?.id || "").trim();
+          const environmentTagLabels = getEnvironmentTagLabels(draftEnvironment);
+          const getEnvironmentDetailVersionTitle = (version) => {
+            if (!version) return "No versions";
+            return String(version.label || ("Version " + (version.version || ""))).trim() || "Version";
+          };
+          const getEnvironmentDetailVersionMeta = (version) => {
+            if (!version) return "";
+            const versionId = String(version.id || "").trim();
+            const status = versionId && versionId === activeEnvironmentDetailVersionId
+              ? "Published"
+              : (String(version.status || "").toLowerCase() === "active" ? "Published" : "Saved");
+            const timestamp = String(version.publishedAt || version.updatedAt || version.createdAt || "").trim();
+            const formattedTimestamp = timestamp ? formatPlaygroundFileDate(timestamp) : "";
+            return status + (formattedTimestamp ? " · " + formattedTimestamp : "");
+          };
+          const renderEnvironmentVersionCountLabel = () => {
+            const versionCountLabel = String(environmentDetailVersions.length) + " " + (environmentDetailVersions.length === 1 ? "Version" : "Versions");
+            return React.createElement("div", {
+                className: "playground-agents-version-count-label playground-computer-version-count-label",
+                title: versionCountLabel,
+                "aria-label": versionCountLabel,
+              },
+              React.createElement(GitBranch, { className: "playground-agents-version-count-icon", strokeWidth: 1.8 }),
+              React.createElement("span", null, versionCountLabel)
+            );
+          };
+          const renderEnvironmentVersionSelector = () => {
+            const hasVersions = environmentDetailVersions.length > 0;
+            const currentTitle = getEnvironmentDetailVersionTitle(selectedEnvironmentDetailVersion);
+            const selectorDisabled = isEnvironmentVersionControlBusy;
+            const canCreateVersionFromSelector = Boolean(canShowEnvironmentDetailHeaderPublish && !isEnvironmentVersionControlBusy);
+            const toggleSelectorMenu = (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (selectorDisabled) {
+                return;
+              }
+              setEnvironmentPublishMenuOpen(false);
+              setEnvironmentVersionsHeaderMenuOpen(false);
+              setEnvironmentTagsMenuOpen(false);
+              setEnvironmentVersionSelectorMenuOpen((current) => !current);
+            };
+            return React.createElement("div", { className: "playground-agents-detail-version-selector-row playground-computer-detail-version-selector-row" },
+              renderPlaygroundPlatformPopup({
+                open: environmentVersionSelectorMenuOpen,
+                shellRef: environmentVersionSelectorMenuRef,
+                shellClassName: "playground-agents-detail-publish-split-shell playground-agents-detail-version-selector-shell playground-computer-detail-version-selector-shell",
+                menuClassName: "playground-agents-detail-publish-menu playground-agents-detail-version-selector-menu playground-computer-detail-version-selector-menu",
+                trigger: React.createElement("div", {
+                    className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-computer-detail-header-publish-button playground-agents-detail-publish-split-control playground-agents-detail-version-selector-control"
+                      + (environmentVersionSelectorMenuOpen ? " is-active" : "")
+                      + (selectorDisabled ? " is-disabled" : ""),
+                  },
+                  React.createElement("button", {
+                      type: "button",
+                      className: "playground-agents-detail-publish-main playground-agents-detail-version-selector-main",
+                      title: currentTitle,
+                      "aria-label": "Choose computer version",
+                      "aria-haspopup": "menu",
+                      "aria-expanded": environmentVersionSelectorMenuOpen ? "true" : "false",
+                      disabled: selectorDisabled,
+                      onClick: toggleSelectorMenu,
+                    },
+                    React.createElement(GitBranch, { className: "playground-agents-detail-version-selector-icon", strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "playground-agents-detail-version-selector-label" }, currentTitle)
+                  ),
+                  React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
+                  React.createElement("button", {
+                      type: "button",
+                      className: "playground-agents-detail-publish-chevron",
+                      title: "Choose computer version",
+                      "aria-label": "Choose computer version",
+                      "aria-haspopup": "menu",
+                      "aria-expanded": environmentVersionSelectorMenuOpen ? "true" : "false",
+                      disabled: selectorDisabled,
+                      onClick: toggleSelectorMenu,
+                    },
+                    React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                  )
+                ),
+                menuProps: {
+                  role: "menu",
+                  onClick: (event) => event.stopPropagation(),
+                },
+                children: React.createElement(React.Fragment, null,
+                  React.createElement("div", { className: "playground-agents-detail-version-selector-list", role: "group", "aria-label": "Computer versions" },
+                    hasVersions
+                      ? environmentDetailVersions.map((version, index) => {
+                          const versionId = String(version?.id || "").trim() || "version-" + index;
+                          const isSelected = versionId === selectedEnvironmentDetailVersionId;
+                          return React.createElement("button", {
+                              key: versionId,
+                              type: "button",
+                              className: "tb-popup-row playground-agents-detail-version-selector-option" + (isSelected ? " is-selected" : ""),
+                              role: "menuitemradio",
+                              "aria-checked": isSelected ? "true" : "false",
+                              disabled: isEnvironmentVersionControlBusy || isSelected,
+                              onClick: () => {
+                                if (isEnvironmentVersionControlBusy || isSelected) {
+                                  return;
+                                }
+                                setEnvironmentVersionSelectorMenuOpen(false);
+                                void restoreEnvironmentVersion(versionId);
+                              },
+                            },
+                            React.createElement("span", { className: "playground-agents-detail-version-selector-option-check" },
+                              isSelected
+                                ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 2.2 })
+                                : null
+                            ),
+                            React.createElement("span", { className: "playground-agents-detail-version-selector-option-copy" },
+                              React.createElement("span", { className: "playground-agents-detail-version-selector-option-title" }, getEnvironmentDetailVersionTitle(version)),
+                              React.createElement("span", { className: "playground-agents-detail-version-selector-option-meta" }, getEnvironmentDetailVersionMeta(version))
+                            )
+                          );
+                        })
+                      : React.createElement("div", { className: "playground-agents-detail-version-selector-empty" }, "No versions yet.")
+                  ),
+                  React.createElement("div", { className: "playground-agents-detail-version-selector-footer" },
+                    React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row playground-agents-detail-version-selector-new-button",
+                        role: "menuitem",
+                        disabled: !canCreateVersionFromSelector,
+                        onClick: () => {
+                          if (!canCreateVersionFromSelector) {
+                            return;
+                          }
+                          setEnvironmentVersionSelectorMenuOpen(false);
+                          openCreateEnvironmentVersionModal({ force: true });
+                        },
+                      },
+                      React.createElement(GitBranchPlus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "New Version")
+                      )
+                    ),
+                    React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row playground-agents-detail-version-selector-new-button",
+                        role: "menuitem",
+                        disabled: !canShowEnvironmentDetailHeaderPublish || isEnvironmentVersionControlBusy,
+                        onClick: () => {
+                          if (!canShowEnvironmentDetailHeaderPublish || isEnvironmentVersionControlBusy) {
+                            return;
+                          }
+                          setEnvironmentVersionSelectorMenuOpen(false);
+                          setEnvironmentPublishMenuOpen(false);
+                          setEnvironmentTagsMenuOpen(false);
+                          setEnvironmentVersionsHeaderMenuOpen(false);
+                          openEnvironmentVersionChangesPage();
+                        },
+                      },
+                      React.createElement(History, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "Version history")
+                      )
+                    )
+                  )
+                )
+              }),
+              renderEnvironmentVersionCountLabel(),
+              renderEnvironmentTagsControl()
+            );
+          };
+          const handleEnvironmentTagSubmit = (event) => {
+            event.preventDefault();
+            const nextLabel = normalizeEnvironmentTagLabel(environmentTagInputValue);
+            if (!nextLabel) {
+              return;
+            }
+            const existingKey = nextLabel.toLowerCase();
+            if (environmentTagLabels.some((label) => label.toLowerCase() === existingKey)) {
+              setEnvironmentTagInputValue("");
+              return;
+            }
+            updateEnvironmentTagLabels([...environmentTagLabels, nextLabel]);
+            setEnvironmentTagInputValue("");
+          };
+          const removeEnvironmentTagLabel = (labelToRemove) => {
+            const removeKey = normalizeEnvironmentTagLabel(labelToRemove).toLowerCase();
+            if (!removeKey) {
+              return;
+            }
+            updateEnvironmentTagLabels(environmentTagLabels.filter((label) => label.toLowerCase() !== removeKey));
+          };
+          function renderEnvironmentTagsControl() {
+            return renderPlaygroundPlatformPopup({
+              open: environmentTagsMenuOpen,
+              shellRef: environmentTagsMenuRef,
+              shellClassName: "playground-agents-tags-control-shell playground-computer-tags-control-shell playground-tasks-toolbar-popup-shell",
+              menuClassName: "playground-agents-tags-menu playground-computer-tags-menu",
+              trigger: React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-tags-control-button" + (environmentTagsMenuOpen ? " is-active" : ""),
+                  "aria-label": "Edit computer tags",
+                  "aria-haspopup": "menu",
+                  "aria-expanded": environmentTagsMenuOpen ? "true" : "false",
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setEnvironmentPublishMenuOpen(false);
+                    setEnvironmentVersionSelectorMenuOpen(false);
+                    setEnvironmentVersionsHeaderMenuOpen(false);
+                    setEnvironmentTagsMenuOpen((current) => !current);
+                  },
+                },
+                React.createElement(Tag, { className: "playground-agents-tags-control-icon", strokeWidth: 1.8 }),
+                React.createElement("span", null, "Tags"),
+                React.createElement("span", { className: "playground-agents-tags-count" }, String(environmentTagLabels.length))
+              ),
+              menuProps: {
+                role: "menu",
+                onClick: (event) => event.stopPropagation(),
+              },
+              children: React.createElement("div", { className: "playground-agents-tags-menu-content" },
+                React.createElement("form", {
+                    className: "playground-agents-tags-form",
+                    onSubmit: handleEnvironmentTagSubmit,
+                  },
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-agents-tags-input",
+                    value: environmentTagInputValue,
+                    placeholder: "Add label",
+                    "aria-label": "Add computer tag",
+                    onChange: (event) => setEnvironmentTagInputValue(event.target.value),
+                    onKeyDown: (event) => event.stopPropagation(),
+                  }),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-agents-tags-add-button",
+                    disabled: !normalizeEnvironmentTagLabel(environmentTagInputValue),
+                    "aria-label": "Add tag",
+                  }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
+                ),
+                environmentTagLabels.length > 0
+                  ? React.createElement("div", { className: "playground-agents-tags-list" },
+                      environmentTagLabels.map((label) =>
+                        React.createElement("span", { key: label, className: "playground-agents-tags-chip" },
+                          React.createElement("span", { className: "playground-agents-tags-chip-label" }, label),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-agents-tags-chip-remove",
+                            "aria-label": "Remove " + label,
+                            onClick: () => removeEnvironmentTagLabel(label),
+                          }, React.createElement(X, { width: 12, height: 12, strokeWidth: 2 }))
+                        )
+                      )
+                    )
+                  : React.createElement("div", { className: "playground-agents-tags-empty" }, "No tags yet.")
+              )
+            });
+          }
           const renderEnvironmentPublishSplitButton = () => renderPlaygroundPlatformPopup({
             open: environmentPublishMenuOpen,
             shellRef: environmentPublishMenuRef,
@@ -106572,18 +107398,19 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               React.createElement("button", {
                   type: "button",
                   className: "playground-agents-detail-publish-main",
-                  title: "Open computer versions",
-                  "aria-label": "Open computer versions",
-                  "aria-expanded": environmentVersionsSidebarOpen ? "true" : "false",
+                  title: "Save and publish computer changes",
+                  "aria-label": "Save and publish computer changes",
                   disabled: isEnvironmentPublishControlDisabled,
                   onClick: () => {
                     setEnvironmentPublishMenuOpen(false);
+                    setEnvironmentVersionSelectorMenuOpen(false);
+                    setEnvironmentTagsMenuOpen(false);
                     setEnvironmentVersionsHeaderMenuOpen(false);
-                    setEnvironmentVersionsSidebarOpen(true);
+                    void saveAndPublishCurrentEnvironmentVersion();
                   },
                 },
                 React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Publish")
+                React.createElement("span", null, "Save & Publish")
               ),
               React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
               React.createElement("button", {
@@ -106596,6 +107423,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   disabled: isEnvironmentPublishControlDisabled,
                   onClick: (event) => {
                     event.stopPropagation();
+                    setEnvironmentVersionSelectorMenuOpen(false);
+                    setEnvironmentTagsMenuOpen(false);
                     setEnvironmentPublishMenuOpen((current) => !current);
                   },
                 },
@@ -106638,6 +107467,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 : null,
               renderEnvironmentSidebarToggleButton()
             );
+          const environmentDetailSidebarControls = renderEnvironmentControlRow("playground-agents-detail-sidebar-controls playground-agents-detail-top-controls-actions playground-computer-detail-sidebar-controls playground-computer-detail-top-controls-actions");
+          const environmentDetailTopControls = React.createElement("div", { className: "playground-agents-detail-top-controls playground-computer-detail-top-controls" },
+            renderEnvironmentVersionSelector(),
+            environmentDetailSidebarControls
+          );
           const environmentProfileSection = React.createElement("div", { className: "playground-agents-profile-section playground-computer-detail-profile-section" },
             React.createElement("div", { className: "playground-agents-profile-copy" },
               React.createElement("div", { className: "playground-agents-profile-name-wrap" },
@@ -106653,10 +107487,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   onBlur: commitDraftEnvironmentIfDirty,
                 })
               )
-            ),
-            environmentSidebarCollapsed
-              ? renderEnvironmentControlRow("playground-agents-detail-profile-actions playground-computer-detail-profile-actions")
-              : null
+            )
           );
           const renderEnvironmentSidebarValue = (value, className = "") =>
             React.createElement("span", {
@@ -106791,9 +107622,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               className: "playground-project-overview-sidebar playground-agents-detail-sidebar playground-computer-detail-sidebar",
               "aria-label": (draftEnvironment.name || "Computer") + " settings",
             },
-            !environmentSidebarCollapsed
-              ? renderEnvironmentControlRow("playground-agents-detail-sidebar-controls playground-computer-detail-sidebar-controls")
-              : null,
             React.createElement("section", { className: "playground-project-overview-sidebar-card playground-computer-detail-properties-card" },
               React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
                 React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties")
@@ -106909,19 +107737,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const environmentDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-computer-detail-tabs" },
             React.createElement("div", { className: "playground-project-overview-chart-tabs" },
               [
-                { id: "general", label: "General" },
-                { id: "advanced", label: "Advanced Settings" },
-              ].map((tab) =>
-                React.createElement("button", {
+                { id: "general", label: "General", Icon: LayoutGrid },
+                { id: "advanced", label: "Advanced Settings", Icon: Settings2 },
+              ].map((tab) => {
+                const TabIcon = tab.Icon;
+                return React.createElement("button", {
                     key: tab.id,
                     type: "button",
                     className: "playground-project-overview-chart-tab" + (normalizedEnvironmentDetailTab === tab.id ? " is-active" : ""),
                     onClick: () => setEnvironmentDetailTab(tab.id),
                     "aria-pressed": normalizedEnvironmentDetailTab === tab.id ? "true" : "false",
                   },
+                  React.createElement(TabIcon, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.8 }),
                   tab.label
-                )
-              ),
+                );
+              }),
               React.createElement("button", {
                   type: "button",
                   className: "playground-project-overview-chart-tab playground-computer-detail-filebase-tab",
@@ -106930,6 +107760,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   title: "Open Filebase",
                   "aria-label": "Open Filebase for this computer",
                 },
+                React.createElement(FolderOpen, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.8 }),
                 React.createElement("span", null, "Filebase"),
                 React.createElement(ExternalLink, { width: 12, height: 12, strokeWidth: 1.8 })
               )
@@ -106953,7 +107784,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             },
             React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.9 })
           );
-          const environmentDetailAdvancedSection = React.createElement(React.Fragment, null,
+          const environmentDetailAdvancedSection = React.createElement("div", { className: "playground-computer-detail-advanced-tab" },
             renderEditorSection("runtimes", "Runtime Versions", "", runtimeVersionsBox, null, false),
             renderEditorSection(
               "packages-system",
@@ -107623,8 +108454,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const environmentDetailWorkspaceSection = React.createElement("div", {
               className: "playground-project-overview-layout playground-agents-detail-overview-layout playground-computer-detail-overview-layout" + (environmentSidebarCollapsed ? " is-sidebar-collapsed" : ""),
             },
+            environmentDetailTabs,
+            environmentDetailTopControls,
             React.createElement("div", { className: "playground-project-overview-main playground-agents-detail-overview-main playground-computer-detail-overview-main" },
-              environmentDetailTabs,
               environmentDetailActiveSection
             ),
             environmentSidebar
@@ -111672,6 +112504,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentComposerReasoningTriggerRef = useRef(null);
         const agentComposerDeepResearchModelTriggerRef = useRef(null);
         const agentDeepResearchModelTriggerRef = useRef(null);
+        const agentVoicePopoverRef = useRef(null);
         const agentsOverviewToolbarRef = useRef(null);
         const agentsObservabilityToolbarRef = useRef(null);
         const lastAppliedFocusedAgentSelectionTokenRef = useRef("");
@@ -111811,6 +112644,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentRenameValue, setAgentRenameValue] = useState("");
         const [agentRenameError, setAgentRenameError] = useState("");
         const [agentModelPopover, setAgentModelPopover] = useState("");
+        const [agentVoicePopoverOpen, setAgentVoicePopoverOpen] = useState(false);
         const [agentModelPickerState, setAgentModelPickerState] = useState(null);
         const [agentModelPickerVisible, setAgentModelPickerVisible] = useState(false);
         const [agentModelPickerClosing, setAgentModelPickerClosing] = useState(false);
@@ -113448,6 +114282,26 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             ...current,
             [field]: value,
           }));
+        }
+
+        function updateAgentVoiceSelection(voiceId) {
+          if (isPlaygroundDefaultAgentConfigurationLocked(draftAgent)) {
+            return;
+          }
+          const normalizedVoiceId = String(voiceId || "").trim();
+          updateDraftAgent((current) => {
+            const currentVoiceMode = normalizePlaygroundVoiceAgentMode(current.voiceMode);
+	            return {
+	              ...current,
+	              voiceMode: normalizedVoiceId
+	                ? (currentVoiceMode === "phone" ? "web_and_phone" : currentVoiceMode === "off" ? "web" : currentVoiceMode)
+	                : "off",
+	              voiceProvider: "xai",
+              voiceModel: current.voiceModel || "grok-voice-latest",
+              voiceId: normalizedVoiceId || null,
+            };
+          });
+          setAgentVoicePopoverOpen(false);
         }
 
         function updateAgentTagLabels(nextLabels) {
@@ -115940,6 +116794,33 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [agentModelPopover]);
 
         useEffect(() => {
+          if (!agentVoicePopoverOpen) {
+            return undefined;
+          }
+
+          function handleAgentVoicePopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !agentVoicePopoverRef.current || agentVoicePopoverRef.current.contains(target)) {
+              return;
+            }
+            setAgentVoicePopoverOpen(false);
+          }
+
+          function handleAgentVoicePopoverEscape(event) {
+            if (event.key === "Escape") {
+              setAgentVoicePopoverOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleAgentVoicePopoverPointerDown);
+          window.addEventListener("keydown", handleAgentVoicePopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleAgentVoicePopoverPointerDown);
+            window.removeEventListener("keydown", handleAgentVoicePopoverEscape);
+          };
+        }, [agentVoicePopoverOpen]);
+
+        useEffect(() => {
           return () => {
             if (agentSendTeamModalCloseTimerRef.current) {
               window.clearTimeout(agentSendTeamModalCloseTimerRef.current);
@@ -116985,6 +117866,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             { id: "deepseek", label: "DeepSeek", description: "Show DeepSeek models" },
             { id: "minimax", label: "MiniMax", description: "Show MiniMax models" },
             { id: "kimi", label: "Kimi", description: "Show Moonshot models" },
+            { id: "zai", label: "ZAI", description: "Show ZAI models" },
+            { id: "qwen", label: "Qwen", description: "Show Qwen models" },
             { id: "custom", label: "Custom", description: "Show external and custom models" },
           ];
           const providerLabelById = Object.fromEntries(providerFilterOptions.map((option) => [option.id, option.label]));
@@ -118142,6 +119025,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             { id: "deepseek", label: "DeepSeek" },
             { id: "minimax", label: "MiniMax" },
             { id: "kimi", label: "Kimi" },
+            { id: "zai", label: "ZAI" },
+            { id: "qwen", label: "Qwen" },
             { id: "custom", label: "Custom" },
             { id: "available", label: "Available" },
             { id: "locked", label: "Plan required" },
@@ -119927,6 +120812,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const orchestratorAgentId = metadata?.team?.orchestratorAgentId || "";
           const orchestratorAgent = orchestratorAgentId ? availableTeamMemberAgentsById[orchestratorAgentId] : null;
           const guardrailBundle = buildPlaygroundAgentGuardrailBundle(agent, guardrailSets);
+          const voicePayload = buildPlaygroundVoiceAgentUpdatePayload(agent);
 
           return {
             name: String(agent?.name || "").trim() || (isTeamAgent ? "New Team" : "New Agent"),
@@ -119966,6 +120852,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             invisible_prompt_adaptations: guardrailBundle.promptAdaptations,
             invisiblePromptAdaptions: guardrailBundle.promptAdaptations,
             invisible_prompt_adaptions: guardrailBundle.promptAdaptations,
+            ...voicePayload,
             metadata,
           };
         }
@@ -120797,13 +121684,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return Boolean(selectedVersion && selectedVersion.status === "active");
         }
 
-        function canPublishDraftAgentSelectedVersion() {
-          const selectedVersion = getDraftAgentSelectedVersion();
-          if (!selectedVersion) return false;
-          const hasChanges = hasDraftAgentVersionChanges();
-          return selectedVersion.status === "active" ? hasChanges : !hasChanges;
-        }
-
         function canPublishAgentVersion(version) {
           const normalizedVersionId = String(version?.id || "").trim();
           if (!normalizedVersionId) return false;
@@ -120816,33 +121696,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return !hasChanges;
         }
 
-        function getAgentVersionPrimaryActionKind() {
-          return canPublishDraftAgentSelectedVersion() ? "publish" : "save";
-        }
-
         function getAgentVersionPopupActions(options = {}) {
-          const includeVersionHistory = options.includeVersionHistory !== false;
-          const agentVersionPrimaryActionKind = getAgentVersionPrimaryActionKind();
+          const includeVersionHistory = options.includeVersionHistory === true;
           const agentVersionHasChanges = hasDraftAgentVersionChanges();
-          const agentVersionCanPublish = canPublishDraftAgentSelectedVersion();
           const actions = [
-            agentVersionPrimaryActionKind === "publish"
-              ? {
-                  id: "publish",
-                  label: "Publish",
-                  Icon: Rocket,
-                  shortcut: "⌘P",
-                  disabled: !agentVersionCanPublish,
-                  onClick: publishCurrentAgentVersion,
-                }
-              : {
-                  id: "save",
-                  label: "Save",
-                  Icon: Save,
-                  shortcut: "⌘S",
-                  disabled: !agentVersionHasChanges,
-                  onClick: saveCurrentAgentVersion,
-                },
             {
               id: "save-new-version",
               label: "Save to new Version",
@@ -120978,27 +121835,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setAgentVersionsHeaderMenuOpen(false);
           finishCloseAgentVersionModal();
           setOpenAgentVersionMenuId("");
-        }
-
-        async function saveCurrentAgentVersion() {
-          if (!draftAgent || agentVersionState.status === "loading") {
-            return;
-          }
-          if (!hasDraftAgentVersionChanges()) {
-            return;
-          }
-          const actor = getAgentVersionActor();
-          const result = agentVersionController.buildSaveCurrentResource(draftAgent, { status: "saved", actor });
-          if (!result?.resource) {
-            return;
-          }
-          await commitVersionedAgentRecord(result.resource, {
-            operation: "save-current",
-            actor,
-            loadingMessage: "Saving current version...",
-            successMessage: "Current version saved",
-            errorMessage: "Failed to save current version.",
-          });
         }
 
         function cancelAgentVersionModalAnimation() {
@@ -121172,21 +122008,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
         }
 
-        async function publishCurrentAgentVersion() {
-          if (!draftAgent || agentVersionState.status === "loading") {
+        async function saveAndPublishCurrentAgentVersion() {
+          if (!draftAgent || saveState.isSaving || agentVersionState.status === "loading") {
+            return;
+          }
+          if (!hasDraftAgentVersionChanges()) {
             return;
           }
           const selectedVersion = getDraftAgentSelectedVersion();
-          const hasChanges = hasDraftAgentVersionChanges();
-          if (hasChanges && selectedVersion?.status !== "active") {
-            setAgentVersionState({
-              status: "error",
-              message: "",
-              error: "Save the current version before publishing.",
-            });
-            return;
-          }
-          const validation = validateAgentVersionForPublish(draftAgent, selectedVersion);
+          const actor = getAgentVersionActor();
+          const currentSnapshot = buildPlaygroundAgentVersionSnapshot(draftAgent);
+          const validation = validateAgentVersionForPublish(
+            draftAgent,
+            selectedVersion
+              ? { ...selectedVersion, snapshot: currentSnapshot }
+              : { snapshot: currentSnapshot }
+          );
           if (!validation.ok) {
             setAgentVersionState({
               status: "error",
@@ -121195,20 +122032,35 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             });
             return;
           }
-          const actor = getAgentVersionActor();
-          const result = agentVersionController.buildPublishSelectedResource(draftAgent, {
-            actor,
-            updateFromResource: hasChanges,
-          });
-          if (!result?.resource) {
+
+          const publishResult = selectedVersion
+            ? agentVersionController.buildPublishSelectedResource(draftAgent, {
+                actor,
+                updateFromResource: true,
+              })
+            : (() => {
+                const saveResult = agentVersionController.buildSaveCurrentResource(draftAgent, { status: "saved", actor });
+                if (!saveResult?.resource) {
+                  return null;
+                }
+                return agentVersionController.buildPublishSelectedResource(saveResult.resource, {
+                  actor,
+                  updateFromResource: true,
+                });
+              })();
+          if (!publishResult?.resource) {
             return;
           }
-          await commitVersionedAgentRecord(result.resource, {
-            operation: "publish",
+          setAgentPublishMenuOpen(false);
+          setAgentVersionSelectorMenuOpen(false);
+          setAgentTagsMenuOpen(false);
+          setAgentVersionsHeaderMenuOpen(false);
+          await commitVersionedAgentRecord(publishResult.resource, {
+            operation: "save-publish",
             actor,
-            loadingMessage: "Publishing current version...",
-            successMessage: "Published",
-            errorMessage: "Failed to publish current version.",
+            loadingMessage: "Saving & publishing agent...",
+            successMessage: "Saved & published",
+            errorMessage: "Failed to save and publish agent.",
           });
         }
 
@@ -123003,9 +123855,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             && !isDefaultAgentConfigurationLocked
           );
           const isAgentVersionControlBusy = saveState.isSaving || agentVersionState.status === "loading";
-          const isAgentPublishControlDisabled = Boolean(!draftAgent || isAgentVersionControlBusy);
-          const isAgentPublishMenuDisabled = Boolean(!draftAgent || isAgentVersionControlBusy);
-          const agentVersionPopupActions = getAgentVersionPopupActions();
+          const agentVersionHasChanges = hasDraftAgentVersionChanges();
+          const isAgentPublishControlDisabled = Boolean(!draftAgent || isAgentVersionControlBusy || !agentVersionHasChanges);
+          const isAgentPublishMenuDisabled = isAgentPublishControlDisabled;
+          const agentVersionPopupActions = getAgentVersionPopupActions({ includeVersionHistory: false });
           const agentDetailVersions = readDraftAgentVersions();
           const selectedAgentDetailVersion = getDraftAgentSelectedVersion() || getDraftAgentActiveVersion() || agentDetailVersions[0] || null;
           const activeAgentDetailVersion = getDraftAgentActiveVersion();
@@ -123026,10 +123879,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const formattedTimestamp = timestamp ? formatPlaygroundFileDate(timestamp) : "";
             return status + (formattedTimestamp ? " · " + formattedTimestamp : "");
           };
+          const renderAgentVersionCountLabel = () => {
+            const versionCountLabel = String(agentDetailVersions.length) + " " + (agentDetailVersions.length === 1 ? "Version" : "Versions");
+            return React.createElement("div", {
+                className: "playground-agents-version-count-label",
+                title: versionCountLabel,
+                "aria-label": versionCountLabel,
+              },
+              React.createElement(GitBranch, { className: "playground-agents-version-count-icon", strokeWidth: 1.8 }),
+              React.createElement("span", null, versionCountLabel)
+            );
+          };
           const renderAgentVersionSelector = () => {
             const hasVersions = agentDetailVersions.length > 0;
             const currentTitle = getAgentDetailVersionTitle(selectedAgentDetailVersion);
-            const selectorDisabled = isAgentVersionControlBusy || !hasVersions;
+            const selectorDisabled = isAgentVersionControlBusy;
+            const canCreateVersionFromSelector = Boolean(canShowAgentDetailHeaderPublish && !isAgentVersionControlBusy);
             const toggleSelectorMenu = (event) => {
               event.preventDefault();
               event.stopPropagation();
@@ -123043,7 +123908,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             };
             return React.createElement("div", { className: "playground-agents-detail-version-selector-row" },
               renderPlaygroundPlatformPopup({
-                open: agentVersionSelectorMenuOpen && hasVersions,
+                open: agentVersionSelectorMenuOpen,
                 shellRef: agentVersionSelectorMenuRef,
                 shellClassName: "playground-agents-detail-publish-split-shell playground-agents-detail-version-selector-shell",
                 menuClassName: "playground-agents-detail-publish-menu playground-agents-detail-version-selector-menu",
@@ -123084,37 +123949,82 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   onClick: (event) => event.stopPropagation(),
                 },
                 children: React.createElement(React.Fragment, null,
-                  agentDetailVersions.map((version, index) => {
-                    const versionId = String(version?.id || "").trim() || "version-" + index;
-                    const isSelected = versionId === selectedAgentDetailVersionId;
-                    return React.createElement("button", {
-                        key: versionId,
+                  React.createElement("div", { className: "playground-agents-detail-version-selector-list", role: "group", "aria-label": "Agent versions" },
+                    hasVersions
+                      ? agentDetailVersions.map((version, index) => {
+                          const versionId = String(version?.id || "").trim() || "version-" + index;
+                          const isSelected = versionId === selectedAgentDetailVersionId;
+                          return React.createElement("button", {
+                              key: versionId,
+                              type: "button",
+                              className: "tb-popup-row playground-agents-detail-version-selector-option" + (isSelected ? " is-selected" : ""),
+                              role: "menuitemradio",
+                              "aria-checked": isSelected ? "true" : "false",
+                              disabled: isAgentVersionControlBusy || isSelected,
+                              onClick: () => {
+                                if (isAgentVersionControlBusy || isSelected) {
+                                  return;
+                                }
+                                setAgentVersionSelectorMenuOpen(false);
+                                void restoreAgentVersion(versionId);
+                              },
+                            },
+                            React.createElement("span", { className: "playground-agents-detail-version-selector-option-check" },
+                              isSelected
+                                ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 2.2 })
+                                : null
+                            ),
+                            React.createElement("span", { className: "playground-agents-detail-version-selector-option-copy" },
+                              React.createElement("span", { className: "playground-agents-detail-version-selector-option-title" }, getAgentDetailVersionTitle(version)),
+                              React.createElement("span", { className: "playground-agents-detail-version-selector-option-meta" }, getAgentDetailVersionMeta(version))
+                            )
+                          );
+                        })
+                      : React.createElement("div", { className: "playground-agents-detail-version-selector-empty" }, "No versions yet.")
+                  ),
+                  React.createElement("div", { className: "playground-agents-detail-version-selector-footer" },
+                    React.createElement("button", {
                         type: "button",
-                        className: "tb-popup-row playground-agents-detail-version-selector-option" + (isSelected ? " is-selected" : ""),
-                        role: "menuitemradio",
-                        "aria-checked": isSelected ? "true" : "false",
-                        disabled: isAgentVersionControlBusy || isSelected,
+                        className: "tb-popup-row playground-agents-detail-version-selector-new-button",
+                        role: "menuitem",
+                        disabled: !canCreateVersionFromSelector,
                         onClick: () => {
-                          if (isAgentVersionControlBusy || isSelected) {
+                          if (!canCreateVersionFromSelector) {
                             return;
                           }
                           setAgentVersionSelectorMenuOpen(false);
-                          void restoreAgentVersion(versionId);
+                          openCreateAgentVersionModal({ force: true });
                         },
                       },
-                      React.createElement("span", { className: "playground-agents-detail-version-selector-option-check" },
-                        isSelected
-                          ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 2.2 })
-                          : null
-                      ),
-                      React.createElement("span", { className: "playground-agents-detail-version-selector-option-copy" },
-                        React.createElement("span", { className: "playground-agents-detail-version-selector-option-title" }, getAgentDetailVersionTitle(version)),
-                        React.createElement("span", { className: "playground-agents-detail-version-selector-option-meta" }, getAgentDetailVersionMeta(version))
+                      React.createElement(GitBranchPlus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "New Version")
                       )
-                    );
-                  })
+                    ),
+                    React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row playground-agents-detail-version-selector-new-button",
+                        role: "menuitem",
+                        disabled: !canShowAgentVersions || isAgentVersionControlBusy,
+                        onClick: () => {
+                          if (!canShowAgentVersions || isAgentVersionControlBusy) {
+                            return;
+                          }
+                          setAgentVersionSelectorMenuOpen(false);
+                          setAgentPublishMenuOpen(false);
+                          setAgentVersionsHeaderMenuOpen(false);
+                          openAgentVersionChangesPage();
+                        },
+                      },
+                      React.createElement(History, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "Version history")
+                      )
+                    )
+                  )
                 )
               }),
+              renderAgentVersionCountLabel(),
               renderAgentTagsControl()
             );
           };
@@ -123218,20 +124128,19 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              React.createElement("button", {
 	                  type: "button",
 	                  className: "playground-agents-detail-publish-main",
-	                  title: "Open agent versions",
-	                  "aria-label": "Open agent versions",
-	                  "aria-expanded": agentVersionsSidebarOpen ? "true" : "false",
+	                  title: "Save and publish agent changes",
+	                  "aria-label": "Save and publish agent changes",
 		                  disabled: isAgentPublishControlDisabled,
 		                  onClick: () => {
 		                    setAgentPublishMenuOpen(false);
                         setAgentVersionSelectorMenuOpen(false);
                         setAgentTagsMenuOpen(false);
 		                    setAgentVersionsHeaderMenuOpen(false);
-		                    setAgentVersionsSidebarOpen(true);
+		                    void saveAndPublishCurrentAgentVersion();
 		                  },
 	                },
 	                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                React.createElement("span", null, "Publish")
+	                React.createElement("span", null, "Save & Publish")
 	              ),
               React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
               React.createElement("button", {
@@ -123416,6 +124325,54 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   false,
                   true
                 );
+          const selectedVoiceId = String(draftAgent.voiceId || "eve").trim() || "eve";
+          const selectedVoiceOption = PLAYGROUND_VOICE_AGENT_VOICE_OPTIONS.find((option) => option.id === selectedVoiceId);
+          const selectedVoiceLabel = selectedVoiceOption?.label || selectedVoiceId;
+          const renderAgentVoiceSelector = () => React.createElement("div", {
+              className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup playground-agents-detail-voice-select-popup" + (agentVoicePopoverOpen ? " is-open" : ""),
+              ref: agentVoicePopoverRef,
+            },
+            React.createElement("button", {
+                type: "button",
+                className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-agents-detail-about-row playground-agents-detail-voice-select-trigger is-voice",
+                onClick: () => setAgentVoicePopoverOpen((current) => !current),
+                disabled: isDefaultAgentConfigurationLocked,
+                title: "Voice: " + selectedVoiceLabel,
+                "aria-label": "Select voice. Current voice: " + selectedVoiceLabel,
+                "aria-expanded": agentVoicePopoverOpen ? "true" : "false",
+              },
+              React.createElement("span", { className: "playground-project-overview-sidebar-resource-label playground-agents-detail-about-value playground-agents-detail-voice-select-value" },
+                React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
+                  React.createElement(AudioLines, { width: 14, height: 14, strokeWidth: 1.85 })
+                ),
+                React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedVoiceLabel)
+              ),
+              React.createElement(ChevronDown, { className: "playground-agents-detail-voice-select-chevron", strokeWidth: 1.8 })
+            ),
+            agentVoicePopoverOpen
+              ? React.createElement("div", {
+                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-agents-detail-voice-select-menu",
+                  onClick: (event) => event.stopPropagation(),
+                },
+                PLAYGROUND_VOICE_AGENT_VOICE_OPTIONS.map((option) => {
+                  const isSelected = option.id === selectedVoiceId;
+                  return React.createElement("button", {
+                      key: option.id || "off",
+                      type: "button",
+                      className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
+                      onClick: () => updateAgentVoiceSelection(option.id),
+                    },
+                    React.createElement("span", { className: "tb-popup-check-slot" },
+                      isSelected
+                        ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                        : null
+                    ),
+                    React.createElement("span", null, option.label)
+                  );
+                })
+              )
+              : null
+          );
 
           const agentDetailPerformanceRangeOptions = [
             { id: "5d", label: "5D", bucketCount: 5 },
@@ -123993,11 +124950,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               })
             );
           };
-          const agentPropertiesSidebar = React.createElement("aside", {
-              className: "playground-project-overview-sidebar playground-agents-detail-sidebar"
-                + (agentModelPopover || agentOwnerPopoverOpen ? " is-popover-open" : ""),
-              "aria-label": isTeamAgent ? "Team settings" : "Agent settings",
-            },
+	          const agentPropertiesSidebar = React.createElement("aside", {
+	              className: "playground-project-overview-sidebar playground-agents-detail-sidebar"
+	                + (agentModelPopover || agentOwnerPopoverOpen || agentVoicePopoverOpen ? " is-popover-open" : ""),
+	              "aria-label": isTeamAgent ? "Team settings" : "Agent settings",
+	            },
             React.createElement("section", {
                 className: "playground-project-overview-sidebar-card playground-agents-detail-about-card",
               },
@@ -124017,14 +124974,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     title: agentEmailAddress || "No email address available",
                   }
                 ),
-                renderAgentAboutRow(
-                  "model",
-                  null,
-                  agentPrimaryModelControl,
-                  { extraClassName: "is-model" }
-                )
-              )
-            ),
+	                renderAgentAboutRow(
+	                  "model",
+	                  null,
+	                  agentPrimaryModelControl,
+	                  { extraClassName: "is-model" }
+	                ),
+	                renderAgentVoiceSelector()
+	              )
+	            ),
             React.createElement("section", { className: "playground-project-overview-sidebar-card playground-agents-detail-actions-card" },
               React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
                 React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Actions")
@@ -125822,11 +126780,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                         React.createElement("span", { key: agentId, className: "playground-agents-team-selected-pill" }, availableTeamMemberAgentsById[agentId]?.name || agentId)
                       )
                     )
-                  : null
-              )
-            : null;
+	                  : null
+	              )
+	            : null;
 
-          const canUndoAgentInstructions = Array.isArray(agentInstructionsHistory.past) && agentInstructionsHistory.past.length > 0;
+	          const canUndoAgentInstructions = Array.isArray(agentInstructionsHistory.past) && agentInstructionsHistory.past.length > 0;
           const canRedoAgentInstructions = Array.isArray(agentInstructionsHistory.future) && agentInstructionsHistory.future.length > 0;
           const renderAgentInstructionsToolbarButton = (action) =>
             React.createElement("button", {
@@ -125967,11 +126925,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             : normalizedAgentDetailTab === "insights"
               ? agentInsightsSection
               : React.createElement(React.Fragment, null,
-                  isTeamAgent
-                    ? renderEditorSection("team", "Team Setup", "", teamSection, null, false)
-                    : null,
-                  instructionsSection
-                );
+	                  isTeamAgent
+	                    ? renderEditorSection("team", "Team Setup", "", teamSection, null, false)
+	                    : null,
+		                  instructionsSection
+		                );
           const agentDetailWorkspaceSection = React.createElement("div", {
               className: "playground-project-overview-layout playground-agents-detail-overview-layout" + (agentDetailSidebarCollapsed ? " is-sidebar-collapsed" : ""),
             },
@@ -126073,14 +127031,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 		            }
 
             if (key === "s") {
-              if (getAgentVersionPrimaryActionKind() === "save" && hasDraftAgentVersionChanges()) {
-                void saveCurrentAgentVersion();
+              if (hasDraftAgentVersionChanges()) {
+                void saveAndPublishCurrentAgentVersion();
               }
               return;
             }
 
-            if (key === "p" && !event.shiftKey && canPublishDraftAgentSelectedVersion()) {
-              void publishCurrentAgentVersion();
+            if (key === "p" && !event.shiftKey && hasDraftAgentVersionChanges()) {
+              void saveAndPublishCurrentAgentVersion();
             }
           }
 
@@ -126474,9 +127432,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return null;
           }
           const isVersionControlBusy = saveState.isSaving || agentVersionState.status === "loading";
-          const isPublishControlDisabled = Boolean(!draftAgent || isVersionControlBusy);
-          const isPublishMenuDisabled = Boolean(!draftAgent || isVersionControlBusy);
-          const versionPopupActions = getAgentVersionPopupActions();
+          const versionHasChanges = hasDraftAgentVersionChanges();
+          const isPublishControlDisabled = Boolean(!draftAgent || isVersionControlBusy || !versionHasChanges);
+          const isPublishMenuDisabled = isPublishControlDisabled;
+          const versionPopupActions = getAgentVersionPopupActions({ includeVersionHistory: false });
           return renderPlaygroundPlatformPopup({
             open: agentPublishMenuOpen,
             shellRef: agentPublishMenuRef,
@@ -126490,20 +127449,19 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               React.createElement("button", {
                   type: "button",
                   className: "playground-agents-detail-publish-main",
-                  title: "Open agent versions",
-                  "aria-label": "Open agent versions",
-                  "aria-expanded": agentVersionsSidebarOpen ? "true" : "false",
+                  title: "Save and publish agent changes",
+                  "aria-label": "Save and publish agent changes",
                   disabled: isPublishControlDisabled,
                   onClick: () => {
                     setAgentPublishMenuOpen(false);
                     setAgentVersionSelectorMenuOpen(false);
                     setAgentTagsMenuOpen(false);
                     setAgentVersionsHeaderMenuOpen(false);
-                    setAgentVersionsSidebarOpen(true);
+                    void saveAndPublishCurrentAgentVersion();
                   },
                 },
                 React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Publish")
+                React.createElement("span", null, "Save & Publish")
               ),
               React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
               React.createElement("button", {
@@ -161635,16 +162593,46 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
       }
 
-      function writePlaygroundGuardrailSetsToStorage(sets) {
-        if (typeof window === "undefined" || !window.localStorage) {
-          return;
+      function readPlaygroundGuardrailListFromPayload(payload, keys = []) {
+        const source = payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
+        for (const key of keys) {
+          if (Array.isArray(source[key])) return source[key];
+          if (Array.isArray(source.data?.[key])) return source.data[key];
         }
-        try {
-          const customSets = (Array.isArray(sets) ? sets : []).filter((set) => !isPlaygroundDefaultGuardrailSet(set));
-          window.localStorage.setItem(PLAYGROUND_GUARDRAILS_STORAGE_KEY, JSON.stringify(customSets));
-        } catch {
-          // Ignore storage write failures; the in-memory editor should remain usable.
-        }
+        if (Array.isArray(source.data)) return source.data;
+        if (Array.isArray(source.items)) return source.items;
+        if (Array.isArray(source.records)) return source.records;
+        return [];
+      }
+
+      function buildPlaygroundGuardrailBackendMetadata(set) {
+        const normalizedSet = normalizePlaygroundGuardrailSet(set);
+        const existingMetadata = stripPlaygroundGuardrailVersionMetadata(normalizedSet.metadata);
+        return {
+          ...(existingMetadata && typeof existingMetadata === "object" && !Array.isArray(existingMetadata) ? existingMetadata : {}),
+        };
+      }
+
+      function buildPlaygroundGuardrailBackendPayload(set) {
+        const normalizedSet = normalizePlaygroundGuardrailSet(set);
+        return {
+          id: normalizedSet.id,
+          name: normalizedSet.name,
+          description: normalizedSet.description,
+          prompts: (Array.isArray(normalizedSet.prompts) ? normalizedSet.prompts : [])
+            .map((prompt) => createPlaygroundGuardrailPromptDraft(prompt)),
+          metadata: buildPlaygroundGuardrailBackendMetadata(normalizedSet),
+        };
+      }
+
+      function mergePlaygroundGuardrailSetWithBackendDetails(set, versions = []) {
+        const normalizedSet = normalizePlaygroundGuardrailSet(set);
+        const normalizedVersions = normalizePlaygroundGuardrailVersions(versions);
+        return ensurePlaygroundGuardrailInitialVersion(
+          normalizedVersions.length
+            ? createPlaygroundGuardrailWithVersionList(normalizedSet, normalizedVersions)
+            : normalizedSet
+        );
       }
 
       function createPlaygroundPlatformNavigationToken() {
@@ -162242,12 +163230,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const guardrailVersionModalFrameRef = useRef(null);
         const guardrailVersionBaselineRef = useRef({ key: "", signature: "" });
         const guardrailVersionDraftTouchedRef = useRef(false);
-        const [guardrailSets, setGuardrailSets] = useState(() => readPlaygroundGuardrailSetsFromStorage());
-        const [selectedGuardrailSetId, setSelectedGuardrailSetId] = useState(() => {
-          const storedSets = readPlaygroundGuardrailSetsFromStorage();
-          const availableSets = getPlaygroundAllGuardrailSets(storedSets);
-          return availableSets[0]?.id || "";
-        });
+        const guardrailsBackendLoadRef = useRef("");
+        const guardrailsBackendLoadedRef = useRef(false);
+        const guardrailsBackendMigratedLocalRef = useRef(false);
+        const guardrailPersistTimersRef = useRef(new Map());
+        const guardrailPersistSignaturesRef = useRef(new Map());
+        const [guardrailSets, setGuardrailSets] = useState([]);
+        const [selectedGuardrailSetId, setSelectedGuardrailSetId] = useState("");
+        const [guardrailsBackendSyncState, setGuardrailsBackendSyncState] = useState({ status: "idle", error: "" });
         const [guardrailsSearchQuery, setGuardrailsSearchQuery] = useState("");
         const [guardrailsSort, setGuardrailsSort] = useState("updated");
         const [guardrailsSetFilter, setGuardrailsSetFilter] = useState("all");
@@ -162268,11 +163258,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [guardrailVersionChangesState, setGuardrailVersionChangesState] = useState(null);
         const [openGuardrailVersionMenuId, setOpenGuardrailVersionMenuId] = useState("");
         const allGuardrailSets = useMemo(() => getPlaygroundAllGuardrailSets(guardrailSets), [guardrailSets]);
-        const [evaluationSets, setEvaluationSets] = useState(() => readPlaygroundEvaluationSetsFromStorage());
-        const [selectedEvaluationSetId, setSelectedEvaluationSetId] = useState(() => {
-          const storedSets = readPlaygroundEvaluationSetsFromStorage();
-          return storedSets[0]?.id || "";
-        });
+        const [evaluationSets, setEvaluationSets] = useState([]);
+        const [selectedEvaluationSetId, setSelectedEvaluationSetId] = useState("");
         const [selectedEvaluationRunId, setSelectedEvaluationRunId] = useState("");
         const [selectedEvaluationCaseId, setSelectedEvaluationCaseId] = useState("");
         const [evaluationRunReturnTarget, setEvaluationRunReturnTarget] = useState(null);
@@ -162532,7 +163519,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setActivePage("guardrails");
           focusGuardrailTitleInput();
         }
-        function handleDeleteGuardrailSet(setId) {
+        async function handleDeleteGuardrailSet(setId) {
           const normalizedSetId = String(setId || "").trim();
           if (!normalizedSetId) return;
           const targetSet = allGuardrailSets.find((set) => set?.id === normalizedSetId);
@@ -162541,6 +163528,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (!confirmed) return;
           setGuardrailSetActionMenuId("");
           setGuardrailDetailActionsMenuOpen(false);
+          const previousSets = Array.isArray(guardrailSets) ? guardrailSets : [];
           setGuardrailSets((current) => (Array.isArray(current) ? current : []).filter((set) => set?.id !== normalizedSetId));
           if (selectedGuardrailSetId === normalizedSetId) {
             const fallbackSet = allGuardrailSets.find((set) => set?.id !== normalizedSetId);
@@ -162549,6 +163537,17 @@ ${PROJECT_OVERVIEW_SCRIPT}
             if (guardrailsPageMode === "detail") {
               setGuardrailsPageMode("overview");
             }
+          }
+          try {
+            await requestGuardrailBackendJson(
+              "/guardrails/" + encodeURIComponent(normalizedSetId),
+              { method: "DELETE" },
+              "Failed to delete guardrail set."
+            );
+            guardrailPersistSignaturesRef.current.delete(normalizedSetId);
+          } catch (error) {
+            setGuardrailSets(previousSets);
+            setGuardrailsBackendSyncState({ status: "error", error: error?.message || String(error) });
           }
         }
         function renderGuardrailActionMenuItems(setId) {
@@ -162577,9 +163576,275 @@ ${PROJECT_OVERVIEW_SCRIPT}
             )
           );
         }
-        useEffect(() => {
-          writePlaygroundGuardrailSetsToStorage(guardrailSets);
-        }, [guardrailSets]);
+
+        async function readGuardrailBackendJson(response, fallbackMessage = "Guardrail request failed.") {
+          const text = await response.text();
+          let data = {};
+          try {
+            data = text ? JSON.parse(text) : {};
+          } catch {
+            data = { message: text };
+          }
+          if (!response.ok) {
+            const message = String(data?.message || data?.error || fallbackMessage || "Guardrail request failed.").trim();
+            throw new Error(message);
+          }
+          return data;
+        }
+
+        async function requestGuardrailBackendJson(path, init = {}, fallbackMessage = "Guardrail request failed.") {
+          const normalizedBackendUrl = String(proxyBackendBase || "").replace(/\\/+$/, "");
+          if (!normalizedBackendUrl) {
+            throw new Error("Guardrail backend is unavailable.");
+          }
+          const headers = new Headers(requestHeaders || {});
+          if (init.body !== undefined && !headers.has("Content-Type")) {
+            headers.set("Content-Type", "application/json");
+          }
+          const response = await fetch(normalizedBackendUrl + path, {
+            credentials: "include",
+            cache: "no-store",
+            ...init,
+            headers,
+          });
+          return await readGuardrailBackendJson(response, fallbackMessage);
+        }
+
+        async function fetchBackendGuardrailSetDetails(set) {
+          const normalizedSet = normalizePlaygroundGuardrailSet(set);
+          if (!normalizedSet.id || isPlaygroundDefaultGuardrailSet(normalizedSet)) return normalizedSet;
+          const versionsPayload = await requestGuardrailBackendJson(
+            "/guardrails/" + encodeURIComponent(normalizedSet.id) + "/versions",
+            { method: "GET" },
+            "Failed to load guardrail versions."
+          ).catch(() => null);
+          const versions = readPlaygroundGuardrailListFromPayload(versionsPayload || {}, ["versions", "guardrailVersions", "guardrail_versions"])
+            .map((version, index) => normalizePlaygroundGuardrailVersion(version, index));
+          return mergePlaygroundGuardrailSetWithBackendDetails(normalizedSet, versions);
+        }
+
+        function replaceGuardrailSetFromBackend(nextSet, options = {}) {
+          const normalizedSet = ensurePlaygroundGuardrailInitialVersion(normalizePlaygroundGuardrailSet(nextSet));
+          if (!normalizedSet.id || isPlaygroundDefaultGuardrailSet(normalizedSet)) return normalizedSet;
+          setGuardrailSets((current) => {
+            const currentSets = Array.isArray(current) ? current : [];
+            const replaced = currentSets.some((set) => set?.id === normalizedSet.id);
+            const nextSets = replaced
+              ? currentSets.map((set) => set?.id === normalizedSet.id ? normalizedSet : set)
+              : [normalizedSet, ...currentSets];
+            return nextSets
+              .filter((set) => set?.id && !isPlaygroundDefaultGuardrailSet(set))
+              .sort((left, right) => (Date.parse(right.updatedAt || 0) || 0) - (Date.parse(left.updatedAt || 0) || 0));
+          });
+          guardrailPersistSignaturesRef.current.set(normalizedSet.id, JSON.stringify(buildPlaygroundGuardrailBackendPayload(normalizedSet)));
+          if (options.select !== false) {
+            setSelectedGuardrailSetId(normalizedSet.id);
+          }
+          if (options.rememberBaseline !== false) {
+            playgroundGuardrailVersionController.rememberBaseline(normalizedSet, guardrailVersionBaselineRef, { force: true });
+            guardrailVersionDraftTouchedRef.current = false;
+          }
+          return normalizedSet;
+        }
+
+        async function reloadBackendGuardrailSet(setId, options = {}) {
+          const normalizedSetId = String(setId || "").trim();
+          if (!normalizedSetId) return null;
+          const setPayload = await requestGuardrailBackendJson(
+            "/guardrails/" + encodeURIComponent(normalizedSetId),
+            { method: "GET" },
+            "Failed to load guardrail set."
+          );
+          const backendSet = normalizePlaygroundGuardrailSet(setPayload?.guardrail || setPayload?.data || setPayload);
+          const detailedSet = await fetchBackendGuardrailSetDetails(backendSet);
+          if (detailedSet?.id) {
+            replaceGuardrailSetFromBackend(detailedSet, options);
+          }
+          return detailedSet;
+        }
+
+        async function migrateLocalGuardrailSetToBackend(localSet) {
+          const normalizedLocalSet = ensurePlaygroundGuardrailInitialVersion(normalizePlaygroundGuardrailSet(localSet));
+          if (!normalizedLocalSet.id) return null;
+          const createdPayload = await requestGuardrailBackendJson(
+            "/guardrails",
+            {
+              method: "POST",
+              body: JSON.stringify(buildPlaygroundGuardrailBackendPayload(normalizedLocalSet)),
+            },
+            "Failed to migrate guardrail set."
+          );
+          const createdSet = normalizePlaygroundGuardrailSet(createdPayload?.guardrail || createdPayload?.data || createdPayload);
+          if (!createdSet.id) return null;
+          const localVersions = readPlaygroundGuardrailVersions(normalizedLocalSet)
+            .slice()
+            .sort((left, right) => Number(left.version || 0) - Number(right.version || 0));
+          for (const localVersion of localVersions) {
+            try {
+              const versionPayload = await requestGuardrailBackendJson(
+                "/guardrails/" + encodeURIComponent(createdSet.id) + "/versions",
+                {
+                  method: "POST",
+                  body: JSON.stringify({
+                    label: localVersion.label,
+                    name: localVersion.label,
+                    description: localVersion.description,
+                    snapshot: localVersion.snapshot || buildPlaygroundGuardrailVersionSnapshot(normalizedLocalSet),
+                    metadata: buildPlaygroundGuardrailBackendMetadata(normalizedLocalSet),
+                  }),
+                },
+                "Failed to migrate guardrail version."
+              );
+              const createdVersion = normalizePlaygroundGuardrailVersion(versionPayload?.version || versionPayload?.data || versionPayload);
+              if (localVersion.status === "active" && createdVersion.id) {
+                await requestGuardrailBackendJson(
+                  "/guardrails/" + encodeURIComponent(createdSet.id) + "/versions/" + encodeURIComponent(createdVersion.id) + "/publish",
+                  {
+                    method: "POST",
+                    body: JSON.stringify({ snapshot: localVersion.snapshot || buildPlaygroundGuardrailVersionSnapshot(normalizedLocalSet) }),
+                  },
+                  "Failed to publish migrated guardrail version."
+                ).catch(() => null);
+              }
+            } catch {
+              // Keep migrating the rest; failed local entries remain in browser storage for manual recovery.
+            }
+          }
+          return await reloadBackendGuardrailSet(createdSet.id, { select: false });
+        }
+
+        async function loadBackendGuardrailSets(options = {}) {
+          const normalizedBackendUrl = String(proxyBackendBase || "").replace(/\\/+$/, "");
+          if (!normalizedBackendUrl) return [];
+          const loadKey = normalizedBackendUrl + "|" + requestHeadersSignature;
+          if (!options.force && guardrailsBackendLoadRef.current === loadKey) return guardrailSets;
+          guardrailsBackendLoadRef.current = loadKey;
+          setGuardrailsBackendSyncState({ status: "loading", error: "" });
+          try {
+            const setsPayload = await requestGuardrailBackendJson(
+              "/guardrails?type=custom&limit=500",
+              { method: "GET" },
+              "Failed to load guardrail sets."
+            );
+            const backendSets = readPlaygroundGuardrailListFromPayload(setsPayload || {}, ["guardrails", "guardrailSets", "guardrail_sets"])
+              .map((set) => normalizePlaygroundGuardrailSet(set))
+              .filter((set) => set.id && !isPlaygroundDefaultGuardrailSet(set));
+            let detailedSets = await Promise.all(backendSets.map((set) => fetchBackendGuardrailSetDetails(set)));
+            if (!detailedSets.length && !guardrailsBackendMigratedLocalRef.current) {
+              guardrailsBackendMigratedLocalRef.current = true;
+              const localSets = readPlaygroundGuardrailSetsFromStorage()
+                .map((set) => ensurePlaygroundGuardrailInitialVersion(normalizePlaygroundGuardrailSet(set)))
+                .filter((set) => set.id && !isPlaygroundDefaultGuardrailSet(set));
+              if (localSets.length) {
+                const migratedSets = [];
+                for (const localSet of localSets) {
+                  try {
+                    const migratedSet = await migrateLocalGuardrailSetToBackend(localSet);
+                    if (migratedSet?.id) migratedSets.push(migratedSet);
+                  } catch {
+                    // Keep migrating the rest; failed local entries remain in browser storage for manual recovery.
+                  }
+                }
+                detailedSets = migratedSets;
+              }
+            }
+            detailedSets = detailedSets
+              .map((set) => ensurePlaygroundGuardrailInitialVersion(normalizePlaygroundGuardrailSet(set)))
+              .filter((set) => set.id && !isPlaygroundDefaultGuardrailSet(set))
+              .sort((left, right) => (Date.parse(right.updatedAt || 0) || 0) - (Date.parse(left.updatedAt || 0) || 0));
+            setGuardrailSets(detailedSets);
+            guardrailPersistSignaturesRef.current = new Map(detailedSets.map((set) => [
+              set.id,
+              JSON.stringify(buildPlaygroundGuardrailBackendPayload(set)),
+            ]));
+            guardrailsBackendLoadedRef.current = true;
+            setGuardrailsBackendSyncState({ status: "idle", error: "" });
+            const availableSets = getPlaygroundAllGuardrailSets(detailedSets);
+            const selectedStillExists = availableSets.some((set) => set.id === selectedGuardrailSetId);
+            if (!selectedStillExists) {
+              setSelectedGuardrailSetId(availableSets[0]?.id || "");
+              if (!availableSets[0]?.id) {
+                setGuardrailsPageMode("overview");
+              }
+            }
+            return detailedSets;
+          } catch (error) {
+            guardrailsBackendLoadRef.current = "";
+            setGuardrailsBackendSyncState({ status: "error", error: error?.message || String(error) });
+            return guardrailSets;
+          }
+        }
+
+        async function persistGuardrailSetToBackend(set) {
+          const normalizedSet = ensurePlaygroundGuardrailInitialVersion(normalizePlaygroundGuardrailSet(set));
+          if (!normalizedSet.id || isPlaygroundDefaultGuardrailSet(normalizedSet)) return null;
+          const payload = buildPlaygroundGuardrailBackendPayload(normalizedSet);
+          const signature = JSON.stringify(payload);
+          if (guardrailPersistSignaturesRef.current.get(normalizedSet.id) === signature) {
+            return normalizedSet;
+          }
+          const data = await requestGuardrailBackendJson(
+            "/guardrails/" + encodeURIComponent(normalizedSet.id),
+            {
+              method: "PATCH",
+              body: JSON.stringify(payload),
+            },
+            "Failed to save guardrail set."
+          );
+          guardrailPersistSignaturesRef.current.set(normalizedSet.id, signature);
+          return normalizePlaygroundGuardrailSet(data?.guardrail || data?.data || data || normalizedSet);
+        }
+
+        function schedulePersistGuardrailSet(set, options = {}) {
+          const normalizedSet = ensurePlaygroundGuardrailInitialVersion(normalizePlaygroundGuardrailSet(set));
+          if (!normalizedSet.id || isPlaygroundDefaultGuardrailSet(normalizedSet) || !String(proxyBackendBase || "").trim()) return;
+          if (options.persist === false) return;
+          const delayMs = Math.max(0, Number(options.delayMs ?? 450) || 0);
+          const existingTimer = guardrailPersistTimersRef.current.get(normalizedSet.id);
+          if (existingTimer) {
+            if (typeof window !== "undefined") {
+              window.clearTimeout(existingTimer);
+            } else {
+              clearTimeout(existingTimer);
+            }
+          }
+          const runPersist = () => {
+            guardrailPersistTimersRef.current.delete(normalizedSet.id);
+            void persistGuardrailSetToBackend(normalizedSet).catch((error) => {
+              setGuardrailsBackendSyncState({ status: "error", error: error?.message || String(error) });
+            });
+          };
+          if (delayMs === 0) {
+            runPersist();
+            return;
+          }
+          const timer = typeof window !== "undefined"
+            ? window.setTimeout(runPersist, delayMs)
+            : setTimeout(runPersist, delayMs);
+          guardrailPersistTimersRef.current.set(normalizedSet.id, timer);
+        }
+
+        function applyGuardrailVersionResult(result, options = {}) {
+          if (!result?.resource) return null;
+          const normalizedSet = ensurePlaygroundGuardrailInitialVersion(normalizePlaygroundGuardrailSet(result.resource));
+          replaceGuardrailSetFromBackend(normalizedSet, options);
+          setGuardrailVersionState({ status: "idle", message: "", error: "" });
+          setGuardrailPublishMenuOpen(false);
+          setGuardrailVersionsHeaderMenuOpen(false);
+          setOpenGuardrailVersionMenuId("");
+          return normalizedSet;
+        }
+
+        useEffect(() => () => {
+          guardrailPersistTimersRef.current.forEach((timer) => {
+            if (typeof window !== "undefined") {
+              window.clearTimeout(timer);
+            } else {
+              clearTimeout(timer);
+            }
+          });
+          guardrailPersistTimersRef.current.clear();
+        }, []);
         useEffect(() => {
           if (!guardrailPublishMenuOpen) {
             return undefined;
@@ -162643,9 +163908,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
             window.removeEventListener("keydown", handleGuardrailActionsEscape);
           };
         }, [guardrailDetailActionsMenuOpen, guardrailSetActionMenuId]);
-        useEffect(() => {
-          writePlaygroundEvaluationSetsToStorage(evaluationSets);
-        }, [evaluationSets]);
         useEffect(() => {
           if (selectedGuardrailSetId && allGuardrailSets.some((set) => set.id === selectedGuardrailSetId)) {
             return;
@@ -163269,6 +164531,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const requestHeaders = useMemo(() => {
           return authRequestHeaders;
         }, [authRequestHeaders]);
+        const requestHeadersSignature = useMemo(() => (
+          Object.keys(requestHeaders || {})
+            .sort()
+            .map((key) => key + ":" + String(requestHeaders[key] || ""))
+            .join("|")
+        ), [requestHeaders]);
 	        useEffect(() => {
 	          writePlaygroundActiveOrganizationId(activeOrganizationId);
 	        }, [activeOrganizationId]);
@@ -163293,8 +164561,27 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            environmentId: "",
 	            agentId: "",
 	          }));
+            setGuardrailSets([]);
+            setSelectedGuardrailSetId("");
+            guardrailsBackendLoadRef.current = "";
+            guardrailsBackendLoadedRef.current = false;
+            guardrailsBackendMigratedLocalRef.current = false;
+            guardrailPersistSignaturesRef.current = new Map();
+            guardrailPersistTimersRef.current.forEach((timer) => {
+              if (typeof window !== "undefined") {
+                window.clearTimeout(timer);
+              } else {
+                clearTimeout(timer);
+              }
+            });
+            guardrailPersistTimersRef.current.clear();
+            resetGuardrailVersionTransientState();
 	          setTeamPageMetronomeWorkflows([]);
 	        }, [activeOrganizationId]);
+        useEffect(() => {
+          void loadBackendGuardrailSets({ force: false });
+          return undefined;
+        }, [proxyBackendBase, requestHeadersSignature]);
 	        useEffect(() => {
           const canLoadTeamMetronomeWorkflows = !isDemoMode && hasSessionAuth;
           if (!canLoadTeamMetronomeWorkflows || teamPageActiveTab !== "resources") {
@@ -171970,11 +173257,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
             });
             const data = await response.json().catch(() => ({}));
 
-            if (!response.ok || !data?.checkoutUrl) {
-              throw new Error(data?.message || data?.error || "Failed to start checkout.");
+            if (data?.checkoutUrl) {
+              window.location.href = data.checkoutUrl;
+              return;
             }
 
-            window.location.href = data.checkoutUrl;
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to start checkout.");
+            }
+            throw new Error("Failed to start checkout.");
           } catch (error) {
             setSettingsBillingError(error instanceof Error ? error.message : "Failed to start checkout.");
             setSettingsCheckoutLoading(false);
@@ -172019,11 +173310,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
             });
             const data = await response.json().catch(() => ({}));
 
-            if (!response.ok || !data?.checkoutUrl) {
-              throw new Error(data?.message || data?.error || "Failed to start checkout.");
+            if (data?.checkoutUrl) {
+              window.location.href = data.checkoutUrl;
+              return;
             }
 
-            window.location.href = data.checkoutUrl;
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to start checkout.");
+            }
+            throw new Error("Failed to start checkout.");
           } catch (error) {
             setSettingsBillingError(error instanceof Error ? error.message : "Failed to start checkout.");
             setSettingsTopUpActionId("");
@@ -174150,10 +175445,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : 30;
           const totalUsedCT = Math.max(
             readSettingsComputeTokens(settingsUsageSummary?.totals, "totalCT", "totalCost"),
-            settingsDollarsToComputeTokens(settingsBudgetStatus?.currentPeriodUsage)
+            settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["currentPeriodUsage", "usage", "usedCredits"]))
           );
           const quotaCT = Math.max(
-            settingsDollarsToComputeTokens(settingsBudgetStatus?.tierQuota),
+            settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["includedCredits", "includedTierQuota", "tierQuota"])),
             totalUsedCT
           );
           const remainingCT = Math.max(0, quotaCT - totalUsedCT);
@@ -182652,15 +183947,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 const userTier = settingsCurrentTierId;
                 const tierInfo = SETTINGS_PLAN_CATALOG.find((tier) => tier.id === userTier) || fallbackTierInfo;
                 const includedTierQuotaCT = Math.max(
-                  settingsDollarsToComputeTokens(settingsBudgetStatus?.includedTierQuota),
-                  settingsDollarsToComputeTokens(settingsBudgetStatus?.tierQuota),
+                  settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["includedCredits", "includedTierQuota"])),
+                  settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["tierQuota"])),
                   Number(tierInfo.computeTokens || fallbackTierInfo.computeTokens)
                 );
-                const topUpBalanceCT = Math.max(0, settingsDollarsToComputeTokens(settingsBudgetStatus?.topUpBalance));
+                const topUpBalanceCT = Math.max(0, settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["topUpBalance", "topUpCredits"])));
                 const hasTopUpBalance = topUpBalanceCT > 0;
                 const totalUsedCT = Math.max(
                   Number(settingsUsageSummary?.totals?.totalCT || 0),
-                  settingsDollarsToComputeTokens(settingsBudgetStatus?.currentPeriodUsage)
+                  settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["currentPeriodUsage", "usage", "usedCredits"]))
                 );
                 const remainingPlanCT = Math.max(0, includedTierQuotaCT - totalUsedCT);
                 const totalRemainingCT = remainingPlanCT + topUpBalanceCT;
@@ -193329,11 +194624,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
           };
           const welcomeTierInfo = SETTINGS_PLAN_CATALOG.find((tier) => tier.id === settingsCurrentTierId) || welcomeFallbackTierInfo;
           const welcomeIncludedQuotaCT = Math.max(
-            settingsDollarsToComputeTokens(settingsBudgetStatus?.includedTierQuota),
-            settingsDollarsToComputeTokens(settingsBudgetStatus?.tierQuota),
+            settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["includedCredits", "includedTierQuota"])),
+            settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["tierQuota"])),
             Number(welcomeTierInfo.computeTokens || welcomeFallbackTierInfo.computeTokens)
           );
-          const welcomeTopUpBalanceCT = Math.max(0, settingsDollarsToComputeTokens(settingsBudgetStatus?.topUpBalance));
+          const welcomeTopUpBalanceCT = Math.max(0, settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["topUpBalance", "topUpCredits"])));
           const welcomeTotalBudgetCT = Math.max(1, welcomeIncludedQuotaCT + welcomeTopUpBalanceCT);
           const welcomeRemainingCT = Math.max(0, welcomeTotalBudgetCT - welcomeTotalUsedCT);
           const welcomeRemainingPercentage = clampSettingsPercentage((welcomeRemainingCT / welcomeTotalBudgetCT) * 100);
@@ -197891,7 +199186,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             ? selectedGuardrailSet.prompts
             : [];
 
-          function createGuardrailSet() {
+          async function createGuardrailSet() {
             const creator = {
               id: String(sessionState.userId || accountEmail || accountName || "").trim(),
               userId: String(sessionState.userId || "").trim(),
@@ -197912,17 +199207,31 @@ ${PROJECT_OVERVIEW_SCRIPT}
               },
             });
             const nextSet = ensurePlaygroundGuardrailInitialVersion(draftSet);
-            setGuardrailSets((current) => [nextSet, ...(Array.isArray(current) ? current : [])]);
-            setSelectedGuardrailSetId(nextSet.id);
-            setGuardrailsSetFilter("custom");
-            setGuardrailsPageMode("detail");
-            setGuardrailsToolbarPopover("");
-            setGuardrailSetActionMenuId("");
-            setGuardrailDetailActionsMenuOpen(false);
-            setGuardrailPublishMenuOpen(false);
-            setGuardrailVersionsHeaderMenuOpen(false);
-            setGuardrailVersionChangesState(null);
-            rememberGuardrailVersionBaseline(nextSet, { force: true });
+            setGuardrailsBackendSyncState({ status: "loading", error: "" });
+            try {
+              const createdPayload = await requestGuardrailBackendJson(
+                "/guardrails",
+                {
+                  method: "POST",
+                  body: JSON.stringify(buildPlaygroundGuardrailBackendPayload(nextSet)),
+                },
+                "Failed to create guardrail set."
+              );
+              const createdSet = normalizePlaygroundGuardrailSet(createdPayload?.guardrail || createdPayload?.data || createdPayload);
+              const detailedSet = await fetchBackendGuardrailSetDetails(createdSet);
+              replaceGuardrailSetFromBackend(detailedSet, { select: true, rememberBaseline: true });
+              setGuardrailsBackendSyncState({ status: "idle", error: "" });
+              setGuardrailsSetFilter("custom");
+              setGuardrailsPageMode("detail");
+              setGuardrailsToolbarPopover("");
+              setGuardrailSetActionMenuId("");
+              setGuardrailDetailActionsMenuOpen(false);
+              setGuardrailPublishMenuOpen(false);
+              setGuardrailVersionsHeaderMenuOpen(false);
+              setGuardrailVersionChangesState(null);
+            } catch (error) {
+              setGuardrailsBackendSyncState({ status: "error", error: error?.message || String(error) });
+            }
           }
 
           function selectGuardrailSet(setId) {
@@ -197954,23 +199263,30 @@ ${PROJECT_OVERVIEW_SCRIPT}
             guardrailVersionDraftTouchedRef.current = false;
           }
 
-          function updateGuardrailSet(setId, updater) {
+          function updateGuardrailSet(setId, updater, options = {}) {
             const normalizedSetId = String(setId || "").trim();
             if (!normalizedSetId) return;
             const targetSet = safeGuardrailSets.find((set) => set?.id === normalizedSetId);
             if (isGuardrailSetReadonly(targetSet)) return;
-            guardrailVersionDraftTouchedRef.current = true;
+            if (options.markVersionTouched !== false) {
+              guardrailVersionDraftTouchedRef.current = true;
+            }
+            let nextSetForPersistence = null;
             setGuardrailSets((current) => (Array.isArray(current) ? current : []).map((set) => {
               if (set?.id !== normalizedSetId) return set;
               const updatedSet = typeof updater === "function" ? updater(set) : { ...set, ...updater };
-              return {
+              nextSetForPersistence = ensurePlaygroundGuardrailInitialVersion(normalizePlaygroundGuardrailSet({
                 ...set,
                 ...updatedSet,
                 id: set.id,
                 prompts: Array.isArray(updatedSet?.prompts) ? updatedSet.prompts : (Array.isArray(set.prompts) ? set.prompts : []),
                 updatedAt: new Date().toISOString(),
-              };
+              }));
+              return nextSetForPersistence;
             }));
+            if (nextSetForPersistence) {
+              schedulePersistGuardrailSet(nextSetForPersistence, options);
+            }
           }
 
           function getGuardrailVersionMetadata(set = selectedGuardrailSet) {
@@ -198081,55 +199397,44 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return actions;
           }
 
-          function commitVersionedGuardrailSet(nextSet, options = {}) {
-            const normalizedSet = normalizePlaygroundGuardrailSet(nextSet);
-            if (!normalizedSet?.id || isGuardrailSetReadonly(normalizedSet)) {
-              return null;
-            }
-            setGuardrailVersionState({
-              status: "loading",
-              message: options.loadingMessage || "Updating guardrail versions...",
-              error: "",
+          function buildGuardrailSetForRepublish() {
+            return normalizePlaygroundGuardrailSet({
+              ...selectedGuardrailSet,
+              updatedAt: new Date().toISOString(),
             });
-            try {
-              setGuardrailSets((current) => (Array.isArray(current) ? current : []).map((set) => (
-                set?.id === normalizedSet.id ? normalizedSet : set
-              )));
-              rememberGuardrailVersionBaseline(normalizedSet, { force: true });
-              setGuardrailPublishMenuOpen(false);
-              setGuardrailVersionsHeaderMenuOpen(false);
-              setOpenGuardrailVersionMenuId("");
-              setGuardrailVersionState({
-                status: "success",
-                message: options.successMessage || "Guardrail versions updated.",
-                error: "",
-              });
-              if (typeof window !== "undefined") {
-                window.setTimeout(() => {
-                  setGuardrailVersionState((current) => current.status === "success" ? { status: "idle", message: "", error: "" } : current);
-                }, 1400);
-              }
-              return normalizedSet;
-            } catch (error) {
-              setGuardrailVersionState({
-                status: "error",
-                message: "",
-                error: error?.message || options.errorMessage || "Failed to update guardrail versions.",
-              });
-              return null;
-            }
           }
 
-          function saveCurrentGuardrailVersion() {
+          async function saveCurrentGuardrailVersion() {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
             if (!hasSelectedGuardrailVersionChanges()) return null;
+            const selectedVersion = getSelectedGuardrailVersion();
             const result = playgroundGuardrailVersionController.buildSaveCurrentResource(selectedGuardrailSet, { status: "saved" });
-            if (!result?.resource) return null;
-            return commitVersionedGuardrailSet(result.resource, {
-              loadingMessage: "Saving current version...",
-              successMessage: "Current version saved",
-              errorMessage: "Failed to save current version.",
-            });
+            const nextSet = applyGuardrailVersionResult(result, { select: false, rememberBaseline: false });
+            if (!nextSet) return null;
+            setGuardrailVersionState({ status: "loading", message: "", error: "" });
+            try {
+              await persistGuardrailSetToBackend(nextSet);
+              if (selectedVersion?.id && selectedVersion.status !== "active") {
+                await requestGuardrailBackendJson(
+                  "/guardrails/" + encodeURIComponent(nextSet.id) + "/versions/" + encodeURIComponent(selectedVersion.id),
+                  {
+                    method: "PATCH",
+                    body: JSON.stringify({
+                      label: selectedVersion.label,
+                      description: selectedVersion.description,
+                      snapshot: buildPlaygroundGuardrailVersionSnapshot(nextSet),
+                      metadata: buildPlaygroundGuardrailBackendMetadata(nextSet),
+                    }),
+                  },
+                  "Failed to save guardrail version."
+                ).catch(() => null);
+              }
+              setGuardrailVersionState({ status: "idle", message: "", error: "" });
+              return await reloadBackendGuardrailSet(nextSet.id, { select: false, rememberBaseline: true });
+            } catch (error) {
+              setGuardrailVersionState({ status: "error", message: "", error: error?.message || String(error) });
+              return nextSet;
+            }
           }
 
           function cancelGuardrailVersionModalAnimation() {
@@ -198220,40 +199525,81 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }, typeof PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS === "number" ? PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS : 75);
           }
 
-          function saveGuardrailToNewVersion(options = {}) {
+          async function saveGuardrailToNewVersion(options = {}) {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
             const forceNewVersion = Boolean(options.force);
             if (!forceNewVersion && !hasSelectedGuardrailVersionChanges()) return null;
-            const result = playgroundGuardrailVersionController.buildNewVersionResource(selectedGuardrailSet, {
-              label: options.label,
-              description: options.description,
+            const sourceSet = normalizePlaygroundGuardrailSet({
+              ...selectedGuardrailSet,
+              updatedAt: new Date().toISOString(),
             });
-            if (!result?.resource) return null;
-            return commitVersionedGuardrailSet(result.resource, {
-              loadingMessage: "Saving new version...",
-              successMessage: "New version saved",
-              errorMessage: "Failed to save new version.",
-            });
+            setGuardrailVersionState({ status: "loading", message: "", error: "" });
+            try {
+              await persistGuardrailSetToBackend(sourceSet);
+              const versionPayload = await requestGuardrailBackendJson(
+                "/guardrails/" + encodeURIComponent(sourceSet.id) + "/versions",
+                {
+                  method: "POST",
+                  body: JSON.stringify({
+                    label: options.label,
+                    name: options.label,
+                    description: options.description,
+                    snapshot: buildPlaygroundGuardrailVersionSnapshot(sourceSet),
+                    metadata: buildPlaygroundGuardrailBackendMetadata(sourceSet),
+                  }),
+                },
+                "Failed to create guardrail version."
+              );
+              const createdVersion = normalizePlaygroundGuardrailVersion(versionPayload?.version || versionPayload?.data || versionPayload);
+              const versions = [
+                createdVersion,
+                ...readSelectedGuardrailVersions(sourceSet).filter((version) => version.id !== createdVersion.id),
+              ];
+              const nextSet = createPlaygroundGuardrailWithVersionList(sourceSet, versions, createdVersion.id);
+              applyGuardrailVersionResult({ resource: nextSet }, { select: false, rememberBaseline: true });
+              setGuardrailVersionState({ status: "idle", message: "", error: "" });
+              return await reloadBackendGuardrailSet(nextSet.id, { select: false, rememberBaseline: true });
+            } catch (error) {
+              setGuardrailVersionState({ status: "error", message: "", error: error?.message || String(error) });
+              return null;
+            }
           }
 
-          function updateGuardrailVersionDetails(versionId, versionDetails = {}) {
+          async function updateGuardrailVersionDetails(versionId, versionDetails = {}) {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
-            const result = playgroundGuardrailVersionController.buildVersionMetadataResource(selectedGuardrailSet, versionId, versionDetails);
-            if (!result?.resource) return null;
-            return commitVersionedGuardrailSet(result.resource, {
-              loadingMessage: "Saving version details...",
-              successMessage: "Version details saved",
-              errorMessage: "Failed to save version details.",
-            });
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) return null;
+            setGuardrailVersionState({ status: "loading", message: "", error: "" });
+            try {
+              await requestGuardrailBackendJson(
+                "/guardrails/" + encodeURIComponent(selectedGuardrailSet.id) + "/versions/" + encodeURIComponent(normalizedVersionId),
+                {
+                  method: "PATCH",
+                  body: JSON.stringify({
+                    label: versionDetails.label,
+                    name: versionDetails.label,
+                    description: versionDetails.description,
+                  }),
+                },
+                "Failed to update guardrail version."
+              );
+              const result = playgroundGuardrailVersionController.buildVersionMetadataResource(selectedGuardrailSet, normalizedVersionId, versionDetails);
+              const nextSet = applyGuardrailVersionResult(result, { select: false, rememberBaseline: true });
+              setGuardrailVersionState({ status: "idle", message: "", error: "" });
+              return await reloadBackendGuardrailSet(nextSet?.id || selectedGuardrailSet.id, { select: false, rememberBaseline: true });
+            } catch (error) {
+              setGuardrailVersionState({ status: "error", message: "", error: error?.message || String(error) });
+              return null;
+            }
           }
 
-          function commitGuardrailVersionModal() {
+          async function commitGuardrailVersionModal() {
             if (!guardrailVersionModal || guardrailVersionState.status === "loading") return;
             const label = String(guardrailVersionNameDraft || "").trim() || "Version";
             const description = String(guardrailVersionDescriptionDraft || "").trim();
             const savedSet = guardrailVersionModal.mode === "edit"
-              ? updateGuardrailVersionDetails(guardrailVersionModal.versionId, { label, description })
-              : saveGuardrailToNewVersion({
+              ? await updateGuardrailVersionDetails(guardrailVersionModal.versionId, { label, description })
+              : await saveGuardrailToNewVersion({
                   force: Boolean(guardrailVersionModal.force),
                   label,
                   description,
@@ -198263,7 +199609,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }
           }
 
-          function publishCurrentGuardrailVersion() {
+          async function publishCurrentGuardrailVersion() {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
             const selectedVersion = getSelectedGuardrailVersion();
             const hasChanges = hasSelectedGuardrailVersionChanges();
@@ -198276,31 +199622,55 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return null;
             }
             if (!canPublishSelectedGuardrailVersion()) return null;
-            const result = playgroundGuardrailVersionController.buildPublishSelectedResource(selectedGuardrailSet, {
-              updateFromResource: hasChanges,
-            });
-            if (!result?.resource) return null;
-            return commitVersionedGuardrailSet(result.resource, {
-              loadingMessage: "Publishing current version...",
-              successMessage: "Published",
-              errorMessage: "Failed to publish current version.",
-            });
+            const sourceSet = hasChanges ? buildGuardrailSetForRepublish() : selectedGuardrailSet;
+            setGuardrailVersionState({ status: "loading", message: "", error: "" });
+            try {
+              await persistGuardrailSetToBackend(sourceSet);
+              await requestGuardrailBackendJson(
+                "/guardrails/" + encodeURIComponent(sourceSet.id) + "/versions/" + encodeURIComponent(selectedVersion.id) + "/publish",
+                {
+                  method: "POST",
+                  body: JSON.stringify({ snapshot: buildPlaygroundGuardrailVersionSnapshot(sourceSet) }),
+                },
+                "Failed to publish guardrail version."
+              );
+              const result = playgroundGuardrailVersionController.buildPublishSelectedResource(sourceSet, {
+                updateFromResource: hasChanges,
+              });
+              const nextSet = applyGuardrailVersionResult(result, { select: false, rememberBaseline: true });
+              setGuardrailVersionState({ status: "idle", message: "", error: "" });
+              return await reloadBackendGuardrailSet(nextSet?.id || sourceSet.id, { select: false, rememberBaseline: true });
+            } catch (error) {
+              setGuardrailVersionState({ status: "error", message: "", error: error?.message || String(error) });
+              return null;
+            }
           }
 
-          function restoreGuardrailVersion(versionId) {
+          async function restoreGuardrailVersion(versionId) {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
-            const result = playgroundGuardrailVersionController.buildRestoreVersionResource(selectedGuardrailSet, versionId);
-            if (!result?.resource) return null;
-            return commitVersionedGuardrailSet(result.resource, {
-              loadingMessage: "Restoring guardrail version...",
-              successMessage: "Version restored",
-              errorMessage: "Failed to restore guardrail version.",
-            });
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) return null;
+            setGuardrailVersionState({ status: "loading", message: "", error: "" });
+            try {
+              await requestGuardrailBackendJson(
+                "/guardrails/" + encodeURIComponent(selectedGuardrailSet.id) + "/versions/" + encodeURIComponent(normalizedVersionId) + "/restore",
+                { method: "POST" },
+                "Failed to restore guardrail version."
+              );
+              const result = playgroundGuardrailVersionController.buildRestoreVersionResource(selectedGuardrailSet, normalizedVersionId);
+              const nextSet = applyGuardrailVersionResult(result, { select: false, rememberBaseline: true });
+              setGuardrailVersionState({ status: "idle", message: "", error: "" });
+              return await reloadBackendGuardrailSet(nextSet?.id || selectedGuardrailSet.id, { select: false, rememberBaseline: true });
+            } catch (error) {
+              setGuardrailVersionState({ status: "error", message: "", error: error?.message || String(error) });
+              return null;
+            }
           }
 
-          function publishGuardrailVersion(versionId) {
+          async function publishGuardrailVersion(versionId) {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
-            const targetVersion = readSelectedGuardrailVersions().find((version) => version.id === String(versionId || "").trim());
+            const normalizedVersionId = String(versionId || "").trim();
+            const targetVersion = readSelectedGuardrailVersions().find((version) => version.id === normalizedVersionId);
             const selectedVersion = getSelectedGuardrailVersion();
             const hasChanges = hasSelectedGuardrailVersionChanges();
             const shouldRepublishCurrentEditor = Boolean(
@@ -198318,55 +199688,86 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return null;
             }
             if (!canPublishGuardrailVersion(targetVersion)) return null;
-            const result = playgroundGuardrailVersionController.buildPublishVersionResource(selectedGuardrailSet, versionId, {
-              updateFromResource: shouldRepublishCurrentEditor,
-            });
-            if (!result?.resource) return null;
-            return commitVersionedGuardrailSet(result.resource, {
-              loadingMessage: "Publishing guardrail version...",
-              successMessage: "Published",
-              errorMessage: "Failed to publish guardrail version.",
-            });
+            const sourceSet = shouldRepublishCurrentEditor ? buildGuardrailSetForRepublish() : selectedGuardrailSet;
+            setGuardrailVersionState({ status: "loading", message: "", error: "" });
+            try {
+              if (shouldRepublishCurrentEditor) {
+                await persistGuardrailSetToBackend(sourceSet);
+              }
+              await requestGuardrailBackendJson(
+                "/guardrails/" + encodeURIComponent(sourceSet.id) + "/versions/" + encodeURIComponent(normalizedVersionId) + "/publish",
+                {
+                  method: "POST",
+                  body: JSON.stringify({
+                    snapshot: shouldRepublishCurrentEditor ? buildPlaygroundGuardrailVersionSnapshot(sourceSet) : undefined,
+                  }),
+                },
+                "Failed to publish guardrail version."
+              );
+              const result = playgroundGuardrailVersionController.buildPublishVersionResource(sourceSet, normalizedVersionId, {
+                updateFromResource: shouldRepublishCurrentEditor,
+              });
+              const nextSet = applyGuardrailVersionResult(result, { select: false, rememberBaseline: true });
+              setGuardrailVersionState({ status: "idle", message: "", error: "" });
+              return await reloadBackendGuardrailSet(nextSet?.id || sourceSet.id, { select: false, rememberBaseline: true });
+            } catch (error) {
+              setGuardrailVersionState({ status: "error", message: "", error: error?.message || String(error) });
+              return null;
+            }
           }
 
-          function deleteGuardrailVersion(versionId) {
+          async function deleteGuardrailVersion(versionId) {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
             if (readSelectedGuardrailVersions().length <= 1) return null;
-            const result = playgroundGuardrailVersionController.buildDeleteVersionResource(selectedGuardrailSet, versionId);
-            if (!result?.resource) return null;
             const confirmed = typeof window === "undefined" || window.confirm("Delete this guardrail version?");
             if (!confirmed) return null;
-            return commitVersionedGuardrailSet(result.resource, {
-              loadingMessage: "Deleting guardrail version...",
-              successMessage: "Version deleted",
-              errorMessage: "Failed to delete guardrail version.",
-            });
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) return null;
+            setGuardrailVersionState({ status: "loading", message: "", error: "" });
+            try {
+              await requestGuardrailBackendJson(
+                "/guardrails/" + encodeURIComponent(selectedGuardrailSet.id) + "/versions/" + encodeURIComponent(normalizedVersionId),
+                { method: "DELETE" },
+                "Failed to delete guardrail version."
+              );
+              const result = playgroundGuardrailVersionController.buildDeleteVersionResource(selectedGuardrailSet, normalizedVersionId);
+              const nextSet = applyGuardrailVersionResult(result, { select: false, rememberBaseline: true });
+              setGuardrailVersionState({ status: "idle", message: "", error: "" });
+              return await reloadBackendGuardrailSet(nextSet?.id || selectedGuardrailSet.id, { select: false, rememberBaseline: true });
+            } catch (error) {
+              setGuardrailVersionState({ status: "error", message: "", error: error?.message || String(error) });
+              return null;
+            }
           }
 
-          function unpublishActiveGuardrailVersion() {
+          async function unpublishActiveGuardrailVersion() {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
-            const result = playgroundGuardrailVersionController.buildUnpublishActiveResource(selectedGuardrailSet);
-            if (!result?.resource) return null;
+            const activeVersion = getSelectedGuardrailActiveVersion();
+            if (!activeVersion?.id) return null;
             const confirmed = typeof window === "undefined" || window.confirm("Unpublish this guardrail set?");
             if (!confirmed) return null;
-            return commitVersionedGuardrailSet(result.resource, {
-              loadingMessage: "Unpublishing guardrail set...",
-              successMessage: "Unpublished",
-              errorMessage: "Failed to unpublish guardrail set.",
-            });
+            setGuardrailVersionState({ status: "loading", message: "", error: "" });
+            try {
+              await requestGuardrailBackendJson(
+                "/guardrails/" + encodeURIComponent(selectedGuardrailSet.id) + "/versions/" + encodeURIComponent(activeVersion.id) + "/unpublish",
+                { method: "POST" },
+                "Failed to unpublish guardrail set."
+              );
+              const result = playgroundGuardrailVersionController.buildUnpublishActiveResource(selectedGuardrailSet);
+              const nextSet = applyGuardrailVersionResult(result, { select: false, rememberBaseline: true });
+              setGuardrailVersionState({ status: "idle", message: "", error: "" });
+              return await reloadBackendGuardrailSet(nextSet?.id || selectedGuardrailSet.id, { select: false, rememberBaseline: true });
+            } catch (error) {
+              setGuardrailVersionState({ status: "error", message: "", error: error?.message || String(error) });
+              return null;
+            }
           }
 
-          function handleRevertGuardrailDraft() {
+          async function handleRevertGuardrailDraft() {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") return null;
             const selectedVersion = getSelectedGuardrailVersion();
             if (!selectedVersion) return null;
-            const result = playgroundGuardrailVersionController.buildRestoreVersionResource(selectedGuardrailSet, selectedVersion.id);
-            if (!result?.resource) return null;
-            return commitVersionedGuardrailSet(result.resource, {
-              loadingMessage: "Reverting guardrail set...",
-              successMessage: "Reverted",
-              errorMessage: "Failed to revert guardrail set.",
-            });
+            return await restoreGuardrailVersion(selectedVersion.id);
           }
 
           const GUARDRAIL_VERSION_COMPARE_CURRENT_EDITOR_ID = "current-editor";
@@ -212708,6 +214109,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (url.pathname === "/api/real/evaluations" || url.pathname.startsWith("/api/real/evaluations/")) {
+    const suffix = url.pathname.slice("/api/real/evaluations".length);
+    void proxyUpstreamJsonRequest(req, res, "/evaluations" + suffix, req.method);
+    return;
+  }
+
   if (playgroundFineTuningRuntime.handleRequest(req, res, url)) {
     return;
   }
@@ -213675,39 +215082,30 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === "GET" && (url.pathname === "/api/real/guardrails" || url.pathname === "/api/real/guardrail-sets")) {
-    void proxyUpstreamGet(req, res, "/guardrails");
+  const voiceAgentsProxyMatch = url.pathname.match(/^\/api\/real\/voice-agents(?:\/(.*))?$/);
+  if (voiceAgentsProxyMatch && ["GET", "POST", "PATCH", "PUT", "DELETE"].includes(req.method || "")) {
+    const suffix = voiceAgentsProxyMatch[1]
+      ? "/" + voiceAgentsProxyMatch[1].split("/").map((segment) => encodeURIComponent(decodeURIComponent(segment))).join("/")
+      : "";
+    if (req.method === "GET") {
+      void proxyUpstreamGet(req, res, "/voice-agents" + suffix);
+    } else {
+      void proxyUpstreamJsonRequest(req, res, "/voice-agents" + suffix, req.method);
+    }
     return;
   }
 
-  if (req.method === "POST" && (url.pathname === "/api/real/guardrails" || url.pathname === "/api/real/guardrail-sets")) {
-    void proxyUpstreamJsonRequest(req, res, "/guardrails", "POST");
-    return;
-  }
-
-  const guardrailDetailMatch = url.pathname.match(/^\/api\/real\/(?:guardrails|guardrail-sets)\/([^/]+)$/);
-  if (req.method === "GET" && guardrailDetailMatch) {
-    void proxyUpstreamGet(req, res, `/guardrails/${encodeURIComponent(decodeURIComponent(guardrailDetailMatch[1]))}`);
-    return;
-  }
-
-  if ((req.method === "PATCH" || req.method === "PUT") && guardrailDetailMatch) {
-    void proxyUpstreamJsonRequest(
-      req,
-      res,
-      `/guardrails/${encodeURIComponent(decodeURIComponent(guardrailDetailMatch[1]))}`,
-      "PATCH",
-    );
-    return;
-  }
-
-  if (req.method === "DELETE" && guardrailDetailMatch) {
-    void proxyUpstreamJsonRequest(
-      req,
-      res,
-      `/guardrails/${encodeURIComponent(decodeURIComponent(guardrailDetailMatch[1]))}`,
-      "DELETE",
-    );
+  const guardrailsProxyMatch = url.pathname.match(/^\/api\/real\/(?:guardrails|guardrail-sets)(?:\/(.*))?$/);
+  if (guardrailsProxyMatch && ["GET", "POST", "PATCH", "PUT", "DELETE"].includes(req.method || "")) {
+    const suffix = guardrailsProxyMatch[1]
+      ? "/" + guardrailsProxyMatch[1].split("/").map((segment) => encodeURIComponent(decodeURIComponent(segment))).join("/")
+      : "";
+    const upstreamMethod = req.method === "PUT" ? "PATCH" : req.method;
+    if (upstreamMethod === "GET") {
+      void proxyUpstreamGet(req, res, "/guardrails" + suffix);
+    } else {
+      void proxyUpstreamJsonRequest(req, res, "/guardrails" + suffix, upstreamMethod);
+    }
     return;
   }
 
