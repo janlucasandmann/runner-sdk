@@ -1472,13 +1472,55 @@ function getRunnerAgentGuardrailTexts(option: RunnerChatOption | null | undefine
 }
 
 const RUNNER_AGENT_GUARDRAILS_HIDDEN_PROMPT_MARKER = "Invisible guardrails for the selected agent:";
+const RUNNER_VISIBLE_USER_MESSAGE_MARKER = "Visible user message:";
 
 function isRunnerInternalHiddenExecutionPromptContent(value: unknown): boolean {
   const normalizedValue = stripSystemTags(String(value || "")).trim();
   if (!normalizedValue) {
     return false;
   }
-  return normalizedValue.includes(RUNNER_AGENT_GUARDRAILS_HIDDEN_PROMPT_MARKER);
+  return normalizedValue.startsWith(RUNNER_AGENT_GUARDRAILS_HIDDEN_PROMPT_MARKER);
+}
+
+function extractRunnerVisibleContentFromHiddenExecutionPrompt(value: unknown): string {
+  const normalizedValue = stripSystemTags(String(value || "")).trim();
+  if (!isRunnerInternalHiddenExecutionPromptContent(normalizedValue)) {
+    return normalizedValue;
+  }
+
+  const explicitVisibleIndex = normalizedValue.lastIndexOf(RUNNER_VISIBLE_USER_MESSAGE_MARKER);
+  if (explicitVisibleIndex >= 0) {
+    return normalizedValue.slice(explicitVisibleIndex + RUNNER_VISIBLE_USER_MESSAGE_MARKER.length).trim();
+  }
+
+  const blocks = normalizedValue
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+  const lastBlock = blocks[blocks.length - 1] || "";
+  if (
+    !lastBlock ||
+    lastBlock === RUNNER_AGENT_GUARDRAILS_HIDDEN_PROMPT_MARKER ||
+    lastBlock.startsWith("Follow these guardrails") ||
+    /^Guardrail\s+\d+:/i.test(lastBlock)
+  ) {
+    return "";
+  }
+  return lastBlock;
+}
+
+function buildRunnerExecutionPromptWithHiddenContext(hiddenParts: string[], visiblePrompt: string): string {
+  const normalizedHiddenParts = hiddenParts
+    .filter((part) => typeof part === "string" && part.trim().length > 0)
+    .map((part) => part.trim());
+  const normalizedVisiblePrompt = String(visiblePrompt || "").trim();
+  if (normalizedHiddenParts.length === 0) {
+    return normalizedVisiblePrompt;
+  }
+  return [
+    ...normalizedHiddenParts,
+    `${RUNNER_VISIBLE_USER_MESSAGE_MARKER}\n${normalizedVisiblePrompt}`,
+  ].join("\n\n");
 }
 
 function buildRunnerAgentGuardrailsHiddenPrompt(option: RunnerChatOption | null | undefined): string {
@@ -1927,8 +1969,11 @@ function normalizeRunnerConversationMessage(value: unknown): RunnerConversationM
     return null;
   }
 
-  const content = normalizeRunnerConversationMessageContent(record.content ?? record.message ?? record.text);
-  if (role === "user" && isRunnerInternalHiddenExecutionPromptContent(content)) {
+  const rawContent = normalizeRunnerConversationMessageContent(record.content ?? record.message ?? record.text);
+  const content = role === "user"
+    ? extractRunnerVisibleContentFromHiddenExecutionPrompt(rawContent)
+    : rawContent;
+  if (role === "user" && isRunnerInternalHiddenExecutionPromptContent(rawContent) && !content) {
     return null;
   }
   const logMetadataCandidate =
@@ -10528,8 +10573,9 @@ function buildHydratedTurnsFromLogs(
     const log = dedupedLogs[index];
 
     if (log.eventType === "user_message" || (log as RunnerLog & { isUserMessage?: boolean }).isUserMessage) {
-      const prompt = stripSystemTags(log.message || "");
-      if (isRunnerInternalHiddenExecutionPromptContent(prompt)) {
+      const rawPrompt = stripSystemTags(log.message || "");
+      const prompt = extractRunnerVisibleContentFromHiddenExecutionPrompt(rawPrompt);
+      if (isRunnerInternalHiddenExecutionPromptContent(rawPrompt) && !prompt) {
         continue;
       }
       const startedAtMs = getSafeTimestamp(log, index);
@@ -14343,10 +14389,10 @@ export function RunnerChat({
     headers.set("Content-Type", "application/json");
     const agentGuardrailsHiddenPromptText = buildRunnerAgentGuardrailsHiddenPrompt(selectedAgent);
     const hiddenSystemPromptText = hiddenSystemPrompt.trim();
-    const executionPrompt =
-      [agentGuardrailsHiddenPromptText, hiddenSystemPromptText, prompt]
-        .filter((part) => typeof part === "string" && part.trim().length > 0)
-        .join("\n\n");
+    const executionPrompt = buildRunnerExecutionPromptWithHiddenContext(
+      [agentGuardrailsHiddenPromptText, hiddenSystemPromptText],
+      prompt
+    );
 
     try {
       const response = await fetch(`${normalizedBackendUrl}/threads/${encodeURIComponent(resolvedThreadId)}/context/actions/btw/stream`, {
@@ -14520,10 +14566,10 @@ export function RunnerChat({
     const adCreationHiddenPromptText = options?.adCreationCommand
       ? buildRunnerAdCreationHiddenPrompt(options.adCreationCommand)
       : "";
-    const executionTaskText =
-      [agentGuardrailsHiddenPromptText, hiddenSystemPromptText, resourceCreationHiddenPromptText, agentCreationHiddenPromptText, skillCreationHiddenPromptText, slideCreationHiddenPromptText, researchCreationHiddenPromptText, scrapeCreationHiddenPromptText, parseCreationHiddenPromptText, adCreationHiddenPromptText, taskText]
-        .filter((part) => typeof part === "string" && part.trim().length > 0)
-        .join("\n\n");
+    const executionTaskText = buildRunnerExecutionPromptWithHiddenContext(
+      [agentGuardrailsHiddenPromptText, hiddenSystemPromptText, resourceCreationHiddenPromptText, agentCreationHiddenPromptText, skillCreationHiddenPromptText, slideCreationHiddenPromptText, researchCreationHiddenPromptText, scrapeCreationHiddenPromptText, parseCreationHiddenPromptText, adCreationHiddenPromptText],
+      taskText
+    );
     const visibleTaskText =
       options?.displayPromptOverride !== undefined
         ? String(options.displayPromptOverride || "")

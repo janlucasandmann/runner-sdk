@@ -4680,43 +4680,53 @@ const html = `<!doctype html>
 
       .playground-top-nav-sidebar-toggle {
         flex: 0 0 auto;
-        width: 30px;
-        height: 30px;
+        min-height: 26px;
+        width: 20px;
+        height: 26px;
         border: 0;
         border-radius: 999px;
-        padding: 0;
+        padding: 0 9px;
         background: transparent;
-        color: rgba(255, 255, 255, 0.72);
+        color: #fff;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 7px;
+        appearance: none;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-style: normal;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
         cursor: pointer;
-        transition: color 160ms ease, background 160ms ease;
       }
 
       .playground-top-nav-sidebar-toggle:hover,
       .playground-top-nav-sidebar-toggle:focus-visible {
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.95);
         outline: none;
       }
 
       .playground-top-nav-sidebar-toggle-icon {
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+        padding: 3px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+        box-sizing: border-box;
       }
 
       .playground-unified-top-navbar .playground-environments-editor-navbar-copy {
         flex-direction: row;
         align-items: center;
-        gap: 8px;
+        gap: 16px;
       }
 
       .playground-top-nav-path {
         min-width: 0;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 14px;
         color: rgba(255, 255, 255, 0.52);
       }
 
@@ -4726,6 +4736,9 @@ const html = `<!doctype html>
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
         border: 0;
         padding: 0;
         background: transparent;
@@ -4746,6 +4759,18 @@ const html = `<!doctype html>
 
       .playground-top-nav-path-item.is-current {
         color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-top-nav-path-icon {
+        flex: 0 0 auto;
+        width: 13px;
+        height: 13px;
+      }
+
+      .playground-top-nav-path-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .playground-top-nav-path-separator {
@@ -5735,7 +5760,7 @@ const html = `<!doctype html>
         overflow: hidden;
         border: 0;
         border-color: transparent;
-        background: transparent;
+        background: linear-gradient(to top, #082673, #1D59BE);
         gap: 8px;
       }
 
@@ -5746,6 +5771,7 @@ const html = `<!doctype html>
       .playground-files-control-button.playground-tasks-nav-issue-button:hover,
       .playground-files-control-button.playground-tasks-nav-issue-button.is-active {
         border-color: transparent;
+        background: linear-gradient(to top, #082673, #1D59BE);
       }
 
       .playground-files-control-button.playground-tasks-nav-issue-button::before {
@@ -34166,6 +34192,13 @@ ${PLAYGROUND_EVALUATIONS_CSS}
       .playground-agents-nav-create-button {
         min-height: 30px;
         padding: 0 10px;
+        background: linear-gradient(to top, #082673, #1D59BE);
+      }
+
+      .playground-agents-nav-create-button:hover,
+      .playground-agents-nav-create-button:focus-visible,
+      .playground-agents-nav-create-button.is-active {
+        background: linear-gradient(to top, #082673, #1D59BE);
       }
 
       @media (max-width: 980px) {
@@ -44580,7 +44613,9 @@ ${METRONOME_PAGE_CSS}
 
 	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-header,
 	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-header {
-	        margin: 0;
+	        margin: 0 0 12px;
+	        padding-bottom: 12px;
+	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	      }
 
 	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-tabs.playground-agents-overview-tabs.playground-project-overview-tabs,
@@ -44781,13 +44816,51 @@ ${METRONOME_PAGE_CSS}
 		        content: none;
 		      }
 
-		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section {
-		        margin-top: 0 !important;
-		        overflow: visible !important;
-		      }
+	      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section {
+	        --playground-agents-overview-sticky-toolbar-height: 66px;
+	        --playground-agents-overview-sticky-mask-height: 132px;
+	        margin-top: 0 !important;
+	        overflow: visible !important;
+	      }
 
-		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-project-overview-threads-table,
-		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-project-overview-thread-list,
+	      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section::before {
+	        content: "";
+	        pointer-events: none;
+	        position: sticky;
+	        top: 0;
+	        z-index: 205;
+	        display: block;
+	        height: var(--playground-agents-overview-sticky-mask-height);
+	        margin: -18px -18px calc(-1 * var(--playground-agents-overview-sticky-mask-height));
+	        border-radius: 10px 10px 0 0;
+	        background: #0d0d0d;
+	      }
+
+	      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section > .playground-develop-server-kind-table-toolbar {
+	        position: sticky;
+	        top: 0;
+	        z-index: 240;
+	        background: #0d0d0d;
+	        margin: -18px -18px 0;
+	        padding: 18px 18px 12px;
+	        border-radius: 10px 10px 0 0;
+	        box-shadow: none;
+	        -webkit-backdrop-filter: none;
+	        backdrop-filter: none;
+	      }
+
+	      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-project-overview-threads-table-header {
+	        position: sticky;
+	        top: var(--playground-agents-overview-sticky-toolbar-height);
+	        z-index: 220;
+	        background: #0d0d0d;
+	        padding-top: 12px;
+	        -webkit-backdrop-filter: none;
+	        backdrop-filter: none;
+	      }
+
+	      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-project-overview-threads-table,
+	      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-project-overview-thread-list,
 		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-project-overview-threads-table-row {
 		        overflow: visible !important;
 		      }
@@ -53148,7 +53221,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-		      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
 	      import { RunnerClient } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
 	      import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -76580,16 +76653,24 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         const kind = getPlaygroundFileKind(entry);
         const baseClassName = ("playground-files-entry-icon" + (size === "large" ? " is-large" : "") + (className ? " " + className : "")).trim();
         const [thumbnailFailed, setThumbnailFailed] = useState(false);
+        const [thumbnailFallbackFailed, setThumbnailFallbackFailed] = useState(false);
         const thumbnailUrl = useMemo(() => {
           if (!useThumbnail || kind !== "image" || !isPlaygroundRasterThumbnailCandidate(entry) || !environmentId || !backendUrl || !entry?.path) {
             return "";
           }
           return buildPlaygroundEnvironmentThumbnailUrl(backendUrl, environmentId, entry.path, size === "large" ? 128 : 64);
         }, [backendUrl, entry?.path, environmentId, kind, size, useThumbnail]);
+        const thumbnailFallbackUrl = useMemo(() => {
+          if (!useThumbnail || kind !== "image" || !environmentId || !backendUrl || !entry?.path) {
+            return "";
+          }
+          return buildPlaygroundEnvironmentDownloadUrl(backendUrl, environmentId, entry.path);
+        }, [backendUrl, entry?.path, environmentId, kind, useThumbnail]);
 
         useEffect(() => {
           setThumbnailFailed(false);
-        }, [thumbnailUrl]);
+          setThumbnailFallbackFailed(false);
+        }, [thumbnailFallbackUrl, thumbnailUrl]);
 
         if (kind === "folder") {
           return React.createElement("img", {
@@ -76599,14 +76680,23 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           });
         }
         if (kind === "image") {
-          if (thumbnailUrl && !thumbnailFailed) {
+          const imageThumbnailUrl = thumbnailUrl && !thumbnailFailed
+            ? thumbnailUrl
+            : (!thumbnailFallbackFailed ? thumbnailFallbackUrl : "");
+          if (imageThumbnailUrl) {
             return React.createElement("img", {
               className: baseClassName + " is-thumbnail",
-              src: thumbnailUrl,
+              src: imageThumbnailUrl,
               alt: entry?.name || "Image",
               loading: "lazy",
               decoding: "async",
-              onError: () => setThumbnailFailed(true),
+              onError: () => {
+                if (imageThumbnailUrl === thumbnailUrl && thumbnailFallbackUrl) {
+                  setThumbnailFailed(true);
+                } else {
+                  setThumbnailFallbackFailed(true);
+                }
+              },
             });
           }
           return React.createElement(ImageIcon, { className: baseClassName + " is-image", strokeWidth: 1.75 });
@@ -112443,6 +112533,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         onAgentMutated,
         onStartThreadWithAgent,
         onUpgradeToIndividual,
+        onOpenModelsPage,
         embeddedInResources = false,
         topNavActionsPortalId = "",
         versionsDrawerPortalId = "",
@@ -112478,6 +112569,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentInitialVersionSeededRef = useRef(new Set());
         const agentVersionBaselineRef = useRef({ key: "", signature: "" });
         const agentVersionDraftTouchedRef = useRef(false);
+        const agentVersionsLoadedRef = useRef(new Set());
         const agentSendTeamModalCloseTimerRef = useRef(null);
         const agentSendTeamModalFrameRef = useRef(null);
         const agentApiModalCloseTimerRef = useRef(null);
@@ -112506,6 +112598,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentDeepResearchModelTriggerRef = useRef(null);
         const agentVoicePopoverRef = useRef(null);
         const agentsOverviewToolbarRef = useRef(null);
+        const agentsOverviewActionsMenuRef = useRef(null);
         const agentsObservabilityToolbarRef = useRef(null);
         const lastAppliedFocusedAgentSelectionTokenRef = useRef("");
         const handledBackRequestTokenRef = useRef(backRequestToken);
@@ -112563,6 +112656,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [agentsHomeThreadsError, setAgentsHomeThreadsError] = useState("");
         const [agentsHomeChartTimescale, setAgentsHomeChartTimescale] = useState("month");
         const [agentsAnalyticsMenuOpen, setAgentsAnalyticsMenuOpen] = useState(false);
+        const [agentsOverviewActionsMenuOpen, setAgentsOverviewActionsMenuOpen] = useState(false);
         const [agentDetailChartTimescale, setAgentDetailChartTimescale] = useState("month");
         const [agentDetailPerformanceRange, setAgentDetailPerformanceRange] = useState("1m");
         const [agentsHomeCreationCommandRequest, setAgentsHomeCreationCommandRequest] = useState(null);
@@ -113830,6 +113924,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           normalizedFocusedAgentSelectionToken
           && lastAppliedFocusedAgentSelectionTokenRef.current !== normalizedFocusedAgentSelectionToken
         );
+        const canLoadAgentVersions = Boolean(
+          !isHomeViewActive
+          && !agentCreationSetupOpen
+          && draftAgent?.id
+          && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
+          && !draftAgent.isSystem
+          && !draftAgent.isDefault
+          && !isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
+        );
 
         useLayoutEffect(() => {
           if (!topNavActionsPortalId || typeof document === "undefined") {
@@ -113882,6 +113985,90 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             setAgentDetailSidebarCollapsed(shouldRestoreCollapsed);
           }
         }, [agentVersionsSidebarOpen, agentDetailSidebarCollapsed]);
+
+        useEffect(() => {
+          const needsVersionSurface = agentVersionsSidebarOpen
+            || agentPublishMenuOpen
+            || agentVersionSelectorMenuOpen
+            || agentVersionsHeaderMenuOpen
+            || Boolean(agentVersionChangesState)
+            || Boolean(agentVersionModal)
+            || Boolean(openAgentVersionMenuId);
+          const normalizedAgentId = String(draftAgent?.id || selectedAgentId || "").trim();
+          if (
+            !needsVersionSurface
+            || !canLoadAgentVersions
+            || !backendUrl
+            || !normalizedAgentId
+            || normalizedAgentId === PLAYGROUND_AGENT_DRAFT_ID
+            || agentVersionsLoadedRef.current.has(normalizedAgentId)
+          ) {
+            return undefined;
+          }
+          const baseAgent = normalizePlaygroundAgentRecord(
+            draftAgent?.id === normalizedAgentId
+              ? draftAgent
+              : agentDetailsById[normalizedAgentId]
+          );
+          if (!baseAgent?.id || baseAgent.isSystem || baseAgent.isDefault) {
+            return undefined;
+          }
+          agentVersionsLoadedRef.current.add(normalizedAgentId);
+          let cancelled = false;
+          void fetch(backendUrl + "/agents/" + encodeURIComponent(normalizedAgentId) + "/versions", {
+            method: "GET",
+            headers: requestHeaders,
+          })
+            .then(async (versionsResponse) => {
+              const versionsData = await versionsResponse.json().catch(() => ({}));
+              if (!versionsResponse.ok) {
+                throw new Error(versionsData?.message || versionsData?.error || "Failed to load agent versions.");
+              }
+              const versionItems = Array.isArray(versionsData?.data)
+                ? versionsData.data
+                : Array.isArray(versionsData?.versions)
+                  ? versionsData.versions
+                  : Array.isArray(versionsData?.items)
+                    ? versionsData.items
+                    : [];
+              if (cancelled || versionItems.length === 0) return;
+              const agentWithVersions = createPlaygroundAgentWithVersionList(baseAgent, versionItems);
+              setAgentDetailsById((current) => ({
+                ...current,
+                [normalizedAgentId]: agentWithVersions,
+              }));
+              setDraftAgent((current) => {
+                if (!current || String(current.id || "").trim() !== normalizedAgentId) return current;
+                return editorDirtyRef.current ? current : agentWithVersions;
+              });
+              if (!editorDirtyRef.current && selectedAgentIdRef.current === normalizedAgentId) {
+                rememberAgentVersionBaseline(agentWithVersions);
+              }
+            })
+            .catch((error) => {
+              agentVersionsLoadedRef.current.delete(normalizedAgentId);
+              if (!cancelled) {
+                console.warn("[agents] Failed to load authoritative agent versions", error);
+              }
+            });
+          return () => {
+            cancelled = true;
+          };
+        }, [
+          agentDetailsById,
+          agentPublishMenuOpen,
+          agentVersionChangesState,
+          agentVersionModal,
+          agentVersionSelectorMenuOpen,
+          agentVersionsHeaderMenuOpen,
+          agentVersionsSidebarOpen,
+          backendUrl,
+          canLoadAgentVersions,
+          draftAgent,
+          openAgentVersionMenuId,
+          requestHeaders,
+          selectedAgentId,
+        ]);
 
         useEffect(() => {
           if (!embeddedInResources || typeof onResourcesHeaderChange !== "function") {
@@ -115012,43 +115199,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               throw new Error("Agent response was empty.");
             }
 
-            let normalizedWithVersions = normalized;
-            if (
-              normalized.id
-              && normalized.id !== PLAYGROUND_AGENT_DRAFT_ID
-              && !normalized.isSystem
-              && !normalized.isDefault
-            ) {
-              try {
-                const versionsResponse = await fetch(backendUrl + "/agents/" + encodeURIComponent(normalized.id) + "/versions", {
-                  method: "GET",
-                  headers: requestHeaders,
-                });
-                const versionsData = await versionsResponse.json().catch(() => ({}));
-                if (versionsResponse.ok) {
-                  const versionItems = Array.isArray(versionsData?.data)
-                    ? versionsData.data
-                    : Array.isArray(versionsData?.versions)
-                      ? versionsData.versions
-                      : Array.isArray(versionsData?.items)
-                        ? versionsData.items
-                        : [];
-                  if (versionItems.length > 0) {
-                    normalizedWithVersions = createPlaygroundAgentWithVersionList(normalized, versionItems);
-                  }
-                }
-              } catch (error) {
-                console.warn("[agents] Failed to load authoritative agent versions", error);
-              }
-            }
-
 	            setAgentDetailsById((current) => ({
 	              ...current,
-	              [agentId]: normalizedWithVersions,
+	              [agentId]: normalized,
 	            }));
 	            if (selectedAgentIdRef.current === agentId && !editorDirtyRef.current) {
-	              rememberAgentVersionBaseline(normalizedWithVersions);
-	              setDraftAgent(normalizedWithVersions);
+	              rememberAgentVersionBaseline(normalized);
+	              setDraftAgent(normalized);
 	            }
           } catch (error) {
             if (selectedAgentIdRef.current === agentId) {
@@ -116937,6 +117094,33 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             window.removeEventListener("keydown", handleAgentActionsPopoverEscape);
           };
         }, [agentActionsPopoverOpen]);
+
+        useEffect(() => {
+          if (!agentsOverviewActionsMenuOpen) {
+            return undefined;
+          }
+
+          function handleAgentsOverviewActionsMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !agentsOverviewActionsMenuRef.current || agentsOverviewActionsMenuRef.current.contains(target)) {
+              return;
+            }
+            setAgentsOverviewActionsMenuOpen(false);
+          }
+
+          function handleAgentsOverviewActionsMenuEscape(event) {
+            if (event.key === "Escape") {
+              setAgentsOverviewActionsMenuOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleAgentsOverviewActionsMenuPointerDown);
+          window.addEventListener("keydown", handleAgentsOverviewActionsMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleAgentsOverviewActionsMenuPointerDown);
+            window.removeEventListener("keydown", handleAgentsOverviewActionsMenuEscape);
+          };
+        }, [agentsOverviewActionsMenuOpen]);
 
         useEffect(() => {
           if (!agentPublishMenuOpen) {
@@ -127045,6 +127229,67 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           window.addEventListener("keydown", handleAgentVersionKeyboardShortcut, true);
           return () => window.removeEventListener("keydown", handleAgentVersionKeyboardShortcut, true);
         }, [canShowAgentVersions, draftAgent, saveState.isSaving, agentVersionState.status, agentVersionModal]);
+        function renderAgentsOverviewActionsMenu() {
+          if (!shouldShowAgentsHome || agentCreationSetupOpen || agentListMode !== "agents") {
+            return null;
+          }
+          return renderPlaygroundPlatformPopup({
+            open: agentsOverviewActionsMenuOpen,
+            shellRef: agentsOverviewActionsMenuRef,
+            shellClassName: "playground-agents-overview-topnav-actions-shell",
+            menuClassName: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+            trigger: React.createElement("button", {
+              type: "button",
+              className: "playground-files-header-icon-button is-plain" + (agentsOverviewActionsMenuOpen ? " is-active" : ""),
+              title: "Agent resources",
+              "aria-label": "Agent resources",
+              "aria-haspopup": "menu",
+              "aria-expanded": agentsOverviewActionsMenuOpen ? "true" : "false",
+              onClick: () => setAgentsOverviewActionsMenuOpen((current) => !current),
+            }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
+            menuProps: {
+              role: "menu",
+              onClick: (event) => event.stopPropagation(),
+            },
+            children: React.createElement(React.Fragment, null,
+              React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row",
+                onClick: () => {
+                  setAgentsOverviewActionsMenuOpen(false);
+                  if (typeof onOpenModelsPage === "function") {
+                    onOpenModelsPage();
+                  }
+                },
+              },
+                React.createElement(Brain, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Models")
+                )
+              ),
+              React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row",
+                onClick: () => {
+                  setAgentsOverviewActionsMenuOpen(false);
+                  if (typeof window !== "undefined") {
+                    const guideWindow = window.open("http://localhost:3001/developers/prompt-guidance", "_blank", "noopener,noreferrer");
+                    if (guideWindow) {
+                      guideWindow.opener = null;
+                    }
+                  }
+                },
+              },
+                React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Prompting guide")
+                )
+              )
+            ),
+          });
+        }
         const agentsTopNavActions = topNavActionsContainer && !agentVersionsSidebarOpen
           ? createPortal(
               React.createElement(React.Fragment, null,
@@ -127115,7 +127360,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 shouldShowAgentsHome && !agentCreationSetupOpen
                   ? React.createElement("button", {
                   type: "button",
-                  className: "playground-top-nav-private-chat-button",
+                  className: "playground-top-nav-private-chat-button playground-agents-nav-create-button",
                   onClick: () => {
                     if (agentListMode === "teams") {
                       handleCreateTeam();
@@ -127127,9 +127372,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   "aria-label": agentListMode === "teams" ? "Create team" : "Create agent",
                   },
                     React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }),
-                    React.createElement("span", null, agentListMode === "teams" ? "Team" : "Agent")
+                    React.createElement("span", null, agentListMode === "teams" ? "Team" : "New Agent")
                   )
-                  : null
+                  : null,
+                renderAgentsOverviewActionsMenu()
               ),
               topNavActionsContainer
             )
@@ -162747,6 +162993,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           edit: null,
           rename: null,
           duplicate: null,
+          share: null,
           delete: null,
           publish: null,
           run: null,
@@ -163232,6 +163479,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const guardrailVersionDraftTouchedRef = useRef(false);
         const guardrailsBackendLoadRef = useRef("");
         const guardrailsBackendLoadedRef = useRef(false);
+        const guardrailDetailsLoadedRef = useRef(new Set());
         const guardrailsBackendMigratedLocalRef = useRef(false);
         const guardrailPersistTimersRef = useRef(new Map());
         const guardrailPersistSignaturesRef = useRef(new Map());
@@ -163610,9 +163858,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return await readGuardrailBackendJson(response, fallbackMessage);
         }
 
-        async function fetchBackendGuardrailSetDetails(set) {
+        async function fetchBackendGuardrailSetDetails(set, options = {}) {
           const normalizedSet = normalizePlaygroundGuardrailSet(set);
           if (!normalizedSet.id || isPlaygroundDefaultGuardrailSet(normalizedSet)) return normalizedSet;
+          if (options.includeVersions === false) {
+            return ensurePlaygroundGuardrailInitialVersion(normalizedSet);
+          }
           const versionsPayload = await requestGuardrailBackendJson(
             "/guardrails/" + encodeURIComponent(normalizedSet.id) + "/versions",
             { method: "GET" },
@@ -163658,6 +163909,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const backendSet = normalizePlaygroundGuardrailSet(setPayload?.guardrail || setPayload?.data || setPayload);
           const detailedSet = await fetchBackendGuardrailSetDetails(backendSet);
           if (detailedSet?.id) {
+            guardrailDetailsLoadedRef.current.add(detailedSet.id);
             replaceGuardrailSetFromBackend(detailedSet, options);
           }
           return detailedSet;
@@ -163718,6 +163970,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (!normalizedBackendUrl) return [];
           const loadKey = normalizedBackendUrl + "|" + requestHeadersSignature;
           if (!options.force && guardrailsBackendLoadRef.current === loadKey) return guardrailSets;
+          if (guardrailsBackendLoadRef.current !== loadKey) {
+            guardrailDetailsLoadedRef.current = new Set();
+          }
           guardrailsBackendLoadRef.current = loadKey;
           setGuardrailsBackendSyncState({ status: "loading", error: "" });
           try {
@@ -163729,7 +163984,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             const backendSets = readPlaygroundGuardrailListFromPayload(setsPayload || {}, ["guardrails", "guardrailSets", "guardrail_sets"])
               .map((set) => normalizePlaygroundGuardrailSet(set))
               .filter((set) => set.id && !isPlaygroundDefaultGuardrailSet(set));
-            let detailedSets = await Promise.all(backendSets.map((set) => fetchBackendGuardrailSetDetails(set)));
+            let detailedSets = await Promise.all(backendSets.map((set) => fetchBackendGuardrailSetDetails(set, { includeVersions: false })));
             if (!detailedSets.length && !guardrailsBackendMigratedLocalRef.current) {
               guardrailsBackendMigratedLocalRef.current = true;
               const localSets = readPlaygroundGuardrailSetsFromStorage()
@@ -163915,6 +164170,47 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setSelectedGuardrailSetId(allGuardrailSets[0]?.id || "");
         }, [allGuardrailSets, selectedGuardrailSetId]);
         useEffect(() => {
+          const normalizedSetId = String(selectedGuardrailSetId || "").trim();
+          const needsVersionSurface = guardrailVersionsSidebarOpen
+            || guardrailPublishMenuOpen
+            || guardrailVersionsHeaderMenuOpen
+            || Boolean(guardrailVersionChangesState)
+            || Boolean(guardrailVersionModal)
+            || Boolean(openGuardrailVersionMenuId);
+          if (activePage !== "guardrails" || guardrailsPageMode !== "detail" || !normalizedSetId || !needsVersionSurface) {
+            return undefined;
+          }
+          if (guardrailDetailsLoadedRef.current.has(normalizedSetId)) {
+            return undefined;
+          }
+          const selectedSet = allGuardrailSets.find((set) => set?.id === normalizedSetId) || null;
+          if (!selectedSet || isPlaygroundDefaultGuardrailSet(selectedSet)) {
+            return undefined;
+          }
+          let cancelled = false;
+          void reloadBackendGuardrailSet(normalizedSetId, {
+            select: false,
+            rememberBaseline: !guardrailVersionDraftTouchedRef.current,
+          }).catch((error) => {
+            if (cancelled) return;
+            setGuardrailsBackendSyncState({ status: "error", error: error?.message || String(error) });
+          });
+          return () => {
+            cancelled = true;
+          };
+        }, [
+          activePage,
+          allGuardrailSets,
+          guardrailPublishMenuOpen,
+          guardrailVersionChangesState,
+          guardrailVersionModal,
+          guardrailVersionsHeaderMenuOpen,
+          guardrailVersionsSidebarOpen,
+          guardrailsPageMode,
+          openGuardrailVersionMenuId,
+          selectedGuardrailSetId,
+        ]);
+        useEffect(() => {
           const isGuardrailDetailContext = activePage === "guardrails" && guardrailsPageMode === "detail";
           if (isGuardrailDetailContext) {
             return;
@@ -163948,6 +164244,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setGuardrailSetActionMenuId("");
         }, [activePage, guardrailSetActionMenuId]);
         useEffect(() => {
+          if (activePage !== "evaluations") {
+            return;
+          }
           if (selectedEvaluationSetId && evaluationSets.some((set) => set.id === selectedEvaluationSetId)) {
             return;
           }
@@ -163956,7 +164255,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (evaluationsPageMode !== "overview") {
             setEvaluationsPageMode(evaluationSets[0]?.id ? "detail" : "overview");
           }
-        }, [evaluationSets, evaluationsPageMode, selectedEvaluationSetId]);
+        }, [activePage, evaluationSets, evaluationsPageMode, selectedEvaluationSetId]);
         useEffect(() => {
           if (activePage === "evaluations" || !evaluationRunReturnTarget) {
             return;
@@ -163964,6 +164263,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setEvaluationRunReturnTarget(null);
         }, [activePage, evaluationRunReturnTarget]);
         useEffect(() => {
+          if (activePage !== "fine-tuning") {
+            return;
+          }
           if (selectedFineTuningJobId && fineTuningJobs.some((job) => normalizePlaygroundFineTuningJob(job).id === selectedFineTuningJobId)) {
             return;
           }
@@ -163971,7 +164273,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (fineTuningPageMode !== "overview") {
             setFineTuningPageMode(fineTuningJobs[0] ? "detail" : "overview");
           }
-        }, [fineTuningJobs, fineTuningPageMode, selectedFineTuningJobId]);
+        }, [activePage, fineTuningJobs, fineTuningPageMode, selectedFineTuningJobId]);
         useLayoutEffect(() => {
           if (guardrailsPageMode !== "detail") {
             return;
@@ -164537,6 +164839,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             .map((key) => key + ":" + String(requestHeaders[key] || ""))
             .join("|")
         ), [requestHeaders]);
+        const shouldLoadGuardrailSets = activePage === "guardrails";
 	        useEffect(() => {
 	          writePlaygroundActiveOrganizationId(activeOrganizationId);
 	        }, [activeOrganizationId]);
@@ -164565,6 +164868,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setSelectedGuardrailSetId("");
             guardrailsBackendLoadRef.current = "";
             guardrailsBackendLoadedRef.current = false;
+            guardrailDetailsLoadedRef.current = new Set();
             guardrailsBackendMigratedLocalRef.current = false;
             guardrailPersistSignaturesRef.current = new Map();
             guardrailPersistTimersRef.current.forEach((timer) => {
@@ -164579,9 +164883,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          setTeamPageMetronomeWorkflows([]);
 	        }, [activeOrganizationId]);
         useEffect(() => {
+          if (!shouldLoadGuardrailSets) {
+            return undefined;
+          }
           void loadBackendGuardrailSets({ force: false });
           return undefined;
-        }, [proxyBackendBase, requestHeadersSignature]);
+        }, [proxyBackendBase, requestHeadersSignature, shouldLoadGuardrailSets]);
 	        useEffect(() => {
           const canLoadTeamMetronomeWorkflows = !isDemoMode && hasSessionAuth;
           if (!canLoadTeamMetronomeWorkflows || teamPageActiveTab !== "resources") {
@@ -168992,6 +169299,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             edit: null,
             rename: null,
             duplicate: null,
+            share: null,
             delete: null,
             publish: null,
             run: null,
@@ -171122,18 +171430,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
               }));
             }
 
-            const loadProfile = () => fetchJsonWithTimeout("/api/aios/user/profile", {
+            const loadSession = () => fetchJsonWithTimeout("/api/aios/user/session", {
               method: "GET",
               credentials: "include",
               cache: "no-store",
             }, 20000);
 
-            let { response, data } = await loadProfile();
+            let { response, data } = await loadSession();
 
             if (isUnauthorizedStatus(response.status)) {
               const refreshedCookie = await syncFirebaseSessionCookieFromCurrentUser(true);
               if (refreshedCookie) {
-                const retriedResult = await loadProfile();
+                const retriedResult = await loadSession();
                 response = retriedResult.response;
                 data = retriedResult.data;
               }
@@ -171176,6 +171484,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return;
             }
 
+            const sessionBootstrapData = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+            const sessionProfileData = sessionBootstrapData.profile && typeof sessionBootstrapData.profile === "object" && !Array.isArray(sessionBootstrapData.profile)
+              ? sessionBootstrapData.profile
+              : sessionBootstrapData;
+            const sessionStreamingData = sessionBootstrapData.profile && sessionBootstrapData.streaming && typeof sessionBootstrapData.streaming === "object" && !Array.isArray(sessionBootstrapData.streaming)
+              ? sessionBootstrapData.streaming
+              : null;
+            const sessionStreamingOk = Boolean(sessionBootstrapData.profile && sessionBootstrapData.streamingOk);
+            data = sessionProfileData;
+
             const payloadIdentity = extractSessionIdentityFromPayload(data);
             let nextStreamingConfig = {
               status: "error",
@@ -171184,13 +171502,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
               error: "Failed to load runner access.",
             };
             try {
-              const { response: streamingResponse, data: streamingData } = await fetchJsonWithTimeout("/api/aios/user/streaming-key", {
-                method: "GET",
-                credentials: "include",
-                cache: "no-store",
-              }, 15000);
+              let streamingData = sessionStreamingData;
+              let streamingResponseOk = sessionStreamingOk;
+              if (!streamingData) {
+                const streamingResult = await fetchJsonWithTimeout("/api/aios/user/streaming-key", {
+                  method: "GET",
+                  credentials: "include",
+                  cache: "no-store",
+                }, 15000);
+                streamingData = streamingResult.data;
+                streamingResponseOk = streamingResult.response.ok;
+              }
 
-              if (!streamingResponse.ok) {
+              if (!streamingResponseOk) {
                 throw new Error(streamingData?.message || streamingData?.error || "Failed to load runner access.");
               }
 
@@ -171234,6 +171558,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
               });
               const budgetData = await budgetResponse.json().catch(() => ({}));
               if (budgetResponse.ok) {
+                setSettingsBudgetStatus(budgetData);
+                sessionBudgetSyncKeyRef.current = [
+                  typeof data.userId === "string" ? data.userId : "",
+                  nextStreamingConfig.status === "ready" && nextStreamingConfig.apiKey
+                    ? nextStreamingConfig.apiKey
+                    : SESSION_API_KEY_SENTINEL,
+                  resolvedUpstreamUrl,
+                ].join(":");
                 if (typeof budgetData?.tier === "string" && budgetData.tier.trim()) {
                   resolvedSubscriptionTier = budgetData.tier.trim();
                 }
@@ -174589,30 +174921,23 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return;
           }
 
-          void loadSettingsBudgetStatus();
-          void loadSettingsUsageData();
+          if (!settingsBudgetStatus) {
+            void loadSettingsBudgetStatus();
+          }
         }, [
           activePage,
           hasSessionAuth,
           loadSettingsBudgetStatus,
-          loadSettingsUsageData,
+          settingsBudgetStatus,
         ]);
 
         useEffect(() => {
-          if (!showInitialThreadWelcome || !hasSessionAuth) {
+          if (!showInitialThreadWelcome || !hasSessionAuth || settingsBudgetStatus) {
             return;
           }
 
           void loadSettingsBudgetStatus();
-        }, [hasSessionAuth, loadSettingsBudgetStatus, showInitialThreadWelcome]);
-
-        useEffect(() => {
-          if (!showInitialThreadWelcome || !hasSessionAuth) {
-            return;
-          }
-
-          void loadSettingsUsageData();
-        }, [hasSessionAuth, loadSettingsUsageData, showInitialThreadWelcome]);
+        }, [hasSessionAuth, loadSettingsBudgetStatus, settingsBudgetStatus, showInitialThreadWelcome]);
 
         useEffect(() => {
           if (activePage !== "settings" || settingsSection !== "integrations" || !hasSessionAuth) {
@@ -190456,8 +190781,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setRealServers([]);
             return;
           }
+          if (activePage !== "develop" && !(activePage === "resources" && String(resourcesServerKind || "").trim())) {
+            return;
+          }
           void refreshServers();
-        }, [hasRealAccess, refreshServers]);
+        }, [activePage, hasRealAccess, refreshServers, resourcesServerKind]);
 
         useEffect(() => {
           if (!hasRealAccess) {
@@ -190536,13 +190864,38 @@ ${PROJECT_OVERVIEW_SCRIPT}
           window.addEventListener("focus", handleWindowFocus);
           document.addEventListener("visibilitychange", handleVisibilityChange);
 
-          const interval = window.setInterval(() => {
-            triggerSilentRefresh();
-          }, 5000);
+          const hasLiveThreadListActivity = () => (
+            (realThreadsRef.current || []).some((thread) => {
+              const normalizedStatus = String(thread?.status || "").trim().toLowerCase();
+              return isActiveThreadDisplayStatus(normalizedStatus)
+                || isPendingPermissionThreadDisplayStatus(normalizedStatus)
+                || normalizedStatus.includes("progress")
+                || normalizedStatus.includes("work")
+                || normalizedStatus.includes("stream");
+            })
+          );
+
+          let refreshTimer = 0;
+          const scheduleNextThreadRefresh = () => {
+            if (isDisposed) {
+              return;
+            }
+            const refreshDelayMs = hasLiveThreadListActivity() ? 5000 : 45000;
+            refreshTimer = window.setTimeout(() => {
+              if (isDisposed) {
+                return;
+              }
+              triggerSilentRefresh();
+              scheduleNextThreadRefresh();
+            }, refreshDelayMs);
+          };
+          scheduleNextThreadRefresh();
 
           return () => {
             isDisposed = true;
-            window.clearInterval(interval);
+            if (refreshTimer) {
+              window.clearTimeout(refreshTimer);
+            }
             window.removeEventListener("storage", handleStorage);
             window.removeEventListener("focus", handleWindowFocus);
             document.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -198442,7 +198795,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   },
                 },
                   React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                  React.createElement("span", null, "Issue")
+                  React.createElement("span", null, "New Issue")
                 )
               : React.createElement("button", {
                   type: "button",
@@ -198634,7 +198987,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function renderInitialThreadWelcomeNav() {
           return renderUnifiedTopNav({
             className: "playground-thread-welcome-navbar",
-            pathItems: [{ label: "Create" }, { label: "Home" }],
+            pathItems: [{ label: "Create", Icon: PencilRuler }, { label: "Home", Icon: House }],
             includeGhost: true,
             ghostVariant: "private-chat",
             includeSearchDivider: true,
@@ -198649,6 +199002,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return null;
           }
           const isReadOnly = Boolean(state.readOnly);
+          const canShareWithTeam = !isReadOnly && typeof metronomeTopNavActionsRef.current?.share === "function";
           const menuRows = isReadOnly
             ? [
                 { id: "duplicate", label: "Duplicate", icon: Copy, action: () => metronomeTopNavActionsRef.current?.duplicate?.() },
@@ -198656,6 +199010,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : [
                 { id: "rename", label: "Edit", icon: SquarePen, action: () => metronomeTopNavActionsRef.current?.rename?.() },
                 { id: "duplicate", label: "Duplicate", icon: Copy, action: () => metronomeTopNavActionsRef.current?.duplicate?.() },
+                ...(canShareWithTeam
+                  ? [{ id: "share", label: "Share with Team", icon: UsersRound, action: () => metronomeTopNavActionsRef.current?.share?.() }]
+                  : []),
                 { id: "delete", label: "Delete", icon: Trash2, action: () => metronomeTopNavActionsRef.current?.delete?.(), danger: true },
               ];
           const workflowId = String(state.workflowId || "").trim();
@@ -198869,6 +199226,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     }
                     handleNewThread();
                   },
+                  onOpenModelsPage: () => openModelsPage(),
                   embeddedInResources: true,
                   topNavActionsPortalId: "playground-resources-nav-actions",
                   versionsDrawerPortalId: "playground-agent-versions-drawer-root",
@@ -200708,6 +201066,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function renderEvaluationsPage() {
           return renderPlaygroundEvaluationsPage({
+            shouldLoadData: activePage === "evaluations",
             backendUrl: proxyBackendBase,
             requestHeaders,
             agents: runtimeAgents,
@@ -200789,6 +201148,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function renderFineTuningPage() {
           return React.createElement(PlaygroundFineTuningPage, {
+            shouldLoadData: activePage === "fine-tuning",
             backendUrl: proxyBackendBase,
             requestHeaders,
             agents: runtimeAgents,
@@ -202491,6 +202851,35 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
         }
 
+        function getTopNavPathItemIcon(label) {
+          const normalizedLabel = String(label || "").trim().toLowerCase();
+          if (normalizedLabel === "create") return PencilRuler;
+          if (normalizedLabel === "home") return House;
+          if (normalizedLabel === "imagine") return Clapperboard;
+          if (normalizedLabel === "projects") return Rocket;
+          if (normalizedLabel === "files") return FolderOpen;
+          if (normalizedLabel === "metronome") return Metronome;
+          if (normalizedLabel === "calendar") return CalendarIcon;
+          if (normalizedLabel === "configure") return SlidersHorizontal;
+          if (normalizedLabel === "overview") return LayoutGrid;
+          if (normalizedLabel === "usage") return Coins;
+          if (normalizedLabel === "agents") return Bot;
+          if (normalizedLabel === "computers") return Monitor;
+          if (normalizedLabel === "tags") return Tag;
+          if (normalizedLabel === "plugins") return Package;
+          if (normalizedLabel === "skills") return Layers;
+          if (normalizedLabel === "teams") return UsersRound;
+          if (normalizedLabel === "settings") return Settings2;
+          if (normalizedLabel === "organization" || normalizedLabel === "organizations") return Building2;
+          if (normalizedLabel === "models") return Brain;
+          if (normalizedLabel === "templates") return LibraryBig;
+          if (normalizedLabel === "inference") return Cpu;
+          if (normalizedLabel === "guardrails") return Shield;
+          if (normalizedLabel === "evaluations") return ChartColumnIncreasing;
+          if (normalizedLabel === "fine-tuning") return TestTubeDiagonal;
+          return null;
+        }
+
         function renderTopNavPath(pathItems) {
           const safeItems = (Array.isArray(pathItems) ? pathItems : [])
             .map((item) => {
@@ -202508,18 +202897,31 @@ ${PROJECT_OVERVIEW_SCRIPT}
               const isCurrent = index === effectiveItems.length - 1;
               const key = String(index) + ":" + label;
               const isClickable = typeof item.onClick === "function" && (!isCurrent || item.allowCurrentClick === true);
+              const itemIcon = item.Icon || getTopNavPathItemIcon(label);
+              const ItemIcon = itemIcon ? getPlaygroundSafeIconComponent(itemIcon, Circle) : null;
+              const itemContent = React.createElement(React.Fragment, null,
+                ItemIcon
+                  ? React.createElement(ItemIcon, {
+                      className: "playground-top-nav-path-icon",
+                      strokeWidth: 1.8,
+                      "aria-hidden": "true",
+                    })
+                  : null,
+                React.createElement("span", { className: "playground-top-nav-path-label" }, label)
+              );
               const itemNode = isClickable
                 ? React.createElement("button", {
                     type: "button",
                     className: "playground-top-nav-path-item" + (isCurrent ? " is-current" : ""),
                     onClick: item.onClick,
-                  }, label)
+                    title: label,
+                  }, itemContent)
                 : React.createElement("span", {
                     className: "playground-top-nav-path-item" + (isCurrent ? " is-current" : ""),
                     title: label,
-                  }, label);
+                  }, itemContent);
               return React.createElement(React.Fragment, { key },
-                index > 0 ? React.createElement("span", { className: "playground-top-nav-path-separator", "aria-hidden": "true" }, "›") : null,
+                index > 0 ? React.createElement("span", { className: "playground-top-nav-path-separator", "aria-hidden": "true" }, "/") : null,
                 itemNode
               );
             })
@@ -205371,8 +205773,9 @@ async function proxyThreadMessages(req, res, threadId) {
     const shouldUseExecutionContentForUpstream = body.useExecutionContentForUpstream === true || isAgentAssistantPresetExecutionContent(executionContent);
 
     const payload = {
-      content: shouldUseExecutionContentForUpstream ? executionContent : visibleContent,
+      content: visibleContent,
       ...(executionContent ? { executionContent } : {}),
+      ...(shouldUseExecutionContentForUpstream ? { useExecutionContentForUpstream: true } : {}),
       ...(Array.isArray(body.attachments) ? { attachments: body.attachments } : {}),
       ...(body.githubRepo && typeof body.githubRepo === "object" ? { githubRepo: body.githubRepo } : {}),
       ...(body.quotedSelection && typeof body.quotedSelection === "object" ? { quotedSelection: body.quotedSelection } : {}),
@@ -209697,6 +210100,79 @@ async function proxyAiosJsonRequest(req, res, upstreamPath, method) {
   }
 }
 
+async function handleAiosUserSessionRequest(req, res) {
+  const baseHeaders = {
+    cookie: req.headers.cookie || "",
+    authorization: req.headers.authorization || "",
+    "x-api-key": req.headers["x-api-key"] || "",
+    "content-type": req.headers["content-type"] || "application/json",
+  };
+
+  async function fetchAiosSessionJson(upstreamPath) {
+    const upstreamTarget = new URL(`${aiosOrigin}${upstreamPath}`);
+    const upstream = await fetch(upstreamTarget.toString(), {
+      method: "GET",
+      headers: baseHeaders,
+    });
+    const text = await upstream.text();
+    let data = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { message: text };
+    }
+    return {
+      ok: upstream.ok,
+      status: upstream.status,
+      data,
+      setCookie: upstream.headers.get("set-cookie") || "",
+    };
+  }
+
+  try {
+    const [profileResult, streamingResult] = await Promise.all([
+      fetchAiosSessionJson("/api/user/profile"),
+      fetchAiosSessionJson("/api/user/streaming-key").catch((error) => ({
+        ok: false,
+        status: 502,
+        data: {
+          error: "Failed to load runner access.",
+          message: error instanceof Error ? error.message : String(error),
+        },
+        setCookie: "",
+      })),
+    ]);
+
+    const responseHeaders = {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+    };
+    const setCookieHeaders = [profileResult.setCookie, streamingResult.setCookie].filter(Boolean);
+    if (setCookieHeaders.length) {
+      responseHeaders["Set-Cookie"] = setCookieHeaders;
+    }
+
+    if (!profileResult.ok) {
+      res.writeHead(profileResult.status, responseHeaders);
+      res.end(JSON.stringify(profileResult.data || {}));
+      return;
+    }
+
+    res.writeHead(200, responseHeaders);
+    res.end(JSON.stringify({
+      profile: profileResult.data || {},
+      streaming: streamingResult.data || {},
+      streamingOk: Boolean(streamingResult.ok),
+      streamingStatus: streamingResult.status,
+    }));
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to load account session.",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 function shouldRewriteNotionRedirectUri(value) {
   if (!value) {
     return false;
@@ -213697,6 +214173,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/aios/github/user") {
     void proxyAiosJsonRequest(req, res, "/api/github/user", "GET");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/aios/user/session") {
+    void handleAiosUserSessionRequest(req, res);
     return;
   }
 

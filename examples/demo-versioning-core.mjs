@@ -233,6 +233,7 @@ export const VERSIONING_CORE_SCRIPT = String.raw`
       }
 
       function createPlaygroundVersionController(config = {}) {
+        const snapshotSignatureCache = typeof WeakMap === "function" ? new WeakMap() : null;
         const controller = {
           getMetadata(resource) {
             const getMetadata = typeof config.getMetadata === "function" ? config.getMetadata : null;
@@ -283,7 +284,25 @@ export const VERSIONING_CORE_SCRIPT = String.raw`
           },
 
           getSnapshotSignature(snapshot) {
-            return stringifyPlaygroundVersionComparableValue(controller.buildComparableSnapshot(snapshot));
+            const canCacheSnapshot = snapshot && typeof snapshot === "object";
+            if (snapshotSignatureCache && canCacheSnapshot && snapshotSignatureCache.has(snapshot)) {
+              return snapshotSignatureCache.get(snapshot);
+            }
+            const comparableSnapshot = controller.buildComparableSnapshot(snapshot);
+            const canCacheComparable = comparableSnapshot && typeof comparableSnapshot === "object";
+            if (snapshotSignatureCache && canCacheComparable && snapshotSignatureCache.has(comparableSnapshot)) {
+              const cachedSignature = snapshotSignatureCache.get(comparableSnapshot);
+              if (canCacheSnapshot) snapshotSignatureCache.set(snapshot, cachedSignature);
+              return cachedSignature;
+            }
+            const signature = stringifyPlaygroundVersionComparableValue(comparableSnapshot);
+            if (snapshotSignatureCache && canCacheSnapshot) {
+              snapshotSignatureCache.set(snapshot, signature);
+            }
+            if (snapshotSignatureCache && canCacheComparable) {
+              snapshotSignatureCache.set(comparableSnapshot, signature);
+            }
+            return signature;
           },
 
           getCurrentSnapshotSignature(resource) {

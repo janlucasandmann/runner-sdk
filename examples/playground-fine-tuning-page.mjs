@@ -1755,6 +1755,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           currentUserName = "",
           currentUserEmail = "",
           currentUserAvatarUrl = "",
+          shouldLoadData = false,
         } = props;
 
         const modalFrameRef = useRef(null);
@@ -1784,6 +1785,10 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         const normalizedJobs = useMemo(() => (Array.isArray(fineTuningJobs) ? fineTuningJobs : [])
           .map((job, index) => normalizePlaygroundFineTuningJob(job, index))
           .sort((left, right) => (Date.parse(right.updatedAt || 0) || 0) - (Date.parse(left.updatedAt || 0) || 0)), [fineTuningJobs]);
+        const normalizedSelectedFineTuningJobId = useMemo(
+          () => normalizePlaygroundFineTuningString(selectedFineTuningJobId),
+          [selectedFineTuningJobId]
+        );
         const normalizedAgents = useMemo(() => (Array.isArray(agents) ? agents : []).filter((agent) => normalizePlaygroundFineTuningString(agent?.id)), [agents]);
         const normalizedEnvironments = useMemo(() => (Array.isArray(environments) ? environments : []).filter((environment) => normalizePlaygroundFineTuningString(environment?.id)), [environments]);
         const normalizedEvaluationSets = useMemo(() => (Array.isArray(evaluationSets) ? evaluationSets : [])
@@ -1883,10 +1888,26 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
             evaluationRuns: nextReferences,
           });
         }
-        const versionRecoveredJobs = useMemo(() => buildFineTuningJobsFromAgentVersions(), [normalizedAgents]);
+        const shouldRecoverFineTuningJobsFromVersions = useMemo(() => {
+          if (normalizedJobs.length === 0) return true;
+          if (!normalizedSelectedFineTuningJobId) return false;
+          return !normalizedJobs.some((job) => job.id === normalizedSelectedFineTuningJobId);
+        }, [normalizedJobs, normalizedSelectedFineTuningJobId]);
+        const versionRecoveredJobs = useMemo(
+          () => shouldRecoverFineTuningJobsFromVersions ? buildFineTuningJobsFromAgentVersions() : [],
+          [normalizedAgents, shouldRecoverFineTuningJobsFromVersions]
+        );
         const displaySourceJobs = useMemo(() => mergeFineTuningJobLists(normalizedJobs, versionRecoveredJobs), [normalizedJobs, versionRecoveredJobs]);
-        const versionEnrichedJobs = useMemo(() => displaySourceJobs.map((job) => enrichFineTuningJobFromAgentVersions(job)), [displaySourceJobs, normalizedAgents]);
-        const scoredJobs = useMemo(() => versionEnrichedJobs.map((job) => resolveFineTuningJobScoresFromEvaluationRuns(job)), [versionEnrichedJobs, normalizedEvaluationSets]);
+        const versionEnrichedJobs = useMemo(() => displaySourceJobs.map((job) => (
+          needsFineTuningAgentVersionEnrichment(job)
+            ? enrichFineTuningJobFromAgentVersions(job)
+            : normalizePlaygroundFineTuningJob(job)
+        )), [displaySourceJobs, normalizedAgents, normalizedSelectedFineTuningJobId]);
+        const scoredJobs = useMemo(() => versionEnrichedJobs.map((job) => (
+          needsFineTuningEvaluationScoreResolution(job)
+            ? resolveFineTuningJobScoresFromEvaluationRuns(job)
+            : normalizePlaygroundFineTuningJob(job)
+        )), [versionEnrichedJobs, normalizedEvaluationSets, normalizedSelectedFineTuningJobId]);
         const currentFineTuningUser = useMemo(() => normalizePlaygroundFineTuningPersonIdentity({
           id: currentUserId || currentUserEmail || "",
           userId: currentUserId || "",
@@ -2064,6 +2085,31 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           });
         }
 
+        function needsFineTuningAgentVersionEnrichment(job) {
+          const normalizedJob = normalizePlaygroundFineTuningJob(job);
+          if (!normalizedJob.id) return false;
+          if (normalizedJob.id !== normalizedSelectedFineTuningJobId && !isPlaygroundFineTuningActiveStatus(normalizedJob.status)) {
+            return false;
+          }
+          return !normalizedJob.createdAgentVersionId
+            || !normalizedJob.afterAgentSnapshot
+            || !Array.isArray(normalizedJob.diffFiles)
+            || normalizedJob.diffFiles.length === 0;
+        }
+
+        function needsFineTuningEvaluationScoreResolution(job) {
+          const normalizedJob = normalizePlaygroundFineTuningJob(job);
+          if (!normalizedJob.id || !normalizedJob.evaluationRuns.length) return false;
+          if (normalizedJob.id === normalizedSelectedFineTuningJobId || isPlaygroundFineTuningActiveStatus(normalizedJob.status)) return true;
+          if (!hasPlaygroundFineTuningAfterResult(normalizedJob)) return true;
+          return normalizedJob.evaluationRuns.some((reference, index) => {
+            const normalizedReference = normalizePlaygroundFineTuningRunReference(reference, index);
+            return !normalizedReference.evaluationSetName
+              || !Number.isFinite(Number(normalizedReference.beforeScore))
+              || (normalizedReference.afterRunId && !Number.isFinite(Number(normalizedReference.afterScore)));
+          });
+        }
+
         function buildFineTuningJobFromAgentVersion(agent, version, fallbackIndex = 0) {
           const metadata = readPlaygroundFineTuningPlainObject(version?.metadata);
           const fineTuningJobId = normalizePlaygroundFineTuningString(version?.fineTuningJobId || version?.fine_tuning_job_id || metadata.fineTuningJobId || metadata.fine_tuning_job_id);
@@ -2184,6 +2230,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         }, []);
 
         useEffect(() => {
+          if (!shouldLoadData) return undefined;
           const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
           if (!normalizedBackendUrl || typeof setFineTuningJobs !== "function") return undefined;
           const loadKey = normalizedBackendUrl + "|" + requestHeadersSignature;
@@ -2212,7 +2259,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           return () => {
             cancelled = true;
           };
-        }, [backendUrl, requestHeadersSignature, setFineTuningJobs]);
+        }, [backendUrl, requestHeadersSignature, setFineTuningJobs, shouldLoadData]);
 
         useEffect(() => {
           if (!evaluationSetPickerOpen || typeof document === "undefined") return undefined;

@@ -3885,6 +3885,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           onVersionsSidebarOpenChange,
           threadRecords,
           onRefreshThreadRecords,
+          shouldLoadData = false,
         } = options;
         const evaluationActionsPopoverRef = useRef(null);
         const evaluationPublishMenuRef = useRef(null);
@@ -3904,6 +3905,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         const evaluationVersionDraftTouchedRef = useRef(false);
         const evaluationBackendLoadRef = useRef("");
         const evaluationBackendLoadedRef = useRef(false);
+        const evaluationDetailsLoadedRef = useRef(new Set());
         const evaluationBackendMigratedLocalRef = useRef(false);
         const evaluationSetPersistTimersRef = useRef(new Map());
         const evaluationSetPersistSignaturesRef = useRef(new Map());
@@ -4006,16 +4008,16 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           return await readPlaygroundEvaluationBackendJson(response, fallbackMessage);
         }
 
-        async function fetchBackendEvaluationSetDetails(set, allRuns = []) {
+        async function fetchBackendEvaluationSetDetails(set, allRuns = [], options = {}) {
           const normalizedSet = normalizePlaygroundEvaluationSet(set);
           if (!normalizedSet.id) return normalizedSet;
-          const [versionsPayload] = await Promise.all([
-            requestEvaluationBackendJson(
-              "/evaluations/" + encodeURIComponent(normalizedSet.id) + "/versions",
-              { method: "GET" },
-              "Failed to load evaluation versions."
-            ).catch(() => null),
-          ]);
+          const versionsPayload = options.includeVersions === false
+            ? null
+            : await requestEvaluationBackendJson(
+                "/evaluations/" + encodeURIComponent(normalizedSet.id) + "/versions",
+                { method: "GET" },
+                "Failed to load evaluation versions."
+              ).catch(() => null);
           const versions = readPlaygroundEvaluationListFromPayload(versionsPayload || {}, ["versions", "evaluationVersions", "evaluation_versions"])
             .map((version, index) => normalizePlaygroundEvaluationVersion(version, index));
           const runs = (Array.isArray(allRuns) ? allRuns : [])
@@ -4043,6 +4045,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           const backendRuns = readPlaygroundEvaluationListFromPayload(runsPayload || {}, ["runs", "evaluationRuns", "evaluation_runs"]);
           const detailedSet = await fetchBackendEvaluationSetDetails(backendSet, backendRuns);
           if (detailedSet?.id && typeof setEvaluationSets === "function") {
+            evaluationDetailsLoadedRef.current.add(detailedSet.id);
             replaceEvaluationSet(detailedSet, {
               clearRunSelection: options.clearRunSelection !== false,
               rememberBaseline: options.rememberBaseline !== false,
@@ -4129,6 +4132,9 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           if (!normalizedBackendUrl || typeof setEvaluationSets !== "function") return [];
           const loadKey = normalizedBackendUrl + "|" + requestHeadersSignature;
           if (!options.force && evaluationBackendLoadRef.current === loadKey) return normalizedSets;
+          if (evaluationBackendLoadRef.current !== loadKey) {
+            evaluationDetailsLoadedRef.current = new Set();
+          }
           evaluationBackendLoadRef.current = loadKey;
           setEvaluationBackendSyncState({ status: "loading", error: "" });
           try {
@@ -4142,7 +4148,7 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             const backendRuns = readPlaygroundEvaluationListFromPayload(runsPayload || {}, ["runs", "evaluationRuns", "evaluation_runs"])
               .map((run, index) => normalizePlaygroundEvaluationRun(run, index))
               .filter((run) => run.id);
-            let detailedSets = await Promise.all(backendSets.map((set) => fetchBackendEvaluationSetDetails(set, backendRuns)));
+            let detailedSets = await Promise.all(backendSets.map((set) => fetchBackendEvaluationSetDetails(set, backendRuns, { includeVersions: false })));
             if (!detailedSets.length && !evaluationBackendMigratedLocalRef.current) {
               evaluationBackendMigratedLocalRef.current = true;
               const localSets = readPlaygroundEvaluationSetsFromStorage()
@@ -4187,9 +4193,12 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         }
 
         useEffect(() => {
+          if (!shouldLoadData) {
+            return undefined;
+          }
           void loadBackendEvaluationSets({ force: false });
           return undefined;
-        }, [backendUrl, requestHeadersSignature]);
+        }, [backendUrl, requestHeadersSignature, shouldLoadData]);
 
         useEffect(() => () => {
           evaluationSetPersistTimersRef.current.forEach((timer) => {
@@ -4253,6 +4262,47 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           activeRun?.id,
           activeRun?.cases?.length,
           requestHeadersSignature,
+        ]);
+
+        useEffect(() => {
+          const normalizedSetId = String(activeSet?.id || selectedEvaluationSetId || "").trim();
+          const needsVersionSurface = evaluationVersionsSidebarOpen
+            || evaluationPublishMenuOpen
+            || evaluationVersionsHeaderMenuOpen
+            || Boolean(evaluationVersionChangesState)
+            || Boolean(evaluationVersionModal)
+            || Boolean(openEvaluationVersionMenuId);
+          if (!shouldLoadData || !backendUrl || !isEvaluationDetailPage || !normalizedSetId || !needsVersionSurface) {
+            return undefined;
+          }
+          if (evaluationDetailsLoadedRef.current.has(normalizedSetId)) {
+            return undefined;
+          }
+          let cancelled = false;
+          void reloadBackendEvaluationSet(normalizedSetId, {
+            clearRunSelection: false,
+            select: false,
+            rememberBaseline: !evaluationVersionDraftTouchedRef.current,
+          }).catch((error) => {
+            if (cancelled) return;
+            setEvaluationBackendSyncState({ status: "error", error: error?.message || String(error) });
+          });
+          return () => {
+            cancelled = true;
+          };
+        }, [
+          activeSet?.id,
+          backendUrl,
+          evaluationPublishMenuOpen,
+          evaluationVersionChangesState,
+          evaluationVersionModal,
+          evaluationVersionsHeaderMenuOpen,
+          evaluationVersionsSidebarOpen,
+          isEvaluationDetailPage,
+          openEvaluationVersionMenuId,
+          requestHeadersSignature,
+          selectedEvaluationSetId,
+          shouldLoadData,
         ]);
 
         useEffect(() => {
@@ -4701,6 +4751,9 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         function getEvaluationPublishedRunSource(set = activeSet) {
           if (!set) return null;
           const normalizedSet = normalizePlaygroundEvaluationSet(set);
+          if (String(backendUrl || "").trim() && normalizedSet.id && !evaluationDetailsLoadedRef.current.has(normalizedSet.id)) {
+            return null;
+          }
           const activeVersion = getSelectedEvaluationActiveVersion(normalizedSet);
           if (!activeVersion || activeVersion.status !== "active") {
             return null;
@@ -5931,6 +5984,23 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
         function openRunEvaluationModal(setId) {
           const targetSet = normalizedSets.find((set) => set.id === setId) || activeSet;
           if (!targetSet) return;
+          const normalizedTargetSetId = String(targetSet.id || "").trim();
+          if (String(backendUrl || "").trim() && normalizedTargetSetId && !evaluationDetailsLoadedRef.current.has(normalizedTargetSetId)) {
+            setEvaluationBackendSyncState({ status: "loading", error: "" });
+            void reloadBackendEvaluationSet(normalizedTargetSetId, {
+              clearRunSelection: false,
+              select: false,
+              rememberBaseline: false,
+            }).then((loadedSet) => {
+              setEvaluationBackendSyncState({ status: "idle", error: "" });
+              if (loadedSet?.id) {
+                openRunEvaluationModal(loadedSet.id);
+              }
+            }).catch((error) => {
+              setEvaluationBackendSyncState({ status: "error", error: error?.message || String(error) });
+            });
+            return;
+          }
           const runSource = getEvaluationPublishedRunSource(targetSet);
           const sourceSet = runSource?.set;
           if (!sourceSet) {
