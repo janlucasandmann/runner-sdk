@@ -3017,6 +3017,7 @@ const html = `<!doctype html>
 
       .playground-project-overview-summary-title {
         font-size: 18px !important;
+        font-weight: 400;
       }
 
       .playground-project-overview-summary-title.playground-develop-title {
@@ -9898,6 +9899,14 @@ const html = `<!doctype html>
         scrollbar-width: none;
       }
 
+      .playground-team-page:has(.playground-team-resources-panel) {
+        padding-top: 0;
+      }
+
+      .playground-team-page:has(.playground-team-resources-panel) .playground-team-shell {
+        padding-top: 42px;
+      }
+
       .playground-team-page::-webkit-scrollbar {
         display: none;
       }
@@ -10272,7 +10281,8 @@ const html = `<!doctype html>
         gap: 8px;
       }
 
-      .playground-team-resources-panel .playground-project-resources-row.has-source-column.has-owner-column > :nth-child(5) {
+      .playground-team-resources-panel .playground-project-resources-row.has-source-column.has-owner-column > :nth-child(5),
+      .playground-team-resources-panel .playground-project-resources-row.has-selection-column.has-source-column.has-owner-column > :nth-child(6) {
         min-height: 100%;
         display: flex;
         align-items: center;
@@ -10372,6 +10382,552 @@ const html = `<!doctype html>
         font-size: 13px;
         font-weight: 400;
         line-height: 1.45;
+      }
+
+      .playground-team-overview-page {
+        width: 100%;
+      }
+
+      .playground-team-overview-page .playground-environments-home-content {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        gap: 24px;
+      }
+
+      .playground-team-overview-page .playground-environments-home-hero {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-team-overview-page .playground-develop-server-kind-header {
+        margin: 0 0 12px;
+        padding-bottom: 12px;
+      }
+
+      .playground-team-overview-empty-metrics.playground-environments-home-metrics {
+        height: 364px;
+        min-height: 364px;
+        max-height: 364px;
+        margin-top: 12px;
+        margin-bottom: 0;
+        display: block;
+      }
+
+      .playground-team-overview-empty-chart {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+      }
+
+      .playground-team-overview-table-section .playground-team-overview-action-shell {
+        position: relative;
+      }
+
+      .playground-team-overview-table-section .playground-team-overview-action-shell .playground-agents-overview-toolbar-menu {
+        left: auto;
+        right: 0;
+        transform-origin: top right;
+      }
+
+      .playground-project-overview-panel-plain.playground-plugins-section {
+        gap: 0 !important;
+      }
+
+      .playground-project-overview-panel-plain.playground-plugins-section .playground-project-overview-threads-table-header {
+        padding-top: 12px;
+      }
+
+      .playground-team-overview-table-section .playground-team-overview-sticky-table-header .playground-develop-server-kind-table-toolbar {
+        flex-wrap: nowrap;
+      }
+
+      .playground-team-overview-table-section .playground-team-overview-sticky-table-header .playground-develop-server-kind-table-controls {
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 0;
+        flex-wrap: nowrap;
+      }
+
+      .playground-team-overview-table-section .playground-team-overview-sticky-table-header .playground-develop-server-kind-search-shell {
+        flex: 0 1 340px;
+        width: min(340px, 100%);
+        min-width: 0;
+        max-width: 340px;
+      }
+
+      .playground-team-overview-table-section .playground-team-overview-sticky-table-header .playground-plugins-toolbar-controls {
+        flex-wrap: nowrap;
+        flex: 0 0 auto;
+      }
+
+      .playground-team-overview-table-section .playground-team-overview-sticky-table-header .playground-agents-overview-toolbar-create-button {
+        flex: 0 0 auto;
+      }
+
+      .playground-team-overview-toolbar-row {
+        position: relative;
+        z-index: 501;
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-start;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 10px;
+        width: 100%;
+        padding: 0 0 12px;
+        margin: 0;
+        border-bottom: 0;
+        pointer-events: auto;
+      }
+
+      .playground-team-overview-toolbar-row > *,
+      .playground-team-overview-toolbar-row .playground-plugins-toolbar-controls,
+      .playground-team-overview-toolbar-row .playground-files-toolbar-anchor,
+      .playground-team-overview-toolbar-row .playground-develop-server-kind-search-shell,
+      .playground-team-overview-toolbar-row .playground-plugins-search,
+      .playground-team-overview-toolbar-row button {
+        position: relative;
+        z-index: 502;
+        pointer-events: auto;
+      }
+
+      .playground-team-overview-toolbar-row .playground-develop-server-kind-search-shell {
+        flex: 0 1 340px;
+        width: min(340px, 100%);
+        min-width: 0;
+        max-width: 340px;
+      }
+
+      .playground-team-overview-toolbar-row .playground-plugins-toolbar-controls {
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+      }
+
+      .playground-team-overview-toolbar-row .playground-agents-overview-toolbar-create-button {
+        flex: 0 0 auto;
+        margin-left: auto;
+      }
+
+      .playground-team-grid-table-section.playground-agents-overview-list-section {
+        position: relative;
+        isolation: isolate;
+        margin-top: 0 !important;
+        margin-bottom: 24px;
+        padding: 0 18px 6px;
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 15px;
+        overflow: visible !important;
+        background: rgba(255, 255, 255, 0.075);
+      }
+
+      .playground-team-grid-table-section .playground-agents-overview-sticky-table-header {
+        position: sticky;
+        top: 0;
+        z-index: 240;
+        margin: 0 -18px;
+        padding: 12px 18px 0;
+        border-radius: 15px 15px 0 0;
+        background: #121212;
+      }
+
+      .playground-team-grid-table-section .playground-project-overview-threads-table {
+        position: relative;
+        z-index: 0;
+        width: 100%;
+        margin-left: 0;
+        padding-left: 0;
+        padding-right: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        overflow: visible !important;
+      }
+
+      .playground-team-grid-table-section .playground-project-overview-thread-list {
+        position: relative;
+        z-index: 0;
+        width: calc(100% + 24px);
+        margin-left: -12px;
+        padding-left: 12px;
+        padding-right: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background: #000;
+        overflow: visible !important;
+      }
+
+      .playground-team-grid-table-section .playground-project-overview-threads-table-header,
+      .playground-team-grid-table-section .playground-project-overview-threads-table-row {
+        gap: 12px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        font-size: 12px;
+      }
+
+      .playground-team-grid-table-section .playground-project-overview-threads-table-header *,
+      .playground-team-grid-table-section .playground-project-overview-threads-table-row * {
+        font-size: 12px;
+      }
+
+      .playground-team-grid-table-section .playground-project-overview-threads-table-row {
+        min-height: 58px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        overflow: visible !important;
+      }
+
+	      .playground-team-grid-table-section .playground-project-overview-thread-list > .playground-project-overview-threads-table-row:last-child {
+	        border-bottom: 0;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-table-card {
+	        position: relative;
+	        isolation: isolate;
+	        margin-top: 0 !important;
+	        margin-bottom: 24px;
+	        padding: 0 18px 6px;
+	        border: 1px solid rgba(255, 255, 255, 0.075);
+	        border-radius: 15px;
+	        overflow: visible !important;
+	        background: rgba(255, 255, 255, 0.075);
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-table-inner {
+	        display: flex;
+	        flex-direction: column;
+	        gap: 0;
+	        overflow: visible !important;
+	      }
+
+		      .playground-team-resources-panel .playground-project-resources-toolbar {
+		        position: sticky;
+		        top: 0;
+		        z-index: 520;
+	        margin: 0 -18px;
+	        width: calc(100% + 36px);
+	        padding: 12px 18px;
+	        border-radius: 15px 15px 0 0;
+	        background: #121212;
+	        display: grid !important;
+	        grid-template-columns: minmax(220px, 360px) minmax(0, 1fr);
+	        align-items: center;
+	        gap: 24px;
+	        justify-content: stretch !important;
+	      }
+
+		      .playground-project-resources-search {
+		        --playground-files-library-search-border: linear-gradient(
+		          -10deg,
+		          rgba(200, 200, 200, 0.25),
+		          rgba(255, 255, 255, 0.1),
+		          rgba(255, 255, 255, 0.15),
+		          rgba(255, 255, 255, 0.375)
+		        );
+		        width: min(100%, 360px);
+		        height: 32px;
+		        display: inline-flex;
+		        align-items: center;
+		        gap: 10px;
+		        padding: 0 14px;
+		        border: 0;
+		        border-radius: 999px;
+		        color: rgba(255, 255, 255, 0.88);
+		        box-sizing: border-box;
+		        position: relative;
+		        z-index: 0;
+		        overflow: hidden;
+		        -webkit-backdrop-filter: blur(50px);
+		        backdrop-filter: blur(50px);
+		      }
+
+		      .playground-project-resources-search::before {
+		        content: "";
+		        pointer-events: none;
+		        position: absolute;
+		        inset: 0;
+		        border-radius: inherit;
+		        padding: 1px;
+		        background: var(--playground-files-library-search-border);
+		        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+		        mask-clip: content-box, border-box;
+		        mask-composite: exclude;
+		        mask-origin: content-box, border-box;
+		        mask-repeat: repeat, repeat;
+		        mask-size: auto, auto;
+		      }
+
+		      .playground-project-resources-search > * {
+		        position: relative;
+		        z-index: 1;
+		      }
+
+		      .playground-project-resources-search-input {
+		        min-width: 0;
+		        flex: 1;
+		        border: 0;
+		        outline: none;
+		        background: transparent;
+		        color: #fff;
+		        font: inherit;
+		        font-size: 12px;
+		        line-height: 1;
+		      }
+
+		      .playground-project-resources-search-input::placeholder {
+		        color: rgba(255, 255, 255, 0.5);
+		      }
+
+		      .playground-team-resources-panel .playground-project-resources-toolbar > .playground-project-resources-search {
+			        grid-column: 1;
+			        width: min(100%, 360px);
+		        min-width: 0;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-toolbar-actions {
+	        width: 100% !important;
+	        margin-left: auto !important;
+	        flex: 1 1 auto !important;
+	        display: flex !important;
+	        justify-content: flex-end !important;
+	        justify-self: stretch !important;
+	        grid-column: 2;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-new-shell {
+	        order: 999 !important;
+	        margin-left: 10px !important;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-filter-shell {
+	        order: 1;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-toolbar-actions > .playground-files-library-divider {
+	        order: 2;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-toolbar-actions > .playground-files-library-icon-button {
+	        order: 3;
+	      }
+
+	      .playground-team-resources-panel .playground-files-library-new-button.playground-agents-nav-create-button {
+	        height: 30px;
+	        min-height: 30px;
+	        padding: 0 10px;
+	        background: linear-gradient(to top, #082673, #1D59BE);
+	      }
+
+	      .playground-team-resources-panel .playground-files-library-new-button.playground-agents-nav-create-button:hover,
+	      .playground-team-resources-panel .playground-files-library-new-button.playground-agents-nav-create-button:focus-visible,
+	      .playground-team-resources-panel .playground-files-library-new-button.playground-agents-nav-create-button.is-active {
+	        background: linear-gradient(to top, #082673, #1D59BE);
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-list-shell {
+	        position: relative;
+	        z-index: 0;
+	        width: calc(100% + 24px);
+	        margin-left: -12px;
+	        padding-left: 12px;
+	        padding-right: 12px;
+	        border: 1px solid rgba(255, 255, 255, 0.1);
+	        border-top: 0;
+	        border-radius: 10px;
+	        background: #000;
+	        overflow: visible !important;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-row {
+	        min-height: 58px;
+	        display: grid;
+	        align-items: center;
+	        gap: 12px;
+	        width: 100%;
+	        max-width: 100%;
+	        box-sizing: border-box;
+	        padding: 12px 0;
+	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	        font-size: 12px;
+	        overflow: visible !important;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-row.has-source-column.has-owner-column {
+	        grid-template-columns: minmax(260px, 1.35fr) minmax(110px, 0.42fr) minmax(170px, 0.72fr) minmax(110px, 0.36fr) minmax(180px, 0.72fr) 28px;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-row.has-selection-column.has-source-column.has-owner-column {
+	        grid-template-columns: 21px minmax(260px, 1.35fr) minmax(110px, 0.42fr) minmax(170px, 0.72fr) minmax(110px, 0.36fr) minmax(180px, 0.72fr) 28px;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-row.has-selection-column > div:first-child,
+	      .playground-team-resources-panel .playground-project-resources-cell.is-select {
+	        display: flex;
+	        align-items: center;
+	        justify-content: center;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-row.is-header {
+	        position: sticky;
+	        top: 56px;
+	        z-index: 510;
+	        min-height: auto;
+	        padding-top: 12px;
+	        padding-bottom: 12px;
+	        background: #000;
+	        color: rgba(255, 255, 255, 0.5);
+	        font-weight: 400;
+	        border-top: 0;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-row.is-header .playground-agents-overview-sortable-header {
+	        width: 100%;
+	        justify-content: flex-start;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-row *,
+	      .playground-team-resources-panel .playground-project-resources-cell,
+	      .playground-team-resources-panel .playground-project-resource-title-main,
+	      .playground-team-resources-panel .playground-project-resource-title-sub {
+	        font-size: 12px;
+	      }
+
+	      .playground-team-resources-panel .playground-project-resources-list-shell > .playground-project-resources-row:last-child {
+	        border-bottom: 0;
+	      }
+
+	      .playground-team-members-table-section .playground-project-overview-threads-table-header,
+	      .playground-team-members-table-section .playground-project-overview-threads-table-row {
+        grid-template-columns: 21px minmax(260px, 1.35fr) minmax(150px, 0.52fr) minmax(120px, 0.38fr) minmax(120px, 0.38fr) 28px;
+      }
+
+      .playground-team-members-table-section .playground-project-overview-threads-table-header > div:first-child,
+      .playground-team-members-table-section .playground-project-overview-thread-cell.is-select {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-team-members-table-section .playground-project-overview-thread-cell,
+      .playground-team-members-table-section .playground-team-table-title,
+      .playground-team-members-table-section .playground-team-table-meta,
+      .playground-team-members-table-section .playground-agents-overview-table-value {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-team-members-table-section .playground-project-overview-thread-cell.is-model {
+        justify-self: start;
+      }
+
+      .playground-team-member-role-select-shell {
+        position: relative;
+        width: auto;
+        min-width: 0;
+        max-width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .playground-team-members-table-section .playground-team-member-role-select {
+        width: auto;
+        min-width: 0;
+        max-width: 100%;
+        height: 30px;
+        min-height: 0;
+        padding: 0 25px 0 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.82);
+        font: inherit;
+        font-size: 12px;
+        line-height: 30px;
+        cursor: pointer;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+
+      .playground-team-members-table-section .playground-team-member-role-select:focus {
+        border-color: transparent;
+      }
+
+      .playground-team-members-table-section .playground-team-member-role-select:disabled {
+        cursor: default;
+        opacity: 0.55;
+      }
+
+      .playground-team-member-role-select-icon {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .playground-team-members-table-section .playground-team-member-role-select option {
+        background: #171718;
+        color: #fff;
+      }
+
+      .playground-team-members-table-section .playground-team-members-table-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        gap: 10px;
+        padding: 0 0 12px;
+        margin: 0;
+        border-bottom: 0;
+        width: 100%;
+        pointer-events: auto;
+      }
+
+      .playground-team-members-toolbar-row > *,
+      .playground-team-members-toolbar-row .playground-plugins-toolbar-controls,
+      .playground-team-members-toolbar-row .playground-files-toolbar-anchor,
+      .playground-team-members-toolbar-row .playground-develop-server-kind-search-shell,
+      .playground-team-members-toolbar-row .playground-plugins-search,
+      .playground-team-members-toolbar-row button {
+        position: relative;
+        z-index: 502;
+        pointer-events: auto;
+      }
+
+      .playground-team-members-toolbar-row .playground-develop-server-kind-search-shell {
+        flex: 0 1 340px;
+        width: min(340px, 100%);
+        min-width: 0;
+        max-width: 340px;
+        background: rgba(255, 255, 255, 0.025) !important;
+      }
+
+      .playground-team-members-toolbar-row .playground-plugins-toolbar-controls {
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+      }
+
+      .playground-team-members-table-section .playground-agents-overview-toolbar-create-button {
+        flex: 0 0 auto;
+        margin-left: auto;
+      }
+
+      .playground-team-members-table-section .playground-plugins-empty {
+        min-height: 240px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
       }
 
       .playground-team-overview-layout {
@@ -10876,13 +11432,6 @@ const html = `<!doctype html>
       }
 
       .playground-team-member-avatar {
-        --playground-team-member-avatar-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
         position: relative;
         width: 28px;
         height: 28px;
@@ -10897,22 +11446,6 @@ const html = `<!doctype html>
         font-size: 10px;
         font-weight: 400;
         line-height: 1;
-      }
-
-      .playground-team-member-avatar:has(> .playground-team-member-avatar-fallback)::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-team-member-avatar-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
       }
 
       .playground-team-member-avatar-image {
@@ -39395,7 +39928,7 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        margin-bottom: 20px;
+        margin-bottom: 0;
       }
 
       .playground-tasks-detail-section-header .playground-tasks-detail-section-title {
@@ -42934,6 +43467,11 @@ ${METRONOME_PAGE_CSS}
         max-width: var(--playground-thread-content-max-width);
       }
 
+      .playground-team-overview-page.playground-agents-overview-page .playground-environments-home-content {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+      }
+
       .playground-agents-configure-hero .playground-develop-server-kind-header {
         margin-bottom: 12px;
       }
@@ -42948,6 +43486,18 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-overview-page.is-develop-configure-page .playground-develop-server-kind-metrics.playground-environments-home-metrics {
         margin-bottom: 0;
+        overflow: hidden;
+        position: relative;
+        z-index: 0;
+      }
+
+      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-empty-metrics.playground-environments-home-metrics {
+        height: 364px;
+        min-height: 364px;
+        max-height: 364px;
+        margin-top: 12px;
+        margin-bottom: 0;
+        display: block;
         overflow: hidden;
         position: relative;
         z-index: 0;
@@ -42992,6 +43542,7 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-overview-list-section.playground-project-overview-panel-plain.playground-plugins-section {
         margin-top: 0 !important;
+        gap: 0 !important;
         position: relative;
         z-index: 2;
         overflow: visible;
@@ -43058,6 +43609,79 @@ ${METRONOME_PAGE_CSS}
         font-size: 12px;
       }
 
+      .playground-project-overview-threads-table-header {
+        font-weight: 400;
+      }
+
+      .playground-agents-overview-sortable-header {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .playground-agents-overview-sortable-header.is-active {
+        color: #fff;
+      }
+
+      .playground-agents-overview-sortable-header-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-agents-overview-column-sort-button {
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
+        min-height: 18px;
+        padding: 0;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.3);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex: 0 0 auto;
+      }
+
+      .playground-agents-overview-column-sort-button:hover,
+      .playground-agents-overview-column-sort-button:focus-visible {
+        outline: none;
+      }
+
+      .playground-agents-overview-sort-icon {
+        position: relative;
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        color: rgba(255, 255, 255, 0.3);
+      }
+
+      .playground-agents-overview-sort-icon-layer {
+        position: absolute;
+        inset: 0;
+        width: 14px;
+        height: 14px;
+        color: rgba(255, 255, 255, 0.3);
+      }
+
+      .playground-agents-overview-sort-icon-layer.is-top {
+        clip-path: inset(0 0 50% 0);
+      }
+
+      .playground-agents-overview-sort-icon-layer.is-bottom {
+        clip-path: inset(50% 0 0 0);
+      }
+
+      .playground-agents-overview-sort-icon.is-ascending .playground-agents-overview-sort-icon-layer.is-bottom,
+      .playground-agents-overview-sort-icon.is-descending .playground-agents-overview-sort-icon-layer.is-top {
+        color: #fff;
+      }
+
       .playground-evaluations-runs-section .playground-agents-overview-select-checkbox {
         border-color: rgba(255, 255, 255, 0.2);
       }
@@ -43089,15 +43713,15 @@ ${METRONOME_PAGE_CSS}
         justify-content: center;
       }
 
-      .playground-agents-overview-select-checkbox {
-        position: relative;
-        width: 14px;
-        height: 14px;
-        margin-left: 5px;
-        padding: 0;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 5px;
-        background: transparent;
+	      .playground-agents-overview-select-checkbox {
+	        position: relative;
+	        width: 14px;
+	        height: 14px;
+	        margin-left: 5px;
+	        padding: 0;
+	        border: 1px solid rgba(255, 255, 255, 0.2);
+	        border-radius: 5px;
+	        background: transparent;
         appearance: none;
         -webkit-appearance: none;
         cursor: pointer;
@@ -43230,8 +43854,13 @@ ${METRONOME_PAGE_CSS}
         background: transparent;
       }
 
+      .playground-resources-page.is-develop-configure-page.is-computers-view .playground-computers-overview-metrics {
+        z-index: 0;
+      }
+
       .playground-computers-overview-list-section.playground-project-overview-panel-plain.playground-plugins-section {
         margin-top: 0 !important;
+        gap: 0 !important;
         overflow: visible;
       }
 
@@ -43243,9 +43872,14 @@ ${METRONOME_PAGE_CSS}
         overflow: visible !important;
       }
 
+      .playground-computers-overview-list-section .playground-project-overview-threads-table {
+        position: relative;
+        z-index: 0;
+      }
+
       .playground-resources-page.is-develop-configure-page .playground-computers-overview-list-section.playground-agents-detail-threads-section.playground-evaluations-runs-section .playground-project-overview-threads-table-header,
       .playground-resources-page.is-develop-configure-page .playground-computers-overview-list-section.playground-agents-detail-threads-section.playground-evaluations-runs-section .playground-project-overview-threads-table-row {
-        grid-template-columns: minmax(180px, 1fr) minmax(150px, 0.68fr) minmax(92px, 0.4fr) minmax(92px, 0.4fr) 28px !important;
+        grid-template-columns: 21px minmax(180px, 1fr) minmax(150px, 0.68fr) minmax(92px, 0.4fr) minmax(92px, 0.4fr) 28px !important;
         gap: 12px;
         width: 100%;
         max-width: 100%;
@@ -43299,6 +43933,13 @@ ${METRONOME_PAGE_CSS}
 
       .playground-computers-overview-list-section .playground-project-overview-thread-cell.is-name {
         color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-computers-overview-list-section .playground-project-overview-threads-table-header > div:first-child,
+      .playground-computers-overview-list-section .playground-project-overview-thread-cell.is-select {
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .playground-computers-overview-list-section .playground-project-overview-thread-cell.is-actions,
@@ -44300,13 +44941,13 @@ ${METRONOME_PAGE_CSS}
         min-height: 30px;
         padding: 0 14px;
         border-radius: 999px;
-        background: #fff;
-        color: #000;
+        background: linear-gradient(to top, #082673, #1D59BE);
+        color: rgba(255, 255, 255, 0.96);
       }
 
       .playground-resources-page.is-computers-view .playground-resources-overview-create-button:hover {
-        color: #000;
-        background: rgba(255, 255, 255, 0.92);
+        color: #fff;
+        background: linear-gradient(to top, #082673, #1D59BE);
       }
 
       .playground-resources-overview-settings-stack {
@@ -44709,7 +45350,8 @@ ${METRONOME_PAGE_CSS}
         cursor: default;
       }
 
-      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu {
+      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu,
+      .playground-resources-page.is-develop-configure-page .playground-tasks-toolbar-popup-shell .playground-computers-overview-toolbar-menu {
         --playground-platform-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
         top: calc(100% + 8px);
         left: 0;
@@ -44730,7 +45372,8 @@ ${METRONOME_PAGE_CSS}
         overflow: hidden;
       }
 
-      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu::before {
+      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu::before,
+      .playground-resources-page.is-develop-configure-page .playground-tasks-toolbar-popup-shell .playground-computers-overview-toolbar-menu::before {
         content: "";
         pointer-events: none;
         position: absolute;
@@ -44747,12 +45390,14 @@ ${METRONOME_PAGE_CSS}
         mask-size: auto, auto;
       }
 
-      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu > * {
+      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu > *,
+      .playground-resources-page.is-develop-configure-page .playground-tasks-toolbar-popup-shell .playground-computers-overview-toolbar-menu > * {
         position: relative;
         z-index: 6;
       }
 
-      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu.is-closing {
+      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu.is-closing,
+      .playground-resources-page.is-develop-configure-page .playground-tasks-toolbar-popup-shell .playground-computers-overview-toolbar-menu.is-closing {
         pointer-events: none;
         animation: playground-agent-list-action-menu-fade-out 90ms ease both;
       }
@@ -45084,16 +45729,72 @@ ${METRONOME_PAGE_CSS}
 	        flex-wrap: nowrap;
 	      }
 
-	      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-agents-overview-sticky-table-header .playground-develop-server-kind-search-shell {
-	        flex: 0 1 340px;
-	        width: min(340px, 100%);
-	        min-width: min(280px, 100%);
-	        max-width: 340px;
-	        background: rgba(255, 255, 255, 0.025) !important;
-	      }
+		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-agents-overview-sticky-table-header .playground-develop-server-kind-search-shell {
+		        flex: 0 1 340px;
+		        width: min(340px, 100%);
+		        min-width: min(280px, 100%);
+		        max-width: 340px;
+		        background: rgba(255, 255, 255, 0.025) !important;
+		      }
 
-	      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-project-overview-threads-table-header {
-	        position: relative;
+		      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-sticky-table-header .playground-develop-server-kind-table-toolbar {
+		        flex-wrap: nowrap !important;
+		      }
+
+			      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-toolbar-row {
+			        position: relative;
+			        z-index: 501;
+			        display: flex !important;
+			        align-items: center;
+			        justify-content: flex-start !important;
+			        flex-direction: row !important;
+			        flex-wrap: nowrap !important;
+			        gap: 10px;
+			        width: 100% !important;
+			        padding: 0 0 12px !important;
+			        margin: 0 !important;
+			        border-bottom: 0 !important;
+			        pointer-events: auto;
+			      }
+
+			      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-toolbar-row > *,
+			      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-toolbar-row .playground-plugins-toolbar-controls,
+			      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-toolbar-row .playground-files-toolbar-anchor,
+			      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-toolbar-row .playground-develop-server-kind-search-shell,
+			      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-toolbar-row .playground-plugins-search,
+			      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-toolbar-row button {
+			        position: relative;
+			        z-index: 502;
+			        pointer-events: auto;
+			      }
+
+		      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-sticky-table-header .playground-develop-server-kind-table-controls {
+		        flex: 1 1 auto !important;
+		        width: auto !important;
+		        min-width: 0;
+		        flex-wrap: nowrap !important;
+		      }
+
+			      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-sticky-table-header .playground-develop-server-kind-search-shell {
+			        flex: 0 1 340px !important;
+			        width: min(340px, 100%) !important;
+			        min-width: 0 !important;
+			        max-width: 340px !important;
+			        background: rgba(255, 255, 255, 0.025) !important;
+			      }
+
+		      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-sticky-table-header .playground-plugins-toolbar-controls {
+		        flex: 0 0 auto;
+		        flex-wrap: nowrap !important;
+		      }
+
+		      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-sticky-table-header .playground-agents-overview-toolbar-create-button {
+		        flex: 0 0 auto !important;
+		        margin-left: auto;
+		      }
+
+		      .playground-agents-overview-page.is-develop-configure-page .playground-plugins-section.is-develop-server-kind-list.playground-agents-overview-list-section.playground-agents-overview-table-section .playground-project-overview-threads-table-header {
+		        position: relative;
 	        z-index: 1;
 	        background: transparent;
 	        padding-top: 0;
@@ -45136,13 +45837,14 @@ ${METRONOME_PAGE_CSS}
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list {
 		        position: relative;
 		        isolation: isolate;
+		        z-index: 3;
 		        gap: 0;
 		        margin-bottom: 24px;
-		        padding: 0 18px 18px;
-		        border: 1px solid rgba(255, 255, 255, 0.05);
-		        border-radius: 10px;
-		        overflow: visible;
-		        background: rgba(255, 255, 255, 0.05);
+		        padding: 0 18px 6px;
+		        border: 1px solid rgba(255, 255, 255, 0.075);
+		        border-radius: 15px;
+		        overflow: visible !important;
+		        background: rgba(255, 255, 255, 0.075);
 		        -webkit-backdrop-filter: none;
 		        backdrop-filter: none;
 		      }
@@ -45174,13 +45876,43 @@ ${METRONOME_PAGE_CSS}
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-sticky-table-header {
 		        position: sticky;
 		        top: 0;
-		        z-index: 240;
+		        z-index: 500;
 		        margin: 0 -18px;
-		        padding: 18px 18px 0;
-		        border-radius: 10px 10px 0 0;
-		        background: #0d0d0d;
+		        padding: 12px 18px 0;
+		        border-radius: 15px 15px 0 0;
+		        background: #121212;
 		        -webkit-backdrop-filter: none;
 		        backdrop-filter: none;
+		        pointer-events: auto;
+		      }
+
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-toolbar-row {
+		        position: relative;
+		        z-index: 501;
+		        display: flex;
+		        align-items: center;
+		        gap: 10px;
+		        width: 100%;
+		        pointer-events: auto;
+		      }
+
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-toolbar-row > *,
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-toolbar-row .playground-develop-server-kind-table-controls,
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-toolbar-row .playground-plugins-toolbar-controls,
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-toolbar-row .playground-files-toolbar-anchor,
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-toolbar-row .playground-develop-server-kind-search-shell,
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-toolbar-row .playground-plugins-search,
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-toolbar-row button {
+		        position: relative;
+		        z-index: 502;
+		        pointer-events: auto;
+		      }
+
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-toolbar-row .playground-resources-overview-create-button {
+		        position: relative;
+		        z-index: 502;
+		        flex: 0 0 auto;
+		        pointer-events: auto;
 		      }
 
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-sticky-table-header .playground-develop-server-kind-table-toolbar {
@@ -45196,7 +45928,8 @@ ${METRONOME_PAGE_CSS}
 		      }
 
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-sticky-table-header .playground-develop-server-kind-table-controls {
-		        width: 100%;
+		        flex: 1 1 auto;
+		        width: auto;
 		        margin-left: 0;
 		        justify-content: flex-start;
 		        align-items: center;
@@ -45204,18 +45937,19 @@ ${METRONOME_PAGE_CSS}
 		      }
 
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-sticky-table-header .playground-develop-server-kind-search-shell {
-		        flex: 0 1 440px;
-		        width: min(440px, 100%);
+		        flex: 0 1 340px;
+		        width: min(340px, 100%);
 		        min-width: min(280px, 100%);
-		        max-width: 440px;
+		        max-width: 340px;
+		        background: rgba(255, 255, 255, 0.025) !important;
 		      }
 
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-sticky-table-header .playground-tasks-toolbar-popup-shell {
-		        z-index: 250;
+		        z-index: 520;
 		      }
 
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-sticky-table-header .playground-tasks-toolbar-popup-menu {
-		        z-index: 251;
+		        z-index: 521;
 		      }
 
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-computers-overview-sticky-table-header .playground-project-overview-threads-table-header {
@@ -45225,6 +45959,44 @@ ${METRONOME_PAGE_CSS}
 		        padding-top: 0;
 		        -webkit-backdrop-filter: none;
 		        backdrop-filter: none;
+		      }
+
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-project-overview-threads-table-header.playground-computers-overview-column-header {
+		        margin-top: 12px;
+		        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		      }
+
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-project-overview-threads-table {
+		        position: relative;
+		        z-index: 0;
+		        background: transparent;
+		        border: none;
+		        border-radius: 0;
+		        padding-left: 0;
+		        padding-right: 0;
+		        width: 100%;
+		        margin-left: 0;
+		        overflow: visible !important;
+		      }
+
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-project-overview-thread-list {
+		        position: relative;
+		        z-index: 0;
+		        background: #000;
+		        border-radius: 10px;
+		        padding-left: 12px;
+		        padding-right: 12px;
+		        width: calc(100% + 24px);
+		        margin-left: -12px;
+		        border: 1px solid rgba(255, 255, 255, 0.1);
+		        overflow: visible !important;
+		      }
+
+		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list .playground-project-overview-threads-table-row {
+		        min-height: 58px;
+		        padding-top: 12px;
+		        padding-bottom: 12px;
+		        overflow: visible !important;
 		      }
 
 		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-table-title,
@@ -45593,10 +46365,10 @@ ${METRONOME_PAGE_CSS}
       .playground-agents-detail-content .playground-environments-editor-surface,
       .playground-agents-detail-content .playground-tasks-detail-description.playground-environments-editor-description {
         margin-top: 0;
-        padding: 0;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 10px;
-        background: transparent;
+        padding: 0 0 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.075);
         box-shadow: none;
         overflow: hidden !important;
         backdrop-filter: none;
@@ -46402,6 +47174,24 @@ ${METRONOME_PAGE_CSS}
         overflow: hidden;
       }
 
+      .playground-team-members-table-section.playground-agents-detail-threads-section .playground-project-overview-threads-table-header,
+      .playground-team-members-table-section.playground-agents-detail-threads-section .playground-project-overview-threads-table-row {
+        grid-template-columns: 21px minmax(260px, 1.35fr) minmax(150px, 0.52fr) minmax(120px, 0.38fr) minmax(120px, 0.38fr) 28px !important;
+        gap: 12px;
+      }
+
+      .playground-team-members-table-section.playground-agents-detail-threads-section .playground-project-overview-threads-table {
+        overflow: visible !important;
+      }
+
+      .playground-team-members-table-section.playground-agents-detail-threads-section .playground-project-overview-thread-list {
+        overflow: visible !important;
+      }
+
+      .playground-team-members-table-section.playground-agents-detail-threads-section .playground-team-members-sticky-table-header {
+        z-index: 500;
+      }
+
       .playground-agents-detail-evaluations-section .playground-project-overview-threads-table-header,
       .playground-agents-detail-evaluations-section .playground-project-overview-threads-table-row {
         grid-template-columns: minmax(180px, 1.4fr) minmax(82px, 0.42fr) minmax(108px, 0.56fr) minmax(76px, 0.38fr) minmax(92px, 0.48fr) 24px;
@@ -46689,11 +47479,11 @@ ${METRONOME_PAGE_CSS}
         position: sticky;
         top: 0;
         z-index: 8;
-        background: #0a0a0a;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
+        background: #121212;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
         padding: 12px 20px 10px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 0;
       }
 
       .playground-agents-detail-instructions-section.is-header-stuck .playground-tasks-detail-section-header {
@@ -46703,10 +47493,17 @@ ${METRONOME_PAGE_CSS}
 
       .playground-agents-detail-instructions-section .playground-tasks-detail-description-editor {
         display: block;
+        box-sizing: border-box;
+        width: calc(100% - 12px);
         height: auto;
         min-height: 0;
+        margin-left: 6px;
+        padding-top: 20px;
         padding-left: 20px;
         padding-right: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background: black;
         overflow: visible;
       }
 
@@ -53592,16 +54389,21 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         renderIcon,
         renderCreator,
         renderSource,
-        renderOwner,
-        renderRowMenu,
-        renderNewMenu,
-        renderEmptyContent,
-        onNewButtonClick,
-        onRowOpen,
-        searchPlaceholder = "Search resources",
+	        renderOwner,
+	        renderRowMenu,
+	        renderRowMenuInline = true,
+	        renderNewMenu,
+	        renderEmptyContent,
+	        onNewButtonClick,
+	        onRowOpen,
+	        onRowActionMenuOpen,
+	        onRowContextMenu,
+	        activeRowMenuId = "",
+	        searchPlaceholder = "Search resources",
         searchAriaLabel = "Search resources",
-        newButtonLabel = "New",
-        primaryHeader = "Resource",
+	        newButtonLabel = "New",
+	        newButtonClassName = "",
+	        primaryHeader = "Resource",
         secondaryHeader = "Creator",
         sourceHeader = "Shared Through",
         tertiaryHeader = "Updated",
@@ -53610,10 +54412,19 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         noMatchesLabel = "No resources match this view yet.",
         showNewButton = true,
         showFilterButton = true,
-        showViewToggle = true,
-        showListSubtitle = false,
-        metaCellsStopRowOpen = true,
-      }) {
+	        showViewToggle = true,
+	        showListSubtitle = false,
+	        metaCellsStopRowOpen = true,
+	        showSelectionColumn = false,
+	        selectedRowIds = new Set(),
+		        getSelectionId,
+		        onToggleRowSelection,
+		        onToggleVisibleSelection,
+		        sortKey = "",
+		        sortDirection = "asc",
+		        sortableColumns = [],
+		        onSortChange,
+		      }) {
         const visibleRows = Array.isArray(rows) ? rows : [];
         const availableRows = Array.isArray(allRows) ? allRows : visibleRows;
         const activeViewMode = viewMode === "grid" ? "grid" : "list";
@@ -53623,9 +54434,102 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           ? typeFilters
           : [{ id: "all", label: "All" }];
         const defaultTypeMeta = { label: "Resource", Icon: Layers };
-        const hasSourceColumn = typeof renderSource === "function";
-        const hasOwnerColumn = typeof renderOwner === "function";
-        const resourceRowColumnClassName = (hasSourceColumn ? " has-source-column" : "") + (hasOwnerColumn ? " has-owner-column" : "");
+	        const hasSourceColumn = typeof renderSource === "function";
+	        const hasOwnerColumn = typeof renderOwner === "function";
+	        const selectionEnabled = Boolean(showSelectionColumn && activeViewMode === "list");
+	        const selectedResourceRowIds = selectedRowIds instanceof Set
+	          ? selectedRowIds
+	          : new Set(Array.isArray(selectedRowIds) ? selectedRowIds.map((value) => String(value || "").trim()).filter(Boolean) : []);
+	        const getResourceSelectionId = (row) => {
+	          if (typeof getSelectionId === "function") {
+	            return String(getSelectionId(row) || "").trim();
+	          }
+	          return String(row?.key || row?.id || row?.title || "").trim();
+	        };
+	        const visibleSelectionIds = selectionEnabled
+	          ? visibleRows.map((row) => getResourceSelectionId(row)).filter(Boolean)
+	          : [];
+	        const selectedVisibleSelectionIds = visibleSelectionIds.filter((selectionId) => selectedResourceRowIds.has(selectionId));
+	        const allVisibleRowsSelected = visibleSelectionIds.length > 0 && selectedVisibleSelectionIds.length === visibleSelectionIds.length;
+	        const hasPartialVisibleSelection = selectedVisibleSelectionIds.length > 0 && !allVisibleRowsSelected;
+	        const resourceRowColumnClassName = (selectionEnabled ? " has-selection-column" : "") + (hasSourceColumn ? " has-source-column" : "") + (hasOwnerColumn ? " has-owner-column" : "");
+	        const handleToggleResourceRowSelection = (event, row) => {
+	          event.preventDefault();
+	          event.stopPropagation();
+	          const selectionId = getResourceSelectionId(row);
+	          if (selectionId && typeof onToggleRowSelection === "function") {
+	            onToggleRowSelection(selectionId, row);
+	          }
+	        };
+		        const handleToggleVisibleSelection = (event) => {
+		          event.preventDefault();
+		          event.stopPropagation();
+		          if (typeof onToggleVisibleSelection === "function") {
+		            onToggleVisibleSelection(visibleSelectionIds, !allVisibleRowsSelected);
+		          }
+		        };
+		        const activeSortKey = String(sortKey || "").trim();
+		        const activeSortDirection = String(sortDirection || "").toLowerCase() === "desc" ? "desc" : "asc";
+		        const sortableColumnSet = new Set((Array.isArray(sortableColumns) ? sortableColumns : [])
+		          .map((columnKey) => String(columnKey || "").trim())
+		          .filter(Boolean));
+		        const renderResourceSortIcon = (columnKey) => {
+		          const normalizedColumnKey = String(columnKey || "").trim();
+		          const isActive = Boolean(normalizedColumnKey && activeSortKey === normalizedColumnKey);
+		          const isDescending = isActive && activeSortDirection === "desc";
+		          const isAscending = isActive && !isDescending;
+		          return React.createElement("span", {
+		              className: "playground-agents-overview-sort-icon"
+		                + (isActive ? " is-active" : "")
+		                + (isAscending ? " is-ascending" : "")
+		                + (isDescending ? " is-descending" : ""),
+		              "aria-hidden": "true",
+		            },
+		            React.createElement(ChevronsUpDown, {
+		              className: "playground-agents-overview-sort-icon-layer is-top",
+		              width: 14,
+		              height: 14,
+		              strokeWidth: 1.8,
+		            }),
+		            React.createElement(ChevronsUpDown, {
+		              className: "playground-agents-overview-sort-icon-layer is-bottom",
+		              width: 14,
+		              height: 14,
+		              strokeWidth: 1.8,
+		            })
+		          );
+		        };
+		        const renderResourceHeaderCell = (label, columnKey) => {
+		          const normalizedColumnKey = String(columnKey || "").trim();
+		          const sortable = Boolean(normalizedColumnKey && sortableColumnSet.has(normalizedColumnKey) && typeof onSortChange === "function");
+		          if (!sortable) {
+		            return label;
+		          }
+		          const isActive = activeSortKey === normalizedColumnKey;
+		          const nextDirection = isActive && activeSortDirection === "asc" ? "descending" : "ascending";
+		          return React.createElement("div", {
+		              className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : ""),
+		            },
+		            React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+		            React.createElement("button", {
+		                type: "button",
+		                className: "playground-agents-overview-column-sort-button"
+		                  + (isActive ? " is-active" : "")
+		                  + (isActive && activeSortDirection === "asc" ? " is-ascending" : "")
+		                  + (isActive && activeSortDirection === "desc" ? " is-descending" : ""),
+		                title: "Sort " + label + " " + nextDirection,
+		                "aria-label": "Sort " + label + " " + nextDirection,
+		                "aria-pressed": isActive ? "true" : "false",
+		                onClick: (event) => {
+		                  event.preventDefault();
+		                  event.stopPropagation();
+		                  onSortChange(normalizedColumnKey);
+		                },
+		              },
+		              renderResourceSortIcon(normalizedColumnKey)
+		            )
+		          );
+		        };
 
         const setToolbarPopover = (nextValue) => {
           if (typeof onToolbarPopoverChange === "function") {
@@ -53792,38 +54696,70 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
                 );
               })
             );
-          }
-          return React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-project-resources-row is-header" + resourceRowColumnClassName },
-              React.createElement("div", null, primaryHeader),
-              React.createElement("div", null, secondaryHeader),
-              hasSourceColumn
-                ? React.createElement("div", null, sourceHeader)
-                : null,
-              React.createElement("div", null, tertiaryHeader),
-              hasOwnerColumn
-                ? React.createElement("div", null, ownerHeader)
-                : null,
+	          }
+	          return React.createElement(React.Fragment, null,
+	            React.createElement("div", { className: "playground-project-resources-row is-header" + resourceRowColumnClassName },
+	              selectionEnabled
+	                ? React.createElement("div", null,
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+	                        + (allVisibleRowsSelected ? " is-selected" : "")
+	                        + (hasPartialVisibleSelection ? " is-partial" : ""),
+	                      role: "checkbox",
+	                      "aria-checked": allVisibleRowsSelected ? "true" : (hasPartialVisibleSelection ? "mixed" : "false"),
+	                      "aria-label": allVisibleRowsSelected ? "Deselect all visible resources" : "Select all visible resources",
+	                      onClick: handleToggleVisibleSelection,
+	                    })
+	                  )
+	                : null,
+		              React.createElement("div", null, renderResourceHeaderCell(primaryHeader, "resource")),
+		              React.createElement("div", null, renderResourceHeaderCell(secondaryHeader, "access")),
+	              hasSourceColumn
+	                ? React.createElement("div", null, renderResourceHeaderCell(sourceHeader, "source"))
+	                : null,
+	              React.createElement("div", null, renderResourceHeaderCell(tertiaryHeader, "updated")),
+	              hasOwnerColumn
+	                ? React.createElement("div", null, renderResourceHeaderCell(ownerHeader, "owner"))
+	                : null,
               React.createElement("div", null, "")
             ),
             visibleRows.map((row) => {
               const meta = getMeta(row) || defaultTypeMeta;
               const rowMenuId = getMenuId(row);
-              const rowMenuOpen = Boolean(rowMenuId && menuId === rowMenuId);
-              return React.createElement("div", {
-                  key: row?.key || row?.id || row?.title,
-                  role: "button",
-                  tabIndex: 0,
-                  className: "playground-project-resources-row" + resourceRowColumnClassName + (rowMenuOpen ? " is-menu-open" : ""),
-                  onClick: () => openRow(row),
-                  onKeyDown: (event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      openRow(row);
-                    }
-                  },
-                },
-                React.createElement("div", { className: "playground-project-resource-title-cell" },
+	              const rowMenuOpen = Boolean(rowMenuId && (menuId === rowMenuId || activeRowMenuId === rowMenuId));
+	              return React.createElement("div", {
+	                  key: row?.key || row?.id || row?.title,
+	                  role: "button",
+	                  tabIndex: 0,
+	                  className: "playground-project-resources-row" + resourceRowColumnClassName + (rowMenuOpen ? " is-menu-open" : ""),
+	                  onClick: () => openRow(row),
+		                  onContextMenu: (event) => {
+		                    if (typeof onRowContextMenu === "function") {
+		                      onRowContextMenu(event, row);
+		                    }
+		                  },
+		                  onKeyDown: (event) => {
+	                    if (event.key === "Enter" || event.key === " ") {
+	                      event.preventDefault();
+	                      openRow(row);
+	                    }
+	                  },
+	                },
+	                selectionEnabled
+	                  ? React.createElement("div", { className: "playground-project-resources-cell is-select" },
+	                      React.createElement("button", {
+	                        type: "button",
+	                        className: "playground-agents-overview-select-checkbox" + (selectedResourceRowIds.has(getResourceSelectionId(row)) ? " is-selected" : ""),
+	                        role: "checkbox",
+	                        "aria-checked": selectedResourceRowIds.has(getResourceSelectionId(row)) ? "true" : "false",
+	                        "aria-label": "Select " + (row?.title || "resource"),
+	                        onClick: (event) => handleToggleResourceRowSelection(event, row),
+	                        onKeyDown: (event) => event.stopPropagation(),
+	                      })
+	                    )
+	                  : null,
+	                React.createElement("div", { className: "playground-project-resource-title-cell" },
                   renderSharedIcon(row, meta),
                   React.createElement("span", { className: "playground-project-resource-title-copy" },
                     React.createElement("span", { className: "playground-project-resource-title-main" }, row?.title || "Untitled resource"),
@@ -53847,26 +54783,33 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
                   )
                   : null,
                 React.createElement("div", { className: "playground-project-resources-row-action" },
-                  typeof renderRowMenu === "function"
-                    ? React.createElement("div", {
-                        className: "playground-tasks-toolbar-popup-shell playground-project-resources-action-shell" + (rowMenuOpen ? " is-open" : ""),
-                      },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-project-resources-action-button",
-                        onClick: (event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          setToolbarPopover("");
-                          if (typeof onMenuIdChange === "function") {
-                            onMenuIdChange((current) => current === rowMenuId ? "" : rowMenuId);
-                          }
-                        },
-                        "aria-label": "Resource actions for " + (row?.title || "resource"),
-                        "aria-expanded": rowMenuOpen ? "true" : "false",
-                      }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
-                      renderRowMenu(row)
-                    )
+	                  typeof renderRowMenu === "function"
+	                    ? React.createElement("div", {
+	                        className: "playground-tasks-toolbar-popup-shell playground-project-resources-action-shell" + (rowMenuOpen ? " is-open" : ""),
+	                      },
+	                      React.createElement("button", {
+	                        type: "button",
+	                        className: "playground-project-resources-action-button playground-overview-table-action-button",
+	                        onClick: (event) => {
+	                          event.preventDefault();
+	                          event.stopPropagation();
+	                          setToolbarPopover("");
+	                          if (typeof onRowActionMenuOpen === "function") {
+	                            onRowActionMenuOpen(event, row, { openLeft: true });
+	                          } else if (typeof onMenuIdChange === "function") {
+	                            onMenuIdChange((current) => current === rowMenuId ? "" : rowMenuId);
+	                          }
+	                        },
+			                        onContextMenu: (event) => {
+			                          if (typeof onRowContextMenu === "function") {
+			                            onRowContextMenu(event, row);
+			                          }
+			                        },
+	                        "aria-label": "Resource actions for " + (row?.title || "resource"),
+	                        "aria-expanded": rowMenuOpen ? "true" : "false",
+	                      }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
+	                      renderRowMenuInline === false ? null : renderRowMenu(row)
+	                    )
                     : null
                 )
               );
@@ -53878,23 +54821,23 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           React.createElement("section", { className: "playground-project-resources-table-card" },
             React.createElement("div", { className: "playground-project-resources-table-inner" },
               React.createElement("div", { className: "playground-project-resources-toolbar playground-files-library-title-row" },
-                React.createElement("label", { className: "playground-files-library-search" },
-                  React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
-                  React.createElement("input", {
-                    type: "search",
-                    value: searchQuery,
-                    onChange: (event) => typeof onSearchQueryChange === "function" && onSearchQueryChange(event.target.value),
-                    className: "playground-files-library-search-input",
-                    placeholder: searchPlaceholder,
-                    "aria-label": searchAriaLabel,
-                  })
+	                React.createElement("label", { className: "playground-project-resources-search" },
+	                  React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
+	                  React.createElement("input", {
+	                    type: "search",
+	                    value: searchQuery,
+	                    onChange: (event) => typeof onSearchQueryChange === "function" && onSearchQueryChange(event.target.value),
+	                    className: "playground-project-resources-search-input",
+	                    placeholder: searchPlaceholder,
+	                    "aria-label": searchAriaLabel,
+	                  })
                 ),
                 React.createElement("div", { className: "playground-files-library-actions playground-project-resources-toolbar-actions" },
                   showNewButton
                     ? React.createElement("div", { className: "playground-project-resources-new-shell playground-files-library-new-anchor playground-tasks-toolbar-popup-shell" + (activeToolbarPopover === "new" ? " is-open" : "") },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-library-new-button" + (activeToolbarPopover === "new" ? " is-active" : ""),
+	                        React.createElement("button", {
+	                          type: "button",
+	                          className: "playground-files-library-new-button" + (newButtonClassName ? " " + newButtonClassName : "") + (activeToolbarPopover === "new" ? " is-active" : ""),
                           onClick: (event) => {
                             event.stopPropagation();
                             closeRowMenu();
@@ -53950,10 +54893,12 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
                     : null
                 )
               ),
-              renderRows()
-            )
-          )
-        );
+	              activeViewMode === "list"
+	                ? React.createElement("div", { className: "playground-project-resources-list-shell" }, renderRows())
+	                : renderRows()
+	            )
+	          )
+	        );
       }
 
       function remarkPlaygroundSoftbreaksToBreaks() {
@@ -85006,6 +85951,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const environmentShareTeamModalFrameRef = useRef(null);
         const environmentApiModalCloseTimerRef = useRef(null);
         const environmentApiModalFrameRef = useRef(null);
+        const environmentListActionMenuCloseTimerRef = useRef(null);
+        const environmentBulkActionMenuCloseTimerRef = useRef(null);
         const environmentRenameInputRef = useRef(null);
         const environmentDescriptionTextareaRef = useRef(null);
         const databaseActionsPopoverRef = useRef(null);
@@ -85091,10 +86038,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [draftDatabase, setDraftDatabase] = useState(null);
         const [toolbarPopover, setToolbarPopover] = useState("");
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
+        const [fileEnvironmentMutationState, setFileEnvironmentMutationState] = useState({
+          environmentId: "",
+          action: "",
+        });
         const [resourcesOverviewToolbarPopover, setResourcesOverviewToolbarPopover] = useState("");
         const [resourcesOverviewFilter, setResourcesOverviewFilter] = useState("all");
         const [resourcesOverviewSort, setResourcesOverviewSort] = useState("name");
+        const [resourcesOverviewSortDirection, setResourcesOverviewSortDirection] = useState("asc");
         const [resourcesOverviewHomeTab, setResourcesOverviewHomeTab] = useState("general");
+        const [selectedOverviewComputerIds, setSelectedOverviewComputerIds] = useState(() => new Set());
         const normalizedResourceBillingPreferences = normalizeDemoSettingsBillingPreferences(resourceBillingPreferences);
         const [loadingEnvironmentId, setLoadingEnvironmentId] = useState("");
         const [loadingEnvironmentAnalyticsId, setLoadingEnvironmentAnalyticsId] = useState("");
@@ -85202,6 +86155,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [environmentShareTeamModalClosing, setEnvironmentShareTeamModalClosing] = useState(false);
         const [environmentShareTeamPickerValue, setEnvironmentShareTeamPickerValue] = useState("");
         const [environmentShareTeamError, setEnvironmentShareTeamError] = useState("");
+        const [environmentShareTeamTargetEnvironment, setEnvironmentShareTeamTargetEnvironment] = useState(null);
+        const [environmentShareTeamTargetEnvironmentIds, setEnvironmentShareTeamTargetEnvironmentIds] = useState([]);
         const [environmentShareTeamState, setEnvironmentShareTeamState] = useState({
           teamId: "",
           action: "",
@@ -85291,6 +86246,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [isServerComposerDescriptionEditing, setIsServerComposerDescriptionEditing] = useState(false);
         const [environmentComposerRuntimePopover, setEnvironmentComposerRuntimePopover] = useState("");
         const [environmentListActionMenuState, setEnvironmentListActionMenuState] = useState(null);
+        const [environmentListActionMenuClosing, setEnvironmentListActionMenuClosing] = useState(false);
+        const [environmentBulkActionMenuState, setEnvironmentBulkActionMenuState] = useState(null);
+        const [environmentBulkActionMenuClosing, setEnvironmentBulkActionMenuClosing] = useState(false);
         const [serverResourceActionMenuState, setServerResourceActionMenuState] = useState(null);
         const [environmentAnalyticsErrorById, setEnvironmentAnalyticsErrorById] = useState({});
         const [environmentHomeAnalyticsError, setEnvironmentHomeAnalyticsError] = useState("");
@@ -85471,6 +86429,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setResourceMode(embeddedResourcesView === "servers" ? "servers" : "computers");
         }, [embeddedInResources, embeddedResourcesView]);
 
+        useEffect(() => () => {
+          if (environmentListActionMenuCloseTimerRef.current !== null) {
+            window.clearTimeout(environmentListActionMenuCloseTimerRef.current);
+            environmentListActionMenuCloseTimerRef.current = null;
+          }
+          if (environmentBulkActionMenuCloseTimerRef.current !== null) {
+            window.clearTimeout(environmentBulkActionMenuCloseTimerRef.current);
+            environmentBulkActionMenuCloseTimerRef.current = null;
+          }
+        }, []);
+
         useEffect(() => {
           if (resourceMode === "servers") {
             setResourcesOverviewHomeTab("general");
@@ -85645,6 +86614,46 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             || environmentListActionMenuState.environmentRecord
             || null;
         }, [environmentListActionMenuState, orderedEnvironments]);
+
+        function normalizeEnvironmentActionTarget(environmentRecord) {
+          const normalizedId = String(environmentRecord?.id || "").trim();
+          if (!normalizedId || normalizedId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+            return null;
+          }
+          const matchingEnvironment = environmentDetailsById[normalizedId]
+            || orderedEnvironments.find((environment) => String(environment?.id || "").trim() === normalizedId)
+            || environmentRecord
+            || null;
+          return matchingEnvironment ? normalizePlaygroundEnvironmentRecord(matchingEnvironment) : null;
+        }
+
+        function normalizeEnvironmentActionTargets(environmentRecords = []) {
+          const sourceRecords = Array.isArray(environmentRecords) ? environmentRecords : [environmentRecords];
+          const seen = new Set();
+          return sourceRecords
+            .map((environmentRecord) => normalizeEnvironmentActionTarget(environmentRecord))
+            .filter((environmentRecord) => {
+              const normalizedId = String(environmentRecord?.id || "").trim();
+              if (!normalizedId || seen.has(normalizedId)) {
+                return false;
+              }
+              seen.add(normalizedId);
+              return true;
+            });
+        }
+
+        function getEnvironmentActionTargetsByIds(environmentIds = []) {
+          const sourceIds = Array.isArray(environmentIds) ? environmentIds : [environmentIds];
+          return normalizeEnvironmentActionTargets(
+            sourceIds.map((environmentId) => {
+              const normalizedId = String(environmentId || "").trim();
+              if (!normalizedId) return null;
+              return environmentDetailsById[normalizedId]
+                || orderedEnvironments.find((environment) => String(environment?.id || "").trim() === normalizedId)
+                || null;
+            })
+          );
+        }
 
         const orderedServers = useMemo(() => {
           const activePreviewServers = Object.values(resourceTemplatePreviewServerRecordById)
@@ -86030,6 +87039,26 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             || ""
           );
         }, [availableEnvironmentShareTeams, environmentSharedTeamIdSet]);
+
+        function getDefaultEnvironmentShareTeamIdForEnvironments(targetEnvironments = []) {
+          const normalizedTargets = normalizeEnvironmentActionTargets(targetEnvironments);
+          if (normalizedTargets.length === 0) {
+            return defaultEnvironmentShareTeamId;
+          }
+          return (
+            availableEnvironmentShareTeams.find((team) => (
+              normalizedTargets.some((environmentRecord) => !getEnvironmentSharedTeamIds(environmentRecord).includes(team.id))
+            ))?.id
+            || availableEnvironmentShareTeams[0]?.id
+            || ""
+          );
+        }
+
+        function getEnvironmentShareTeamTargets() {
+          return environmentShareTeamTargetEnvironmentIds.length > 0
+            ? getEnvironmentActionTargetsByIds(environmentShareTeamTargetEnvironmentIds)
+            : normalizeEnvironmentActionTargets([environmentShareTeamTargetEnvironment || draftEnvironment]);
+        }
 
         const displayEnvironments = useMemo(() => {
           const items = [...orderedEnvironments];
@@ -89063,7 +90092,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         useEffect(() => {
           setResourcesOverviewFilter("all");
+          setResourcesOverviewSort("name");
+          setResourcesOverviewSortDirection("asc");
           setResourcesOverviewToolbarPopover("");
+          closeEnvironmentListActionMenu({ animate: false });
+          closeEnvironmentBulkActionMenu({ animate: false });
         }, [resourceMode]);
 
         useEffect(() => {
@@ -90889,8 +91922,54 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           openEnvironmentComposer();
         }
 
-        function closeEnvironmentListActionMenu() {
-          setEnvironmentListActionMenuState(null);
+        function clearEnvironmentListActionMenuCloseTimer() {
+          if (environmentListActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
+            window.clearTimeout(environmentListActionMenuCloseTimerRef.current);
+            environmentListActionMenuCloseTimerRef.current = null;
+          }
+        }
+
+        function clearEnvironmentBulkActionMenuCloseTimer() {
+          if (environmentBulkActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
+            window.clearTimeout(environmentBulkActionMenuCloseTimerRef.current);
+            environmentBulkActionMenuCloseTimerRef.current = null;
+          }
+        }
+
+        function closeEnvironmentListActionMenu(options = {}) {
+          if (!environmentListActionMenuState) {
+            return;
+          }
+          clearEnvironmentListActionMenuCloseTimer();
+          if (options?.animate === false || typeof window === "undefined") {
+            setEnvironmentListActionMenuClosing(false);
+            setEnvironmentListActionMenuState(null);
+            return;
+          }
+          setEnvironmentListActionMenuClosing(true);
+          environmentListActionMenuCloseTimerRef.current = window.setTimeout(() => {
+            environmentListActionMenuCloseTimerRef.current = null;
+            setEnvironmentListActionMenuClosing(false);
+            setEnvironmentListActionMenuState(null);
+          }, 90);
+        }
+
+        function closeEnvironmentBulkActionMenu(options = {}) {
+          if (!environmentBulkActionMenuState) {
+            return;
+          }
+          clearEnvironmentBulkActionMenuCloseTimer();
+          if (options?.animate === false || typeof window === "undefined") {
+            setEnvironmentBulkActionMenuClosing(false);
+            setEnvironmentBulkActionMenuState(null);
+            return;
+          }
+          setEnvironmentBulkActionMenuClosing(true);
+          environmentBulkActionMenuCloseTimerRef.current = window.setTimeout(() => {
+            environmentBulkActionMenuCloseTimerRef.current = null;
+            setEnvironmentBulkActionMenuClosing(false);
+            setEnvironmentBulkActionMenuState(null);
+          }, 90);
         }
 
         function getOverviewActionMenuPosition(event, menuHeight = 184, options = {}) {
@@ -90912,22 +91991,62 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return getSideActionMenuPosition(event, menuHeight, 220);
         }
 
+        function getOverviewContextMenuPosition(event, menuHeight = 184) {
+          const menuWidth = 220;
+          const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
+          const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+          const gutter = 12;
+          const maxLeft = Math.max(gutter, viewportWidth - menuWidth - gutter);
+          const maxTop = Math.max(gutter, viewportHeight - menuHeight - gutter);
+          return {
+            top: Math.max(gutter, Math.min(maxTop, Number(event?.clientY || 0))),
+            left: Math.max(gutter, Math.min(maxLeft, Number(event?.clientX || 0))),
+          };
+        }
+
         function openEnvironmentListActionMenu(event, environment, options = {}) {
           if (!environment?.id) {
             return;
           }
           event.preventDefault();
           event.stopPropagation();
-          const position = getOverviewActionMenuPosition(event, 184, options);
-          setEnvironmentListActionMenuState((current) =>
-            current?.environmentId === environment.id
-              ? null
-              : {
-                  environmentId: environment.id,
-                  environmentRecord: environment,
-                  ...position,
-                }
-          );
+          const position = options?.context
+            ? getOverviewContextMenuPosition(event, 224)
+            : getOverviewActionMenuPosition(event, 224, options);
+          if (!options?.context && environmentListActionMenuState?.environmentId === environment.id && !environmentListActionMenuClosing) {
+            closeEnvironmentListActionMenu();
+            return;
+          }
+          clearEnvironmentListActionMenuCloseTimer();
+          closeEnvironmentBulkActionMenu({ animate: false });
+          setEnvironmentListActionMenuClosing(false);
+          setEnvironmentListActionMenuState({
+            environmentId: environment.id,
+            environmentRecord: environment,
+            ...position,
+          });
+          setServerResourceActionMenuState(null);
+        }
+
+        function openEnvironmentBulkActionMenu(event, environmentIds = [], options = {}) {
+          const selectedIds = Array.isArray(environmentIds)
+            ? environmentIds.map((environmentId) => String(environmentId || "").trim()).filter(Boolean)
+            : [];
+          if (selectedIds.length < 2) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          const position = options?.context
+            ? getOverviewContextMenuPosition(event, 132)
+            : getOverviewActionMenuPosition(event, 132, options);
+          clearEnvironmentBulkActionMenuCloseTimer();
+          closeEnvironmentListActionMenu({ animate: false });
+          setEnvironmentBulkActionMenuClosing(false);
+          setEnvironmentBulkActionMenuState({
+            environmentIds: selectedIds,
+            ...position,
+          });
           setServerResourceActionMenuState(null);
         }
 
@@ -95667,6 +96786,77 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
         }
 
+        async function handleDeleteEnvironments(environmentRecords = []) {
+          const targets = normalizeEnvironmentActionTargets(environmentRecords)
+            .filter((environmentTarget) =>
+              environmentTarget?.id
+              && environmentTarget.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
+              && !environmentTarget.isSystem
+              && !environmentTarget.isDefault
+            );
+          if (targets.length === 0) {
+            return;
+          }
+          const prompt = targets.length === 1
+            ? "Delete this computer?"
+            : "Delete " + targets.length + " computers?";
+          if (!window.confirm(prompt)) {
+            return;
+          }
+
+          setSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            for (const target of targets) {
+              const response = await fetch(backendUrl + "/environments/" + encodeURIComponent(target.id), {
+                method: "DELETE",
+                headers: requestHeaders,
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to delete environment.");
+              }
+            }
+            const deletedIds = new Set(targets.map((target) => target.id));
+            setEnvironmentDetailsById((current) => {
+              const next = { ...current };
+              deletedIds.forEach((environmentId) => {
+                delete next[environmentId];
+              });
+              return next;
+            });
+            setSelectedOverviewComputerIds((current) => {
+              const next = new Set(current || []);
+              deletedIds.forEach((environmentId) => next.delete(environmentId));
+              return next;
+            });
+            if (deletedIds.has(selectedEnvironmentId)) {
+              const remainingEnvironments = orderedEnvironments.filter((environment) => !deletedIds.has(environment.id));
+              const fallbackEnvironment = remainingEnvironments.find((environment) => environment.isDefault) || remainingEnvironments[0] || null;
+              setSelectedEnvironmentId(fallbackEnvironment?.id || "");
+              setDraftEnvironment(null);
+            }
+            setSaveState({
+              isSaving: false,
+              error: "",
+              message: targets.length === 1 ? "Deleted" : "Deleted " + targets.length + " computers",
+            });
+            if (onEnvironmentMutated) {
+              await onEnvironmentMutated();
+            }
+          } catch (error) {
+            setSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to delete environments.",
+              message: "",
+            });
+          }
+        }
+
         function clearEnvironmentAutosaveQueue() {
           if (environmentAutosaveTimerRef.current) {
             window.clearTimeout(environmentAutosaveTimerRef.current);
@@ -96888,8 +98078,20 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           };
         }
 
-        function openEnvironmentShareTeamModal() {
-          if (!draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+        function openEnvironmentShareTeamModal(environmentRecord = null, options = {}) {
+          const targetEnvironmentIds = Array.isArray(options?.environmentIds)
+            ? options.environmentIds.map((environmentId) => String(environmentId || "").trim()).filter(Boolean)
+            : [];
+          const targetEnvironments = (targetEnvironmentIds.length > 0
+            ? getEnvironmentActionTargetsByIds(targetEnvironmentIds)
+            : normalizeEnvironmentActionTargets([environmentRecord || draftEnvironment])
+          ).filter((environmentTarget) =>
+            environmentTarget?.id
+            && environmentTarget.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
+            && !environmentTarget.isSystem
+            && !environmentTarget.isDefault
+          );
+          if (targetEnvironments.length === 0) {
             return;
           }
           if (typeof onWorkspaceTeamsRequest === "function") {
@@ -96904,7 +98106,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             environmentShareTeamModalFrameRef.current = null;
           }
           setEnvironmentShareTeamError("");
-          setEnvironmentShareTeamPickerValue(defaultEnvironmentShareTeamId);
+          setEnvironmentShareTeamTargetEnvironment(targetEnvironmentIds.length > 0 ? null : targetEnvironments[0]);
+          setEnvironmentShareTeamTargetEnvironmentIds(targetEnvironmentIds.length > 0 ? targetEnvironments.map((environmentTarget) => environmentTarget.id) : []);
+          setEnvironmentShareTeamPickerValue(getDefaultEnvironmentShareTeamIdForEnvironments(targetEnvironments));
           setEnvironmentShareTeamModalVisible(false);
           setEnvironmentShareTeamModalClosing(false);
           setEnvironmentShareTeamModalOpen(true);
@@ -96928,6 +98132,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setEnvironmentShareTeamModalVisible(false);
           setEnvironmentShareTeamModalClosing(false);
           setEnvironmentShareTeamModalOpen(false);
+          setEnvironmentShareTeamTargetEnvironment(null);
+          setEnvironmentShareTeamTargetEnvironmentIds([]);
           setEnvironmentShareTeamPickerValue("");
           setEnvironmentShareTeamError("");
           setEnvironmentShareTeamState({
@@ -96965,7 +98171,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         async function handleEnvironmentShareTeamSubmit(event) {
           event.preventDefault();
-          if (!draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+          const targetEnvironments = getEnvironmentShareTeamTargets()
+            .filter((environmentTarget) =>
+              environmentTarget?.id
+              && environmentTarget.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
+              && !environmentTarget.isSystem
+              && !environmentTarget.isDefault
+            );
+          if (targetEnvironments.length === 0) {
             setEnvironmentShareTeamError("Save this computer before sharing it with a team.");
             return;
           }
@@ -96974,8 +98187,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             setEnvironmentShareTeamError("Choose a team first.");
             return;
           }
-          if (environmentSharedTeamIdSet.has(normalizedTeamId)) {
-            setEnvironmentShareTeamError("This computer is already shared with that team.");
+          const shareTargets = targetEnvironments.filter((environmentTarget) => !getEnvironmentSharedTeamIds(environmentTarget).includes(normalizedTeamId));
+          if (shareTargets.length === 0) {
+            setEnvironmentShareTeamError(targetEnvironments.length > 1 ? "These computers are already shared with that team." : "This computer is already shared with that team.");
             return;
           }
           const selectedTeam = availableEnvironmentShareTeams.find((team) => team.id === normalizedTeamId) || null;
@@ -96990,26 +98204,40 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             error: "",
           });
           try {
-            const payload = buildEnvironmentTeamSharePayload(draftEnvironment, selectedTeam);
-            const { response, data } = await fetchJsonWithTimeout(backendUrl + "/teams/" + encodeURIComponent(normalizedTeamId) + "/resource-shares", {
-              method: "POST",
-              credentials: "include",
-              cache: "no-store",
-              headers: {
-                ...requestHeaders,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(payload),
-            }, 8000);
-            if (!response.ok && Number(response.status || 0) !== 409) {
-              throw new Error(data?.message || data?.error || "Failed to share computer with team.");
+            for (const targetEnvironment of shareTargets) {
+              const payload = buildEnvironmentTeamSharePayload(targetEnvironment, selectedTeam);
+              const { response, data } = await fetchJsonWithTimeout(backendUrl + "/teams/" + encodeURIComponent(normalizedTeamId) + "/resource-shares", {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+              }, 8000);
+              if (!response.ok && Number(response.status || 0) !== 409) {
+                throw new Error(data?.message || data?.error || "Failed to share computer with team.");
+              }
+              const nextEnvironment = applyEnvironmentSharedTeam(targetEnvironment, normalizedTeamId);
+              const savedEnvironment = await persistEnvironmentRecord(nextEnvironment);
+              const mergedEnvironment = normalizePlaygroundEnvironmentRecord({
+                ...nextEnvironment,
+                ...savedEnvironment,
+                metadata: savedEnvironment?.metadata || nextEnvironment.metadata,
+              });
+              setEnvironmentDetailsById((current) => ({
+                ...current,
+                [mergedEnvironment.id]: mergedEnvironment,
+              }));
+              if (selectedEnvironmentId === mergedEnvironment.id) {
+                setDraftEnvironment(mergedEnvironment);
+                rememberEnvironmentVersionBaseline(mergedEnvironment, { force: true });
+              }
             }
-            const nextEnvironment = applyEnvironmentSharedTeam(draftEnvironment, normalizedTeamId);
-            await commitVersionedEnvironmentRecord(nextEnvironment, {
-              loadingMessage: "Sharing computer...",
-              successMessage: "Shared with team",
-              errorMessage: "Computer was shared, but local sharing metadata could not be saved.",
-            });
+            if (typeof onEnvironmentMutated === "function") {
+              await onEnvironmentMutated();
+            }
             if (typeof onWorkspaceTeamsRequest === "function") {
               onWorkspaceTeamsRequest({
                 selectedTeamId: normalizedTeamId,
@@ -97026,6 +98254,118 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               error: message,
             });
           }
+        }
+
+        function renderEnvironmentShareTeamModalElement() {
+          if (!environmentShareTeamModalOpen) {
+            return null;
+          }
+          const targetEnvironments = getEnvironmentShareTeamTargets()
+            .filter((environmentTarget) =>
+              environmentTarget?.id
+              && environmentTarget.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
+              && !environmentTarget.isSystem
+              && !environmentTarget.isDefault
+            );
+          const targetEnvironmentCount = targetEnvironments.length;
+          const isSharingEnvironmentToTeam = environmentShareTeamState.action === "share";
+          const selectedTeamId = String(environmentShareTeamPickerValue || "").trim();
+          const selectedTeamAlreadyShared = targetEnvironmentCount > 0 && targetEnvironments.every((environmentTarget) => getEnvironmentSharedTeamIds(environmentTarget).includes(selectedTeamId));
+          const hasManageableTeams = availableEnvironmentShareTeams.length > 0;
+          const showTeamsLoading = workspaceTeamsLoading && !hasManageableTeams;
+          const selectedTeam = availableEnvironmentShareTeams.find((team) => team.id === environmentShareTeamPickerValue) || null;
+          const modal = renderPlaygroundPlatformModal({
+            open: environmentShareTeamModalOpen,
+            visible: environmentShareTeamModalVisible,
+            closing: environmentShareTeamModalClosing,
+            onClose: () => closeEnvironmentShareTeamModal(),
+            as: "form",
+            backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-send-team-modal-backdrop playground-computer-share-team-modal-backdrop",
+            className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-send-team-modal playground-computer-share-team-modal",
+            ariaLabel: targetEnvironmentCount > 1 ? "Share computers with team" : "Share computer with team",
+            surfaceProps: {
+              onSubmit: (event) => {
+                void handleEnvironmentShareTeamSubmit(event);
+              },
+            },
+            children: React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                  React.createElement("div", {
+                    className: "playground-content-title playground-tasks-project-modal-name-input",
+                    style: { display: "flex", alignItems: "center" },
+                  }, targetEnvironmentCount > 1 ? "Share " + targetEnvironmentCount + " Computers with Team" : "Share with Team"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: () => closeEnvironmentShareTeamModal(),
+                    disabled: isSharingEnvironmentToTeam,
+                    title: "Close",
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-issue-modal-body playground-agents-send-team-modal-body" },
+                showTeamsLoading
+                  ? React.createElement("div", { className: "playground-agents-send-team-empty" },
+                      React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                      React.createElement("span", null, "Loading teams...")
+                    )
+                  : workspaceTeamsRequiresPlan
+                    ? React.createElement("div", { className: "playground-agents-send-team-empty" }, "Teams are not available on this workspace plan.")
+                    : hasManageableTeams
+                      ? React.createElement("div", { className: "playground-agents-send-team-list", role: "radiogroup", "aria-label": "Teams" },
+                          availableEnvironmentShareTeams.map((team) => {
+                            const isSelected = team.id === environmentShareTeamPickerValue;
+                            const sharedCount = targetEnvironments.filter((environmentTarget) => getEnvironmentSharedTeamIds(environmentTarget).includes(team.id)).length;
+                            const isShared = targetEnvironmentCount > 0 && sharedCount === targetEnvironmentCount;
+                            const teamMeta = targetEnvironmentCount > 1
+                              ? (sharedCount > 0 ? sharedCount + "/" + targetEnvironmentCount + " already shared" : team.roleLabel)
+                              : (isShared ? "Already shared" : team.roleLabel);
+                            return React.createElement("button", {
+                                key: team.id,
+                                type: "button",
+                                className: "playground-agents-send-team-option" + (isSelected ? " is-selected" : "") + (isShared ? " is-shared" : ""),
+                                onClick: () => setEnvironmentShareTeamPickerValue(team.id),
+                                disabled: isSharingEnvironmentToTeam,
+                                role: "radio",
+                                "aria-checked": isSelected ? "true" : "false",
+                              },
+                              React.createElement("span", { className: "playground-agents-send-team-option-icon", "aria-hidden": "true" },
+                                React.createElement(UsersRound, { width: 15, height: 15, strokeWidth: 1.85 })
+                              ),
+                              React.createElement("span", { className: "playground-agents-send-team-option-copy" },
+                                React.createElement("span", { className: "playground-agents-send-team-option-title" }, team.name),
+                                React.createElement("span", { className: "playground-agents-send-team-option-meta" }, teamMeta)
+                              ),
+                              isSelected
+                                ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            );
+                          })
+                        )
+                      : React.createElement("div", { className: "playground-agents-send-team-empty" }, "No teams are available yet.")
+              ),
+              environmentShareTeamError
+                ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, environmentShareTeamError)
+                : null,
+              React.createElement("div", { className: "playground-tasks-project-modal-actions playground-agents-send-team-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button",
+                  onClick: () => closeEnvironmentShareTeamModal(),
+                  disabled: isSharingEnvironmentToTeam,
+                }, "Cancel"),
+                React.createElement("button", {
+                  type: "submit",
+                  className: "playground-environments-action-button is-primary",
+                  disabled: isSharingEnvironmentToTeam || !selectedTeam || selectedTeamAlreadyShared,
+                }, isSharingEnvironmentToTeam ? "Sharing..." : "Share")
+              )
+            )
+          });
+          return modal && typeof createPortal === "function" && typeof document !== "undefined" && document.body
+            ? createPortal(modal, document.body)
+            : modal;
         }
 
         function openEnvironmentApiModal() {
@@ -98718,62 +100058,172 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const isProtected = Boolean(environmentListActionTarget.isSystem || environmentListActionTarget.isDefault);
           const isDeleting = saveState.isSaving && environmentListActionTarget.id === selectedEnvironmentId;
           const isCopying = fileEnvironmentMutationState.action === "fork" && fileEnvironmentMutationState.environmentId === environmentListActionTarget.id;
+          const isSharing = environmentShareTeamState.action === "share";
           const menuStyle = {
+            position: "fixed",
             top: environmentListActionMenuState.top + "px",
           };
           if (Number.isFinite(environmentListActionMenuState.right)) {
             menuStyle.right = environmentListActionMenuState.right + "px";
+            menuStyle.left = "auto";
           } else {
             menuStyle.left = environmentListActionMenuState.left + "px";
+            menuStyle.right = "auto";
           }
 
-          return React.createElement("div", {
+          const menuElement = React.createElement("div", {
               className: "sidebar-thread-popup-scrim",
+              style: { zIndex: 360 },
               onClick: closeEnvironmentListActionMenu,
             },
               React.createElement("div", {
-                className: "sidebar-thread-popup is-agent-list-action-menu",
+                className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
                 style: menuStyle,
                 onClick: (event) => event.stopPropagation(),
               },
-                React.createElement("div", { className: "sidebar-thread-popup-title" }, "Computer"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-thread-popup-row",
-                  onClick: () => {
-                    closeEnvironmentListActionMenu();
-                    openEnvironmentRenameDialog(environmentListActionTarget);
-                  },
-                  disabled: isProtected || isDeleting || isCopying,
+                React.createElement("div", {
+                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu" + (environmentListActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
+                  role: "menu",
                 },
-                  React.createElement(SquarePen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
-                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, "Rename")
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-thread-popup-row",
-                  onClick: () => {
-                    void handleCopyEnvironmentFromMenu(environmentListActionTarget);
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      closeEnvironmentListActionMenu();
+                      openEnvironmentRenameDialog(environmentListActionTarget);
+                    },
+                    disabled: isProtected || isDeleting || isCopying || isSharing,
                   },
-                  disabled: isDeleting || isCopying,
-                },
-                  React.createElement(Copy, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
-                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isCopying ? "Copying..." : "Copy")
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-thread-popup-row is-danger",
-                  onClick: () => {
-                    closeEnvironmentListActionMenu();
-                    void handleDeleteEnvironment(environmentListActionTarget.id);
+                    React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                      React.createElement("span", null, "Rename")
+                    )
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      closeEnvironmentListActionMenu({ animate: false });
+                      openEnvironmentShareTeamModal(environmentListActionTarget);
+                    },
+                    disabled: isProtected || isDeleting || isCopying || isSharing,
                   },
-                  disabled: isProtected || isDeleting || isCopying,
-                },
-                  React.createElement(Trash2, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
-                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isDeleting ? "Deleting..." : "Delete")
+                    React.createElement(UsersRound, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                      React.createElement("span", null, "Share with Team")
+                    )
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      void handleCopyEnvironmentFromMenu(environmentListActionTarget);
+                    },
+                    disabled: isDeleting || isCopying || isSharing,
+                  },
+                    React.createElement(Copy, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                      React.createElement("span", null, isCopying ? "Copying..." : "Copy")
+                    )
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row is-danger",
+                    onClick: () => {
+                      closeEnvironmentListActionMenu();
+                      void handleDeleteEnvironment(environmentListActionTarget.id);
+                    },
+                    disabled: isProtected || isDeleting || isCopying || isSharing,
+                  },
+                    React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                      React.createElement("span", null, isDeleting ? "Deleting..." : "Delete")
+                    )
+                  )
                 )
               )
             );
+          return typeof createPortal === "function" && typeof document !== "undefined" && document.body
+            ? createPortal(menuElement, document.body)
+            : menuElement;
+        }
+
+        function renderEnvironmentBulkActionMenu() {
+          if (!environmentBulkActionMenuState) {
+            return null;
+          }
+          const bulkEnvironments = getEnvironmentActionTargetsByIds(environmentBulkActionMenuState.environmentIds);
+          if (bulkEnvironments.length < 2) {
+            return null;
+          }
+          const bulkEnvironmentIds = bulkEnvironments.map((environmentTarget) => environmentTarget.id);
+          const mutableTargets = bulkEnvironments.filter((environmentTarget) => !environmentTarget?.isDefault && !environmentTarget?.isSystem);
+          const isSharing = environmentShareTeamState.action === "share";
+          const menuStyle = {
+            position: "fixed",
+            top: environmentBulkActionMenuState.top + "px",
+            left: environmentBulkActionMenuState.left + "px",
+            right: "auto",
+          };
+          if (Number.isFinite(environmentBulkActionMenuState.right)) {
+            menuStyle.right = environmentBulkActionMenuState.right + "px";
+            menuStyle.left = "auto";
+          }
+
+          const menuElement = React.createElement("div", {
+              className: "sidebar-thread-popup-scrim",
+              style: { zIndex: 360 },
+              onClick: closeEnvironmentBulkActionMenu,
+            },
+              React.createElement("div", {
+                className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
+                style: menuStyle,
+                onClick: (event) => event.stopPropagation(),
+              },
+                React.createElement("div", {
+                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu" + (environmentBulkActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
+                  role: "menu",
+                },
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      closeEnvironmentBulkActionMenu({ animate: false });
+                      openEnvironmentShareTeamModal(null, { environmentIds: bulkEnvironmentIds });
+                    },
+                    disabled: saveState.isSaving || isSharing || mutableTargets.length === 0,
+                  },
+                    React.createElement(UsersRound, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                      React.createElement("span", null, "Share with Team")
+                    )
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row is-danger",
+                    onClick: () => {
+                      closeEnvironmentBulkActionMenu({ animate: false });
+                      void handleDeleteEnvironments(mutableTargets);
+                    },
+                    disabled: saveState.isSaving || isSharing || mutableTargets.length === 0,
+                  },
+                    React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                      React.createElement("span", null, "Delete")
+                    )
+                  )
+                )
+              )
+            );
+          return typeof createPortal === "function" && typeof document !== "undefined" && document.body
+            ? createPortal(menuElement, document.body)
+            : menuElement;
         }
 
         function renderServerResourceActionMenu() {
@@ -108582,102 +110032,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
 
           function renderEnvironmentShareTeamModal() {
-            if (!environmentShareTeamModalOpen) {
-              return null;
-            }
-            const isSharingEnvironmentToTeam = environmentShareTeamState.action === "share";
-            const selectedTeamAlreadyShared = environmentSharedTeamIdSet.has(String(environmentShareTeamPickerValue || "").trim());
-            const hasManageableTeams = availableEnvironmentShareTeams.length > 0;
-            const showTeamsLoading = workspaceTeamsLoading && !hasManageableTeams;
-            const selectedTeam = availableEnvironmentShareTeams.find((team) => team.id === environmentShareTeamPickerValue) || null;
-            const modal = renderPlaygroundPlatformModal({
-              open: environmentShareTeamModalOpen,
-              visible: environmentShareTeamModalVisible,
-              closing: environmentShareTeamModalClosing,
-              onClose: () => closeEnvironmentShareTeamModal(),
-              as: "form",
-              backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-send-team-modal-backdrop playground-computer-share-team-modal-backdrop",
-              className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-send-team-modal playground-computer-share-team-modal",
-              ariaLabel: "Share computer with team",
-              surfaceProps: {
-                onSubmit: (event) => {
-                  void handleEnvironmentShareTeamSubmit(event);
-                },
-              },
-              children: React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                    React.createElement("div", {
-                      className: "playground-content-title playground-tasks-project-modal-name-input",
-                      style: { display: "flex", alignItems: "center" },
-                    }, "Share with Team"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: () => closeEnvironmentShareTeamModal(),
-                      disabled: isSharingEnvironmentToTeam,
-                      title: "Close",
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  )
-                ),
-                React.createElement("div", { className: "playground-tasks-issue-modal-body playground-agents-send-team-modal-body" },
-                  showTeamsLoading
-                    ? React.createElement("div", { className: "playground-agents-send-team-empty" },
-                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                        React.createElement("span", null, "Loading teams...")
-                      )
-                    : workspaceTeamsRequiresPlan
-                      ? React.createElement("div", { className: "playground-agents-send-team-empty" }, "Teams are not available on this workspace plan.")
-                      : hasManageableTeams
-                        ? React.createElement("div", { className: "playground-agents-send-team-list", role: "radiogroup", "aria-label": "Teams" },
-                            availableEnvironmentShareTeams.map((team) => {
-                              const isSelected = team.id === environmentShareTeamPickerValue;
-                              const isShared = environmentSharedTeamIdSet.has(team.id);
-                              return React.createElement("button", {
-                                  key: team.id,
-                                  type: "button",
-                                  className: "playground-agents-send-team-option" + (isSelected ? " is-selected" : "") + (isShared ? " is-shared" : ""),
-                                  onClick: () => setEnvironmentShareTeamPickerValue(team.id),
-                                  disabled: isSharingEnvironmentToTeam,
-                                  role: "radio",
-                                  "aria-checked": isSelected ? "true" : "false",
-                                },
-                                React.createElement("span", { className: "playground-agents-send-team-option-icon", "aria-hidden": "true" },
-                                  React.createElement(UsersRound, { width: 15, height: 15, strokeWidth: 1.85 })
-                                ),
-                                React.createElement("span", { className: "playground-agents-send-team-option-copy" },
-                                  React.createElement("span", { className: "playground-agents-send-team-option-title" }, team.name),
-                                  React.createElement("span", { className: "playground-agents-send-team-option-meta" }, isShared ? "Already shared" : team.roleLabel)
-                                ),
-                                isSelected
-                                  ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
-                                  : null
-                              );
-                            })
-                          )
-                        : React.createElement("div", { className: "playground-agents-send-team-empty" }, "No teams are available yet.")
-                ),
-                environmentShareTeamError
-                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, environmentShareTeamError)
-                  : null,
-                React.createElement("div", { className: "playground-tasks-project-modal-actions playground-agents-send-team-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button",
-                    onClick: () => closeEnvironmentShareTeamModal(),
-                    disabled: isSharingEnvironmentToTeam,
-                  }, "Cancel"),
-                  React.createElement("button", {
-                    type: "submit",
-                    className: "playground-environments-action-button is-primary",
-                    disabled: isSharingEnvironmentToTeam || !selectedTeam || selectedTeamAlreadyShared,
-                  }, isSharingEnvironmentToTeam ? "Sharing..." : "Share")
-                )
-              )
-            });
-            return modal && typeof createPortal === "function" && typeof document !== "undefined" && document.body
-              ? createPortal(modal, document.body)
-              : modal;
+            return renderEnvironmentShareTeamModalElement();
           }
 
           function renderEnvironmentApiModal() {
@@ -108906,7 +110261,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             desktopOverlay,
             renderEnvironmentVersionsSidebarPortal(),
             renderEnvironmentVersionModal(),
-            renderEnvironmentShareTeamModal(),
+            renderEnvironmentShareTeamModalElement(),
             renderEnvironmentApiModal()
           );
         }
@@ -111185,7 +112540,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             },
               React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }),
               shouldShowCreateLabel
-                ? React.createElement("span", null, isServersMode ? (embeddedServerKindLabel || "Resource") : "Computer")
+                ? React.createElement("span", null, isServersMode ? (embeddedServerKindLabel || "Resource") : "New Computer")
                 : null
             )
           );
@@ -111198,6 +112553,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         };
         const shouldHideResourcesTopNavActions = environmentVersionsSidebarOpen
           || serverVersionsSidebarOpen
+          || (embeddedInResources && !isServersMode && shouldShowEnvironmentHome)
           || (!isServersMode && !shouldShowEnvironmentHome && Boolean(selectedEnvironmentId));
         const resourcesTopNavActions = topNavActionsContainer && !shouldHideResourcesTopNavActions
           ? createPortal(
@@ -111228,10 +112584,92 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 { id: "stopped", label: "Stopped", description: "Only show stopped computers" },
               ];
           const resourcesOverviewSortOptions = [
-            { id: "name", label: "Name (A-Z)" },
-            { id: "updated", label: "Recently Updated" },
+            { id: "name", label: "Name (A-Z)", sortKey: "name", direction: "asc" },
+            { id: "updated", label: "Recently Updated", sortKey: "updated", direction: "desc" },
           ];
+          const normalizeResourcesOverviewSortDirection = (direction) =>
+            direction === "desc" ? "desc" : "asc";
+          const normalizedResourcesOverviewSortDirection = normalizeResourcesOverviewSortDirection(resourcesOverviewSortDirection);
           const baseOverviewItems = isServersMode ? filteredOverviewServerResources : filteredOverviewEnvironments;
+          const getOverviewResourceCreatedAt = (item) => item?.createdAt || item?.metadata?.createdAt || "";
+          const getOverviewResourceLastUsedAt = (item) => {
+            const metadata = item?.metadata && typeof item.metadata === "object" && !Array.isArray(item.metadata)
+              ? item.metadata
+              : null;
+            const billingState = metadata?.resourceBilling && typeof metadata.resourceBilling === "object" && !Array.isArray(metadata.resourceBilling)
+              ? metadata.resourceBilling
+              : null;
+            const candidates = [
+              item?.lastUsedAt,
+              item?.lastRunAt,
+              metadata?.lastUsedAt,
+              metadata?.lastRunAt,
+              item?.lastDeployedAt,
+              billingState?.activeSessionLastSettledAt,
+              billingState?.activeSessionStartedAt,
+              billingState?.lastSettledAt,
+              billingState?.activeSince,
+              item?.updatedAt,
+            ];
+            let selected = "";
+            let selectedTimestamp = 0;
+            candidates.forEach((value) => {
+              const timestamp = Date.parse(String(value || ""));
+              if (Number.isFinite(timestamp) && timestamp > selectedTimestamp) {
+                selectedTimestamp = timestamp;
+                selected = value;
+              }
+            });
+            return selected;
+          };
+          const getOverviewResourceDisplayName = (item) =>
+            String(item?.name || (isServersMode ? "Untitled Server" : "Untitled Computer")).trim();
+          const getOverviewResourceProfileLabel = (item) =>
+            String(getPlaygroundEnvironmentComputeProfileConfig(item?.computeProfile)?.label || "Standard").trim();
+          const getOverviewResourceTimestamp = (value) => {
+            const timestamp = Date.parse(String(value || ""));
+            return Number.isFinite(timestamp) ? timestamp : 0;
+          };
+          const getOverviewResourceUpdatedTimestamp = (item) =>
+            getOverviewResourceTimestamp(item?.updatedAt || item?.metadata?.updatedAt || item?.createdAt || item?.metadata?.createdAt || "");
+          const getOverviewResourceSortValue = (item, sortKey) => {
+            switch (sortKey) {
+              case "profile":
+                return getOverviewResourceProfileLabel(item);
+              case "created":
+                return getOverviewResourceTimestamp(getOverviewResourceCreatedAt(item));
+              case "lastUsed":
+                return getOverviewResourceTimestamp(getOverviewResourceLastUsedAt(item));
+              case "updated":
+                return getOverviewResourceUpdatedTimestamp(item);
+              case "name":
+              default:
+                return getOverviewResourceDisplayName(item);
+            }
+          };
+          const compareOverviewResourceSortValues = (left, right, sortKey) => {
+            const leftValue = getOverviewResourceSortValue(left, sortKey);
+            const rightValue = getOverviewResourceSortValue(right, sortKey);
+            if (typeof leftValue === "number" || typeof rightValue === "number") {
+              const leftNumber = typeof leftValue === "number" && Number.isFinite(leftValue) ? leftValue : 0;
+              const rightNumber = typeof rightValue === "number" && Number.isFinite(rightValue) ? rightValue : 0;
+              if (leftNumber !== rightNumber) {
+                return leftNumber - rightNumber;
+              }
+            } else {
+              const textComparison = String(leftValue || "").localeCompare(String(rightValue || ""), undefined, {
+                numeric: true,
+                sensitivity: "base",
+              });
+              if (textComparison !== 0) {
+                return textComparison;
+              }
+            }
+            return getOverviewResourceDisplayName(left).localeCompare(getOverviewResourceDisplayName(right), undefined, {
+              numeric: true,
+              sensitivity: "base",
+            });
+          };
           const isOverviewResourcePublished = (item) => item?.resourceType === "database"
             ? String(item?.status || "").trim().toLowerCase() === "active"
             : (
@@ -111267,17 +112705,42 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             })
             .slice()
             .sort((left, right) => {
-              if (resourcesOverviewSort === "updated") {
-                const leftUpdatedAt = Date.parse(String(left?.updatedAt || left?.createdAt || ""));
-                const rightUpdatedAt = Date.parse(String(right?.updatedAt || right?.createdAt || ""));
-                const leftValue = Number.isFinite(leftUpdatedAt) ? leftUpdatedAt : 0;
-                const rightValue = Number.isFinite(rightUpdatedAt) ? rightUpdatedAt : 0;
-                if (leftValue !== rightValue) {
-                  return rightValue - leftValue;
-                }
-              }
-              return String(left?.name || "").localeCompare(String(right?.name || ""));
+              const baseComparison = compareOverviewResourceSortValues(left, right, resourcesOverviewSort);
+              return normalizedResourcesOverviewSortDirection === "desc" ? -baseComparison : baseComparison;
             });
+          const visibleOverviewComputerIds = !isServersMode
+            ? overviewItems.map((item) => String(item?.id || "").trim()).filter(Boolean)
+            : [];
+          const selectedVisibleOverviewComputerIds = visibleOverviewComputerIds.filter((computerId) => selectedOverviewComputerIds.has(computerId));
+          const allVisibleOverviewComputersSelected = visibleOverviewComputerIds.length > 0 && selectedVisibleOverviewComputerIds.length === visibleOverviewComputerIds.length;
+          const hasPartialVisibleOverviewComputerSelection = selectedVisibleOverviewComputerIds.length > 0 && !allVisibleOverviewComputersSelected;
+          const toggleOverviewComputerSelection = (computerId) => {
+            const normalizedComputerId = String(computerId || "").trim();
+            if (!normalizedComputerId) return;
+            setSelectedOverviewComputerIds((current) => {
+              const next = new Set(current || []);
+              if (next.has(normalizedComputerId)) {
+                next.delete(normalizedComputerId);
+              } else {
+                next.add(normalizedComputerId);
+              }
+              return next;
+            });
+          };
+          const toggleVisibleOverviewComputerSelection = () => {
+            if (visibleOverviewComputerIds.length === 0) {
+              return;
+            }
+            setSelectedOverviewComputerIds((current) => {
+              const next = new Set(current || []);
+              if (allVisibleOverviewComputersSelected) {
+                visibleOverviewComputerIds.forEach((computerId) => next.delete(computerId));
+              } else {
+                visibleOverviewComputerIds.forEach((computerId) => next.add(computerId));
+              }
+              return next;
+            });
+          };
           const overviewTitle = isServersMode ? (embeddedServerKindPluralLabel || "Servers") : "Computers";
           const overviewTableColumns = isServersMode
             ? [
@@ -111295,37 +112758,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 { id: "last-used", label: "Last used", width: "150px", align: "right" },
                 { id: "actions", label: "", width: "64px", align: "action" },
               ];
-          const getOverviewResourceCreatedAt = (item) => item?.createdAt || item?.metadata?.createdAt || "";
-          const getOverviewResourceLastUsedAt = (item) => {
-            const metadata = item?.metadata && typeof item.metadata === "object" && !Array.isArray(item.metadata)
-              ? item.metadata
-              : null;
-            const billingState = metadata?.resourceBilling && typeof metadata.resourceBilling === "object" && !Array.isArray(metadata.resourceBilling)
-              ? metadata.resourceBilling
-              : null;
-            const candidates = [
-              item?.lastUsedAt,
-              item?.lastRunAt,
-              metadata?.lastUsedAt,
-              metadata?.lastRunAt,
-              item?.lastDeployedAt,
-              billingState?.activeSessionLastSettledAt,
-              billingState?.activeSessionStartedAt,
-              billingState?.lastSettledAt,
-              billingState?.activeSince,
-              item?.updatedAt,
-            ];
-            let selected = "";
-            let selectedTimestamp = 0;
-            candidates.forEach((value) => {
-              const timestamp = Date.parse(String(value || ""));
-              if (Number.isFinite(timestamp) && timestamp > selectedTimestamp) {
-                selectedTimestamp = timestamp;
-                selected = value;
-              }
-            });
-            return selected;
-          };
           const renderOverviewResourceIcon = (item) => {
             if (!isServersMode) {
               return React.createElement(HardDrive, { width: 17, height: 17, strokeWidth: 1.8 });
@@ -111367,9 +112799,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const title = item?.name || (isServersMode ? "Untitled Server" : "Untitled Computer");
             const description = String(item?.description || (isServersMode ? getEmbeddedServerKindLabel(item) : "Computer")).trim();
             return React.createElement("div", { className: "playground-resources-overview-name-cell" },
-              React.createElement("span", { className: "playground-resources-overview-table-icon", "aria-hidden": "true" },
-                renderOverviewResourceIcon(item)
-              ),
+              isServersMode
+                ? React.createElement("span", { className: "playground-resources-overview-table-icon", "aria-hidden": "true" },
+                    renderOverviewResourceIcon(item)
+                  )
+                : null,
               React.createElement("div", { className: "playground-resources-overview-name-copy" },
                 React.createElement("div", { className: "playground-resources-overview-name-title" }, title),
                 React.createElement("div", {
@@ -111668,12 +113102,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             );
           };
           const renderOverviewResourceActionCell = (item, elementTag = "td", options = {}) => {
+            const normalizedOverviewComputerId = String(item?.id || "").trim();
             const isMenuOpen = isServersMode
               ? (
                   serverResourceActionMenuState?.resourceId === item.id
                   && serverResourceActionMenuState?.resourceType === (item.resourceType === "database" ? "database" : "server")
                 )
-              : environmentListActionMenuState?.environmentId === item.id;
+              : (
+                  environmentListActionMenuState?.environmentId === item.id
+                  || (
+                    normalizedOverviewComputerId
+                    && environmentBulkActionMenuState
+                    && Array.isArray(environmentBulkActionMenuState.environmentIds)
+                    && environmentBulkActionMenuState.environmentIds.includes(normalizedOverviewComputerId)
+                  )
+                );
             const Tag = elementTag || "td";
             const className = Tag === "td"
               ? "playground-overview-table-action-cell"
@@ -111685,8 +113128,19 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 onClick: (event) => {
                   if (isServersMode) {
                     openServerResourceActionMenu(event, item, options);
+                  } else if (normalizedOverviewComputerId && selectedOverviewComputerIds.has(normalizedOverviewComputerId) && selectedOverviewComputerIds.size > 1) {
+                    openEnvironmentBulkActionMenu(event, Array.from(selectedOverviewComputerIds || []), options);
                   } else {
                     openEnvironmentListActionMenu(event, item, options);
+                  }
+                },
+                onContextMenu: (event) => {
+                  if (isServersMode) {
+                    openServerResourceActionMenu(event, item, { context: true });
+                  } else if (normalizedOverviewComputerId && selectedOverviewComputerIds.has(normalizedOverviewComputerId) && selectedOverviewComputerIds.size > 1) {
+                    openEnvironmentBulkActionMenu(event, Array.from(selectedOverviewComputerIds || []), { context: true });
+                  } else {
+                    openEnvironmentListActionMenu(event, item, { context: true });
                   }
                 },
                 onKeyDown: (event) => event.stopPropagation(),
@@ -111702,6 +113156,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const createdAt = getOverviewResourceCreatedAt(item);
             const lastUsedAt = getOverviewResourceLastUsedAt(item);
             const itemName = item?.name || "Untitled Computer";
+            const normalizedComputerId = String(item?.id || "").trim();
+            const isOverviewComputerSelected = selectedOverviewComputerIds.has(normalizedComputerId);
+            const openComputerOverviewActionMenu = (event, options = {}) => {
+              if (isOverviewComputerSelected && selectedOverviewComputerIds.size > 1) {
+                openEnvironmentBulkActionMenu(event, Array.from(selectedOverviewComputerIds || []), options);
+                return;
+              }
+              openEnvironmentListActionMenu(event, item, options);
+            };
             return React.createElement("div", {
                 key: item.id,
                 tabIndex: 0,
@@ -111709,6 +113172,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 className: "playground-project-overview-threads-table-row",
                 "aria-label": "Open " + itemName,
                 onClick: () => openOverviewResourceItem(item),
+                onContextMenu: (event) => openComputerOverviewActionMenu(event, { context: true }),
                 onKeyDown: (event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
@@ -111716,6 +113180,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   }
                 },
               },
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-overview-select-checkbox" + (isOverviewComputerSelected ? " is-selected" : ""),
+                  role: "checkbox",
+                  "aria-checked": isOverviewComputerSelected ? "true" : "false",
+                  "aria-label": "Select " + itemName,
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleOverviewComputerSelection(normalizedComputerId);
+                  },
+                  onKeyDown: (event) => event.stopPropagation(),
+                })
+              ),
               React.createElement("div", { className: "playground-project-overview-thread-cell is-name" }, renderOverviewResourceNameCell(item)),
               React.createElement("div", { className: "playground-project-overview-thread-cell is-profile" },
                 React.createElement("div", { className: "playground-agents-overview-table-value" }, profile?.label || "Standard")
@@ -111730,12 +113209,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const createdAt = getOverviewResourceCreatedAt(item);
             const lastUsedAt = getOverviewResourceLastUsedAt(item);
             const itemName = item?.name || "Untitled Computer";
+            const normalizedComputerId = String(item?.id || "").trim();
+            const isOverviewComputerSelected = selectedOverviewComputerIds.has(normalizedComputerId);
+            const openComputerOverviewActionMenu = (event, options = {}) => {
+              if (isOverviewComputerSelected && selectedOverviewComputerIds.size > 1) {
+                openEnvironmentBulkActionMenu(event, Array.from(selectedOverviewComputerIds || []), options);
+                return;
+              }
+              openEnvironmentListActionMenu(event, item, options);
+            };
             return React.createElement("tr", {
                 key: item.id,
                 tabIndex: 0,
                 role: "button",
                 "aria-label": "Open " + itemName,
                 onClick: () => openOverviewResourceItem(item),
+                onContextMenu: (event) => openComputerOverviewActionMenu(event, { context: true }),
                 onKeyDown: (event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
@@ -112122,8 +113611,23 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            && resourcesOverviewFilter === "all";
 		          const overviewResourceLoadingLabel = isServersMode ? currentServerResourcesLabel.toLowerCase() : "computers";
 			          const developConfigureResourcesLabel = isServersMode ? currentServerResourcesLabel : "Computers";
+			          const computerOverviewCreateButton = !isServersMode
+			            ? React.createElement("button", {
+			                type: "button",
+			                className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button playground-resources-overview-create-button",
+			                onClick: () => {
+			                  setResourcesOverviewToolbarPopover("");
+			                  handleCreateEnvironment();
+			                },
+			                title: "Create computer",
+			                "aria-label": "Create computer",
+			              },
+			                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+			                React.createElement("span", null, "New Computer")
+			              )
+			            : null;
 			          const overviewSearchSortFilterRow = React.createElement("div", {
-			              className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar",
+			              className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar" + (!isServersMode ? " playground-computers-overview-toolbar-row" : ""),
 			              ref: resourcesOverviewToolbarRef,
 			            },
 			            isServersMode
@@ -112144,26 +113648,27 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 			              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
 			                React.createElement("button", {
 			                  type: "button",
-		                  className: "playground-files-control-button is-bare is-backlog-sort" + (resourcesOverviewToolbarPopover === "sort" || resourcesOverviewSort !== "name" ? " is-active" : ""),
+		                  className: "playground-files-control-button is-bare is-backlog-sort" + (resourcesOverviewToolbarPopover === "sort" || resourcesOverviewSort !== "name" || normalizedResourcesOverviewSortDirection !== "asc" ? " is-active" : ""),
 		                  onClick: () => setResourcesOverviewToolbarPopover((current) => current === "sort" ? "" : "sort"),
 		                },
 		                  React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
 		                  React.createElement("span", null, "Sort")
 		                ),
 		                resourcesOverviewToolbarPopover === "sort"
-		                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+		                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-computers-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
 		                      resourcesOverviewSortOptions.map((option) =>
 		                        React.createElement("button", {
 		                            key: option.id,
 		                            type: "button",
-		                            className: "tb-popup-row tb-popup-row-select" + (resourcesOverviewSort === option.id ? " selected" : ""),
+		                            className: "tb-popup-row tb-popup-row-select" + (resourcesOverviewSort === (option.sortKey || option.id) && normalizedResourcesOverviewSortDirection === normalizeResourcesOverviewSortDirection(option.direction) ? " selected" : ""),
 		                            onClick: () => {
-		                              setResourcesOverviewSort(option.id);
+		                              setResourcesOverviewSort(option.sortKey || option.id);
+		                              setResourcesOverviewSortDirection(normalizeResourcesOverviewSortDirection(option.direction));
 		                              setResourcesOverviewToolbarPopover("");
 		                            },
 		                          },
 		                          React.createElement("span", { className: "tb-popup-check-slot" },
-		                            resourcesOverviewSort === option.id
+		                            resourcesOverviewSort === (option.sortKey || option.id) && normalizedResourcesOverviewSortDirection === normalizeResourcesOverviewSortDirection(option.direction)
 		                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
 		                              : null
 		                          ),
@@ -112185,7 +113690,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 		                  React.createElement("span", null, "Filter")
 		                ),
 		                resourcesOverviewToolbarPopover === "filter"
-		                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+		                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-computers-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
 		                      resourcesOverviewFilterOptions.map((option) =>
 		                        React.createElement("button", {
 		                            key: option.id,
@@ -112211,23 +113716,98 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 			                  : null
 				              )
 			            )
-			            )
+			            ),
+			            !isServersMode ? computerOverviewCreateButton : null
 			          );
-			          const renderComputersOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", { className: "playground-computers-overview-sticky-table-header" },
-			            overviewSearchSortFilterRow,
-			            includeColumns
-			              ? React.createElement("div", { className: "playground-project-overview-threads-table-header" },
-			                  React.createElement("div", null, "Name"),
-			                  React.createElement("div", null, "Computer Profile"),
-			                  React.createElement("div", null, "Created"),
-			                  React.createElement("div", null, "Last used"),
+			          const handleComputersOverviewColumnSort = (sortKey) => {
+			            const normalizedSortKey = String(sortKey || "name").trim() || "name";
+			            setResourcesOverviewToolbarPopover("");
+			            setResourcesOverviewSortDirection((currentDirection) => {
+			              if (resourcesOverviewSort !== normalizedSortKey) {
+			                return "asc";
+			              }
+			              return normalizeResourcesOverviewSortDirection(currentDirection) === "asc" ? "desc" : "asc";
+			            });
+			            setResourcesOverviewSort(normalizedSortKey);
+			          };
+			          const renderComputersOverviewSortIcon = (sortKey) => {
+			            const isActive = resourcesOverviewSort === sortKey;
+			            const isDescending = isActive && normalizedResourcesOverviewSortDirection === "desc";
+			            const isAscending = isActive && !isDescending;
+			            return React.createElement("span", {
+			                className: "playground-agents-overview-sort-icon"
+			                  + (isActive ? " is-active" : "")
+			                  + (isAscending ? " is-ascending" : "")
+			                  + (isDescending ? " is-descending" : ""),
+			                "aria-hidden": "true",
+			              },
+			              React.createElement(ChevronsUpDown, {
+			                className: "playground-agents-overview-sort-icon-layer is-top",
+			                width: 14,
+			                height: 14,
+			                strokeWidth: 1.8,
+			              }),
+			              React.createElement(ChevronsUpDown, {
+			                className: "playground-agents-overview-sort-icon-layer is-bottom",
+			                width: 14,
+			                height: 14,
+			                strokeWidth: 1.8,
+			              })
+			            );
+			          };
+			          const renderComputersOverviewSortableHeader = (label, sortKey) => {
+			            const isActive = resourcesOverviewSort === sortKey;
+			            const nextDirection = isActive && normalizedResourcesOverviewSortDirection === "asc" ? "descending" : "ascending";
+			            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
+			              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+			              React.createElement("button", {
+			                  type: "button",
+			                  className: "playground-agents-overview-column-sort-button"
+			                    + (isActive ? " is-active" : "")
+			                    + (isActive && normalizedResourcesOverviewSortDirection === "asc" ? " is-ascending" : "")
+			                    + (isActive && normalizedResourcesOverviewSortDirection === "desc" ? " is-descending" : ""),
+			                  title: "Sort " + label + " " + nextDirection,
+			                  "aria-label": "Sort " + label + " " + nextDirection,
+			                  "aria-pressed": isActive ? "true" : "false",
+			                  onClick: (event) => {
+			                    event.preventDefault();
+			                    event.stopPropagation();
+			                    handleComputersOverviewColumnSort(sortKey);
+			                  },
+			                },
+			                renderComputersOverviewSortIcon(sortKey)
+			              )
+			            );
+			          };
+			          const renderComputersOverviewTableColumnHeader = () => React.createElement("div", { className: "playground-project-overview-threads-table-header playground-computers-overview-column-header" },
+			                  React.createElement("div", null,
+			                    React.createElement("button", {
+			                      type: "button",
+			                      className: "playground-agents-overview-select-checkbox playground-computers-overview-select-all-checkbox"
+			                        + (allVisibleOverviewComputersSelected ? " is-selected" : "")
+			                        + (hasPartialVisibleOverviewComputerSelection ? " is-partial" : ""),
+			                      role: "checkbox",
+			                      "aria-checked": allVisibleOverviewComputersSelected ? "true" : (hasPartialVisibleOverviewComputerSelection ? "mixed" : "false"),
+			                      "aria-label": allVisibleOverviewComputersSelected ? "Deselect all visible computers" : "Select all visible computers",
+			                      onClick: (event) => {
+			                        event.preventDefault();
+			                        event.stopPropagation();
+			                        toggleVisibleOverviewComputerSelection();
+			                      },
+			                    })
+			                  ),
+			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Name", "name")),
+			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Computer Profile", "profile")),
+			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Created", "created")),
+			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Last used", "lastUsed")),
 			                  React.createElement("div", null)
-			                )
-			              : null
+			                );
+			          const renderComputersOverviewStickyTableHeader = () => React.createElement("div", { className: "playground-computers-overview-sticky-table-header" },
+			            overviewSearchSortFilterRow
 			          );
 		          const overviewResourceTable = overviewItems.length === 0
 		            ? React.createElement(React.Fragment, null,
-		                !isServersMode && isDevelopConfigureOverview ? renderComputersOverviewStickyTableHeader(false) : null,
+		                !isServersMode && isDevelopConfigureOverview ? renderComputersOverviewStickyTableHeader() : null,
 		                shouldShowOverviewResourceLoading
 		                  ? React.createElement("div", { className: "playground-plugins-empty playground-resources-overview-loading" },
 		                      React.createElement(Loader2, { className: "playground-files-state-loader", width: 16, height: 16, strokeWidth: 1.75 }),
@@ -112240,18 +113820,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 		                    )
 		              )
 		            : !isServersMode
-		              ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-computers-overview-list-table" },
-		                  isDevelopConfigureOverview
-		                    ? renderComputersOverviewStickyTableHeader(true)
-		                    : React.createElement("div", { className: "playground-project-overview-threads-table-header" },
-		                        React.createElement("div", null, "Name"),
-		                        React.createElement("div", null, "Computer Profile"),
-		                        React.createElement("div", null, "Created"),
-		                        React.createElement("div", null, "Last used"),
-		                        React.createElement("div", null)
-		                      ),
-		                  React.createElement("div", { className: "playground-project-overview-thread-list" },
-		                    overviewItems.map((item) => renderComputerOverviewGridRow(item))
+		              ? React.createElement(React.Fragment, null,
+		                  isDevelopConfigureOverview ? renderComputersOverviewStickyTableHeader() : null,
+		                  React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-computers-overview-list-table" },
+		                    !isDevelopConfigureOverview ? renderComputersOverviewTableColumnHeader() : null,
+		                    React.createElement("div", { className: "playground-project-overview-thread-list" },
+		                      isDevelopConfigureOverview ? renderComputersOverviewTableColumnHeader() : null,
+		                      overviewItems.map((item) => renderComputerOverviewGridRow(item))
+		                    )
 		                  )
 		                )
 		              : React.createElement("div", { className: "playground-resources-overview-table-shell" },
@@ -112316,7 +113892,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-sort" + (resourcesOverviewToolbarPopover === "sort" || resourcesOverviewSort !== "name" ? " is-active" : ""),
+                    className: "playground-files-control-button is-bare is-backlog-sort" + (resourcesOverviewToolbarPopover === "sort" || resourcesOverviewSort !== "name" || normalizedResourcesOverviewSortDirection !== "asc" ? " is-active" : ""),
                     onClick: () => setResourcesOverviewToolbarPopover((current) => current === "sort" ? "" : "sort"),
                   },
                     React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
@@ -112328,14 +113904,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                           React.createElement("button", {
                               key: option.id,
                               type: "button",
-                              className: "tb-popup-row tb-popup-row-select" + (resourcesOverviewSort === option.id ? " selected" : ""),
+                              className: "tb-popup-row tb-popup-row-select" + (resourcesOverviewSort === (option.sortKey || option.id) && normalizedResourcesOverviewSortDirection === normalizeResourcesOverviewSortDirection(option.direction) ? " selected" : ""),
                               onClick: () => {
-                                setResourcesOverviewSort(option.id);
+                                setResourcesOverviewSort(option.sortKey || option.id);
+                                setResourcesOverviewSortDirection(normalizeResourcesOverviewSortDirection(option.direction));
                                 setResourcesOverviewToolbarPopover("");
                               },
                             },
                             React.createElement("span", { className: "tb-popup-check-slot" },
-                              resourcesOverviewSort === option.id
+                              resourcesOverviewSort === (option.sortKey || option.id) && normalizedResourcesOverviewSortDirection === normalizeResourcesOverviewSortDirection(option.direction)
                                 ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
                                 : null
                             ),
@@ -112494,6 +114071,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   )
                 ),
             renderEnvironmentRenameModal(),
+            shouldShowEnvironmentHome ? renderEnvironmentListActionMenu() : null,
+            shouldShowEnvironmentHome ? renderEnvironmentBulkActionMenu() : null,
+            shouldShowEnvironmentHome ? renderEnvironmentShareTeamModalElement() : null,
             renderServerResourceActionMenu(),
             renderServerRenameModal(),
             shouldShowEnvironmentHome ? renderDatabaseRenameModal() : null,
@@ -112825,9 +114405,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     )
                   )
                 : null
-            )
-          ),
+          )
+        ),
           renderEnvironmentListActionMenu(),
+          renderEnvironmentBulkActionMenu(),
+          shouldShowEnvironmentHome ? renderEnvironmentShareTeamModalElement() : null,
           renderServerResourceActionMenu(),
           renderEnvironmentRenameModal(),
           renderServerRenameModal(),
@@ -112972,6 +114554,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const agentsOverviewToolbarPopoverCloseTimerRef = useRef(null);
         const [agentsOverviewFilter, setAgentsOverviewFilter] = useState("all");
         const [agentsOverviewSort, setAgentsOverviewSort] = useState("name");
+        const [agentsOverviewSortDirection, setAgentsOverviewSortDirection] = useState("asc");
         const [selectedOverviewAgentIds, setSelectedOverviewAgentIds] = useState(() => new Set());
         const [agentsObservabilityToolbarPopover, setAgentsObservabilityToolbarPopover] = useState("");
         const [agentsObservabilityStatusFilter, setAgentsObservabilityStatusFilter] = useState("all");
@@ -129164,11 +130747,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             },
           ];
           const agentsOverviewSortOptions = [
-            { id: "name", label: "Name (A-Z)" },
-            { id: "updated", label: "Recently Updated" },
+            { id: "name", label: "Name (A-Z)", sortKey: "name", direction: "asc" },
+            { id: "updated", label: "Recently Updated", sortKey: "updated", direction: "desc" },
           ];
           const normalizedOverviewSearchQuery = String(searchPopupQuery || "").trim().toLowerCase();
-          const visibleOverviewAgents = displayAgents
+          const filteredOverviewAgents = displayAgents
             .filter((agent) => {
               if (!agent?.id || agent.id === PLAYGROUND_AGENT_DRAFT_ID) {
                 return false;
@@ -129184,24 +130767,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               }
               const haystack = [agent?.name || "", agent?.description || "", agent?.instructions || ""].join(" ").toLowerCase();
               return haystack.includes(normalizedOverviewSearchQuery);
-            })
-            .slice()
-            .sort((left, right) => {
-              if (agentsOverviewSort === "updated") {
-                const leftUpdatedAt = Date.parse(String(left?.updatedAt || left?.metadata?.updatedAt || left?.createdAt || left?.metadata?.createdAt || ""));
-                const rightUpdatedAt = Date.parse(String(right?.updatedAt || right?.metadata?.updatedAt || right?.createdAt || right?.metadata?.createdAt || ""));
-                const leftValue = Number.isFinite(leftUpdatedAt) ? leftUpdatedAt : 0;
-                const rightValue = Number.isFinite(rightUpdatedAt) ? rightUpdatedAt : 0;
-                if (leftValue !== rightValue) {
-                  return rightValue - leftValue;
-                }
-              }
-              return String(left?.name || "").localeCompare(String(right?.name || ""));
             });
-          const visibleOverviewAgentIds = visibleOverviewAgents.map((agent) => String(agent?.id || "").trim()).filter(Boolean);
-          const selectedVisibleOverviewAgentIds = visibleOverviewAgentIds.filter((agentId) => selectedOverviewAgentIds.has(agentId));
-          const allVisibleOverviewAgentsSelected = visibleOverviewAgentIds.length > 0 && selectedVisibleOverviewAgentIds.length === visibleOverviewAgentIds.length;
-          const hasPartialVisibleOverviewSelection = selectedVisibleOverviewAgentIds.length > 0 && !allVisibleOverviewAgentsSelected;
           const latestOverviewThreadActivityByAgentId = new Map();
           (Array.isArray(agentsHomeThreadRecords) ? agentsHomeThreadRecords : []).forEach((thread) => {
             const threadAgentId = String(thread?.agentId || thread?.agent?.id || thread?.metadata?.agentId || "").trim();
@@ -129334,6 +130900,71 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               React.createElement("span", { className: "playground-guardrails-creator-label" }, label)
             );
           };
+          const normalizeAgentsOverviewSortDirection = (direction) =>
+            direction === "desc" ? "desc" : "asc";
+          const normalizedAgentsOverviewSortDirection = normalizeAgentsOverviewSortDirection(agentsOverviewSortDirection);
+          const getAgentOverviewDisplayName = (agent) =>
+            String(agent?.name || (agent?.agentType === "team" ? "Untitled Squad" : "Untitled Agent")).trim();
+          const getAgentOverviewModelLabel = (agent) => {
+            const modelMeta = getPlaygroundAgentModelMeta(agent?.model || "claude-haiku-4-5", resolvedAgentModelOptions);
+            return String(modelMeta?.label || modelMeta?.id || agent?.model || "").trim();
+          };
+          const getAgentOverviewTimestamp = (value) => {
+            const timestamp = Date.parse(String(value || ""));
+            return Number.isFinite(timestamp) ? timestamp : 0;
+          };
+          const getAgentOverviewUpdatedTimestamp = (agent) =>
+            getAgentOverviewTimestamp(agent?.updatedAt || agent?.metadata?.updatedAt || agent?.createdAt || agent?.metadata?.createdAt || "");
+          const getAgentOverviewLastUsedTimestamp = (agent) =>
+            getAgentOverviewTimestamp(getOverviewAgentLastUsedAt(agent));
+          const getAgentOverviewSortValue = (agent, sortKey) => {
+            switch (sortKey) {
+              case "model":
+                return getAgentOverviewModelLabel(agent);
+              case "creator":
+                return getAgentOverviewCreatorLabel(agent);
+              case "lastUsed":
+                return getAgentOverviewLastUsedTimestamp(agent);
+              case "updated":
+                return getAgentOverviewUpdatedTimestamp(agent);
+              case "name":
+              default:
+                return getAgentOverviewDisplayName(agent);
+            }
+          };
+          const compareAgentOverviewSortValues = (left, right, sortKey) => {
+            const leftValue = getAgentOverviewSortValue(left, sortKey);
+            const rightValue = getAgentOverviewSortValue(right, sortKey);
+            if (typeof leftValue === "number" || typeof rightValue === "number") {
+              const leftNumber = typeof leftValue === "number" && Number.isFinite(leftValue) ? leftValue : 0;
+              const rightNumber = typeof rightValue === "number" && Number.isFinite(rightValue) ? rightValue : 0;
+              if (leftNumber !== rightNumber) {
+                return leftNumber - rightNumber;
+              }
+            } else {
+              const textComparison = String(leftValue || "").localeCompare(String(rightValue || ""), undefined, {
+                numeric: true,
+                sensitivity: "base",
+              });
+              if (textComparison !== 0) {
+                return textComparison;
+              }
+            }
+            return getAgentOverviewDisplayName(left).localeCompare(getAgentOverviewDisplayName(right), undefined, {
+              numeric: true,
+              sensitivity: "base",
+            });
+          };
+          const visibleOverviewAgents = filteredOverviewAgents
+            .slice()
+            .sort((left, right) => {
+              const baseComparison = compareAgentOverviewSortValues(left, right, agentsOverviewSort);
+              return normalizedAgentsOverviewSortDirection === "desc" ? -baseComparison : baseComparison;
+            });
+          const visibleOverviewAgentIds = visibleOverviewAgents.map((agent) => String(agent?.id || "").trim()).filter(Boolean);
+          const selectedVisibleOverviewAgentIds = visibleOverviewAgentIds.filter((agentId) => selectedOverviewAgentIds.has(agentId));
+          const allVisibleOverviewAgentsSelected = visibleOverviewAgentIds.length > 0 && selectedVisibleOverviewAgentIds.length === visibleOverviewAgentIds.length;
+          const hasPartialVisibleOverviewSelection = selectedVisibleOverviewAgentIds.length > 0 && !allVisibleOverviewAgentsSelected;
           const isDevelopConfigureAgentsOverview = embeddedInResources;
           const agentsOverviewEntityLabel = agentListMode === "teams" ? "Squads" : "Agents";
           const toggleOverviewAgentSelection = (agentId) => {
@@ -129363,6 +130994,67 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               return next;
             });
           };
+          const handleAgentsOverviewColumnSort = (sortKey) => {
+            const normalizedSortKey = String(sortKey || "name").trim() || "name";
+            setAgentsOverviewToolbarPopover("");
+            setAgentsOverviewToolbarPopoverClosing("");
+            setAgentsOverviewSortDirection((currentDirection) => {
+              if (agentsOverviewSort !== normalizedSortKey) {
+                return "asc";
+              }
+              return normalizeAgentsOverviewSortDirection(currentDirection) === "asc" ? "desc" : "asc";
+            });
+            setAgentsOverviewSort(normalizedSortKey);
+          };
+          const renderAgentsOverviewSortIcon = (sortKey) => {
+            const isActive = agentsOverviewSort === sortKey;
+            const isDescending = isActive && normalizedAgentsOverviewSortDirection === "desc";
+            const isAscending = isActive && !isDescending;
+            return React.createElement("span", {
+                className: "playground-agents-overview-sort-icon"
+                  + (isActive ? " is-active" : "")
+                  + (isAscending ? " is-ascending" : "")
+                  + (isDescending ? " is-descending" : ""),
+                "aria-hidden": "true",
+              },
+              React.createElement(ChevronsUpDown, {
+                className: "playground-agents-overview-sort-icon-layer is-top",
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+              }),
+              React.createElement(ChevronsUpDown, {
+                className: "playground-agents-overview-sort-icon-layer is-bottom",
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+              })
+            );
+          };
+          const renderAgentsOverviewSortableHeader = (label, sortKey) => {
+            const isActive = agentsOverviewSort === sortKey;
+            const nextDirection = isActive && normalizedAgentsOverviewSortDirection === "asc" ? "descending" : "ascending";
+            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
+              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-overview-column-sort-button"
+                    + (isActive ? " is-active" : "")
+                    + (isActive && normalizedAgentsOverviewSortDirection === "asc" ? " is-ascending" : "")
+                    + (isActive && normalizedAgentsOverviewSortDirection === "desc" ? " is-descending" : ""),
+                  title: "Sort " + label + " " + nextDirection,
+                  "aria-label": "Sort " + label + " " + nextDirection,
+                  "aria-pressed": isActive ? "true" : "false",
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    handleAgentsOverviewColumnSort(sortKey);
+                  },
+                },
+                renderAgentsOverviewSortIcon(sortKey)
+              )
+            );
+          };
           const renderAgentsOverviewTableColumnHeader = () => React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header" },
             React.createElement("div", null,
               React.createElement("button", {
@@ -129380,10 +131072,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 },
               })
             ),
-            React.createElement("div", null, "Name"),
-            React.createElement("div", null, "Model"),
-            React.createElement("div", null, "Creator"),
-            React.createElement("div", null, "Last used"),
+            React.createElement("div", null, renderAgentsOverviewSortableHeader("Name", "name")),
+            React.createElement("div", null, renderAgentsOverviewSortableHeader("Model", "model")),
+            React.createElement("div", null, renderAgentsOverviewSortableHeader("Creator", "creator")),
+            React.createElement("div", null, renderAgentsOverviewSortableHeader("Last used", "lastUsed")),
             React.createElement("div", null)
           );
           const getAgentsOverviewToolbarMenuClassName = (menuId) =>
@@ -129411,7 +131103,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-sort" + (agentsOverviewToolbarPopover === "sort" || agentsOverviewSort !== "name" ? " is-active" : ""),
+                    className: "playground-files-control-button is-bare is-backlog-sort" + (agentsOverviewToolbarPopover === "sort" || agentsOverviewSort !== "name" || normalizedAgentsOverviewSortDirection !== "asc" ? " is-active" : ""),
                     onClick: () => toggleAgentsOverviewToolbarPopover("sort"),
                   },
                     React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
@@ -129423,14 +131115,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                           React.createElement("button", {
                               key: option.id,
                               type: "button",
-                              className: "tb-popup-row tb-popup-row-select" + (agentsOverviewSort === option.id ? " selected" : ""),
+                              className: "tb-popup-row tb-popup-row-select" + (agentsOverviewSort === (option.sortKey || option.id) && normalizedAgentsOverviewSortDirection === normalizeAgentsOverviewSortDirection(option.direction) ? " selected" : ""),
                               onClick: () => {
-                                setAgentsOverviewSort(option.id);
+                                setAgentsOverviewSort(option.sortKey || option.id);
+                                setAgentsOverviewSortDirection(normalizeAgentsOverviewSortDirection(option.direction));
                                 closeAgentsOverviewToolbarPopover();
                               },
                             },
                             React.createElement("span", { className: "tb-popup-check-slot" },
-                              agentsOverviewSort === option.id
+                              agentsOverviewSort === (option.sortKey || option.id) && normalizedAgentsOverviewSortDirection === normalizeAgentsOverviewSortDirection(option.direction)
                                 ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
                                 : null
                             ),
@@ -165601,12 +167294,42 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [teamPageSelectedRoleId, setTeamPageSelectedRoleId] = useState("member");
         const [teamPageRoleMembersPopover, setTeamPageRoleMembersPopover] = useState("");
         const [teamPermissionChartAnimationKey, setTeamPermissionChartAnimationKey] = useState(0);
-        const [teamPageResourceFilter, setTeamPageResourceFilter] = useState("all");
-        const [teamPageResourceSearchQuery, setTeamPageResourceSearchQuery] = useState("");
-        const [teamPageResourceViewMode, setTeamPageResourceViewMode] = useState("list");
-        const [teamPageResourceToolbarPopover, setTeamPageResourceToolbarPopover] = useState("");
-        const [teamPageResourceMenuId, setTeamPageResourceMenuId] = useState("");
-        const [teamPageMemberMenuId, setTeamPageMemberMenuId] = useState("");
+	        const [teamPageResourceFilter, setTeamPageResourceFilter] = useState("all");
+	        const [teamPageResourceSearchQuery, setTeamPageResourceSearchQuery] = useState("");
+				        const [teamPageResourceViewMode, setTeamPageResourceViewMode] = useState("list");
+					        const [teamPageResourceToolbarPopover, setTeamPageResourceToolbarPopover] = useState("");
+					        const [teamPageResourceMenuId, setTeamPageResourceMenuId] = useState("");
+					        const [teamPageResourceSort, setTeamPageResourceSort] = useState("resource");
+					        const [teamPageResourceSortDirection, setTeamPageResourceSortDirection] = useState("asc");
+					        const [selectedTeamPageResourceIds, setSelectedTeamPageResourceIds] = useState(() => new Set());
+					        const [teamPageResourceActionMenuState, setTeamPageResourceActionMenuState] = useState(null);
+					        const [teamPageResourceActionMenuClosing, setTeamPageResourceActionMenuClosing] = useState(false);
+					        const teamPageResourceActionMenuCloseTimerRef = useRef(null);
+					        const [teamPageResourceBulkActionMenuState, setTeamPageResourceBulkActionMenuState] = useState(null);
+					        const [teamPageResourceBulkActionMenuClosing, setTeamPageResourceBulkActionMenuClosing] = useState(false);
+					        const teamPageResourceBulkActionMenuCloseTimerRef = useRef(null);
+				        const [teamPageMemberMenuId, setTeamPageMemberMenuId] = useState("");
+		        const [teamPageMemberActionMenuState, setTeamPageMemberActionMenuState] = useState(null);
+		        const [teamPageMemberActionMenuClosing, setTeamPageMemberActionMenuClosing] = useState(false);
+		        const teamPageMemberActionMenuCloseTimerRef = useRef(null);
+		        const [teamPageMemberBulkActionMenuState, setTeamPageMemberBulkActionMenuState] = useState(null);
+		        const [teamPageMemberBulkActionMenuClosing, setTeamPageMemberBulkActionMenuClosing] = useState(false);
+		        const teamPageMemberBulkActionMenuCloseTimerRef = useRef(null);
+		        const teamPageMemberToolbarRef = useRef(null);
+		        const [teamPageMemberSearchQuery, setTeamPageMemberSearchQuery] = useState("");
+	        const [teamPageMemberSort, setTeamPageMemberSort] = useState("user");
+	        const [teamPageMemberSortDirection, setTeamPageMemberSortDirection] = useState("asc");
+	        const [teamPageMemberFilter, setTeamPageMemberFilter] = useState("all");
+	        const [teamPageMemberToolbarPopover, setTeamPageMemberToolbarPopover] = useState("");
+	        const [selectedTeamPageMemberIds, setSelectedTeamPageMemberIds] = useState(() => new Set());
+	        const teamOverviewToolbarRef = useRef(null);
+	        const [teamOverviewSearchQuery, setTeamOverviewSearchQuery] = useState("");
+        const [teamOverviewSort, setTeamOverviewSort] = useState("name");
+        const [teamOverviewSortDirection, setTeamOverviewSortDirection] = useState("asc");
+        const [teamOverviewFilter, setTeamOverviewFilter] = useState("all");
+        const [teamOverviewToolbarPopover, setTeamOverviewToolbarPopover] = useState("");
+        const [teamOverviewMenuId, setTeamOverviewMenuId] = useState("");
+        const [selectedTeamOverviewIds, setSelectedTeamOverviewIds] = useState(() => new Set());
         const [teamPageMembers, setTeamPageMembers] = useState([]);
         const [teamPageInvitations, setTeamPageInvitations] = useState([]);
         const [teamPageShares, setTeamPageShares] = useState([]);
@@ -165686,10 +167409,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
           document.addEventListener("mousedown", handlePointerDown);
           return () => document.removeEventListener("mousedown", handlePointerDown);
         }, [teamPageRoleMembersPopover]);
-        useEffect(() => {
-          if (!teamPageMemberMenuId || typeof document === "undefined") {
-            return undefined;
-          }
+	        useEffect(() => {
+	          if (!teamPageMemberMenuId || typeof document === "undefined") {
+	            return undefined;
+	          }
           const handlePointerDown = (event) => {
             const target = event.target;
             if (target && typeof target.closest === "function" && target.closest(".playground-team-member-action-shell")) {
@@ -165697,18 +167420,93 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }
             setTeamPageMemberMenuId("");
           };
+	          document.addEventListener("mousedown", handlePointerDown);
+	          return () => document.removeEventListener("mousedown", handlePointerDown);
+	        }, [teamPageMemberMenuId]);
+	        useEffect(() => {
+	          if (!teamPageMemberToolbarPopover || typeof document === "undefined") {
+	            return undefined;
+	          }
+	          const handlePointerDown = (event) => {
+	            const target = event.target;
+	            if (
+	              target
+	              && teamPageMemberToolbarRef.current
+	              && teamPageMemberToolbarRef.current.contains(target)
+	            ) {
+	              return;
+	            }
+	            setTeamPageMemberToolbarPopover("");
+	          };
+	          document.addEventListener("mousedown", handlePointerDown);
+	          return () => document.removeEventListener("mousedown", handlePointerDown);
+	        }, [teamPageMemberToolbarPopover]);
+	        useEffect(() => {
+			          if (teamPageActiveTab !== "resources") {
+			            setTeamPageResourceToolbarPopover("");
+			            setTeamPageResourceMenuId("");
+			            setSelectedTeamPageResourceIds(new Set());
+			            setTeamPageResourceActionMenuState(null);
+			            setTeamPageResourceActionMenuClosing(false);
+			            setTeamPageResourceBulkActionMenuState(null);
+			            setTeamPageResourceBulkActionMenuClosing(false);
+			          }
+		          if (teamPageActiveTab !== "members") {
+		            setTeamPageMemberMenuId("");
+		            setTeamPageMemberActionMenuState(null);
+		            setTeamPageMemberActionMenuClosing(false);
+		            setTeamPageMemberBulkActionMenuState(null);
+		            setTeamPageMemberBulkActionMenuClosing(false);
+		            setTeamPageMemberToolbarPopover("");
+		            setSelectedTeamPageMemberIds(new Set());
+		          }
+		        }, [teamPageActiveTab]);
+		        useEffect(() => {
+			          setSelectedTeamPageMemberIds(new Set());
+			          setSelectedTeamPageResourceIds(new Set());
+			          setTeamPageResourceActionMenuState(null);
+			          setTeamPageResourceActionMenuClosing(false);
+			          setTeamPageResourceBulkActionMenuState(null);
+			          setTeamPageResourceBulkActionMenuClosing(false);
+			          setTeamPageMemberMenuId("");
+		          setTeamPageMemberActionMenuState(null);
+		          setTeamPageMemberActionMenuClosing(false);
+		          setTeamPageMemberBulkActionMenuState(null);
+		          setTeamPageMemberBulkActionMenuClosing(false);
+		          setTeamPageMemberToolbarPopover("");
+		        }, [teamPageSelectedTeamId]);
+			        useEffect(() => () => {
+			          clearTeamPageMemberActionMenuCloseTimer();
+			          clearTeamPageMemberBulkActionMenuCloseTimer();
+			          clearTeamPageResourceActionMenuCloseTimer();
+			          clearTeamPageResourceBulkActionMenuCloseTimer();
+			        }, []);
+        useEffect(() => {
+          if ((!teamOverviewToolbarPopover && !teamOverviewMenuId) || typeof document === "undefined") {
+            return undefined;
+          }
+          const handlePointerDown = (event) => {
+            const target = event.target;
+            if (
+              target
+              && teamOverviewToolbarRef.current
+              && teamOverviewToolbarRef.current.contains(target)
+            ) {
+              return;
+            }
+            if (
+              target
+              && typeof target.closest === "function"
+              && target.closest(".playground-team-overview-action-shell")
+            ) {
+              return;
+            }
+            setTeamOverviewToolbarPopover("");
+            setTeamOverviewMenuId("");
+          };
           document.addEventListener("mousedown", handlePointerDown);
           return () => document.removeEventListener("mousedown", handlePointerDown);
-        }, [teamPageMemberMenuId]);
-        useEffect(() => {
-          if (teamPageActiveTab !== "resources") {
-            setTeamPageResourceToolbarPopover("");
-            setTeamPageResourceMenuId("");
-          }
-          if (teamPageActiveTab !== "members") {
-            setTeamPageMemberMenuId("");
-          }
-        }, [teamPageActiveTab]);
+        }, [teamOverviewMenuId, teamOverviewToolbarPopover]);
         useEffect(() => {
           if ((!teamPageResourceToolbarPopover && !teamPageResourceMenuId) || typeof document === "undefined") {
             return undefined;
@@ -189843,13 +191641,31 @@ ${PROJECT_OVERVIEW_SCRIPT}
             ).trim();
           };
 
-          const renderRoleSelect = (props) => React.createElement("select", {
-            className: "playground-team-select",
-            ...props,
-            value: normalizePlaygroundTeamRoleId(props?.value, "member"),
-          }, PLAYGROUND_ASSIGNABLE_TEAM_ROLE_DEFINITIONS.map((option) =>
-            React.createElement("option", { key: option.id, value: option.id }, option.label)
-          ));
+	          const renderRoleSelect = (props = {}) => {
+	            const { variant, className, ...selectProps } = props || {};
+	            const isMemberRowVariant = variant === "member-row";
+	            const selectElement = React.createElement("select", {
+	              className: "playground-team-select"
+	                + (isMemberRowVariant ? " playground-team-member-role-select" : "")
+	                + (className ? " " + className : ""),
+	              ...selectProps,
+	              value: normalizePlaygroundTeamRoleId(props?.value, "member"),
+	            }, PLAYGROUND_ASSIGNABLE_TEAM_ROLE_DEFINITIONS.map((option) =>
+	              React.createElement("option", { key: option.id, value: option.id }, option.label)
+	            ));
+	            return isMemberRowVariant
+	              ? React.createElement("span", { className: "playground-team-member-role-select-shell" },
+	                  selectElement,
+	                  React.createElement(ChevronsUpDown, {
+	                    className: "playground-team-member-role-select-icon",
+	                    width: 13,
+	                    height: 13,
+	                    strokeWidth: 1.55,
+	                    "aria-hidden": "true",
+	                  })
+	                )
+	              : selectElement;
+	          };
 
           const renderEmpty = (text) => React.createElement("div", { className: "playground-team-empty" }, text);
 
@@ -190402,66 +192218,462 @@ ${PROJECT_OVERVIEW_SCRIPT}
               : modalElement;
           };
 
-          const renderTeamOverview = () => React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-team-page-header" },
-              React.createElement("div", null,
-                React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-team-page-title" }, "Teams")
-              ),
-              renderTeamActionButton("Create team", () => setTeamPageCreateModalOpen(true), {
-                icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+          const normalizeTeamOverviewSortDirection = (direction) =>
+            direction === "desc" ? "desc" : "asc";
+          const normalizedTeamOverviewSortDirection = normalizeTeamOverviewSortDirection(teamOverviewSortDirection);
+          const getTeamOverviewDisplayName = (team) => String(team?.name || "Untitled team").trim();
+          const getTeamOverviewCreatedTimestamp = (team) => {
+            const timestamp = Date.parse(String(team?.createdAt || team?.created_at || ""));
+            return Number.isFinite(timestamp) ? timestamp : 0;
+          };
+          const getTeamOverviewOwnerLabel = (team) => {
+            const ownerName = String(
+              team?.ownerName
+              || team?.owner_name
+              || team?.owner?.name
+              || team?.owner?.displayName
+              || team?.createdByName
+              || team?.created_by_name
+              || ""
+            ).trim();
+            const ownerEmail = String(
+              team?.ownerEmail
+              || team?.owner_email
+              || team?.owner?.email
+              || team?.createdByEmail
+              || team?.created_by_email
+              || ""
+            ).trim();
+            if (ownerName) {
+              return ownerName;
+            }
+            if (ownerEmail) {
+              return ownerEmail;
+            }
+            if (String(team?.ownerUserId || team?.ownerId || "").trim() === String(sessionState.userId || "").trim()) {
+              return "You";
+            }
+            return "Team";
+          };
+          const getTeamOverviewRoleLabel = (team) => formatRole(team?.role);
+          const getTeamOverviewSortValue = (team, sortKey) => {
+            switch (sortKey) {
+              case "role":
+                return getTeamOverviewRoleLabel(team);
+              case "owner":
+                return getTeamOverviewOwnerLabel(team);
+              case "created":
+                return getTeamOverviewCreatedTimestamp(team);
+              case "name":
+              default:
+                return getTeamOverviewDisplayName(team);
+            }
+          };
+          const compareTeamOverviewSortValues = (left, right, sortKey) => {
+            const leftValue = getTeamOverviewSortValue(left, sortKey);
+            const rightValue = getTeamOverviewSortValue(right, sortKey);
+            if (typeof leftValue === "number" || typeof rightValue === "number") {
+              const leftNumber = typeof leftValue === "number" && Number.isFinite(leftValue) ? leftValue : 0;
+              const rightNumber = typeof rightValue === "number" && Number.isFinite(rightValue) ? rightValue : 0;
+              if (leftNumber !== rightNumber) {
+                return leftNumber - rightNumber;
+              }
+            } else {
+              const textComparison = String(leftValue || "").localeCompare(String(rightValue || ""), undefined, {
+                numeric: true,
+                sensitivity: "base",
+              });
+              if (textComparison !== 0) {
+                return textComparison;
+              }
+            }
+            return getTeamOverviewDisplayName(left).localeCompare(getTeamOverviewDisplayName(right), undefined, {
+              numeric: true,
+              sensitivity: "base",
+            });
+          };
+          const normalizedTeamOverviewSearchQuery = String(teamOverviewSearchQuery || "").trim().toLowerCase();
+          const visibleOverviewTeams = (Array.isArray(teamPageTeams) ? teamPageTeams : [])
+            .filter((team) => {
+              if (teamOverviewFilter === "owned" && String(team?.ownerUserId || team?.ownerId || "").trim() !== String(sessionState.userId || "").trim()) {
+                return false;
+              }
+              if (teamOverviewFilter === "member" && String(team?.ownerUserId || team?.ownerId || "").trim() === String(sessionState.userId || "").trim()) {
+                return false;
+              }
+              if (!normalizedTeamOverviewSearchQuery) {
+                return true;
+              }
+              const haystack = [
+                getTeamOverviewDisplayName(team),
+                getTeamOverviewRoleLabel(team),
+                getTeamOverviewOwnerLabel(team),
+                team?.id || "",
+              ].join(" ").toLowerCase();
+              return haystack.includes(normalizedTeamOverviewSearchQuery);
+            })
+            .slice()
+            .sort((left, right) => {
+              const baseComparison = compareTeamOverviewSortValues(left, right, teamOverviewSort);
+              return normalizedTeamOverviewSortDirection === "desc" ? -baseComparison : baseComparison;
+            });
+          const visibleOverviewTeamIds = visibleOverviewTeams.map((team) => String(team?.id || "").trim()).filter(Boolean);
+          const selectedVisibleTeamOverviewIds = visibleOverviewTeamIds.filter((teamId) => selectedTeamOverviewIds.has(teamId));
+          const allVisibleTeamsSelected = visibleOverviewTeamIds.length > 0 && selectedVisibleTeamOverviewIds.length === visibleOverviewTeamIds.length;
+          const hasPartialVisibleTeamSelection = selectedVisibleTeamOverviewIds.length > 0 && !allVisibleTeamsSelected;
+          const toggleTeamOverviewSelection = (teamId) => {
+            const normalizedTeamId = String(teamId || "").trim();
+            if (!normalizedTeamId) return;
+            setSelectedTeamOverviewIds((current) => {
+              const next = new Set(current || []);
+              if (next.has(normalizedTeamId)) {
+                next.delete(normalizedTeamId);
+              } else {
+                next.add(normalizedTeamId);
+              }
+              return next;
+            });
+          };
+          const toggleVisibleTeamOverviewSelection = () => {
+            if (visibleOverviewTeamIds.length === 0) {
+              return;
+            }
+            setSelectedTeamOverviewIds((current) => {
+              const next = new Set(current || []);
+              if (allVisibleTeamsSelected) {
+                visibleOverviewTeamIds.forEach((teamId) => next.delete(teamId));
+              } else {
+                visibleOverviewTeamIds.forEach((teamId) => next.add(teamId));
+              }
+              return next;
+            });
+          };
+          const teamOverviewSortOptions = [
+            { id: "name", label: "Name (A-Z)", sortKey: "name", direction: "asc" },
+            { id: "created", label: "Recently Created", sortKey: "created", direction: "desc" },
+          ];
+          const teamOverviewFilterOptions = [
+            { id: "all", label: "All Teams", description: "Show every team workspace" },
+            { id: "owned", label: "Owned by You", description: "Only show teams you own" },
+            { id: "member", label: "Member Teams", description: "Only show teams where you are a member" },
+          ];
+          const handleTeamOverviewColumnSort = (sortKey) => {
+            const normalizedSortKey = String(sortKey || "name").trim() || "name";
+            setTeamOverviewToolbarPopover("");
+            setTeamOverviewSortDirection((currentDirection) => {
+              if (teamOverviewSort !== normalizedSortKey) {
+                return "asc";
+              }
+              return normalizeTeamOverviewSortDirection(currentDirection) === "asc" ? "desc" : "asc";
+            });
+            setTeamOverviewSort(normalizedSortKey);
+          };
+          const renderTeamOverviewSortIcon = (sortKey) => {
+            const isActive = teamOverviewSort === sortKey;
+            const isDescending = isActive && normalizedTeamOverviewSortDirection === "desc";
+            const isAscending = isActive && !isDescending;
+            return React.createElement("span", {
+                className: "playground-agents-overview-sort-icon"
+                  + (isActive ? " is-active" : "")
+                  + (isAscending ? " is-ascending" : "")
+                  + (isDescending ? " is-descending" : ""),
+                "aria-hidden": "true",
+              },
+              React.createElement(ChevronsUpDown, {
+                className: "playground-agents-overview-sort-icon-layer is-top",
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+              }),
+              React.createElement(ChevronsUpDown, {
+                className: "playground-agents-overview-sort-icon-layer is-bottom",
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+              })
+            );
+          };
+          const renderTeamOverviewSortableHeader = (label, sortKey) => {
+            const isActive = teamOverviewSort === sortKey;
+            const nextDirection = isActive && normalizedTeamOverviewSortDirection === "asc" ? "descending" : "ascending";
+            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
+              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-overview-column-sort-button"
+                    + (isActive ? " is-active" : "")
+                    + (isActive && normalizedTeamOverviewSortDirection === "asc" ? " is-ascending" : "")
+                    + (isActive && normalizedTeamOverviewSortDirection === "desc" ? " is-descending" : ""),
+                  title: "Sort " + label + " " + nextDirection,
+                  "aria-label": "Sort " + label + " " + nextDirection,
+                  "aria-pressed": isActive ? "true" : "false",
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    handleTeamOverviewColumnSort(sortKey);
+                  },
+                },
+                renderTeamOverviewSortIcon(sortKey)
+              )
+            );
+          };
+          const renderTeamOverviewColumnHeader = () => React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-team-overview-column-header" },
+            React.createElement("div", null,
+              React.createElement("button", {
+                type: "button",
+                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+                  + (allVisibleTeamsSelected ? " is-selected" : "")
+                  + (hasPartialVisibleTeamSelection ? " is-partial" : ""),
+                role: "checkbox",
+                "aria-checked": allVisibleTeamsSelected ? "true" : (hasPartialVisibleTeamSelection ? "mixed" : "false"),
+                "aria-label": allVisibleTeamsSelected ? "Deselect all visible teams" : "Select all visible teams",
+                onClick: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  toggleVisibleTeamOverviewSelection();
+                },
               })
             ),
-            teamPageError
-              ? React.createElement("div", { className: "playground-team-error" }, teamPageError)
-              : null,
-            React.createElement("div", { className: "playground-team-overview-layout" },
-              React.createElement("div", { className: "playground-team-table-panel" },
-                teamPageTeams.length > 0
-                  ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
-                      React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table" },
-                        React.createElement("colgroup", null,
-                          React.createElement("col", { className: "playground-team-table-col-main" }),
-                          React.createElement("col", { className: "playground-team-table-col-role" }),
-                          React.createElement("col", { className: "playground-team-table-col-meta" }),
-                          React.createElement("col", { className: "playground-team-table-col-actions" })
-                        ),
-                        React.createElement("thead", null,
-                          React.createElement("tr", null,
-                            React.createElement("th", null, "Team"),
-                            React.createElement("th", null, "Role"),
-                            React.createElement("th", null, "Created"),
-                            React.createElement("th", { className: "is-actions" }, "")
-                          )
-                        ),
-                        React.createElement("tbody", null,
-                          teamPageTeams.map((team) =>
-                            React.createElement("tr", {
-                              key: team.id,
-                              className: "is-clickable",
-                              tabIndex: 0,
-                              onClick: () => openTeamDetail(team.id),
-                              onKeyDown: (event) => {
-                                if (event.key === "Enter" || event.key === " ") {
-                                  event.preventDefault();
-                                  openTeamDetail(team.id);
-                                }
+            React.createElement("div", null, renderTeamOverviewSortableHeader("Name", "name")),
+            React.createElement("div", null, renderTeamOverviewSortableHeader("Role", "role")),
+            React.createElement("div", null, renderTeamOverviewSortableHeader("Owner", "owner")),
+            React.createElement("div", null, renderTeamOverviewSortableHeader("Created", "created")),
+            React.createElement("div", null)
+          );
+          const renderTeamOverviewToolbarMenu = (menuId, options, activeValue, setActiveValue) => {
+            const isSort = menuId === "sort";
+            return React.createElement("div", {
+                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+              },
+              options.map((option) => {
+                const optionValue = option.sortKey || option.id;
+                const optionDirection = normalizeTeamOverviewSortDirection(option.direction);
+                const selected = isSort
+                  ? teamOverviewSort === optionValue && normalizedTeamOverviewSortDirection === optionDirection
+                  : activeValue === option.id;
+                return React.createElement("button", {
+                    key: option.id,
+                    type: "button",
+                    className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
+                    onClick: () => {
+                      if (isSort) {
+                        setTeamOverviewSort(optionValue);
+                        setTeamOverviewSortDirection(optionDirection);
+                      } else {
+                        setActiveValue(option.id);
+                      }
+                      setTeamOverviewToolbarPopover("");
+                    },
+                  },
+                  React.createElement("span", { className: "tb-popup-check-slot" },
+                    selected ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
+                  ),
+                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                    React.createElement("span", null, option.label),
+                    option.description ? React.createElement("span", null, option.description) : null
+                  )
+                );
+              })
+            );
+          };
+          const renderTeamOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header" },
+            React.createElement("div", {
+                className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row",
+                ref: teamOverviewToolbarRef,
+              },
+              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
+                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("input", {
+                  type: "search",
+                  value: teamOverviewSearchQuery,
+                  onChange: (event) => setTeamOverviewSearchQuery(event.target.value),
+                  className: "playground-plugins-search",
+                  placeholder: "Search teams",
+                })
+              ),
+              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-sort" + (teamOverviewToolbarPopover === "sort" || teamOverviewSort !== "name" || normalizedTeamOverviewSortDirection !== "asc" ? " is-active" : ""),
+                    onClick: () => setTeamOverviewToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                  },
+                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Sort")
+                  ),
+                  teamOverviewToolbarPopover === "sort"
+                    ? renderTeamOverviewToolbarMenu("sort", teamOverviewSortOptions, teamOverviewSort, setTeamOverviewSort)
+                    : null
+                ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-filter" + (teamOverviewToolbarPopover === "filter" || teamOverviewFilter !== "all" ? " is-active" : ""),
+                    onClick: () => setTeamOverviewToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                  },
+                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Filter")
+                  ),
+                  teamOverviewToolbarPopover === "filter"
+                    ? renderTeamOverviewToolbarMenu("filter", teamOverviewFilterOptions, teamOverviewFilter, setTeamOverviewFilter)
+                    : null
+                )
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button",
+                onClick: () => {
+                  setTeamOverviewToolbarPopover("");
+                  setTeamPageCreateModalOpen(true);
+                },
+                title: "Create team",
+                "aria-label": "Create team",
+              },
+                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "New Team")
+              )
+            ),
+            includeColumns ? renderTeamOverviewColumnHeader() : null
+          );
+          const renderTeamOverviewRowMenu = (team) => {
+            const menuId = String(team?.id || "");
+            if (!menuId || teamOverviewMenuId !== menuId) {
+              return null;
+            }
+            return React.createElement("div", {
+                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+              },
+              React.createElement("button", {
+                type: "button",
+                className: "tb-popup-row",
+                onClick: () => {
+                  setTeamOverviewMenuId("");
+                  openTeamDetail(team.id);
+                },
+              },
+                React.createElement(ChevronRight, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Open"))
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "tb-popup-row",
+                onClick: () => {
+                  setTeamOverviewMenuId("");
+                  setTeamPageSelectedTeamId(String(team?.id || ""));
+                  setTeamPageRenameName(team?.name || "");
+                  setTeamPageRenameModalOpen(true);
+                },
+              },
+                React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Rename"))
+              )
+            );
+          };
+          const renderTeamOverview = () => React.createElement("div", { className: "playground-team-overview-page playground-agents-overview-page is-develop-configure-page" },
+            React.createElement("div", { className: "playground-environments-home-content playground-team-overview-content" },
+              React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero playground-agents-configure-hero playground-team-overview-hero" },
+                React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-team-page-header" },
+                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-team-page-title" }, "Teams")
+                ),
+                React.createElement("div", {
+                    className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-team-overview-empty-metrics",
+                    "aria-hidden": "true",
+                  },
+                  React.createElement("div", { className: "playground-team-overview-empty-chart" })
+                ),
+                teamPageError
+                  ? React.createElement("div", { className: "playground-team-error" }, teamPageError)
+                  : null,
+                React.createElement("section", {
+                    className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section",
+                  },
+                  visibleOverviewTeams.length === 0 ? renderTeamOverviewStickyTableHeader(false) : null,
+                  visibleOverviewTeams.length === 0
+                    ? React.createElement("div", { className: "playground-plugins-empty" },
+                        normalizedTeamOverviewSearchQuery
+                          ? "No matching teams found."
+                          : (teamPageLoading ? "Loading teams..." : "No teams yet.")
+                      )
+                    : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
+                        renderTeamOverviewStickyTableHeader(false),
+                        React.createElement("div", { className: "playground-project-overview-thread-list" },
+                          renderTeamOverviewColumnHeader(),
+                          visibleOverviewTeams.map((team) => {
+                            const teamId = String(team?.id || "");
+                            const teamName = getTeamOverviewDisplayName(team);
+                            const isOverviewTeamSelected = selectedTeamOverviewIds.has(teamId);
+                            const createdAt = team?.createdAt || team?.created_at || "";
+                            return React.createElement("div", {
+                                key: teamId || teamName,
+                                tabIndex: 0,
+                                role: "button",
+                                className: "playground-project-overview-threads-table-row",
+                                "aria-label": "Open " + teamName,
+                                onClick: () => openTeamDetail(team.id),
+                                onKeyDown: (event) => {
+                                  if (event.key === "Enter" || event.key === " ") {
+                                    event.preventDefault();
+                                    openTeamDetail(team.id);
+                                  }
+                                },
                               },
-                            },
-                              React.createElement("td", null,
-                                React.createElement("div", { className: "playground-team-table-title" }, team.name || "Untitled team"),
-                                React.createElement("div", { className: "playground-team-table-meta" }, team.ownerUserId === sessionState.userId ? "Owned by you" : "Member workspace")
+                              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-agents-overview-select-checkbox" + (isOverviewTeamSelected ? " is-selected" : ""),
+                                  role: "checkbox",
+                                  "aria-checked": isOverviewTeamSelected ? "true" : "false",
+                                  "aria-label": "Select " + teamName,
+                                  onClick: (event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    toggleTeamOverviewSelection(teamId);
+                                  },
+                                  onKeyDown: (event) => event.stopPropagation(),
+                                })
                               ),
-                              React.createElement("td", { className: "playground-auth-users-cell" }, formatRole(team.role)),
-                              React.createElement("td", { className: "playground-auth-users-cell" }, formatDate(team.createdAt) || "—"),
-                              React.createElement("td", { className: "is-actions" },
-                                React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 })
+                              React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
+                                React.createElement("div", { className: "playground-agents-overview-name-cell" },
+                                  React.createElement("div", { className: "playground-agents-overview-name-copy" },
+                                    React.createElement("div", { className: "playground-agents-overview-name-title" }, teamName)
+                                  )
+                                )
+                              ),
+                              React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
+                                React.createElement("div", { className: "playground-agents-overview-table-value" }, getTeamOverviewRoleLabel(team))
+                              ),
+                              React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
+                                React.createElement("div", { className: "playground-agents-overview-table-value" }, getTeamOverviewOwnerLabel(team))
+                              ),
+                              React.createElement("div", {
+                                className: "playground-project-overview-thread-cell is-date",
+                                title: createdAt ? formatPlaygroundExactDate(createdAt) : "",
+                              },
+                                React.createElement("div", { className: "playground-agents-overview-table-value" }, formatDate(createdAt) || "—")
+                              ),
+                              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-team-overview-action-shell" },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-overview-table-action-button" + (teamOverviewMenuId === teamId ? " is-open" : ""),
+                                  onClick: (event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    setTeamOverviewToolbarPopover("");
+                                    setTeamOverviewMenuId((current) => current === teamId ? "" : teamId);
+                                  },
+                                  onKeyDown: (event) => event.stopPropagation(),
+                                  "aria-label": "Team actions",
+                                  "aria-expanded": teamOverviewMenuId === teamId ? "true" : "false",
+                                },
+                                  React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
+                                ),
+                                renderTeamOverviewRowMenu(team)
                               )
-                            )
-                          )
+                            );
+                          })
                         )
                       )
-                    )
-                  : renderEmpty(teamPageLoading ? "Loading teams..." : "No teams yet.")
+                )
               )
             ),
             renderCreateTeamModal()
@@ -190566,11 +192778,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
             const displayName = getTeamMemberRowDisplayName(row);
             return email && displayName.toLowerCase() !== email.toLowerCase() ? email : "";
           };
-          const getTeamMemberJoinedLabel = (row) => {
-            if (row?.kind === "invitation") {
-              return "-";
-            }
-            const item = row?.item || {};
+	          const getTeamMemberJoinedLabel = (row) => {
+	            if (row?.kind === "invitation") {
+	              return "-";
+	            }
+	            const item = row?.item || {};
             const joinedAt = getTeamMemberIdentitySources(item)
               .map((source) => (
                 source.joinedAt
@@ -190580,13 +192792,141 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 || source.createdAt
                 || source.created_at
               ))
-              .find((value) => String(value || "").trim());
-            return formatDate(joinedAt) || "-";
-          };
-          const getTeamMemberAvatarUrl = (item, isInvitation = false) => {
-            if (isInvitation) {
-              return "";
-            }
+	              .find((value) => String(value || "").trim());
+	            return formatDate(joinedAt) || "-";
+	          };
+	          const getTeamMemberJoinedTimestamp = (row) => {
+	            if (row?.kind === "invitation") {
+	              return 0;
+	            }
+	            const item = row?.item || {};
+	            const joinedAt = getTeamMemberIdentitySources(item)
+	              .map((source) => (
+	                source.joinedAt
+	                || source.joined_at
+	                || source.acceptedAt
+	                || source.accepted_at
+	                || source.createdAt
+	                || source.created_at
+	              ))
+	              .find((value) => String(value || "").trim());
+	            const timestamp = Date.parse(String(joinedAt || ""));
+	            return Number.isFinite(timestamp) ? timestamp : 0;
+	          };
+	          const getTeamMemberRoleLabel = (row) => {
+	            const item = row?.item || {};
+	            return isTeamOwnerMember(item, row?.kind === "invitation")
+	              ? "Owner"
+	              : formatRole(item.role);
+	          };
+	          const getTeamMemberStatusLabel = (row) => {
+	            const item = row?.item || {};
+	            return row?.kind === "invitation"
+	              ? (item.status || "pending")
+	              : (item.status || "active");
+	          };
+	          const getTeamMemberSortValue = (row, sortKey) => {
+	            switch (sortKey) {
+	              case "role":
+	                return getTeamMemberRoleLabel(row);
+	              case "status":
+	                return getTeamMemberStatusLabel(row);
+	              case "joined":
+	                return getTeamMemberJoinedTimestamp(row);
+	              case "user":
+	              default:
+	                return getTeamMemberRowDisplayName(row);
+	            }
+	          };
+	          const compareTeamMemberSortValues = (left, right, sortKey) => {
+	            const leftValue = getTeamMemberSortValue(left, sortKey);
+	            const rightValue = getTeamMemberSortValue(right, sortKey);
+	            if (typeof leftValue === "number" || typeof rightValue === "number") {
+	              const leftNumber = typeof leftValue === "number" && Number.isFinite(leftValue) ? leftValue : 0;
+	              const rightNumber = typeof rightValue === "number" && Number.isFinite(rightValue) ? rightValue : 0;
+	              if (leftNumber !== rightNumber) {
+	                return leftNumber - rightNumber;
+	              }
+	            } else {
+	              const textComparison = String(leftValue || "").localeCompare(String(rightValue || ""), undefined, {
+	                numeric: true,
+	                sensitivity: "base",
+	              });
+	              if (textComparison !== 0) {
+	                return textComparison;
+	              }
+	            }
+	            return getTeamMemberRowDisplayName(left).localeCompare(getTeamMemberRowDisplayName(right), undefined, {
+	              numeric: true,
+	              sensitivity: "base",
+	            });
+	          };
+	          const normalizedTeamPageMemberSortDirection = normalizeTeamOverviewSortDirection(teamPageMemberSortDirection);
+	          const normalizedTeamPageMemberSearchQuery = String(teamPageMemberSearchQuery || "").trim().toLowerCase();
+	          const visibleTeamMemberRows = memberRows
+	            .filter((row) => {
+	              const normalizedStatus = String(getTeamMemberStatusLabel(row) || "").trim().toLowerCase();
+	              if (teamPageMemberFilter === "active" && (row?.kind === "invitation" || normalizedStatus !== "active")) {
+	                return false;
+	              }
+	              if (teamPageMemberFilter === "pending" && row?.kind !== "invitation" && normalizedStatus !== "pending") {
+	                return false;
+	              }
+	              if (!normalizedTeamPageMemberSearchQuery) {
+	                return true;
+	              }
+	              const haystack = [
+	                getTeamMemberRowDisplayName(row),
+	                getTeamMemberRowDetail(row),
+	                getTeamMemberRoleLabel(row),
+	                getTeamMemberStatusLabel(row),
+	                row?.id || "",
+	              ].join(" ").toLowerCase();
+	              return haystack.includes(normalizedTeamPageMemberSearchQuery);
+	            })
+	            .slice()
+	            .sort((left, right) => {
+	              const baseComparison = compareTeamMemberSortValues(left, right, teamPageMemberSort);
+	              return normalizedTeamPageMemberSortDirection === "desc" ? -baseComparison : baseComparison;
+	            });
+	          const getTeamMemberSelectionId = (row) => String(row?.kind || "member") + ":" + String(row?.id || row?.item?.id || "");
+	          const visibleTeamMemberSelectionIds = visibleTeamMemberRows
+	            .map((row) => getTeamMemberSelectionId(row))
+	            .filter(Boolean);
+	          const selectedVisibleTeamPageMemberIds = visibleTeamMemberSelectionIds.filter((memberId) => selectedTeamPageMemberIds.has(memberId));
+	          const allVisibleTeamMembersSelected = visibleTeamMemberSelectionIds.length > 0 && selectedVisibleTeamPageMemberIds.length === visibleTeamMemberSelectionIds.length;
+	          const hasPartialVisibleTeamMemberSelection = selectedVisibleTeamPageMemberIds.length > 0 && !allVisibleTeamMembersSelected;
+	          const toggleTeamPageMemberSelection = (memberId) => {
+	            const normalizedMemberId = String(memberId || "").trim();
+	            if (!normalizedMemberId) return;
+	            setSelectedTeamPageMemberIds((current) => {
+	              const next = new Set(current || []);
+	              if (next.has(normalizedMemberId)) {
+	                next.delete(normalizedMemberId);
+	              } else {
+	                next.add(normalizedMemberId);
+	              }
+	              return next;
+	            });
+	          };
+	          const toggleVisibleTeamPageMemberSelection = () => {
+	            if (visibleTeamMemberSelectionIds.length === 0) {
+	              return;
+	            }
+	            setSelectedTeamPageMemberIds((current) => {
+	              const next = new Set(current || []);
+	              if (allVisibleTeamMembersSelected) {
+	                visibleTeamMemberSelectionIds.forEach((memberId) => next.delete(memberId));
+	              } else {
+	                visibleTeamMemberSelectionIds.forEach((memberId) => next.add(memberId));
+	              }
+	              return next;
+	            });
+	          };
+	          const getTeamMemberAvatarUrl = (item, isInvitation = false) => {
+	            if (isInvitation) {
+	              return "";
+	            }
             const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
             const rawAvatarUrl = getTeamMemberIdentitySources(item)
               .map((value) => (
@@ -190608,39 +192948,306 @@ ${PROJECT_OVERVIEW_SCRIPT}
             const normalizedAvatarUrl = normalizeSessionPhotoUrl(rawAvatarUrl || fallbackAvatarUrl || "");
             return canRenderAvatarImage(normalizedAvatarUrl) ? normalizedAvatarUrl : "";
           };
-          const getTeamMemberMenuId = (row) => "team-member:" + String(row?.kind || "member") + ":" + String(row?.id || row?.item?.id || "");
-          const renderTeamMemberActionMenu = (row) => {
-            const item = row?.item || {};
-            const rowId = String(item.id || row?.id || "").trim();
-            const menuId = getTeamMemberMenuId(row);
-            if (!menuId || teamPageMemberMenuId !== menuId) {
-              return null;
-            }
-            const isInvitation = row?.kind === "invitation";
-            const actionId = isInvitation ? "revoke:" + rowId : "member-remove:" + rowId;
-            const isRemoving = teamPageActionId === actionId;
-            return React.createElement("div", {
-                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-resources-action-menu playground-team-member-action-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                onClick: (event) => event.stopPropagation(),
-              },
-              React.createElement("button", {
-                  type: "button",
-                  className: "tb-popup-row playground-project-team-menu-item is-danger",
-                  disabled: isRemoving,
-                  onClick: () => {
-                    setTeamPageMemberMenuId("");
-                    if (isInvitation) {
-                      handleRevokeTeamInvitation(rowId);
-                    } else {
-                      handleRemoveTeamMember(rowId);
-                    }
-                  },
-                },
-                React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, isRemoving ? "Removing..." : "Remove user")
-              )
-            );
-          };
+	          const getTeamMemberMenuId = (row) => "team-member:" + String(row?.kind || "member") + ":" + String(row?.id || row?.item?.id || "");
+	          const getTeamMemberActionId = (row) => String(row?.item?.id || row?.id || "").trim();
+	          const canRemoveTeamMemberRow = (row) => {
+	            const item = row?.item || {};
+	            const rowId = getTeamMemberActionId(row);
+	            const isInvitation = row?.kind === "invitation";
+	            const isProtectedMember = !isInvitation && (isTeamOwnerMember(item, false) || isCurrentTeamMemberRow(item, false));
+	            return Boolean(canManageTeam && rowId && (isInvitation || !isProtectedMember));
+	          };
+	          const getTeamMemberActionTargetsByIds = (memberIds = []) => {
+	            const normalizedIds = new Set((Array.isArray(memberIds) ? memberIds : [])
+	              .map((memberId) => String(memberId || "").trim())
+	              .filter(Boolean));
+	            if (!normalizedIds.size) {
+	              return [];
+	            }
+	            return memberRows.filter((row) => normalizedIds.has(getTeamMemberSelectionId(row)));
+	          };
+	          function clearTeamPageMemberActionMenuCloseTimer() {
+	            if (teamPageMemberActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
+	              window.clearTimeout(teamPageMemberActionMenuCloseTimerRef.current);
+	              teamPageMemberActionMenuCloseTimerRef.current = null;
+	            }
+	          }
+	          function clearTeamPageMemberBulkActionMenuCloseTimer() {
+	            if (teamPageMemberBulkActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
+	              window.clearTimeout(teamPageMemberBulkActionMenuCloseTimerRef.current);
+	              teamPageMemberBulkActionMenuCloseTimerRef.current = null;
+	            }
+	          }
+	          function closeTeamPageMemberActionMenu(options = {}) {
+	            if (!teamPageMemberActionMenuState) {
+	              return;
+	            }
+	            clearTeamPageMemberActionMenuCloseTimer();
+	            if (options?.animate === false || typeof window === "undefined") {
+	              setTeamPageMemberActionMenuClosing(false);
+	              setTeamPageMemberActionMenuState(null);
+	              return;
+	            }
+	            setTeamPageMemberActionMenuClosing(true);
+	            teamPageMemberActionMenuCloseTimerRef.current = window.setTimeout(() => {
+	              teamPageMemberActionMenuCloseTimerRef.current = null;
+	              setTeamPageMemberActionMenuClosing(false);
+	              setTeamPageMemberActionMenuState(null);
+	            }, 90);
+	          }
+	          function closeTeamPageMemberBulkActionMenu(options = {}) {
+	            if (!teamPageMemberBulkActionMenuState) {
+	              return;
+	            }
+	            clearTeamPageMemberBulkActionMenuCloseTimer();
+	            if (options?.animate === false || typeof window === "undefined") {
+	              setTeamPageMemberBulkActionMenuClosing(false);
+	              setTeamPageMemberBulkActionMenuState(null);
+	              return;
+	            }
+	            setTeamPageMemberBulkActionMenuClosing(true);
+	            teamPageMemberBulkActionMenuCloseTimerRef.current = window.setTimeout(() => {
+	              teamPageMemberBulkActionMenuCloseTimerRef.current = null;
+	              setTeamPageMemberBulkActionMenuClosing(false);
+	              setTeamPageMemberBulkActionMenuState(null);
+	            }, 90);
+	          }
+	          function getTeamMemberContextMenuPosition(event, menuHeight = 96) {
+	            const menuWidth = 220;
+	            const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
+	            const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+	            const gutter = 12;
+	            const maxLeft = Math.max(gutter, viewportWidth - menuWidth - gutter);
+	            const maxTop = Math.max(gutter, viewportHeight - menuHeight - gutter);
+	            return {
+	              top: Math.max(gutter, Math.min(maxTop, Number(event?.clientY || 0))),
+	              left: Math.max(gutter, Math.min(maxLeft, Number(event?.clientX || 0))),
+	            };
+	          }
+	          function getTeamMemberActionMenuStyle(menuState) {
+	            const menuStyle = {
+	              position: "fixed",
+	              top: Number(menuState?.top || 0) + "px",
+	            };
+	            if (Number.isFinite(menuState?.right)) {
+	              menuStyle.right = Number(menuState.right) + "px";
+	              menuStyle.left = "auto";
+	            } else {
+	              menuStyle.left = Number(menuState?.left || 0) + "px";
+	              menuStyle.right = "auto";
+	            }
+	            return menuStyle;
+	          }
+	          function openTeamPageMemberBulkActionMenu(event, memberIds = []) {
+	            const selectedIds = (Array.isArray(memberIds) ? memberIds : [])
+	              .map((memberId) => String(memberId || "").trim())
+	              .filter(Boolean);
+	            if (selectedIds.length < 2) {
+	              return false;
+	            }
+	            event.preventDefault();
+	            event.stopPropagation();
+	            const position = getTeamMemberContextMenuPosition(event, 96);
+	            clearTeamPageMemberBulkActionMenuCloseTimer();
+	            closeTeamPageMemberActionMenu({ animate: false });
+	            setTeamPageMemberMenuId("");
+	            setTeamPageResourceMenuId("");
+	            setTeamPageResourceToolbarPopover("");
+	            setTeamPageMemberBulkActionMenuClosing(false);
+	            setTeamPageMemberBulkActionMenuState({
+	              memberIds: selectedIds,
+	              ...position,
+	            });
+	            return true;
+	          }
+	          function openTeamPageMemberActionMenu(event, row, options = {}) {
+	            const menuId = getTeamMemberMenuId(row);
+	            if (!menuId) {
+	              return;
+	            }
+	            event.preventDefault();
+	            event.stopPropagation();
+	            const memberSelectionId = getTeamMemberSelectionId(row);
+	            if (
+	              options?.context
+	              && memberSelectionId
+	              && selectedTeamPageMemberIds.has(memberSelectionId)
+	              && selectedTeamPageMemberIds.size > 1
+	            ) {
+	              openTeamPageMemberBulkActionMenu(event, Array.from(selectedTeamPageMemberIds || []));
+	              return;
+	            }
+		            const position = options?.context
+		              ? getTeamMemberContextMenuPosition(event, 96)
+		              : getSideActionMenuPosition(event, 96, 220);
+	            if (!options?.context && teamPageMemberActionMenuState?.menuId === menuId && !teamPageMemberActionMenuClosing) {
+	              closeTeamPageMemberActionMenu();
+	              return;
+	            }
+	            clearTeamPageMemberActionMenuCloseTimer();
+	            closeTeamPageMemberBulkActionMenu({ animate: false });
+	            setTeamPageMemberMenuId("");
+	            setTeamPageResourceMenuId("");
+	            setTeamPageResourceToolbarPopover("");
+	            setTeamPageMemberActionMenuClosing(false);
+	            setTeamPageMemberActionMenuState({
+	              menuId,
+	              row,
+	              ...position,
+	            });
+	          }
+	          async function handleRemoveTeamMemberRows(rows = []) {
+	            const targets = (Array.isArray(rows) ? rows : []).filter(canRemoveTeamMemberRow);
+	            if (!targets.length) {
+	              return;
+	            }
+	            const confirmed = window.confirm("Remove " + targets.length + " selected " + (targets.length === 1 ? "member" : "members") + " from the team?");
+	            if (!confirmed) {
+	              return;
+	            }
+	            const teamId = String(teamPageSelectedTeamId || "").trim();
+	            if (!teamId) {
+	              return;
+	            }
+	            closeTeamPageMemberBulkActionMenu({ animate: false });
+	            closeTeamPageMemberActionMenu({ animate: false });
+	            setTeamPageActionId("member-bulk-remove");
+	            setTeamPageError("");
+	            try {
+	              for (const row of targets) {
+	                const rowId = getTeamMemberActionId(row);
+	                if (!rowId) {
+	                  continue;
+	                }
+	                if (row?.kind === "invitation") {
+	                  const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/invitations/" + encodeURIComponent(rowId) + "/revoke", {
+	                    method: "POST",
+	                    credentials: "include",
+	                    cache: "no-store",
+	                    headers: {
+	                      ...requestHeaders,
+	                      "Content-Type": "application/json",
+	                    },
+	                    body: "{}",
+	                  }, 8000);
+	                  if (!response.ok) {
+	                    throw new Error(data?.message || data?.error || "Failed to revoke invitation.");
+	                  }
+	                } else {
+	                  const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/members/" + encodeURIComponent(rowId), {
+	                    method: "DELETE",
+	                    credentials: "include",
+	                    cache: "no-store",
+	                    headers: requestHeaders,
+	                  }, 8000);
+	                  if (!response.ok) {
+	                    throw new Error(data?.message || data?.error || "Failed to remove team member.");
+	                  }
+	                }
+	              }
+	              setSelectedTeamPageMemberIds(new Set());
+	              await loadTeamPageData();
+	            } catch (error) {
+	              setTeamPageError(error instanceof Error ? error.message : "Failed to remove selected team members.");
+	            } finally {
+	              setTeamPageActionId("");
+	            }
+	          }
+	          const renderTeamMemberActionMenuPortal = () => {
+	            if (!teamPageMemberActionMenuState) {
+	              return null;
+	            }
+	            const row = teamPageMemberActionMenuState.row || null;
+	            const rowId = getTeamMemberActionId(row);
+	            const isInvitation = row?.kind === "invitation";
+	            const actionId = isInvitation ? "revoke:" + rowId : "member-remove:" + rowId;
+	            const isRemoving = teamPageActionId === actionId || teamPageActionId === "member-bulk-remove";
+	            const canRemoveRow = canRemoveTeamMemberRow(row);
+	            const menuElement = React.createElement("div", {
+	                className: "sidebar-thread-popup-scrim",
+	                style: { zIndex: 360 },
+	                onClick: closeTeamPageMemberActionMenu,
+	              },
+	              React.createElement("div", {
+	                className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
+	                style: getTeamMemberActionMenuStyle(teamPageMemberActionMenuState),
+	                onClick: (event) => event.stopPropagation(),
+	              },
+	                React.createElement("div", {
+	                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu" + (teamPageMemberActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
+	                  role: "menu",
+	                },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    role: "menuitem",
+	                    className: "tb-popup-row is-danger",
+	                    disabled: !canRemoveRow || isRemoving,
+	                    onClick: () => {
+	                      closeTeamPageMemberActionMenu({ animate: false });
+	                      if (isInvitation) {
+	                        handleRevokeTeamInvitation(rowId);
+	                      } else {
+	                        handleRemoveTeamMember(rowId);
+	                      }
+	                    },
+	                  },
+	                    React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                      React.createElement("span", null, isRemoving ? "Removing..." : (isInvitation ? "Revoke invitation" : "Remove user"))
+	                    )
+	                  )
+	                )
+	              )
+	            );
+	            return typeof createPortal === "function" && typeof document !== "undefined" && document.body
+	              ? createPortal(menuElement, document.body)
+	              : menuElement;
+	          };
+	          const renderTeamMemberBulkActionMenuPortal = () => {
+	            if (!teamPageMemberBulkActionMenuState) {
+	              return null;
+	            }
+	            const targets = getTeamMemberActionTargetsByIds(teamPageMemberBulkActionMenuState.memberIds);
+	            if (targets.length < 2) {
+	              return null;
+	            }
+	            const removableTargets = targets.filter(canRemoveTeamMemberRow);
+	            const isRemoving = teamPageActionId === "member-bulk-remove";
+	            const menuElement = React.createElement("div", {
+	                className: "sidebar-thread-popup-scrim",
+	                style: { zIndex: 360 },
+	                onClick: closeTeamPageMemberBulkActionMenu,
+	              },
+	              React.createElement("div", {
+	                className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
+	                style: getTeamMemberActionMenuStyle(teamPageMemberBulkActionMenuState),
+	                onClick: (event) => event.stopPropagation(),
+	              },
+	                React.createElement("div", {
+	                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu" + (teamPageMemberBulkActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
+	                  role: "menu",
+	                },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    role: "menuitem",
+	                    className: "tb-popup-row is-danger",
+	                    disabled: isRemoving || removableTargets.length === 0,
+	                    onClick: () => {
+	                      void handleRemoveTeamMemberRows(removableTargets);
+	                    },
+	                  },
+	                    React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                      React.createElement("span", null, isRemoving ? "Removing..." : "Remove selected")
+	                    )
+	                  )
+	                )
+	              )
+	            );
+	            return typeof createPortal === "function" && typeof document !== "undefined" && document.body
+	              ? createPortal(menuElement, document.body)
+	              : menuElement;
+	          };
           const renderTeamMemberIdentityCell = (item, displayName, detail, isInvitation) =>
             React.createElement("div", { className: "playground-team-member-cell" },
               renderAccountAvatar(
@@ -190655,85 +193262,296 @@ ${PROJECT_OVERVIEW_SCRIPT}
               )
             );
 
+	          const teamPageMemberSortOptions = [
+	            { id: "user", label: "User (A-Z)", sortKey: "user", direction: "asc" },
+	            { id: "role", label: "Role", sortKey: "role", direction: "asc" },
+	            { id: "status", label: "Status", sortKey: "status", direction: "asc" },
+	            { id: "joined", label: "Recently Joined", sortKey: "joined", direction: "desc" },
+	          ];
+	          const teamPageMemberFilterOptions = [
+	            { id: "all", label: "All Members", description: "Show members and pending invites" },
+	            { id: "active", label: "Active Members", description: "Only show active team members" },
+	            { id: "pending", label: "Pending Invites", description: "Only show pending invitations" },
+	          ];
+	          const handleTeamMembersColumnSort = (sortKey) => {
+	            const normalizedSortKey = String(sortKey || "user").trim() || "user";
+	            setTeamPageMemberToolbarPopover("");
+	            setTeamPageMemberSortDirection((currentDirection) => {
+	              if (teamPageMemberSort !== normalizedSortKey) {
+	                return normalizedSortKey === "joined" ? "desc" : "asc";
+	              }
+	              return normalizeTeamOverviewSortDirection(currentDirection) === "asc" ? "desc" : "asc";
+	            });
+	            setTeamPageMemberSort(normalizedSortKey);
+	          };
+	          const renderTeamMembersSortIcon = (sortKey) => {
+	            const isActive = teamPageMemberSort === sortKey;
+	            const isDescending = isActive && normalizedTeamPageMemberSortDirection === "desc";
+	            const isAscending = isActive && !isDescending;
+	            return React.createElement("span", {
+	                className: "playground-agents-overview-sort-icon"
+	                  + (isActive ? " is-active" : "")
+	                  + (isAscending ? " is-ascending" : "")
+	                  + (isDescending ? " is-descending" : ""),
+	                "aria-hidden": "true",
+	              },
+	              React.createElement(ChevronsUpDown, {
+	                className: "playground-agents-overview-sort-icon-layer is-top",
+	                width: 14,
+	                height: 14,
+	                strokeWidth: 1.8,
+	              }),
+	              React.createElement(ChevronsUpDown, {
+	                className: "playground-agents-overview-sort-icon-layer is-bottom",
+	                width: 14,
+	                height: 14,
+	                strokeWidth: 1.8,
+	              })
+	            );
+	          };
+	          const renderTeamMembersSortableHeader = (label, sortKey) => {
+	            const isActive = teamPageMemberSort === sortKey;
+	            const nextDirection = isActive && normalizedTeamPageMemberSortDirection === "asc" ? "descending" : "ascending";
+	            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
+	              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+	              React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-agents-overview-column-sort-button"
+	                    + (isActive ? " is-active" : "")
+	                    + (isActive && normalizedTeamPageMemberSortDirection === "asc" ? " is-ascending" : "")
+	                    + (isActive && normalizedTeamPageMemberSortDirection === "desc" ? " is-descending" : ""),
+	                  title: "Sort " + label + " " + nextDirection,
+	                  "aria-label": "Sort " + label + " " + nextDirection,
+	                  "aria-pressed": isActive ? "true" : "false",
+	                  onClick: (event) => {
+	                    event.preventDefault();
+	                    event.stopPropagation();
+	                    handleTeamMembersColumnSort(sortKey);
+	                  },
+	                },
+	                renderTeamMembersSortIcon(sortKey)
+	              )
+	            );
+	          };
+	          const renderTeamMembersTableColumnHeader = () => React.createElement("div", {
+	              className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-team-members-column-header",
+	            },
+	            React.createElement("div", null,
+	              React.createElement("button", {
+	                type: "button",
+	                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+	                  + (allVisibleTeamMembersSelected ? " is-selected" : "")
+	                  + (hasPartialVisibleTeamMemberSelection ? " is-partial" : ""),
+	                role: "checkbox",
+	                "aria-checked": allVisibleTeamMembersSelected ? "true" : (hasPartialVisibleTeamMemberSelection ? "mixed" : "false"),
+	                "aria-label": allVisibleTeamMembersSelected ? "Deselect all visible members" : "Select all visible members",
+	                onClick: (event) => {
+	                  event.preventDefault();
+	                  event.stopPropagation();
+	                  toggleVisibleTeamPageMemberSelection();
+	                },
+	              })
+	            ),
+	            React.createElement("div", null, renderTeamMembersSortableHeader("User", "user")),
+	            React.createElement("div", null, renderTeamMembersSortableHeader("Role", "role")),
+	            React.createElement("div", null, renderTeamMembersSortableHeader("Status", "status")),
+	            React.createElement("div", null, renderTeamMembersSortableHeader("Joined", "joined")),
+	            React.createElement("div", null)
+	          );
+	          const renderTeamMembersToolbarMenu = (menuId, options, activeValue, setActiveValue) => {
+	            const isSort = menuId === "sort";
+	            return React.createElement("div", {
+	                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	              },
+	              options.map((option) => {
+	                const optionValue = option.sortKey || option.id;
+	                const optionDirection = normalizeTeamOverviewSortDirection(option.direction);
+	                const selected = isSort
+	                  ? teamPageMemberSort === optionValue && normalizedTeamPageMemberSortDirection === optionDirection
+	                  : activeValue === option.id;
+	                return React.createElement("button", {
+	                    key: option.id,
+	                    type: "button",
+	                    className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
+	                    onClick: () => {
+	                      if (isSort) {
+	                        setTeamPageMemberSort(optionValue);
+	                        setTeamPageMemberSortDirection(optionDirection);
+	                      } else {
+	                        setActiveValue(option.id);
+	                      }
+	                      setTeamPageMemberToolbarPopover("");
+	                    },
+	                  },
+	                  React.createElement("span", { className: "tb-popup-check-slot" },
+	                    selected ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
+	                  ),
+	                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                    React.createElement("span", null, option.label),
+	                    option.description ? React.createElement("span", null, option.description) : null
+	                  )
+	                );
+	              })
+	            );
+	          };
+
+	          const renderTeamMembersStickyTableHeader = () => React.createElement("div", {
+	              className: "playground-agents-overview-sticky-table-header playground-team-members-sticky-table-header",
+	            },
+	            React.createElement("div", {
+	                className: "playground-develop-server-kind-table-toolbar playground-team-members-table-toolbar playground-team-members-toolbar-row",
+	                ref: teamPageMemberToolbarRef,
+	              },
+	              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
+	                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                React.createElement("input", {
+	                  type: "search",
+	                  value: teamPageMemberSearchQuery,
+	                  onChange: (event) => setTeamPageMemberSearchQuery(event.target.value),
+	                  className: "playground-plugins-search",
+	                  placeholder: "Search members",
+	                })
+	              ),
+	              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-files-control-button is-bare is-backlog-sort" + (teamPageMemberToolbarPopover === "sort" || teamPageMemberSort !== "user" || normalizedTeamPageMemberSortDirection !== "asc" ? " is-active" : ""),
+	                    onClick: () => setTeamPageMemberToolbarPopover((current) => current === "sort" ? "" : "sort"),
+	                  },
+	                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("span", null, "Sort")
+	                  ),
+	                  teamPageMemberToolbarPopover === "sort"
+	                    ? renderTeamMembersToolbarMenu("sort", teamPageMemberSortOptions, teamPageMemberSort, setTeamPageMemberSort)
+	                    : null
+	                ),
+	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-files-control-button is-bare is-backlog-filter" + (teamPageMemberToolbarPopover === "filter" || teamPageMemberFilter !== "all" ? " is-active" : ""),
+	                    onClick: () => setTeamPageMemberToolbarPopover((current) => current === "filter" ? "" : "filter"),
+	                  },
+	                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("span", null, "Filter")
+	                  ),
+	                  teamPageMemberToolbarPopover === "filter"
+	                    ? renderTeamMembersToolbarMenu("filter", teamPageMemberFilterOptions, teamPageMemberFilter, setTeamPageMemberFilter)
+	                    : null
+	                )
+	              ),
+	              canManageTeam
+	                ? React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button",
+	                    onClick: () => {
+	                      setTeamPageMemberToolbarPopover("");
+	                      setTeamPageInviteModalOpen(true);
+	                    },
+	                    title: "Invite member",
+	                    "aria-label": "Invite member",
+	                  },
+	                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("span", null, "Invite Member")
+	                  )
+	                : null
+	            )
+	          );
+
           const renderMembersTab = () => React.createElement("div", { className: "playground-team-detail-panel" },
-            memberRows.length > 0
-              ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
-                  React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table playground-team-members-table" },
-                    React.createElement("colgroup", null,
-                      React.createElement("col", { className: "playground-team-table-col-main" }),
-                      React.createElement("col", { className: "playground-team-table-col-role" }),
-                      React.createElement("col", { className: "playground-team-table-col-meta" }),
-                      React.createElement("col", { className: "playground-team-table-col-joined" }),
-                      React.createElement("col", { className: "playground-team-table-col-actions" })
-                    ),
-                    React.createElement("thead", null,
-                      React.createElement("tr", null,
-                        React.createElement("th", null, "User"),
-                        React.createElement("th", null, "Role"),
-                        React.createElement("th", null, "Status"),
-                        React.createElement("th", null, "Joined"),
-                        React.createElement("th", { className: "is-actions" }, "")
-                      )
-                    ),
-                    React.createElement("tbody", null,
-                      memberRows.map((row) => {
+            React.createElement("section", {
+                className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-team-grid-table-section playground-team-members-table-section",
+              },
+              renderTeamMembersStickyTableHeader(),
+	              visibleTeamMemberRows.length > 0
+	                ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
+	                    React.createElement("div", { className: "playground-project-overview-thread-list" },
+	                      renderTeamMembersTableColumnHeader(),
+	                      visibleTeamMemberRows.map((row) => {
                         const item = row.item || {};
                         const isInvitation = row.kind === "invitation";
                         const displayName = getTeamMemberRowDisplayName(row);
-                        const detail = getTeamMemberRowDetail(row);
-                        const joinedLabel = getTeamMemberJoinedLabel(row);
-                        const isOwner = isTeamOwnerMember(item, isInvitation);
-                        const isProtectedMember = isOwner || isCurrentTeamMemberRow(item, isInvitation);
-                        const rowActionId = String(item.id || row.id || "").trim();
-                        const canRemoveRow = canManageTeam && rowActionId && (isInvitation || !isProtectedMember);
-                        const menuId = getTeamMemberMenuId(row);
-                        const menuOpen = teamPageMemberMenuId === menuId;
-                        return React.createElement("tr", { key: row.kind + ":" + row.id },
-                          React.createElement("td", null,
-                            renderTeamMemberIdentityCell(item, displayName, detail, isInvitation)
-                          ),
-                          React.createElement("td", null,
+		                        const detail = getTeamMemberRowDetail(row);
+		                        const joinedLabel = getTeamMemberJoinedLabel(row);
+		                        const isOwner = isTeamOwnerMember(item, isInvitation);
+		                        const isProtectedMember = isOwner || isCurrentTeamMemberRow(item, isInvitation);
+		                        const canRemoveRow = canRemoveTeamMemberRow(row);
+		                        const menuId = getTeamMemberMenuId(row);
+		                        const menuOpen = teamPageMemberActionMenuState?.menuId === menuId;
+		                        const memberSelectionId = getTeamMemberSelectionId(row);
+		                        const isTeamMemberSelected = selectedTeamPageMemberIds.has(memberSelectionId);
+		                        return React.createElement("div", {
+		                            key: row.kind + ":" + row.id,
+		                            className: "playground-project-overview-threads-table-row",
+		                            onContextMenu: (event) => {
+		                              if (isTeamMemberSelected && selectedTeamPageMemberIds.size > 1) {
+		                                openTeamPageMemberBulkActionMenu(event, Array.from(selectedTeamPageMemberIds || []));
+		                                return;
+		                              }
+		                              openTeamPageMemberActionMenu(event, row, { context: true });
+		                            },
+		                          },
+	                          React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+	                            React.createElement("button", {
+	                              type: "button",
+	                              className: "playground-agents-overview-select-checkbox" + (isTeamMemberSelected ? " is-selected" : ""),
+	                              role: "checkbox",
+	                              "aria-checked": isTeamMemberSelected ? "true" : "false",
+	                              "aria-label": "Select " + displayName,
+	                              onClick: (event) => {
+	                                event.preventDefault();
+	                                event.stopPropagation();
+	                                toggleTeamPageMemberSelection(memberSelectionId);
+	                              },
+	                            })
+	                          ),
+	                          React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
+	                            renderTeamMemberIdentityCell(item, displayName, detail, isInvitation)
+	                          ),
+                          React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
                             isOwner
                               ? React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, "Owner")
                               : !isInvitation && canManageTeam && !isProtectedMember
-                              ? renderRoleSelect({
-                                  value: item.role || "create",
-                                  onChange: (event) => handleUpdateTeamMemberRole(item.id, event.target.value),
-                                  disabled: teamPageActionId === "member-role:" + item.id,
-                                })
-                              : React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, formatRole(item.role))
+	                                ? renderRoleSelect({
+	                                    value: item.role || "create",
+	                                    onChange: (event) => handleUpdateTeamMemberRole(item.id, event.target.value),
+	                                    disabled: teamPageActionId === "member-role:" + item.id,
+	                                    variant: "member-row",
+	                                  })
+                                : React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, formatRole(item.role))
                           ),
-                          React.createElement("td", { className: "playground-auth-users-cell" }, isInvitation ? (item.status || "pending") : (item.status || "active")),
-                          React.createElement("td", { className: "playground-auth-users-cell" }, joinedLabel),
-                          React.createElement("td", { className: "is-actions" },
-                            canRemoveRow
-                              ? React.createElement("div", {
-                                  className: "playground-tasks-toolbar-popup-shell playground-project-resources-action-shell playground-team-member-action-shell" + (menuOpen ? " is-open" : ""),
-                                },
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-team-icon-button playground-team-member-action-button",
-                                  onClick: (event) => {
-                                    event.preventDefault();
-                                    event.stopPropagation();
-                                    setTeamPageResourceMenuId("");
-                                    setTeamPageResourceToolbarPopover("");
-                                    setTeamPageMemberMenuId((current) => current === menuId ? "" : menuId);
-                                  },
-                                  "aria-label": "Team member actions for " + displayName,
-                                  "aria-expanded": menuOpen ? "true" : "false",
-                                }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
-                                renderTeamMemberActionMenu(row)
-                              )
-                              : null
-                          )
-                        );
+                          React.createElement("div", { className: "playground-project-overview-thread-cell is-status" },
+                            React.createElement("div", { className: "playground-agents-overview-table-value" }, isInvitation ? (item.status || "pending") : (item.status || "active"))
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
+                            React.createElement("div", { className: "playground-agents-overview-table-value" }, joinedLabel)
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
+		                            canRemoveRow
+		                              ? React.createElement("button", {
+		                                  type: "button",
+		                                  className: "playground-overview-table-action-button playground-team-member-action-button" + (menuOpen ? " is-open" : ""),
+		                                  onClick: (event) => openTeamPageMemberActionMenu(event, row, { openLeft: true }),
+		                                  onContextMenu: (event) => openTeamPageMemberActionMenu(event, row, { context: true }),
+		                                  onKeyDown: (event) => event.stopPropagation(),
+		                                  "aria-label": "Team member actions for " + displayName,
+		                                  "aria-expanded": menuOpen ? "true" : "false",
+		                                }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 }))
+		                              : null
+		                          )
+		                        );
                       })
                     )
-                  )
-                )
-              : renderEmpty(teamPageLoading ? "Loading members..." : "No members yet.")
-          );
+		                  )
+		                : React.createElement("div", { className: "playground-plugins-empty" },
+		                    teamPageLoading
+		                      ? "Loading members..."
+		                      : (normalizedTeamPageMemberSearchQuery || teamPageMemberFilter !== "all" ? "No matching members found." : "No members yet.")
+		                  )
+	            ),
+	            renderTeamMemberActionMenuPortal(),
+	            renderTeamMemberBulkActionMenuPortal()
+	          );
 
           const getTeamResourceTypeMeta = (resourceType) => {
             const normalizedType = String(resourceType || "").trim();
@@ -191371,9 +194189,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
               }
               return String(left.title || "").localeCompare(String(right.title || ""));
             });
-          const teamResourceTypeFilters = [
-            { id: "all", label: "All" },
-            { id: "project", label: "Projects" },
+	          const teamResourceTypeFilters = [
+	            { id: "all", label: "All" },
+	            { id: "project", label: "Projects" },
             { id: "environment", label: "Computers" },
             { id: "agent", label: "Agents" },
             { id: "file", label: "Files" },
@@ -191383,12 +194201,73 @@ ${PROJECT_OVERVIEW_SCRIPT}
             { id: "database", label: "Databases" },
             { id: "imagine", label: "Imagine" },
             { id: "imagine_template", label: "Imagine templates" },
-          ].filter((filterOption) => (
-            filterOption.id === "all" || teamResourceRowsAll.some((row) => row.type === filterOption.id)
-          ));
-          const teamResourceRows = teamResourceRowsAll
-            .filter((row) => String(teamPageResourceFilter || "all") === "all" || row.type === teamPageResourceFilter)
-            .filter((row) => {
+	          ].filter((filterOption) => (
+	            filterOption.id === "all" || teamResourceRowsAll.some((row) => row.type === filterOption.id)
+	          ));
+	          const getTeamResourceSortValue = (row, sortKey) => {
+	            const record = row?.record && typeof row.record === "object" && !Array.isArray(row.record) ? row.record : {};
+	            switch (String(sortKey || "resource")) {
+	              case "access":
+	                return row?.accessLabel || row?.status || "";
+	              case "source":
+	                return row?.sourceLabel || "";
+	              case "updated": {
+	                const timestamp = Date.parse(String(
+	                  row?.updatedAt
+	                  || row?.directShare?.updatedAt
+	                  || record.updatedAt
+	                  || record.updated_at
+	                  || record.createdAt
+	                  || record.created_at
+	                  || ""
+	                ));
+	                return Number.isFinite(timestamp) ? timestamp : 0;
+	              }
+	              case "owner":
+	                return row?.ownerLabel || "";
+	              case "resource":
+	              default:
+	                return row?.title || "";
+	            }
+	          };
+	          const compareTeamResourceRows = (left, right, sortKey) => {
+	            const leftValue = getTeamResourceSortValue(left, sortKey);
+	            const rightValue = getTeamResourceSortValue(right, sortKey);
+	            if (typeof leftValue === "number" || typeof rightValue === "number") {
+	              const leftNumber = typeof leftValue === "number" && Number.isFinite(leftValue) ? leftValue : 0;
+	              const rightNumber = typeof rightValue === "number" && Number.isFinite(rightValue) ? rightValue : 0;
+	              if (leftNumber !== rightNumber) {
+	                return leftNumber - rightNumber;
+	              }
+	            } else {
+	              const textComparison = String(leftValue || "").localeCompare(String(rightValue || ""), undefined, {
+	                numeric: true,
+	                sensitivity: "base",
+	              });
+	              if (textComparison !== 0) {
+	                return textComparison;
+	              }
+	            }
+	            return String(left?.title || "").localeCompare(String(right?.title || ""), undefined, {
+	              numeric: true,
+	              sensitivity: "base",
+	            });
+	          };
+	          const handleTeamResourceSortChange = (nextSortKey) => {
+	            const normalizedSortKey = String(nextSortKey || "resource").trim() || "resource";
+	            setTeamPageResourceToolbarPopover("");
+	            setTeamPageResourceMenuId("");
+	            setTeamPageResourceSortDirection((currentDirection) => {
+	              if (teamPageResourceSort !== normalizedSortKey) {
+	                return normalizedSortKey === "updated" ? "desc" : "asc";
+	              }
+	              return String(currentDirection || "asc").toLowerCase() === "asc" ? "desc" : "asc";
+	            });
+	            setTeamPageResourceSort(normalizedSortKey);
+	          };
+	          const teamResourceRows = teamResourceRowsAll
+	            .filter((row) => String(teamPageResourceFilter || "all") === "all" || row.type === teamPageResourceFilter)
+	            .filter((row) => {
               const query = String(teamPageResourceSearchQuery || "").trim().toLowerCase();
               if (!query) {
                 return true;
@@ -191399,11 +194278,237 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 row.status,
                 row.sourceLabel,
                 row.ownerLabel,
-                row.record?.resourceId || "",
-              ].join(" ").toLowerCase().includes(query);
-            });
-          const getTeamResourceRowMenuId = (row) => "team-resource:" + String(row?.key || "").trim();
-          const openTeamShareResourceModal = (resourceType = "") => {
+	                row.record?.resourceId || "",
+	              ].join(" ").toLowerCase().includes(query);
+	            })
+	            .slice()
+	            .sort((left, right) => {
+	              const comparison = compareTeamResourceRows(left, right, teamPageResourceSort);
+	              return String(teamPageResourceSortDirection || "asc").toLowerCase() === "desc" ? -comparison : comparison;
+	            });
+	          const getTeamResourceSelectionId = (row) => String(row?.key || row?.id || row?.resourceId || row?.title || "").trim();
+	          const toggleTeamPageResourceSelection = (resourceId) => {
+	            const normalizedResourceId = String(resourceId || "").trim();
+	            if (!normalizedResourceId) return;
+	            setSelectedTeamPageResourceIds((current) => {
+	              const next = new Set(current || []);
+	              if (next.has(normalizedResourceId)) {
+	                next.delete(normalizedResourceId);
+	              } else {
+	                next.add(normalizedResourceId);
+	              }
+	              return next;
+	            });
+	          };
+	          const toggleVisibleTeamPageResourceSelection = (resourceIds = [], shouldSelect = true) => {
+	            const normalizedResourceIds = (Array.isArray(resourceIds) ? resourceIds : [])
+	              .map((resourceId) => String(resourceId || "").trim())
+	              .filter(Boolean);
+	            if (!normalizedResourceIds.length) {
+	              return;
+	            }
+	            setSelectedTeamPageResourceIds((current) => {
+	              const next = new Set(current || []);
+	              normalizedResourceIds.forEach((resourceId) => {
+	                if (shouldSelect) {
+	                  next.add(resourceId);
+	                } else {
+	                  next.delete(resourceId);
+	                }
+	              });
+	              return next;
+	            });
+		          };
+		          const getTeamResourceRowMenuId = (row) => "team-resource:" + String(row?.key || "").trim();
+		          const canRemoveTeamResourceRow = (row) => Boolean((row?.directShare || row?.record || {})?.id && canManageTeam);
+		          const getTeamResourceActionTargetsByIds = (resourceIds = []) => {
+		            const normalizedIds = new Set((Array.isArray(resourceIds) ? resourceIds : [])
+		              .map((resourceId) => String(resourceId || "").trim())
+		              .filter(Boolean));
+		            if (!normalizedIds.size) {
+		              return [];
+		            }
+		            const sourceRows = Array.isArray(teamResourceRowsAll) ? teamResourceRowsAll : teamResourceRows;
+		            return sourceRows.filter((row) => normalizedIds.has(getTeamResourceSelectionId(row)));
+		          };
+		          function clearTeamPageResourceActionMenuCloseTimer() {
+		            if (teamPageResourceActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
+		              window.clearTimeout(teamPageResourceActionMenuCloseTimerRef.current);
+		              teamPageResourceActionMenuCloseTimerRef.current = null;
+		            }
+		          }
+		          function clearTeamPageResourceBulkActionMenuCloseTimer() {
+		            if (teamPageResourceBulkActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
+		              window.clearTimeout(teamPageResourceBulkActionMenuCloseTimerRef.current);
+		              teamPageResourceBulkActionMenuCloseTimerRef.current = null;
+		            }
+		          }
+		          function closeTeamPageResourceActionMenu(options = {}) {
+		            if (!teamPageResourceActionMenuState) {
+		              return;
+		            }
+		            clearTeamPageResourceActionMenuCloseTimer();
+		            if (options?.animate === false || typeof window === "undefined") {
+		              setTeamPageResourceActionMenuClosing(false);
+		              setTeamPageResourceActionMenuState(null);
+		              setTeamPageResourceMenuId("");
+		              return;
+		            }
+		            setTeamPageResourceActionMenuClosing(true);
+		            teamPageResourceActionMenuCloseTimerRef.current = window.setTimeout(() => {
+		              teamPageResourceActionMenuCloseTimerRef.current = null;
+		              setTeamPageResourceActionMenuClosing(false);
+		              setTeamPageResourceActionMenuState(null);
+		              setTeamPageResourceMenuId("");
+		            }, 90);
+		          }
+		          function closeTeamPageResourceBulkActionMenu(options = {}) {
+		            if (!teamPageResourceBulkActionMenuState) {
+		              return;
+		            }
+		            clearTeamPageResourceBulkActionMenuCloseTimer();
+		            if (options?.animate === false || typeof window === "undefined") {
+		              setTeamPageResourceBulkActionMenuClosing(false);
+		              setTeamPageResourceBulkActionMenuState(null);
+		              return;
+		            }
+		            setTeamPageResourceBulkActionMenuClosing(true);
+		            teamPageResourceBulkActionMenuCloseTimerRef.current = window.setTimeout(() => {
+		              teamPageResourceBulkActionMenuCloseTimerRef.current = null;
+		              setTeamPageResourceBulkActionMenuClosing(false);
+		              setTeamPageResourceBulkActionMenuState(null);
+		            }, 90);
+		          }
+		          function getTeamResourceContextMenuPosition(event, menuHeight = 184) {
+		            const menuWidth = 240;
+		            const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
+		            const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+		            const gutter = 12;
+		            const maxLeft = Math.max(gutter, viewportWidth - menuWidth - gutter);
+		            const maxTop = Math.max(gutter, viewportHeight - menuHeight - gutter);
+		            return {
+		              top: Math.max(gutter, Math.min(maxTop, Number(event?.clientY || 0))),
+		              left: Math.max(gutter, Math.min(maxLeft, Number(event?.clientX || 0))),
+		            };
+		          }
+		          function getTeamResourceActionMenuStyle(menuState) {
+		            const menuStyle = {
+		              position: "fixed",
+		              top: Number(menuState?.top || 0) + "px",
+		            };
+		            if (Number.isFinite(menuState?.right)) {
+		              menuStyle.right = Number(menuState.right) + "px";
+		              menuStyle.left = "auto";
+		            } else {
+		              menuStyle.left = Number(menuState?.left || 0) + "px";
+		              menuStyle.right = "auto";
+		            }
+		            return menuStyle;
+		          }
+		          function openTeamPageResourceBulkActionMenu(event, resourceIds = []) {
+		            const selectedIds = (Array.isArray(resourceIds) ? resourceIds : [])
+		              .map((resourceId) => String(resourceId || "").trim())
+		              .filter(Boolean);
+		            if (selectedIds.length < 2) {
+		              return false;
+		            }
+		            event.preventDefault();
+		            event.stopPropagation();
+		            const position = getTeamResourceContextMenuPosition(event, 96);
+		            clearTeamPageResourceBulkActionMenuCloseTimer();
+		            closeTeamPageResourceActionMenu({ animate: false });
+		            closeTeamPageMemberActionMenu({ animate: false });
+		            closeTeamPageMemberBulkActionMenu({ animate: false });
+		            setTeamPageResourceMenuId("");
+		            setTeamPageResourceToolbarPopover("");
+		            setTeamPageMemberMenuId("");
+		            setTeamPageResourceBulkActionMenuClosing(false);
+		            setTeamPageResourceBulkActionMenuState({
+		              resourceIds: selectedIds,
+		              ...position,
+		            });
+		            return true;
+		          }
+		          function openTeamPageResourceActionMenu(event, row, options = {}) {
+		            const menuId = getTeamResourceRowMenuId(row);
+		            if (!menuId) {
+		              return;
+		            }
+		            event.preventDefault();
+		            event.stopPropagation();
+		            const resourceSelectionId = getTeamResourceSelectionId(row);
+		            if (
+		              options?.context
+		              && resourceSelectionId
+		              && selectedTeamPageResourceIds.has(resourceSelectionId)
+		              && selectedTeamPageResourceIds.size > 1
+		            ) {
+		              openTeamPageResourceBulkActionMenu(event, Array.from(selectedTeamPageResourceIds || []));
+		              return;
+		            }
+		            const position = options?.context
+		              ? getTeamResourceContextMenuPosition(event, 184)
+		              : getSideActionMenuPosition(event, 184, 240);
+		            if (!options?.context && teamPageResourceActionMenuState?.menuId === menuId && !teamPageResourceActionMenuClosing) {
+		              closeTeamPageResourceActionMenu();
+		              return;
+		            }
+		            clearTeamPageResourceActionMenuCloseTimer();
+		            closeTeamPageResourceBulkActionMenu({ animate: false });
+		            closeTeamPageMemberActionMenu({ animate: false });
+		            closeTeamPageMemberBulkActionMenu({ animate: false });
+		            setTeamPageMemberMenuId("");
+		            setTeamPageResourceToolbarPopover("");
+		            setTeamPageResourceMenuId(menuId);
+		            setTeamPageResourceActionMenuClosing(false);
+		            setTeamPageResourceActionMenuState({
+		              menuId,
+		              row,
+		              ...position,
+		            });
+		          }
+		          async function handleDeleteTeamResourceRows(rows = []) {
+		            const targets = (Array.isArray(rows) ? rows : []).filter(canRemoveTeamResourceRow);
+		            if (!targets.length) {
+		              return;
+		            }
+		            const confirmed = window.confirm("Remove " + targets.length + " selected " + (targets.length === 1 ? "resource" : "resources") + " from the team?");
+		            if (!confirmed) {
+		              return;
+		            }
+		            const teamId = String(teamPageSelectedTeamId || "").trim();
+		            if (!teamId) {
+		              return;
+		            }
+		            closeTeamPageResourceBulkActionMenu({ animate: false });
+		            closeTeamPageResourceActionMenu({ animate: false });
+		            setTeamPageActionId("share-bulk-delete");
+		            setTeamPageError("");
+		            try {
+		              for (const row of targets) {
+		                const shareId = String((row?.directShare || row?.record || {})?.id || "").trim();
+		                if (!shareId) {
+		                  continue;
+		                }
+		                const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/resource-shares/" + encodeURIComponent(shareId), {
+		                  method: "DELETE",
+		                  credentials: "include",
+		                  cache: "no-store",
+		                  headers: requestHeaders,
+		                }, 8000);
+		                if (!response.ok) {
+		                  throw new Error(data?.message || data?.error || "Failed to remove shared resource.");
+		                }
+		              }
+		              setSelectedTeamPageResourceIds(new Set());
+		              await loadTeamPageData();
+		            } catch (error) {
+		              setTeamPageError(error instanceof Error ? error.message : "Failed to remove selected shared resources.");
+		            } finally {
+		              setTeamPageActionId("");
+		            }
+		          }
+	          const openTeamShareResourceModal = (resourceType = "") => {
             const normalizedType = String(resourceType || "").trim();
             if (normalizedType) {
               setTeamPageShareResourceType(normalizedType);
@@ -191761,34 +194866,37 @@ ${PROJECT_OVERVIEW_SCRIPT}
               })
             );
           };
-          const renderTeamResourceRowMenu = (row) => {
-            const share = row?.directShare || row?.record || {};
-            const menuId = getTeamResourceRowMenuId(row);
-            if (!menuId || teamPageResourceMenuId !== menuId) {
-              return null;
-            }
-            const directShare = row?.directShare || null;
-            const canEditDirectShareAccess = Boolean(directShare && canManageTeam && String(row?.type || row?.resourceType || "").trim() !== "project");
-            const projectSources = (Array.isArray(row?.sources) ? row.sources : [])
-              .filter((source) => source.kind === "project" || source.kind === "project_access");
-            const isAccessUpdating = teamPageActionId === "share-access:" + share.id;
-            const isDeleting = teamPageActionId === "share-delete:" + share.id;
-            return React.createElement("div", {
-                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-resources-action-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                onClick: (event) => event.stopPropagation(),
-              },
+	          const renderTeamResourceRowMenu = (row, options = {}) => {
+	            const share = row?.directShare || row?.record || {};
+	            const menuId = getTeamResourceRowMenuId(row);
+	            if (!menuId || teamPageResourceMenuId !== menuId) {
+	              return null;
+	            }
+	            const directShare = row?.directShare || null;
+	            const canEditDirectShareAccess = Boolean(directShare && canManageTeam && String(row?.type || row?.resourceType || "").trim() !== "project");
+	            const projectSources = (Array.isArray(row?.sources) ? row.sources : [])
+	              .filter((source) => source.kind === "project" || source.kind === "project_access");
+	            const isAccessUpdating = teamPageActionId === "share-access:" + share.id;
+	            const isDeleting = teamPageActionId === "share-delete:" + share.id || teamPageActionId === "share-bulk-delete";
+	            return React.createElement("div", {
+	                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-project-resources-action-menu"
+	                  + (options?.closing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
+	                role: "menu",
+	                onClick: (event) => event.stopPropagation(),
+	              },
               canEditDirectShareAccess
                 ? accessOptions.map((option) => {
                     const isActive = String(row?.accessLevel || "use") === option.value;
                     return React.createElement("button", {
                         key: option.value,
                         type: "button",
-                        className: "tb-popup-row tb-popup-row-select" + (isActive ? " selected" : ""),
-                        disabled: isAccessUpdating || isDeleting,
-                        onClick: () => {
-                          setTeamPageResourceMenuId("");
-                          handleUpdateTeamResourceShareAccess(share, option.value);
-                        },
+	                        className: "tb-popup-row tb-popup-row-select" + (isActive ? " selected" : ""),
+	                        role: "menuitem",
+	                        disabled: isAccessUpdating || isDeleting,
+	                        onClick: () => {
+	                          closeTeamPageResourceActionMenu({ animate: false });
+	                          handleUpdateTeamResourceShareAccess(share, option.value);
+	                        },
                       },
                       React.createElement("span", { className: "tb-popup-check-slot" },
                         isActive
@@ -191808,44 +194916,120 @@ ${PROJECT_OVERVIEW_SCRIPT}
               projectSources.length > 0
                 ? projectSources.slice(0, 4).map((source) =>
                     React.createElement("button", {
-                        key: "source:" + String(source.projectId || source.label || ""),
-                        type: "button",
-                        className: "tb-popup-row playground-project-team-menu-item",
-                        onClick: () => {
-                          setTeamPageResourceMenuId("");
-                          openTeamProjectResourceSource(source.projectId);
-                        },
-                      },
-                      React.createElement(LayoutDashboard, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, source.kind === "project_access" ? "Open project" : "Open " + (source.projectName || "project"))
-                    )
-                  )
+	                        key: "source:" + String(source.projectId || source.label || ""),
+	                        type: "button",
+	                        className: "tb-popup-row playground-project-team-menu-item",
+	                        role: "menuitem",
+	                        onClick: () => {
+	                          closeTeamPageResourceActionMenu({ animate: false });
+	                          openTeamProjectResourceSource(source.projectId);
+	                        },
+	                      },
+	                      React.createElement(LayoutDashboard, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                        React.createElement("span", null, source.kind === "project_access" ? "Open project" : "Open " + (source.projectName || "project"))
+	                      )
+	                    )
+	                  )
                 : null,
               directShare && canManageTeam
                 ? React.createElement("button", {
-                    type: "button",
-                    className: "tb-popup-row playground-project-team-menu-item is-danger",
-                    disabled: isAccessUpdating || isDeleting,
-                    onClick: () => {
-                      setTeamPageResourceMenuId("");
-                      handleDeleteTeamResourceShare(share.id);
-                    },
-                  },
-                  React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, isDeleting ? "Removing..." : "Remove from team")
-                )
-                : projectSources.length === 0
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "tb-popup-row playground-project-team-menu-item",
-                      disabled: true,
-                    }, "No resource actions")
-                  : null
-            );
-          };
-          const renderResourcesTab = () => React.createElement("div", { className: "playground-team-detail-panel playground-team-resources-panel" },
-            React.createElement(PlaygroundSharedResourcesTab, {
-              rows: teamResourceRows,
+	                    type: "button",
+	                    className: "tb-popup-row playground-project-team-menu-item is-danger",
+	                    role: "menuitem",
+	                    disabled: isAccessUpdating || isDeleting,
+	                    onClick: () => {
+	                      closeTeamPageResourceActionMenu({ animate: false });
+	                      handleDeleteTeamResourceShare(share.id);
+	                    },
+	                  },
+	                  React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                    React.createElement("span", null, isDeleting ? "Removing..." : "Remove from team")
+	                  )
+	                )
+	                : projectSources.length === 0
+	                  ? React.createElement("button", {
+	                      type: "button",
+	                      className: "tb-popup-row playground-project-team-menu-item",
+	                      role: "menuitem",
+	                      disabled: true,
+	                    }, "No resource actions")
+	                  : null
+	            );
+	          };
+	          const renderTeamResourceActionMenuPortal = () => {
+	            if (!teamPageResourceActionMenuState) {
+	              return null;
+	            }
+	            const row = teamPageResourceActionMenuState.row || null;
+	            const menuElement = React.createElement("div", {
+	                className: "sidebar-thread-popup-scrim",
+	                style: { zIndex: 360 },
+	                onClick: closeTeamPageResourceActionMenu,
+	              },
+	              React.createElement("div", {
+	                className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
+	                style: getTeamResourceActionMenuStyle(teamPageResourceActionMenuState),
+	                onClick: (event) => event.stopPropagation(),
+	              },
+	                renderTeamResourceRowMenu(row, { closing: teamPageResourceActionMenuClosing })
+	              )
+	            );
+	            return typeof createPortal === "function" && typeof document !== "undefined" && document.body
+	              ? createPortal(menuElement, document.body)
+	              : menuElement;
+	          };
+	          const renderTeamResourceBulkActionMenuPortal = () => {
+	            if (!teamPageResourceBulkActionMenuState) {
+	              return null;
+	            }
+	            const targets = getTeamResourceActionTargetsByIds(teamPageResourceBulkActionMenuState.resourceIds);
+	            if (targets.length < 2) {
+	              return null;
+	            }
+	            const removableTargets = targets.filter(canRemoveTeamResourceRow);
+	            const isRemoving = teamPageActionId === "share-bulk-delete";
+	            const menuElement = React.createElement("div", {
+	                className: "sidebar-thread-popup-scrim",
+	                style: { zIndex: 360 },
+	                onClick: closeTeamPageResourceBulkActionMenu,
+	              },
+	              React.createElement("div", {
+	                className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
+	                style: getTeamResourceActionMenuStyle(teamPageResourceBulkActionMenuState),
+	                onClick: (event) => event.stopPropagation(),
+	              },
+	                React.createElement("div", {
+	                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu"
+	                    + (teamPageResourceBulkActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
+	                  role: "menu",
+	                },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    role: "menuitem",
+	                    className: "tb-popup-row is-danger",
+	                    disabled: isRemoving || removableTargets.length === 0,
+	                    onClick: () => {
+	                      void handleDeleteTeamResourceRows(removableTargets);
+	                    },
+	                  },
+	                    React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                      React.createElement("span", null, isRemoving ? "Removing..." : "Remove selected")
+	                    )
+	                  )
+	                )
+	              )
+	            );
+	            return typeof createPortal === "function" && typeof document !== "undefined" && document.body
+	              ? createPortal(menuElement, document.body)
+	              : menuElement;
+	          };
+	          const renderResourcesTab = () => React.createElement("div", { className: "playground-team-detail-panel playground-team-resources-panel" },
+	            React.createElement(React.Fragment, null,
+	              React.createElement(PlaygroundSharedResourcesTab, {
+	              rows: teamResourceRows,
               allRows: teamResourceRowsAll,
               searchQuery: teamPageResourceSearchQuery,
               onSearchQueryChange: setTeamPageResourceSearchQuery,
@@ -191854,33 +195038,57 @@ ${PROJECT_OVERVIEW_SCRIPT}
               filter: teamPageResourceFilter,
               onFilterChange: setTeamPageResourceFilter,
               typeFilters: teamResourceTypeFilters,
-              viewMode: teamPageResourceViewMode,
-              onViewModeChange: setTeamPageResourceViewMode,
-              menuId: teamPageResourceMenuId,
+	              viewMode: teamPageResourceViewMode,
+	              onViewModeChange: setTeamPageResourceViewMode,
+	              sortKey: teamPageResourceSort,
+	              sortDirection: teamPageResourceSortDirection,
+	              sortableColumns: ["resource", "access", "source", "updated", "owner"],
+	              onSortChange: handleTeamResourceSortChange,
+	              menuId: teamPageResourceMenuId,
               onMenuIdChange: setTeamPageResourceMenuId,
               getTypeMeta: getTeamResourceTypeMeta,
               getRowMenuId: getTeamResourceRowMenuId,
               renderIcon: renderTeamResourceIcon,
               renderCreator: renderTeamResourceAccess,
               renderSource: renderTeamResourceSource,
-              renderOwner: renderTeamResourceOwner,
-              renderRowMenu: renderTeamResourceRowMenu,
-              renderNewMenu: renderTeamResourceNewMenu,
+	              renderOwner: renderTeamResourceOwner,
+	              renderRowMenu: renderTeamResourceRowMenu,
+	              renderRowMenuInline: false,
+	              renderNewMenu: renderTeamResourceNewMenu,
               onNewButtonClick: () => openTeamShareResourceModal(),
               onRowOpen: openTeamResourceRow,
               metaCellsStopRowOpen: false,
-              newButtonLabel: "Add",
-              searchAriaLabel: "Search team resources",
+	              newButtonLabel: "Add Resource",
+	              newButtonClassName: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button",
+	              searchAriaLabel: "Search team resources",
               primaryHeader: "Resource",
               secondaryHeader: "Access",
               sourceHeader: "Shared Through",
               tertiaryHeader: "Updated",
               ownerHeader: "Owner",
               emptyLabel: teamPageLoading ? "Loading resources..." : "No resources shared yet.",
-              noMatchesLabel: "No shared resources match this view yet.",
-              showNewButton: canManageTeam,
-            })
-          );
+	              noMatchesLabel: "No shared resources match this view yet.",
+	              showNewButton: canManageTeam,
+	              showSelectionColumn: true,
+	              selectedRowIds: selectedTeamPageResourceIds,
+	              getSelectionId: getTeamResourceSelectionId,
+		              onToggleRowSelection: toggleTeamPageResourceSelection,
+		              onToggleVisibleSelection: toggleVisibleTeamPageResourceSelection,
+		              onRowActionMenuOpen: openTeamPageResourceActionMenu,
+		              onRowContextMenu: (event, row) => {
+		                const selectionId = getTeamResourceSelectionId(row);
+		                if (selectionId && selectedTeamPageResourceIds.has(selectionId) && selectedTeamPageResourceIds.size > 1) {
+		                  openTeamPageResourceBulkActionMenu(event, Array.from(selectedTeamPageResourceIds || []));
+		                  return;
+		                }
+		                openTeamPageResourceActionMenu(event, row, { context: true });
+		              },
+		              activeRowMenuId: teamPageResourceActionMenuState?.menuId || "",
+		            }),
+	              renderTeamResourceActionMenuPortal(),
+	              renderTeamResourceBulkActionMenuPortal()
+	            )
+	          );
 
           const renderRolesTab = () => {
             const rolePermissionSets = normalizePlaygroundTeamRolePermissionSets(selectedTeam?.rolePermissionSets);
@@ -192002,11 +195210,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               setTeamPageRenameModalOpen(true);
                             }, { icon: React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }) })
                           : null,
-                        canManageTeam && teamPageActiveTab === "members"
-                          ? renderTeamActionButton("Invite member", () => setTeamPageInviteModalOpen(true), {
-                              icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            })
-                          : null
                       )
                     ),
                     React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs playground-develop-tabs playground-develop-server-kind-tabs playground-team-detail-tabs" },
