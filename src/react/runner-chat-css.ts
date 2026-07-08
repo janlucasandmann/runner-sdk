@@ -9075,7 +9075,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   margin-bottom: 12px;
   padding: 25px 16px 11px;
   border-radius: 0 0 var(--tb-runner-radius-xl) var(--tb-runner-radius-xl);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.075);
   color: rgba(255, 255, 255, 0.68);
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.2);
 }

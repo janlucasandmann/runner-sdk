@@ -1922,12 +1922,15 @@ export const METRONOME_PAGE_CSS = String.raw`
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        transition: max-height 220ms ease, min-height 220ms ease, height 220ms ease;
       }
 
       .playground-metronome-inline-node-inspector .playground-metronome-node-inspector {
+        min-height: 0;
         height: auto;
         max-height: 100%;
         border-radius: 15px;
+        transition: max-height 220ms ease, min-height 220ms ease, height 220ms ease;
       }
 
       .playground-metronome-editor-main {
@@ -2375,7 +2378,9 @@ export const METRONOME_PAGE_CSS = String.raw`
 
       .playground-metronome-node.is-note {
         width: 100%;
+        max-width: none;
         height: 100%;
+        max-height: none;
         min-width: 180px;
         min-height: 96px;
         border-radius: 16px;
@@ -2687,7 +2692,7 @@ export const METRONOME_PAGE_CSS = String.raw`
         flex: 1 1 auto;
         min-height: 0;
         padding: 12px 14px 24px;
-        overflow: hidden;
+        overflow-x: hidden;
         display: flex;
         flex-direction: column;
         gap: 0;
@@ -2832,6 +2837,7 @@ export const METRONOME_PAGE_CSS = String.raw`
 
       .playground-metronome-node-inspector .playground-metronome-field.playground-metronome-database-document-field {
         border-bottom: 0;
+        padding-bottom: 0;
       }
 
       .playground-metronome-node-inspector .playground-metronome-field:first-child {
@@ -2911,6 +2917,52 @@ export const METRONOME_PAGE_CSS = String.raw`
       .playground-metronome-node-inspector .playground-metronome-project-trigger-field:has(> .playground-metronome-select) > .playground-metronome-field-label {
         flex-basis: 84px;
         min-width: 84px;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-thread-output-field:has(> .playground-metronome-input) > .playground-metronome-field-label,
+      .playground-metronome-node-inspector .playground-metronome-thread-output-field:has(> .playground-metronome-select) > .playground-metronome-field-label {
+        flex-basis: 80px;
+        min-width: 80px;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-imagine-model-field:has(> .playground-metronome-select) > .playground-metronome-field-label {
+        flex-basis: 86px;
+        min-width: 86px;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-database-input-source-field:has(> .playground-metronome-select) > .playground-metronome-field-label {
+        flex-basis: 84px;
+        min-width: 84px;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-database-upsert-key-field:has(> .playground-metronome-input) > .playground-metronome-field-label {
+        flex-basis: 74px;
+        min-width: 74px;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-firecrawl-output-key-field:has(> .playground-metronome-input) > .playground-metronome-field-label {
+        flex-basis: 74px;
+        min-width: 74px;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-firecrawl-source-field:has(> .playground-metronome-select) > .playground-metronome-field-label,
+      .playground-metronome-node-inspector .playground-metronome-firecrawl-fallback-field:has(> .playground-metronome-input) > .playground-metronome-field-label {
+        flex-basis: 112px;
+        min-width: 112px;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-table-fallback-field:has(> .playground-metronome-input) > .playground-metronome-field-label,
+      .playground-metronome-node-inspector .playground-metronome-table-batch-size-field:has(> .playground-metronome-input) > .playground-metronome-field-label,
+      .playground-metronome-node-inspector .playground-metronome-table-output-key-field:has(> .playground-metronome-input) > .playground-metronome-field-label {
+        flex-basis: 78px;
+        min-width: 78px;
         white-space: nowrap;
       }
 
@@ -3573,6 +3625,11 @@ export const METRONOME_PAGE_CSS = String.raw`
         line-height: 1.4;
       }
 
+      .playground-metronome-firecrawl-credential-hint.playground-metronome-field-hint {
+        margin-top: 0;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
       .playground-metronome-github-setup-card {
         position: relative;
         display: flex;
@@ -3836,6 +3893,17 @@ export const METRONOME_PAGE_CSS = String.raw`
         text-align: right;
       }
 
+      .playground-metronome-trigger-evaluate-row.is-thread-more-row {
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        transition: margin-bottom 180ms ease;
+      }
+
+      .playground-metronome-trigger-evaluate-row.is-thread-more-row.is-open {
+        margin-bottom: 12px;
+      }
+
       .playground-metronome-trigger-evaluate-link {
         border: 0;
         padding: 0;
@@ -3846,6 +3914,56 @@ export const METRONOME_PAGE_CSS = String.raw`
         font-weight: 400;
         line-height: 1.3;
         cursor: pointer;
+      }
+
+      .playground-metronome-thread-more-toggle {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.62);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.3;
+        cursor: pointer;
+      }
+
+      .playground-metronome-thread-more-toggle:hover,
+      .playground-metronome-thread-more-toggle:focus-visible {
+        color: rgba(255, 255, 255, 0.92);
+        outline: none;
+      }
+
+      .playground-metronome-thread-more-toggle-icon {
+        flex: 0 0 auto;
+        transition: transform 160ms ease;
+      }
+
+      .playground-metronome-thread-more-toggle.is-open .playground-metronome-thread-more-toggle-icon {
+        transform: rotate(180deg);
+      }
+
+      .playground-metronome-thread-more-sections {
+        display: grid;
+        grid-template-rows: 0fr;
+        opacity: 0;
+        transition: grid-template-rows 220ms ease, opacity 160ms ease;
+      }
+
+      .playground-metronome-thread-more-sections.is-open {
+        grid-template-rows: 1fr;
+        opacity: 1;
+      }
+
+      .playground-metronome-thread-more-sections-inner {
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
       }
 
       .playground-metronome-trigger-evaluate-link:hover,
@@ -3864,7 +3982,8 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-node-inspector .playground-metronome-type-description {
-        margin-top: 12px;
+        margin-top: -18px;
+        margin-bottom: 24px;
       }
 
       .playground-metronome-node-inspector .playground-metronome-loop-type-description {
@@ -3928,6 +4047,16 @@ export const METRONOME_PAGE_CSS = String.raw`
         pointer-events: none;
         transition: opacity 140ms ease, transform 140ms ease;
         z-index: 20;
+      }
+
+      .playground-metronome-field-tooltip-popover.is-portal {
+        position: fixed;
+        left: auto;
+        top: auto;
+        opacity: 1;
+        transform: none;
+        pointer-events: none;
+        z-index: 100002;
       }
 
       .playground-metronome-field-tooltip:hover .playground-metronome-field-tooltip-popover,
@@ -4546,7 +4675,11 @@ export const METRONOME_PAGE_CSS = String.raw`
       .playground-metronome-condition-editor {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-field.playground-metronome-condition-editor-field {
+        padding-bottom: 0;
       }
 
       .playground-metronome-condition-fields {
@@ -4562,11 +4695,47 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-condition-editor-row {
-        display: grid;
-        grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr) auto;
-        align-items: center;
-        gap: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
         min-width: 0;
+      }
+
+      .playground-metronome-condition-editor-row-header {
+        min-height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-metronome-condition-editor-row-kind {
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.3;
+      }
+
+      .playground-metronome-condition-editor-row-fields {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .playground-metronome-condition-editor-row .playground-metronome-input {
+        height: 30px;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0 10px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        line-height: 30px;
+      }
+
+      .playground-metronome-condition-editor-row .playground-metronome-input:disabled {
+        opacity: 1;
+        color: rgba(255, 255, 255, 0.52);
       }
 
       .playground-metronome-condition-editor-remove {
@@ -4596,10 +4765,6 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-condition-editor-row.is-fixed {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      }
-
-      .playground-metronome-condition-editor-row.is-fixed .playground-metronome-input {
         color: rgba(255, 255, 255, 0.72);
       }
 
@@ -4612,7 +4777,7 @@ export const METRONOME_PAGE_CSS = String.raw`
         color: rgba(255, 255, 255, 0.92);
         font: inherit;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 400;
         padding: 0 11px;
         display: inline-flex;
         align-items: center;
@@ -4652,11 +4817,11 @@ export const METRONOME_PAGE_CSS = String.raw`
         padding: 12px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         color: rgba(255, 255, 255, 0.9);
-        font-size: 13px;
+        font-size: 12px;
       }
 
       .playground-metronome-switch-row.is-workflow-context {
-        margin-top: 12px;
+        margin-top: 0;
         border-bottom: 0;
       }
 
@@ -4666,6 +4831,16 @@ export const METRONOME_PAGE_CSS = String.raw`
         flex-direction: column;
         gap: 3px;
         color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-metronome-switch-title-with-tooltip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.35;
       }
 
       .playground-metronome-switch-copy small {
@@ -4774,26 +4949,15 @@ export const METRONOME_PAGE_CSS = String.raw`
         display: flex;
         flex-direction: column;
         gap: 13px;
+        margin-top: 12px;
         padding: 14px;
-        border-radius: 15px;
-        background: transparent;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.1);
       }
 
       .playground-metronome-database-fields-card::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        z-index: 5;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-project-overview-chart-border, linear-gradient(135deg, rgba(255,255,255,0.42), rgba(255,255,255,0.06)));
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
+        content: none;
+        display: none;
       }
 
       .playground-metronome-database-fields-header {
@@ -5550,13 +5714,16 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-node-inspector .playground-metronome-field.playground-metronome-workspace-selector-field,
-      .playground-metronome-node-inspector .playground-metronome-field.playground-metronome-agent-selector-field {
+      .playground-metronome-node-inspector .playground-metronome-field.playground-metronome-agent-selector-field,
+      .playground-metronome-node-inspector .playground-metronome-field.playground-metronome-inspector-selector-field {
         flex: 0 0 auto;
         align-self: stretch;
-        gap: 7px;
-        padding: 11px 0;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 0 0 8px;
         border: 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         background: transparent;
         border-radius: 0;
         overflow: visible;
@@ -5565,13 +5732,17 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-workspace-selector-field .playground-metronome-field-label.playground-metronome-field-title,
-      .playground-metronome-agent-selector-field .playground-metronome-field-label.playground-metronome-field-title {
+      .playground-metronome-agent-selector-field .playground-metronome-field-label.playground-metronome-field-title,
+      .playground-metronome-inspector-selector-field .playground-metronome-field-label.playground-metronome-field-title {
+        flex: 0 0 64px;
+        min-width: 64px;
         margin: 0;
         color: rgba(255, 255, 255, 0.92);
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 400;
-        line-height: 18px;
-        min-height: 18px;
+        line-height: 1.3;
+        min-height: 0;
+        white-space: nowrap;
       }
 
       .playground-metronome-workspace-selector-field .tb-selector-anchor,
@@ -5983,7 +6154,7 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-flow .react-flow__edge.selected .react-flow__edge-path {
-        stroke: rgba(255, 255, 255, 0.25);
+        stroke: rgba(102, 166, 255, 0.78);
       }
 
       .playground-metronome-flow .react-flow__edge-text,
@@ -6055,6 +6226,12 @@ export const METRONOME_PAGE_CSS = String.raw`
 
       .playground-metronome-flow .react-flow__edge.is-metronome-run-active path {
         stroke: #66a6ff !important;
+        stroke-width: 2.25 !important;
+      }
+
+      .playground-metronome-flow .react-flow__edge.selected path,
+      .playground-metronome-flow .react-flow__edge.selected .react-flow__edge-path {
+        stroke: rgba(102, 166, 255, 0.78) !important;
         stroke-width: 2.25 !important;
       }
 
@@ -10192,7 +10369,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               usedIds.add(id);
               return {
                 id,
-                label: isElse ? "Default" : rawLabel,
+                label: isElse ? "Else" : rawLabel,
                 rule: String(source.rule || source.expression || source.value || ""),
               };
             })
@@ -10201,10 +10378,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           if (conditionBranches.length === 0) {
             conditionBranches.push({ id: "condition-1", label: normalizedConditionType === "json" ? "Match" : "", rule: "" });
           }
-          const elseBranch = normalized.find((branch) => branch.id === "else") || { id: "else", label: "Default", rule: "" };
+          const elseBranch = normalized.find((branch) => branch.id === "else") || { id: "else", label: "Else", rule: "" };
           return [
             ...conditionBranches,
-            { ...elseBranch, id: "else", label: "Default", rule: "" },
+            { ...elseBranch, id: "else", label: "Else", rule: "" },
           ];
         }
 
@@ -10252,6 +10429,26 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
         const METRONOME_NODE_DEFAULT_WIDTH = 150;
         const METRONOME_NODE_DEFAULT_HEIGHT = 72;
 
+        function normalizeMetronomeNodeDimension(value, fallback) {
+          if (typeof value === "number" && Number.isFinite(value) && value > 0) return value;
+          if (typeof value === "string") {
+            const trimmed = value.trim();
+            if (!trimmed || trimmed.toLowerCase() === "auto") return fallback;
+            const parsed = Number.parseFloat(trimmed);
+            if (Number.isFinite(parsed) && parsed > 0) return parsed;
+          }
+          return fallback;
+        }
+
+        function normalizeMetronomeNoteNodeStyle(style) {
+          const source = style && typeof style === "object" ? style : {};
+          return {
+            ...source,
+            width: normalizeMetronomeNodeDimension(source.width, METRONOME_NOTE_NODE_DEFAULT_WIDTH),
+            height: normalizeMetronomeNodeDimension(source.height, METRONOME_NOTE_NODE_DEFAULT_HEIGHT),
+          };
+        }
+
         function isMetronomeLoopNode(node) {
           return String(node?.data?.kind || node?.kind || "").trim() === "loop";
         }
@@ -10277,8 +10474,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             : isMetronomeNoteNode(node)
               ? METRONOME_NOTE_NODE_DEFAULT_HEIGHT
               : METRONOME_NODE_DEFAULT_HEIGHT;
-          const width = Number(style.width || node?.width || measured.width || defaultWidth);
-          const height = Number(style.height || node?.height || measured.height || defaultHeight);
+          const width = normalizeMetronomeNodeDimension(style.width || node?.width || measured.width, defaultWidth);
+          const height = normalizeMetronomeNodeDimension(style.height || node?.height || measured.height, defaultHeight);
           return {
             width: Number.isFinite(width) && width > 0 ? width : defaultWidth,
             height: Number.isFinite(height) && height > 0 ? height : defaultHeight,
@@ -10600,11 +10797,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             nextNode.data.label = normalizeMetronomeNodeLabel(overrides.label || meta.label, kind, normalizedSubtype);
             nextNode.data.description = overrides.description || getMetronomeSubtypeLabel(kind, normalizedSubtype);
           } else if (kind === "note") {
-            nextNode.style = {
-              width: METRONOME_NOTE_NODE_DEFAULT_WIDTH,
-              height: METRONOME_NOTE_NODE_DEFAULT_HEIGHT,
-              ...(overrides.style && typeof overrides.style === "object" ? overrides.style : {}),
-            };
+            nextNode.style = normalizeMetronomeNoteNodeStyle(overrides.style);
           } else if (overrides.style && typeof overrides.style === "object") {
             nextNode.style = overrides.style;
           }
@@ -12938,12 +13131,12 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 return {
                   ...node,
                   type: node.type || "metronome",
-                  style: node.style && typeof node.style === "object"
-                    ? node.style
-                    : normalizedKind === "loop"
+                  style: normalizedKind === "note"
+                    ? normalizeMetronomeNoteNodeStyle(node.style)
+                    : node.style && typeof node.style === "object"
+                      ? node.style
+                      : normalizedKind === "loop"
                       ? { width: METRONOME_LOOP_NODE_DEFAULT_WIDTH, height: METRONOME_LOOP_NODE_DEFAULT_HEIGHT }
-                      : normalizedKind === "note"
-                        ? { width: METRONOME_NOTE_NODE_DEFAULT_WIDTH, height: METRONOME_NOTE_NODE_DEFAULT_HEIGHT }
                       : undefined,
                   position: node.position && typeof node.position === "object"
                     ? node.position
@@ -12975,8 +13168,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               if (node?.data?.kind === "loop" && (!node.style || typeof node.style !== "object")) {
                 return { ...node, style: { width: METRONOME_LOOP_NODE_DEFAULT_WIDTH, height: METRONOME_LOOP_NODE_DEFAULT_HEIGHT } };
               }
-              if (node?.data?.kind === "note" && (!node.style || typeof node.style !== "object")) {
-                return { ...node, style: { width: METRONOME_NOTE_NODE_DEFAULT_WIDTH, height: METRONOME_NOTE_NODE_DEFAULT_HEIGHT } };
+              if (node?.data?.kind === "note") {
+                return { ...node, style: normalizeMetronomeNoteNodeStyle(node.style) };
               }
               return node;
             });
@@ -15516,6 +15709,13 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	          const isLoopNode = kind === "loop";
 		          const shouldHideBody = kind === "action" || kind === "trigger" || isApprovalNode || isTicketNode || isImagineNode || isFunctionNode || isFirecrawlNode || isTableNode || isDatabaseNode || isMetronomeNode || isEndNode || isConditionNode;
 	          const config = data?.config || {};
+          const handleNodePointerDown = (event) => {
+            if (event.button !== undefined && event.button !== 0) return;
+            if (event.target?.closest?.(".react-flow__handle, .playground-metronome-loop-resize-handle, input, textarea, select, button, a")) return;
+            if (typeof data?.onNodeSelect === "function") {
+              data.onNodeSelect(id);
+            }
+          };
 	          const renderResizeHandle = (corner, className) => React.createElement("span", {
 	            className: "playground-metronome-loop-resize-handle " + className + " nodrag",
 	            role: "presentation",
@@ -15556,6 +15756,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	          if (isLoopNode) {
 	            return React.createElement("div", {
 	              className: "playground-metronome-node is-loop" + (selected ? " is-selected" : "") + (data?.runState ? " is-run-" + String(data.runState) : ""),
+                onPointerDown: handleNodePointerDown,
 	            },
 	              renderResizeHandle("top-left", "is-top-left"),
 	              renderResizeHandle("top-right", "is-top-right"),
@@ -15591,7 +15792,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const conditionHandleBaseTop = 75;
           const conditionHandleStep = 47;
           const runStateClass = data?.runState ? " is-run-" + String(data.runState) : "";
-	          return React.createElement("div", { className: "playground-metronome-node" + (selected ? " is-selected" : "") + (isBranchNode ? " is-condition" : "") + (isEndNode ? " is-end" : "") + runStateClass },
+	          return React.createElement("div", {
+              className: "playground-metronome-node" + (selected ? " is-selected" : "") + (isBranchNode ? " is-condition" : "") + (isEndNode ? " is-end" : "") + runStateClass,
+              onPointerDown: isEndNode ? undefined : handleNodePointerDown,
+            },
             React.createElement(Handle, { id: "node-input", type: "target", position: Position.Left }),
             React.createElement("div", { className: "playground-metronome-node-header" },
               React.createElement("span", {
@@ -15720,6 +15924,15 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             event.dataTransfer.dropEffect = readOnly ? "none" : "move";
           }, [readOnly]);
 
+          const selectInspectableNode = useCallback((node) => {
+            const kind = String(node?.data?.kind || "").trim();
+            if (kind === "note" || kind === "end") {
+              onSelectNode("");
+              return;
+            }
+            onSelectNode(node?.id || "");
+          }, [onSelectNode]);
+
           return React.createElement(ReactFlow, {
             className: "playground-metronome-flow " + (isPanMode ? "is-pan-mode" : "is-select-mode"),
             nodes,
@@ -15743,14 +15956,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 onViewportChange(viewport || {});
               }
             },
-	            onNodeClick: (_event, node) => {
-	              const kind = String(node?.data?.kind || "").trim();
-	              if (kind === "note" || kind === "end") {
-	                onSelectNode("");
-	                return;
-	              }
-	              onSelectNode(node.id);
-	            },
+            onNodePointerDown: (_event, node) => selectInspectableNode(node),
+	            onNodeClick: (_event, node) => selectInspectableNode(node),
             onPaneClick,
             fitView: true,
             minZoom: 0.35,
@@ -16028,6 +16235,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const [metronomeEnvironmentFilePickerSelectedPaths, setMetronomeEnvironmentFilePickerSelectedPaths] = useState([]);
           const [metronomeEnvironmentFilePickerState, setMetronomeEnvironmentFilePickerState] = useState({ status: "idle", error: "" });
           const [isMetronomeAttachmentUploading, setIsMetronomeAttachmentUploading] = useState(false);
+          const [isMetronomeThreadMoreOpen, setIsMetronomeThreadMoreOpen] = useState(false);
+          const [metronomeFieldTooltipPortal, setMetronomeFieldTooltipPortal] = useState({ copy: "", rect: null });
           const [isMetronomeWorkspaceSelectorOpen, setIsMetronomeWorkspaceSelectorOpen] = useState(false);
           const [metronomeWorkspaceSelectorMode, setMetronomeWorkspaceSelectorMode] = useState("computers");
           const metronomeWorkspaceSelectorAnchorRef = useRef(null);
@@ -17246,6 +17455,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             setActiveMetronomeRichTextField("");
             setMetronomeDynamicContentPicker({ fieldKey: "", rect: null, query: "" });
             setMetronomeOutputContractComposer({ key: "", type: "string" });
+            setIsMetronomeThreadMoreOpen(false);
+            setMetronomeFieldTooltipPortal({ copy: "", rect: null });
           }, [selectedNodeId]);
 
           useEffect(() => {
@@ -17548,6 +17759,12 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const metronomeDynamicContentGroups = useMemo(() => {
             return buildMetronomeDynamicContentGroups(nodes, edges, selectedNodeId);
           }, [nodes, edges, selectedNodeId]);
+          const selectMetronomeNodeFromCanvas = useCallback((nodeId) => {
+            setIsMetronomeRunSidebarOpen(false);
+            setIsMetronomePublishActionsMenuOpen(false);
+            setIsMetronomePublishMenuOpen(false);
+            setSelectedNodeId(String(nodeId || ""));
+          }, []);
           const selectedFirecrawlCredentialVaultId = useMemo(() => {
             if (!selectedNode || selectedNode.data?.kind !== "firecrawl") return "";
             const selectedConfig = selectedNode.data?.config && typeof selectedNode.data.config === "object" ? selectedNode.data.config : {};
@@ -18044,16 +18261,21 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               : metronomeRunHighlight.completedNodeIds.has(nodeId)
                 ? "completed"
                 : "";
+            const renderedStyle = isMetronomeNoteNode(node)
+              ? normalizeMetronomeNoteNodeStyle(node.style)
+              : node.style;
             return {
               ...node,
+              style: renderedStyle,
 	              data: {
 	                ...(node.data || {}),
 	                runState,
+                  onNodeSelect: selectMetronomeNodeFromCanvas,
 	                onInlineNoteChange: isActiveWorkflowBuiltIn ? undefined : updateInlineMetronomeNote,
 	                onLoopResizeStart: isActiveWorkflowBuiltIn ? undefined : handleLoopResizeStart,
 	              },
 	            };
-	          }), [nodes, metronomeRunHighlight, isActiveWorkflowBuiltIn, updateInlineMetronomeNote, handleLoopResizeStart]);
+	          }), [nodes, metronomeRunHighlight, isActiveWorkflowBuiltIn, updateInlineMetronomeNote, handleLoopResizeStart, selectMetronomeNodeFromCanvas]);
           const renderedMetronomeEdges = useMemo(() => normalizeMetronomeEdgesForNodes(edges, nodes).map((edge) => {
             const edgeId = String(edge.id || "");
             const isActive = metronomeRunHighlight.activeEdgeId === edgeId;
@@ -21341,14 +21563,66 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 selectionEndOffset: token.length,
               });
             };
+            const openMetronomeFieldTooltip = (copy, event) => {
+              const nextCopy = String(copy || "").trim();
+              const rect = event?.currentTarget?.getBoundingClientRect?.();
+              if (!nextCopy || !rect) return;
+              setMetronomeFieldTooltipPortal({
+                copy: nextCopy,
+                rect: {
+                  left: rect.left,
+                  right: rect.right,
+                  top: rect.top,
+                  bottom: rect.bottom,
+                  width: rect.width,
+                  height: rect.height,
+                },
+              });
+            };
+            const closeMetronomeFieldTooltip = () => {
+              setMetronomeFieldTooltipPortal({ copy: "", rect: null });
+            };
+            const renderMetronomeFieldTooltipPortal = () => {
+              const copy = String(metronomeFieldTooltipPortal.copy || "").trim();
+              const rect = metronomeFieldTooltipPortal.rect;
+              if (!copy || !rect) return null;
+              const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1024;
+              const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 768;
+              const tooltipWidth = Math.min(260, Math.max(220, viewportWidth - 24));
+              const rightSideLeft = rect.right + 8;
+              const leftSideLeft = rect.left - tooltipWidth - 8;
+              const tooltipLeft = rightSideLeft + tooltipWidth <= viewportWidth - 12
+                ? rightSideLeft
+                : Math.max(12, leftSideLeft);
+              const tooltipTop = Math.max(12, Math.min(rect.top + (rect.height / 2) - 20, viewportHeight - 84));
+              const tooltip = React.createElement("span", {
+                className: "playground-metronome-field-tooltip-popover is-portal",
+                style: {
+                  left: tooltipLeft + "px",
+                  top: tooltipTop + "px",
+                  width: tooltipWidth + "px",
+                },
+              }, copy);
+              return typeof document !== "undefined" && typeof createPortal === "function"
+                ? createPortal(tooltip, document.body)
+                : tooltip;
+            };
             const renderMetronomeFieldTooltip = (copy) => copy
               ? React.createElement("span", {
                   className: "playground-metronome-field-tooltip",
                   tabIndex: 0,
                   "aria-label": copy,
+                  onMouseEnter: (event) => openMetronomeFieldTooltip(copy, event),
+                  onMouseLeave: closeMetronomeFieldTooltip,
+                  onFocus: (event) => openMetronomeFieldTooltip(copy, event),
+                  onBlur: closeMetronomeFieldTooltip,
+                  onKeyDown: (event) => {
+                    if (event.key === "Escape") {
+                      closeMetronomeFieldTooltip();
+                    }
+                  },
                 },
-                  React.createElement(Info, { width: 11, height: 11, strokeWidth: 2 }),
-                  React.createElement("span", { className: "playground-metronome-field-tooltip-popover" }, copy)
+                  React.createElement(Info, { width: 11, height: 11, strokeWidth: 2 })
                 )
               : null;
             const renderMetronomeFieldTitle = (title, tooltip) => React.createElement("label", {
@@ -21519,7 +21793,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               fieldKey = "inputBinding",
               fallback = "last.text",
               options = METRONOME_WORKFLOW_DATA_BINDING_OPTIONS,
-            } = {}) => React.createElement("div", { className: "playground-metronome-field" },
+              className = "",
+            } = {}) => React.createElement("div", { className: "playground-metronome-field" + (className ? " " + className : "") },
               renderMetronomeFieldTitle(title || "Input binding", tooltip || "Choose which upstream workflow output this node should consume."),
               renderMetronomeInspectorSelect({
                 id: "data-binding-" + fieldKey,
@@ -21826,10 +22101,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 ? createPortal(picker, document.body)
                 : picker;
             };
-            const renderMetronomeRichTextField = ({ fieldKey, title, placeholder, tooltip, description }) => {
+            const renderMetronomeRichTextField = ({ fieldKey, title, placeholder, tooltip, description, isInstructionsField: forceInstructionsField = false }) => {
               const fieldValue = String(config[fieldKey] || "");
               const isEditing = activeMetronomeRichTextField === fieldKey;
-              const isInstructionsField = fieldKey === "promptExtension"
+              const isInstructionsField = forceInstructionsField
+                || fieldKey === "promptExtension"
                 || (kind === "action" && fieldKey === "message");
               const supportsMetronomeAttachments = isInstructionsField
                 || (kind === "action" && fieldKey === "message")
@@ -22102,171 +22378,42 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             };
             const renderMetronomeAgentSelector = (options = {}) => {
               const selectorTitle = String(options?.title || "Agent").trim() || "Agent";
-              const popupTitle = String(options?.popupTitle || "Agent").trim() || "Agent";
               const selectedAgent = metronomeAgentOptions.find((option) => option.id === config.agentId)
                 || defaultMetronomeAgentOption
                 || metronomeAgentOptions[0]
                 || null;
-              const selectedAgentLabel = selectedAgent?.name || "Select agent";
-              const availableAgentPopupModes = ["agents", "teams", "humans"].filter((mode) => {
-                return metronomeAgentOptions.some((agent) => getMetronomeAgentSelectorMode(agent) === mode);
+              const agentOptions = metronomeAgentOptions.map((agent) => {
+                const selectorMode = getMetronomeAgentSelectorMode(agent);
+                return {
+                  id: agent.id,
+                  label: agent.name || "Agent",
+                  description: selectorMode === "teams"
+                    ? "Team agent"
+                    : selectorMode === "humans"
+                      ? "Human collaborator"
+                      : "Agent",
+                };
               });
-              const selectedAgentMode = selectedAgent ? getMetronomeAgentSelectorMode(selectedAgent) : "agents";
-              const activeAgentPopupMode = availableAgentPopupModes.includes(metronomeAgentSelectorMode)
-                ? metronomeAgentSelectorMode
-                : (availableAgentPopupModes.includes(selectedAgentMode) ? selectedAgentMode : (availableAgentPopupModes[0] || "agents"));
-              const filteredMetronomeAgents = metronomeAgentOptions.filter((agent) => getMetronomeAgentSelectorMode(agent) === activeAgentPopupMode);
-              const agentPopupEmptyLabel = activeAgentPopupMode === "teams"
-                ? "No team agents available."
-                : activeAgentPopupMode === "humans"
-                  ? "No human collaborators available."
-                  : "No agents available.";
-              const selectMetronomeAgent = (agent) => {
-                updateSelectedNodeConfigPatch({
-                  agentId: agent.id,
-                  agentName: agent.name || "",
-                });
-                setIsMetronomeAgentSelectorOpen(false);
-              };
-              const agentPopupWidth = metronomeAgentSelectorRect
-                ? Math.min(Math.max(metronomeAgentSelectorRect.width, 240), 320)
-                : 320;
-              const agentPopupMaxHeight = metronomeAgentSelectorRect && typeof window !== "undefined"
-                ? Math.min(320, Math.max(180, window.innerHeight - metronomeAgentSelectorRect.top - 16))
-                : 320;
-              const agentPopupOverlayStyle = metronomeAgentSelectorRect
-                ? {
-                    position: "fixed",
-                    left: metronomeAgentSelectorRect.left + "px",
-                    top: metronomeAgentSelectorRect.top + "px",
-                    width: agentPopupWidth + "px",
-                    maxHeight: agentPopupMaxHeight + "px",
-                    zIndex: 100000,
-                  }
-                : {
-                    position: "fixed",
-                    left: "16px",
-                    top: "80px",
-                    width: agentPopupWidth + "px",
-                    maxHeight: agentPopupMaxHeight + "px",
-                    zIndex: 100000,
-                  };
-              const agentPopup = isMetronomeAgentSelectorOpen
-                ? React.createElement("div", {
-                    className: "playground-metronome-agent-popup-portal tb-runner-chat",
-                    style: agentPopupOverlayStyle,
-                    onPointerDown: (event) => event.stopPropagation(),
-                    onMouseDown: (event) => event.stopPropagation(),
-                    onClick: (event) => event.stopPropagation(),
-                  },
-                    React.createElement("div", { className: "tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent" },
-                      React.createElement("div", { className: "tb-popup-menu-title" }, popupTitle),
-                      React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
-                        React.createElement("div", { className: "tb-popup-nav" },
-                          availableAgentPopupModes.includes("agents")
-                            ? React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-nav-button " + (activeAgentPopupMode === "agents" ? "active" : ""),
-                                onClick: () => setMetronomeAgentSelectorMode("agents"),
-                              }, "Agents")
-                            : null,
-                          availableAgentPopupModes.includes("teams")
-                            ? React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-nav-button " + (activeAgentPopupMode === "teams" ? "active" : ""),
-                                onClick: () => setMetronomeAgentSelectorMode("teams"),
-                              }, "Teams")
-                            : null,
-                          availableAgentPopupModes.includes("humans")
-                            ? React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-nav-button " + (activeAgentPopupMode === "humans" ? "active" : ""),
-                                onClick: () => setMetronomeAgentSelectorMode("humans"),
-                              }, "Humans")
-                            : null
-                        )
-                      ),
-                      React.createElement("div", { className: "tb-popup-menu-inline-body tb-popup-menu-inline-body-agent" },
-                        filteredMetronomeAgents.length > 0
-                          ? filteredMetronomeAgents.map((agent) => {
-                              const isSelectedAgent = selectedAgent?.id === agent.id;
-                              const selectorMode = getMetronomeAgentSelectorMode(agent);
-                              return React.createElement("button", {
-                                key: agent.id,
-                                type: "button",
-                                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent " + (isSelectedAgent ? "selected" : ""),
-                                onClick: () => selectMetronomeAgent(agent),
-                              },
-                                selectorMode === "teams"
-                                  ? React.createElement(Layers, { className: "tb-popup-icon", strokeWidth: 1.75 })
-                                  : renderMetronomeAgentOptionIcon(agent),
-                                React.createElement("span", { className: "tb-popup-label" }, agent.name),
-                                React.createElement("span", { className: "tb-popup-check-slot" },
-                                  isSelectedAgent ? React.createElement(Check, { className: "tb-popup-check" }) : null
-                                )
-                              );
-                            })
-                          : React.createElement("div", { className: "tb-popup-menu-inline-empty" },
-                              React.createElement("div", { className: "tb-popup-empty-state" }, agentPopupEmptyLabel)
-                            )
-                      )
-                    )
-                  )
-                : null;
-              const agentPopupLayer = agentPopup && typeof document !== "undefined" && typeof createPortal === "function"
-                ? createPortal(agentPopup, document.body)
-                : agentPopup;
-              const toggleMetronomeAgentSelector = (forceOpen = null) => {
-                const nextOpen = typeof forceOpen === "boolean" ? forceOpen : !isMetronomeAgentSelectorOpen;
-                const rect = metronomeAgentSelectorAnchorRef.current?.getBoundingClientRect?.();
-                if (rect) {
-                  setMetronomeAgentSelectorRect({
-                    left: rect.left,
-                    top: rect.bottom + 8,
-                    width: rect.width,
-                  });
-                }
-                if (nextOpen) {
-                  setMetronomeAgentSelectorMode((currentMode) => {
-                    if (availableAgentPopupModes.includes(currentMode)) return currentMode;
-                    if (availableAgentPopupModes.includes(selectedAgentMode)) return selectedAgentMode;
-                    return availableAgentPopupModes[0] || "agents";
-                  });
-                }
-                setIsMetronomeWorkspaceSelectorOpen(false);
-                setIsMetronomeAgentSelectorOpen(nextOpen);
-              };
-              const openMetronomeAgentSelectorFromFieldEvent = (event) => {
-                if (event.target?.closest?.(".playground-metronome-agent-popup-portal")) {
-                  return;
-                }
-                event.preventDefault();
-                event.stopPropagation();
-                toggleMetronomeAgentSelector(true);
-              };
               return React.createElement("div", {
-                className: "playground-metronome-field playground-metronome-agent-selector-field",
+                className: "playground-metronome-field playground-metronome-inspector-selector-field",
               },
-                React.createElement("label", { className: "playground-metronome-field-label playground-metronome-field-title" }, selectorTitle),
-                React.createElement("div", { className: "tb-selector-anchor" },
-                  React.createElement("button", {
-                    type: "button",
-                    ref: metronomeAgentSelectorAnchorRef,
-                    className: "playground-metronome-agent-selector-trigger",
-                    onPointerDown: openMetronomeAgentSelectorFromFieldEvent,
-                    onMouseDown: openMetronomeAgentSelectorFromFieldEvent,
-                    onClick: openMetronomeAgentSelectorFromFieldEvent,
-                    onKeyDown: (event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        openMetronomeAgentSelectorFromFieldEvent(event);
-                      }
-                    },
+                renderMetronomeFieldTitle(selectorTitle),
+                renderMetronomeInspectorSelect({
+                  id: "thread-agent-" + (selectedNodeId || "selected"),
+                  value: selectedAgent?.id || config.agentId || "",
+                  options: agentOptions,
+                  placeholder: metronomeAgentOptions.length ? "Select agent" : "No agents available",
+                  searchPlaceholder: "Select an agent...",
+                  disabled: isActiveWorkflowBuiltIn || !metronomeAgentOptions.length,
+                  onChange: (nextAgentId) => {
+                    const nextAgent = metronomeAgentOptions.find((agent) => agent.id === nextAgentId) || null;
+                    if (!nextAgent) return;
+                    updateSelectedNodeConfigPatch({
+                      agentId: nextAgent.id,
+                      agentName: nextAgent.name || "",
+                    });
                   },
-                    React.createElement("span", { className: "playground-metronome-agent-selector-trigger-label" }, selectedAgentLabel),
-                    React.createElement(ChevronDown, { width: 15, height: 15, strokeWidth: 1.85 })
-                  )
-                ),
-                agentPopupLayer
+                })
               );
             };
             const renderMetronomeWorkspaceSelector = (options = {}) => {
@@ -22276,179 +22423,71 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               const selectedEnvironment = metronomeComputerOptions.find((option) => option.id === config.environmentId)
                 || (currentContextType === "computer" ? defaultMetronomeComputerOption : null)
                 || null;
-              const selectedWorkspaceLabel = currentContextType === "project"
-                ? (selectedProject?.name || "Select project")
-                : (selectedEnvironment?.name || "Select computer");
-              const workspacePopupEmptyLabel = metronomeWorkspaceSelectorMode === "projects"
-                ? "No projects available."
-                : "No computers available.";
-              const selectMetronomeProject = (project) => {
-                const projectEnvironmentId = getMetronomeProjectEnvironmentId(project);
-                const projectEnvironment = metronomeComputerOptions.find((option) => option.id === projectEnvironmentId) || null;
-                updateSelectedNodeConfigPatch({
-                  contextType: "project",
-                  resource: "project",
-                  projectId: project.id,
-                  projectName: project.name || "",
-                  environmentId: projectEnvironmentId,
-                  environmentName: projectEnvironment?.name || "",
-                });
-                setIsMetronomeWorkspaceSelectorOpen(false);
-              };
-              const selectMetronomeEnvironment = (environment) => {
-                updateSelectedNodeConfigPatch({
-                  contextType: "computer",
-                  resource: "computer",
-                  projectId: "",
-                  projectName: "",
-                  environmentId: environment.id,
-                  environmentName: environment.name || "",
-                });
-                setIsMetronomeWorkspaceSelectorOpen(false);
-              };
-              const workspacePopupWidth = metronomeWorkspaceSelectorRect
-                ? Math.min(Math.max(metronomeWorkspaceSelectorRect.width, 240), 320)
-                : 320;
-              const workspacePopupMaxHeight = metronomeWorkspaceSelectorRect && typeof window !== "undefined"
-                ? Math.min(320, Math.max(180, window.innerHeight - metronomeWorkspaceSelectorRect.top - 16))
-                : 320;
-              const workspacePopupOverlayStyle = metronomeWorkspaceSelectorRect
-                ? {
-                    position: "fixed",
-                    left: metronomeWorkspaceSelectorRect.left + "px",
-                    top: metronomeWorkspaceSelectorRect.top + "px",
-                    width: workspacePopupWidth + "px",
-                    maxHeight: workspacePopupMaxHeight + "px",
-                    zIndex: 100000,
-                  }
-                : {
-                    position: "fixed",
-                    left: "16px",
-                    top: "80px",
-                    width: workspacePopupWidth + "px",
-                    maxHeight: workspacePopupMaxHeight + "px",
-                    zIndex: 100000,
-                  }
-              const workspacePopup = isMetronomeWorkspaceSelectorOpen
-                ? React.createElement("div", {
-                    className: "playground-metronome-workspace-popup-portal",
-                    style: workspacePopupOverlayStyle,
-                    onPointerDown: (event) => event.stopPropagation(),
-                    onMouseDown: (event) => event.stopPropagation(),
-                    onClick: (event) => event.stopPropagation(),
-                  },
-                    React.createElement("div", {
-                      className: "playground-metronome-workspace-popup",
-                    },
-                      React.createElement("div", { className: "playground-metronome-workspace-popup-title" }, "Workspace"),
-                      React.createElement("div", { className: "playground-metronome-workspace-popup-tab-shell" },
-                        React.createElement("div", { className: "playground-metronome-workspace-popup-tabs" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-metronome-workspace-popup-tab " + (metronomeWorkspaceSelectorMode === "computers" ? "is-active" : ""),
-                            onClick: () => setMetronomeWorkspaceSelectorMode("computers"),
-                          }, "Computers"),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-metronome-workspace-popup-tab " + (metronomeWorkspaceSelectorMode === "projects" ? "is-active" : ""),
-                            onClick: () => setMetronomeWorkspaceSelectorMode("projects"),
-                          }, "Projects")
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-metronome-workspace-popup-list" },
-                        metronomeWorkspaceSelectorMode === "projects"
-                          ? metronomeProjectOptions.length > 0
-                            ? metronomeProjectOptions.map((project) => {
-                                const projectEnvironmentId = getMetronomeProjectEnvironmentId(project);
-                                const isSelectedProject = currentContextType === "project" && config.projectId === project.id;
-                                return React.createElement("button", {
-                                  key: project.id,
-                                  type: "button",
-                                  className: "playground-metronome-workspace-popup-row " + (isSelectedProject ? "is-selected" : ""),
-                                  onClick: () => selectMetronomeProject(project),
-                                  disabled: !projectEnvironmentId,
-                                  title: !projectEnvironmentId ? "This project has no linked computer." : project.name,
-                                },
-                                  React.createElement(Rocket, { className: "playground-metronome-workspace-popup-row-icon", strokeWidth: 1.75 }),
-                                  React.createElement("span", { className: "playground-metronome-workspace-popup-row-label" }, project.name),
-                                  React.createElement("span", { className: "playground-metronome-workspace-popup-row-check-slot" },
-                                    isSelectedProject ? React.createElement(Check, { className: "playground-metronome-workspace-popup-row-check" }) : null
-                                  )
-                                );
-                              })
-                            : React.createElement("div", { className: "playground-metronome-workspace-popup-empty-wrap" },
-                                React.createElement("div", { className: "playground-metronome-workspace-popup-empty" }, workspacePopupEmptyLabel)
-                              )
-                          : metronomeComputerOptions.length > 0
-                            ? metronomeComputerOptions.map((environment) => {
-                                const isSelectedEnvironment = currentContextType === "computer" && (config.environmentId || defaultMetronomeComputerOption?.id || "") === environment.id;
-                                return React.createElement("button", {
-                                  key: environment.id,
-                                  type: "button",
-                                  className: "playground-metronome-workspace-popup-row " + (isSelectedEnvironment ? "is-selected" : ""),
-                                  onClick: () => selectMetronomeEnvironment(environment),
-                                },
-                                  React.createElement(Monitor, { className: "playground-metronome-workspace-popup-row-icon", strokeWidth: 1.75 }),
-                                  React.createElement("span", { className: "playground-metronome-workspace-popup-row-label" }, environment.name),
-                                  React.createElement("span", { className: "playground-metronome-workspace-popup-row-check-slot" },
-                                    isSelectedEnvironment ? React.createElement(Check, { className: "playground-metronome-workspace-popup-row-check" }) : null
-                                  )
-                                );
-                              })
-                            : React.createElement("div", { className: "playground-metronome-workspace-popup-empty-wrap" },
-                                React.createElement("div", { className: "playground-metronome-workspace-popup-empty" }, workspacePopupEmptyLabel)
-                              )
-                      )
-                    )
-                  )
-                : null;
-              const workspacePopupLayer = workspacePopup && typeof document !== "undefined" && typeof createPortal === "function"
-                ? createPortal(workspacePopup, document.body)
-                : workspacePopup;
-              const toggleMetronomeWorkspaceSelector = (forceOpen = null) => {
-                const rect = metronomeWorkspaceSelectorAnchorRef.current?.getBoundingClientRect?.();
-                if (rect) {
-                  setMetronomeWorkspaceSelectorRect({
-                    left: rect.left,
-                    top: rect.bottom + 8,
-                    width: rect.width,
-                  });
-                }
-                setMetronomeWorkspaceSelectorMode(currentContextType === "project" ? "projects" : "computers");
-                setIsMetronomeWorkspaceSelectorOpen((value) => typeof forceOpen === "boolean" ? forceOpen : !value);
-              };
-              const openMetronomeWorkspaceSelectorFromFieldEvent = (event) => {
-                if (event.target?.closest?.(".playground-metronome-workspace-popup-portal")) {
-                  return;
-                }
-                event.preventDefault();
-                event.stopPropagation();
-                toggleMetronomeWorkspaceSelector(true);
-              };
+              const selectedWorkspaceValue = currentContextType === "project" && selectedProject
+                ? "project:" + selectedProject.id
+                : selectedEnvironment
+                  ? "computer:" + selectedEnvironment.id
+                  : "";
+              const workspaceOptions = [
+                ...metronomeComputerOptions.map((environment) => ({
+                  id: "computer:" + environment.id,
+                  label: environment.name || "Computer",
+                  description: "Computer",
+                })),
+                ...metronomeProjectOptions.map((project) => {
+                  const projectEnvironmentId = getMetronomeProjectEnvironmentId(project);
+                  const projectEnvironment = metronomeComputerOptions.find((option) => option.id === projectEnvironmentId) || null;
+                  return {
+                    id: "project:" + project.id,
+                    label: project.name || "Project",
+                    description: projectEnvironment
+                      ? "Project on " + (projectEnvironment.name || "linked computer")
+                      : "Project without linked computer",
+                  };
+                }),
+              ];
               return React.createElement("div", {
-                className: "playground-metronome-field playground-metronome-workspace-selector-field",
-                "data-context-type": currentContextType,
+                className: "playground-metronome-field playground-metronome-inspector-selector-field",
               },
-                React.createElement("label", { className: "playground-metronome-field-label playground-metronome-field-title" }, selectorTitle),
-                React.createElement("div", { className: "tb-selector-anchor" },
-                  React.createElement("button", {
-                    type: "button",
-                    ref: metronomeWorkspaceSelectorAnchorRef,
-                    className: "playground-metronome-workspace-selector-trigger",
-                    onPointerDown: openMetronomeWorkspaceSelectorFromFieldEvent,
-                    onMouseDown: openMetronomeWorkspaceSelectorFromFieldEvent,
-                    onClick: openMetronomeWorkspaceSelectorFromFieldEvent,
-                    onKeyDown: (event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        openMetronomeWorkspaceSelectorFromFieldEvent(event);
-                      }
-                    },
+                renderMetronomeFieldTitle(selectorTitle),
+                renderMetronomeInspectorSelect({
+                  id: "thread-workspace-" + (selectedNodeId || "selected"),
+                  value: selectedWorkspaceValue,
+                  options: workspaceOptions,
+                  placeholder: workspaceOptions.length ? "Select computer" : "No computers available",
+                  searchPlaceholder: "Select a computer...",
+                  disabled: isActiveWorkflowBuiltIn || !workspaceOptions.length,
+                  onChange: (nextWorkspaceValue) => {
+                    const [nextType, ...nextIdParts] = String(nextWorkspaceValue || "").split(":");
+                    const nextId = nextIdParts.join(":");
+                    if (nextType === "project") {
+                      const nextProject = metronomeProjectOptions.find((project) => project.id === nextId) || null;
+                      if (!nextProject) return;
+                      const projectEnvironmentId = getMetronomeProjectEnvironmentId(nextProject);
+                      if (!projectEnvironmentId) return;
+                      const projectEnvironment = metronomeComputerOptions.find((option) => option.id === projectEnvironmentId) || null;
+                      updateSelectedNodeConfigPatch({
+                        contextType: "project",
+                        resource: "project",
+                        projectId: nextProject.id,
+                        projectName: nextProject.name || "",
+                        environmentId: projectEnvironmentId,
+                        environmentName: projectEnvironment?.name || "",
+                      });
+                      return;
+                    }
+                    const nextEnvironment = metronomeComputerOptions.find((environment) => environment.id === nextId) || null;
+                    if (!nextEnvironment) return;
+                    updateSelectedNodeConfigPatch({
+                      contextType: "computer",
+                      resource: "computer",
+                      projectId: "",
+                      projectName: "",
+                      environmentId: nextEnvironment.id,
+                      environmentName: nextEnvironment.name || "",
+                    });
                   },
-                    React.createElement("span", { className: "playground-metronome-workspace-selector-trigger-label" }, selectedWorkspaceLabel),
-                    React.createElement(ChevronDown, { width: 15, height: 15, strokeWidth: 1.85 })
-                  )
-                ),
-                workspacePopupLayer
+                })
               );
             };
             const renderMetronomeScheduleSettings = () => {
@@ -23200,22 +23239,27 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 selectedConditionType === "database_document_field"
                   ? React.createElement("div", { className: "playground-metronome-condition-fields" },
                       React.createElement("div", { className: "playground-metronome-field" },
-                        React.createElement("label", { className: "playground-metronome-field-label" }, "Database"),
-                        React.createElement("select", {
-                          className: "playground-metronome-select",
+                        renderMetronomeFieldTitle("Database"),
+                        renderMetronomeInspectorSelect({
+                          id: "condition-database-" + (selectedNodeId || "selected"),
                           value: config.databaseId || "",
-                          onChange: (event) => {
-                            const nextDatabaseId = event.target.value;
+                          options: [
+                            { id: "", label: metronomeDatabaseOptions.length ? "Select database" : "No databases available" },
+                            ...metronomeDatabaseOptions.map((option) => ({
+                              id: option.id,
+                              label: option.name,
+                              description: option.description || option.id || "",
+                            })),
+                          ],
+                          searchPlaceholder: "Select database...",
+                          onChange: (nextDatabaseId) => {
                             const nextDatabase = metronomeDatabaseOptions.find((option) => option.id === nextDatabaseId) || null;
                             updateSelectedNodeConfigPatch({
                               databaseId: nextDatabaseId,
                               databaseName: nextDatabase?.name || "",
                             });
                           },
-                        },
-                          React.createElement("option", { value: "" }, "Select database"),
-                          metronomeDatabaseOptions.map((option) => React.createElement("option", { key: option.id, value: option.id }, option.name))
-                        )
+                        })
                       ),
                       React.createElement("div", { className: "playground-metronome-field" },
                         React.createElement("label", { className: "playground-metronome-field-label" }, "Collection"),
@@ -23228,7 +23272,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                         })
                       ),
                       React.createElement("div", { className: "playground-metronome-field" },
-                        React.createElement("label", { className: "playground-metronome-field-label" }, "Document ID"),
+                        React.createElement("label", { className: "playground-metronome-field-label" }, "Document"),
                         React.createElement("input", {
                           type: "text",
                           className: "playground-metronome-input",
@@ -23237,33 +23281,33 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           onChange: (event) => updateSelectedNodeConfig("databaseDocumentId", event.target.value),
                         })
                       ),
-                      React.createElement("div", { className: "playground-metronome-condition-compact-grid" },
-                        React.createElement("div", { className: "playground-metronome-field" },
-                          React.createElement("label", { className: "playground-metronome-field-label" }, "Field path"),
-                          React.createElement("input", {
-                            type: "text",
-                            className: "playground-metronome-input",
-                            value: config.databaseFieldPath || "",
-                            placeholder: "status",
-                            onChange: (event) => updateSelectedNodeConfig("databaseFieldPath", event.target.value),
-                          })
-                        ),
-                        React.createElement("div", { className: "playground-metronome-field" },
-                          React.createElement("label", { className: "playground-metronome-field-label" }, "Operator"),
-                          React.createElement("select", {
-                            className: "playground-metronome-select",
-                            value: config.databaseOperator || "equals",
-                            onChange: (event) => updateSelectedNodeConfig("databaseOperator", event.target.value),
-                          },
-                            React.createElement("option", { value: "equals" }, "Equals"),
-                            React.createElement("option", { value: "not_equals" }, "Not equals"),
-                            React.createElement("option", { value: "contains" }, "Contains"),
-                            React.createElement("option", { value: "not_contains" }, "Not contains")
-                          )
-                        )
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        React.createElement("label", { className: "playground-metronome-field-label" }, "Field"),
+                        React.createElement("input", {
+                          type: "text",
+                          className: "playground-metronome-input",
+                          value: config.databaseFieldPath || "",
+                          placeholder: "status",
+                          onChange: (event) => updateSelectedNodeConfig("databaseFieldPath", event.target.value),
+                        })
                       ),
                       React.createElement("div", { className: "playground-metronome-field" },
-                        React.createElement("label", { className: "playground-metronome-field-label" }, "Compare value"),
+                        renderMetronomeFieldTitle("Operator"),
+                        renderMetronomeInspectorSelect({
+                          id: "condition-database-operator-" + (selectedNodeId || "selected"),
+                          value: config.databaseOperator || "equals",
+                          options: [
+                            { id: "equals", label: "Equals" },
+                            { id: "not_equals", label: "Not equals" },
+                            { id: "contains", label: "Contains" },
+                            { id: "not_contains", label: "Not contains" },
+                          ],
+                          onChange: (nextValue) => updateSelectedNodeConfig("databaseOperator", nextValue),
+                          searchPlaceholder: "Select operator...",
+                        })
+                      ),
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        React.createElement("label", { className: "playground-metronome-field-label" }, "Comparison"),
                         React.createElement("input", {
                           type: "text",
                           className: "playground-metronome-input",
@@ -23277,22 +23321,27 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 selectedConditionType === "ticket_status"
                   ? React.createElement("div", { className: "playground-metronome-condition-fields" },
                       React.createElement("div", { className: "playground-metronome-field" },
-                        React.createElement("label", { className: "playground-metronome-field-label" }, "Project"),
-                        React.createElement("select", {
-                          className: "playground-metronome-select",
+                        renderMetronomeFieldTitle("Project"),
+                        renderMetronomeInspectorSelect({
+                          id: "condition-ticket-project-" + (selectedNodeId || "selected"),
                           value: config.ticketProjectId || "",
-                          onChange: (event) => {
-                            const nextProjectId = event.target.value;
+                          options: [
+                            { id: "", label: metronomeProjectOptions.length ? "Select project" : "No projects available" },
+                            ...metronomeProjectOptions.map((option) => ({
+                              id: option.id,
+                              label: option.name,
+                              description: option.description || option.id || "",
+                            })),
+                          ],
+                          searchPlaceholder: "Select project...",
+                          onChange: (nextProjectId) => {
                             const nextProject = metronomeProjectOptions.find((option) => option.id === nextProjectId) || null;
                             updateSelectedNodeConfigPatch({
                               ticketProjectId: nextProjectId,
                               ticketProjectName: nextProject?.name || "",
                             });
                           },
-                        },
-                          React.createElement("option", { value: "" }, "Select project"),
-                          metronomeProjectOptions.map((option) => React.createElement("option", { key: option.id, value: option.id }, option.name))
-                        )
+                        })
                       ),
                       React.createElement("div", { className: "playground-metronome-field" },
                         React.createElement("label", { className: "playground-metronome-field-label" }, "Ticket ID"),
@@ -23304,68 +23353,74 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           onChange: (event) => updateSelectedNodeConfig("ticketId", event.target.value),
                         })
                       ),
-                      React.createElement("div", { className: "playground-metronome-condition-compact-grid" },
-                        React.createElement("div", { className: "playground-metronome-field" },
-                          React.createElement("label", { className: "playground-metronome-field-label" }, "Operator"),
-                          React.createElement("select", {
-                            className: "playground-metronome-select",
-                            value: config.ticketStatusOperator || "equals",
-                            onChange: (event) => updateSelectedNodeConfig("ticketStatusOperator", event.target.value),
-                          },
-                            React.createElement("option", { value: "equals" }, "Equals"),
-                            React.createElement("option", { value: "not_equals" }, "Not equals")
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-metronome-field" },
-                          React.createElement("label", { className: "playground-metronome-field-label" }, "Status"),
-                          React.createElement("select", {
-                            className: "playground-metronome-select",
-                            value: config.ticketStatusValue || "planned",
-                            onChange: (event) => updateSelectedNodeConfig("ticketStatusValue", event.target.value),
-                          },
-                            ticketStatusOptions.map((option) => React.createElement("option", { key: option.id, value: option.id }, option.label))
-                          )
-                        )
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        renderMetronomeFieldTitle("Operator"),
+                        renderMetronomeInspectorSelect({
+                          id: "condition-ticket-operator-" + (selectedNodeId || "selected"),
+                          value: config.ticketStatusOperator || "equals",
+                          options: [
+                            { id: "equals", label: "Equals" },
+                            { id: "not_equals", label: "Not equals" },
+                          ],
+                          onChange: (nextValue) => updateSelectedNodeConfig("ticketStatusOperator", nextValue),
+                          searchPlaceholder: "Select operator...",
+                        })
+                      ),
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        renderMetronomeFieldTitle("Status"),
+                        renderMetronomeInspectorSelect({
+                          id: "condition-ticket-status-" + (selectedNodeId || "selected"),
+                          value: config.ticketStatusValue || "planned",
+                          options: ticketStatusOptions,
+                          onChange: (nextValue) => updateSelectedNodeConfig("ticketStatusValue", nextValue),
+                          searchPlaceholder: "Select status...",
+                        })
                       )
                     )
                   : null,
                 isFixedBranches
                   ? null
-                  : React.createElement("div", { className: "playground-metronome-field" },
-                    React.createElement("label", { className: "playground-metronome-field-label playground-metronome-field-title" }, "Branches"),
+                  : React.createElement("div", { className: "playground-metronome-field playground-metronome-condition-editor-field" },
                     React.createElement("div", { className: "playground-metronome-condition-editor" },
-                      conditionBranches.map((branch) => {
-                        const isElseBranch = branch.id === "else";
-                        const isLockedBranch = isElseBranch || isFixedBranches;
+                      conditionBranches.filter((branch) => branch.id !== "else").map((branch, branchIndex) => {
+                        const isLockedBranch = isFixedBranches;
+                        const branchKindLabel = branchIndex === 0
+                            ? "If"
+                            : "Else if";
                         return React.createElement("div", {
                           key: branch.id,
                           className: "playground-metronome-condition-editor-row" + (isFixedBranches ? " is-fixed" : ""),
                         },
-                          React.createElement("input", {
-                            type: "text",
-                            className: "playground-metronome-input",
-                            value: branch.label || "",
-                            placeholder: isElseBranch ? "Default" : branchLabelPlaceholder,
-                            disabled: isLockedBranch,
-                            ...getMetronomeTextInputKeyHandlers(),
-                            onChange: (event) => updateConditionBranch(branch.id, { label: event.target.value }),
-                          }),
-                          React.createElement("input", {
-                            type: "text",
-                            className: "playground-metronome-input",
-                            value: branch.rule || "",
-                            placeholder: isElseBranch ? "No match" : branchRulePlaceholder,
-                            disabled: isLockedBranch,
-                            ...getMetronomeTextInputKeyHandlers(),
-                            onChange: (event) => updateConditionBranch(branch.id, { rule: event.target.value }),
-                          }),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-metronome-condition-editor-remove",
-                            disabled: isLockedBranch || editableConditionBranchCount <= 1,
-                            "aria-label": "Remove condition branch",
-                            onClick: () => removeConditionBranch(branch.id),
-                          }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.9 }))
+                          React.createElement("div", { className: "playground-metronome-condition-editor-row-header" },
+                            React.createElement("span", { className: "playground-metronome-condition-editor-row-kind" }, branchKindLabel),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-metronome-condition-editor-remove",
+                              disabled: isLockedBranch || editableConditionBranchCount <= 1,
+                              "aria-label": "Remove condition branch",
+                              onClick: () => removeConditionBranch(branch.id),
+                            }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.9 }))
+                          ),
+                          React.createElement("div", { className: "playground-metronome-condition-editor-row-fields" },
+                            React.createElement("input", {
+                              type: "text",
+                              className: "playground-metronome-input",
+                              value: branch.label || "",
+                              placeholder: branchLabelPlaceholder,
+                              disabled: isLockedBranch,
+                              ...getMetronomeTextInputKeyHandlers(),
+                              onChange: (event) => updateConditionBranch(branch.id, { label: event.target.value }),
+                            }),
+                            React.createElement("input", {
+                              type: "text",
+                              className: "playground-metronome-input",
+                              value: branch.rule || "",
+                              placeholder: branchRulePlaceholder,
+                              disabled: isLockedBranch,
+                              ...getMetronomeTextInputKeyHandlers(),
+                              onChange: (event) => updateConditionBranch(branch.id, { rule: event.target.value }),
+                            })
+                          )
                         );
                       }),
                       canAddConditionBranches
@@ -23375,7 +23430,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                             onClick: addConditionBranch,
                           },
                             React.createElement(Plus, { width: 13, height: 13, strokeWidth: 2 }),
-                            React.createElement("span", null, selectedConditionType === "json" ? "Add JSON branch" : "Add substring branch")
+                            React.createElement("span", null, "Add")
                           )
                         : null
                     )
@@ -24278,8 +24333,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               renderMetronomeWorkspaceSelector(),
               React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
                 React.createElement("div", { className: "playground-metronome-switch-copy" },
-                  React.createElement("span", null, "Use full workflow context"),
-                  React.createElement("small", null, "Pass the full chain of previous node summaries into this thread. Turn off to pass only the latest node result.")
+                  React.createElement("span", { className: "playground-metronome-switch-title-with-tooltip" },
+                    React.createElement("span", null, "Full workflow context"),
+                    renderMetronomeFieldTooltip("Pass the full chain of previous node summaries into this thread. Turn off to pass only the latest node result.")
+                  )
                 ),
                 React.createElement("button", {
                   type: "button",
@@ -24292,56 +24349,78 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   },
                 })
               ),
-              React.createElement("div", { className: "playground-metronome-field" },
-                renderMetronomeFieldTitle("Output mode", "Structured output lets downstream Firecrawl, Database, and Function nodes bind to JSON, URLs, files, records, and artifacts."),
-                renderMetronomeInspectorSelect({
-                  id: "thread-output-mode-" + (selectedNodeId || "selected"),
-                  value: String(config.outputMode || config.output_mode || "text") === "structured" ? "structured" : "text",
-                  options: [
-                    { id: "text", label: "Narrative text" },
-                    { id: "structured", label: "Structured JSON" },
-                  ],
-                  onChange: (nextValue) => updateSelectedNodeConfig("outputMode", nextValue),
-                  searchPlaceholder: "Select output mode...",
-                })
-              ),
-              React.createElement("div", { className: "playground-metronome-field" },
-                renderMetronomeFieldTitle("Output key", "Name this thread output so downstream nodes can bind to it, for example previous.menu_detection.records."),
-                React.createElement("input", {
-                  className: "playground-metronome-input",
-                  value: config.outputKey || config.output_key || "thread",
-                  onChange: (event) => updateSelectedNodeConfig("outputKey", event.target.value),
-                  placeholder: "thread",
-                })
-              ),
-              React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
-                React.createElement("div", { className: "playground-metronome-switch-copy" },
-                  React.createElement("span", null, "Require JSON output"),
-                  React.createElement("small", null, "Ask the agent to produce machine-readable output for deterministic downstream nodes.")
+              React.createElement("div", { className: "playground-metronome-trigger-evaluate-row is-thread-more-row" + (isMetronomeThreadMoreOpen ? " is-open" : "") },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-metronome-thread-more-toggle" + (isMetronomeThreadMoreOpen ? " is-open" : ""),
+                  "aria-expanded": isMetronomeThreadMoreOpen ? "true" : "false",
+                  onClick: () => setIsMetronomeThreadMoreOpen((value) => !value),
+                },
+                  React.createElement(ChevronDown, { className: "playground-metronome-thread-more-toggle-icon", width: 13, height: 13, strokeWidth: 1.9 }),
+                  React.createElement("span", null, "More")
                 ),
                 React.createElement("button", {
                   type: "button",
-                  className: "playground-metronome-switch" + (config.requireJsonOutput || config.require_json_output ? " is-on" : ""),
-                  role: "switch",
-                  "aria-checked": config.requireJsonOutput || config.require_json_output ? "true" : "false",
-                  onClick: () => updateSelectedNodeConfig("requireJsonOutput", !(config.requireJsonOutput || config.require_json_output)),
-                })
+                  className: "playground-metronome-trigger-evaluate-link",
+                  onClick: () => setIsMetronomeTriggerDiagnosticsModalOpen(true),
+                }, "Evaluate Node")
               ),
-              renderThreadOutputContractBuilder(),
-              renderMetronomeJsonEditorField({
-                title: "Output fields",
-                tooltip: "Fields that this thread can expose to following nodes.",
-                fieldKey: "outputFieldsJson",
-                value: config.outputFieldsJson || config.output_fields_json || JSON.stringify(METRONOME_THREAD_OUTPUT_FIELDS, null, 2),
-                path: "output-fields.json",
-              }),
-              renderMetronomeJsonEditorField({
-                title: "Output contract",
-                tooltip: "Optional JSON shape the agent should return when structured output is enabled.",
-                fieldKey: "outputContractJson",
-                value: config.outputContractJson || config.output_contract_json || "{\n  \"summary\": \"\",\n  \"urls\": [],\n  \"records\": [],\n  \"artifacts\": []\n}",
-                path: "output-contract.json",
-              })
+              React.createElement("div", { className: "playground-metronome-thread-more-sections" + (isMetronomeThreadMoreOpen ? " is-open" : "") },
+                React.createElement("div", { className: "playground-metronome-thread-more-sections-inner" },
+                    React.createElement("div", { className: "playground-metronome-field playground-metronome-thread-output-field" },
+                      renderMetronomeFieldTitle("Output mode", "Structured output lets downstream Firecrawl, Database, and Function nodes bind to JSON, URLs, files, records, and artifacts."),
+                      renderMetronomeInspectorSelect({
+                        id: "thread-output-mode-" + (selectedNodeId || "selected"),
+                        value: String(config.outputMode || config.output_mode || "text") === "structured" ? "structured" : "text",
+                        options: [
+                          { id: "text", label: "Narrative text" },
+                          { id: "structured", label: "Structured JSON" },
+                        ],
+                        onChange: (nextValue) => updateSelectedNodeConfig("outputMode", nextValue),
+                        searchPlaceholder: "Select output mode...",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-metronome-field playground-metronome-thread-output-field" },
+                      renderMetronomeFieldTitle("Output key", "Name this thread output so downstream nodes can bind to it, for example previous.menu_detection.records."),
+                      React.createElement("input", {
+                        className: "playground-metronome-input",
+                        value: config.outputKey || config.output_key || "thread",
+                        onChange: (event) => updateSelectedNodeConfig("outputKey", event.target.value),
+                        placeholder: "thread",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
+                      React.createElement("div", { className: "playground-metronome-switch-copy" },
+                        React.createElement("span", { className: "playground-metronome-switch-title-with-tooltip" },
+                          React.createElement("span", null, "Require JSON output"),
+                          renderMetronomeFieldTooltip("Ask the agent to produce machine-readable output for deterministic downstream nodes.")
+                        )
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-metronome-switch" + (config.requireJsonOutput || config.require_json_output ? " is-on" : ""),
+                        role: "switch",
+                        "aria-checked": config.requireJsonOutput || config.require_json_output ? "true" : "false",
+                        onClick: () => updateSelectedNodeConfig("requireJsonOutput", !(config.requireJsonOutput || config.require_json_output)),
+                      })
+                    ),
+                    renderThreadOutputContractBuilder(),
+                    renderMetronomeJsonEditorField({
+                      title: "Output fields",
+                      tooltip: "Fields that this thread can expose to following nodes.",
+                      fieldKey: "outputFieldsJson",
+                      value: config.outputFieldsJson || config.output_fields_json || JSON.stringify(METRONOME_THREAD_OUTPUT_FIELDS, null, 2),
+                      path: "output-fields.json",
+                    }),
+                    renderMetronomeJsonEditorField({
+                      title: "Output contract",
+                      tooltip: "Optional JSON shape the agent should return when structured output is enabled.",
+                      fieldKey: "outputContractJson",
+                      value: config.outputContractJson || config.output_contract_json || "{\n  \"summary\": \"\",\n  \"urls\": [],\n  \"records\": [],\n  \"artifacts\": []\n}",
+                      path: "output-contract.json",
+                    })
+                  )
+                )
             );
             };
             const renderImagineSettings = () => {
@@ -24420,26 +24499,18 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 ),
                 React.createElement("div", { className: "playground-metronome-field" },
                   renderMetronomeFieldTitle("Mode"),
-                  React.createElement("div", { className: "playground-metronome-media-switch", role: "group", "aria-label": "Imagine media mode" },
-                    [
-                      { id: "image", label: "Image", Icon: ImageIcon },
-                      { id: "video", label: "Video", Icon: Film },
-                    ].map((mode) => {
-                      const ModeIcon = mode.Icon;
-                      const isActive = selectedMediaMode === mode.id;
-                      return React.createElement("button", {
-                        key: mode.id,
-                        type: "button",
-                        className: "playground-metronome-media-switch-button" + (isActive ? " is-active" : ""),
-                        onClick: () => setImagineMediaMode(mode.id),
-                      },
-                        React.createElement(ModeIcon, { width: 13, height: 13, strokeWidth: 1.85 }),
-                        React.createElement("span", null, mode.label)
-                      );
-                    })
-                  )
+                  renderMetronomeInspectorSelect({
+                    id: "imagine-mode-" + (selectedNodeId || "selected"),
+                    value: selectedMediaMode,
+                    options: [
+                      { id: "image", label: "Image", description: "Generate still images from workflow context." },
+                      { id: "video", label: "Video", description: "Generate short videos from workflow context." },
+                    ],
+                    onChange: (nextValue) => setImagineMediaMode(nextValue),
+                    searchPlaceholder: "Select mode...",
+                  })
                 ),
-                React.createElement("div", { className: "playground-metronome-field" },
+                React.createElement("div", { className: "playground-metronome-field playground-metronome-imagine-model-field" },
                   renderMetronomeFieldTitle(
                     selectedMediaMode === "video" ? "Video model" : "Image model",
                     (modelOptions.find((option) => option.id === selectedModelId) || modelOptions[0])?.description || ""
@@ -24458,16 +24529,19 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 ),
                 renderMetronomeRichTextField({
                   fieldKey: "prompt",
-                  title: "Prompt adaption",
+                  title: "Instructions",
                   placeholder: selectedMediaMode === "video" ? "Describe the video to generate" : "Describe the image to generate",
                   tooltip: "Append generation instructions to the workflow context before Imagine runs. The node can use summaries and artifacts from previous nodes.",
+                  isInstructionsField: true,
                 }),
                 renderMetronomeAgentSelector(),
                 renderMetronomeWorkspaceSelector(),
                 React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
                   React.createElement("div", { className: "playground-metronome-switch-copy" },
-                    React.createElement("span", null, "Use full workflow context"),
-                    React.createElement("small", null, "Pass the full chain of previous node summaries into Imagine. Turn off to pass only the latest node result.")
+                    React.createElement("span", { className: "playground-metronome-switch-title-with-tooltip" },
+                      React.createElement("span", null, "Full workflow context"),
+                      renderMetronomeFieldTooltip("Pass the full chain of previous node summaries into Imagine. Turn off to pass only the latest node result.")
+                    )
                   ),
                   React.createElement("button", {
                     type: "button",
@@ -24622,9 +24696,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                       renderMetronomeWorkspaceSelector(),
                       renderMetronomeRichTextField({
                         fieldKey: "adaptationInstructions",
-                        title: "Adaptation instructions",
+                        title: "Instructions",
                         placeholder: "Describe how the ticket should be adapted from the workflow context.",
                         tooltip: "Use this when previous node output should update the ticket title, body, status, or fields.",
+                        isInstructionsField: true,
                       })
                     )
                   : null,
@@ -24701,14 +24776,20 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               const isCredentialSecretsLoading = credentialVaultId && metronomeSecretVaultSecretsLoadingId === credentialVaultId;
               return React.createElement(React.Fragment, null,
                 React.createElement("div", { className: "playground-metronome-field" },
-                  renderMetronomeFieldTitle("Firecrawl credential", "Use the managed Computer Agents Firecrawl credential by default, billed as usage. Choose a Secrets resource to use your own key."),
-                  React.createElement("select", {
-                    className: "playground-metronome-select",
+                  renderMetronomeFieldTitle("Credential", "Use the managed Computer Agents Firecrawl credential by default, billed as usage. Choose a Secrets resource to use your own key."),
+                  renderMetronomeInspectorSelect({
+                    id: "firecrawl-credential-vault-" + (selectedNodeId || "selected"),
                     value: credentialVaultId,
-                    onKeyDown: stopMetronomeInputKeyPropagation,
-                    onKeyUp: stopMetronomeInputKeyPropagation,
-                    onChange: (event) => {
-                      const nextVaultId = String(event.target.value || "").trim();
+                    options: [
+                      { id: "", label: "Computer Agents Firecrawl", description: "Managed credential" },
+                      ...metronomeSecretVaultOptions.map((option) => ({
+                        id: option.id,
+                        label: option.name,
+                        description: option.description || option.id || "",
+                      })),
+                    ],
+                    onChange: (nextValue) => {
+                      const nextVaultId = String(nextValue || "").trim();
                       const nextVault = metronomeSecretVaultOptions.find((option) => option.id === nextVaultId) || null;
                       updateSelectedNodeConfigPatch({
                         credentialVaultId: nextVaultId,
@@ -24721,24 +24802,26 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                         void loadMetronomeSecretVaultSecrets(nextVaultId, { force: true });
                       }
                     },
-                  },
-                    React.createElement("option", { value: "" }, "Computer Agents Firecrawl"),
-                    metronomeSecretVaultOptions.map((option) =>
-                      React.createElement("option", { key: option.id, value: option.id }, option.name)
-                    )
-                  )
+                    searchPlaceholder: "Select credential...",
+                  })
                 ),
                 credentialVaultId
                   ? React.createElement("div", { className: "playground-metronome-field" },
                       renderMetronomeFieldTitle("Credential", "Select the Firecrawl API key stored in the chosen secrets resource."),
-                      React.createElement("select", {
-                        className: "playground-metronome-select",
+                      renderMetronomeInspectorSelect({
+                        id: "firecrawl-credential-secret-" + (selectedNodeId || "selected"),
                         value: credentialSecretId,
                         disabled: isCredentialSecretsLoading,
-                        onKeyDown: stopMetronomeInputKeyPropagation,
-                        onKeyUp: stopMetronomeInputKeyPropagation,
-                        onChange: (event) => {
-                          const nextSecretId = String(event.target.value || "").trim();
+                        options: [
+                          { id: "", label: isCredentialSecretsLoading ? "Loading credentials..." : "Select credential" },
+                          ...credentialVaultSecrets.map((secret) => ({
+                            id: secret.id,
+                            label: secret.name,
+                            description: secret.description || secret.id || "",
+                          })),
+                        ],
+                        onChange: (nextValue) => {
+                          const nextSecretId = String(nextValue || "").trim();
                           const nextSecret = credentialVaultSecrets.find((secret) => secret.id === nextSecretId) || null;
                           updateSelectedNodeConfigPatch({
                             credentialSecretId: nextSecretId,
@@ -24746,29 +24829,26 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                             credentialRef: nextSecretId ? buildMetronomeSecretCredentialRef(credentialVaultId, nextSecretId) : "",
                           });
                         },
-                      },
-                        React.createElement("option", { value: "" }, isCredentialSecretsLoading ? "Loading credentials..." : "Select credential"),
-                        credentialVaultSecrets.map((secret) =>
-                          React.createElement("option", { key: secret.id, value: secret.id }, secret.name)
-                        )
-                      )
+                        searchPlaceholder: "Select credential...",
+                      })
                     )
                   : null,
                 credentialVaultId && !isCredentialSecretsLoading && !credentialVaultSecrets.length
-                  ? React.createElement("p", { className: "playground-metronome-field-hint" }, "No credentials found in this secrets resource yet.")
+                  ? React.createElement("p", { className: "playground-metronome-field-hint playground-metronome-firecrawl-credential-hint" }, "No credentials found in this secrets resource yet.")
                   : null,
                 !credentialVaultId
-                  ? React.createElement("p", { className: "playground-metronome-field-hint" }, "Managed by Computer Agents and billed as usage.")
+                  ? React.createElement("p", { className: "playground-metronome-field-hint playground-metronome-firecrawl-credential-hint" }, "Managed by Computer Agents and billed as usage.")
                   : null,
                 !metronomeSecretVaultOptions.length
-                  ? React.createElement("p", { className: "playground-metronome-field-hint" }, "Create a Secrets resource in Develop mode to use your own Firecrawl key.")
+                  ? React.createElement("p", { className: "playground-metronome-field-hint playground-metronome-firecrawl-credential-hint" }, "Create a Secrets resource in Develop mode to use your own Firecrawl key.")
                   : null,
                 isSearch
                   ? React.createElement(React.Fragment, null,
                       renderMetronomeDataBindingSelect({
-                        title: "Search query source",
+                        title: "Query",
                         fieldKey: "inputBinding",
                         fallback: "last.text",
+                        className: "playground-metronome-firecrawl-source-field",
                         options: [
                           { id: "last.text", label: "Previous node text" },
                           { id: "last.json.query", label: "Previous node JSON query" },
@@ -24776,8 +24856,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           { id: "workflow.context", label: "Full workflow context" },
                         ],
                       }),
-                      React.createElement("div", { className: "playground-metronome-field" },
-                        renderMetronomeFieldTitle("Fallback query", "Used when the selected binding does not provide a query."),
+                      React.createElement("div", { className: "playground-metronome-field playground-metronome-firecrawl-fallback-field" },
+                        renderMetronomeFieldTitle("Fallback", "Used when the selected binding does not provide a query."),
                         React.createElement("input", {
                           type: "text",
                           className: "playground-metronome-input",
@@ -24796,13 +24876,14 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                         title: "URL source",
                         fieldKey: "inputBinding",
                         fallback: "last.urls",
+                        className: "playground-metronome-firecrawl-source-field",
                         options: [
                           { id: "last.urls", label: "Previous node URLs" },
                           { id: "last.json.url", label: "Previous node JSON URL" },
                           { id: "trigger.input.url", label: "Trigger input URL" },
                         ],
                       }),
-                      React.createElement("div", { className: "playground-metronome-field" },
+                      React.createElement("div", { className: "playground-metronome-field playground-metronome-firecrawl-fallback-field" },
                         renderMetronomeFieldTitle("Fallback URL"),
                         React.createElement("input", {
                           type: "url",
@@ -24834,13 +24915,14 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                         title: "Document source",
                         fieldKey: "inputBinding",
                         fallback: "last.files",
+                        className: "playground-metronome-firecrawl-source-field",
                         options: [
                           { id: "last.files", label: "Previous node files" },
                           { id: "last.documents", label: "Previous node documents" },
                           { id: "last.json.filePath", label: "Previous node JSON file path" },
                         ],
                       }),
-                      React.createElement("div", { className: "playground-metronome-field" },
+                      React.createElement("div", { className: "playground-metronome-field playground-metronome-firecrawl-fallback-field" },
                         renderMetronomeFieldTitle("Fallback file path"),
                         React.createElement("input", {
                           type: "text",
@@ -24857,9 +24939,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 isExtract
                   ? React.createElement(React.Fragment, null,
                       renderMetronomeDataBindingSelect({
-                        title: "Extraction source",
+                        title: "Source",
                         fieldKey: "inputBinding",
                         fallback: "last.documents",
+                        className: "playground-metronome-firecrawl-source-field",
                         options: [
                           { id: "last.documents", label: "Previous node documents" },
                           { id: "last.json", label: "Previous node JSON" },
@@ -24867,17 +24950,13 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           { id: "workflow.context", label: "Full workflow context" },
                         ],
                       }),
-                      React.createElement("div", { className: "playground-metronome-field" },
-                        renderMetronomeFieldTitle("Extraction prompt"),
-                        React.createElement("textarea", {
-                          className: "playground-metronome-textarea",
-                          value: config.prompt || "",
-                          placeholder: "Extract company name, price, date, and source URL.",
-                          onKeyDown: stopMetronomeInputKeyPropagation,
-                          onKeyUp: stopMetronomeInputKeyPropagation,
-                          onChange: (event) => updateSelectedNodeConfig("prompt", event.target.value),
-                        })
-                      ),
+                      renderMetronomeRichTextField({
+                        fieldKey: "prompt",
+                        title: "Instructions",
+                        placeholder: "Extract company name, price, date, and source URL.",
+                        tooltip: "Describe the structured data Firecrawl should extract from the selected source.",
+                        isInstructionsField: true,
+                      }),
                       renderMetronomeJsonEditorField({
                         title: "Output schema",
                         fieldKey: "schemaJson",
@@ -24887,7 +24966,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                     )
                   : null,
                 React.createElement("div", { className: "playground-metronome-field" },
-                  renderMetronomeFieldTitle("Limit"),
+                  renderMetronomeFieldTitle("Limit", "Maximum number of Firecrawl results, pages, or documents this node may return."),
                   React.createElement("input", {
                     type: "number",
                     min: "1",
@@ -24901,8 +24980,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 ),
                 React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
                   React.createElement("div", { className: "playground-metronome-switch-copy" },
-                    React.createElement("span", null, "Save artifacts"),
-                    React.createElement("small", null, "Store scraped pages, parsed documents, and extracted records as workflow artifacts for following nodes.")
+                    React.createElement("span", { className: "playground-metronome-switch-title-with-tooltip" },
+                      React.createElement("span", null, "Save artifacts"),
+                      renderMetronomeFieldTooltip("Store scraped pages, parsed documents, and extracted records as workflow artifacts for following nodes.")
+                    )
                   ),
                   React.createElement("button", {
                     type: "button",
@@ -24912,8 +24993,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                     onClick: () => updateSelectedNodeConfig("saveArtifacts", config.saveArtifacts === false || config.save_artifacts === false),
                   })
                 ),
-                React.createElement("div", { className: "playground-metronome-field" },
-                  renderMetronomeFieldTitle("Output key"),
+                React.createElement("div", { className: "playground-metronome-field playground-metronome-firecrawl-output-key-field" },
+                  renderMetronomeFieldTitle("Output key", "Name this Firecrawl output so downstream nodes can bind to it, for example previous.firecrawl.documents."),
                   React.createElement("input", {
                     type: "text",
                     className: "playground-metronome-input",
@@ -24930,7 +25011,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               const operation = normalizeMetronomeTableOperation(config.operation || subtype);
               return React.createElement(React.Fragment, null,
                 renderMetronomeDataBindingSelect({
-                  title: "Table source",
+                  title: "Source",
                   fieldKey: "inputBinding",
                   fallback: "trigger.input.files",
                   options: [
@@ -24942,8 +25023,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                     { id: "workflow.context", label: "Full workflow context" },
                   ],
                 }),
-                React.createElement("div", { className: "playground-metronome-field" },
-                  renderMetronomeFieldTitle("Fallback file path or URL", "Used when the source binding does not contain inline CSV/TSV text or a file reference."),
+                React.createElement("div", { className: "playground-metronome-field playground-metronome-table-fallback-field" },
+                  renderMetronomeFieldTitle("Fallback File", "Used when the source binding does not contain inline CSV/TSV text or a file reference."),
                   React.createElement("input", {
                     type: "text",
                     className: "playground-metronome-input",
@@ -24968,8 +25049,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 ),
                 React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
                   React.createElement("div", { className: "playground-metronome-switch-copy" },
-                    React.createElement("span", null, "First row contains headers"),
-                    React.createElement("small", null, "Headers are normalized into snake_case keys while preserving the original labels.")
+                    React.createElement("span", { className: "playground-metronome-switch-title-with-tooltip" },
+                      React.createElement("span", null, "First row contains headers"),
+                      renderMetronomeFieldTooltip("Headers are normalized into snake_case keys while preserving the original labels.")
+                    )
                   ),
                   React.createElement("button", {
                     type: "button",
@@ -24979,7 +25062,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                     onClick: () => updateSelectedNodeConfig("hasHeader", config.hasHeader === false || config.has_header === false),
                   })
                 ),
-                React.createElement("div", { className: "playground-metronome-field" },
+                React.createElement("div", { className: "playground-metronome-field playground-metronome-table-batch-size-field" },
                   renderMetronomeFieldTitle("Batch size", "Creates a batches array for downstream database or loop nodes. Use 0 to disable batching."),
                   React.createElement("input", {
                     type: "number",
@@ -24992,8 +25075,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                     onChange: (event) => updateSelectedNodeConfig("batchSize", Math.max(0, Number(event.target.value) || 0)),
                   })
                 ),
-                React.createElement("div", { className: "playground-metronome-field" },
-                  renderMetronomeFieldTitle("Output key"),
+                React.createElement("div", { className: "playground-metronome-field playground-metronome-table-output-key-field" },
+                  renderMetronomeFieldTitle("Output key", "Name this parsed table output so downstream nodes can bind to records, batches, and columns."),
                   React.createElement("input", {
                     type: "text",
                     className: "playground-metronome-input",
@@ -25366,21 +25449,26 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	              return React.createElement(React.Fragment, null,
 	                React.createElement("div", { className: "playground-metronome-field" },
 	                  renderMetronomeFieldTitle("Database"),
-                  React.createElement("select", {
-                    className: "playground-metronome-select",
+                  renderMetronomeInspectorSelect({
+                    id: "database-resource-" + (selectedNodeId || "selected"),
                     value: config.databaseId || "",
-                    onChange: (event) => {
-                      const nextDatabaseId = event.target.value;
+                    options: [
+                      { id: "", label: metronomeDatabaseOptions.length ? "Select database" : "No databases available" },
+                      ...metronomeDatabaseOptions.map((option) => ({
+                        id: option.id,
+                        label: option.name,
+                        description: option.description || option.id || "",
+                      })),
+                    ],
+                    onChange: (nextDatabaseId) => {
                       const nextDatabase = metronomeDatabaseOptions.find((option) => option.id === nextDatabaseId) || null;
                       updateSelectedNodeConfigPatch({
                         databaseId: nextDatabaseId,
                         databaseName: nextDatabase?.name || "",
                       });
                     },
-                  },
-                    React.createElement("option", { value: "" }, metronomeDatabaseOptions.length ? "Select database" : "No databases available"),
-                    metronomeDatabaseOptions.map((option) => React.createElement("option", { key: option.id, value: option.id }, option.name))
-                  )
+                    searchPlaceholder: "Select database...",
+                  })
                 ),
                 React.createElement("div", { className: "playground-metronome-field" },
                   renderMetronomeFieldTitle("Collection"),
@@ -25394,22 +25482,24 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                     onChange: (event) => updateSelectedNodeConfig("collection", event.target.value),
                   })
                 ),
-                React.createElement("div", { className: "playground-metronome-field" },
-                  renderMetronomeFieldTitle("Document ID"),
-                  React.createElement("input", {
-                    type: "text",
-                    className: "playground-metronome-input",
-                    value: config.documentId || "",
-                    placeholder: isDeleteOperation || subtype === "update_document" ? "Document id or {{ input }}" : "Optional",
-                    onKeyDown: stopMetronomeInputKeyPropagation,
-                    onKeyUp: stopMetronomeInputKeyPropagation,
-                    onChange: (event) => updateSelectedNodeConfig("documentId", event.target.value),
-                  })
-                ),
+                isBulkWriteOperation
+                  ? null
+                  : React.createElement("div", { className: "playground-metronome-field" },
+                      renderMetronomeFieldTitle("Document"),
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-metronome-input",
+                        value: config.documentId || "",
+                        placeholder: isDeleteOperation || subtype === "update_document" ? "Document id or {{ input }}" : "Optional",
+                        onKeyDown: stopMetronomeInputKeyPropagation,
+                        onKeyUp: stopMetronomeInputKeyPropagation,
+                        onChange: (event) => updateSelectedNodeConfig("documentId", event.target.value),
+                      })
+                    ),
                 isBulkWriteOperation
                   ? React.createElement(React.Fragment, null,
                       renderMetronomeDataBindingSelect({
-                        title: "Records source",
+                        title: "Source",
                         tooltip: "Choose where this database write reads the array of records from.",
                         fieldKey: "recordsBinding",
                         fallback: "last.records",
@@ -25421,7 +25511,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                         ],
                       }),
                       subtype === "upsert_many_documents"
-                        ? React.createElement("div", { className: "playground-metronome-field" },
+                        ? React.createElement("div", { className: "playground-metronome-field playground-metronome-database-upsert-key-field" },
                             renderMetronomeFieldTitle("Upsert key", "Field used to match existing documents before writing."),
                             React.createElement("input", {
                               type: "text",
@@ -25433,26 +25523,17 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                               onChange: (event) => updateSelectedNodeConfig("upsertKey", event.target.value),
                             })
                           )
-                        : null,
-                      renderMetronomeJsonEditorField({
-                        title: "Document template",
-                        tooltip: "Template applied to each incoming record before writing to the collection.",
-                        fieldKey: "documentTemplateJson",
-                        value: config.documentTemplateJson || config.document_template_json || "{\n  \"source\": \"metronome\",\n  \"record\": \"{{ record }}\"\n}",
-                        path: "document-template.json",
-                      })
+                        : null
                     )
                   : renderMetronomeDataBindingSelect({
                       title: "Input source",
                       tooltip: "Choose which upstream output should populate this database operation.",
                       fieldKey: "inputBinding",
                       fallback: "last.json",
+                      className: "playground-metronome-database-input-source-field",
                     }),
 	                isDeleteOperation
-	                  ? React.createElement("div", { className: "playground-metronome-field" },
-	                      renderMetronomeFieldTitle("Delete metadata"),
-	                      renderDatabaseJsonEditor("delete-metadata.json", documentJson || "{\n  \"reason\": \"{{ input }}\"\n}")
-	                    )
+	                  ? null
 	                  : React.createElement("div", { className: "playground-metronome-field playground-metronome-database-document-field" },
 	                      React.createElement("div", { className: "playground-metronome-database-fields-card" },
 	                        React.createElement("div", { className: "playground-metronome-database-document-toolbar" },
@@ -25794,7 +25875,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	                  : null
                 )
 		              ),
-              renderMetronomeAttachmentModalPortal()
+              renderMetronomeAttachmentModalPortal(),
+              renderMetronomeFieldTooltipPortal()
 		            );
           };
 
@@ -27479,12 +27561,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                               onConnect: handleConnect,
                               onNodeDragStop: handleMetronomeNodeDragStop,
                               onCreateNode: handleCreateNode,
-                              onSelectNode: (nodeId) => {
-                                setIsMetronomeRunSidebarOpen(false);
-                                setIsMetronomePublishActionsMenuOpen(false);
-                                setIsMetronomePublishMenuOpen(false);
-                                setSelectedNodeId(nodeId);
-                              },
+                              onSelectNode: selectMetronomeNodeFromCanvas,
                               onPaneClick: () => setSelectedNodeId(""),
                               onUndo: undoGraphChange,
                               onRedo: redoGraphChange,
