@@ -3,6 +3,27 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         overflow: hidden;
       }
 
+      .playground-fine-tuning-page .playground-fine-tuning-overview-shell {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        margin: 0 auto;
+      }
+
+      .playground-fine-tuning-page .playground-guardrails-browser-header.playground-guardrails-overview-browser-header,
+      .playground-fine-tuning-page .playground-guardrails-browser-body.playground-guardrails-overview-browser-body {
+        width: 100%;
+        max-width: none;
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .playground-fine-tuning-page .playground-guardrails-overview-browser-header > .playground-files-library-header {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        margin-left: auto;
+        margin-right: auto;
+      }
+
       .playground-fine-tuning-page .playground-guardrails-table-header,
       .playground-fine-tuning-page .playground-guardrails-table-row {
         grid-template-columns: minmax(220px, 1.3fr) minmax(130px, 0.72fr) minmax(132px, 0.72fr) minmax(112px, 0.55fr) minmax(96px, 0.46fr) 32px;
@@ -538,8 +559,15 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
 
       .playground-fine-tuning-page .playground-evaluations-overview-section .playground-project-overview-threads-table-header,
       .playground-fine-tuning-page .playground-evaluations-overview-section .playground-project-overview-threads-table-row {
-        grid-template-columns: minmax(170px, 1.12fr) minmax(140px, 0.72fr) minmax(80px, 0.34fr) minmax(122px, 0.58fr) minmax(150px, 0.74fr) 20px;
+        grid-template-columns: 34px minmax(170px, 1.12fr) minmax(140px, 0.72fr) minmax(80px, 0.34fr) minmax(122px, 0.58fr) minmax(150px, 0.74fr) 28px;
         gap: 12px;
+      }
+
+      .playground-fine-tuning-page .playground-evaluations-overview-section.playground-agents-overview-list-section.playground-agents-detail-threads-section.playground-evaluations-runs-section .playground-project-overview-threads-table-header,
+      .playground-fine-tuning-page .playground-evaluations-overview-section.playground-agents-overview-list-section.playground-agents-detail-threads-section.playground-evaluations-runs-section .playground-project-overview-threads-table-row {
+        grid-template-columns: 34px minmax(260px, 1.25fr) minmax(210px, 0.86fr) minmax(86px, 0.34fr) minmax(150px, 0.62fr) minmax(190px, 0.78fr) 28px !important;
+        gap: 12px;
+        padding-right: 0;
       }
 
       .playground-fine-tuning-page .playground-evaluations-overview-section .playground-project-overview-thread-cell,
@@ -548,6 +576,23 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .playground-fine-tuning-page .playground-evaluations-overview-section .playground-project-overview-thread-cell.is-actions,
+      .playground-fine-tuning-page .playground-evaluations-overview-section .playground-project-overview-threads-table-header > div:last-child {
+        display: flex;
+        justify-content: flex-end;
+        overflow: visible !important;
+      }
+
+      .playground-fine-tuning-overview-loading {
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 0;
+        text-align: center;
       }
 
       .playground-fine-tuning-create-modal .playground-fine-tuning-evaluation-name {
@@ -1775,6 +1820,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         const [fineTuningSortMode, setFineTuningSortMode] = useState("updated-desc");
         const [fineTuningFilterMode, setFineTuningFilterMode] = useState("all");
         const [fineTuningToolbarPopover, setFineTuningToolbarPopover] = useState("");
+        const [selectedFineTuningOverviewIds, setSelectedFineTuningOverviewIds] = useState(() => new Set());
         const [fineTuningDetailTab, setFineTuningDetailTab] = useState("analysis");
         const [fineTuningStopJobId, setFineTuningStopJobId] = useState("");
         const [evaluationSetPickerOpen, setEvaluationSetPickerOpen] = useState(false);
@@ -3596,8 +3642,10 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           const sortOptions = [
             { id: "updated-desc", label: "Recently updated", description: "Newest jobs first." },
             { id: "name-asc", label: "Name", description: "Alphabetical by job name." },
+            { id: "agent-asc", label: "Agent", description: "Alphabetical by target agent." },
             { id: "improvement-desc", label: "Best improvement", description: "Highest score lift first." },
             { id: "sets-desc", label: "Evaluation sets", description: "Most evaluation sets first." },
+            { id: "conductor-asc", label: "Conducted by", description: "Alphabetical by conductor." },
           ];
           const filterOptions = [
             { id: "all", label: "All jobs", description: "Show every fine-tuning job." },
@@ -3610,6 +3658,15 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
           const filterMode = filterOptions.some((option) => option.id === fineTuningFilterMode) ? fineTuningFilterMode : "all";
           const activeSortOption = sortOptions.find((option) => option.id === sortMode) || sortOptions[0];
           const activeFilterOption = filterOptions.find((option) => option.id === filterMode) || filterOptions[0];
+          const getFineTuningJobAgentLabel = (job) => {
+            const agent = normalizedAgents.find((item) => normalizePlaygroundFineTuningString(item?.id) === normalizePlaygroundFineTuningString(job?.targetAgentId || job?.agentId)) || null;
+            return normalizePlaygroundFineTuningString(job?.agentName || job?.targetAgentName || agent?.name || agent?.label || agent?.title || "Agent");
+          };
+          const getFineTuningJobConductorLabel = (job) => {
+            const explicitConductor = normalizePlaygroundFineTuningPersonIdentity(job?.conductedBy || job?.createdBy || job?.created_by || {});
+            const conductor = getPlaygroundFineTuningPersonLabel(explicitConductor) ? explicitConductor : currentFineTuningUser;
+            return getPlaygroundFineTuningPersonLabel(conductor);
+          };
           const visibleJobs = filteredJobs
             .filter((job) => {
               const status = normalizePlaygroundFineTuningString(job?.status || "completed").toLowerCase();
@@ -3623,11 +3680,17 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               if (sortMode === "name-asc") {
                 return String(left?.name || "").localeCompare(String(right?.name || ""));
               }
+              if (sortMode === "agent-asc") {
+                return getFineTuningJobAgentLabel(left).localeCompare(getFineTuningJobAgentLabel(right));
+              }
               if (sortMode === "improvement-desc") {
                 return (Number(right?.improvementScore || 0) || 0) - (Number(left?.improvementScore || 0) || 0);
               }
               if (sortMode === "sets-desc") {
                 return (Array.isArray(right?.evaluationSets) ? right.evaluationSets.length : 0) - (Array.isArray(left?.evaluationSets) ? left.evaluationSets.length : 0);
+              }
+              if (sortMode === "conductor-asc") {
+                return getFineTuningJobConductorLabel(left).localeCompare(getFineTuningJobConductorLabel(right));
               }
               return (Date.parse(String(right?.updatedAt || "")) || 0) - (Date.parse(String(left?.updatedAt || "")) || 0);
             });
@@ -3649,6 +3712,199 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               )
             );
           }
+          const visibleFineTuningOverviewIds = visibleJobs.map((job) => String(job?.id || "").trim()).filter(Boolean);
+          const selectedVisibleFineTuningOverviewIds = visibleFineTuningOverviewIds.filter((jobId) => selectedFineTuningOverviewIds.has(jobId));
+          const allVisibleFineTuningJobsSelected = visibleFineTuningOverviewIds.length > 0 && selectedVisibleFineTuningOverviewIds.length === visibleFineTuningOverviewIds.length;
+          const hasPartialVisibleFineTuningSelection = selectedVisibleFineTuningOverviewIds.length > 0 && !allVisibleFineTuningJobsSelected;
+          const toggleFineTuningOverviewSelection = (jobId) => {
+            const normalizedJobId = normalizePlaygroundFineTuningString(jobId);
+            if (!normalizedJobId) return;
+            setSelectedFineTuningOverviewIds((current) => {
+              const next = new Set(current || []);
+              if (next.has(normalizedJobId)) {
+                next.delete(normalizedJobId);
+              } else {
+                next.add(normalizedJobId);
+              }
+              return next;
+            });
+          };
+          const toggleVisibleFineTuningOverviewSelection = () => {
+            if (visibleFineTuningOverviewIds.length === 0) return;
+            setSelectedFineTuningOverviewIds((current) => {
+              const next = new Set(current || []);
+              if (allVisibleFineTuningJobsSelected) {
+                visibleFineTuningOverviewIds.forEach((jobId) => next.delete(jobId));
+              } else {
+                visibleFineTuningOverviewIds.forEach((jobId) => next.add(jobId));
+              }
+              return next;
+            });
+          };
+          const fineTuningOverviewSortMap = {
+            job: "name-asc",
+            agent: "agent-asc",
+            sets: "sets-desc",
+            improvement: "improvement-desc",
+            conductor: "conductor-asc",
+          };
+          const renderFineTuningOverviewSortIcon = (sortKey) => {
+            const nextSortMode = fineTuningOverviewSortMap[sortKey] || sortKey;
+            const isActive = sortMode === nextSortMode;
+            const isDescending = isActive && (sortMode === "sets-desc" || sortMode === "improvement-desc" || sortMode === "updated-desc");
+            const isAscending = isActive && !isDescending;
+            return React.createElement("span", {
+                className: "playground-agents-overview-sort-icon"
+                  + (isActive ? " is-active" : "")
+                  + (isAscending ? " is-ascending" : "")
+                  + (isDescending ? " is-descending" : ""),
+                "aria-hidden": "true",
+              },
+              React.createElement(ChevronsUpDown, {
+                className: "playground-agents-overview-sort-icon-layer is-top",
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+              }),
+              React.createElement(ChevronsUpDown, {
+                className: "playground-agents-overview-sort-icon-layer is-bottom",
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+              })
+            );
+          };
+          const renderFineTuningOverviewSortableHeader = (label, sortKey) => {
+            const nextSortMode = fineTuningOverviewSortMap[sortKey] || sortKey;
+            const isActive = sortMode === nextSortMode;
+            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
+              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-agents-overview-column-sort-button"
+                  + (isActive ? " is-active" : "")
+                  + (isActive && (sortMode === "sets-desc" || sortMode === "improvement-desc" || sortMode === "updated-desc") ? " is-descending" : "")
+                  + (isActive && !(sortMode === "sets-desc" || sortMode === "improvement-desc" || sortMode === "updated-desc") ? " is-ascending" : ""),
+                title: "Sort " + label,
+                "aria-label": "Sort " + label,
+                "aria-pressed": isActive ? "true" : "false",
+                onClick: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setFineTuningSortMode(nextSortMode);
+                  closeToolbarPopover();
+                },
+              }, renderFineTuningOverviewSortIcon(sortKey))
+            );
+          };
+          const renderFineTuningOverviewColumnHeader = () => React.createElement("div", {
+              className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-fine-tuning-overview-column-header",
+            },
+            React.createElement("div", null,
+              React.createElement("button", {
+                type: "button",
+                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+                  + (allVisibleFineTuningJobsSelected ? " is-selected" : "")
+                  + (hasPartialVisibleFineTuningSelection ? " is-partial" : ""),
+                role: "checkbox",
+                "aria-checked": allVisibleFineTuningJobsSelected ? "true" : (hasPartialVisibleFineTuningSelection ? "mixed" : "false"),
+                "aria-label": allVisibleFineTuningJobsSelected ? "Deselect all visible fine-tuning jobs" : "Select all visible fine-tuning jobs",
+                onClick: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  toggleVisibleFineTuningOverviewSelection();
+                },
+              })
+            ),
+            React.createElement("div", null, renderFineTuningOverviewSortableHeader("Job", "job")),
+            React.createElement("div", null, renderFineTuningOverviewSortableHeader("Agent", "agent")),
+            React.createElement("div", null, renderFineTuningOverviewSortableHeader("Sets", "sets")),
+            React.createElement("div", null, renderFineTuningOverviewSortableHeader("Improvement", "improvement")),
+            React.createElement("div", null, renderFineTuningOverviewSortableHeader("Conducted by", "conductor")),
+            React.createElement("div", null)
+          );
+          const renderFineTuningOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", {
+              className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-fine-tuning-overview-sticky-table-header",
+            },
+            React.createElement("div", {
+                className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-fine-tuning-overview-toolbar-row",
+              },
+              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell playground-fine-tuning-overview-search-shell" },
+                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("input", {
+                  type: "search",
+                  value: fineTuningSearchQuery || "",
+                  onChange: (event) => typeof setFineTuningSearchQuery === "function" ? setFineTuningSearchQuery(event.target.value) : undefined,
+                  className: "playground-plugins-search",
+                  placeholder: "Search fine-tuning jobs",
+                  "aria-label": "Search fine-tuning jobs",
+                })
+              ),
+              React.createElement("div", { className: "playground-plugins-toolbar-controls playground-fine-tuning-overview-controls" },
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-sort" + (fineTuningToolbarPopover === "sort" || sortMode !== "updated-desc" ? " is-active" : ""),
+                    onClick: () => {
+                      setRowMenuId("");
+                      setFineTuningToolbarPopover((current) => current === "sort" ? "" : "sort");
+                    },
+                    title: activeSortOption.label,
+                  },
+                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Sort")
+                  ),
+                  fineTuningToolbarPopover === "sort"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        sortOptions.map((option) => renderToolbarOption({
+                          option,
+                          active: sortMode === option.id,
+                          onClick: () => {
+                            setFineTuningSortMode(option.id);
+                            closeToolbarPopover();
+                          },
+                        }))
+                      )
+                    : null
+                ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-filter" + (fineTuningToolbarPopover === "filter" || filterMode !== "all" ? " is-active" : ""),
+                    onClick: () => {
+                      setRowMenuId("");
+                      setFineTuningToolbarPopover((current) => current === "filter" ? "" : "filter");
+                    },
+                    title: activeFilterOption.label,
+                  },
+                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Filter")
+                  ),
+                  fineTuningToolbarPopover === "filter"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        filterOptions.map((option) => renderToolbarOption({
+                          option,
+                          active: filterMode === option.id,
+                          onClick: () => {
+                            setFineTuningFilterMode(option.id);
+                            closeToolbarPopover();
+                          },
+                        }))
+                      )
+                    : null
+                )
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button playground-fine-tuning-overview-create-button",
+                onClick: openCreateModal,
+              },
+                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Fine-Tune")
+              )
+            ),
+            includeColumns ? renderFineTuningOverviewColumnHeader() : null
+          );
           function renderFineTuningJobRow(job) {
             function renderIdentityCell(label, photoUrl) {
               const resolvedLabel = normalizePlaygroundFineTuningString(label) || "-";
@@ -3687,12 +3943,27 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                   openJob(job.id);
                 },
               },
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-run", title: job.name },
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-overview-select-checkbox" + (selectedFineTuningOverviewIds.has(job.id) ? " is-selected" : ""),
+                  role: "checkbox",
+                  "aria-checked": selectedFineTuningOverviewIds.has(job.id) ? "true" : "false",
+                  "aria-label": "Select " + (job.name || "fine-tuning job"),
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleFineTuningOverviewSelection(job.id);
+                  },
+                  onKeyDown: (event) => event.stopPropagation(),
+                })
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-name", title: job.name },
                 React.createElement("div", { className: "playground-guardrails-set-copy" },
                   React.createElement("div", { className: "playground-plugin-row-title" }, job.name)
                 )
               ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-triggered-by", title: job.agentName },
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-model", title: job.agentName },
                 renderAgentCell()
               ),
               React.createElement("div", { className: "playground-project-overview-thread-cell is-source" },
@@ -3704,14 +3975,14 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
                 renderConductorCell()
               ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-fine-tuning-overview-action-shell" },
                 React.createElement("div", {
                     className: "playground-tasks-toolbar-popup-shell",
                     onClick: (event) => event.stopPropagation(),
                   },
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-project-overview-thread-menu-button" + (rowMenuId === job.id ? " is-active" : ""),
+                    className: "playground-overview-table-action-button" + (rowMenuId === job.id ? " is-open" : ""),
                     onClick: (event) => {
                       event.preventDefault();
                       event.stopPropagation();
@@ -3719,10 +3990,10 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
                     },
                     "aria-label": "Fine-tuning job actions",
                     "aria-expanded": rowMenuId === job.id ? "true" : "false",
-                  }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
+                  }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })),
                   rowMenuId === job.id
                     ? React.createElement("div", {
-                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
                         onClick: (event) => event.stopPropagation(),
                       },
                         React.createElement("button", {
@@ -3754,116 +4025,36 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
               )
             );
           }
-          return React.createElement("div", { className: "playground-guardrails-layout playground-evaluations-overview-layout" },
-            React.createElement("div", { className: "playground-guardrails-list-panel" },
-              React.createElement("section", {
-                  className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-evaluations-overview-section",
-                },
-                React.createElement("div", { className: "playground-plugins-search-row" },
-                  React.createElement("div", { className: "playground-plugins-search-shell" },
-                    React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("input", {
-                      type: "search",
-                      value: fineTuningSearchQuery || "",
-                      onChange: (event) => typeof setFineTuningSearchQuery === "function" ? setFineTuningSearchQuery(event.target.value) : undefined,
-                      className: "playground-plugins-search",
-                      placeholder: "Search fine-tuning jobs",
-                      "aria-label": "Search fine-tuning jobs",
-                    })
-                  ),
-                  React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button is-bare is-backlog-sort" + (fineTuningToolbarPopover === "sort" || sortMode !== "updated-desc" ? " is-active" : ""),
-                        onClick: () => {
-                          setRowMenuId("");
-                          setFineTuningToolbarPopover((current) => current === "sort" ? "" : "sort");
-                        },
-                        title: activeSortOption.label,
-                      },
-                        React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Sort")
-                      ),
-                      fineTuningToolbarPopover === "sort"
-                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                            sortOptions.map((option) => renderToolbarOption({
-                              option,
-                              active: sortMode === option.id,
-                              onClick: () => {
-                                setFineTuningSortMode(option.id);
-                                closeToolbarPopover();
-                              },
-                            }))
-                          )
-                        : null
-                    ),
-                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button is-bare is-backlog-filter" + (fineTuningToolbarPopover === "filter" || filterMode !== "all" ? " is-active" : ""),
-                        onClick: () => {
-                          setRowMenuId("");
-                          setFineTuningToolbarPopover((current) => current === "filter" ? "" : "filter");
-                        },
-                        title: activeFilterOption.label,
-                      },
-                        React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Filter")
-                      ),
-                      fineTuningToolbarPopover === "filter"
-                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                            filterOptions.map((option) => renderToolbarOption({
-                              option,
-                              active: filterMode === option.id,
-                              onClick: () => {
-                                setFineTuningFilterMode(option.id);
-                                closeToolbarPopover();
-                              },
-                            }))
-                          )
-                        : null
-                    )
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-library-new-button playground-evaluations-overview-create-button",
-                    onClick: openCreateModal,
-                  },
-                    React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Fine-Tune")
+          return React.createElement("div", { className: "playground-plugins-page playground-guardrails-layout playground-evaluations-overview-layout playground-team-overview-page playground-agents-overview-page playground-fine-tuning-overview-shell is-develop-configure-page" },
+            React.createElement("section", {
+                className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section playground-evaluations-overview-section playground-fine-tuning-overview-table-section",
+              },
+              visibleJobs.length === 0 ? renderFineTuningOverviewStickyTableHeader(false) : null,
+              fineTuningJobsLoading && scoredJobs.length === 0
+                ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-evaluations-overview-table" },
+                    React.createElement("div", { className: "playground-tasks-secondary-copy playground-fine-tuning-overview-loading" }, "Loading fine-tuning jobs...")
                   )
-                ),
-                fineTuningJobsLoading && scoredJobs.length === 0
-                  ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Loading fine-tuning jobs...")
-                  : visibleJobs.length > 0
-                  ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-evaluations-overview-table" },
-                      React.createElement("div", { className: "playground-project-overview-threads-table-header" },
-                        React.createElement("div", null, "Job"),
-                        React.createElement("div", null, "Agent"),
-                        React.createElement("div", null, "Sets"),
-                        React.createElement("div", null, "Improvement"),
-                        React.createElement("div", null, "Conducted by"),
-                        React.createElement("div", null)
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-thread-list" },
-                        visibleJobs.map((job) => renderFineTuningJobRow(job))
-                      )
+                : visibleJobs.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-evaluations-overview-table" },
+                    renderFineTuningOverviewStickyTableHeader(false),
+                    React.createElement("div", { className: "playground-project-overview-thread-list" },
+                      renderFineTuningOverviewColumnHeader(),
+                      visibleJobs.map((job) => renderFineTuningJobRow(job))
                     )
-                  : scoredJobs.length === 0
-                    ? React.createElement("div", { className: "playground-guardrails-empty" },
-                        React.createElement("div", { className: "playground-guardrails-empty-icon" }, React.createElement(TestTubeDiagonal, { width: 18, height: 18, strokeWidth: 1.8 })),
-                        React.createElement("div", { className: "playground-guardrails-empty-title" }, "No fine-tuning jobs yet"),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-library-new-button playground-guardrails-empty-button",
-                          onClick: openCreateModal,
-                        }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }), "Fine-Tune")
-                      )
-                    : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                        hasFilters ? "No matching fine-tuning jobs." : "No fine-tuning jobs yet."
-                      )
-              )
+                  )
+                : scoredJobs.length === 0
+                  ? React.createElement("div", { className: "playground-guardrails-empty" },
+                      React.createElement("div", { className: "playground-guardrails-empty-icon" }, React.createElement(TestTubeDiagonal, { width: 18, height: 18, strokeWidth: 1.8 })),
+                      React.createElement("div", { className: "playground-guardrails-empty-title" }, "No fine-tuning jobs yet"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-library-new-button playground-guardrails-empty-button",
+                        onClick: openCreateModal,
+                      }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }), "Fine-Tune")
+                    )
+                  : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                      hasFilters ? "No matching fine-tuning jobs." : "No fine-tuning jobs yet."
+                    )
             )
           );
         }
@@ -4500,7 +4691,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
         return React.createElement("section", { className: "playground-files-page playground-guardrails-page playground-evaluations-page playground-fine-tuning-page" },
           React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" },
             React.createElement("section", { className: "playground-files-browser playground-guardrails-browser" },
-              React.createElement("div", { className: "playground-files-browser-header playground-guardrails-browser-header" },
+              React.createElement("div", { className: "playground-files-browser-header playground-guardrails-browser-header" + (!isDetailPage ? " playground-guardrails-overview-browser-header" : "") },
                 React.createElement("div", { className: "playground-files-library-header playground-guardrails-library-header" },
                   isDetailPage
                     ? React.createElement("button", {
@@ -4540,7 +4731,7 @@ export const PLAYGROUND_FINE_TUNING_SCRIPT = String.raw`
 	                  )
                 )
               ),
-              React.createElement("div", { className: "playground-files-browser-body playground-guardrails-browser-body" },
+              React.createElement("div", { className: "playground-files-browser-body playground-guardrails-browser-body" + (!isDetailPage ? " playground-guardrails-overview-browser-body" : "") },
                 isDetailPage ? renderDetail() : renderOverview()
               )
             )

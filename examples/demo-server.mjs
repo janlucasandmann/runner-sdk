@@ -10426,11 +10426,19 @@ const html = `<!doctype html>
         position: relative;
       }
 
-      .playground-team-overview-table-section .playground-team-overview-action-shell .playground-agents-overview-toolbar-menu {
-        left: auto;
-        right: 0;
-        transform-origin: top right;
-      }
+	      .playground-team-overview-table-section .playground-team-overview-action-shell .playground-agents-overview-toolbar-menu {
+	        left: auto;
+	        right: 0;
+	        transform-origin: top right;
+	      }
+
+	      .playground-team-overview-table-section .playground-organization-overview-action-shell .playground-agents-overview-toolbar-menu,
+	      .playground-team-overview-table-section .playground-tags-overview-action-shell .playground-agents-overview-toolbar-menu,
+	      .playground-organization-members-table-section .playground-organization-member-action-shell .playground-agents-overview-toolbar-menu {
+	        left: auto;
+	        right: 0;
+	        transform-origin: top right;
+	      }
 
       .playground-project-overview-panel-plain.playground-plugins-section {
         gap: 0 !important;
@@ -10501,15 +10509,46 @@ const html = `<!doctype html>
         max-width: 340px;
       }
 
-      .playground-team-overview-toolbar-row .playground-plugins-toolbar-controls {
-        flex: 0 0 auto;
-        flex-wrap: nowrap;
-      }
+	      .playground-team-overview-toolbar-row .playground-plugins-toolbar-controls {
+	        flex: 0 0 auto;
+	        flex-wrap: nowrap;
+	      }
 
-      .playground-team-overview-toolbar-row .playground-agents-overview-toolbar-create-button {
-        flex: 0 0 auto;
-        margin-left: auto;
-      }
+	      .playground-team-overview-toolbar-row .playground-plugins-search-icon {
+	        z-index: 503;
+	        opacity: 1;
+	        color: rgba(255, 255, 255, 0.42);
+	      }
+
+	      .playground-team-overview-toolbar-row .playground-agents-overview-toolbar-create-button {
+	        flex: 0 0 auto;
+	        margin-left: auto;
+	      }
+
+	      .playground-tags-overview-status-label {
+	        display: inline-flex;
+	        align-items: center;
+	        justify-content: center;
+	        width: fit-content;
+	        min-height: 22px;
+	        padding: 0 8px;
+	        border: 0;
+	        border-radius: 5px;
+	        font-size: 12px;
+	        font-weight: 400;
+	        line-height: 1;
+	        white-space: nowrap;
+	      }
+
+	      .playground-tags-overview-status-label.is-connected {
+	        background: rgba(133, 223, 123, 0.1);
+	        color: #85DF7B;
+	      }
+
+	      .playground-tags-overview-status-label.is-not-connected {
+	        background: rgba(255, 255, 255, 0.1);
+	        color: rgba(255, 255, 255, 0.7);
+	      }
 
       .playground-team-grid-table-section.playground-agents-overview-list-section {
         position: relative;
@@ -22192,6 +22231,27 @@ const html = `<!doctype html>
         align-items: stretch;
       }
 
+      .playground-guardrails-overview-shell {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        margin: 0 auto;
+      }
+
+      .playground-guardrails-page .playground-guardrails-browser-header.playground-guardrails-overview-browser-header,
+      .playground-guardrails-page .playground-guardrails-browser-body.playground-guardrails-overview-browser-body {
+        width: 100%;
+        max-width: none;
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .playground-guardrails-page .playground-guardrails-overview-browser-header > .playground-files-library-header {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        margin-left: auto;
+        margin-right: auto;
+      }
+
       .playground-guardrails-list-panel,
       .playground-guardrails-editor {
         min-width: 0;
@@ -22245,6 +22305,12 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.9);
         cursor: pointer;
         transition: background-color 160ms ease;
+      }
+
+      .playground-guardrails-overview-table-section .playground-project-overview-threads-table-header,
+      .playground-guardrails-overview-table-section .playground-project-overview-threads-table-row {
+        grid-template-columns: 34px minmax(200px, 1.25fr) minmax(90px, 0.42fr) minmax(150px, 0.82fr) minmax(98px, 0.46fr) 28px;
+        gap: 12px;
       }
 
       .playground-guardrails-table-row:hover,
@@ -45350,8 +45416,9 @@ ${METRONOME_PAGE_CSS}
         cursor: default;
       }
 
-      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu,
-      .playground-resources-page.is-develop-configure-page .playground-tasks-toolbar-popup-shell .playground-computers-overview-toolbar-menu {
+	      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu,
+	      .playground-team-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu,
+	      .playground-resources-page.is-develop-configure-page .playground-tasks-toolbar-popup-shell .playground-computers-overview-toolbar-menu {
         --playground-platform-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
         top: calc(100% + 8px);
         left: 0;
@@ -45372,8 +45439,9 @@ ${METRONOME_PAGE_CSS}
         overflow: hidden;
       }
 
-      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu::before,
-      .playground-resources-page.is-develop-configure-page .playground-tasks-toolbar-popup-shell .playground-computers-overview-toolbar-menu::before {
+	      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu::before,
+	      .playground-team-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu::before,
+	      .playground-resources-page.is-develop-configure-page .playground-tasks-toolbar-popup-shell .playground-computers-overview-toolbar-menu::before {
         content: "";
         pointer-events: none;
         position: absolute;
@@ -45390,14 +45458,16 @@ ${METRONOME_PAGE_CSS}
         mask-size: auto, auto;
       }
 
-      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu > *,
-      .playground-resources-page.is-develop-configure-page .playground-tasks-toolbar-popup-shell .playground-computers-overview-toolbar-menu > * {
+	      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu > *,
+	      .playground-team-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu > *,
+	      .playground-resources-page.is-develop-configure-page .playground-tasks-toolbar-popup-shell .playground-computers-overview-toolbar-menu > * {
         position: relative;
         z-index: 6;
       }
 
-      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu.is-closing,
-      .playground-resources-page.is-develop-configure-page .playground-tasks-toolbar-popup-shell .playground-computers-overview-toolbar-menu.is-closing {
+	      .playground-agents-overview-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu.is-closing,
+	      .playground-team-page .playground-tasks-toolbar-popup-shell .playground-agents-overview-toolbar-menu.is-closing,
+	      .playground-resources-page.is-develop-configure-page .playground-tasks-toolbar-popup-shell .playground-computers-overview-toolbar-menu.is-closing {
         pointer-events: none;
         animation: playground-agent-list-action-menu-fade-out 90ms ease both;
       }
@@ -46081,15 +46151,34 @@ ${METRONOME_PAGE_CSS}
 		      }
 
 		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-search-shell .playground-plugins-search,
-		      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-search-shell .playground-plugins-search {
-		        border: 0;
-		        background: rgba(255, 255, 255, 0.04);
+			      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-search-shell .playground-plugins-search {
+			        border: 0;
+			        background: rgba(255, 255, 255, 0.04);
+			      }
+
+		      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-toolbar-row .playground-develop-server-kind-search-shell .playground-plugins-search-icon {
+		        display: block !important;
+		        position: absolute !important;
+		        left: 12px !important;
+		        top: 50% !important;
+		        width: 14px !important;
+		        height: 14px !important;
+		        transform: translateY(-50%) !important;
+		        z-index: 504 !important;
+		        color: rgba(255, 255, 255, 0.42) !important;
+		        opacity: 1 !important;
+		        pointer-events: none !important;
 		      }
 
-		      .playground-project-overview-threads-section .playground-plugins-search,
-		      .playground-project-overview-threads-section .playground-plugins-search-shell {
-		        background: transparent !important;
+		      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-toolbar-row .playground-develop-server-kind-search-shell .playground-plugins-search-icon,
+		      .playground-team-overview-page.is-develop-configure-page .playground-team-overview-table-section .playground-team-overview-toolbar-row .playground-develop-server-kind-search-shell .playground-plugins-search-icon * {
+		        stroke: currentColor !important;
 		      }
+
+			      .playground-project-overview-threads-section .playground-plugins-search,
+			      .playground-project-overview-threads-section .playground-plugins-search-shell {
+			        background: transparent !important;
+			      }
 
 			      .playground-resources-page.is-develop-server-kind-page .is-develop-server-kind-list .playground-resources-overview-table-shell,
 			      .playground-resources-page.is-develop-configure-page .is-develop-server-kind-list .playground-resources-overview-table-shell,
@@ -54526,8 +54615,8 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 		                  onSortChange(normalizedColumnKey);
 		                },
 		              },
-		              renderResourceSortIcon(normalizedColumnKey)
-		            )
+			              renderResourceSortIcon(normalizedColumnKey)
+			                )
 		          );
 		        };
 
@@ -54896,9 +54985,9 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 	              activeViewMode === "list"
 	                ? React.createElement("div", { className: "playground-project-resources-list-shell" }, renderRows())
 	                : renderRows()
-	            )
-	          )
-	        );
+			                  )
+			                )
+			          );
       }
 
       function remarkPlaygroundSoftbreaksToBreaks() {
@@ -85068,7 +85157,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               ].filter(Boolean).join(" "),
             },
               React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeSortOption.label),
-              sortOptions.map((option) =>
+              options.map((option) =>
                 React.createElement("button", {
                     key: option.id,
                     type: "button",
@@ -131783,10 +131872,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [topNavActionsContainer, setTopNavActionsContainer] = useState(null);
         const [skillsPageMode, setSkillsPageMode] = useState("overview");
         const [skillsOverviewSearchQuery, setSkillsOverviewSearchQuery] = useState("");
-        const [skillsOverviewStatusFilter, setSkillsOverviewStatusFilter] = useState("all");
-        const [skillsOverviewSort, setSkillsOverviewSort] = useState("updated");
-        const [skillsOverviewView, setSkillsOverviewView] = useState("list");
-        const [skillsOverviewToolbarPopover, setSkillsOverviewToolbarPopover] = useState("");
+	        const [skillsOverviewStatusFilter, setSkillsOverviewStatusFilter] = useState("all");
+	        const [skillsOverviewSort, setSkillsOverviewSort] = useState("updated");
+	        const [skillsOverviewSortDirection, setSkillsOverviewSortDirection] = useState("desc");
+	        const [skillsOverviewView, setSkillsOverviewView] = useState("list");
+	        const [skillsOverviewToolbarPopover, setSkillsOverviewToolbarPopover] = useState("");
         const [skillsHeroSlideIndex, setSkillsHeroSlideIndex] = useState(0);
         const [skillsHeroDisplayIndex, setSkillsHeroDisplayIndex] = useState(0);
         const [skillsHeroOutgoingIndex, setSkillsHeroOutgoingIndex] = useState(null);
@@ -131841,8 +131931,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [skillEnvironmentFilePickerExpandedFolders, setSkillEnvironmentFilePickerExpandedFolders] = useState([]);
         const [skillEnvironmentFilePickerSelectedPaths, setSkillEnvironmentFilePickerSelectedPaths] = useState([]);
         const [skillEnvironmentSelectionId, setSkillEnvironmentSelectionId] = useState("");
-        const [skillEnvironmentPopoverOpen, setSkillEnvironmentPopoverOpen] = useState(false);
-        const [skillEnvironmentFilePickerTarget, setSkillEnvironmentFilePickerTarget] = useState("detail");
+	        const [skillEnvironmentPopoverOpen, setSkillEnvironmentPopoverOpen] = useState(false);
+	        const [skillEnvironmentFilePickerTarget, setSkillEnvironmentFilePickerTarget] = useState("detail");
+	        const [selectedSkillsOverviewIds, setSelectedSkillsOverviewIds] = useState(() => new Set());
         const skillDescriptionTextareaRef = useRef(null);
         const skillUsageTextareaRef = useRef(null);
         const skillProcessTextareaRef = useRef(null);
@@ -132414,12 +132505,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return systemSkills;
         }, [normalizedCustomSkills, skillListMode, systemSkills]);
 
-        const skillListActionTarget = useMemo(() => {
-          if (!skillListActionMenuState?.skillId) {
-            return null;
-          }
-          return normalizedCustomSkills.find((skill) => skill.id === skillListActionMenuState.skillId) || null;
-        }, [normalizedCustomSkills, skillListActionMenuState]);
+	        const skillListActionTarget = useMemo(() => {
+	          if (!skillListActionMenuState?.skillId) {
+	            return null;
+	          }
+	          return allSkills.find((skill) => skill.id === skillListActionMenuState.skillId) || null;
+	        }, [allSkills, skillListActionMenuState]);
 
         const selectedSkill = useMemo(() => {
           return allSkills.find((skill) => skill.id === selectedSkillId) || null;
@@ -132497,29 +132588,44 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           });
         }, [displaySkills, normalizedSkillsOverviewQuery, skillsOverviewStatusFilter]);
 
-        const sortedOverviewSkills = useMemo(() => {
-          const next = filteredOverviewSkills.slice();
-          if (skillsOverviewSort === "name") {
-            next.sort((left, right) =>
-              String(left?.name || left?.id || "").localeCompare(String(right?.name || right?.id || ""))
-            );
-            return next;
-          }
-
-          const getSkillTimestamp = (skill) => {
-            const resolved = Date.parse(String(skill?.updatedAt || skill?.createdAt || ""));
-            return Number.isFinite(resolved) ? resolved : 0;
-          };
-
-          next.sort((left, right) => {
-            const timestampDelta = getSkillTimestamp(right) - getSkillTimestamp(left);
-            if (timestampDelta !== 0) {
-              return timestampDelta;
-            }
-            return String(left?.name || left?.id || "").localeCompare(String(right?.name || right?.id || ""));
-          });
-          return next;
-        }, [filteredOverviewSkills, skillsOverviewSort]);
+	        const sortedOverviewSkills = useMemo(() => {
+	          const next = filteredOverviewSkills.slice();
+	          const getSkillTimestamp = (skill) => {
+	            const resolved = Date.parse(String(skill?.updatedAt || skill?.createdAt || ""));
+	            return Number.isFinite(resolved) ? resolved : 0;
+	          };
+	          const getSkillSortValue = (skill) => {
+	            switch (skillsOverviewSort) {
+	              case "status":
+	                return skill?.isActive === false ? "Disabled" : "Active";
+	              case "type":
+	                return skill?.isCustom ? "Custom" : "System";
+	              case "updated":
+	                return getSkillTimestamp(skill);
+	              case "name":
+	              default:
+	                return String(skill?.name || skill?.id || "");
+	            }
+	          };
+	          next.sort((left, right) => {
+	            const leftValue = getSkillSortValue(left);
+	            const rightValue = getSkillSortValue(right);
+	            let comparison = 0;
+	            if (typeof leftValue === "number" || typeof rightValue === "number") {
+	              comparison = (Number.isFinite(leftValue) ? leftValue : 0) - (Number.isFinite(rightValue) ? rightValue : 0);
+	            } else {
+	              comparison = String(leftValue || "").localeCompare(String(rightValue || ""), undefined, {
+	                numeric: true,
+	                sensitivity: "base",
+	              });
+	            }
+	            if (comparison !== 0) {
+	              return skillsOverviewSortDirection === "desc" ? -comparison : comparison;
+	            }
+	            return String(left?.name || left?.id || "").localeCompare(String(right?.name || right?.id || ""));
+	          });
+	          return next;
+	        }, [filteredOverviewSkills, skillsOverviewSort, skillsOverviewSortDirection]);
 
         const heroFeaturedSkills = useMemo(() => {
           const preferredSkills = (skillListMode === "custom" ? normalizedCustomSkills : systemSkills).filter(Boolean);
@@ -132843,9 +132949,27 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             document.removeEventListener("mousedown", handleSkillVideoGenerationModelPopoverPointerDown);
             window.removeEventListener("keydown", handleSkillVideoGenerationModelPopoverEscape);
           };
-        }, [skillVideoGenerationModelPopoverOpen]);
+	        }, [skillVideoGenerationModelPopoverOpen]);
 
-        useEffect(() => {
+	        useEffect(() => {
+	          if (!skillsOverviewToolbarPopover) return undefined;
+
+	          function handleSkillsOverviewToolbarPopoverPointerDown(event) {
+	            const target = event?.target instanceof Node ? event.target : null;
+	            if (!target || skillsOverviewToolbarRef.current?.contains(target)) {
+	              return;
+	            }
+	            if (typeof target.closest === "function" && target.closest(".playground-skills-overview-action-shell")) {
+	              return;
+	            }
+	            setSkillsOverviewToolbarPopover("");
+	          }
+
+	          document.addEventListener("mousedown", handleSkillsOverviewToolbarPopoverPointerDown);
+	          return () => document.removeEventListener("mousedown", handleSkillsOverviewToolbarPopoverPointerDown);
+	        }, [skillsOverviewToolbarPopover]);
+
+	        useEffect(() => {
           if (skillsPageMode !== "detail") {
             return;
           }
@@ -133154,10 +133278,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setToolbarPopover((current) => current === nextValue ? "" : nextValue);
         }
 
-        function openSkillComposer() {
-          setToolbarPopover("");
-          setSkillListActionMenuState(null);
-          setSkillListMode("custom");
+	        function openSkillComposer() {
+	          setToolbarPopover("");
+	          setSkillListActionMenuState(null);
+	          setSelectedSkillsOverviewIds(new Set());
+	          setSkillListMode("custom");
           setSkillsPageMode("overview");
           setSkillComposerDraft(buildPlaygroundDefaultSkillComposerDraft());
           setSkillComposerSaveState({
@@ -133214,50 +133339,85 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }));
         }
 
-        function handleSkillSelect(skillId) {
-          setToolbarPopover("");
-          setSkillsOverviewToolbarPopover("");
-          setSkillListActionMenuState(null);
-          setSelectedSkillId(PLAYGROUND_RUNNER_SKILL_ID_ALIASES[String(skillId || "").trim()] || String(skillId || "").trim());
+	        function handleSkillSelect(skillId) {
+	          setToolbarPopover("");
+	          setSkillsOverviewToolbarPopover("");
+	          setSkillListActionMenuState(null);
+	          setSelectedSkillsOverviewIds(new Set());
+	          setSelectedSkillId(PLAYGROUND_RUNNER_SKILL_ID_ALIASES[String(skillId || "").trim()] || String(skillId || "").trim());
           setSkillsPageMode("detail");
         }
 
         function handleSkillListModeChange(nextMode) {
           const normalizedMode = nextMode === "custom" ? "custom" : "system";
           setSkillListMode(normalizedMode);
-          setToolbarPopover("");
-          setSkillsOverviewToolbarPopover("");
-          setSkillListActionMenuState(null);
-        }
+	          setToolbarPopover("");
+	          setSkillsOverviewToolbarPopover("");
+	          setSkillListActionMenuState(null);
+	          setSelectedSkillsOverviewIds(new Set());
+	        }
 
         function handleBackToSkillsOverview() {
           setToolbarPopover("");
           setSkillsOverviewToolbarPopover("");
-          setSkillActionsPopoverOpen(false);
-          setSkillDetailIconPickerOpen(false);
-          setSkillsPageMode("overview");
+	          setSkillActionsPopoverOpen(false);
+	          setSkillDetailIconPickerOpen(false);
+	          setSelectedSkillsOverviewIds(new Set());
+	          setSkillsPageMode("overview");
         }
 
         function closeSkillListActionMenu() {
           setSkillListActionMenuState(null);
         }
 
-        function openSkillListActionMenu(event, skill) {
-          if (!skill?.id || !skill.isCustom) {
-            return;
-          }
-          event.preventDefault();
-          event.stopPropagation();
-          const position = getSideActionMenuPosition(event, 140, 220);
-          setSkillListActionMenuState((current) =>
-            current?.skillId === skill.id
-              ? null
-              : {
-                  skillId: skill.id,
-                  ...position,
-                }
-          );
-        }
+	        function getSkillListContextMenuPosition(event, menuHeight = 150) {
+	          const menuWidth = 220;
+	          const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
+	          const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+	          const gutter = 12;
+	          const maxLeft = Math.max(gutter, viewportWidth - menuWidth - gutter);
+	          const maxTop = Math.max(gutter, viewportHeight - menuHeight - gutter);
+	          return {
+	            top: Math.max(gutter, Math.min(maxTop, Number(event?.clientY || 0))),
+	            left: Math.max(gutter, Math.min(maxLeft, Number(event?.clientX || 0))),
+	          };
+	        }
+
+	        function getSkillListActionMenuStyle(menuState) {
+	          const menuStyle = {
+	            position: "fixed",
+	            top: Number(menuState?.top || 0) + "px",
+	          };
+	          if (Number.isFinite(menuState?.right)) {
+	            menuStyle.right = Number(menuState.right) + "px";
+	            menuStyle.left = "auto";
+	          } else {
+	            menuStyle.left = Number(menuState?.left || 0) + "px";
+	            menuStyle.right = "auto";
+	          }
+	          return menuStyle;
+	        }
+
+	        function openSkillListActionMenu(event, skill, options = {}) {
+	          if (!skill?.id) {
+	            return;
+	          }
+	          event.preventDefault();
+	          event.stopPropagation();
+	          const menuHeight = skill.isCustom ? 180 : 64;
+	          const position = options?.context
+	            ? getSkillListContextMenuPosition(event, menuHeight)
+	            : getSideActionMenuPosition(event, menuHeight, 220);
+	          setSkillListActionMenuState((current) =>
+	            current?.skillId === skill.id && !options?.context
+	              ? null
+	              : {
+	                  skillId: skill.id,
+	                  skill,
+	                  ...position,
+	                }
+	          );
+	        }
 
         function getPlaygroundSkillIconComponent(skill) {
           const normalizedCustomIcon = String(skill?.icon || "default").trim().toLowerCase();
@@ -134853,48 +135013,75 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             );
         }
 
-        function renderSkillListActionMenu() {
-          if (!skillListActionMenuState || !skillListActionTarget) {
-            return null;
-          }
+	        function renderSkillListActionMenu() {
+	          if (!skillListActionMenuState || !skillListActionTarget) {
+	            return null;
+	          }
 
-          const isDeleting = skillSaveState.isSaving && selectedSkillId === skillListActionTarget.id;
-
-          return React.createElement("div", {
-              className: "sidebar-thread-popup-scrim",
-              onClick: closeSkillListActionMenu,
-            },
-              React.createElement("div", {
-                className: "sidebar-thread-popup",
-                style: {
-                  top: skillListActionMenuState.top + "px",
-                  left: skillListActionMenuState.left + "px",
-                },
-                onClick: (event) => event.stopPropagation(),
-              },
-                React.createElement("div", { className: "sidebar-thread-popup-title" }, "Skill"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-thread-popup-row",
-                  onClick: () => openSkillRenameDialog(skillListActionTarget),
-                },
-                  React.createElement(SquarePen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
-                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, "Rename")
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-thread-popup-row is-danger",
-                  onClick: () => {
-                    void handleDeleteSelectedSkill(skillListActionTarget);
-                  },
-                  disabled: isDeleting,
-                },
-                  React.createElement(Trash2, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
-                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isDeleting ? "Deleting..." : "Delete")
-                )
-              )
-            );
-        }
+	          const isDeleting = skillSaveState.isSaving && selectedSkillId === skillListActionTarget.id;
+	          const menuElement = React.createElement("div", {
+	              className: "sidebar-thread-popup-scrim",
+	              style: { zIndex: 9000 },
+	              onClick: closeSkillListActionMenu,
+	            },
+	              React.createElement("div", {
+	                className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
+	                style: getSkillListActionMenuStyle(skillListActionMenuState),
+	                onClick: (event) => event.stopPropagation(),
+	              },
+	                React.createElement("div", {
+	                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	                    role: "menu",
+	                  },
+	                React.createElement("button", {
+	                  type: "button",
+	                  role: "menuitem",
+	                  className: "tb-popup-row",
+	                  onClick: () => {
+	                    closeSkillListActionMenu();
+	                    handleSkillSelect(skillListActionTarget.id);
+	                  },
+	                },
+	                  React.createElement(ChevronRight, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Open"))
+	                ),
+	                skillListActionTarget.isCustom ? React.createElement("button", {
+	                  type: "button",
+	                  role: "menuitem",
+	                  className: "tb-popup-row",
+	                  onClick: () => openSkillEditDialog(skillListActionTarget),
+	                },
+	                  React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Edit"))
+	                ) : null,
+	                skillListActionTarget.isCustom ? React.createElement("button", {
+	                  type: "button",
+	                  role: "menuitem",
+	                  className: "tb-popup-row",
+	                  onClick: () => openSkillRenameDialog(skillListActionTarget),
+	                },
+	                  React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Rename"))
+	                ) : null,
+	                skillListActionTarget.isCustom ? React.createElement("button", {
+	                  type: "button",
+	                  role: "menuitem",
+	                  className: "tb-popup-row is-danger",
+	                  onClick: () => {
+	                    void handleDeleteSelectedSkill(skillListActionTarget);
+	                  },
+	                  disabled: isDeleting,
+	                },
+	                  React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, isDeleting ? "Deleting..." : "Delete"))
+	                ) : null
+	                )
+	              )
+	            );
+	          return typeof createPortal === "function" && typeof document !== "undefined" && document.body
+	            ? createPortal(menuElement, document.body)
+	            : menuElement;
+	        }
 
         function renderCurrentSkillDetail() {
           const skillsSearchAction = React.createElement("div", {
@@ -135489,10 +135676,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             { id: "active", label: "Active", description: "Only show skills currently enabled" },
             { id: "disabled", label: "Disabled", description: "Only show disabled skills" },
           ];
-          const skillsOverviewSortOptions = [
-            { id: "updated", label: "Recently Updated" },
-            { id: "name", label: "Name (A-Z)" },
-          ];
+	          const skillsOverviewSortOptions = [
+	            { id: "updated", label: "Recently Updated", sortKey: "updated", direction: "desc" },
+	            { id: "name", label: "Name (A-Z)", sortKey: "name", direction: "asc" },
+	            { id: "status", label: "Status", sortKey: "status", direction: "asc" },
+	            { id: "type", label: "Type", sortKey: "type", direction: "asc" },
+	          ];
 
           function renderSkillHeroPill(skill, className) {
             if (!skill) {
@@ -135507,32 +135696,317 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             );
           }
 
-          function renderSkillOverviewItem(skill) {
-            return React.createElement("button", {
-                key: skill.id,
-                type: "button",
-                className: "playground-plugin-row playground-skills-overview-item",
-                onClick: () => handleSkillSelect(skill.id),
-              },
-              React.createElement("div", { className: "playground-plugin-row-copy" },
-                React.createElement("div", { className: "playground-plugin-row-logo-shell" },
-                  renderSkillIcon(skill, "playground-environments-list-item-icon")
-                ),
-                React.createElement("div", { className: "playground-plugin-row-text" },
-                  React.createElement("div", { className: "playground-plugin-row-title" }, skill.name || skill.id),
-                  React.createElement("div", { className: "playground-plugin-row-description" }, skill.description || (skill.isCustom ? "Custom skill" : "System skill"))
-                )
-              ),
-              React.createElement("span", { className: "playground-plugin-row-state" },
-                React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 2 })
-              )
-            );
-          }
+	          const visibleSkillOverviewIds = sortedOverviewSkills.map((skill) => String(skill?.id || "").trim()).filter(Boolean);
+	          const selectedVisibleSkillOverviewIds = visibleSkillOverviewIds.filter((skillId) => selectedSkillsOverviewIds.has(skillId));
+	          const allVisibleSkillsSelected = visibleSkillOverviewIds.length > 0 && selectedVisibleSkillOverviewIds.length === visibleSkillOverviewIds.length;
+	          const hasPartialVisibleSkillsSelection = selectedVisibleSkillOverviewIds.length > 0 && !allVisibleSkillsSelected;
+	          const toggleSkillOverviewSelection = (skillId) => {
+	            const normalizedSkillId = String(skillId || "").trim();
+	            if (!normalizedSkillId) return;
+	            setSelectedSkillsOverviewIds((current) => {
+	              const next = new Set(current || []);
+	              if (next.has(normalizedSkillId)) {
+	                next.delete(normalizedSkillId);
+	              } else {
+	                next.add(normalizedSkillId);
+	              }
+	              return next;
+	            });
+	          };
+	          const toggleVisibleSkillOverviewSelection = () => {
+	            if (visibleSkillOverviewIds.length === 0) return;
+	            setSelectedSkillsOverviewIds((current) => {
+	              const next = new Set(current || []);
+	              if (allVisibleSkillsSelected) {
+	                visibleSkillOverviewIds.forEach((skillId) => next.delete(skillId));
+	              } else {
+	                visibleSkillOverviewIds.forEach((skillId) => next.add(skillId));
+	              }
+	              return next;
+	            });
+	          };
+	          const normalizeSkillsOverviewSortDirection = (direction) => direction === "desc" ? "desc" : "asc";
+	          const normalizedSkillsOverviewSortDirection = normalizeSkillsOverviewSortDirection(skillsOverviewSortDirection);
+	          const handleSkillsOverviewColumnSort = (sortKey) => {
+	            const normalizedSortKey = String(sortKey || "name").trim() || "name";
+	            setSkillsOverviewToolbarPopover("");
+	            setSkillsOverviewSortDirection((currentDirection) => {
+	              if (skillsOverviewSort !== normalizedSortKey) {
+	                return normalizedSortKey === "updated" ? "desc" : "asc";
+	              }
+	              return normalizeSkillsOverviewSortDirection(currentDirection) === "asc" ? "desc" : "asc";
+	            });
+	            setSkillsOverviewSort(normalizedSortKey);
+	          };
+	          const renderSkillsOverviewSortIcon = (sortKey) => {
+	            const isActive = skillsOverviewSort === sortKey;
+	            const isDescending = isActive && normalizedSkillsOverviewSortDirection === "desc";
+	            const isAscending = isActive && !isDescending;
+	            return React.createElement("span", {
+	                className: "playground-agents-overview-sort-icon"
+	                  + (isActive ? " is-active" : "")
+	                  + (isAscending ? " is-ascending" : "")
+	                  + (isDescending ? " is-descending" : ""),
+	                "aria-hidden": "true",
+	              },
+	              React.createElement(ChevronsUpDown, {
+	                className: "playground-agents-overview-sort-icon-layer is-top",
+	                width: 14,
+	                height: 14,
+	                strokeWidth: 1.8,
+	              }),
+	              React.createElement(ChevronsUpDown, {
+	                className: "playground-agents-overview-sort-icon-layer is-bottom",
+	                width: 14,
+	                height: 14,
+	                strokeWidth: 1.8,
+	              })
+	            );
+	          };
+	          const renderSkillsOverviewSortableHeader = (label, sortKey) => {
+	            const isActive = skillsOverviewSort === sortKey;
+	            const nextDirection = isActive && normalizedSkillsOverviewSortDirection === "asc" ? "descending" : "ascending";
+	            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
+	              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+	              React.createElement("button", {
+	                type: "button",
+	                className: "playground-agents-overview-column-sort-button"
+	                  + (isActive ? " is-active" : "")
+	                  + (isActive && normalizedSkillsOverviewSortDirection === "asc" ? " is-ascending" : "")
+	                  + (isActive && normalizedSkillsOverviewSortDirection === "desc" ? " is-descending" : ""),
+	                title: "Sort " + label + " " + nextDirection,
+	                "aria-label": "Sort " + label + " " + nextDirection,
+	                "aria-pressed": isActive ? "true" : "false",
+	                onClick: (event) => {
+	                  event.preventDefault();
+	                  event.stopPropagation();
+	                  handleSkillsOverviewColumnSort(sortKey);
+	                },
+	              }, renderSkillsOverviewSortIcon(sortKey))
+	            );
+	          };
+	          const renderSkillsOverviewStatusLabel = (skill) => {
+	            const isActive = skill?.isActive !== false;
+	            return React.createElement("span", {
+	              className: "playground-tags-overview-status-label " + (isActive ? "is-connected" : "is-not-connected"),
+	            }, isActive ? "Active" : "Disabled");
+	          };
+	          const renderSkillsOverviewToolbarMenu = (menuId, options) => React.createElement("div", {
+	              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	            },
+	            options.map((option) => {
+	              const optionSortKey = option.sortKey || option.id;
+	              const optionDirection = normalizeSkillsOverviewSortDirection(option.direction || (optionSortKey === "updated" ? "desc" : "asc"));
+	              const selected = menuId === "sort"
+	                ? skillsOverviewSort === optionSortKey && normalizedSkillsOverviewSortDirection === optionDirection
+	                : skillsOverviewStatusFilter === option.id;
+	              return React.createElement("button", {
+	                  key: option.id,
+	                  type: "button",
+	                  className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
+	                  onClick: () => {
+	                    if (menuId === "sort") {
+	                      setSkillsOverviewSort(optionSortKey);
+	                      setSkillsOverviewSortDirection(optionDirection);
+	                    } else {
+	                      setSkillsOverviewStatusFilter(option.id);
+	                    }
+	                    setSkillsOverviewToolbarPopover("");
+	                  },
+	                },
+	                React.createElement("span", { className: "tb-popup-check-slot" },
+	                  selected ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
+	                ),
+	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                  React.createElement("span", null, option.label),
+	                  option.description ? React.createElement("span", null, option.description) : null
+	                )
+	              );
+	            })
+	          );
+	          const renderSkillsOverviewColumnHeader = () => React.createElement("div", {
+	              className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-skills-overview-column-header",
+	            },
+	            React.createElement("div", null,
+	              React.createElement("button", {
+	                type: "button",
+	                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+	                  + (allVisibleSkillsSelected ? " is-selected" : "")
+	                  + (hasPartialVisibleSkillsSelection ? " is-partial" : ""),
+	                role: "checkbox",
+	                "aria-checked": allVisibleSkillsSelected ? "true" : (hasPartialVisibleSkillsSelection ? "mixed" : "false"),
+	                "aria-label": allVisibleSkillsSelected ? "Deselect all visible skills" : "Select all visible skills",
+	                onClick: (event) => {
+	                  event.preventDefault();
+	                  event.stopPropagation();
+	                  toggleVisibleSkillOverviewSelection();
+	                },
+	              })
+	            ),
+	            React.createElement("div", null, renderSkillsOverviewSortableHeader("Name", "name")),
+	            React.createElement("div", null, renderSkillsOverviewSortableHeader("Status", "status")),
+	            React.createElement("div", null, renderSkillsOverviewSortableHeader("Type", "type")),
+	            React.createElement("div", null, renderSkillsOverviewSortableHeader("Updated", "updated")),
+	            React.createElement("div", null)
+	          );
+	          const renderSkillsOverviewModeSwitch = () => React.createElement("div", { className: "playground-agents-list-switch-row playground-skills-overview-switch-row playground-skills-overview-toolbar-switch" },
+	            React.createElement("div", { className: "content-mode-switch playground-agents-list-switch playground-skills-overview-switch" },
+	              React.createElement("button", {
+	                type: "button",
+	                className: "content-mode-button" + (skillListMode === "system" ? " is-active" : ""),
+	                onClick: () => handleSkillListModeChange("system"),
+	                "aria-pressed": skillListMode === "system",
+	              }, "System"),
+	              React.createElement("button", {
+	                type: "button",
+	                className: "content-mode-button" + (skillListMode === "custom" ? " is-active" : ""),
+	                onClick: () => handleSkillListModeChange("custom"),
+	                "aria-pressed": skillListMode === "custom",
+	              }, "Custom")
+	            )
+	          );
+	          const renderSkillsOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", {
+	              className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-skills-overview-sticky-table-header",
+	            },
+	            React.createElement("div", {
+	                className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-skills-overview-toolbar-row",
+	                ref: skillsOverviewToolbarRef,
+	              },
+	              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell playground-skills-overview-search-shell" },
+	                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                React.createElement("input", {
+	                  type: "search",
+	                  value: skillsOverviewSearchQuery,
+	                  onChange: (event) => setSkillsOverviewSearchQuery(event.target.value),
+	                  className: "playground-plugins-search",
+	                  placeholder: "Search skills",
+	                })
+	              ),
+	              React.createElement("div", { className: "playground-plugins-toolbar-controls playground-skills-overview-controls" },
+	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-skills-overview-sort-shell" },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-files-control-button is-bare is-backlog-sort" + (skillsOverviewToolbarPopover === "sort" || skillsOverviewSort !== "updated" || normalizedSkillsOverviewSortDirection !== "desc" ? " is-active" : ""),
+	                    onClick: () => setSkillsOverviewToolbarPopover((current) => current === "sort" ? "" : "sort"),
+	                  },
+	                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("span", null, "Sort")
+	                  ),
+	                  skillsOverviewToolbarPopover === "sort"
+	                    ? renderSkillsOverviewToolbarMenu("sort", skillsOverviewSortOptions)
+	                    : null
+	                ),
+	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-skills-overview-filter-shell" },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-files-control-button is-bare is-backlog-filter" + (skillsOverviewToolbarPopover === "filter" || skillsOverviewStatusFilter !== "all" ? " is-active" : ""),
+	                    onClick: () => setSkillsOverviewToolbarPopover((current) => current === "filter" ? "" : "filter"),
+	                  },
+	                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("span", null, "Filter")
+	                  ),
+	                  skillsOverviewToolbarPopover === "filter"
+	                    ? renderSkillsOverviewToolbarMenu("filter", skillsOverviewFilterOptions)
+	                    : null
+	                )
+	              ),
+	              renderSkillsOverviewModeSwitch()
+	            ),
+	            includeColumns ? renderSkillsOverviewColumnHeader() : null
+	          );
+	          const getSkillOverviewUpdatedLabel = (skill) =>
+	            formatRelativeThreadTime(skill?.updatedAt || skill?.createdAt) || (skill?.isCustom ? "Recently" : "System");
+	          function renderSkillOverviewItem(skill) {
+	            const skillId = String(skill?.id || "").trim();
+	            const skillName = String(skill?.name || skill?.id || "Skill").trim();
+	            const isSelected = selectedSkillsOverviewIds.has(skillId);
+	            const menuOpen = skillListActionMenuState?.skillId === skillId;
+	            return React.createElement("div", {
+	                key: skillId || skillName,
+	                tabIndex: 0,
+	                role: "button",
+	                className: "playground-project-overview-threads-table-row playground-skills-overview-table-row",
+	                "aria-label": "Open " + skillName,
+	                onClick: () => handleSkillSelect(skillId),
+	                onContextMenu: (event) => openSkillListActionMenu(event, skill, { context: true }),
+	                onKeyDown: (event) => {
+	                  if (event.key === "Enter" || event.key === " ") {
+	                    event.preventDefault();
+	                    handleSkillSelect(skillId);
+	                  }
+	                },
+	              },
+	              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-agents-overview-select-checkbox" + (isSelected ? " is-selected" : ""),
+	                  role: "checkbox",
+	                  "aria-checked": isSelected ? "true" : "false",
+	                  "aria-label": "Select " + skillName,
+	                  onClick: (event) => {
+	                    event.preventDefault();
+	                    event.stopPropagation();
+	                    toggleSkillOverviewSelection(skillId);
+	                  },
+	                  onKeyDown: (event) => event.stopPropagation(),
+	                })
+	              ),
+	              React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
+	                React.createElement("div", { className: "playground-agents-overview-name-cell playground-skills-overview-name-cell" },
+	                  React.createElement("div", { className: "playground-plugin-row-logo-shell playground-skills-overview-logo-shell" },
+	                    renderSkillIcon(skill, "playground-environments-list-item-icon")
+	                  ),
+	                  React.createElement("div", { className: "playground-agents-overview-name-copy" },
+	                    React.createElement("div", { className: "playground-agents-overview-name-title" }, skillName)
+	                  )
+	                )
+	              ),
+	              React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
+	                renderSkillsOverviewStatusLabel(skill)
+	              ),
+	              React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
+	                React.createElement("div", { className: "playground-agents-overview-table-value" }, skill?.isCustom ? "Custom" : "System")
+	              ),
+	              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
+	                React.createElement("div", { className: "playground-agents-overview-table-value" }, getSkillOverviewUpdatedLabel(skill))
+	              ),
+	              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-skills-overview-action-shell" },
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-overview-table-action-button" + (menuOpen ? " is-open" : ""),
+	                  onClick: (event) => openSkillListActionMenu(event, skill),
+	                  onKeyDown: (event) => event.stopPropagation(),
+	                  "aria-label": "Skill actions",
+	                  "aria-expanded": menuOpen ? "true" : "false",
+	                },
+	                  React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
+	                )
+	              )
+	            );
+	          }
+	          const renderSkillsOverviewTableSection = () => React.createElement("section", {
+	              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section playground-skills-overview-table-section",
+	            },
+	            sortedOverviewSkills.length === 0 ? renderSkillsOverviewStickyTableHeader(false) : null,
+	            sortedOverviewSkills.length === 0
+	              ? React.createElement("div", { className: "playground-plugins-empty" },
+	                  normalizedSkillsOverviewQuery
+	                    ? (skillListMode === "custom" ? "No custom skills match your search." : "No system skills match your search.")
+	                    : (skillListMode === "custom" ? "No custom skills yet." : "No system skills available.")
+	                )
+	              : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
+	                  renderSkillsOverviewStickyTableHeader(false),
+	                  React.createElement("div", { className: "playground-project-overview-thread-list" },
+	                    renderSkillsOverviewColumnHeader(),
+	                    sortedOverviewSkills.map((skill) => renderSkillOverviewItem(skill))
+	                  )
+	                )
+	          );
 
           return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page" },
             skillsOverviewTopNavActions,
             React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-              React.createElement("div", { className: "playground-plugins-page" },
+	              React.createElement("div", { className: "playground-plugins-page playground-team-overview-page playground-agents-overview-page playground-skills-overview-page is-develop-configure-page" },
                 React.createElement("h2", { className: "playground-plugins-hero-heading playground-tools-overview-heading" }, "Shape ACP with the right Skills"),
                 React.createElement("section", { className: "playground-plugins-hero-slider" },
                   React.createElement("div", { className: "playground-plugins-hero-slide" },
@@ -135568,125 +136042,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                       )
                     : null
                 ),
-                overviewAnalytics,
-                React.createElement("section", { className: "playground-plugins-section" },
-                  React.createElement("div", { className: "playground-plugins-section-header" },
-                    React.createElement("div", { className: "playground-plugins-section-copy" },
-                      React.createElement("h3", { className: "playground-plugins-section-title" }, "Skills")
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-skills-overview-toolbar" },
-                    React.createElement("div", { className: "playground-skills-overview-toolbar-main", ref: skillsOverviewToolbarRef },
-                      React.createElement("div", { className: "playground-plugins-search-shell playground-skills-overview-search-shell" },
-                        React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("input", {
-                          type: "search",
-                          value: skillsOverviewSearchQuery,
-                          onChange: (event) => setSkillsOverviewSearchQuery(event.target.value),
-                          className: "playground-plugins-search",
-                          placeholder: "Search skills by name or description",
-                        })
-                      ),
-                      React.createElement("div", { className: "playground-skills-overview-controls" },
-                        React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-skills-overview-sort-shell" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-files-control-button is-bare is-backlog-sort" + (skillsOverviewToolbarPopover === "sort" || skillsOverviewSort !== "updated" ? " is-active" : ""),
-                            onClick: () => setSkillsOverviewToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                          },
-                            React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Sort")
-                          ),
-                          skillsOverviewToolbarPopover === "sort"
-                            ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                                skillsOverviewSortOptions.map((option) =>
-                                  React.createElement("button", {
-                                      key: option.id,
-                                      type: "button",
-                                      className: "tb-popup-row tb-popup-row-select" + (skillsOverviewSort === option.id ? " selected" : ""),
-                                      onClick: () => {
-                                        setSkillsOverviewSort(option.id);
-                                        setSkillsOverviewToolbarPopover("");
-                                      },
-                                    },
-                                      React.createElement("span", { className: "tb-popup-check-slot" },
-                                        skillsOverviewSort === option.id
-                                          ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                          : null
-                                      ),
-                                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                        React.createElement("span", null, option.label)
-                                      )
-                                    )
-                                )
-                              )
-                            : null
-                        ),
-                        React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-skills-overview-filter-shell" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-files-control-button is-bare is-backlog-filter" + (skillsOverviewToolbarPopover === "filter" || skillsOverviewStatusFilter !== "all" ? " is-active" : ""),
-                            onClick: () => setSkillsOverviewToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                          },
-                            React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Filter")
-                          ),
-                          skillsOverviewToolbarPopover === "filter"
-                            ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                                skillsOverviewFilterOptions.map((option) =>
-                                  React.createElement("button", {
-                                      key: option.id,
-                                      type: "button",
-                                      className: "tb-popup-row tb-popup-row-select" + (skillsOverviewStatusFilter === option.id ? " selected" : ""),
-                                      onClick: () => {
-                                        setSkillsOverviewStatusFilter(option.id);
-                                        setSkillsOverviewToolbarPopover("");
-                                      },
-                                    },
-                                      React.createElement("span", { className: "tb-popup-check-slot" },
-                                        skillsOverviewStatusFilter === option.id
-                                          ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                          : null
-                                      ),
-                                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                        React.createElement("span", null, option.label),
-                                        React.createElement("span", null, option.description)
-                                      )
-                                    )
-                                )
-                          )
-                            : null
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-agents-list-switch-row playground-skills-overview-switch-row playground-skills-overview-toolbar-switch" },
-                        React.createElement("div", { className: "content-mode-switch playground-agents-list-switch playground-skills-overview-switch" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "content-mode-button" + (skillListMode === "system" ? " is-active" : ""),
-                            onClick: () => handleSkillListModeChange("system"),
-                            "aria-pressed": skillListMode === "system",
-                          }, "System"),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "content-mode-button" + (skillListMode === "custom" ? " is-active" : ""),
-                            onClick: () => handleSkillListModeChange("custom"),
-                            "aria-pressed": skillListMode === "custom",
-                          }, "Custom")
-                        )
-                      )
-                    )
-                  ),
-                  sortedOverviewSkills.length === 0
-                    ? React.createElement("div", { className: "playground-plugins-empty" },
-                        normalizedSkillsOverviewQuery
-                          ? (skillListMode === "custom" ? "No custom skills match your search." : "No system skills match your search.")
-                          : (skillListMode === "custom" ? "No custom skills yet." : "No system skills available.")
-                      )
-                    : React.createElement("div", { className: "playground-skills-overview-results is-list" },
-                        sortedOverviewSkills.map((skill) => renderSkillOverviewItem(skill))
-                      )
-                )
-              )
+	                overviewAnalytics,
+	                renderSkillsOverviewTableSection()
+	              )
             )
           );
         }
@@ -165954,6 +166312,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [metronomeRunStatusByKey, setMetronomeRunStatusByKey] = useState({});
         const [metronomeRunStatusRefreshTick, setMetronomeRunStatusRefreshTick] = useState(0);
         const metronomeRunTraceSelectionRef = useRef(null);
+        const metronomeSidebarRunsLoadKeyRef = useRef("");
         const metronomeRunTraceSeenStepKeysRef = useRef({
           key: "",
           hydrated: false,
@@ -166412,6 +166771,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [pluginsOverviewFilter, setPluginsOverviewFilter] = useState("all");
         const [pluginsOverviewSort, setPluginsOverviewSort] = useState("name");
         const [pluginsOverviewToolbarPopover, setPluginsOverviewToolbarPopover] = useState("");
+        const [selectedTagOverviewIds, setSelectedTagOverviewIds] = useState(() => new Set());
+        const [tagOverviewActionMenuState, setTagOverviewActionMenuState] = useState(null);
         const [toolsView, setToolsView] = useState("plugins");
         const [tagDetailConfigsById, setTagDetailConfigsById] = useState({});
         const [tagDetailLoadingId, setTagDetailLoadingId] = useState("");
@@ -166469,6 +166830,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [guardrailsPageMode, setGuardrailsPageMode] = useState("overview");
         const [guardrailsToolbarPopover, setGuardrailsToolbarPopover] = useState("");
         const [guardrailSetActionMenuId, setGuardrailSetActionMenuId] = useState("");
+        const [selectedGuardrailsOverviewIds, setSelectedGuardrailsOverviewIds] = useState(() => new Set());
         const [guardrailDetailActionsMenuOpen, setGuardrailDetailActionsMenuOpen] = useState(false);
         const [guardrailPublishMenuOpen, setGuardrailPublishMenuOpen] = useState(false);
         const [guardrailVersionsHeaderMenuOpen, setGuardrailVersionsHeaderMenuOpen] = useState(false);
@@ -167353,10 +167715,26 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [organizationPageRenameModalOpen, setOrganizationPageRenameModalOpen] = useState(false);
         const [organizationPageRenameName, setOrganizationPageRenameName] = useState("");
         const [organizationPageInviteModalOpen, setOrganizationPageInviteModalOpen] = useState(false);
-        const [organizationPageInviteEmail, setOrganizationPageInviteEmail] = useState("");
-        const [organizationPageInviteRole, setOrganizationPageInviteRole] = useState("member");
-        const [organizationPageActionId, setOrganizationPageActionId] = useState("");
-        const [teamPageCreateName, setTeamPageCreateName] = useState("");
+	        const [organizationPageInviteEmail, setOrganizationPageInviteEmail] = useState("");
+	        const [organizationPageInviteRole, setOrganizationPageInviteRole] = useState("member");
+	        const [organizationPageActionId, setOrganizationPageActionId] = useState("");
+	        const organizationOverviewToolbarRef = useRef(null);
+	        const [organizationOverviewSearchQuery, setOrganizationOverviewSearchQuery] = useState("");
+	        const [organizationOverviewSort, setOrganizationOverviewSort] = useState("name");
+	        const [organizationOverviewSortDirection, setOrganizationOverviewSortDirection] = useState("asc");
+	        const [organizationOverviewFilter, setOrganizationOverviewFilter] = useState("all");
+	        const [organizationOverviewToolbarPopover, setOrganizationOverviewToolbarPopover] = useState("");
+	        const [organizationOverviewMenuId, setOrganizationOverviewMenuId] = useState("");
+	        const [selectedOrganizationOverviewIds, setSelectedOrganizationOverviewIds] = useState(() => new Set());
+	        const organizationMemberToolbarRef = useRef(null);
+	        const [organizationMemberSearchQuery, setOrganizationMemberSearchQuery] = useState("");
+	        const [organizationMemberSort, setOrganizationMemberSort] = useState("user");
+		        const [organizationMemberSortDirection, setOrganizationMemberSortDirection] = useState("asc");
+		        const [organizationMemberFilter, setOrganizationMemberFilter] = useState("all");
+		        const [organizationMemberToolbarPopover, setOrganizationMemberToolbarPopover] = useState("");
+		        const [organizationMemberMenuId, setOrganizationMemberMenuId] = useState("");
+		        const [selectedOrganizationMemberIds, setSelectedOrganizationMemberIds] = useState(() => new Set());
+	        const [teamPageCreateName, setTeamPageCreateName] = useState("");
         const [teamPageCreateModalOpen, setTeamPageCreateModalOpen] = useState(false);
         const [teamPageCreateInviteEmails, setTeamPageCreateInviteEmails] = useState("");
         const [teamPageCreateInviteRole, setTeamPageCreateInviteRole] = useState("member");
@@ -167481,10 +167859,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
 			          clearTeamPageResourceActionMenuCloseTimer();
 			          clearTeamPageResourceBulkActionMenuCloseTimer();
 			        }, []);
-        useEffect(() => {
-          if ((!teamOverviewToolbarPopover && !teamOverviewMenuId) || typeof document === "undefined") {
-            return undefined;
-          }
+	        useEffect(() => {
+	          if ((!teamOverviewToolbarPopover && !teamOverviewMenuId) || typeof document === "undefined") {
+	            return undefined;
+	          }
           const handlePointerDown = (event) => {
             const target = event.target;
             if (
@@ -167504,10 +167882,45 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setTeamOverviewToolbarPopover("");
             setTeamOverviewMenuId("");
           };
-          document.addEventListener("mousedown", handlePointerDown);
-          return () => document.removeEventListener("mousedown", handlePointerDown);
-        }, [teamOverviewMenuId, teamOverviewToolbarPopover]);
-        useEffect(() => {
+	          document.addEventListener("mousedown", handlePointerDown);
+	          return () => document.removeEventListener("mousedown", handlePointerDown);
+	        }, [teamOverviewMenuId, teamOverviewToolbarPopover]);
+		        useEffect(() => {
+		          if ((!organizationOverviewToolbarPopover && !organizationOverviewMenuId && !organizationMemberToolbarPopover && !organizationMemberMenuId) || typeof document === "undefined") {
+		            return undefined;
+		          }
+	          const handlePointerDown = (event) => {
+	            const target = event.target;
+	            if (
+	              target
+	              && organizationOverviewToolbarRef.current
+	              && organizationOverviewToolbarRef.current.contains(target)
+	            ) {
+	              return;
+	            }
+	            if (
+	              target
+	              && typeof target.closest === "function"
+		              && target.closest(".playground-organization-overview-action-shell, .playground-organization-member-action-shell")
+		            ) {
+		              return;
+		            }
+	            if (
+	              target
+	              && organizationMemberToolbarRef.current
+	              && organizationMemberToolbarRef.current.contains(target)
+	            ) {
+	              return;
+	            }
+		            setOrganizationOverviewToolbarPopover("");
+		            setOrganizationOverviewMenuId("");
+		            setOrganizationMemberToolbarPopover("");
+		            setOrganizationMemberMenuId("");
+		          };
+		          document.addEventListener("mousedown", handlePointerDown);
+		          return () => document.removeEventListener("mousedown", handlePointerDown);
+		        }, [organizationMemberMenuId, organizationMemberToolbarPopover, organizationOverviewMenuId, organizationOverviewToolbarPopover]);
+	        useEffect(() => {
           if ((!teamPageResourceToolbarPopover && !teamPageResourceMenuId) || typeof document === "undefined") {
             return undefined;
           }
@@ -167753,9 +168166,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           function handlePluginsOverviewToolbarPopoverPointerDown(event) {
             const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !pluginsOverviewToolbarRef.current || pluginsOverviewToolbarRef.current.contains(target)) {
-              return;
-            }
+	            if (!target || pluginsOverviewToolbarRef.current?.contains(target)) {
+	              return;
+	            }
+	            if (typeof target.closest === "function" && target.closest(".playground-tags-overview-action-shell")) {
+	              return;
+	            }
             setPluginsOverviewToolbarPopover("");
           }
 
@@ -167933,10 +168349,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          activeOrganizationResourceScopeKeyRef.current = nextScopeKey;
 	          setEnvironmentId("");
 	          setPreferredAgentId("");
-	          setCurrentThreadId("");
-	          setRealThreads([]);
-	          setRealThreadsHasMore(false);
-	          setRealAgents([]);
+		          setCurrentThreadId("");
+		          setRealThreads([]);
+		          setRealThreadsHasMore(false);
+		          setOptimisticMetronomeRunEntries({});
+		          setMetronomeRunStatusByKey({});
+		          setMetronomeRunTraceSelection(null);
+		          setMetronomeRunTraceState({ key: "", status: "idle", run: null, error: "" });
+		          metronomeSidebarRunsLoadKeyRef.current = "";
+		          setRealAgents([]);
 	          setRealEnvironments([]);
 	          setRealProjects([]);
 	          setSettingsTriggers([]);
@@ -173020,6 +173441,213 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
+        function normalizeMetronomeSidebarRun(rawRun, workflow = {}) {
+          const raw = rawRun && typeof rawRun === "object" && !Array.isArray(rawRun) ? rawRun : {};
+          const output = raw.output && typeof raw.output === "object" && !Array.isArray(raw.output) ? raw.output : {};
+          const input = raw.input && typeof raw.input === "object" && !Array.isArray(raw.input)
+            ? raw.input
+            : raw.inputs && typeof raw.inputs === "object" && !Array.isArray(raw.inputs)
+              ? raw.inputs
+              : {};
+          return {
+            ...raw,
+            id: String(raw.id || raw.runId || raw.run_id || "").trim(),
+            metronomeId: String(raw.metronomeId || raw.metronome_id || workflow?.id || workflow?.metronomeId || "").trim(),
+            workflowName: String(workflow?.name || workflow?.workflowName || raw.workflowName || raw.metronomeName || "Metronome").trim() || "Metronome",
+            status: String(raw.status || "completed").trim() || "completed",
+            input,
+            output,
+            createdAt: String(raw.createdAt || raw.created_at || raw.queuedAt || raw.queued_at || "").trim(),
+            updatedAt: String(raw.updatedAt || raw.updated_at || raw.completedAt || raw.completed_at || raw.startedAt || raw.started_at || raw.createdAt || raw.created_at || "").trim(),
+            startedAt: String(raw.startedAt || raw.started_at || "").trim(),
+            completedAt: String(raw.completedAt || raw.completed_at || "").trim(),
+          };
+        }
+
+        function buildMetronomeRunEntryFromRun(workflow, rawRun) {
+          const run = normalizeMetronomeSidebarRun(rawRun, workflow);
+          const metronomeId = String(run.metronomeId || workflow?.id || workflow?.metronomeId || "").trim();
+          const runId = String(run.id || "").trim();
+          const key = getSidebarMetronomeRunGroupKey({ metronomeId, runId });
+          if (!key) {
+            return null;
+          }
+          const workflowName = String(run.workflowName || workflow?.name || "Metronome").trim() || "Metronome";
+          const runForThreads = {
+            ...run,
+            workflowId: metronomeId,
+            metronomeId,
+            workflowName,
+            metronomeName: workflowName,
+            runId,
+          };
+          const threads = collectMetronomeRunTraceChildThreads(runForThreads);
+          const activityTimestamp = run.updatedAt || run.completedAt || run.startedAt || run.createdAt || new Date().toISOString();
+          const syntheticActivityThread = normalizeThreadItem({
+            id: createMetronomeRunTraceThreadId(key) || key,
+            title: workflowName,
+            status: mapMetronomeRunStatusToThreadDisplayStatus(run.status) || run.status || "completed",
+            createdAt: run.createdAt || activityTimestamp,
+            updatedAt: activityTimestamp,
+            metadata: {
+              metronomeWorkflow: {
+                metronomeId,
+                workflowId: metronomeId,
+                metronomeName: workflowName,
+                workflowName,
+                runId,
+                workflowRunId: runId,
+                status: run.status,
+                isOriginThread: false,
+              },
+            },
+          });
+          const latestThread = threads.reduce((latest, thread) => (
+            !latest || resolveThreadSortTimestamp(thread) > resolveThreadSortTimestamp(latest) ? thread : latest
+          ), syntheticActivityThread);
+          return {
+            kind: "metronome-run",
+            key,
+            metronomeId,
+            runId,
+            workflowName,
+            status: run.status,
+            input: run.input || null,
+            createdAt: run.createdAt || "",
+            updatedAt: run.updatedAt || "",
+            threads,
+            latestThread,
+          };
+        }
+
+        useEffect(() => {
+          if (!hasRealAccess || hasDemoAccess) {
+            metronomeSidebarRunsLoadKeyRef.current = "";
+            return undefined;
+          }
+          const scopeKey = [
+            String(activeOrganizationId || "").trim() || "__personal__",
+            requestHeadersSignature,
+            proxyBackendBase,
+          ].join("|");
+          if (metronomeSidebarRunsLoadKeyRef.current === scopeKey) {
+            return undefined;
+          }
+          metronomeSidebarRunsLoadKeyRef.current = scopeKey;
+          let cancelled = false;
+
+          const loadRecentMetronomeRuns = async () => {
+            try {
+              const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/metronomes?limit=50", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              }, 10000);
+              if (cancelled || !response.ok) {
+                return;
+              }
+              const workflows = getPlaygroundMetronomeListArray(data)
+                .map(normalizePlaygroundCalendarMetronomeWorkflow)
+                .filter((workflow) => {
+                  const workflowId = String(workflow?.id || "").trim();
+                  const status = String(workflow?.status || "").trim().toLowerCase();
+                  return workflowId && status !== "archived";
+                })
+                .slice(0, 50);
+              if (!workflows.length) {
+                return;
+              }
+
+              const loadedEntries = [];
+              for (let index = 0; index < workflows.length && !cancelled; index += 6) {
+                const batch = workflows.slice(index, index + 6);
+                const batchResults = await Promise.all(batch.map(async (workflow) => {
+                  const workflowId = String(workflow?.id || "").trim();
+                  try {
+                    const runsResult = await fetchJsonWithTimeout(
+                      proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId) + "/runs?limit=3",
+                      {
+                        method: "GET",
+                        credentials: "include",
+                        cache: "no-store",
+                        headers: requestHeaders,
+                      },
+                      10000
+                    );
+                    if (!runsResult.response.ok) {
+                      return [];
+                    }
+                    const rawRuns = Array.isArray(runsResult.data?.data)
+                      ? runsResult.data.data
+                      : Array.isArray(runsResult.data)
+                        ? runsResult.data
+                        : [];
+                    return rawRuns
+                      .map((run) => buildMetronomeRunEntryFromRun(workflow, run))
+                      .filter(Boolean);
+                  } catch {
+                    return [];
+                  }
+                }));
+                loadedEntries.push(...batchResults.flat());
+              }
+
+              if (cancelled || !loadedEntries.length) {
+                return;
+              }
+              setOptimisticMetronomeRunEntries((current) => {
+                const safeCurrent = current && typeof current === "object" ? current : {};
+                const next = { ...safeCurrent };
+                loadedEntries.forEach((entry) => {
+                  const groupKey = String(entry?.key || getSidebarMetronomeRunGroupKey({ metronomeId: entry?.metronomeId, runId: entry?.runId }) || "").trim();
+                  if (!groupKey) {
+                    return;
+                  }
+                  const existing = safeCurrent[groupKey] || null;
+                  const threads = mergeMetronomeRunEntryThreads(
+                    Array.isArray(entry?.threads) ? entry.threads : [],
+                    Array.isArray(existing?.threads) ? existing.threads : []
+                  );
+                  const latestThread = threads.reduce((latest, thread) => (
+                    !latest || resolveThreadSortTimestamp(thread) > resolveThreadSortTimestamp(latest) ? thread : latest
+                  ), existing?.latestThread || entry?.latestThread || null);
+                  next[groupKey] = {
+                    ...(existing && typeof existing === "object" ? existing : {}),
+                    ...entry,
+                    key: groupKey,
+                    threads,
+                    latestThread,
+                  };
+                });
+                return next;
+              });
+            } catch {
+              metronomeSidebarRunsLoadKeyRef.current = "";
+            }
+          };
+
+          void loadRecentMetronomeRuns();
+          return () => {
+            cancelled = true;
+          };
+        }, [activeOrganizationId, hasDemoAccess, hasRealAccess, proxyBackendBase, requestHeaders, requestHeadersSignature]);
+
+        useEffect(() => {
+          function handleMetronomeRunUpserted(event) {
+            const detail = event?.detail && typeof event.detail === "object" ? event.detail : {};
+            const workflow = detail.workflow || detail.metronome || {};
+            const run = detail.run || detail.metronomeRun || detail;
+            const entry = buildMetronomeRunEntryFromRun(workflow, run);
+            if (entry) {
+              upsertOptimisticMetronomeRunEntry(entry);
+            }
+          }
+
+          window.addEventListener("playground:metronome-run-upserted", handleMetronomeRunUpserted);
+          return () => window.removeEventListener("playground:metronome-run-upserted", handleMetronomeRunUpserted);
+        }, []);
+
         function handleMetronomeWorkflowRunFromThread(payload) {
           const workflowId = String(payload?.workflowId || "").trim();
           const runId = String(payload?.runId || "").trim();
@@ -173215,16 +173843,44 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 run: nextRun,
                 error: "",
               });
+              const nextTraceThreads = collectMetronomeRunTraceChildThreads(nextRun);
+              if (nextTraceThreads.length) {
+                setRealThreads((current) => {
+                  const existingById = new Map((Array.isArray(current) ? current : []).map((thread) => [String(thread?.id || "").trim(), thread]));
+                  let didChange = false;
+                  nextTraceThreads.forEach((thread) => {
+                    const threadId = String(thread?.id || "").trim();
+                    if (!threadId || privateThreadIdsRef.current.has(threadId) || isPrivateThreadRecord(thread)) {
+                      return;
+                    }
+                    const existing = existingById.get(threadId) || null;
+                    if (!existing || JSON.stringify(existing) !== JSON.stringify(thread)) {
+                      didChange = true;
+                      existingById.set(threadId, existing ? normalizeThreadItem({ ...existing, ...thread }) : thread);
+                    }
+                  });
+                  return didChange ? normalizeThreadList(Array.from(existingById.values())) : current;
+                });
+              }
               setOptimisticMetronomeRunEntries((current) => {
                 const existing = current && typeof current === "object" ? current[key] : null;
-                if (!existing) {
-                  return current;
-                }
+                const nextThreads = mergeMetronomeRunEntryThreads(nextTraceThreads, Array.isArray(existing?.threads) ? existing.threads : []);
+                const latestThread = nextThreads.reduce((latest, thread) => (
+                  !latest || resolveThreadSortTimestamp(thread) > resolveThreadSortTimestamp(latest) ? thread : latest
+                ), existing?.latestThread || null);
                 return {
-                  ...current,
+                  ...(current && typeof current === "object" ? current : {}),
                   [key]: {
-                    ...existing,
-                    status: String(nextRun?.status || existing.status || "").trim(),
+                    ...(existing && typeof existing === "object" ? existing : {}),
+                    kind: "metronome-run",
+                    key,
+                    metronomeId: workflowId,
+                    runId,
+                    workflowName: String(selection?.workflowName || nextRun?.metronomeName || nextRun?.workflowName || existing?.workflowName || "Metronome").trim() || "Metronome",
+                    status: String(nextRun?.status || existing?.status || "").trim(),
+                    input: nextRun?.input || existing?.input || null,
+                    threads: nextThreads,
+                    latestThread,
                   },
                 };
               });
@@ -186870,11 +187526,444 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   flex: "0 0 auto",
                 },
               },
-              React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.8 })
-            );
-          };
+	              React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.8 })
+	            );
+	          };
 
-          if (selectedPlugin) {
+		          const visibleTagOverviewIds = sortedPlugins.map((plugin) => String(plugin?.id || "").trim()).filter(Boolean);
+	          const selectedVisibleTagOverviewIds = visibleTagOverviewIds.filter((pluginId) => selectedTagOverviewIds.has(pluginId));
+	          const allVisibleTagsSelected = visibleTagOverviewIds.length > 0 && selectedVisibleTagOverviewIds.length === visibleTagOverviewIds.length;
+	          const hasPartialVisibleTagSelection = selectedVisibleTagOverviewIds.length > 0 && !allVisibleTagsSelected;
+	          const toggleTagOverviewSelection = (pluginId) => {
+	            const normalizedPluginId = String(pluginId || "").trim();
+	            if (!normalizedPluginId) return;
+	            setSelectedTagOverviewIds((current) => {
+	              const next = new Set(current || []);
+	              if (next.has(normalizedPluginId)) {
+	                next.delete(normalizedPluginId);
+	              } else {
+	                next.add(normalizedPluginId);
+	              }
+	              return next;
+	            });
+	          };
+	          const toggleVisibleTagOverviewSelection = () => {
+	            if (visibleTagOverviewIds.length === 0) {
+	              return;
+	            }
+	            setSelectedTagOverviewIds((current) => {
+	              const next = new Set(current || []);
+	              if (allVisibleTagsSelected) {
+	                visibleTagOverviewIds.forEach((pluginId) => next.delete(pluginId));
+	              } else {
+	                visibleTagOverviewIds.forEach((pluginId) => next.add(pluginId));
+	              }
+	              return next;
+	            });
+	          };
+		          const getTagOverviewStatusLabel = (plugin) => plugin?.connected ? "Connected" : "Not Connected";
+		          const renderTagOverviewStatusLabel = (plugin) => {
+		            const isConnected = Boolean(plugin?.connected);
+		            return React.createElement("span", {
+		              className: "playground-tags-overview-status-label " + (isConnected ? "is-connected" : "is-not-connected"),
+		            }, getTagOverviewStatusLabel(plugin));
+		          };
+		          const getTagOverviewIdentityLabel = (plugin) => {
+		            if (isTagsView) {
+		              const config = getCurrentTagDetailConfig(plugin?.id);
+		              return String(config.connectedIdentity || plugin?.statusCopy || "").trim() || "Not connected";
+		            }
+		            return String(plugin?.statusCopy || "").trim() || (plugin?.connected ? "Connected" : "Not connected");
+		          };
+		          const getTagOverviewProviderLabel = (plugin) => String(plugin?.category || (isTagsView ? "Channel" : "Integration")).trim() || (isTagsView ? "Channel" : "Integration");
+	          const closeTagsOverviewActionMenu = () => {
+	            setTagOverviewActionMenuState(null);
+	          };
+	          const getTagsOverviewContextMenuPosition = (event, menuHeight = 112) => {
+	            const menuWidth = 220;
+	            const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
+	            const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+	            const gutter = 12;
+	            const maxLeft = Math.max(gutter, viewportWidth - menuWidth - gutter);
+	            const maxTop = Math.max(gutter, viewportHeight - menuHeight - gutter);
+	            return {
+	              top: Math.max(gutter, Math.min(maxTop, Number(event?.clientY || 0))),
+	              left: Math.max(gutter, Math.min(maxLeft, Number(event?.clientX || 0))),
+	            };
+	          };
+	          const getTagsOverviewActionMenuStyle = (menuState) => {
+	            const menuStyle = {
+	              position: "fixed",
+	              top: Number(menuState?.top || 0) + "px",
+	            };
+	            if (Number.isFinite(menuState?.right)) {
+	              menuStyle.right = Number(menuState.right) + "px";
+	              menuStyle.left = "auto";
+	            } else {
+	              menuStyle.left = Number(menuState?.left || 0) + "px";
+	              menuStyle.right = "auto";
+	            }
+	            return menuStyle;
+	          };
+	          const openTagsOverviewActionMenu = (event, plugin, options = {}) => {
+	            const pluginId = String(plugin?.id || "").trim();
+	            if (!pluginId) {
+	              return;
+	            }
+	            event.preventDefault();
+	            event.stopPropagation();
+	            const position = options?.context
+	              ? getTagsOverviewContextMenuPosition(event, 112)
+	              : getSideActionMenuPosition(event, 112, 220);
+	            if (!options?.context && tagOverviewActionMenuState?.pluginId === pluginId) {
+	              closeTagsOverviewActionMenu();
+	              return;
+	            }
+	            setPluginsOverviewToolbarPopover("");
+	            setTagOverviewActionMenuState({
+	              pluginId,
+	              plugin,
+	              ...position,
+	            });
+	          };
+	          const openDevelopWebhooksFromTagsOverview = () => {
+	            setPluginsOverviewToolbarPopover("");
+	            closeTagsOverviewActionMenu();
+	            setSelectedPluginId("");
+	            openDevelopHome({ section: "webhooks" });
+	          };
+	          const handleTagsOverviewColumnSort = (sortKey) => {
+	            closeTagsOverviewActionMenu();
+	            setPluginsOverviewToolbarPopover("");
+	            setPluginsOverviewSort(sortKey === "status" ? "connected" : "name");
+	          };
+	          const renderTagsOverviewSortIcon = (sortKey) => {
+	            const isActive = (sortKey === "status" && pluginsOverviewSort === "connected")
+	              || (sortKey === "name" && pluginsOverviewSort === "name");
+	            return React.createElement("span", {
+	                className: "playground-agents-overview-sort-icon" + (isActive ? " is-active is-ascending" : ""),
+	                "aria-hidden": "true",
+	              },
+	              React.createElement(ChevronsUpDown, {
+	                className: "playground-agents-overview-sort-icon-layer is-top",
+	                width: 14,
+	                height: 14,
+	                strokeWidth: 1.8,
+	              }),
+	              React.createElement(ChevronsUpDown, {
+	                className: "playground-agents-overview-sort-icon-layer is-bottom",
+	                width: 14,
+	                height: 14,
+	                strokeWidth: 1.8,
+	              })
+	            );
+	          };
+	          const renderTagsOverviewSortableHeader = (label, sortKey) => {
+	            const isActive = (sortKey === "status" && pluginsOverviewSort === "connected")
+	              || (sortKey === "name" && pluginsOverviewSort === "name");
+	            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
+	              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+	              React.createElement("button", {
+	                type: "button",
+	                className: "playground-agents-overview-column-sort-button" + (isActive ? " is-active is-ascending" : ""),
+	                title: "Sort " + label,
+	                "aria-label": "Sort " + label,
+	                "aria-pressed": isActive ? "true" : "false",
+	                onClick: (event) => {
+	                  event.preventDefault();
+	                  event.stopPropagation();
+	                  handleTagsOverviewColumnSort(sortKey);
+	                },
+	              }, renderTagsOverviewSortIcon(sortKey))
+	            );
+	          };
+		          const renderTagsOverviewToolbarMenu = (menuId, options) => React.createElement("div", {
+		              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+		            },
+	            options.map((option) => {
+	              const selected = menuId === "sort" ? pluginsOverviewSort === option.id : pluginsOverviewFilter === option.id;
+	              return React.createElement("button", {
+	                  key: option.id,
+	                  type: "button",
+	                  className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
+	                  onClick: () => {
+	                    if (menuId === "sort") {
+	                      setPluginsOverviewSort(option.id);
+	                    } else {
+	                      setPluginsOverviewFilter(option.id);
+	                    }
+	                    setPluginsOverviewToolbarPopover("");
+	                  },
+	                },
+	                React.createElement("span", { className: "tb-popup-check-slot" },
+	                  selected ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
+	                ),
+	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                  React.createElement("span", null, option.label),
+	                  option.description ? React.createElement("span", null, option.description) : null
+	                )
+		              );
+		            })
+		          );
+		          const renderPluginsOverviewCategorySwitch = () => isTagsView
+		            ? React.createElement("button", {
+		                type: "button",
+		                className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button playground-tags-overview-create-button",
+		                onClick: openDevelopWebhooksFromTagsOverview,
+		                title: "New custom tag",
+		                "aria-label": "New custom tag",
+		              },
+		                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+		                React.createElement("span", null, "New Custom Tag")
+		              )
+		            : React.createElement("div", { className: "playground-agents-list-switch-row playground-plugins-toolbar-switch" },
+		                React.createElement("div", { className: "content-mode-switch playground-agents-list-switch" },
+		                  React.createElement("button", {
+		                    type: "button",
+		                    className: "content-mode-button" + (pluginsOverviewCategory === "all" ? " is-active" : ""),
+		                    onClick: () => setPluginsOverviewCategory("all"),
+		                    "aria-pressed": pluginsOverviewCategory === "all",
+		                  }, "All"),
+		                  React.createElement("button", {
+		                    type: "button",
+		                    className: "content-mode-button" + (pluginsOverviewCategory === "channel" ? " is-active" : ""),
+		                    onClick: () => setPluginsOverviewCategory("channel"),
+		                    "aria-pressed": pluginsOverviewCategory === "channel",
+		                  }, "Channel"),
+		                  React.createElement("button", {
+		                    type: "button",
+		                    className: "content-mode-button" + (pluginsOverviewCategory === "workspace" ? " is-active" : ""),
+		                    onClick: () => setPluginsOverviewCategory("workspace"),
+		                    "aria-pressed": pluginsOverviewCategory === "workspace",
+		                  }, "Integration")
+		                )
+		              );
+		          const renderTagsOverviewColumnHeader = () => React.createElement("div", {
+		              className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-tags-overview-column-header" + (isTagsView ? "" : " playground-plugins-overview-column-header"),
+		            },
+	            React.createElement("div", null,
+	              React.createElement("button", {
+	                type: "button",
+	                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+	                  + (allVisibleTagsSelected ? " is-selected" : "")
+	                  + (hasPartialVisibleTagSelection ? " is-partial" : ""),
+	                role: "checkbox",
+	                "aria-checked": allVisibleTagsSelected ? "true" : (hasPartialVisibleTagSelection ? "mixed" : "false"),
+		                "aria-label": allVisibleTagsSelected
+		                  ? "Deselect all visible " + (isTagsView ? "tags" : "plugins")
+		                  : "Select all visible " + (isTagsView ? "tags" : "plugins"),
+	                onClick: (event) => {
+	                  event.preventDefault();
+	                  event.stopPropagation();
+	                  toggleVisibleTagOverviewSelection();
+	                },
+	              })
+	            ),
+	            React.createElement("div", null, renderTagsOverviewSortableHeader("Name", "name")),
+	            React.createElement("div", null, renderTagsOverviewSortableHeader("Status", "status")),
+	            React.createElement("div", null, "Connected Identity"),
+	            React.createElement("div", null, "Provider"),
+	            React.createElement("div", null)
+	          );
+	          const renderTagsOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", {
+	              className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-tags-overview-sticky-table-header",
+	            },
+	            React.createElement("div", {
+	                className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-tags-overview-toolbar-row",
+	                ref: pluginsOverviewToolbarRef,
+	              },
+	              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
+	                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+		              React.createElement("input", {
+		                  type: "search",
+		                  value: pluginsSearchQuery,
+		                  onChange: (event) => setPluginsSearchQuery(event.target.value),
+		                  className: "playground-plugins-search",
+		                  placeholder: "Search " + (isTagsView ? "tags" : "plugins"),
+		                })
+	              ),
+	              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+		                  React.createElement("button", {
+		                    type: "button",
+		                    className: "playground-files-control-button is-bare is-backlog-sort" + (pluginsOverviewToolbarPopover === "sort" || pluginsOverviewSort !== "name" ? " is-active" : ""),
+		                    onClick: () => {
+		                      closeTagsOverviewActionMenu();
+		                      setPluginsOverviewToolbarPopover((current) => current === "sort" ? "" : "sort");
+		                    },
+		                  },
+	                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("span", null, "Sort")
+	                  ),
+	                  pluginsOverviewToolbarPopover === "sort"
+	                    ? renderTagsOverviewToolbarMenu("sort", pluginsOverviewSortOptions)
+	                    : null
+	                ),
+	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+		                  React.createElement("button", {
+		                    type: "button",
+		                    className: "playground-files-control-button is-bare is-backlog-filter" + (pluginsOverviewToolbarPopover === "filter" || pluginsOverviewFilter !== "all" ? " is-active" : ""),
+		                    onClick: () => {
+		                      closeTagsOverviewActionMenu();
+		                      setPluginsOverviewToolbarPopover((current) => current === "filter" ? "" : "filter");
+		                    },
+		                  },
+	                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("span", null, "Filter")
+	                  ),
+	                  pluginsOverviewToolbarPopover === "filter"
+	                    ? renderTagsOverviewToolbarMenu("filter", pluginsOverviewFilterOptions)
+	                    : null
+	                )
+		              ),
+			              renderPluginsOverviewCategorySwitch()
+			            ),
+	            includeColumns ? renderTagsOverviewColumnHeader() : null
+	          );
+	          const renderTagsOverviewActionMenuPortal = () => {
+	            if (!tagOverviewActionMenuState) {
+	              return null;
+	            }
+	            const plugin = tagOverviewActionMenuState.plugin || null;
+	            const pluginId = String(plugin?.id || tagOverviewActionMenuState.pluginId || "").trim();
+	            const preferredAction = Array.isArray(plugin?.actions) ? plugin.actions[0] : null;
+	            const menuElement = React.createElement("div", {
+	                className: "sidebar-thread-popup-scrim",
+	                style: { zIndex: 9000 },
+	                onClick: closeTagsOverviewActionMenu,
+	              },
+	              React.createElement("div", {
+	                className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
+	                style: getTagsOverviewActionMenuStyle(tagOverviewActionMenuState),
+	                onClick: (event) => event.stopPropagation(),
+	              },
+	                React.createElement("div", {
+	                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	                    role: "menu",
+	                  },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    role: "menuitem",
+	                    className: "tb-popup-row",
+	                    onClick: () => {
+	                      closeTagsOverviewActionMenu();
+	                      setSelectedPluginId(pluginId);
+	                    },
+	                  },
+	                    React.createElement(ChevronRight, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Open"))
+	                  ),
+	                  preferredAction ? React.createElement("button", {
+	                    type: "button",
+	                    role: "menuitem",
+	                    className: "tb-popup-row" + (preferredAction.tone === "destructive" ? " is-danger" : ""),
+	                    onClick: () => {
+	                      closeTagsOverviewActionMenu();
+	                      preferredAction.onClick();
+	                    },
+	                  },
+	                    preferredAction.tone === "destructive"
+	                      ? React.createElement(Unlink, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 })
+	                      : React.createElement(Link2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, preferredAction.label))
+	                  ) : null
+	                )
+	              )
+	            );
+	            return typeof createPortal === "function" && typeof document !== "undefined" && document.body
+	              ? createPortal(menuElement, document.body)
+	              : menuElement;
+	          };
+		          const renderTagsOverviewTableSection = () => React.createElement("section", {
+	              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section " + (isTagsView ? "playground-tags-overview-table-section" : "playground-plugins-overview-table-section"),
+		            },
+		            renderTagsOverviewActionMenuPortal(),
+		            sortedPlugins.length === 0 ? renderTagsOverviewStickyTableHeader(false) : null,
+		            sortedPlugins.length === 0
+		              ? React.createElement("div", { className: "playground-plugins-empty" }, "No " + (isTagsView ? "tags" : "plugins") + " match your search.")
+		              : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
+	                  renderTagsOverviewStickyTableHeader(false),
+	                  React.createElement("div", { className: "playground-project-overview-thread-list" },
+	                    renderTagsOverviewColumnHeader(),
+	                    sortedPlugins.map((plugin) => {
+		                      const pluginId = String(plugin?.id || "").trim();
+			                      const pluginName = String(plugin?.label || (isTagsView ? "Tag" : "Plugin")).trim();
+		                      const isTagSelected = selectedTagOverviewIds.has(pluginId);
+		                      const menuOpen = tagOverviewActionMenuState?.pluginId === pluginId;
+		                      return React.createElement("div", {
+	                          key: pluginId || pluginName,
+	                          tabIndex: 0,
+	                          role: "button",
+	                          className: "playground-project-overview-threads-table-row",
+		                          "aria-label": "Open " + pluginName,
+		                          onClick: () => {
+		                            closeTagsOverviewActionMenu();
+		                            setPluginsOverviewToolbarPopover("");
+		                            setSelectedPluginId(pluginId);
+		                          },
+		                          onContextMenu: (event) => {
+		                            openTagsOverviewActionMenu(event, plugin, { context: true });
+		                          },
+	                          onKeyDown: (event) => {
+	                            if (event.key === "Enter" || event.key === " ") {
+	                              event.preventDefault();
+	                              setSelectedPluginId(pluginId);
+	                            }
+	                          },
+	                        },
+	                        React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+	                          React.createElement("button", {
+	                            type: "button",
+	                            className: "playground-agents-overview-select-checkbox" + (isTagSelected ? " is-selected" : ""),
+	                            role: "checkbox",
+	                            "aria-checked": isTagSelected ? "true" : "false",
+		                            "aria-label": "Select " + pluginName,
+	                            onClick: (event) => {
+	                              event.preventDefault();
+	                              event.stopPropagation();
+	                              toggleTagOverviewSelection(pluginId);
+	                            },
+	                            onKeyDown: (event) => event.stopPropagation(),
+	                          })
+	                        ),
+	                        React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
+		                          React.createElement("div", { className: "playground-agents-overview-name-cell playground-tags-overview-name-cell" + (isTagsView ? "" : " playground-plugins-overview-name-cell") },
+		                            React.createElement("div", { className: "playground-plugin-row-logo-shell playground-tags-overview-logo-shell" + (isTagsView ? "" : " playground-plugins-overview-logo-shell") }, renderPluginRowLogo(plugin)),
+	                            React.createElement("div", { className: "playground-agents-overview-name-copy" },
+	                              React.createElement("div", { className: "playground-agents-overview-name-title" }, pluginName)
+	                            )
+	                          )
+	                        ),
+		                        React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
+		                          renderTagOverviewStatusLabel(plugin)
+		                        ),
+	                        React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
+	                          React.createElement("div", { className: "playground-agents-overview-table-value" }, getTagOverviewIdentityLabel(plugin))
+	                        ),
+	                        React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
+	                          React.createElement("div", { className: "playground-agents-overview-table-value" }, getTagOverviewProviderLabel(plugin))
+	                        ),
+	                        React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-tags-overview-action-shell" },
+	                          React.createElement("button", {
+	                            type: "button",
+		                            className: "playground-overview-table-action-button" + (menuOpen ? " is-open" : ""),
+		                            onClick: (event) => {
+		                              openTagsOverviewActionMenu(event, plugin);
+		                            },
+	                            onKeyDown: (event) => event.stopPropagation(),
+		                            "aria-label": (isTagsView ? "Tag" : "Plugin") + " actions",
+	                            "aria-expanded": menuOpen ? "true" : "false",
+	                          },
+	                            React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
+		                          )
+		                        )
+	                      );
+	                    })
+	                  )
+	                )
+	          );
+
+	          if (selectedPlugin) {
             const pluginHeaderButtonClass = "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button playground-plugin-detail-connect-button";
             const pluginHeaderAction = (() => {
               if (selectedPlugin.id === "email") {
@@ -186982,7 +188071,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail" },
             React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-              React.createElement("div", { className: "playground-plugins-page" },
+	              React.createElement("div", { className: "playground-plugins-page playground-team-overview-page playground-agents-overview-page is-develop-configure-page " + (isTagsView ? "playground-tags-overview-page" : "playground-plugins-overview-page") },
                 React.createElement("h2", { className: "playground-plugins-hero-heading playground-tools-overview-heading" },
                   isTagsView ? "Trigger agents from external channels" : "Integrate ACP into your Daily work"
                 ),
@@ -187029,151 +188118,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     )
                   )
                 ),
-                React.createElement("section", { className: "playground-plugins-section" },
-                  React.createElement("div", { className: "playground-plugins-section-header" },
-                    React.createElement("div", { className: "playground-plugins-section-copy" },
-                      React.createElement("h3", { className: "playground-plugins-section-title" }, isTagsView ? "Tags" : "Plugins")
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-plugins-search-row", ref: pluginsOverviewToolbarRef },
-                    React.createElement("div", { className: "playground-plugins-search-shell" },
-                      React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("input", {
-                        type: "search",
-                        value: pluginsSearchQuery,
-                        onChange: (event) => setPluginsSearchQuery(event.target.value),
-                        className: "playground-plugins-search",
-                        placeholder: "Search",
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                      React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-control-button is-bare is-backlog-sort" + (pluginsOverviewToolbarPopover === "sort" || pluginsOverviewSort !== "name" ? " is-active" : ""),
-                          onClick: () => setPluginsOverviewToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                        },
-                          React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "Sort")
-                        ),
-                        pluginsOverviewToolbarPopover === "sort"
-                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                              pluginsOverviewSortOptions.map((option) =>
-                                React.createElement("button", {
-                                    key: option.id,
-                                    type: "button",
-                                    className: "tb-popup-row tb-popup-row-select" + (pluginsOverviewSort === option.id ? " selected" : ""),
-                                    onClick: () => {
-                                      setPluginsOverviewSort(option.id);
-                                      setPluginsOverviewToolbarPopover("");
-                                    },
-                                  },
-                                    React.createElement("span", { className: "tb-popup-check-slot" },
-                                      pluginsOverviewSort === option.id
-                                        ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                        : null
-                                    ),
-                                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                      React.createElement("span", null, option.label)
-                                    )
-                                  )
-                              )
-                            )
-                          : null
-                      ),
-                      React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-control-button is-bare is-backlog-filter" + (pluginsOverviewToolbarPopover === "filter" || pluginsOverviewFilter !== "all" ? " is-active" : ""),
-                          onClick: () => setPluginsOverviewToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                        },
-                          React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "Filter")
-                        ),
-                        pluginsOverviewToolbarPopover === "filter"
-                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                              pluginsOverviewFilterOptions.map((option) =>
-                                React.createElement("button", {
-                                    key: option.id,
-                                    type: "button",
-                                    className: "tb-popup-row tb-popup-row-select" + (pluginsOverviewFilter === option.id ? " selected" : ""),
-                                    onClick: () => {
-                                      setPluginsOverviewFilter(option.id);
-                                      setPluginsOverviewToolbarPopover("");
-                                    },
-                                  },
-                                    React.createElement("span", { className: "tb-popup-check-slot" },
-                                      pluginsOverviewFilter === option.id
-                                        ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                        : null
-                                    ),
-                                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                      React.createElement("span", null, option.label),
-                                      React.createElement("span", null, option.description)
-                                    )
-                                  )
-                              )
-                            )
-                          : null
-                      )
-                    ),
-                    isTagsView
-                      ? null
-                      : React.createElement("div", { className: "playground-agents-list-switch-row playground-plugins-toolbar-switch" },
-                          React.createElement("div", { className: "content-mode-switch playground-agents-list-switch" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "content-mode-button" + (pluginsOverviewCategory === "all" ? " is-active" : ""),
-                              onClick: () => setPluginsOverviewCategory("all"),
-                              "aria-pressed": pluginsOverviewCategory === "all",
-                            }, "All"),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "content-mode-button" + (pluginsOverviewCategory === "channel" ? " is-active" : ""),
-                              onClick: () => setPluginsOverviewCategory("channel"),
-                              "aria-pressed": pluginsOverviewCategory === "channel",
-                            }, "Channel"),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "content-mode-button" + (pluginsOverviewCategory === "workspace" ? " is-active" : ""),
-                              onClick: () => setPluginsOverviewCategory("workspace"),
-                              "aria-pressed": pluginsOverviewCategory === "workspace",
-                            }, "Integration")
-                          )
-                        )
-                  ),
-                  sortedPlugins.length === 0
-                    ? React.createElement("div", { className: "playground-plugins-empty" }, "No " + (isTagsView ? "tags" : "plugins") + " match your search.")
-                    : React.createElement("div", { className: "playground-plugins-grid" },
-                        sortedPlugins.map((plugin) =>
-                          React.createElement("button", {
-                            key: plugin.id,
-                            type: "button",
-                            className: "playground-plugin-row",
-                            onClick: () => {
-                              setPluginsOverviewToolbarPopover("");
-                              setSelectedPluginId(plugin.id);
-                            },
-                          },
-                            React.createElement("div", { className: "playground-plugin-row-copy" },
-                              React.createElement("div", { className: "playground-plugin-row-logo-shell" }, renderPluginRowLogo(plugin)),
-                              React.createElement("div", { className: "playground-plugin-row-text" },
-                                React.createElement("div", { className: "playground-plugin-row-title" }, plugin.label),
-                                React.createElement("div", { className: "playground-plugin-row-description" }, plugin.description)
-                              )
-                            ),
-                            React.createElement("span", {
-                              className: "playground-plugin-row-state" + (plugin.connected ? " is-connected" : ""),
-                            },
-                              plugin.connected
-                                ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 2 })
-                                : React.createElement(Plus, { width: 14, height: 14, strokeWidth: 2 })
-                            )
-                          )
-                        )
-                      )
-                ),
-              )
+	                renderTagsOverviewTableSection()
+	              )
             )
           );
         }
@@ -190876,15 +191822,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
             React.createElement("option", { key: option.id, value: option.id }, option.label)
           ));
           const formatOrganizationType = (type) => String(type || "").trim().toLowerCase() === "personal" ? "Personal" : "Company";
-          const openOrganizationDetail = (organizationId) => {
-            const normalizedOrganizationId = String(organizationId || "").trim();
-            if (!normalizedOrganizationId) return;
-            setOrganizationPageSelectedOrganizationId(normalizedOrganizationId);
-            setOrganizationPageMembers([]);
-            setOrganizationPageInvitations([]);
-            setOrganizationPageBillingSummary(null);
-            setOrganizationPageBillingError("");
-          };
+	          const openOrganizationDetail = (organizationId) => {
+	            const normalizedOrganizationId = String(organizationId || "").trim();
+	            if (!normalizedOrganizationId) return;
+	            setOrganizationPageSelectedOrganizationId(normalizedOrganizationId);
+	            setOrganizationPageMembers([]);
+	            setOrganizationPageInvitations([]);
+	            setOrganizationPageBillingSummary(null);
+	            setOrganizationPageBillingError("");
+	            setOrganizationMemberSearchQuery("");
+	            setOrganizationMemberToolbarPopover("");
+	            setOrganizationMemberMenuId("");
+	            setSelectedOrganizationMemberIds(new Set());
+	          };
           const renderOrganizationCreateModal = () => organizationPageCreateModalOpen
             ? React.createElement("div", {
                 className: "playground-team-modal-backdrop",
@@ -191183,70 +192133,493 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 : null
             );
           };
-          const renderOverview = () => React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-team-page-header" },
-              React.createElement("div", null,
-                React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-team-page-title" }, "Organization")
-              ),
-              renderOrganizationActionButton("Create organization", () => setOrganizationPageCreateModalOpen(true), {
-                icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-              })
-            ),
-            organizationPageError ? React.createElement("div", { className: "playground-team-error" }, organizationPageError) : null,
-            activeOrganization ? React.createElement("div", { className: "playground-team-detail-meta" }, "Current workspace: " + (activeOrganization.name || "Organization")) : null,
-            React.createElement("div", { className: "playground-team-overview-layout" },
-              React.createElement("div", { className: "playground-team-table-panel" },
-                organizationPageOrganizations.length > 0
-                  ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
-                      React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table" },
-                        React.createElement("colgroup", null,
-                          React.createElement("col", { className: "playground-team-table-col-main" }),
-                          React.createElement("col", { className: "playground-team-table-col-role" }),
-                          React.createElement("col", { className: "playground-team-table-col-meta" }),
-                          React.createElement("col", { className: "playground-team-table-col-actions" })
-                        ),
-                        React.createElement("thead", null,
-                          React.createElement("tr", null,
-                            React.createElement("th", null, "Organization"),
-                            React.createElement("th", null, "Role"),
-                            React.createElement("th", null, "Type"),
-                            React.createElement("th", { className: "is-actions" }, "")
-                          )
-                        ),
-                        React.createElement("tbody", null,
-                          organizationPageOrganizations.map((organization) => {
-                            const isActive = isOrganizationPageActiveOrganization(organization);
-                            return React.createElement("tr", {
-                              key: organization.id,
-                              className: "is-clickable",
-                              tabIndex: 0,
-                              onClick: () => openOrganizationDetail(organization.id),
-                              onKeyDown: (event) => {
-                                if (event.key === "Enter" || event.key === " ") {
-                                  event.preventDefault();
-                                  openOrganizationDetail(organization.id);
-                                }
-                              },
-                            },
-                              React.createElement("td", null,
-                                React.createElement("div", { className: "playground-team-table-title" }, organization.name || "Organization"),
-                                React.createElement("div", { className: "playground-team-table-meta" }, isActive ? "Current workspace" : "Available workspace")
-                              ),
-                              React.createElement("td", { className: "playground-auth-users-cell" }, formatRole(organization.role)),
-                              React.createElement("td", { className: "playground-auth-users-cell" }, formatOrganizationType(organization.type)),
-                              React.createElement("td", { className: "is-actions" }, isActive
-                                ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
-                                : React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 }))
-                            );
-                          })
-                        )
-                      )
-                    )
-                  : renderEmpty(organizationPageLoading ? "Loading organizations..." : "No organizations yet.")
-              )
-            ),
-            renderOrganizationCreateModal()
-          );
+	          const normalizeOrganizationTableSortDirection = (direction) =>
+	            direction === "desc" ? "desc" : "asc";
+	          const normalizedOrganizationOverviewSortDirection = normalizeOrganizationTableSortDirection(organizationOverviewSortDirection);
+	          const getOrganizationOverviewDisplayName = (organization) => getOrganizationPageDisplayName(organization);
+	          const getOrganizationOverviewRoleLabel = (organization) => formatRole(organization?.role || organization?.membership?.role);
+	          const getOrganizationOverviewTypeLabel = (organization) => formatOrganizationType(organization?.type);
+	          const getOrganizationOverviewStatusLabel = (organization) => isOrganizationPageActiveOrganization(organization) ? "Current" : "Available";
+	          const getOrganizationOverviewCreatedTimestamp = (organization) => {
+	            const timestamp = Date.parse(String(organization?.createdAt || organization?.created_at || ""));
+	            return Number.isFinite(timestamp) ? timestamp : 0;
+	          };
+	          const getOrganizationOverviewSortValue = (organization, sortKey) => {
+	            switch (sortKey) {
+	              case "role":
+	                return getOrganizationOverviewRoleLabel(organization);
+	              case "type":
+	                return getOrganizationOverviewTypeLabel(organization);
+	              case "status":
+	                return getOrganizationOverviewStatusLabel(organization);
+	              case "created":
+	                return getOrganizationOverviewCreatedTimestamp(organization);
+	              case "name":
+	              default:
+	                return getOrganizationOverviewDisplayName(organization);
+	            }
+	          };
+	          const compareOrganizationOverviewSortValues = (left, right, sortKey) => {
+	            const leftValue = getOrganizationOverviewSortValue(left, sortKey);
+	            const rightValue = getOrganizationOverviewSortValue(right, sortKey);
+	            if (typeof leftValue === "number" || typeof rightValue === "number") {
+	              const leftNumber = typeof leftValue === "number" && Number.isFinite(leftValue) ? leftValue : 0;
+	              const rightNumber = typeof rightValue === "number" && Number.isFinite(rightValue) ? rightValue : 0;
+	              if (leftNumber !== rightNumber) {
+	                return leftNumber - rightNumber;
+	              }
+	            } else {
+	              const textComparison = String(leftValue || "").localeCompare(String(rightValue || ""), undefined, {
+	                numeric: true,
+	                sensitivity: "base",
+	              });
+	              if (textComparison !== 0) {
+	                return textComparison;
+	              }
+	            }
+	            return getOrganizationOverviewDisplayName(left).localeCompare(getOrganizationOverviewDisplayName(right), undefined, {
+	              numeric: true,
+	              sensitivity: "base",
+	            });
+	          };
+	          const normalizedOrganizationOverviewSearchQuery = String(organizationOverviewSearchQuery || "").trim().toLowerCase();
+	          const visibleOverviewOrganizations = (Array.isArray(organizationPageOrganizations) ? organizationPageOrganizations : [])
+	            .filter((organization) => {
+	              const isActive = isOrganizationPageActiveOrganization(organization);
+	              const type = String(organization?.type || "").trim().toLowerCase();
+	              if (organizationOverviewFilter === "current" && !isActive) {
+	                return false;
+	              }
+	              if (organizationOverviewFilter === "company" && type === "personal") {
+	                return false;
+	              }
+	              if (organizationOverviewFilter === "personal" && type !== "personal") {
+	                return false;
+	              }
+	              if (!normalizedOrganizationOverviewSearchQuery) {
+	                return true;
+	              }
+	              const haystack = [
+	                getOrganizationOverviewDisplayName(organization),
+	                getOrganizationOverviewRoleLabel(organization),
+	                getOrganizationOverviewTypeLabel(organization),
+	                getOrganizationOverviewStatusLabel(organization),
+	                organization?.id || "",
+	              ].join(" ").toLowerCase();
+	              return haystack.includes(normalizedOrganizationOverviewSearchQuery);
+	            })
+	            .slice()
+	            .sort((left, right) => {
+	              const baseComparison = compareOrganizationOverviewSortValues(left, right, organizationOverviewSort);
+	              return normalizedOrganizationOverviewSortDirection === "desc" ? -baseComparison : baseComparison;
+	            });
+	          const visibleOverviewOrganizationIds = visibleOverviewOrganizations.map((organization) => String(organization?.id || "").trim()).filter(Boolean);
+	          const selectedVisibleOrganizationOverviewIds = visibleOverviewOrganizationIds.filter((organizationId) => selectedOrganizationOverviewIds.has(organizationId));
+	          const allVisibleOrganizationsSelected = visibleOverviewOrganizationIds.length > 0 && selectedVisibleOrganizationOverviewIds.length === visibleOverviewOrganizationIds.length;
+	          const hasPartialVisibleOrganizationSelection = selectedVisibleOrganizationOverviewIds.length > 0 && !allVisibleOrganizationsSelected;
+	          const toggleOrganizationOverviewSelection = (organizationId) => {
+	            const normalizedOrganizationId = String(organizationId || "").trim();
+	            if (!normalizedOrganizationId) return;
+	            setSelectedOrganizationOverviewIds((current) => {
+	              const next = new Set(current || []);
+	              if (next.has(normalizedOrganizationId)) {
+	                next.delete(normalizedOrganizationId);
+	              } else {
+	                next.add(normalizedOrganizationId);
+	              }
+	              return next;
+	            });
+	          };
+	          const toggleVisibleOrganizationOverviewSelection = () => {
+	            if (visibleOverviewOrganizationIds.length === 0) {
+	              return;
+	            }
+	            setSelectedOrganizationOverviewIds((current) => {
+	              const next = new Set(current || []);
+	              if (allVisibleOrganizationsSelected) {
+	                visibleOverviewOrganizationIds.forEach((organizationId) => next.delete(organizationId));
+	              } else {
+	                visibleOverviewOrganizationIds.forEach((organizationId) => next.add(organizationId));
+	              }
+	              return next;
+	            });
+	          };
+	          const organizationOverviewSortOptions = [
+	            { id: "name", label: "Name (A-Z)", sortKey: "name", direction: "asc" },
+	            { id: "created", label: "Recently Created", sortKey: "created", direction: "desc" },
+	          ];
+	          const organizationOverviewFilterOptions = [
+	            { id: "all", label: "All Organizations", description: "Show every organization workspace" },
+	            { id: "current", label: "Current Organization", description: "Only show the active workspace" },
+	            { id: "company", label: "Company Organizations", description: "Only show shared company workspaces" },
+	            { id: "personal", label: "Personal Organization", description: "Only show the personal workspace" },
+	          ];
+	          const renderOrganizationSortIcon = (sortKey, activeSort, activeDirection) => {
+	            const isActive = activeSort === sortKey;
+	            const normalizedDirection = normalizeOrganizationTableSortDirection(activeDirection);
+	            const isDescending = isActive && normalizedDirection === "desc";
+	            const isAscending = isActive && !isDescending;
+	            return React.createElement("span", {
+	                className: "playground-agents-overview-sort-icon"
+	                  + (isActive ? " is-active" : "")
+	                  + (isAscending ? " is-ascending" : "")
+	                  + (isDescending ? " is-descending" : ""),
+	                "aria-hidden": "true",
+	              },
+	              React.createElement(ChevronsUpDown, {
+	                className: "playground-agents-overview-sort-icon-layer is-top",
+	                width: 14,
+	                height: 14,
+	                strokeWidth: 1.8,
+	              }),
+	              React.createElement(ChevronsUpDown, {
+	                className: "playground-agents-overview-sort-icon-layer is-bottom",
+	                width: 14,
+	                height: 14,
+	                strokeWidth: 1.8,
+	              })
+	            );
+	          };
+	          const renderOrganizationSortableHeader = (label, sortKey, activeSort, activeDirection, onSort) => {
+	            const normalizedDirection = normalizeOrganizationTableSortDirection(activeDirection);
+	            const isActive = activeSort === sortKey;
+	            const nextDirection = isActive && normalizedDirection === "asc" ? "descending" : "ascending";
+	            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
+	              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+	              React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-agents-overview-column-sort-button"
+	                    + (isActive ? " is-active" : "")
+	                    + (isActive && normalizedDirection === "asc" ? " is-ascending" : "")
+	                    + (isActive && normalizedDirection === "desc" ? " is-descending" : ""),
+	                  title: "Sort " + label + " " + nextDirection,
+	                  "aria-label": "Sort " + label + " " + nextDirection,
+	                  "aria-pressed": isActive ? "true" : "false",
+	                  onClick: (event) => {
+	                    event.preventDefault();
+	                    event.stopPropagation();
+	                    onSort(sortKey);
+	                  },
+	                },
+	                renderOrganizationSortIcon(sortKey, activeSort, normalizedDirection)
+	              )
+	            );
+	          };
+	          const renderOrganizationToolbarMenu = ({
+	            menuId,
+	            options,
+	            activeValue,
+	            activeSort,
+	            activeDirection,
+	            setActiveValue,
+	            setActiveSort,
+	            setActiveDirection,
+	            close,
+	          }) => {
+	            const isSort = menuId === "sort";
+	            const normalizedDirection = normalizeOrganizationTableSortDirection(activeDirection);
+	            return React.createElement("div", {
+	                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	              },
+	              options.map((option) => {
+	                const optionValue = option.sortKey || option.id;
+	                const optionDirection = normalizeOrganizationTableSortDirection(option.direction);
+	                const selected = isSort
+	                  ? activeSort === optionValue && normalizedDirection === optionDirection
+	                  : activeValue === option.id;
+	                return React.createElement("button", {
+	                    key: option.id,
+	                    type: "button",
+	                    className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
+	                    onClick: () => {
+	                      if (isSort) {
+	                        setActiveSort(optionValue);
+	                        setActiveDirection(optionDirection);
+	                      } else {
+	                        setActiveValue(option.id);
+	                      }
+	                      close();
+	                    },
+	                  },
+	                  React.createElement("span", { className: "tb-popup-check-slot" },
+	                    selected ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
+	                  ),
+	                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                    React.createElement("span", null, option.label),
+	                    option.description ? React.createElement("span", null, option.description) : null
+	                  )
+	                );
+	              })
+	            );
+	          };
+	          const handleOrganizationOverviewColumnSort = (sortKey) => {
+	            const normalizedSortKey = String(sortKey || "name").trim() || "name";
+	            setOrganizationOverviewToolbarPopover("");
+	            setOrganizationOverviewSortDirection((currentDirection) => {
+	              if (organizationOverviewSort !== normalizedSortKey) {
+	                return normalizedSortKey === "created" ? "desc" : "asc";
+	              }
+	              return normalizeOrganizationTableSortDirection(currentDirection) === "asc" ? "desc" : "asc";
+	            });
+	            setOrganizationOverviewSort(normalizedSortKey);
+	          };
+	          const renderOrganizationOverviewColumnHeader = () => React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-team-overview-column-header playground-organization-overview-column-header" },
+	            React.createElement("div", null,
+	              React.createElement("button", {
+	                type: "button",
+	                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+	                  + (allVisibleOrganizationsSelected ? " is-selected" : "")
+	                  + (hasPartialVisibleOrganizationSelection ? " is-partial" : ""),
+	                role: "checkbox",
+	                "aria-checked": allVisibleOrganizationsSelected ? "true" : (hasPartialVisibleOrganizationSelection ? "mixed" : "false"),
+	                "aria-label": allVisibleOrganizationsSelected ? "Deselect all visible organizations" : "Select all visible organizations",
+	                onClick: (event) => {
+	                  event.preventDefault();
+	                  event.stopPropagation();
+	                  toggleVisibleOrganizationOverviewSelection();
+	                },
+	              })
+	            ),
+	            React.createElement("div", null, renderOrganizationSortableHeader("Name", "name", organizationOverviewSort, normalizedOrganizationOverviewSortDirection, handleOrganizationOverviewColumnSort)),
+	            React.createElement("div", null, renderOrganizationSortableHeader("Role", "role", organizationOverviewSort, normalizedOrganizationOverviewSortDirection, handleOrganizationOverviewColumnSort)),
+	            React.createElement("div", null, renderOrganizationSortableHeader("Type", "type", organizationOverviewSort, normalizedOrganizationOverviewSortDirection, handleOrganizationOverviewColumnSort)),
+	            React.createElement("div", null, renderOrganizationSortableHeader("Status", "status", organizationOverviewSort, normalizedOrganizationOverviewSortDirection, handleOrganizationOverviewColumnSort)),
+	            React.createElement("div", null)
+	          );
+	          const renderOrganizationOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-organization-overview-sticky-table-header" },
+	            React.createElement("div", {
+	                className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-organization-overview-toolbar-row",
+	                ref: organizationOverviewToolbarRef,
+	              },
+	              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
+	                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                React.createElement("input", {
+	                  type: "search",
+	                  value: organizationOverviewSearchQuery,
+	                  onChange: (event) => setOrganizationOverviewSearchQuery(event.target.value),
+	                  className: "playground-plugins-search",
+	                  placeholder: "Search organizations",
+	                })
+	              ),
+	              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-files-control-button is-bare is-backlog-sort" + (organizationOverviewToolbarPopover === "sort" || organizationOverviewSort !== "name" || normalizedOrganizationOverviewSortDirection !== "asc" ? " is-active" : ""),
+	                    onClick: () => setOrganizationOverviewToolbarPopover((current) => current === "sort" ? "" : "sort"),
+	                  },
+	                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("span", null, "Sort")
+	                  ),
+	                  organizationOverviewToolbarPopover === "sort"
+	                    ? renderOrganizationToolbarMenu({
+	                        menuId: "sort",
+	                        options: organizationOverviewSortOptions,
+	                        activeSort: organizationOverviewSort,
+	                        activeDirection: normalizedOrganizationOverviewSortDirection,
+	                        setActiveSort: setOrganizationOverviewSort,
+	                        setActiveDirection: setOrganizationOverviewSortDirection,
+	                        close: () => setOrganizationOverviewToolbarPopover(""),
+	                      })
+	                    : null
+	                ),
+	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-files-control-button is-bare is-backlog-filter" + (organizationOverviewToolbarPopover === "filter" || organizationOverviewFilter !== "all" ? " is-active" : ""),
+	                    onClick: () => setOrganizationOverviewToolbarPopover((current) => current === "filter" ? "" : "filter"),
+	                  },
+	                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("span", null, "Filter")
+	                  ),
+	                  organizationOverviewToolbarPopover === "filter"
+	                    ? renderOrganizationToolbarMenu({
+	                        menuId: "filter",
+	                        options: organizationOverviewFilterOptions,
+	                        activeValue: organizationOverviewFilter,
+	                        activeSort: organizationOverviewSort,
+	                        activeDirection: normalizedOrganizationOverviewSortDirection,
+	                        setActiveValue: setOrganizationOverviewFilter,
+	                        setActiveSort: setOrganizationOverviewSort,
+	                        setActiveDirection: setOrganizationOverviewSortDirection,
+	                        close: () => setOrganizationOverviewToolbarPopover(""),
+	                      })
+	                    : null
+	                )
+	              ),
+	              React.createElement("button", {
+	                type: "button",
+	                className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button",
+	                onClick: () => {
+	                  setOrganizationOverviewToolbarPopover("");
+	                  setOrganizationPageCreateModalOpen(true);
+	                },
+	                title: "Create organization",
+	                "aria-label": "Create organization",
+	              },
+	                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                React.createElement("span", null, "New Organization")
+	              )
+	            ),
+	            includeColumns ? renderOrganizationOverviewColumnHeader() : null
+	          );
+	          const renderOrganizationOverviewRowMenu = (organization) => {
+	            const organizationId = String(organization?.id || "").trim();
+	            if (!organizationId || organizationOverviewMenuId !== organizationId) {
+	              return null;
+	            }
+	            const isActive = isOrganizationPageActiveOrganization(organization);
+	            const roleId = normalizeOrganizationRoleId(organization?.role || organization?.membership?.role, "member");
+	            const canRename = roleId === "owner"
+	              || roleId === "admin"
+	              || String(organization?.ownerUserId || organization?.ownerId || "") === String(sessionState.userId || "");
+	            return React.createElement("div", {
+	                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	              },
+	              React.createElement("button", {
+	                type: "button",
+	                className: "tb-popup-row",
+	                onClick: () => {
+	                  setOrganizationOverviewMenuId("");
+	                  openOrganizationDetail(organizationId);
+	                },
+	              },
+	                React.createElement(ChevronRight, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Open"))
+	              ),
+	              isActive ? null : React.createElement("button", {
+	                type: "button",
+	                className: "tb-popup-row",
+	                onClick: () => {
+	                  setOrganizationOverviewMenuId("");
+	                  setActiveOrganizationFromRecord(organization);
+	                },
+	              },
+	                React.createElement(Check, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Set active"))
+	              ),
+	              canRename ? React.createElement("button", {
+	                type: "button",
+	                className: "tb-popup-row",
+	                onClick: () => {
+	                  setOrganizationOverviewMenuId("");
+	                  setOrganizationPageSelectedOrganizationId(organizationId);
+	                  setOrganizationPageRenameName(organization?.name || "");
+	                  setOrganizationPageRenameModalOpen(true);
+	                },
+	              },
+	                React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Rename"))
+	              ) : null
+	            );
+	          };
+	          const renderOverview = () => React.createElement("div", { className: "playground-team-overview-page playground-agents-overview-page playground-organization-overview-page is-develop-configure-page" },
+	            React.createElement("div", { className: "playground-environments-home-content playground-team-overview-content playground-organization-overview-content" },
+	              React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero playground-agents-configure-hero playground-team-overview-hero playground-organization-overview-hero" },
+	                React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-team-page-header" },
+	                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-team-page-title" }, "Organizations")
+	                ),
+	                React.createElement("div", {
+	                    className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-team-overview-empty-metrics",
+	                    "aria-hidden": "true",
+	                  },
+	                  React.createElement("div", { className: "playground-team-overview-empty-chart" })
+	                ),
+	                organizationPageError
+	                  ? React.createElement("div", { className: "playground-team-error" }, organizationPageError)
+	                  : null,
+	                React.createElement("section", {
+	                    className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-organization-overview-table-section",
+	                  },
+	                  visibleOverviewOrganizations.length === 0 ? renderOrganizationOverviewStickyTableHeader(false) : null,
+	                  visibleOverviewOrganizations.length === 0
+	                    ? React.createElement("div", { className: "playground-plugins-empty" },
+	                        normalizedOrganizationOverviewSearchQuery || organizationOverviewFilter !== "all"
+	                          ? "No matching organizations found."
+	                          : (organizationPageLoading ? "Loading organizations..." : "No organizations yet.")
+	                      )
+	                    : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
+	                        renderOrganizationOverviewStickyTableHeader(false),
+	                        React.createElement("div", { className: "playground-project-overview-thread-list" },
+	                          renderOrganizationOverviewColumnHeader(),
+	                          visibleOverviewOrganizations.map((organization) => {
+	                            const organizationId = String(organization?.id || "").trim();
+	                            const organizationName = getOrganizationOverviewDisplayName(organization);
+	                            const isOverviewOrganizationSelected = selectedOrganizationOverviewIds.has(organizationId);
+	                            const isActive = isOrganizationPageActiveOrganization(organization);
+	                            return React.createElement("div", {
+	                                key: organizationId || organizationName,
+	                                tabIndex: 0,
+	                                role: "button",
+	                                className: "playground-project-overview-threads-table-row",
+	                                "aria-label": "Open " + organizationName,
+	                                onClick: () => openOrganizationDetail(organizationId),
+	                                onKeyDown: (event) => {
+	                                  if (event.key === "Enter" || event.key === " ") {
+	                                    event.preventDefault();
+	                                    openOrganizationDetail(organizationId);
+	                                  }
+	                                },
+	                              },
+	                              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+	                                React.createElement("button", {
+	                                  type: "button",
+	                                  className: "playground-agents-overview-select-checkbox" + (isOverviewOrganizationSelected ? " is-selected" : ""),
+	                                  role: "checkbox",
+	                                  "aria-checked": isOverviewOrganizationSelected ? "true" : "false",
+	                                  "aria-label": "Select " + organizationName,
+	                                  onClick: (event) => {
+	                                    event.preventDefault();
+	                                    event.stopPropagation();
+	                                    toggleOrganizationOverviewSelection(organizationId);
+	                                  },
+	                                  onKeyDown: (event) => event.stopPropagation(),
+	                                })
+	                              ),
+	                              React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
+	                                React.createElement("div", { className: "playground-agents-overview-name-cell" },
+	                                  React.createElement("div", { className: "playground-agents-overview-name-copy" },
+	                                    React.createElement("div", { className: "playground-agents-overview-name-title" }, organizationName)
+	                                  )
+	                                )
+	                              ),
+	                              React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
+	                                React.createElement("div", { className: "playground-agents-overview-table-value" }, getOrganizationOverviewRoleLabel(organization))
+	                              ),
+	                              React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
+	                                React.createElement("div", { className: "playground-agents-overview-table-value" }, getOrganizationOverviewTypeLabel(organization))
+	                              ),
+	                              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
+	                                React.createElement("div", { className: "playground-agents-overview-table-value" }, isActive ? "Current" : "Available")
+	                              ),
+	                              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-organization-overview-action-shell" },
+	                                React.createElement("button", {
+	                                  type: "button",
+	                                  className: "playground-overview-table-action-button" + (organizationOverviewMenuId === organizationId ? " is-open" : ""),
+	                                  onClick: (event) => {
+	                                    event.preventDefault();
+	                                    event.stopPropagation();
+	                                    setOrganizationOverviewToolbarPopover("");
+	                                    setOrganizationOverviewMenuId((current) => current === organizationId ? "" : organizationId);
+	                                  },
+	                                  onKeyDown: (event) => event.stopPropagation(),
+	                                  "aria-label": "Organization actions",
+	                                  "aria-expanded": organizationOverviewMenuId === organizationId ? "true" : "false",
+	                                },
+	                                  React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
+	                                ),
+	                                renderOrganizationOverviewRowMenu(organization)
+	                              )
+	                            );
+	                          })
+	                        )
+	                      )
+	                )
+	              )
+	            ),
+	            renderOrganizationCreateModal(),
+	            renderOrganizationRenameModal()
+	          );
           const renderInvitationIdentity = (invitation) => {
             const email = String(invitation?.email || invitation?.emailNormalized || invitation?.email_normalized || "").trim();
             return React.createElement("div", { className: "playground-team-member-cell" },
@@ -191262,63 +192635,378 @@ ${PROJECT_OVERVIEW_SCRIPT}
               )
             );
           };
-          const renderMembers = () => {
-            const memberRows = (Array.isArray(organizationPageMembers) ? organizationPageMembers : [])
-              .map((member) => ({ kind: "member", id: String(member?.id || member?.userId || member?.user_id || ""), item: member }));
-            const invitationRows = (Array.isArray(organizationPageInvitations) ? organizationPageInvitations : [])
-              .filter((invitation) => String(invitation?.status || "").toLowerCase() === "pending")
-              .map((invitation) => ({ kind: "invitation", id: String(invitation?.id || ""), item: invitation }));
-            const rows = [...memberRows, ...invitationRows].filter((row) => row.id);
-            return React.createElement("div", { className: "playground-team-detail-panel" },
-              rows.length > 0
-                ? React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell" },
-                    React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table playground-team-members-table" },
-                      React.createElement("colgroup", null,
-                        React.createElement("col", { className: "playground-team-table-col-main" }),
-                        React.createElement("col", { className: "playground-team-table-col-role" }),
-                        React.createElement("col", { className: "playground-team-table-col-meta" }),
-                        React.createElement("col", { className: "playground-team-table-col-joined" }),
-                        React.createElement("col", { className: "playground-team-table-col-actions" })
-                      ),
-                      React.createElement("thead", null,
-                        React.createElement("tr", null,
-                          React.createElement("th", null, "User"),
-                          React.createElement("th", null, "Role"),
-                          React.createElement("th", null, "Status"),
-                          React.createElement("th", null, "Joined"),
-                          React.createElement("th", { className: "is-actions" }, "")
-                        )
-                      ),
-                      React.createElement("tbody", null,
-                        rows.map((row) => {
-                          const isInvitation = row.kind === "invitation";
-                          const item = row.item;
-                          const revokeActionId = "revoke-organization-invite:" + row.id;
-                          return React.createElement("tr", { key: row.kind + ":" + row.id },
-                            React.createElement("td", null, isInvitation ? renderInvitationIdentity(item) : renderMemberIdentity(item)),
-                            React.createElement("td", null, React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, formatRole(item?.role))),
-                            React.createElement("td", { className: "playground-auth-users-cell" }, isInvitation ? "Pending" : (item?.status || "active")),
-                            React.createElement("td", { className: "playground-auth-users-cell" }, isInvitation
-                              ? (formatDate(item?.createdAt || item?.created_at) || "-")
-                              : (formatDate(item?.joinedAt || item?.joined_at || item?.createdAt || item?.created_at) || "-")),
-                            React.createElement("td", { className: "is-actions" },
-                              isInvitation && canManageOrganization
-                                ? React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-team-button",
-                                    onClick: () => handleRevokeOrganizationInvitation(row.id),
-                                    disabled: organizationPageActionId === revokeActionId,
-                                  }, organizationPageActionId === revokeActionId ? "Revoking..." : "Revoke")
-                                : null
-                            )
-                          );
-                        })
-                      )
-                    )
-                  )
-                : renderEmpty(organizationPageLoading ? "Loading members..." : "No organization members yet.")
-            );
-          };
+	          const renderMembers = () => {
+	            const memberRows = (Array.isArray(organizationPageMembers) ? organizationPageMembers : [])
+	              .map((member) => ({ kind: "member", id: String(member?.id || member?.userId || member?.user_id || ""), item: member }));
+	            const invitationRows = (Array.isArray(organizationPageInvitations) ? organizationPageInvitations : [])
+	              .filter((invitation) => String(invitation?.status || "").toLowerCase() === "pending")
+	              .map((invitation) => ({ kind: "invitation", id: String(invitation?.id || ""), item: invitation }));
+	            const rows = [...memberRows, ...invitationRows].filter((row) => row.id);
+	            const normalizedOrganizationMemberSortDirection = normalizeOrganizationTableSortDirection(organizationMemberSortDirection);
+	            const getOrganizationMemberDisplayName = (row) => row?.kind === "invitation"
+	              ? String(row?.item?.email || row?.item?.emailNormalized || row?.item?.email_normalized || "Pending invitation").trim()
+	              : getMemberDisplayName(row?.item || {});
+	            const getOrganizationMemberDetail = (row) => {
+	              if (row?.kind === "invitation") {
+	                return "Invitation pending";
+	              }
+	              const member = row?.item || {};
+	              const email = readTeamPageIdentityEmail(member);
+	              const displayName = getOrganizationMemberDisplayName(row);
+	              return email && displayName.toLowerCase() !== email.toLowerCase() ? email : "";
+	            };
+	            const getOrganizationMemberRoleLabel = (row) => formatRole(row?.item?.role);
+	            const getOrganizationMemberStatusLabel = (row) => row?.kind === "invitation" ? "pending" : (row?.item?.status || "active");
+	            const getOrganizationMemberJoinedValue = (row) => row?.kind === "invitation"
+	              ? (row?.item?.createdAt || row?.item?.created_at || "")
+	              : (row?.item?.joinedAt || row?.item?.joined_at || row?.item?.createdAt || row?.item?.created_at || "");
+	            const getOrganizationMemberJoinedLabel = (row) => formatDate(getOrganizationMemberJoinedValue(row)) || "-";
+	            const getOrganizationMemberJoinedTimestamp = (row) => {
+	              const timestamp = Date.parse(String(getOrganizationMemberJoinedValue(row) || ""));
+	              return Number.isFinite(timestamp) ? timestamp : 0;
+	            };
+	            const getOrganizationMemberSortValue = (row, sortKey) => {
+	              switch (sortKey) {
+	                case "role":
+	                  return getOrganizationMemberRoleLabel(row);
+	                case "status":
+	                  return getOrganizationMemberStatusLabel(row);
+	                case "joined":
+	                  return getOrganizationMemberJoinedTimestamp(row);
+	                case "user":
+	                default:
+	                  return getOrganizationMemberDisplayName(row);
+	              }
+	            };
+	            const compareOrganizationMemberSortValues = (left, right, sortKey) => {
+	              const leftValue = getOrganizationMemberSortValue(left, sortKey);
+	              const rightValue = getOrganizationMemberSortValue(right, sortKey);
+	              if (typeof leftValue === "number" || typeof rightValue === "number") {
+	                const leftNumber = typeof leftValue === "number" && Number.isFinite(leftValue) ? leftValue : 0;
+	                const rightNumber = typeof rightValue === "number" && Number.isFinite(rightValue) ? rightValue : 0;
+	                if (leftNumber !== rightNumber) {
+	                  return leftNumber - rightNumber;
+	                }
+	              } else {
+	                const textComparison = String(leftValue || "").localeCompare(String(rightValue || ""), undefined, {
+	                  numeric: true,
+	                  sensitivity: "base",
+	                });
+	                if (textComparison !== 0) {
+	                  return textComparison;
+	                }
+	              }
+	              return getOrganizationMemberDisplayName(left).localeCompare(getOrganizationMemberDisplayName(right), undefined, {
+	                numeric: true,
+	                sensitivity: "base",
+	              });
+	            };
+	            const normalizedOrganizationMemberSearchQuery = String(organizationMemberSearchQuery || "").trim().toLowerCase();
+	            const visibleOrganizationMemberRows = rows
+	              .filter((row) => {
+	                const normalizedStatus = String(getOrganizationMemberStatusLabel(row) || "").trim().toLowerCase();
+	                if (organizationMemberFilter === "active" && (row?.kind === "invitation" || normalizedStatus !== "active")) {
+	                  return false;
+	                }
+	                if (organizationMemberFilter === "pending" && row?.kind !== "invitation" && normalizedStatus !== "pending") {
+	                  return false;
+	                }
+	                if (!normalizedOrganizationMemberSearchQuery) {
+	                  return true;
+	                }
+	                const haystack = [
+	                  getOrganizationMemberDisplayName(row),
+	                  getOrganizationMemberDetail(row),
+	                  getOrganizationMemberRoleLabel(row),
+	                  getOrganizationMemberStatusLabel(row),
+	                  row?.id || "",
+	                ].join(" ").toLowerCase();
+	                return haystack.includes(normalizedOrganizationMemberSearchQuery);
+	              })
+	              .slice()
+	              .sort((left, right) => {
+	                const baseComparison = compareOrganizationMemberSortValues(left, right, organizationMemberSort);
+	                return normalizedOrganizationMemberSortDirection === "desc" ? -baseComparison : baseComparison;
+	              });
+	            const getOrganizationMemberSelectionId = (row) => String(row?.kind || "member") + ":" + String(row?.id || "");
+	            const visibleOrganizationMemberSelectionIds = visibleOrganizationMemberRows
+	              .map((row) => getOrganizationMemberSelectionId(row))
+	              .filter(Boolean);
+	            const selectedVisibleOrganizationMemberIds = visibleOrganizationMemberSelectionIds.filter((memberId) => selectedOrganizationMemberIds.has(memberId));
+	            const allVisibleOrganizationMembersSelected = visibleOrganizationMemberSelectionIds.length > 0 && selectedVisibleOrganizationMemberIds.length === visibleOrganizationMemberSelectionIds.length;
+	            const hasPartialVisibleOrganizationMemberSelection = selectedVisibleOrganizationMemberIds.length > 0 && !allVisibleOrganizationMembersSelected;
+	            const toggleOrganizationMemberSelection = (memberId) => {
+	              const normalizedMemberId = String(memberId || "").trim();
+	              if (!normalizedMemberId) return;
+	              setSelectedOrganizationMemberIds((current) => {
+	                const next = new Set(current || []);
+	                if (next.has(normalizedMemberId)) {
+	                  next.delete(normalizedMemberId);
+	                } else {
+	                  next.add(normalizedMemberId);
+	                }
+	                return next;
+	              });
+	            };
+	            const toggleVisibleOrganizationMemberSelection = () => {
+	              if (visibleOrganizationMemberSelectionIds.length === 0) {
+	                return;
+	              }
+	              setSelectedOrganizationMemberIds((current) => {
+	                const next = new Set(current || []);
+	                if (allVisibleOrganizationMembersSelected) {
+	                  visibleOrganizationMemberSelectionIds.forEach((memberId) => next.delete(memberId));
+	                } else {
+	                  visibleOrganizationMemberSelectionIds.forEach((memberId) => next.add(memberId));
+	                }
+	                return next;
+	              });
+	            };
+	            const organizationMemberSortOptions = [
+	              { id: "user", label: "User (A-Z)", sortKey: "user", direction: "asc" },
+	              { id: "role", label: "Role", sortKey: "role", direction: "asc" },
+	              { id: "status", label: "Status", sortKey: "status", direction: "asc" },
+	              { id: "joined", label: "Recently Joined", sortKey: "joined", direction: "desc" },
+	            ];
+	            const organizationMemberFilterOptions = [
+	              { id: "all", label: "All Members", description: "Show members and pending invites" },
+	              { id: "active", label: "Active Members", description: "Only show active organization members" },
+	              { id: "pending", label: "Pending Invites", description: "Only show pending invitations" },
+	            ];
+	            const handleOrganizationMemberColumnSort = (sortKey) => {
+	              const normalizedSortKey = String(sortKey || "user").trim() || "user";
+	              setOrganizationMemberToolbarPopover("");
+	              setOrganizationMemberSortDirection((currentDirection) => {
+	                if (organizationMemberSort !== normalizedSortKey) {
+	                  return normalizedSortKey === "joined" ? "desc" : "asc";
+	                }
+	                return normalizeOrganizationTableSortDirection(currentDirection) === "asc" ? "desc" : "asc";
+	              });
+	              setOrganizationMemberSort(normalizedSortKey);
+	            };
+	            const renderOrganizationMembersTableColumnHeader = () => React.createElement("div", {
+	                className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-team-members-column-header playground-organization-members-column-header",
+	              },
+	              React.createElement("div", null,
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+	                    + (allVisibleOrganizationMembersSelected ? " is-selected" : "")
+	                    + (hasPartialVisibleOrganizationMemberSelection ? " is-partial" : ""),
+	                  role: "checkbox",
+	                  "aria-checked": allVisibleOrganizationMembersSelected ? "true" : (hasPartialVisibleOrganizationMemberSelection ? "mixed" : "false"),
+	                  "aria-label": allVisibleOrganizationMembersSelected ? "Deselect all visible members" : "Select all visible members",
+	                  onClick: (event) => {
+	                    event.preventDefault();
+	                    event.stopPropagation();
+	                    toggleVisibleOrganizationMemberSelection();
+	                  },
+	                })
+	              ),
+	              React.createElement("div", null, renderOrganizationSortableHeader("User", "user", organizationMemberSort, normalizedOrganizationMemberSortDirection, handleOrganizationMemberColumnSort)),
+	              React.createElement("div", null, renderOrganizationSortableHeader("Role", "role", organizationMemberSort, normalizedOrganizationMemberSortDirection, handleOrganizationMemberColumnSort)),
+	              React.createElement("div", null, renderOrganizationSortableHeader("Status", "status", organizationMemberSort, normalizedOrganizationMemberSortDirection, handleOrganizationMemberColumnSort)),
+	              React.createElement("div", null, renderOrganizationSortableHeader("Joined", "joined", organizationMemberSort, normalizedOrganizationMemberSortDirection, handleOrganizationMemberColumnSort)),
+	              React.createElement("div", null)
+	            );
+	            const renderOrganizationMembersStickyTableHeader = () => React.createElement("div", {
+	                className: "playground-agents-overview-sticky-table-header playground-team-members-sticky-table-header playground-organization-members-sticky-table-header",
+	              },
+	              React.createElement("div", {
+	                  className: "playground-develop-server-kind-table-toolbar playground-team-members-table-toolbar playground-team-members-toolbar-row playground-organization-members-toolbar-row",
+	                  ref: organizationMemberToolbarRef,
+	                },
+	                React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
+	                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                  React.createElement("input", {
+	                    type: "search",
+	                    value: organizationMemberSearchQuery,
+	                    onChange: (event) => setOrganizationMemberSearchQuery(event.target.value),
+	                    className: "playground-plugins-search",
+	                    placeholder: "Search members",
+	                  })
+	                ),
+	                React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+	                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-files-control-button is-bare is-backlog-sort" + (organizationMemberToolbarPopover === "sort" || organizationMemberSort !== "user" || normalizedOrganizationMemberSortDirection !== "asc" ? " is-active" : ""),
+	                      onClick: () => setOrganizationMemberToolbarPopover((current) => current === "sort" ? "" : "sort"),
+	                    },
+	                      React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                      React.createElement("span", null, "Sort")
+	                    ),
+	                    organizationMemberToolbarPopover === "sort"
+	                      ? renderOrganizationToolbarMenu({
+	                          menuId: "sort",
+	                          options: organizationMemberSortOptions,
+	                          activeSort: organizationMemberSort,
+	                          activeDirection: normalizedOrganizationMemberSortDirection,
+	                          setActiveSort: setOrganizationMemberSort,
+	                          setActiveDirection: setOrganizationMemberSortDirection,
+	                          close: () => setOrganizationMemberToolbarPopover(""),
+	                        })
+	                      : null
+	                  ),
+	                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-files-control-button is-bare is-backlog-filter" + (organizationMemberToolbarPopover === "filter" || organizationMemberFilter !== "all" ? " is-active" : ""),
+	                      onClick: () => setOrganizationMemberToolbarPopover((current) => current === "filter" ? "" : "filter"),
+	                    },
+	                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                      React.createElement("span", null, "Filter")
+	                    ),
+	                    organizationMemberToolbarPopover === "filter"
+	                      ? renderOrganizationToolbarMenu({
+	                          menuId: "filter",
+	                          options: organizationMemberFilterOptions,
+	                          activeValue: organizationMemberFilter,
+	                          activeSort: organizationMemberSort,
+	                          activeDirection: normalizedOrganizationMemberSortDirection,
+	                          setActiveValue: setOrganizationMemberFilter,
+	                          setActiveSort: setOrganizationMemberSort,
+	                          setActiveDirection: setOrganizationMemberSortDirection,
+	                          close: () => setOrganizationMemberToolbarPopover(""),
+	                        })
+	                      : null
+	                  )
+	                ),
+		                String(selectedOrganization?.type || "").trim().toLowerCase() !== "personal"
+		                  ? React.createElement("button", {
+		                      type: "button",
+		                      className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button",
+		                      onClick: () => {
+		                        if (!canInviteOrganization) {
+		                          return;
+		                        }
+		                        setOrganizationMemberToolbarPopover("");
+		                        setOrganizationPageInviteModalOpen(true);
+		                      },
+		                      disabled: !canInviteOrganization,
+		                      title: "Invite member",
+		                      "aria-label": "Invite member",
+		                    },
+	                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("span", null, "Invite Member")
+	                  )
+	                  : null
+	              )
+	            );
+	            const renderOrganizationMemberRowMenu = (row) => {
+	              const menuId = getOrganizationMemberSelectionId(row);
+	              if (!menuId || organizationMemberMenuId !== menuId || row?.kind !== "invitation" || !canManageOrganization) {
+	                return null;
+	              }
+	              const revokeActionId = "revoke-organization-invite:" + row.id;
+	              return React.createElement("div", {
+	                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	                },
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "tb-popup-row is-danger",
+	                  disabled: organizationPageActionId === revokeActionId,
+	                  onClick: () => {
+	                    setOrganizationMemberMenuId("");
+	                    handleRevokeOrganizationInvitation(row.id);
+	                  },
+	                },
+	                  React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                    React.createElement("span", null, organizationPageActionId === revokeActionId ? "Revoking..." : "Revoke")
+	                  )
+	                )
+	              );
+	            };
+	            return React.createElement("div", { className: "playground-team-detail-panel" },
+	              React.createElement("section", {
+	                  className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-team-grid-table-section playground-team-members-table-section playground-organization-members-table-section",
+	                },
+	                renderOrganizationMembersStickyTableHeader(),
+	                visibleOrganizationMemberRows.length > 0
+	                  ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
+	                      React.createElement("div", { className: "playground-project-overview-thread-list" },
+	                        renderOrganizationMembersTableColumnHeader(),
+	                        visibleOrganizationMemberRows.map((row) => {
+	                          const isInvitation = row.kind === "invitation";
+	                          const item = row.item || {};
+	                          const displayName = getOrganizationMemberDisplayName(row);
+	                          const detail = getOrganizationMemberDetail(row);
+	                          const joinedLabel = getOrganizationMemberJoinedLabel(row);
+	                          const memberSelectionId = getOrganizationMemberSelectionId(row);
+	                          const isOrganizationMemberSelected = selectedOrganizationMemberIds.has(memberSelectionId);
+	                          const menuOpen = organizationMemberMenuId === memberSelectionId;
+	                          return React.createElement("div", {
+	                              key: row.kind + ":" + row.id,
+	                              className: "playground-project-overview-threads-table-row",
+	                              onContextMenu: (event) => {
+	                                if (isInvitation && canManageOrganization) {
+	                                  event.preventDefault();
+	                                  setOrganizationMemberToolbarPopover("");
+	                                  setOrganizationMemberMenuId(memberSelectionId);
+	                                }
+	                              },
+	                            },
+	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+	                              React.createElement("button", {
+	                                type: "button",
+	                                className: "playground-agents-overview-select-checkbox" + (isOrganizationMemberSelected ? " is-selected" : ""),
+	                                role: "checkbox",
+	                                "aria-checked": isOrganizationMemberSelected ? "true" : "false",
+	                                "aria-label": "Select " + displayName,
+	                                onClick: (event) => {
+	                                  event.preventDefault();
+	                                  event.stopPropagation();
+	                                  toggleOrganizationMemberSelection(memberSelectionId);
+	                                },
+	                              })
+	                            ),
+	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
+	                              isInvitation
+	                                ? renderInvitationIdentity(item)
+	                                : renderMemberIdentity(item)
+	                            ),
+	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
+	                              React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, getOrganizationMemberRoleLabel(row))
+	                            ),
+	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-status" },
+	                              React.createElement("div", { className: "playground-agents-overview-table-value" }, getOrganizationMemberStatusLabel(row))
+	                            ),
+	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
+	                              React.createElement("div", { className: "playground-agents-overview-table-value" }, joinedLabel)
+	                            ),
+	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-organization-member-action-shell" },
+	                              isInvitation && canManageOrganization
+	                                ? React.createElement(React.Fragment, null,
+	                                    React.createElement("button", {
+	                                      type: "button",
+	                                      className: "playground-overview-table-action-button playground-team-member-action-button" + (menuOpen ? " is-open" : ""),
+	                                      onClick: (event) => {
+	                                        event.preventDefault();
+	                                        event.stopPropagation();
+	                                        setOrganizationMemberToolbarPopover("");
+	                                        setOrganizationMemberMenuId((current) => current === memberSelectionId ? "" : memberSelectionId);
+	                                      },
+	                                      onKeyDown: (event) => event.stopPropagation(),
+	                                      "aria-label": "Organization member actions for " + displayName,
+	                                      "aria-expanded": menuOpen ? "true" : "false",
+	                                    }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })),
+	                                    renderOrganizationMemberRowMenu(row)
+	                                  )
+	                                : null
+	                            )
+	                          );
+	                        })
+	                      )
+	                    )
+	                  : React.createElement("div", { className: "playground-plugins-empty" },
+	                      organizationPageLoading
+	                        ? "Loading members..."
+	                        : (normalizedOrganizationMemberSearchQuery || organizationMemberFilter !== "all" ? "No matching members found." : "No organization members yet.")
+	                    )
+	              )
+	            );
+	          };
 
           return React.createElement("div", { className: "playground-team-page", ref: organizationPageRef },
             React.createElement("div", { className: "playground-team-shell" },
@@ -198633,6 +200321,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
               group.latestThread = thread;
             }
           });
+          visibleThreadItems.forEach((thread) => {
+            const meta = getThreadMetronomeMetadata(thread);
+            const groupKey = getSidebarMetronomeRunGroupKey(meta);
+            const group = groupKey ? groupsByKey.get(groupKey) : null;
+            if (!group) {
+              return;
+            }
+            group.threads = mergeMetronomeRunEntryThreads(group.threads, [thread]);
+            if (resolveThreadSortTimestamp(thread) > resolveThreadSortTimestamp(group.latestThread)) {
+              group.latestThread = thread;
+            }
+          });
           optimisticEntries.forEach((entry) => {
             const groupKey = String(entry?.key || getSidebarMetronomeRunGroupKey({ metronomeId: entry?.metronomeId, runId: entry?.runId }) || "").trim();
             if (!groupKey) return;
@@ -198659,7 +200359,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             });
           });
           return entries;
-        }, [displayedThreadItems, metronomeRunStatusByKey, optimisticMetronomeRunEntries]);
+        }, [displayedThreadItems, metronomeRunStatusByKey, optimisticMetronomeRunEntries, visibleThreadItems]);
         const selectedMetronomeRunEntry = useMemo(() => {
           const selectedKey = String(metronomeRunTraceSelection?.key || "").trim();
           if (!selectedKey) {
@@ -200381,15 +202081,39 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   ? metadata.metronome
                   : {}),
                 metronomeId: String(selection.workflowId || run?.metronomeId || run?.workflowId || "").trim(),
-                metronomeName: String(selection.workflowName || "Metronome").trim() || "Metronome",
+                metronomeName: String(selection.workflowName || run?.workflowName || run?.metronomeName || "Metronome").trim() || "Metronome",
                 runId: String(selection.runId || run?.id || run?.runId || "").trim(),
                 nodeId: String(safeStep.nodeId || safeStep.node_id || "").trim(),
                 nodeLabel: String(safeStep.label || safeStep.nodeName || safeStep.nodeLabel || title || "").trim(),
                 nodeName: String(safeStep.label || safeStep.nodeName || safeStep.nodeLabel || title || "").trim(),
                 status: stepStatus || nextStatus,
               },
+              metronomeWorkflow: {
+                ...(metadata.metronomeWorkflow && typeof metadata.metronomeWorkflow === "object" && !Array.isArray(metadata.metronomeWorkflow)
+                  ? metadata.metronomeWorkflow
+                  : {}),
+                metronomeId: String(selection.workflowId || run?.metronomeId || run?.workflowId || "").trim(),
+                workflowId: String(selection.workflowId || run?.metronomeId || run?.workflowId || "").trim(),
+                metronomeName: String(selection.workflowName || run?.workflowName || run?.metronomeName || "Metronome").trim() || "Metronome",
+                workflowName: String(selection.workflowName || run?.workflowName || run?.metronomeName || "Metronome").trim() || "Metronome",
+                runId: String(selection.runId || run?.id || run?.runId || "").trim(),
+                workflowRunId: String(selection.runId || run?.id || run?.runId || "").trim(),
+                nodeId: String(safeStep.nodeId || safeStep.node_id || "").trim(),
+                nodeLabel: String(safeStep.label || safeStep.nodeName || safeStep.nodeLabel || title || "").trim(),
+                nodeName: String(safeStep.label || safeStep.nodeName || safeStep.nodeLabel || title || "").trim(),
+                status: stepStatus || nextStatus,
+                isOriginThread: false,
+              },
             },
           });
+        }
+
+        function collectMetronomeRunTraceChildThreads(run) {
+          const output = run?.output && typeof run.output === "object" ? run.output : {};
+          const runThreads = Array.isArray(output.threads) ? output.threads : [];
+          return getMetronomeRunTraceSteps(run)
+            .map((step) => buildMetronomeRunTraceChildThreadRecord(step, findMetronomeRunThreadForStep(step, runThreads), run))
+            .filter(Boolean);
         }
 
         function handleMetronomeRunTraceChildThreadSelect(threadId, thread, step, run) {
@@ -204019,6 +205743,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
               if (guardrailsSort === "creator") {
                 return getGuardrailCreatorLabel(left).localeCompare(getGuardrailCreatorLabel(right));
               }
+              if (guardrailsSort === "type") {
+                const leftType = isGuardrailSetReadonly(left) ? "Default" : "Custom";
+                const rightType = isGuardrailSetReadonly(right) ? "Default" : "Custom";
+                return leftType.localeCompare(rightType) || String(left?.name || "").localeCompare(String(right?.name || ""));
+              }
               const rightTime = new Date(right?.updatedAt || right?.createdAt || 0).getTime() || 0;
               const leftTime = new Date(left?.updatedAt || left?.createdAt || 0).getTime() || 0;
               return rightTime - leftTime;
@@ -205144,35 +206873,43 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
 
           const sortOptions = [
-            { id: "updated", label: "Updated" },
-            { id: "name", label: "Name" },
-            { id: "creator", label: "Creator" },
+            { id: "updated", label: "Recently Updated", description: "Show newest guardrail activity first" },
+            { id: "name", label: "Name", description: "Sort guardrail sets alphabetically" },
+            { id: "type", label: "Type", description: "Group default and custom sets" },
+            { id: "creator", label: "Creator", description: "Sort guardrail sets by creator" },
           ];
           const guardrailsSetFilterOptions = [
-            { id: "all", label: "All Sets" },
-            { id: "default", label: "Default Sets" },
-            { id: "custom", label: "Custom Sets" },
+            { id: "all", label: "All Sets", description: "Show default and custom sets together" },
+            { id: "default", label: "Default Sets", description: "Only show built-in guardrails" },
+            { id: "custom", label: "Custom Sets", description: "Only show custom guardrails" },
           ];
 
-          function renderGuardrailsToolbarMenu() {
-            const activeValue = guardrailsSort;
+          function renderGuardrailsToolbarMenu(menuId, options) {
             return React.createElement("div", {
-              className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide playground-files-toolbar-menu-align-right playground-guardrails-toolbar-menu",
+              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
             },
-              React.createElement("div", { className: "playground-files-toolbar-menu-title" }, "Sort by"),
               sortOptions.map((option) =>
                 React.createElement("button", {
                   key: option.id,
                   type: "button",
-                  className: "playground-files-toolbar-menu-item" + (activeValue === option.id ? " is-active" : ""),
+                  className: "tb-popup-row tb-popup-row-select" + ((menuId === "sort" ? guardrailsSort === option.id : guardrailsSetFilter === option.id) ? " selected" : ""),
                   onClick: () => {
-                    setGuardrailsSort(option.id);
+                    if (menuId === "sort") {
+                      setGuardrailsSort(option.id);
+                    } else {
+                      setGuardrailsSetFilter(option.id);
+                    }
                     setGuardrailsToolbarPopover("");
                   },
                 },
-                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, activeValue === option.id ? "•" : ""),
-                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                    React.createElement("span", null, option.label)
+                  React.createElement("span", { className: "tb-popup-check-slot" },
+                    (menuId === "sort" ? guardrailsSort === option.id : guardrailsSetFilter === option.id)
+                      ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                      : null
+                  ),
+                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                    React.createElement("span", null, option.label),
+                    option.description ? React.createElement("span", null, option.description) : null
                   )
                 )
               )
@@ -205180,84 +206917,259 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
 
           function renderGuardrailsTable() {
-            return React.createElement("div", { className: "playground-guardrails-table-shell" },
-              React.createElement("div", { className: "playground-guardrails-table" },
-                React.createElement("div", { className: "playground-guardrails-table-header" },
-                  React.createElement("span", null, "Set"),
-                  React.createElement("span", null, "Type"),
-                  React.createElement("span", null, "Creator"),
-                  React.createElement("span", null, "Updated"),
-                  React.createElement("span", null, "")
-                ),
-                filteredGuardrailSets.map((set) => {
-                  const selected = selectedGuardrailSet?.id === set?.id;
-                  const isDefaultSet = isGuardrailSetReadonly(set);
-                  return React.createElement("div", {
-                    key: set.id,
-                    role: "button",
-                    tabIndex: 0,
-                    className: "playground-guardrails-table-row" + (selected ? " is-selected" : ""),
-                    onClick: () => selectGuardrailSet(set.id),
-                    onKeyDown: (event) => handleGuardrailSetKeyDown(event, set.id),
-                  },
-                    React.createElement("div", { className: "playground-guardrails-set-cell" },
-                      React.createElement("div", { className: "playground-guardrails-set-copy" },
-                        React.createElement("span", { className: "playground-guardrails-set-title" }, set.name || "Untitled Guardrail Set")
-                        )
-                    ),
-                    React.createElement("span", { className: "playground-guardrails-kind-pill" + (isDefaultSet ? " is-default" : " is-custom") },
-                      isDefaultSet ? "Default" : "Custom"
-                    ),
-                    renderGuardrailCreatorCell(set),
-                    React.createElement("span", { className: "playground-guardrails-table-muted" }, formatGuardrailDate(set.updatedAt || set.createdAt)),
-                    isDefaultSet
-                      ? React.createElement("span", { className: "playground-guardrails-row-action-placeholder", "aria-hidden": "true" })
-                      : renderPlaygroundPlatformPopup({
-                          open: guardrailSetActionMenuId === set.id,
-                          shellRef: guardrailSetActionMenuId === set.id ? guardrailSetActionMenuRef : null,
-                          shellClassName: "playground-guardrails-action-menu-shell playground-guardrails-row-action-menu-shell",
-                          menuClassName: "playground-agents-detail-publish-menu playground-guardrails-action-menu",
-                          trigger: React.createElement("button", {
-                            type: "button",
-                            className: "playground-guardrails-row-action" + (guardrailSetActionMenuId === set.id ? " is-active" : ""),
-                            onClick: (event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              setGuardrailDetailActionsMenuOpen(false);
-                              setGuardrailSetActionMenuId((current) => current === set.id ? "" : set.id);
-                            },
-                            "aria-label": "Guardrail set actions",
-                            "aria-haspopup": "menu",
-                            "aria-expanded": guardrailSetActionMenuId === set.id ? "true" : "false",
-                          }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
-                          menuProps: {
-                            role: "menu",
-                            onClick: (event) => event.stopPropagation(),
-                          },
-                          children: renderGuardrailActionMenuItems(set.id),
-                        })
-                  );
+            const visibleGuardrailOverviewIds = filteredGuardrailSets.map((set) => String(set?.id || "").trim()).filter(Boolean);
+            const selectedVisibleGuardrailOverviewIds = visibleGuardrailOverviewIds.filter((setId) => selectedGuardrailsOverviewIds.has(setId));
+            const allVisibleGuardrailsSelected = visibleGuardrailOverviewIds.length > 0 && selectedVisibleGuardrailOverviewIds.length === visibleGuardrailOverviewIds.length;
+            const hasPartialVisibleGuardrailSelection = selectedVisibleGuardrailOverviewIds.length > 0 && !allVisibleGuardrailsSelected;
+            const toggleGuardrailOverviewSelection = (setId) => {
+              const normalizedSetId = String(setId || "").trim();
+              if (!normalizedSetId) return;
+              setSelectedGuardrailsOverviewIds((current) => {
+                const next = new Set(current || []);
+                if (next.has(normalizedSetId)) {
+                  next.delete(normalizedSetId);
+                } else {
+                  next.add(normalizedSetId);
+                }
+                return next;
+              });
+            };
+            const toggleVisibleGuardrailOverviewSelection = () => {
+              if (visibleGuardrailOverviewIds.length === 0) return;
+              setSelectedGuardrailsOverviewIds((current) => {
+                const next = new Set(current || []);
+                if (allVisibleGuardrailsSelected) {
+                  visibleGuardrailOverviewIds.forEach((setId) => next.delete(setId));
+                } else {
+                  visibleGuardrailOverviewIds.forEach((setId) => next.add(setId));
+                }
+                return next;
+              });
+            };
+            const renderGuardrailsOverviewSortIcon = (sortKey) => {
+              const isActive = guardrailsSort === sortKey;
+              const isDescending = isActive && sortKey === "updated";
+              const isAscending = isActive && !isDescending;
+              return React.createElement("span", {
+                  className: "playground-agents-overview-sort-icon"
+                    + (isActive ? " is-active" : "")
+                    + (isAscending ? " is-ascending" : "")
+                    + (isDescending ? " is-descending" : ""),
+                  "aria-hidden": "true",
+                },
+                React.createElement(ChevronsUpDown, {
+                  className: "playground-agents-overview-sort-icon-layer is-top",
+                  width: 14,
+                  height: 14,
+                  strokeWidth: 1.8,
+                }),
+                React.createElement(ChevronsUpDown, {
+                  className: "playground-agents-overview-sort-icon-layer is-bottom",
+                  width: 14,
+                  height: 14,
+                  strokeWidth: 1.8,
                 })
+              );
+            };
+            const renderGuardrailsOverviewSortableHeader = (label, sortKey) => {
+              const isActive = guardrailsSort === sortKey;
+              return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
+                React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-overview-column-sort-button"
+                    + (isActive ? " is-active" : "")
+                    + (isActive && sortKey === "updated" ? " is-descending" : "")
+                    + (isActive && sortKey !== "updated" ? " is-ascending" : ""),
+                  title: "Sort " + label,
+                  "aria-label": "Sort " + label,
+                  "aria-pressed": isActive ? "true" : "false",
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setGuardrailsSort(sortKey);
+                    setGuardrailsToolbarPopover("");
+                  },
+                }, renderGuardrailsOverviewSortIcon(sortKey))
+              );
+            };
+            const renderGuardrailsOverviewColumnHeader = () => React.createElement("div", {
+                className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-guardrails-overview-column-header",
+              },
+              React.createElement("div", null,
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+                    + (allVisibleGuardrailsSelected ? " is-selected" : "")
+                    + (hasPartialVisibleGuardrailSelection ? " is-partial" : ""),
+                  role: "checkbox",
+                  "aria-checked": allVisibleGuardrailsSelected ? "true" : (hasPartialVisibleGuardrailSelection ? "mixed" : "false"),
+                  "aria-label": allVisibleGuardrailsSelected ? "Deselect all visible guardrail sets" : "Select all visible guardrail sets",
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleVisibleGuardrailOverviewSelection();
+                  },
+                })
+              ),
+              React.createElement("div", null, renderGuardrailsOverviewSortableHeader("Set", "name")),
+              React.createElement("div", null, renderGuardrailsOverviewSortableHeader("Type", "type")),
+              React.createElement("div", null, renderGuardrailsOverviewSortableHeader("Creator", "creator")),
+              React.createElement("div", null, renderGuardrailsOverviewSortableHeader("Updated", "updated")),
+              React.createElement("div", null)
+            );
+            const renderGuardrailsOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", {
+                className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-guardrails-overview-sticky-table-header",
+              },
+              React.createElement("div", {
+                  className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-guardrails-overview-toolbar-row",
+                  ref: guardrailsToolbarRef,
+                },
+                React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell playground-guardrails-overview-search-shell" },
+                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("input", {
+                    type: "search",
+                    value: guardrailsSearchQuery,
+                    onChange: (event) => setGuardrailsSearchQuery(event.target.value),
+                    className: "playground-plugins-search",
+                    placeholder: "Search guardrails",
+                    "aria-label": "Search guardrails",
+                  })
+                ),
+                React.createElement("div", { className: "playground-plugins-toolbar-controls playground-guardrails-overview-controls" },
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button is-bare is-backlog-sort" + (guardrailsToolbarPopover === "sort" || guardrailsSort !== "updated" ? " is-active" : ""),
+                      onClick: () => {
+                        setGuardrailSetActionMenuId("");
+                        setGuardrailsToolbarPopover((current) => current === "sort" ? "" : "sort");
+                      },
+                      title: "Sort guardrails",
+                    },
+                      React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Sort")
+                    ),
+                    guardrailsToolbarPopover === "sort" ? renderGuardrailsToolbarMenu("sort", sortOptions) : null
+                  ),
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button is-bare is-backlog-filter" + (guardrailsToolbarPopover === "filter" || guardrailsSetFilter !== "all" ? " is-active" : ""),
+                      onClick: () => {
+                        setGuardrailSetActionMenuId("");
+                        setGuardrailsToolbarPopover((current) => current === "filter" ? "" : "filter");
+                      },
+                      title: "Filter guardrails",
+                    },
+                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Filter")
+                    ),
+                    guardrailsToolbarPopover === "filter" ? renderGuardrailsToolbarMenu("filter", guardrailsSetFilterOptions) : null
+                  )
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button playground-guardrails-overview-create-button",
+                  onClick: createGuardrailSet,
+                },
+                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "New Set")
+                )
+              ),
+              includeColumns ? renderGuardrailsOverviewColumnHeader() : null
+            );
+            return React.createElement("section", {
+                className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section playground-guardrails-overview-table-section",
+              },
+              React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-guardrails-overview-table" },
+                renderGuardrailsOverviewStickyTableHeader(false),
+                React.createElement("div", { className: "playground-project-overview-thread-list" },
+                  renderGuardrailsOverviewColumnHeader(),
+                  filteredGuardrailSets.map((set) => {
+                    const isDefaultSet = isGuardrailSetReadonly(set);
+                    const setId = String(set?.id || "").trim();
+                    const isSelected = selectedGuardrailsOverviewIds.has(setId);
+                    return React.createElement("div", {
+                      key: setId,
+                      role: "button",
+                      tabIndex: 0,
+                      className: "playground-project-overview-threads-table-row",
+                      onClick: () => selectGuardrailSet(setId),
+                      onKeyDown: (event) => handleGuardrailSetKeyDown(event, setId),
+                    },
+                      React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-agents-overview-select-checkbox" + (isSelected ? " is-selected" : ""),
+                          role: "checkbox",
+                          "aria-checked": isSelected ? "true" : "false",
+                          "aria-label": "Select " + (set.name || "guardrail set"),
+                          onClick: (event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            toggleGuardrailOverviewSelection(setId);
+                          },
+                          onKeyDown: (event) => event.stopPropagation(),
+                        })
+                      ),
+                      React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
+                        React.createElement("div", { className: "playground-agents-overview-name-cell playground-guardrails-overview-name-cell" },
+                          React.createElement("div", { className: "playground-agents-overview-name-copy" },
+                            React.createElement("div", { className: "playground-agents-overview-name-title" }, set.name || "Untitled Guardrail Set")
+                          )
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
+                        React.createElement("span", { className: "playground-guardrails-kind-pill" + (isDefaultSet ? " is-default" : " is-custom") },
+                          isDefaultSet ? "Default" : "Custom"
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
+                        renderGuardrailCreatorCell(set)
+                      ),
+                      React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
+                        React.createElement("span", { className: "playground-guardrails-table-muted" }, formatGuardrailDate(set.updatedAt || set.createdAt))
+                      ),
+                      React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-guardrails-overview-action-shell" },
+                        isDefaultSet
+                          ? null
+                          : renderPlaygroundPlatformPopup({
+                              open: guardrailSetActionMenuId === setId,
+                              shellRef: guardrailSetActionMenuId === setId ? guardrailSetActionMenuRef : null,
+                              shellClassName: "playground-guardrails-action-menu-shell playground-guardrails-row-action-menu-shell playground-tasks-toolbar-popup-shell",
+                              menuClassName: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu",
+                              trigger: React.createElement("button", {
+                                type: "button",
+                                className: "playground-overview-table-action-button" + (guardrailSetActionMenuId === setId ? " is-open" : ""),
+                                onClick: (event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  setGuardrailDetailActionsMenuOpen(false);
+                                  setGuardrailSetActionMenuId((current) => current === setId ? "" : setId);
+                                },
+                                "aria-label": "Guardrail set actions",
+                                "aria-haspopup": "menu",
+                                "aria-expanded": guardrailSetActionMenuId === setId ? "true" : "false",
+                              }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })),
+                              menuProps: {
+                                role: "menu",
+                                onClick: (event) => event.stopPropagation(),
+                              },
+                              children: renderGuardrailActionMenuItems(setId),
+                            })
+                      )
+                    );
+                  }),
+                  filteredGuardrailSets.length === 0
+                    ? React.createElement("div", { className: "playground-plugins-empty" }, "No guardrails found.")
+                    : null
+                )
               )
             );
           }
 
-          const listContent = filteredGuardrailSets.length === 0
-            ? React.createElement("div", { className: "playground-guardrails-empty" },
-                React.createElement("div", { className: "playground-guardrails-empty-icon" },
-                  React.createElement(Shield, { width: 18, height: 18, strokeWidth: 1.8 })
-                ),
-                React.createElement("div", { className: "playground-guardrails-empty-title" }, "No guardrails found"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-library-new-button playground-guardrails-empty-button",
-                  onClick: createGuardrailSet,
-                },
-                  React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "New Set")
-                )
-              )
-            : renderGuardrailsTable();
+          const listContent = renderGuardrailsTable();
           const isGuardrailsDetailPage = guardrailsPageMode === "detail" && selectedGuardrailSet;
           const guardrailsPageTitle = isGuardrailsDetailPage
             ? (selectedGuardrailSet.name || "Untitled Guardrail Set")
@@ -205340,7 +207252,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               React.createElement("section", { className: "playground-files-browser playground-guardrails-browser" },
                 guardrailVersionChangesState
                   ? null
-                  : React.createElement("div", { className: "playground-files-browser-header playground-guardrails-browser-header" },
+                  : React.createElement("div", { className: "playground-files-browser-header playground-guardrails-browser-header" + (!isGuardrailsDetailPage ? " playground-guardrails-overview-browser-header" : "") },
                     React.createElement("div", { className: "playground-files-library-header playground-guardrails-library-header" },
                     isGuardrailsDetailPage
                       ? React.createElement("button", {
@@ -205370,74 +207282,23 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           : guardrailsPageTitle
                       ),
                       isGuardrailsDetailPage
-                        ? guardrailVersionChangesState
-                          ? null
-                          : selectedGuardrailSetReadonly
-                          ? React.createElement("div", { className: "playground-guardrails-detail-actions" },
-                              React.createElement("span", { className: "playground-guardrails-readonly-pill" }, "Default Set")
-                            )
-                          : React.createElement("div", { className: "playground-guardrails-detail-actions" },
-                              renderGuardrailPublishSplitButton()
-                            )
-                        : React.createElement("div", { className: "playground-files-library-actions" },
-                            React.createElement("div", { className: "playground-files-library-search-anchor" },
-                              React.createElement("label", { className: "playground-files-library-search" },
-                                React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
-                                React.createElement("input", {
-                                  type: "text",
-                                  className: "playground-files-library-search-input",
-                                  placeholder: "Search guardrails",
-                                  value: guardrailsSearchQuery,
-                                  onChange: (event) => setGuardrailsSearchQuery(event.target.value),
-                                })
-                              )
-                            ),
-                            React.createElement("div", { className: "playground-files-library-new-anchor" },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-files-library-new-button",
-                                onClick: createGuardrailSet,
-                              },
-                                React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
-                                React.createElement("span", null, "New Set")
-                              )
-                            )
-                          )
-                    ),
-                    isGuardrailsDetailPage
-                      ? null
-                      : React.createElement("div", { className: "playground-files-library-nav-row", ref: guardrailsToolbarRef },
-                          React.createElement("div", { className: "playground-files-library-tabs content-mode-switch playground-guardrails-library-tabs", role: "tablist", "aria-label": "Guardrail set scope" },
-                            guardrailsSetFilterOptions.map((option) =>
-                              React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                role: "tab",
-                                "aria-selected": guardrailsSetFilter === option.id ? "true" : "false",
-                                className: "playground-files-library-tab" + (guardrailsSetFilter === option.id ? " is-active" : ""),
-                                onClick: () => {
-                                  setGuardrailsSetFilter(option.id);
-                                  setGuardrailsToolbarPopover("");
-                                },
-                              }, option.label)
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-files-library-controls" },
-                            React.createElement("div", { className: "playground-files-library-control-anchor" },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-files-library-icon-button" + (guardrailsToolbarPopover === "sort" || guardrailsSort !== "updated" ? " is-active" : ""),
-                                onClick: () => setGuardrailsToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                                title: "Sort guardrails",
-                                "aria-label": "Sort guardrails",
-                              }, React.createElement(ArrowUpDown, { width: 19, height: 19, strokeWidth: 1.8 })),
-                              guardrailsToolbarPopover === "sort" ? renderGuardrailsToolbarMenu() : null
-                            )
-                          )
-                        )
-                  )
+	                        ? guardrailVersionChangesState
+	                          ? null
+	                          : selectedGuardrailSetReadonly
+	                          ? React.createElement("div", { className: "playground-guardrails-detail-actions" },
+	                              React.createElement("span", { className: "playground-guardrails-readonly-pill" }, "Default Set")
+	                            )
+	                          : React.createElement("div", { className: "playground-guardrails-detail-actions" },
+	                              renderGuardrailPublishSplitButton()
+	                            )
+	                        : null
+	                    ),
+	                    isGuardrailsDetailPage
+	                      ? null
+	                      : null
+	                  )
                 ),
-                React.createElement("div", { className: "playground-files-browser-body playground-guardrails-browser-body" },
+                React.createElement("div", { className: "playground-files-browser-body playground-guardrails-browser-body" + (!isGuardrailsDetailPage ? " playground-guardrails-overview-browser-body" : "") },
                   isGuardrailsDetailPage
                     ? guardrailVersionChangesState
                       ? React.createElement("div", { className: "playground-guardrails-detail playground-guardrails-version-changes-shell" },
@@ -205540,9 +207401,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           )
                         )
                       )
-                    : React.createElement("div", { className: "playground-guardrails-layout" },
-                        React.createElement("div", { className: "playground-guardrails-list-panel" }, listContent)
-                      )
+	                    : React.createElement("div", { className: "playground-plugins-page playground-guardrails-layout playground-team-overview-page playground-agents-overview-page playground-guardrails-overview-shell is-develop-configure-page" },
+	                        listContent
+	                      )
                 )
               )
               , renderGuardrailVersionModal()
@@ -207759,7 +209620,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function renderExpandedSidebarContent() {
           const shouldRenderSidebarThreads = sidebarWorkspaceMode === "work";
-          const shouldShowSidebarThreadSection = shouldRenderSidebarThreads && (isThreadsLoading || pinnedThreadItems.length > 0 || baseThreadItems.length > 0);
+          const shouldShowSidebarThreadSection = shouldRenderSidebarThreads && (isThreadsLoading || pinnedThreadItems.length > 0 || baseThreadItems.length > 0 || displayedSidebarThreadEntries.length > 0);
           const sidebarNavigationItems = getSidebarNavigationItems();
           const sidebarFooterNavigationItems = getSidebarFooterNavigationItems();
           const sidebarOrganizationDisplay = getActiveSidebarOrganizationDisplay();
