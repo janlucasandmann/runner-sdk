@@ -43860,6 +43860,98 @@ ${METRONOME_PAGE_CSS}
         height: 14px;
       }
 
+      .playground-project-overview-threads-section.playground-agents-overview-list-section .playground-project-overview-threads-table-header,
+      .playground-project-overview-threads-section.playground-agents-overview-list-section .playground-project-overview-threads-table-row {
+        grid-template-columns: 21px minmax(0, 1.3fr) minmax(0, 0.95fr) minmax(0, 0.95fr) minmax(0, 0.9fr) minmax(86px, 0.62fr) 28px;
+        gap: 12px;
+        padding-right: 0;
+      }
+
+      .playground-project-overview-threads-section.playground-agents-overview-table-section {
+        position: relative;
+        isolation: isolate;
+        overflow: visible !important;
+      }
+
+      .playground-project-overview-threads-section.playground-agents-overview-table-section::before {
+        content: none;
+      }
+
+      .playground-project-overview-threads-section .playground-thread-overview-list-table {
+        position: relative;
+        isolation: isolate;
+        width: 100%;
+        margin: 0 0 24px;
+        padding: 0 18px 6px;
+        background: rgba(255, 255, 255, 0.075);
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 15px;
+        overflow: visible !important;
+        box-sizing: border-box;
+      }
+
+      .playground-project-overview-threads-section .playground-project-overview-threads-sticky-table-header {
+        position: relative;
+        z-index: 240;
+        margin: 0 -18px;
+        padding: 12px 18px 0;
+        border-radius: 15px 15px 0 0;
+        background: #121212;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-project-overview-threads-section .playground-project-overview-threads-toolbar {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        gap: 10px;
+        width: 100%;
+        margin: 0;
+        padding: 0 0 12px;
+        border-bottom: 0;
+      }
+
+      .playground-project-overview-threads-section .playground-project-overview-threads-toolbar .playground-plugins-search-shell {
+        flex: 0 1 340px;
+        width: min(340px, 100%);
+        min-width: min(220px, 100%);
+        max-width: 340px;
+        background: rgba(255, 255, 255, 0.025) !important;
+      }
+
+      .playground-project-overview-threads-section .playground-project-overview-threads-toolbar .playground-plugins-toolbar-controls {
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+      }
+
+      .playground-project-overview-threads-section .playground-project-overview-threads-toolbar .playground-project-overview-toolbar-action {
+        flex: 0 0 auto;
+        margin-left: auto;
+      }
+
+      .playground-project-overview-threads-section .playground-thread-overview-list-table .playground-project-overview-thread-list {
+        width: calc(100% + 24px);
+        margin-left: -12px;
+        padding: 0 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background: #000;
+        overflow: visible !important;
+        box-sizing: border-box;
+      }
+
+      .playground-project-overview-threads-section .playground-thread-overview-list-table .playground-project-overview-threads-table-header {
+        padding-top: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-threads-section.playground-agents-overview-list-section .playground-project-overview-threads-table-row.is-selected {
+        background: rgba(255, 255, 255, 0.025);
+      }
+
       .playground-resources-page.is-develop-configure-page.is-computers-view .playground-environments-home-content {
         width: min(100%, var(--playground-centered-page-max-width));
         max-width: var(--playground-centered-page-max-width);
@@ -46067,6 +46159,141 @@ ${METRONOME_PAGE_CSS}
 		        padding-top: 12px;
 		        padding-bottom: 12px;
 		        overflow: visible !important;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section.is-develop-server-kind-list {
+		        z-index: 3;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-develop-resource-overview-sticky-table-header {
+		        pointer-events: auto;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-develop-resource-overview-toolbar-row {
+		        position: relative;
+		        z-index: 501;
+		        display: flex !important;
+		        align-items: center;
+		        justify-content: flex-start;
+		        flex-direction: row !important;
+		        flex-wrap: nowrap !important;
+		        gap: 10px;
+		        width: 100%;
+		        padding: 0 0 12px !important;
+		        margin: 0 !important;
+		        border-bottom: 0 !important;
+		        background: transparent;
+		        pointer-events: auto;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-develop-resource-overview-toolbar-row > *,
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-develop-resource-overview-toolbar-row .playground-develop-server-kind-table-controls,
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-develop-resource-overview-toolbar-row .playground-plugins-toolbar-controls,
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-develop-resource-overview-toolbar-row .playground-files-toolbar-anchor,
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-develop-resource-overview-toolbar-row .playground-develop-server-kind-search-shell,
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-develop-resource-overview-toolbar-row .playground-plugins-search,
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-develop-resource-overview-toolbar-row button {
+		        position: relative;
+		        z-index: 502;
+		        pointer-events: auto;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-develop-resource-overview-toolbar-row .playground-develop-server-kind-table-controls {
+		        flex: 1 1 auto;
+		        width: auto;
+		        min-width: 0;
+		        margin-left: 0;
+		        justify-content: flex-start;
+		        align-items: center;
+		        flex-wrap: nowrap;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-develop-resource-overview-toolbar-row .playground-develop-server-kind-search-shell {
+		        flex: 0 1 340px;
+		        width: min(340px, 100%);
+		        min-width: min(280px, 100%);
+		        max-width: 340px;
+		        background: rgba(255, 255, 255, 0.025) !important;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-develop-resource-overview-toolbar-row .playground-agents-overview-toolbar-create-button {
+		        flex: 0 0 auto;
+		        margin-left: auto;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-tasks-toolbar-popup-shell {
+		        z-index: 520;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-tasks-toolbar-popup-menu {
+		        z-index: 521;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-project-overview-threads-table-header,
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-project-overview-threads-table-row {
+		        grid-template-columns: 21px minmax(240px, 1.1fr) minmax(124px, 0.46fr) minmax(112px, 0.38fr) minmax(112px, 0.38fr) minmax(112px, 0.38fr) 28px !important;
+		        gap: 12px;
+		        width: 100%;
+		        max-width: 100%;
+		        box-sizing: border-box;
+		        padding-right: 0;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-project-overview-threads-table-header.playground-develop-resource-overview-column-header {
+		        margin-top: 12px;
+		        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-project-overview-thread-cell,
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-resources-overview-name-title,
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-agents-overview-table-value {
+		        min-width: 0;
+		        overflow: hidden;
+		        text-overflow: ellipsis;
+		        white-space: nowrap;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-resources-overview-name-cell {
+		        gap: 8px;
+		        padding-right: 0;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-resources-overview-table-icon {
+		        width: 20px;
+		        height: 20px;
+		        flex-basis: 20px;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-resources-overview-table-icon svg {
+		        width: 16px;
+		        height: 16px;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-resources-overview-name-copy {
+		        gap: 0;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-resources-overview-name-description {
+		        display: none;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-project-overview-threads-table-header > div:first-child,
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-project-overview-thread-cell.is-select {
+		        display: flex;
+		        align-items: center;
+		        justify-content: center;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-project-overview-thread-cell.is-actions,
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-project-overview-threads-table-header > div:last-child {
+		        justify-self: end;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-project-overview-thread-cell.is-actions {
+		        width: 100%;
+		        display: flex;
+		        align-items: center;
+		        justify-content: flex-end;
 		      }
 
 		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-table-title,
@@ -55178,7 +55405,8 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       const FIREBASE_STORAGE_BUCKET = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "testbaseai.firebasestorage.app")};
       const FIREBASE_MESSAGING_SENDER_ID = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "65067873832")};
       const FIREBASE_APP_ID = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:65067873832:web:15722955fece43cdf9671d")};
-      const SEARCH_THREAD_FETCH_LIMIT = 240;
+      const SEARCH_THREAD_FETCH_LIMIT = 20;
+      const SEARCH_THREAD_EXPANDED_FETCH_LIMIT = 240;
       const SETTINGS_CT_PER_DOLLAR = 100;
       const PLAYGROUND_SERVER_IDLE_RATE_PER_MINUTE = {
         website: 0.000005,
@@ -55428,7 +55656,10 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 
       function loadPlaygroundCodeEditorModule() {
         if (!playgroundCodeEditorModuleLoader) {
-          playgroundCodeEditorModuleLoader = import("@monaco-editor/react").catch(() => null);
+          playgroundCodeEditorModuleLoader = import("@monaco-editor/react").catch((error) => {
+            playgroundCodeEditorModuleLoader = null;
+            throw error;
+          });
         }
         return playgroundCodeEditorModuleLoader;
       }
@@ -58512,6 +58743,16 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
               displayThreadTitle: thread?.title || "Untitled thread",
             };
         const threadId = String(safeThread?.id || thread?.id || "").trim();
+        const useAgentsOverviewTable = Boolean(options.useAgentsOverviewTable);
+        const selectedThreadIds = options.selectedIds instanceof Set
+          ? options.selectedIds
+          : new Set(Array.isArray(options.selectedIds) ? options.selectedIds.map((id) => String(id || "").trim()).filter(Boolean) : []);
+        const isThreadSelected = Boolean(threadId && selectedThreadIds.has(threadId));
+        const isThreadActionOpen = Boolean(
+          typeof options.isActionOpen === "function"
+            ? options.isActionOpen(threadId, safeThread, thread)
+            : false
+        );
         const sourceLabel = String(
           typeof options.getSourceLabel === "function"
             ? options.getSourceLabel(thread, safeThread)
@@ -58557,13 +58798,23 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           }
           openThread();
         };
+        const toggleThreadSelection = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (!threadId || typeof options.onToggleSelection !== "function") {
+            return;
+          }
+          options.onToggleSelection(threadId, safeThread, thread);
+        };
 
         return React.createElement("div", {
             key: threadId || displayThreadTitle,
-            className: "playground-project-overview-threads-table-row",
+            className: "playground-project-overview-threads-table-row"
+              + (isThreadSelected ? " is-selected" : ""),
             role: "button",
             tabIndex: 0,
             onClick: openThread,
+            onContextMenu: threadId ? openThreadActions : undefined,
             onKeyDown: (event) => {
               if ((event.key === "Enter" || event.key === " ") && threadId) {
                 event.preventDefault();
@@ -58571,7 +58822,20 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
               }
             },
           },
-          React.createElement("div", { className: "playground-project-overview-thread-cell" },
+          useAgentsOverviewTable
+            ? React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-overview-select-checkbox" + (isThreadSelected ? " is-selected" : ""),
+                  role: "checkbox",
+                  "aria-checked": isThreadSelected ? "true" : "false",
+                  "aria-label": (isThreadSelected ? "Deselect " : "Select ") + (displayThreadTitle || "thread"),
+                  onClick: toggleThreadSelection,
+                  onKeyDown: (event) => event.stopPropagation(),
+                })
+              )
+            : null,
+          React.createElement("div", { className: "playground-project-overview-thread-cell" + (useAgentsOverviewTable ? " is-name" : "") },
             React.createElement("div", { className: "playground-plugin-row-title" }, displayThreadTitle || "Untitled thread")
           ),
           React.createElement("div", {
@@ -58597,14 +58861,23 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             className: "playground-project-overview-thread-cell is-date",
             title: threadDateLabel,
           }, threadDateLabel),
-          React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
+          React.createElement("div", {
+            className: "playground-project-overview-thread-cell is-actions"
+              + (useAgentsOverviewTable ? " playground-overview-table-action-cell" : ""),
+          },
             threadId
               ? React.createElement("button", {
                   type: "button",
-                  className: "playground-project-overview-thread-menu-button",
+                  className: useAgentsOverviewTable
+                    ? "playground-overview-table-action-button" + (isThreadActionOpen ? " is-open" : "")
+                    : "playground-project-overview-thread-menu-button",
                   "aria-label": "Thread actions",
+                  "aria-expanded": isThreadActionOpen ? "true" : "false",
                   onClick: openThreadActions,
-                }, React.createElement(Ellipsis, { width: 15, height: 15, strokeWidth: 1.8 }))
+                  onContextMenu: openThreadActions,
+                }, useAgentsOverviewTable
+                    ? React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
+                    : React.createElement(Ellipsis, { width: 15, height: 15, strokeWidth: 1.8 }))
               : null
           )
         );
@@ -58615,18 +58888,55 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         rowOptions = {},
       } = {}) {
         const safeThreads = Array.isArray(threads) ? threads : [];
-        return React.createElement("div", { className: "playground-project-overview-threads-table" },
-          React.createElement("div", { className: "playground-project-overview-threads-table-header" },
+        const useAgentsOverviewTable = Boolean(rowOptions.useAgentsOverviewTable);
+        const selectable = Boolean(rowOptions.selectable);
+        const allVisibleSelected = Boolean(rowOptions.allVisibleSelected);
+        const partialSelection = Boolean(rowOptions.partialSelection);
+        const tableClassName = "playground-project-overview-threads-table"
+          + (useAgentsOverviewTable ? " playground-evaluations-runs-table playground-agents-overview-list-table playground-thread-overview-list-table" : "");
+        const headerClassName = "playground-project-overview-threads-table-header"
+          + (useAgentsOverviewTable ? " playground-agents-overview-column-header playground-thread-overview-column-header" : "");
+        const headerNode = React.createElement("div", { className: headerClassName },
+            selectable
+              ? React.createElement("div", null,
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+                      + (allVisibleSelected ? " is-selected" : "")
+                      + (partialSelection ? " is-partial" : ""),
+                    role: "checkbox",
+                    "aria-checked": allVisibleSelected ? "true" : (partialSelection ? "mixed" : "false"),
+                    "aria-label": allVisibleSelected ? "Deselect all visible threads" : "Select all visible threads",
+                    onClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      if (typeof rowOptions.onToggleVisibleSelection === "function") {
+                        rowOptions.onToggleVisibleSelection();
+                      }
+                    },
+                  })
+                )
+              : null,
             React.createElement("div", null, "Title"),
             React.createElement("div", null, "Source"),
             React.createElement("div", null, "Environment"),
             React.createElement("div", null, "Triggered by"),
             React.createElement("div", null, "Date"),
             React.createElement("div", null)
-          ),
-          React.createElement("div", { className: "playground-project-overview-thread-list" },
-            safeThreads.map((thread) => renderPlaygroundThreadOverviewRow(thread, rowOptions))
-          )
+          );
+        const rowNodes = safeThreads.map((thread) => renderPlaygroundThreadOverviewRow(thread, rowOptions));
+        if (useAgentsOverviewTable) {
+          return React.createElement("div", { className: tableClassName },
+            rowOptions.toolbarContent || null,
+            React.createElement("div", { className: "playground-project-overview-thread-list" },
+              headerNode,
+              rowNodes
+            )
+          );
+        }
+        return React.createElement("div", { className: tableClassName },
+          headerNode,
+          React.createElement("div", { className: "playground-project-overview-thread-list" }, rowNodes)
         );
       }
 
@@ -59649,6 +59959,15 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           speed: "Very Fast",
         },
         {
+          id: "grok-4.5",
+          label: "Grok 4.5",
+          description: "xAI frontier model for coding, agentic tasks, and knowledge work.",
+          intelligence: "Highest",
+          contextWindow: "500k",
+          speed: "Fast",
+          providerType: "xai",
+        },
+        {
           id: "gemini-3-flash",
           label: "Gemini 3 Flash",
           description: "Fast default model for broad agent execution.",
@@ -60638,10 +60957,12 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         if (modelId.startsWith("kimi-") || modelId.includes("moonshot")) return "kimi";
         if (modelId.startsWith("glm-") || modelId.includes("zai") || modelId.includes("zhipu")) return "zai";
         if (modelId.startsWith("qwen") || modelId.includes("alibaba/qwen")) return "qwen";
+        if (modelId.startsWith("grok-") || modelId.includes("xai")) return "xai";
         if (explicitProvider) {
           if (explicitProvider.includes("anthropic")) return "anthropic";
           if (explicitProvider.includes("google") || explicitProvider.includes("gemini")) return "google";
           if (explicitProvider.includes("openai")) return "openai";
+          if (explicitProvider.includes("xai") || explicitProvider.includes("grok")) return "xai";
           if (explicitProvider.includes("deepseek")) return "deepseek";
           if (explicitProvider.includes("minimax")) return "minimax";
           if (explicitProvider.includes("moonshot") || explicitProvider.includes("kimi") || explicitProvider.includes("cloudflare")) return "kimi";
@@ -60661,6 +60982,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         if (providerType === "anthropic") return "Anthropic";
         if (providerType === "google") return "Google";
         if (providerType === "openai") return "OpenAI";
+        if (providerType === "xai") return "xAI";
         if (providerType === "deepseek") return "DeepSeek";
         if (providerType === "minimax") return "MiniMax";
         if (providerType === "kimi") return "Moonshot";
@@ -60675,7 +60997,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           return "custom";
         }
         const providerType = getPlaygroundAgentModelProviderType(model);
-        if (providerType === "anthropic" || providerType === "google" || providerType === "openai" || providerType === "deepseek" || providerType === "minimax" || providerType === "kimi" || providerType === "zai" || providerType === "qwen") {
+        if (providerType === "anthropic" || providerType === "google" || providerType === "openai" || providerType === "xai" || providerType === "deepseek" || providerType === "minimax" || providerType === "kimi" || providerType === "zai" || providerType === "qwen") {
           return providerType;
         }
         const normalizedSource = String(model?.source || "").trim().toLowerCase();
@@ -60701,6 +61023,9 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         }
         if (providerType === "openai") {
           return { src: "/img/05-model-provider-icons/openai.svg", alt: "OpenAI", className: "is-openai" };
+        }
+        if (providerType === "xai") {
+          return { src: "/img/05-model-provider-icons/xai.svg", alt: "xAI", className: "is-openai" };
         }
         if (providerType === "deepseek") {
           return { src: "/img/05-model-provider-icons/deepseek.png", alt: "DeepSeek", className: "" };
@@ -60731,6 +61056,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         "gpt-5.4": { input: 2.5, cached: 0.25, output: 15.0 },
         "gpt-5.4-mini": { input: 0.75, cached: 0.075, output: 4.5 },
         "gpt-5.4-nano": { input: 0.2, cached: 0.02, output: 1.25 },
+        "grok-4.5": { input: 2.0, cached: 2.0, output: 6.0 },
         "gemini-3-flash": { input: 0.5, cached: 0.05, output: 3.0 },
         "gemini-3-1-flash": { input: 0.5, cached: 0.05, output: 3.0 },
         "gemini-3-1-pro": { input: 2.0, cached: 0.2, output: 12.0 },
@@ -86136,6 +86462,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [resourcesOverviewSort, setResourcesOverviewSort] = useState("name");
         const [resourcesOverviewSortDirection, setResourcesOverviewSortDirection] = useState("asc");
         const [resourcesOverviewHomeTab, setResourcesOverviewHomeTab] = useState("general");
+        const [selectedOverviewServerResourceIds, setSelectedOverviewServerResourceIds] = useState(() => new Set());
         const [selectedOverviewComputerIds, setSelectedOverviewComputerIds] = useState(() => new Set());
         const normalizedResourceBillingPreferences = normalizeDemoSettingsBillingPreferences(resourceBillingPreferences);
         const [loadingEnvironmentId, setLoadingEnvironmentId] = useState("");
@@ -112723,6 +113050,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             getOverviewResourceTimestamp(item?.updatedAt || item?.metadata?.updatedAt || item?.createdAt || item?.metadata?.createdAt || "");
           const getOverviewResourceSortValue = (item, sortKey) => {
             switch (sortKey) {
+              case "type":
+                return isServersMode ? getEmbeddedServerKindLabel(item) : getOverviewResourceProfileLabel(item);
+              case "published":
+                return isServersMode ? (isOverviewResourcePublished(item) ? 1 : 0) : 0;
               case "profile":
                 return getOverviewResourceProfileLabel(item);
               case "created":
@@ -112826,6 +113157,46 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 visibleOverviewComputerIds.forEach((computerId) => next.delete(computerId));
               } else {
                 visibleOverviewComputerIds.forEach((computerId) => next.add(computerId));
+              }
+              return next;
+            });
+          };
+          const getOverviewServerResourceSelectionId = (item) => {
+            const resourceId = String(item?.id || "").trim();
+            if (!resourceId) {
+              return "";
+            }
+            return (item?.resourceType === "database" ? "database" : "server") + ":" + resourceId;
+          };
+          const visibleOverviewServerResourceIds = isServersMode
+            ? overviewItems.map(getOverviewServerResourceSelectionId).filter(Boolean)
+            : [];
+          const selectedVisibleOverviewServerResourceIds = visibleOverviewServerResourceIds.filter((resourceId) => selectedOverviewServerResourceIds.has(resourceId));
+          const allVisibleOverviewServerResourcesSelected = visibleOverviewServerResourceIds.length > 0 && selectedVisibleOverviewServerResourceIds.length === visibleOverviewServerResourceIds.length;
+          const hasPartialVisibleOverviewServerResourceSelection = selectedVisibleOverviewServerResourceIds.length > 0 && !allVisibleOverviewServerResourcesSelected;
+          const toggleOverviewServerResourceSelection = (resourceSelectionId) => {
+            const normalizedResourceSelectionId = String(resourceSelectionId || "").trim();
+            if (!normalizedResourceSelectionId) return;
+            setSelectedOverviewServerResourceIds((current) => {
+              const next = new Set(current || []);
+              if (next.has(normalizedResourceSelectionId)) {
+                next.delete(normalizedResourceSelectionId);
+              } else {
+                next.add(normalizedResourceSelectionId);
+              }
+              return next;
+            });
+          };
+          const toggleVisibleOverviewServerResourceSelection = () => {
+            if (visibleOverviewServerResourceIds.length === 0) {
+              return;
+            }
+            setSelectedOverviewServerResourceIds((current) => {
+              const next = new Set(current || []);
+              if (allVisibleOverviewServerResourcesSelected) {
+                visibleOverviewServerResourceIds.forEach((resourceId) => next.delete(resourceId));
+              } else {
+                visibleOverviewServerResourceIds.forEach((resourceId) => next.add(resourceId));
               }
               return next;
             });
@@ -113360,6 +113731,55 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               renderOverviewResourceActionCell(item)
             );
           };
+          const renderServerOverviewGridRow = (item) => {
+            const createdAt = getOverviewResourceCreatedAt(item);
+            const lastUsedAt = getOverviewResourceLastUsedAt(item);
+            const itemName = item?.name || "Untitled Server";
+            const isPublished = isOverviewResourcePublished(item);
+            const resourceSelectionId = getOverviewServerResourceSelectionId(item);
+            const isOverviewServerResourceSelected = resourceSelectionId && selectedOverviewServerResourceIds.has(resourceSelectionId);
+            return React.createElement("div", {
+                key: resourceSelectionId || item.id,
+                tabIndex: 0,
+                role: "button",
+                className: "playground-project-overview-threads-table-row",
+                "aria-label": "Open " + itemName,
+                onClick: () => openOverviewResourceItem(item),
+                onContextMenu: (event) => openServerResourceActionMenu(event, item, { context: true }),
+                onKeyDown: (event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openOverviewResourceItem(item);
+                  }
+                },
+              },
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-overview-select-checkbox" + (isOverviewServerResourceSelected ? " is-selected" : ""),
+                  role: "checkbox",
+                  "aria-checked": isOverviewServerResourceSelected ? "true" : "false",
+                  "aria-label": "Select " + itemName,
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleOverviewServerResourceSelection(resourceSelectionId);
+                  },
+                  onKeyDown: (event) => event.stopPropagation(),
+                })
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-name" }, renderOverviewResourceNameCell(item)),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-type" },
+                React.createElement("div", { className: "playground-agents-overview-table-value" }, getEmbeddedServerKindLabel(item))
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-status" },
+                React.createElement("div", { className: "playground-agents-overview-table-value playground-resources-overview-published" + (isPublished ? " is-yes" : "") }, isPublished ? "Yes" : "No")
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, renderOverviewDateCell(createdAt)),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, renderOverviewDateCell(lastUsedAt, "Never")),
+              renderOverviewResourceActionCell(item, "div", { openLeft: true })
+            );
+          };
           const renderComputerProfilesTable = () => (
             React.createElement("div", { className: "playground-agents-overview-table-shell is-static" },
               React.createElement("table", { className: "playground-agents-overview-table" },
@@ -113715,11 +114135,28 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 			                React.createElement("span", null, "New Computer")
 			              )
 			            : null;
+			          const serverOverviewCreateButton = isServersMode && normalizedEmbeddedServerKind !== "voice_agent"
+			            ? React.createElement("button", {
+			                type: "button",
+			                className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button playground-resources-overview-create-button",
+			                onClick: () => {
+			                  setResourcesOverviewToolbarPopover("");
+			                  handleCreateServer(normalizedEmbeddedServerKind);
+			                },
+			                title: "Create " + (embeddedServerKindLabel || "server"),
+			                "aria-label": "Create " + (embeddedServerKindLabel || "server"),
+			              },
+			                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+			                React.createElement("span", null, "New " + (embeddedServerKindLabel || "Server"))
+			              )
+			            : null;
 			          const overviewSearchSortFilterRow = React.createElement("div", {
-			              className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar" + (!isServersMode ? " playground-computers-overview-toolbar-row" : ""),
+			              className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar"
+			                + (!isServersMode ? " playground-computers-overview-toolbar-row" : "")
+			                + (isDevelopServerKindOverview ? " playground-develop-resource-overview-toolbar-row" : ""),
 			              ref: resourcesOverviewToolbarRef,
 			            },
-			            isServersMode
+			            isServersMode && !isDevelopServerKindOverview
 			              ? React.createElement("h2", { className: "playground-develop-server-metrics-title playground-develop-server-kind-table-title" }, "All " + developConfigureResourcesLabel)
 			              : null,
 			            React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
@@ -113806,7 +114243,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 				              )
 			            )
 			            ),
-			            !isServersMode ? computerOverviewCreateButton : null
+			            !isServersMode ? computerOverviewCreateButton : (isDevelopServerKindOverview ? serverOverviewCreateButton : null)
 			          );
 			          const handleComputersOverviewColumnSort = (sortKey) => {
 			            const normalizedSortKey = String(sortKey || "name").trim() || "name";
@@ -113894,9 +114331,36 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 			          const renderComputersOverviewStickyTableHeader = () => React.createElement("div", { className: "playground-computers-overview-sticky-table-header" },
 			            overviewSearchSortFilterRow
 			          );
+			          const renderServerOverviewTableColumnHeader = () => React.createElement("div", { className: "playground-project-overview-threads-table-header playground-develop-resource-overview-column-header" },
+			                  React.createElement("div", null,
+			                    React.createElement("button", {
+			                      type: "button",
+			                      className: "playground-agents-overview-select-checkbox playground-develop-resource-overview-select-all-checkbox"
+			                        + (allVisibleOverviewServerResourcesSelected ? " is-selected" : "")
+			                        + (hasPartialVisibleOverviewServerResourceSelection ? " is-partial" : ""),
+			                      role: "checkbox",
+			                      "aria-checked": allVisibleOverviewServerResourcesSelected ? "true" : (hasPartialVisibleOverviewServerResourceSelection ? "mixed" : "false"),
+			                      "aria-label": allVisibleOverviewServerResourcesSelected ? "Deselect all visible resources" : "Select all visible resources",
+			                      onClick: (event) => {
+			                        event.preventDefault();
+			                        event.stopPropagation();
+			                        toggleVisibleOverviewServerResourceSelection();
+			                      },
+			                    })
+			                  ),
+			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Name", "name")),
+			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Type", "type")),
+			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Published", "published")),
+			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Created", "created")),
+			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Last used", "lastUsed")),
+			                  React.createElement("div", null)
+			                );
+			          const renderServerOverviewStickyTableHeader = () => React.createElement("div", { className: "playground-develop-resource-overview-sticky-table-header playground-agents-overview-sticky-table-header" },
+			            overviewSearchSortFilterRow
+			          );
 		          const overviewResourceTable = overviewItems.length === 0
 		            ? React.createElement(React.Fragment, null,
-		                !isServersMode && isDevelopConfigureOverview ? renderComputersOverviewStickyTableHeader() : null,
+		                isDevelopServerKindOverview ? renderServerOverviewStickyTableHeader() : (!isServersMode && isDevelopConfigureOverview ? renderComputersOverviewStickyTableHeader() : null),
 		                shouldShowOverviewResourceLoading
 		                  ? React.createElement("div", { className: "playground-plugins-empty playground-resources-overview-loading" },
 		                      React.createElement(Loader2, { className: "playground-files-state-loader", width: 16, height: 16, strokeWidth: 1.75 }),
@@ -113919,6 +114383,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 		                    )
 		                  )
 		                )
+		              : isDevelopServerKindOverview
+		                ? React.createElement(React.Fragment, null,
+		                    renderServerOverviewStickyTableHeader(),
+		                    React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-develop-resource-overview-list-table" },
+		                      React.createElement("div", { className: "playground-project-overview-thread-list" },
+		                        renderServerOverviewTableColumnHeader(),
+		                        overviewItems.map((item) => renderServerOverviewGridRow(item))
+		                      )
+		                    )
+		                  )
 		              : React.createElement("div", { className: "playground-resources-overview-table-shell" },
 		                  React.createElement("table", { className: "playground-resources-overview-table" },
 		                    React.createElement("colgroup", null,
@@ -113947,9 +114421,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 			          if (isDevelopConfigureOverview && activeResourcesOverviewHomeTab === "general") {
 		            return React.createElement("section", {
 		              className: isServersMode
-		                ? "playground-plugins-section playground-resources-overview-section is-servers-overview is-develop-server-kind-list"
+		                ? "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-resources-overview-section playground-develop-resource-overview-table-section is-servers-overview is-develop-server-kind-list"
 		                : "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-resources-overview-section is-computers-overview is-develop-server-kind-list playground-computers-overview-list-section",
-		            }, isServersMode ? overviewSearchSortFilterRow : null, overviewResourceTable);
+		            }, isServersMode && !isDevelopServerKindOverview ? overviewSearchSortFilterRow : null, overviewResourceTable);
 		          }
 	          return React.createElement("section", { className: "playground-plugins-section playground-resources-overview-section " + (isServersMode ? "is-servers-overview" : "is-computers-overview") },
             activeResourcesOverviewHomeTab === "settings"
@@ -120294,6 +120768,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             { id: "anthropic", label: "Anthropic", description: "Show Claude models" },
             { id: "google", label: "Google", description: "Show Gemini models" },
             { id: "openai", label: "OpenAI", description: "Show GPT models" },
+            { id: "xai", label: "xAI", description: "Show Grok models" },
             { id: "deepseek", label: "DeepSeek", description: "Show DeepSeek models" },
             { id: "minimax", label: "MiniMax", description: "Show MiniMax models" },
             { id: "kimi", label: "Kimi", description: "Show Moonshot models" },
@@ -121579,6 +122054,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             { id: "anthropic", label: "Anthropic" },
             { id: "google", label: "Google" },
             { id: "openai", label: "OpenAI" },
+            { id: "xai", label: "xAI" },
             { id: "deepseek", label: "DeepSeek" },
             { id: "minimax", label: "MiniMax" },
             { id: "kimi", label: "Kimi" },
@@ -136472,6 +136948,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const projectDraftUseCardBackgroundAsWallpaperRef = useRef(true);
         const projectDescriptionTextareaRef = useRef(null);
         const [isProjectDescriptionEditing, setIsProjectDescriptionEditing] = useState(false);
+        const [projectDescriptionHistory, setProjectDescriptionHistory] = useState({ past: [], future: [] });
         const projectDescriptionEditingRef = useRef(false);
         const [projectComposerEnvironmentPopoverOpen, setProjectComposerEnvironmentPopoverOpen] = useState(false);
         const projectComposerEnvironmentPopoverRef = useRef(null);
@@ -136572,6 +137049,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [projectOverviewThreadSortMode, setProjectOverviewThreadSortMode] = useState("recent-desc");
         const [projectOverviewThreadFilterMode, setProjectOverviewThreadFilterMode] = useState("all");
         const [projectOverviewThreadToolbarPopover, setProjectOverviewThreadToolbarPopover] = useState("");
+        const [selectedProjectOverviewThreadIds, setSelectedProjectOverviewThreadIds] = useState(() => new Set());
         const [projectOverviewFileSearchQuery, setProjectOverviewFileSearchQuery] = useState("");
         const [projectOverviewFileSortMode, setProjectOverviewFileSortMode] = useState("recent-desc");
         const [projectOverviewFileFilterMode, setProjectOverviewFileFilterMode] = useState("all");
@@ -136766,6 +137244,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [missionControlStrategyOpen, setMissionControlStrategyOpen] = useState(false);
 	        const missionControlInstructionsTextareaRef = useRef(null);
 	        const [missionControlDocumentDraft, setMissionControlDocumentDraft] = useState("");
+	        const [missionControlDocumentHistory, setMissionControlDocumentHistory] = useState({ past: [], future: [] });
 	        const [missionControlInstructionsDraft, setMissionControlInstructionsDraft] = useState("");
 	        const [missionControlStrategyDraft, setMissionControlStrategyDraft] = useState(buildEmptyPlaygroundProjectStrategyBrief());
 	        const missionControlStrategyDraftRef = useRef(buildEmptyPlaygroundProjectStrategyBrief());
@@ -137079,6 +137558,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           });
           if (shouldResetProjectDescriptionEditing) {
             setProjectDescriptionEditing(false);
+            setProjectDescriptionHistory({ past: [], future: [] });
           }
         }, [
           projectDraft?.id,
@@ -139354,6 +139834,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setProjectOverviewTeamMenuId("");
           setProjectOverviewMilestoneMenuId("");
           setProjectOverviewResourceMenuId("");
+          setSelectedProjectOverviewThreadIds(new Set());
         }, [projectOverviewThreadFilterMode, projectOverviewThreadSearchQuery, projectOverviewThreadSortMode, selectedProjectId]);
         useEffect(() => {
           setTaskDetailThreadToolbarPopover("");
@@ -142690,7 +143171,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           };
         }
 
-        function buildTaskDescriptionListEdit(value, selectionStart, selectionEnd) {
+        function buildTaskDescriptionListEdit(value, selectionStart, selectionEnd, listType = "unordered") {
           const safeStart = Math.max(0, selectionStart);
           const safeEnd = Math.max(safeStart, selectionEnd);
           const lineStart = value.lastIndexOf("\\n", Math.max(0, safeStart - 1)) + 1;
@@ -142701,29 +143182,66 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const block = value.slice(lineStart, lineEnd);
           const lines = block.split("\\n");
           const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
-          const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => /^(\\s*)-\\s+/.test(line));
+          const isOrderedList = listType === "ordered";
+          const orderedListPattern = /^(\\s*)\\d+\\.\\s+/;
+          const unorderedListPattern = /^(\\s*)-\\s+/;
+          const activeListPattern = isOrderedList ? orderedListPattern : unorderedListPattern;
+          const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => activeListPattern.test(line));
+          let orderedIndex = 1;
           const nextLines = lines.map((line) => {
             if (!line.trim()) {
-              return shouldRemoveList ? line : "- ";
+              return shouldRemoveList ? line : (isOrderedList ? String(orderedIndex++) + ". " : "- ");
             }
             if (shouldRemoveList) {
-              return line.replace(/^(\\s*)-\\s+/, "$1");
+              return line.replace(activeListPattern, "$1");
             }
-            if (/^(\\s*)-\\s+/.test(line)) {
+            if (!isOrderedList && unorderedListPattern.test(line)) {
+              return line.replace(unorderedListPattern, "$1- ");
+            }
+            if (isOrderedList && orderedListPattern.test(line)) {
+              orderedIndex += 1;
               return line;
             }
-            return line.replace(/^(\\s*)/, "$1- ");
+            return line.replace(/^(\\s*)/, "$1" + (isOrderedList ? String(orderedIndex++) + ". " : "- "));
           });
           const nextBlock = nextLines.join("\\n");
           const nextValue = value.slice(0, lineStart) + nextBlock + value.slice(lineEnd);
           const collapsedSelection = safeStart === safeEnd;
+          const listPrefixLength = isOrderedList ? 3 : 2;
           const nextCaretOffset = shouldRemoveList
-            ? Math.max(0, safeStart - lineStart - 2)
-            : safeStart - lineStart + 2;
+            ? Math.max(0, safeStart - lineStart - listPrefixLength)
+            : safeStart - lineStart + listPrefixLength;
           return {
             value: nextValue,
             selectionStart: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart,
             selectionEnd: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart + nextBlock.length,
+          };
+        }
+
+        function buildTaskDescriptionLinkEdit(value, selectionStart, selectionEnd) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          const existingLinkMatch = selectedText.match(/^\\[([^\\]]+)\\]\\(([^)]*)\\)$/);
+          if (existingLinkMatch) {
+            const unwrappedText = existingLinkMatch[1];
+            const nextValue = value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd);
+            return {
+              value: nextValue,
+              selectionStart: safeStart,
+              selectionEnd: safeStart + unwrappedText.length,
+            };
+          }
+
+          const label = selectedText || "link text";
+          const url = "url";
+          const markdownLink = "[" + label + "](" + url + ")";
+          const nextValue = value.slice(0, safeStart) + markdownLink + value.slice(safeEnd);
+          const urlStart = safeStart + label.length + 3;
+          return {
+            value: nextValue,
+            selectionStart: urlStart,
+            selectionEnd: urlStart + url.length,
           };
         }
 
@@ -142892,11 +143410,83 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           applyReleaseDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
-        function applyProjectDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+        function updateProjectDescriptionDraftValue(nextValue, options = {}) {
+          const normalizedNextValue = String(nextValue ?? "");
+          if (options.recordHistory !== false) {
+            const previousValue = String(options.previousValue ?? projectDraft?.description ?? "");
+            if (previousValue !== normalizedNextValue) {
+              setProjectDescriptionHistory((current) => ({
+                past: [
+                  ...(Array.isArray(current?.past) ? current.past : []),
+                  previousValue,
+                ].slice(-80),
+                future: [],
+              }));
+            }
+          }
           setProjectDraft((current) => ({
-            ...current,
-            description: nextValue,
+            ...(current && typeof current === "object" ? current : buildPlaygroundDefaultProjectDraft()),
+            description: normalizedNextValue,
           }));
+        }
+
+        function focusProjectDescriptionTextareaAtEnd(value) {
+          window.requestAnimationFrame(() => {
+            const textarea = projectDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const nextCaret = String(value || "").length;
+            textarea.focus();
+            textarea.setSelectionRange(nextCaret, nextCaret);
+            resizeTaskDescriptionTextarea(textarea);
+          });
+        }
+
+        function applyProjectDescriptionHistoryValue(value) {
+          updateProjectDescriptionDraftValue(value, { recordHistory: false });
+          focusProjectDescriptionTextareaAtEnd(value);
+        }
+
+        function handleProjectDescriptionUndo() {
+          const history = projectDescriptionHistory || { past: [], future: [] };
+          const past = Array.isArray(history.past) ? history.past : [];
+          if (!past.length) {
+            return;
+          }
+          const currentValue = String(projectDraft?.description || "");
+          const previousValue = past[past.length - 1];
+          setProjectDescriptionHistory((current) => ({
+            past: (Array.isArray(current?.past) ? current.past : []).slice(0, -1),
+            future: [
+              currentValue,
+              ...(Array.isArray(current?.future) ? current.future : []),
+            ].slice(0, 80),
+          }));
+          applyProjectDescriptionHistoryValue(previousValue);
+        }
+
+        function handleProjectDescriptionRedo() {
+          const history = projectDescriptionHistory || { past: [], future: [] };
+          const future = Array.isArray(history.future) ? history.future : [];
+          if (!future.length) {
+            return;
+          }
+          const currentValue = String(projectDraft?.description || "");
+          const nextValue = future[0];
+          setProjectDescriptionHistory((current) => ({
+            past: [
+              ...(Array.isArray(current?.past) ? current.past : []),
+              currentValue,
+            ].slice(-80),
+            future: (Array.isArray(current?.future) ? current.future : []).slice(1),
+          }));
+          applyProjectDescriptionHistoryValue(nextValue);
+        }
+
+        function applyProjectDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          const previousValue = String(projectDraft?.description || "");
+          updateProjectDescriptionDraftValue(nextValue, { previousValue });
           window.requestAnimationFrame(() => {
             const textarea = projectDescriptionTextareaRef.current;
             if (!textarea) {
@@ -142928,7 +143518,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           } else if (formatType === "underline") {
             edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
           } else if (formatType === "list") {
-            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd, "unordered");
+          } else if (formatType === "ordered-list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd, "ordered");
+          } else if (formatType === "code") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, String.fromCharCode(96));
+          } else if (formatType === "link") {
+            edit = buildTaskDescriptionLinkEdit(value, selectionStart, selectionEnd);
           }
 
           if (!edit) {
@@ -143024,8 +143620,80 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           applyMissionControlInstructionsSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
+        function updateMissionControlDocumentDraftValue(nextValue, options = {}) {
+          const normalizedNextValue = String(nextValue ?? "");
+          if (options.recordHistory !== false) {
+            const previousValue = String(options.previousValue ?? missionControlDocumentDraft ?? "");
+            if (previousValue !== normalizedNextValue) {
+              setMissionControlDocumentHistory((current) => ({
+                past: [
+                  ...(Array.isArray(current?.past) ? current.past : []),
+                  previousValue,
+                ].slice(-80),
+                future: [],
+              }));
+            }
+          }
+          setMissionControlDocumentDraft(normalizedNextValue);
+        }
+
+        function focusMissionControlDocumentTextareaAtEnd(value) {
+          window.requestAnimationFrame(() => {
+            const textarea = missionControlDocumentTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const nextCaret = String(value || "").length;
+            textarea.focus();
+            textarea.setSelectionRange(nextCaret, nextCaret);
+            resizeTaskDescriptionTextarea(textarea);
+          });
+        }
+
+        function applyMissionControlDocumentHistoryValue(value) {
+          updateMissionControlDocumentDraftValue(value, { recordHistory: false });
+          focusMissionControlDocumentTextareaAtEnd(value);
+        }
+
+        function handleMissionControlDocumentUndo() {
+          const history = missionControlDocumentHistory || { past: [], future: [] };
+          const past = Array.isArray(history.past) ? history.past : [];
+          if (!past.length) {
+            return;
+          }
+          const currentValue = String(missionControlDocumentDraft || "");
+          const previousValue = past[past.length - 1];
+          setMissionControlDocumentHistory((current) => ({
+            past: (Array.isArray(current?.past) ? current.past : []).slice(0, -1),
+            future: [
+              currentValue,
+              ...(Array.isArray(current?.future) ? current.future : []),
+            ].slice(0, 80),
+          }));
+          applyMissionControlDocumentHistoryValue(previousValue);
+        }
+
+        function handleMissionControlDocumentRedo() {
+          const history = missionControlDocumentHistory || { past: [], future: [] };
+          const future = Array.isArray(history.future) ? history.future : [];
+          if (!future.length) {
+            return;
+          }
+          const currentValue = String(missionControlDocumentDraft || "");
+          const nextValue = future[0];
+          setMissionControlDocumentHistory((current) => ({
+            past: [
+              ...(Array.isArray(current?.past) ? current.past : []),
+              currentValue,
+            ].slice(-80),
+            future: (Array.isArray(current?.future) ? current.future : []).slice(1),
+          }));
+          applyMissionControlDocumentHistoryValue(nextValue);
+        }
+
         function applyMissionControlDocumentSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-          setMissionControlDocumentDraft(nextValue);
+          const previousValue = String(missionControlDocumentDraft || "");
+          updateMissionControlDocumentDraftValue(nextValue, { previousValue });
           window.requestAnimationFrame(() => {
             const textarea = missionControlDocumentTextareaRef.current;
             if (!textarea) {
@@ -143057,7 +143725,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           } else if (formatType === "underline") {
             edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
           } else if (formatType === "list") {
-            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd, "unordered");
+          } else if (formatType === "ordered-list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd, "ordered");
+          } else if (formatType === "code") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, String.fromCharCode(96));
+          } else if (formatType === "link") {
+            edit = buildTaskDescriptionLinkEdit(value, selectionStart, selectionEnd);
           }
 
           if (!edit) {
@@ -147207,6 +147881,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
         useEffect(() => {
           setIsMissionControlDocumentEditing(false);
+          setMissionControlDocumentHistory({ past: [], future: [] });
         }, [selectedProjectId]);
 
 	        useEffect(() => {
@@ -147224,7 +147899,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (isMissionControlDocumentEditing) {
             return;
           }
-          setMissionControlDocumentDraft(String(selectedProjectMissionControl.document || ""));
+          updateMissionControlDocumentDraftValue(String(selectedProjectMissionControl.document || ""), { recordHistory: false });
+          setMissionControlDocumentHistory({ past: [], future: [] });
         }, [
           isMissionControlDocumentEditing,
           selectedProjectId,
@@ -161719,6 +162395,36 @@ ${PROJECT_OVERVIEW_SCRIPT}
               }))
               .filter((segment) => segment.count > 0);
             const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
+            const canUndoMissionControlDocument = Array.isArray(missionControlDocumentHistory?.past) && missionControlDocumentHistory.past.length > 0;
+            const canRedoMissionControlDocument = Array.isArray(missionControlDocumentHistory?.future) && missionControlDocumentHistory.future.length > 0;
+            const renderMissionControlDocumentToolbarButton = (action) =>
+              React.createElement("button", {
+                key: action.id,
+                type: "button",
+                className: "playground-tasks-detail-format-button",
+                title: action.label,
+                "aria-label": action.label,
+                disabled: Boolean(action.disabled),
+                onMouseDown: (event) => event.preventDefault(),
+                onClick: action.onClick,
+              }, React.createElement(action.icon, {
+                width: 14,
+                height: 14,
+                strokeWidth: action.strokeWidth || 1.8,
+              }));
+            const missionControlDocumentTextFormatActions = [
+              { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
+              { id: "italic", label: "Italic", icon: Italic },
+              { id: "underline", label: "Underline", icon: Underline },
+            ];
+            const missionControlDocumentListFormatActions = [
+              { id: "list", label: "List", icon: List },
+              { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
+            ];
+            const missionControlDocumentInsertFormatActions = [
+              { id: "code", label: "Code", icon: CodeXml },
+              { id: "link", label: "Link", icon: Link2 },
+            ];
             return React.createElement("div", { className: "playground-tasks-detail-shell" },
               React.createElement("div", { className: "playground-tasks-detail-main" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
                 React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
@@ -161830,25 +162536,56 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           )
                         : null
                     ),
-                    React.createElement("div", { className: "playground-tasks-detail-description" },
+                    React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-project-strategy-notes-section" },
                       React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Strategy"),
+                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Strategy Notes"),
                         React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                          [
-                            { id: "bold", label: "Bold", icon: Bold },
-                            { id: "italic", label: "Italic", icon: Italic },
-                            { id: "underline", label: "Underline", icon: Underline },
-                            { id: "list", label: "List", icon: List },
-                          ].map((action) =>
-                            React.createElement("button", {
-                              key: action.id,
-                              type: "button",
-                              className: "playground-tasks-detail-format-button",
-                              title: action.label,
-                              "aria-label": action.label,
-                              onMouseDown: (event) => event.preventDefault(),
+                          renderMissionControlDocumentToolbarButton({
+                            id: "undo",
+                            label: "Undo",
+                            icon: Undo2,
+                            disabled: !canUndoMissionControlDocument,
+                            onClick: handleMissionControlDocumentUndo,
+                          }),
+                          renderMissionControlDocumentToolbarButton({
+                            id: "redo",
+                            label: "Redo",
+                            icon: Redo2,
+                            disabled: !canRedoMissionControlDocument,
+                            onClick: handleMissionControlDocumentRedo,
+                          }),
+                          React.createElement("span", {
+                            key: "history-divider",
+                            className: "playground-agents-detail-instructions-toolbar-divider",
+                            "aria-hidden": "true",
+                          }),
+                          missionControlDocumentTextFormatActions.map((action) =>
+                            renderMissionControlDocumentToolbarButton({
+                              ...action,
                               onClick: () => handleMissionControlDocumentFormat(action.id),
-                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                            })
+                          ),
+                          React.createElement("span", {
+                            key: "list-divider-start",
+                            className: "playground-agents-detail-instructions-toolbar-divider",
+                            "aria-hidden": "true",
+                          }),
+                          missionControlDocumentListFormatActions.map((action) =>
+                            renderMissionControlDocumentToolbarButton({
+                              ...action,
+                              onClick: () => handleMissionControlDocumentFormat(action.id),
+                            })
+                          ),
+                          React.createElement("span", {
+                            key: "list-divider-end",
+                            className: "playground-agents-detail-instructions-toolbar-divider",
+                            "aria-hidden": "true",
+                          }),
+                          missionControlDocumentInsertFormatActions.map((action) =>
+                            renderMissionControlDocumentToolbarButton({
+                              ...action,
+                              onClick: () => handleMissionControlDocumentFormat(action.id),
+                            })
                           )
                         )
                       ),
@@ -161875,7 +162612,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             setIsMissionControlDocumentEditing(true);
                           },
                           onChange: (event) => {
-                            setMissionControlDocumentDraft(event.target.value);
+                            updateMissionControlDocumentDraftValue(event.target.value, {
+                              previousValue: missionControlDocumentDraft,
+                            });
                             resizeTaskDescriptionTextarea(event.currentTarget);
                           },
                           onBlur: () => {
@@ -166400,6 +167139,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [threadDisplayCount, setThreadDisplayCount] = useState(10);
         const threadDisplayCountRef = useRef(10);
         const threadFetchLimitRef = useRef(SEARCH_THREAD_FETCH_LIMIT);
+        const threadRefreshInFlightRef = useRef(null);
         threadDisplayCountRef.current = threadDisplayCount;
         const [threadActionMenuState, setThreadActionMenuState] = useState(null);
         const [metronomeRunActionMenuState, setMetronomeRunActionMenuState] = useState(null);
@@ -166790,11 +167530,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [resourcesView, setResourcesView] = useState("agents");
         const [resourcesServerKind, setResourcesServerKind] = useState("");
         const modelsPageToolbarRef = useRef(null);
+        const modelsPageActionsMenuRef = useRef(null);
         const [modelsPageTab, setModelsPageTab] = useState("agent");
         const [modelsPageSearchQuery, setModelsPageSearchQuery] = useState("");
         const [modelsPageProviderFilter, setModelsPageProviderFilter] = useState("all");
         const [modelsPageSort, setModelsPageSort] = useState("provider");
+        const [modelsPageSortDirection, setModelsPageSortDirection] = useState("asc");
         const [modelsPageToolbarPopover, setModelsPageToolbarPopover] = useState("");
+        const [modelsPageToolbarPopoverClosing, setModelsPageToolbarPopoverClosing] = useState("");
+        const [modelsPageActionsMenuOpen, setModelsPageActionsMenuOpen] = useState(false);
         const [modelsPageViewMode, setModelsPageViewMode] = useState("table");
         const [modelsPageAgentModelOptions, setModelsPageAgentModelOptions] = useState(() => PLAYGROUND_AGENT_MODEL_OPTIONS);
         const [resourceTemplateTypeFilter, setResourceTemplateTypeFilter] = useState("all");
@@ -173520,118 +174264,127 @@ ${PROJECT_OVERVIEW_SCRIPT}
           };
         }
 
-        useEffect(() => {
+        const loadRecentMetronomeSidebarRuns = useCallback(async function loadRecentMetronomeSidebarRuns(options = {}) {
           if (!hasRealAccess || hasDemoAccess) {
             metronomeSidebarRunsLoadKeyRef.current = "";
-            return undefined;
+            return;
           }
           const scopeKey = [
             String(activeOrganizationId || "").trim() || "__personal__",
             requestHeadersSignature,
             proxyBackendBase,
           ].join("|");
-          if (metronomeSidebarRunsLoadKeyRef.current === scopeKey) {
-            return undefined;
+          if (!options?.force && metronomeSidebarRunsLoadKeyRef.current === scopeKey) {
+            return;
           }
           metronomeSidebarRunsLoadKeyRef.current = scopeKey;
-          let cancelled = false;
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/metronomes?limit=50", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders,
+            }, 10000);
+            if (!response.ok) {
+              return;
+            }
+            if (metronomeSidebarRunsLoadKeyRef.current !== scopeKey) {
+              return;
+            }
+            const workflows = getPlaygroundMetronomeListArray(data)
+              .map(normalizePlaygroundCalendarMetronomeWorkflow)
+              .filter((workflow) => {
+                const workflowId = String(workflow?.id || "").trim();
+                const status = String(workflow?.status || "").trim().toLowerCase();
+                return workflowId && status !== "archived";
+              })
+              .slice(0, 50);
+            if (!workflows.length) {
+              return;
+            }
 
-          const loadRecentMetronomeRuns = async () => {
-            try {
-              const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/metronomes?limit=50", {
-                method: "GET",
-                credentials: "include",
-                cache: "no-store",
-                headers: requestHeaders,
-              }, 10000);
-              if (cancelled || !response.ok) {
-                return;
-              }
-              const workflows = getPlaygroundMetronomeListArray(data)
-                .map(normalizePlaygroundCalendarMetronomeWorkflow)
-                .filter((workflow) => {
-                  const workflowId = String(workflow?.id || "").trim();
-                  const status = String(workflow?.status || "").trim().toLowerCase();
-                  return workflowId && status !== "archived";
-                })
-                .slice(0, 50);
-              if (!workflows.length) {
-                return;
-              }
-
-              const loadedEntries = [];
-              for (let index = 0; index < workflows.length && !cancelled; index += 6) {
-                const batch = workflows.slice(index, index + 6);
-                const batchResults = await Promise.all(batch.map(async (workflow) => {
-                  const workflowId = String(workflow?.id || "").trim();
-                  try {
-                    const runsResult = await fetchJsonWithTimeout(
-                      proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId) + "/runs?limit=3",
-                      {
-                        method: "GET",
-                        credentials: "include",
-                        cache: "no-store",
-                        headers: requestHeaders,
-                      },
-                      10000
-                    );
-                    if (!runsResult.response.ok) {
-                      return [];
-                    }
-                    const rawRuns = Array.isArray(runsResult.data?.data)
-                      ? runsResult.data.data
-                      : Array.isArray(runsResult.data)
-                        ? runsResult.data
-                        : [];
-                    return rawRuns
-                      .map((run) => buildMetronomeRunEntryFromRun(workflow, run))
-                      .filter(Boolean);
-                  } catch {
+            const loadedEntries = [];
+            for (let index = 0; index < workflows.length; index += 6) {
+              const batch = workflows.slice(index, index + 6);
+              const batchResults = await Promise.all(batch.map(async (workflow) => {
+                const workflowId = String(workflow?.id || "").trim();
+                try {
+                  const runsResult = await fetchJsonWithTimeout(
+                    proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId) + "/runs?limit=3",
+                    {
+                      method: "GET",
+                      credentials: "include",
+                      cache: "no-store",
+                      headers: requestHeaders,
+                    },
+                    10000
+                  );
+                  if (!runsResult.response.ok) {
                     return [];
                   }
-                }));
-                loadedEntries.push(...batchResults.flat());
-              }
-
-              if (cancelled || !loadedEntries.length) {
-                return;
-              }
-              setOptimisticMetronomeRunEntries((current) => {
-                const safeCurrent = current && typeof current === "object" ? current : {};
-                const next = { ...safeCurrent };
-                loadedEntries.forEach((entry) => {
-                  const groupKey = String(entry?.key || getSidebarMetronomeRunGroupKey({ metronomeId: entry?.metronomeId, runId: entry?.runId }) || "").trim();
-                  if (!groupKey) {
-                    return;
-                  }
-                  const existing = safeCurrent[groupKey] || null;
-                  const threads = mergeMetronomeRunEntryThreads(
-                    Array.isArray(entry?.threads) ? entry.threads : [],
-                    Array.isArray(existing?.threads) ? existing.threads : []
-                  );
-                  const latestThread = threads.reduce((latest, thread) => (
-                    !latest || resolveThreadSortTimestamp(thread) > resolveThreadSortTimestamp(latest) ? thread : latest
-                  ), existing?.latestThread || entry?.latestThread || null);
-                  next[groupKey] = {
-                    ...(existing && typeof existing === "object" ? existing : {}),
-                    ...entry,
-                    key: groupKey,
-                    threads,
-                    latestThread,
-                  };
-                });
-                return next;
-              });
-            } catch {
-              metronomeSidebarRunsLoadKeyRef.current = "";
+                  const rawRuns = Array.isArray(runsResult.data?.data)
+                    ? runsResult.data.data
+                    : Array.isArray(runsResult.data)
+                      ? runsResult.data
+                      : [];
+                  return rawRuns
+                    .map((run) => buildMetronomeRunEntryFromRun(workflow, run))
+                    .filter(Boolean);
+                } catch {
+                  return [];
+                }
+              }));
+              loadedEntries.push(...batchResults.flat());
             }
-          };
 
-          void loadRecentMetronomeRuns();
-          return () => {
-            cancelled = true;
-          };
+            if (!loadedEntries.length) {
+              return;
+            }
+            if (metronomeSidebarRunsLoadKeyRef.current !== scopeKey) {
+              return;
+            }
+            setOptimisticMetronomeRunEntries((current) => {
+              const safeCurrent = current && typeof current === "object" ? current : {};
+              const next = { ...safeCurrent };
+              loadedEntries.forEach((entry) => {
+                const groupKey = String(entry?.key || getSidebarMetronomeRunGroupKey({ metronomeId: entry?.metronomeId, runId: entry?.runId }) || "").trim();
+                if (!groupKey) {
+                  return;
+                }
+                const existing = safeCurrent[groupKey] || null;
+                const threads = mergeMetronomeRunEntryThreads(
+                  Array.isArray(entry?.threads) ? entry.threads : [],
+                  Array.isArray(existing?.threads) ? existing.threads : []
+                );
+                const latestThread = threads.reduce((latest, thread) => (
+                  !latest || resolveThreadSortTimestamp(thread) > resolveThreadSortTimestamp(latest) ? thread : latest
+                ), existing?.latestThread || entry?.latestThread || null);
+                next[groupKey] = {
+                  ...(existing && typeof existing === "object" ? existing : {}),
+                  ...entry,
+                  key: groupKey,
+                  threads,
+                  latestThread,
+                };
+              });
+              return next;
+            });
+          } catch {
+            metronomeSidebarRunsLoadKeyRef.current = "";
+          }
         }, [activeOrganizationId, hasDemoAccess, hasRealAccess, proxyBackendBase, requestHeaders, requestHeadersSignature]);
+
+        useEffect(() => {
+          if (!hasRealAccess || hasDemoAccess) {
+            metronomeSidebarRunsLoadKeyRef.current = "";
+            return undefined;
+          }
+          if (activePage !== "metronome") {
+            return undefined;
+          }
+          void loadRecentMetronomeSidebarRuns();
+          return undefined;
+        }, [activePage, hasDemoAccess, hasRealAccess, loadRecentMetronomeSidebarRuns]);
 
         useEffect(() => {
           function handleMetronomeRunUpserted(event) {
@@ -179621,15 +180374,35 @@ ${PROJECT_OVERVIEW_SCRIPT}
           threadFetchLimitRef.current = requestedLimit;
           const normalizedPreserveThreadId = String(preserveThreadIdOverride || "").trim();
           const shouldSetLoading = !Boolean(options && typeof options === "object" && options.silent);
+          const requestKey = proxyBackendBase
+            + "|"
+            + JSON.stringify(authRequestHeaders || {})
+            + "|"
+            + String(requestedLimit);
+          const currentInFlightRequest = threadRefreshInFlightRef.current;
+          if (
+            currentInFlightRequest
+            && currentInFlightRequest.key === requestKey
+            && currentInFlightRequest.promise
+          ) {
+            await currentInFlightRequest.promise.catch(() => undefined);
+            return;
+          }
 
           if (shouldSetLoading) {
             setIsThreadsLoading(true);
           }
+          let requestPromise = null;
           try {
-            const response = await fetch(proxyBackendBase + "/threads?limit=" + encodeURIComponent(String(requestedLimit)), {
+            requestPromise = fetch(proxyBackendBase + "/threads?limit=" + encodeURIComponent(String(requestedLimit)), {
               method: "GET",
               headers: authRequestHeaders,
             });
+            threadRefreshInFlightRef.current = {
+              key: requestKey,
+              promise: requestPromise,
+            };
+            const response = await requestPromise;
 
             const data = await response.json().catch(() => ({}));
             if (isUnauthorizedStatus(response.status)) {
@@ -179682,6 +180455,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           } catch {
             return;
           } finally {
+            if (threadRefreshInFlightRef.current?.promise === requestPromise) {
+              threadRefreshInFlightRef.current = null;
+            }
             if (shouldSetLoading) {
               setIsThreadsLoading(false);
             }
@@ -182281,6 +183057,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             title: "",
           });
           setModelsPageToolbarPopover("");
+          setModelsPageToolbarPopoverClosing("");
+          setModelsPageActionsMenuOpen(false);
           setActivePage("models");
           void loadModelsPageAgentModelCatalog();
         }
@@ -197220,18 +197998,34 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }, [applyTaskRunState, realThreads, syncCompletedTaskRun, taskRunStates]);
 
         useEffect(() => {
+          const normalizedSearchQuery = String(threadSearchQuery || "").trim();
           if (
             !threadSearchOpen ||
+            normalizedSearchQuery.length < 2 ||
             !hasRealAccess ||
             isThreadsLoading ||
-            realThreads.length >= SEARCH_THREAD_FETCH_LIMIT ||
+            realThreads.length >= SEARCH_THREAD_EXPANDED_FETCH_LIMIT ||
             (!realThreadsHasMore && realThreads.length > 0)
           ) {
             return;
           }
 
-          void refreshThreads(SEARCH_THREAD_FETCH_LIMIT);
-        }, [hasRealAccess, isThreadsLoading, realThreads.length, realThreadsHasMore, refreshThreads, threadSearchOpen]);
+          void refreshThreads(SEARCH_THREAD_EXPANDED_FETCH_LIMIT);
+        }, [hasRealAccess, isThreadsLoading, realThreads.length, realThreadsHasMore, refreshThreads, threadSearchOpen, threadSearchQuery]);
+
+        useEffect(() => {
+          const normalizedSearchQuery = String(threadSearchQuery || "").trim();
+          if (threadSearchOpen && normalizedSearchQuery.length >= 2) {
+            return;
+          }
+          const retainedSidebarLimit = Math.max(
+            SEARCH_THREAD_FETCH_LIMIT,
+            Number.isFinite(threadDisplayCountRef.current) ? threadDisplayCountRef.current : 10
+          );
+          if ((Number(threadFetchLimitRef.current) || SEARCH_THREAD_FETCH_LIMIT) > retainedSidebarLimit) {
+            threadFetchLimitRef.current = retainedSidebarLimit;
+          }
+        }, [threadSearchOpen, threadSearchQuery]);
 
         useEffect(() => {
           threadDisplayCountRef.current = 10;
@@ -203852,10 +204646,72 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
+        function openModelsLandingPage(url) {
+          if (typeof window === "undefined") return;
+          const destination = String(url || "").trim();
+          if (!destination) return;
+          const openedWindow = window.open(destination, "_blank", "noopener,noreferrer");
+          if (openedWindow) openedWindow.opener = null;
+        }
+
+        function renderModelsPageActionsMenu() {
+          return renderPlaygroundPlatformPopup({
+            open: modelsPageActionsMenuOpen,
+            shellRef: modelsPageActionsMenuRef,
+            shellClassName: "playground-agents-overview-topnav-actions-shell playground-models-topnav-actions-shell",
+            menuClassName: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+            trigger: React.createElement("button", {
+              type: "button",
+              className: "playground-files-header-icon-button is-plain" + (modelsPageActionsMenuOpen ? " is-active" : ""),
+              title: "Model resources",
+              "aria-label": "Model resources",
+              "aria-haspopup": "menu",
+              "aria-expanded": modelsPageActionsMenuOpen ? "true" : "false",
+              onClick: () => setModelsPageActionsMenuOpen((current) => !current),
+            }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
+            menuProps: {
+              role: "menu",
+              onClick: (event) => event.stopPropagation(),
+            },
+            children: React.createElement(React.Fragment, null,
+              React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row",
+                onClick: () => {
+                  setModelsPageActionsMenuOpen(false);
+                  openModelsLandingPage(${JSON.stringify(aiosOrigin + "/pricing")});
+                },
+              },
+                React.createElement(Coins, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Pricing")
+                )
+              ),
+              React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row",
+                onClick: () => {
+                  setModelsPageActionsMenuOpen(false);
+                  openModelsLandingPage(${JSON.stringify(aiosOrigin + "/developers")});
+                },
+              },
+                React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Documentation")
+                )
+              )
+            ),
+          });
+        }
+
         function renderModelsPageNav() {
           return renderUnifiedTopNav({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: [{ label: "Configure" }, { label: "Models" }],
+            extraActions: renderModelsPageActionsMenu(),
+            includeSearchDivider: true,
           });
         }
 
@@ -205599,8 +206455,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setProviderFilter: setModelsPageProviderFilter,
             sort: modelsPageSort,
             setSort: setModelsPageSort,
+            sortDirection: modelsPageSortDirection,
+            setSortDirection: setModelsPageSortDirection,
             toolbarPopover: modelsPageToolbarPopover,
             setToolbarPopover: setModelsPageToolbarPopover,
+            toolbarPopoverClosing: modelsPageToolbarPopoverClosing,
+            setToolbarPopoverClosing: setModelsPageToolbarPopoverClosing,
             toolbarRef: modelsPageToolbarRef,
             viewMode: modelsPageViewMode,
             setViewMode: setModelsPageViewMode,
@@ -211682,13 +212542,25 @@ async function readRawRequestBuffer(req) {
 }
 
 function sendJson(res, status, payload) {
+  if (!res || res.destroyed || res.writableEnded || res.headersSent) {
+    return false;
+  }
   const body = JSON.stringify(payload);
-  res.writeHead(status, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Content-Length": Buffer.byteLength(body),
-    "Cache-Control": "no-store",
-  });
-  res.end(body);
+  try {
+    res.writeHead(status, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Length": Buffer.byteLength(body),
+      "Cache-Control": "no-store",
+    });
+    res.end(body);
+    return true;
+  } catch (error) {
+    const errorCode = String(error?.code || "");
+    if (["ECONNRESET", "EPIPE", "ERR_STREAM_WRITE_AFTER_END"].includes(errorCode)) {
+      return false;
+    }
+    throw error;
+  }
 }
 
 function summarizeRunnerStreamChunkForLog(value) {
@@ -213434,6 +214306,22 @@ async function sendEnvironmentOverviewAnalytics(req, res) {
 }
 
 async function proxyUpstreamGet(req, res, upstreamPath, options = {}) {
+  const controller = new AbortController();
+  let didTimeout = false;
+  const timeoutMs = Math.max(1000, Number(options?.timeoutMs) || 20000);
+  const timeoutId = setTimeout(() => {
+    didTimeout = true;
+    if (!controller.signal.aborted) {
+      controller.abort(new Error(`Upstream request timed out after ${timeoutMs}ms.`));
+    }
+  }, timeoutMs);
+  const abortUpstreamIfClientClosed = () => {
+    if (!res.writableEnded && !controller.signal.aborted) {
+      controller.abort(new Error("Client request closed before the upstream request completed."));
+    }
+  };
+  res.once("close", abortUpstreamIfClientClosed);
+
   try {
     const upstreamUrl = parseUpstreamUrl(req, {});
     const apiKey = readOptionalApiKey(req, {});
@@ -213448,10 +214336,12 @@ async function proxyUpstreamGet(req, res, upstreamPath, options = {}) {
         headers: withProxyOrganizationHeader(req, {}, {
           "X-API-Key": apiKey,
         }),
+        signal: controller.signal,
       });
     } else if (hasAiosSession(req)) {
       upstream = await fetchAiosCloud(req, upstreamPath + requestUrl.search, {
         method: "GET",
+        signal: controller.signal,
       });
     } else {
       return sendJson(res, 401, {
@@ -213474,10 +214364,16 @@ async function proxyUpstreamGet(req, res, upstreamPath, options = {}) {
 
     return sendJson(res, upstream.status, parsed);
   } catch (error) {
-    return sendJson(res, 502, {
-      error: "Failed to proxy upstream GET request",
+    if (controller.signal.aborted && (res.writableEnded || res.destroyed)) {
+      return false;
+    }
+    return sendJson(res, didTimeout ? 504 : 502, {
+      error: didTimeout ? "Upstream GET request timed out" : "Failed to proxy upstream GET request",
       message: error instanceof Error ? error.message : String(error),
     });
+  } finally {
+    clearTimeout(timeoutId);
+    res.off("close", abortUpstreamIfClientClosed);
   }
 }
 
@@ -220310,6 +221206,16 @@ const playgroundFineTuningRuntime = createPlaygroundFineTuningRuntime({
 });
 
 const server = http.createServer((req, res) => {
+  const handleRequestStreamError = (error) => {
+    const errorCode = String(error?.code || "");
+    if (["ECONNRESET", "EPIPE", "ERR_STREAM_WRITE_AFTER_END"].includes(errorCode)) {
+      return;
+    }
+    console.error("[demo-server] Request stream error", error);
+  };
+  req.on("error", handleRequestStreamError);
+  res.on("error", handleRequestStreamError);
+
   const url = new URL(req.url || "/", `http://localhost:${port}`);
 
   const rawThreadPathMatch = url.pathname.match(/^\/(thread[_-][A-Za-z0-9_-]+)\/?$/);

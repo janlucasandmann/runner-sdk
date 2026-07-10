@@ -320,6 +320,445 @@ export const MODELS_PAGE_CSS = String.raw`
         white-space: nowrap;
       }
 
+      .playground-models-page.playground-agents-overview-page {
+        padding-top: 0;
+      }
+
+      .playground-models-page .playground-models-browser-header {
+        position: relative;
+        top: auto;
+        z-index: 1;
+        margin-top: 42px;
+        padding: 0 0 12px;
+        background: transparent;
+      }
+
+      .playground-models-page .playground-models-library-header {
+        display: block;
+      }
+
+      .playground-models-page .playground-models-library-header .playground-files-library-title-row {
+        min-height: 24px;
+        margin: 0;
+      }
+
+      .playground-models-page .playground-files-library-title {
+        font-size: 16px;
+        font-weight: 400;
+      }
+
+      .playground-models-overview-table-section.playground-agents-overview-table-section {
+        margin-top: 0 !important;
+        margin-bottom: 24px;
+      }
+
+      .playground-models-overview-table-section .playground-models-overview-sticky-table-header {
+        position: sticky;
+        top: 0;
+      }
+
+      .playground-models-overview-toolbar-row {
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-start !important;
+        flex-flow: row nowrap !important;
+        gap: 10px;
+        width: 100%;
+        padding: 0 0 12px !important;
+        margin: 0 !important;
+        pointer-events: auto;
+      }
+
+      .playground-models-overview-toolbar-row > *,
+      .playground-models-overview-toolbar-row button,
+      .playground-models-overview-toolbar-row input {
+        position: relative;
+        z-index: 2;
+        pointer-events: auto;
+      }
+
+      .playground-models-overview-search-shell {
+        flex: 0 1 340px !important;
+        width: min(340px, 100%) !important;
+        min-width: 220px !important;
+        max-width: 340px !important;
+        background: rgba(255, 255, 255, 0.025) !important;
+      }
+
+      .playground-models-overview-controls {
+        flex: 0 0 auto;
+        flex-wrap: nowrap !important;
+      }
+
+      .playground-models-overview-category-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        margin-left: auto;
+      }
+
+      .playground-models-overview-category-switch {
+        min-width: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .playground-models-overview-category-switch::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-models-overview-category-switch .content-mode-button {
+        min-width: max-content;
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .playground-models-overview-table-section .playground-models-overview-table,
+      .playground-models-overview-table-section .playground-models-entry-list {
+        overflow: visible !important;
+      }
+
+      .playground-models-overview-table-section .playground-models-entry-list {
+        box-sizing: border-box;
+      }
+
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-column-header,
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-table-row {
+        display: grid;
+        grid-template-columns:
+          minmax(170px, 1.3fr)
+          minmax(90px, 0.66fr)
+          minmax(108px, 0.72fr)
+          minmax(108px, 0.78fr)
+          minmax(104px, 0.68fr)
+          minmax(118px, 0.76fr) !important;
+        align-items: center;
+        gap: 12px !important;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-column-header.is-agent-pricing,
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-table-row.is-agent-pricing {
+        grid-template-columns:
+          minmax(170px, 1.32fr)
+          minmax(86px, 0.56fr)
+          minmax(108px, 0.68fr)
+          minmax(94px, 0.62fr)
+          minmax(92px, 0.58fr)
+          minmax(88px, 0.56fr)
+          minmax(88px, 0.56fr)
+          minmax(88px, 0.56fr) !important;
+        gap: 10px !important;
+      }
+
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-column-header.is-image-models,
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-table-row.is-image-models {
+        grid-template-columns:
+          minmax(210px, 1.35fr)
+          minmax(100px, 0.62fr)
+          minmax(170px, 1.05fr)
+          minmax(118px, 0.72fr)
+          minmax(100px, 0.62fr)
+          minmax(220px, 1.35fr) !important;
+      }
+
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-column-header.is-video-models,
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-table-row.is-video-models {
+        grid-template-columns:
+          minmax(220px, 1.38fr)
+          minmax(100px, 0.62fr)
+          minmax(96px, 0.56fr)
+          minmax(150px, 0.88fr)
+          minmax(180px, 1.04fr)
+          minmax(140px, 0.82fr) !important;
+      }
+
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-column-header.is-deep-research-models,
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-table-row.is-deep-research-models {
+        grid-template-columns:
+          minmax(210px, 1.28fr)
+          minmax(100px, 0.6fr)
+          minmax(180px, 1.02fr)
+          minmax(180px, 1.02fr)
+          minmax(100px, 0.58fr)
+          minmax(190px, 1.12fr) !important;
+      }
+
+      .playground-models-overview-table-section .playground-models-overview-column-header,
+      .playground-models-overview-table-section .playground-models-overview-column-header *,
+      .playground-models-overview-table-section .playground-models-overview-table-row,
+      .playground-models-overview-table-section .playground-models-overview-table-row * {
+        font-size: 12px;
+      }
+
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-column-header > div:first-child {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start !important;
+        justify-self: stretch;
+        min-width: 0;
+      }
+
+      .playground-models-overview-table-section .playground-models-overview-column-header .is-right,
+      .playground-models-overview-cell.is-right {
+        justify-content: flex-end;
+        text-align: right;
+      }
+
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-column-header.is-agent-pricing > .is-right {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-width: 0;
+      }
+
+      .playground-models-page.playground-agents-overview-page .playground-models-overview-table-section .playground-models-overview-column-header.is-agent-pricing > .is-right .playground-agents-overview-sortable-header {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .playground-models-overview-table-section .playground-models-overview-table-row {
+        min-height: 58px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        cursor: default;
+        overflow: visible !important;
+      }
+
+      .playground-models-overview-table-section .playground-models-overview-table-row.is-pricing-subrow .playground-models-entry-main {
+        padding-left: 0;
+      }
+
+      .playground-models-overview-cell,
+      .playground-models-overview-cell .playground-models-entry-value {
+        min-width: 0;
+      }
+
+      .playground-models-entry-main {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-models-overview-cell .playground-files-entry-copy {
+        min-width: 0;
+      }
+
+      .playground-models-overview-cell .playground-files-entry-name,
+      .playground-models-overview-cell .playground-models-entry-value {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-models-overview-menu {
+        min-width: 220px;
+      }
+
+      .playground-models-overview-menu.is-closing {
+        pointer-events: none;
+      }
+
+      .playground-models-overview-table-section .playground-plugins-empty {
+        min-height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-models-featured-section {
+        width: 100%;
+        margin: 0 0 24px;
+      }
+
+      .playground-models-featured-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 12px;
+      }
+
+      .playground-models-featured-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.35;
+      }
+
+      .playground-models-featured-caption {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .playground-models-featured-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .playground-models-featured-card {
+        --playground-model-featured-accent: 126, 200, 255;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 184px;
+        padding: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        overflow: hidden;
+        box-sizing: border-box;
+      }
+
+      .playground-models-featured-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 14px;
+        right: 14px;
+        height: 1px;
+        background: rgba(var(--playground-model-featured-accent), 0.82);
+      }
+
+      .playground-models-featured-card.is-speed {
+        --playground-model-featured-accent: 126, 200, 255;
+      }
+
+      .playground-models-featured-card.is-code {
+        --playground-model-featured-accent: 204, 174, 255;
+      }
+
+      .playground-models-featured-card.is-agent {
+        --playground-model-featured-accent: 133, 223, 123;
+      }
+
+      .playground-models-featured-card.is-frontier {
+        --playground-model-featured-accent: 245, 184, 108;
+      }
+
+      .playground-models-featured-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .playground-models-featured-provider {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .playground-models-featured-provider-icon {
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        border: 1px solid rgba(var(--playground-model-featured-accent), 0.18);
+        border-radius: 6px;
+        background: rgba(var(--playground-model-featured-accent), 0.08);
+      }
+
+      .playground-models-featured-provider-icon .playground-agents-model-provider-icon-shell {
+        width: 15px;
+        height: 15px;
+      }
+
+      .playground-models-featured-provider-icon .playground-agents-model-provider-icon,
+      .playground-models-featured-provider-icon svg {
+        width: 15px;
+        height: 15px;
+        object-fit: contain;
+      }
+
+      .playground-models-featured-provider-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-models-featured-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        flex: 0 0 auto;
+        padding: 4px 7px;
+        border-radius: 999px;
+        background: rgba(var(--playground-model-featured-accent), 0.1);
+        color: rgba(var(--playground-model-featured-accent), 0.94);
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .playground-models-featured-name {
+        margin: 16px 0 0;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.3;
+      }
+
+      .playground-models-featured-description {
+        margin: 6px 0 14px;
+        color: rgba(255, 255, 255, 0.54);
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .playground-models-featured-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: auto;
+        padding-top: 11px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-models-featured-metric {
+        min-width: 0;
+      }
+
+      .playground-models-featured-metric-label,
+      .playground-models-featured-metric-value {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-models-featured-metric-label {
+        color: rgba(255, 255, 255, 0.36);
+        font-size: 9px;
+        line-height: 1.2;
+      }
+
+      .playground-models-featured-metric-value {
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.2;
+      }
+
       @media (max-width: 980px) {
         .playground-models-page .playground-files-library-title-row,
         .playground-models-page .playground-files-library-nav-row {
@@ -342,6 +781,44 @@ export const MODELS_PAGE_CSS = String.raw`
           display: none;
         }
 
+        .playground-models-overview-toolbar-row {
+          align-items: stretch;
+          flex-wrap: wrap !important;
+        }
+
+        .playground-models-overview-search-shell {
+          flex-basis: 100% !important;
+          width: 100% !important;
+          max-width: none !important;
+        }
+
+        .playground-models-overview-category-row {
+          width: 100%;
+          margin-left: 0;
+        }
+
+        .playground-models-overview-category-switch {
+          flex: 1 1 auto;
+        }
+
+        .playground-models-overview-table-section .playground-models-overview-column-header {
+          display: none;
+        }
+
+        .playground-models-overview-table-section .playground-models-overview-table-row,
+        .playground-models-overview-table-section .playground-models-overview-table-row.is-agent-pricing {
+          grid-template-columns: minmax(0, 1fr);
+          row-gap: 7px;
+        }
+
+        .playground-models-overview-table-section .playground-models-overview-table-row .playground-models-overview-cell:not(.is-name) {
+          grid-column: 1;
+        }
+
+        .playground-models-featured-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
         .playground-models-entry-row.playground-files-entry-row {
           grid-template-columns: minmax(0, 1fr);
           row-gap: 6px;
@@ -360,7 +837,17 @@ export const MODELS_PAGE_CSS = String.raw`
 
       @media (max-width: 720px) {
         .playground-models-page {
-          padding: 30px 18px 42px;
+          padding: 0 18px 42px;
+        }
+
+        .playground-models-featured-header {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .playground-models-featured-grid {
+          grid-template-columns: minmax(0, 1fr);
         }
       }
 `;
@@ -378,6 +865,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         "gpt-5.4": 174.5,
         "gpt-5.4-mini": 180.6,
         "gpt-5.4-nano": 147.0,
+        "grok-4.5": 85,
         "gemini-3-flash": 176.9,
         "gemini-3-1-flash": 176.9,
         "gemini-3-1-pro": 132.2,
@@ -399,6 +887,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         "kimi-k2.7-code": "High",
         "glm-5.2": "Highest",
         "qwen3.5-397b-a17b": "High",
+        "grok-4.5": "Highest",
       };
 
       function formatPlaygroundManagedLegacyCtPrice(value, unitLabel) {
@@ -637,19 +1126,19 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         const normalizedTabId = normalizePlaygroundManagedModelsTab(tabId);
         if (normalizedTabId === "agent") {
           return [
-            { id: "provider", label: "Provider" },
-            { id: "name", label: "Name (A-Z)" },
-            { id: "intelligence", label: "Highest intelligence" },
-            { id: "cost", label: "Lowest cost" },
-            { id: "context", label: "Largest context" },
-            { id: "speed", label: "Highest TPS" },
+            { id: "provider", label: "Provider", direction: "asc" },
+            { id: "name", label: "Name (A-Z)", direction: "asc" },
+            { id: "intelligence", label: "Highest intelligence", direction: "desc" },
+            { id: "cost-input", label: "Lowest input cost", direction: "asc" },
+            { id: "context", label: "Largest context", direction: "desc" },
+            { id: "speed", label: "Highest TPS", direction: "desc" },
           ];
         }
         return [
-          { id: "provider", label: "Provider" },
-          { id: "name", label: "Name (A-Z)" },
-          { id: "cost", label: "Lowest cost" },
-          { id: "speed", label: "Fastest" },
+          { id: "provider", label: "Provider", direction: "asc" },
+          { id: "name", label: "Name (A-Z)", direction: "asc" },
+          { id: "cost", label: "Lowest cost", direction: "asc" },
+          { id: "speed", label: "Fastest", direction: "desc" },
         ];
       }
 
@@ -876,34 +1365,64 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         );
       }
 
-      function sortPlaygroundManagedModels(tabId, rows, sortId) {
+      function sortPlaygroundManagedModels(tabId, rows, sortId, sortDirection = "asc") {
         const normalizedTabId = normalizePlaygroundManagedModelsTab(tabId);
         const normalizedSortId = String(sortId || "provider").trim() || "provider";
+        const directionMultiplier = String(sortDirection || "asc").trim().toLowerCase() === "desc" ? -1 : 1;
         const compareRows = (left, right) => {
+          let comparison = 0;
           if (normalizedSortId === "name") {
-            return String(left?.label || left?.id || "").localeCompare(String(right?.label || right?.id || ""));
-          }
-          if (normalizedTabId === "agent" && normalizedSortId === "intelligence") {
+            comparison = String(left?.label || left?.id || "").localeCompare(String(right?.label || right?.id || ""));
+          } else if (normalizedTabId === "agent" && normalizedSortId === "intelligence") {
             const leftLevel = getPlaygroundAgentIntelligenceLevel(left?.intelligence || left?.intelligenceLabel || "");
             const rightLevel = getPlaygroundAgentIntelligenceLevel(right?.intelligence || right?.intelligenceLabel || "");
-            if (leftLevel !== rightLevel) return rightLevel - leftLevel;
+            comparison = leftLevel - rightLevel;
+          } else if (normalizedTabId === "agent" && normalizedSortId.startsWith("cost-")) {
+            const priceKey = normalizedSortId === "cost-output" ? "output" : normalizedSortId === "cost-cached" ? "cached" : "input";
+            const readPrice = (model) => {
+              const value = String(getPlaygroundManagedAgentPricingCells(model)?.[priceKey] || "");
+              const match = value.replace(/,/g, "").match(/[0-9]+(?:\.[0-9]+)?/);
+              return match ? Number(match[0]) : Number.POSITIVE_INFINITY;
+            };
+            comparison = readPrice(left) - readPrice(right);
           } else if (normalizedSortId === "cost") {
             const leftCost = getPlaygroundManagedModelPricingRank(normalizedTabId, left);
             const rightCost = getPlaygroundManagedModelPricingRank(normalizedTabId, right);
-            if (leftCost !== rightCost) return leftCost - rightCost;
+            comparison = leftCost - rightCost;
           } else if (normalizedTabId === "agent" && normalizedSortId === "context") {
             const leftContext = readPlaygroundManagedModelContextValue(left);
             const rightContext = readPlaygroundManagedModelContextValue(right);
-            if (leftContext !== rightContext) return rightContext - leftContext;
+            comparison = leftContext - rightContext;
           } else if (normalizedSortId === "speed") {
             const leftSpeed = readPlaygroundManagedModelSpeedRank(left);
             const rightSpeed = readPlaygroundManagedModelSpeedRank(right);
-            if (leftSpeed !== rightSpeed) return rightSpeed - leftSpeed;
+            comparison = leftSpeed - rightSpeed;
+          } else if (normalizedSortId === "capability") {
+            comparison = String(
+              normalizedTabId === "video"
+                ? left?.maxDuration || ""
+                : normalizedTabId === "agent"
+                  ? left?.intelligence || left?.intelligenceLabel || ""
+                  : left?.mode || ""
+            ).localeCompare(String(
+              normalizedTabId === "video"
+                ? right?.maxDuration || ""
+                : normalizedTabId === "agent"
+                  ? right?.intelligence || right?.intelligenceLabel || ""
+                  : right?.mode || ""
+            ));
+          } else if (normalizedSortId === "scope") {
+            comparison = String(
+              normalizedTabId === "video" ? left?.resolutions || "" : left?.contextWindow || ""
+            ).localeCompare(String(
+              normalizedTabId === "video" ? right?.resolutions || "" : right?.contextWindow || ""
+            ));
           }
+          if (comparison !== 0) return comparison * directionMultiplier;
           const leftProvider = getPlaygroundManagedModelProviderLabel(normalizedTabId, left);
           const rightProvider = getPlaygroundManagedModelProviderLabel(normalizedTabId, right);
-          if (leftProvider !== rightProvider) return leftProvider.localeCompare(rightProvider);
-          return String(left?.label || left?.id || "").localeCompare(String(right?.label || right?.id || ""));
+          if (leftProvider !== rightProvider) return leftProvider.localeCompare(rightProvider) * directionMultiplier;
+          return String(left?.label || left?.id || "").localeCompare(String(right?.label || right?.id || "")) * directionMultiplier;
         };
         if (normalizedTabId !== "image" && normalizedTabId !== "video") {
           return rows.slice().sort(compareRows);
@@ -997,7 +1516,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         const providerFilter = String(props.providerFilter || "all").trim() || "all";
         const providerFilterOptions = getPlaygroundManagedModelsProviderFilterOptions(activeTab, sourceRows);
         const sortOptions = getPlaygroundManagedModelsSortOptions(activeTab);
-        const viewMode = props.viewMode === "cards" ? "cards" : "table";
+        const normalizedSortDirection = String(props.sortDirection || "asc").trim().toLowerCase() === "desc" ? "desc" : "asc";
         const filteredRows = sourceRows
           .filter((model) => model?.id && model?.label)
           .filter((model) => {
@@ -1035,9 +1554,12 @@ export const MODELS_PAGE_SCRIPT = String.raw`
             ].join(" ").toLowerCase();
             return haystack.includes(normalizedSearchQuery);
           });
-        const visibleRows = sortPlaygroundManagedModels(activeTab, filteredRows, props.sort);
+        const visibleRows = sortPlaygroundManagedModels(activeTab, filteredRows, props.sort, normalizedSortDirection);
         const isAgentTab = activeTab === "agent";
         const isVideoTab = activeTab === "video";
+        const modelTableVariantClass = activeTab === "deep_research"
+          ? " is-deep-research-models"
+          : " is-" + activeTab + "-models";
         const capabilityLabel = isVideoTab ? "Max Duration" : isAgentTab ? "Intelligence" : "Mode";
         const scopeLabel = isAgentTab ? "Context" : activeTab === "image" ? "Quality" : activeTab === "video" ? "Resolutions" : "Scope";
         const speedLabel = isVideoTab ? "Input Modalities" : isAgentTab ? "Speed in TPS" : "Speed";
@@ -1056,21 +1578,201 @@ export const MODELS_PAGE_SCRIPT = String.raw`
           return model.speed || "Custom";
         };
         const getPricingValue = (model) => getPlaygroundManagedModelPricingLabel(activeTab, model) || (model?.isPricingSubrow ? "" : "Pricing tiers");
+        const featuredModelDefinitions = [
+          {
+            id: "deepseek-v4-flash",
+            displayName: "DeepSeek V4 Flash",
+            badge: "Speed & value",
+            description: "Fast, cost-efficient execution for high-volume agents and everyday production work.",
+            cardClassName: "is-speed",
+            Icon: Zap,
+            metrics: [
+              { label: "Speed", value: (model) => formatPlaygroundManagedAgentModelTps(model) },
+              { label: "Input", value: (model) => getPlaygroundManagedAgentPricingCells(model).input + " / mTok" },
+              { label: "Context", value: (model) => model?.contextWindow || "Custom" },
+            ],
+          },
+          {
+            id: "kimi-k2.7-code",
+            displayName: "Kimi K2.7 Code",
+            badge: "Coding",
+            description: "Maximum coding performance for complex implementation work and long-horizon engineering.",
+            cardClassName: "is-code",
+            Icon: Code2,
+            metrics: [
+              { label: "Intelligence", value: (model) => model?.intelligence || model?.intelligenceLabel || "High" },
+              { label: "Context", value: (model) => model?.contextWindow || "Custom" },
+              { label: "Input", value: (model) => getPlaygroundManagedAgentPricingCells(model).input + " / mTok" },
+            ],
+          },
+          {
+            id: "glm-5.2",
+            displayName: "GLM 5.2",
+            badge: "Agent value",
+            description: "Strong autonomous agent performance with excellent throughput at a low operating cost.",
+            cardClassName: "is-agent",
+            Icon: Bot,
+            metrics: [
+              { label: "Intelligence", value: (model) => model?.intelligence || model?.intelligenceLabel || "Highest" },
+              { label: "Speed", value: (model) => formatPlaygroundManagedAgentModelTps(model) },
+              { label: "Input", value: (model) => getPlaygroundManagedAgentPricingCells(model).input + " / mTok" },
+            ],
+          },
+          {
+            id: "grok-4.5",
+            displayName: "Grok 4.5",
+            badge: "Frontier",
+            description: "Maximum performance and efficient token use for demanding agentic and knowledge work.",
+            cardClassName: "is-frontier",
+            Icon: Sparkles,
+            metrics: [
+              { label: "Intelligence", value: (model) => model?.intelligence || model?.intelligenceLabel || "Highest" },
+              { label: "Speed", value: (model) => formatPlaygroundManagedAgentModelTps(model) },
+              { label: "Context", value: (model) => model?.contextWindow || "Custom" },
+            ],
+          },
+        ];
+        const agentCatalogRows = getPlaygroundManagedModelsForTab("agent", props.agentModelOptions);
+        const featuredModels = featuredModelDefinitions
+          .map((definition) => ({
+            ...definition,
+            model: agentCatalogRows.find((model) => String(model?.id || "") === definition.id) || null,
+          }))
+          .filter((entry) => entry.model);
 
-        const renderSortMenu = () => props.toolbarPopover === "sort"
-          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+        const renderFeaturedModelsSection = () => {
+          if (!isAgentTab || featuredModels.length === 0) return null;
+          return React.createElement("section", {
+              className: "playground-models-featured-section",
+              "aria-labelledby": "playground-models-featured-title",
+            },
+            React.createElement("div", { className: "playground-models-featured-header" },
+              React.createElement("h2", { id: "playground-models-featured-title", className: "playground-models-featured-title" }, "Featured Models"),
+              React.createElement("p", { className: "playground-models-featured-caption" }, "Recommended for production agents")
+            ),
+            React.createElement("div", { className: "playground-models-featured-grid" },
+              featuredModels.map((entry) => {
+                const providerLabel = getPlaygroundManagedModelProviderLabel("agent", entry.model);
+                const RecommendationIcon = entry.Icon;
+                return React.createElement("article", {
+                    key: entry.id,
+                    className: "playground-models-featured-card " + entry.cardClassName,
+                  },
+                  React.createElement("div", { className: "playground-models-featured-card-top" },
+                    React.createElement("div", { className: "playground-models-featured-provider" },
+                      React.createElement("span", { className: "playground-models-featured-provider-icon", "aria-hidden": "true" },
+                        renderPlaygroundManagedModelProviderIcon("agent", entry.model)
+                      ),
+                      React.createElement("span", { className: "playground-models-featured-provider-label" }, providerLabel)
+                    ),
+                    React.createElement("span", { className: "playground-models-featured-badge" },
+                      React.createElement(RecommendationIcon, { width: 11, height: 11, strokeWidth: 1.9 }),
+                      React.createElement("span", null, entry.badge)
+                    )
+                  ),
+                  React.createElement("h3", { className: "playground-models-featured-name" }, entry.displayName),
+                  React.createElement("p", { className: "playground-models-featured-description" }, entry.description),
+                  React.createElement("div", { className: "playground-models-featured-metrics" },
+                    entry.metrics.map((metric) => {
+                      const value = metric.value(entry.model);
+                      return React.createElement("div", { key: metric.label, className: "playground-models-featured-metric" },
+                        React.createElement("span", { className: "playground-models-featured-metric-label" }, metric.label),
+                        React.createElement("span", { className: "playground-models-featured-metric-value", title: value }, value)
+                      );
+                    })
+                  )
+                );
+              })
+            )
+          );
+        };
+
+        const closeToolbarPopover = () => {
+          const openMenu = String(props.toolbarPopover || "").trim();
+          if (!openMenu) return;
+          if (typeof props.setToolbarPopoverClosing === "function") props.setToolbarPopoverClosing(openMenu);
+          props.setToolbarPopover("");
+          window.setTimeout(() => {
+            if (typeof props.setToolbarPopoverClosing === "function") props.setToolbarPopoverClosing("");
+          }, 160);
+        };
+        const toggleToolbarPopover = (menuId) => {
+          if (props.toolbarPopover === menuId) {
+            closeToolbarPopover();
+            return;
+          }
+          if (typeof props.setToolbarPopoverClosing === "function") props.setToolbarPopoverClosing("");
+          props.setToolbarPopover(menuId);
+        };
+        const setModelSort = (sortId, direction) => {
+          props.setSort(sortId);
+          if (typeof props.setSortDirection === "function") {
+            props.setSortDirection(String(direction || "asc").toLowerCase() === "desc" ? "desc" : "asc");
+          }
+        };
+        const handleColumnSort = (sortId) => {
+          const nextDirection = props.sort === sortId && normalizedSortDirection === "asc" ? "desc" : "asc";
+          setModelSort(sortId, nextDirection);
+          closeToolbarPopover();
+        };
+        const renderSortIcon = (sortId) => {
+          const isActive = props.sort === sortId;
+          return React.createElement("span", {
+              className: "playground-agents-overview-sort-icon"
+                + (isActive ? " is-active" : "")
+                + (isActive && normalizedSortDirection === "asc" ? " is-ascending" : "")
+                + (isActive && normalizedSortDirection === "desc" ? " is-descending" : ""),
+              "aria-hidden": "true",
+            },
+            React.createElement(ChevronsUpDown, { className: "playground-agents-overview-sort-icon-layer is-top", width: 14, height: 14, strokeWidth: 1.8 }),
+            React.createElement(ChevronsUpDown, { className: "playground-agents-overview-sort-icon-layer is-bottom", width: 14, height: 14, strokeWidth: 1.8 })
+          );
+        };
+        const renderSortableHeader = (label, sortId, className = "") => {
+          const isActive = props.sort === sortId;
+          const nextDirection = isActive && normalizedSortDirection === "asc" ? "descending" : "ascending";
+          return React.createElement("div", {
+              className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") + (className ? " " + className : ""),
+            },
+            React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+            React.createElement("button", {
+                type: "button",
+                className: "playground-agents-overview-column-sort-button"
+                  + (isActive ? " is-active" : "")
+                  + (isActive && normalizedSortDirection === "asc" ? " is-ascending" : "")
+                  + (isActive && normalizedSortDirection === "desc" ? " is-descending" : ""),
+                title: "Sort " + label + " " + nextDirection,
+                "aria-label": "Sort " + label + " " + nextDirection,
+                "aria-pressed": isActive ? "true" : "false",
+                onClick: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  handleColumnSort(sortId);
+                },
+              },
+              renderSortIcon(sortId)
+            )
+          );
+        };
+        const getToolbarMenuClassName = (menuId) =>
+          "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-models-overview-menu"
+          + (props.toolbarPopoverClosing === menuId ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in");
+
+        const renderSortMenu = () => props.toolbarPopover === "sort" || props.toolbarPopoverClosing === "sort"
+          ? React.createElement("div", { className: getToolbarMenuClassName("sort") },
               sortOptions.map((option) =>
                 React.createElement("button", {
                     key: option.id,
                     type: "button",
-                    className: "tb-popup-row tb-popup-row-select" + (props.sort === option.id ? " selected" : ""),
+                    className: "tb-popup-row tb-popup-row-select"
+                      + (props.sort === option.id && normalizedSortDirection === String(option.direction || "asc") ? " selected" : ""),
                     onClick: () => {
-                      props.setSort(option.id);
-                      props.setToolbarPopover("");
+                      setModelSort(option.id, option.direction);
+                      closeToolbarPopover();
                     },
                   },
                   React.createElement("span", { className: "tb-popup-check-slot" },
-                    props.sort === option.id
+                    props.sort === option.id && normalizedSortDirection === String(option.direction || "asc")
                       ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
                       : null
                   ),
@@ -1082,8 +1784,8 @@ export const MODELS_PAGE_SCRIPT = String.raw`
             )
           : null;
 
-        const renderFilterMenu = () => props.toolbarPopover === "filter"
-          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+        const renderFilterMenu = () => props.toolbarPopover === "filter" || props.toolbarPopoverClosing === "filter"
+          ? React.createElement("div", { className: getToolbarMenuClassName("filter") },
               providerFilterOptions.map((option) =>
                 React.createElement("button", {
                     key: option.id,
@@ -1091,7 +1793,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
                     className: "tb-popup-row tb-popup-row-select" + (providerFilter === option.id ? " selected" : ""),
                     onClick: () => {
                       props.setProviderFilter(option.id);
-                      props.setToolbarPopover("");
+                      closeToolbarPopover();
                     },
                   },
                   React.createElement("span", { className: "tb-popup-check-slot" },
@@ -1112,32 +1814,50 @@ export const MODELS_PAGE_SCRIPT = String.raw`
           const pricingCells = isAgentTab ? getPlaygroundManagedAgentPricingCells(model) : null;
           return React.createElement("div", {
               key: activeTab + ":table:" + model.id,
-              className: "playground-files-entry-row playground-models-entry-row"
+              className: "playground-project-overview-threads-table-row playground-models-overview-table-row"
                 + (isAgentTab ? " is-agent-pricing" : "")
+                + modelTableVariantClass
                 + (model.isPricingSubrow ? " is-pricing-subrow" : ""),
             },
-            React.createElement("div", { className: "playground-files-entry-main playground-models-entry-main" },
-              model.isPricingSubrow ? null : renderPlaygroundManagedModelProviderIcon(activeTab, model),
-              React.createElement("div", { className: "playground-files-entry-copy" },
-                React.createElement("div", {
-                  className: "playground-files-entry-name",
-                  title: model.label || model.id,
-                }, model.label || model.id),
-                null
+            React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell is-name" },
+              React.createElement("div", { className: "playground-files-entry-main playground-models-entry-main" },
+                model.isPricingSubrow ? null : renderPlaygroundManagedModelProviderIcon(activeTab, model),
+                React.createElement("div", { className: "playground-files-entry-copy" },
+                  React.createElement("div", {
+                    className: "playground-files-entry-name",
+                    title: model.label || model.id,
+                  }, model.label || model.id)
+                )
               )
             ),
-            React.createElement("div", { className: "playground-models-entry-value is-strong", title: providerLabel }, providerLabel),
-            React.createElement("div", { className: "playground-models-entry-value" }, getCapabilityValue(model)),
-            React.createElement("div", { className: "playground-models-entry-value", title: getScopeValue(model) }, getScopeValue(model)),
-            React.createElement("div", { className: "playground-models-entry-value", title: getSpeedValue(model) }, getSpeedValue(model)),
+            React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell" },
+              React.createElement("div", { className: "playground-models-entry-value is-strong", title: providerLabel }, providerLabel)
+            ),
+            React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell" },
+              React.createElement("div", { className: "playground-models-entry-value" }, getCapabilityValue(model))
+            ),
+            React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell" },
+              React.createElement("div", { className: "playground-models-entry-value", title: getScopeValue(model) }, getScopeValue(model))
+            ),
+            React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell" },
+              React.createElement("div", { className: "playground-models-entry-value", title: getSpeedValue(model) }, getSpeedValue(model))
+            ),
             ...(isAgentTab
               ? [
-                  React.createElement("div", { className: "playground-models-entry-value is-right is-strong is-price", title: pricingCells.input }, pricingCells.input),
-                  React.createElement("div", { className: "playground-models-entry-value is-right is-strong is-price", title: pricingCells.output }, pricingCells.output),
-                  React.createElement("div", { className: "playground-models-entry-value is-right is-strong is-price", title: pricingCells.cached }, pricingCells.cached),
+                  React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell is-right" },
+                    React.createElement("div", { className: "playground-models-entry-value is-right is-strong is-price", title: pricingCells.input }, pricingCells.input)
+                  ),
+                  React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell is-right" },
+                    React.createElement("div", { className: "playground-models-entry-value is-right is-strong is-price", title: pricingCells.output }, pricingCells.output)
+                  ),
+                  React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell is-right" },
+                    React.createElement("div", { className: "playground-models-entry-value is-right is-strong is-price", title: pricingCells.cached }, pricingCells.cached)
+                  ),
                 ]
               : [
-                  React.createElement("div", { className: "playground-models-entry-value is-right is-strong", title: getPricingValue(model) }, getPricingValue(model)),
+                  React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell is-right" },
+                    React.createElement("div", { className: "playground-models-entry-value is-right is-strong", title: getPricingValue(model) }, getPricingValue(model))
+                  ),
                 ])
           );
         };
@@ -1199,23 +1919,25 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         };
 
         const renderTableHead = () => {
-          if (viewMode !== "table" || visibleRows.length === 0) {
-            return null;
-          }
-          return React.createElement("div", { className: "playground-models-table-head" + (isAgentTab ? " is-agent-pricing" : ""), role: "row" },
-              React.createElement("span", null, "Model"),
-              React.createElement("span", null, "Provider"),
-              React.createElement("span", null, capabilityLabel),
-              React.createElement("span", null, scopeLabel),
-              React.createElement("span", null, speedLabel),
+          return React.createElement("div", {
+              className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-models-overview-column-header"
+                + (isAgentTab ? " is-agent-pricing" : "")
+                + modelTableVariantClass,
+              role: "row",
+            },
+              React.createElement("div", null, renderSortableHeader("Model", "name")),
+              React.createElement("div", null, renderSortableHeader("Provider", "provider")),
+              React.createElement("div", null, renderSortableHeader(capabilityLabel, isAgentTab ? "intelligence" : "capability")),
+              React.createElement("div", null, renderSortableHeader(scopeLabel, isAgentTab ? "context" : "scope")),
+              React.createElement("div", null, renderSortableHeader(speedLabel, "speed")),
               ...(isAgentTab
                 ? [
-                    React.createElement("span", { className: "is-right" }, "Input / mTok"),
-                    React.createElement("span", { className: "is-right" }, "Output / mTok"),
-                    React.createElement("span", { className: "is-right" }, "Cached / mTok"),
+                    React.createElement("div", { className: "is-right" }, renderSortableHeader("Input / mTok", "cost-input")),
+                    React.createElement("div", { className: "is-right" }, renderSortableHeader("Output / mTok", "cost-output")),
+                    React.createElement("div", { className: "is-right" }, renderSortableHeader("Cached / mTok", "cost-cached")),
                   ]
                 : [
-                    React.createElement("span", { className: "is-right" }, pricingLabel),
+                    React.createElement("div", { className: "is-right" }, renderSortableHeader(pricingLabel, "cost")),
                   ])
           );
         };
@@ -1226,10 +1948,10 @@ export const MODELS_PAGE_SCRIPT = String.raw`
               normalizedSearchQuery || providerFilter !== "all" ? "No matching models found." : "No models available."
             );
           }
-          if (viewMode === "cards") {
-            return React.createElement("div", { className: "playground-files-grid playground-models-grid" }, visibleRows.map(renderModelCard));
-          }
-          return React.createElement("div", { className: "playground-files-entry-list playground-models-entry-list" }, visibleRows.map(renderModelRow));
+          return React.createElement("div", { className: "playground-files-entry-list playground-project-overview-thread-list playground-models-entry-list" },
+            renderTableHead(),
+            visibleRows.map(renderModelRow)
+          );
         };
 
         const skillSettingsSection = skillSettingsMeta
@@ -1254,120 +1976,127 @@ export const MODELS_PAGE_SCRIPT = String.raw`
           : null;
         return React.createElement("div", { className: "playground-files-shell playground-models-shell" },
           React.createElement("section", { className: "playground-files-browser playground-models-browser" },
-            React.createElement("div", { className: "playground-files-browser-header", ref: props.toolbarRef },
-              props.toolbarPopover
-                ? React.createElement("div", {
-                    className: "playground-files-search-backdrop",
-                    onClick: () => props.setToolbarPopover(""),
-                  })
-                : null,
+            props.toolbarPopover || props.toolbarPopoverClosing
+              ? React.createElement("div", {
+                  className: "playground-files-search-backdrop",
+                  onClick: closeToolbarPopover,
+                })
+              : null,
+            React.createElement("div", { className: "playground-files-browser-header playground-models-browser-header" },
               React.createElement("div", { className: "playground-files-library-header playground-models-library-header" },
                 React.createElement("div", { className: "playground-files-library-title-row" },
-                  React.createElement("h1", { className: "playground-files-library-title" }, "Models"),
-                  React.createElement("div", { className: "playground-files-library-actions" },
-                    React.createElement("div", { className: "playground-files-library-search-anchor" },
-                      React.createElement("label", { className: "playground-files-library-search" },
-                        React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
-                        React.createElement("input", {
-                          type: "search",
-                          value: props.searchQuery,
-                          onChange: (event) => {
-                            props.setSearchQuery(event.target.value);
-                            if (props.toolbarPopover) {
-                              props.setToolbarPopover("");
-                            }
-                          },
-                          className: "playground-files-library-search-input",
-                          placeholder: "Search models",
-                          "aria-label": "Search models",
-                        })
-                      )
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-library-new-button playground-models-pricing-button",
-                      onClick: () => window.open(props.pricingUrl || "/pricing", "_blank", "noopener,noreferrer"),
-                    }, React.createElement("span", null, "Pricing"))
+                  React.createElement("h1", { className: "playground-files-library-title" }, "Models")
+                )
+              )
+            ),
+            React.createElement("div", { className: "playground-files-browser-body playground-models-browser-body" },
+              renderFeaturedModelsSection(),
+              React.createElement("section", {
+                  className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section playground-models-overview-table-section",
+                },
+                visibleRows.length === 0
+                  ? React.createElement("div", {
+                      className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-models-overview-sticky-table-header",
+                    }, renderModelsToolbar())
+                  : null,
+                visibleRows.length === 0
+                  ? React.createElement("div", { className: "playground-plugins-empty" },
+                      normalizedSearchQuery || providerFilter !== "all" ? "No matching models found." : "No models available."
+                    )
+                  : React.createElement("div", {
+                      className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-models-overview-table",
+                    },
+                    React.createElement("div", {
+                        className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-models-overview-sticky-table-header",
+                      }, renderModelsToolbar()),
+                    renderModelsContent()
                   )
+              ),
+              skillSettingsSection
+            )
+          )
+        );
+
+        function renderModelsToolbar() {
+          return React.createElement("div", {
+              className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-models-overview-toolbar-row",
+              ref: props.toolbarRef,
+            },
+            React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell playground-models-overview-search-shell" },
+              React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+              React.createElement("input", {
+                type: "search",
+                value: props.searchQuery,
+                onChange: (event) => {
+                  props.setSearchQuery(event.target.value);
+                  if (props.toolbarPopover) closeToolbarPopover();
+                },
+                className: "playground-plugins-search",
+                placeholder: "Search models",
+                "aria-label": "Search models",
+              })
+            ),
+            React.createElement("div", { className: "playground-plugins-toolbar-controls playground-models-overview-controls" },
+              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button is-bare is-backlog-sort"
+                    + (props.toolbarPopover === "sort" || props.sort !== "provider" || normalizedSortDirection !== "asc" ? " is-active" : ""),
+                  onClick: () => toggleToolbarPopover("sort"),
+                  title: "Sort models",
+                  "aria-expanded": props.toolbarPopover === "sort" ? "true" : "false",
+                },
+                  React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Sort")
                 ),
-                React.createElement("div", { className: "playground-files-library-nav-row" },
-                  React.createElement("div", { className: "playground-files-library-tabs content-mode-switch", role: "tablist", "aria-label": "Model categories" },
+                renderSortMenu()
+              ),
+              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button is-bare is-backlog-filter"
+                    + (props.toolbarPopover === "filter" || providerFilter !== "all" ? " is-active" : ""),
+                  onClick: () => toggleToolbarPopover("filter"),
+                  title: "Filter models",
+                  "aria-expanded": props.toolbarPopover === "filter" ? "true" : "false",
+                },
+                  React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Filter")
+                ),
+                renderFilterMenu()
+              )
+            ),
+            React.createElement("div", { className: "playground-models-overview-category-row" },
+              React.createElement("div", {
+                  className: "content-mode-switch playground-agents-list-switch playground-models-overview-category-switch",
+                  role: "tablist",
+                  "aria-label": "Model categories",
+                },
                     getPlaygroundManagedModelsTabs().map((tab) =>
                       React.createElement("button", {
                         key: tab.id,
                         type: "button",
                         role: "tab",
-                        className: "playground-files-library-tab" + (activeTab === tab.id ? " is-active" : ""),
+                        className: "content-mode-button" + (activeTab === tab.id ? " is-active" : ""),
                         "aria-selected": activeTab === tab.id ? "true" : "false",
                         onClick: () => {
                           props.setActiveTab(tab.id);
                           props.setToolbarPopover("");
+                          if (typeof props.setToolbarPopoverClosing === "function") props.setToolbarPopoverClosing("");
                           props.setProviderFilter("all");
-                          props.setSort("provider");
+                          setModelSort("provider", "asc");
                         },
                       }, tab.label)
                     )
-                  ),
-                  React.createElement("div", { className: "playground-files-library-controls" },
-                    React.createElement("div", { className: "playground-files-library-control-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-library-icon-button" + (props.toolbarPopover === "sort" || props.sort !== "provider" ? " is-active" : ""),
-                        onClick: () => props.setToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                        title: "Sort models",
-                        "aria-label": "Sort models",
-                        "aria-expanded": props.toolbarPopover === "sort" ? "true" : "false",
-                      }, React.createElement(ArrowUpDown, { width: 19, height: 19, strokeWidth: 1.8 })),
-                      renderSortMenu()
-                    ),
-                    React.createElement("div", { className: "playground-files-library-control-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-library-icon-button" + (props.toolbarPopover === "filter" || providerFilter !== "all" ? " is-active" : ""),
-                        onClick: () => props.setToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                        title: "Filter models",
-                        "aria-label": "Filter models",
-                        "aria-expanded": props.toolbarPopover === "filter" ? "true" : "false",
-                      }, React.createElement(SlidersHorizontal, { width: 19, height: 19, strokeWidth: 1.8 })),
-                      renderFilterMenu()
-                    ),
-                    React.createElement("span", { className: "playground-files-library-divider", "aria-hidden": "true" }),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-library-icon-button" + (viewMode === "cards" ? " is-active" : ""),
-                      onClick: () => {
-                        if (typeof props.setViewMode === "function") props.setViewMode("cards");
-                        props.setToolbarPopover("");
-                      },
-                      title: "Card view",
-                      "aria-label": "Card view",
-                    }, React.createElement(Grid3x3, { width: 20, height: 20, strokeWidth: 1.8 })),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-library-icon-button" + (viewMode === "table" ? " is-active" : ""),
-                      onClick: () => {
-                        if (typeof props.setViewMode === "function") props.setViewMode("table");
-                        props.setToolbarPopover("");
-                      },
-                      title: "Table view",
-                      "aria-label": "Table view",
-                    }, React.createElement(List, { width: 21, height: 21, strokeWidth: 1.8 }))
                   )
-                ),
-                renderTableHead()
-              )
-            ),
-            React.createElement("div", { className: "playground-files-browser-body playground-models-browser-body" },
-              renderModelsContent(),
-              skillSettingsSection
             )
-          )
-        );
+          );
+        }
       }
 
       function renderPlaygroundModelsPage(props) {
         const activeTab = normalizePlaygroundManagedModelsTab(props.activeTab);
-        return React.createElement("div", { className: "playground-files-page playground-models-page" },
+        return React.createElement("div", { className: "playground-files-page playground-models-page playground-agents-overview-page is-develop-configure-page" },
           renderPlaygroundManagedModelsTable({
             activeTab,
             setActiveTab: props.setActiveTab,
@@ -1378,8 +2107,12 @@ export const MODELS_PAGE_SCRIPT = String.raw`
             setProviderFilter: props.setProviderFilter,
             sort: props.sort,
             setSort: props.setSort,
+            sortDirection: props.sortDirection,
+            setSortDirection: props.setSortDirection,
             toolbarPopover: props.toolbarPopover,
             setToolbarPopover: props.setToolbarPopover,
+            toolbarPopoverClosing: props.toolbarPopoverClosing,
+            setToolbarPopoverClosing: props.setToolbarPopoverClosing,
             toolbarRef: props.toolbarRef,
             viewMode: props.viewMode,
             setViewMode: props.setViewMode,

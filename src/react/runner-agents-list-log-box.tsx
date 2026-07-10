@@ -114,6 +114,13 @@ const AGENT_MODEL_CATALOG: AgentModelMeta[] = [
     contextWindow: "400k",
   },
   {
+    id: "grok-4.5",
+    label: "Grok 4.5",
+    description: "xAI frontier model for coding, agentic tasks, and knowledge work.",
+    providerType: "xai",
+    contextWindow: "500k",
+  },
+  {
     id: "gemini-3-flash",
     label: "Gemini 3 Flash",
     description: "Fast default model for broad agent execution.",
@@ -189,6 +196,7 @@ const AGENT_MODEL_PRICING_BY_ID: Record<string, AgentModelPricing> = {
   "gpt-5.4": { input: 2.5, cached: 0.25, output: 15.0 },
   "gpt-5.4-mini": { input: 0.75, cached: 0.075, output: 4.5 },
   "gpt-5.4-nano": { input: 0.2, cached: 0.02, output: 1.25 },
+  "grok-4.5": { input: 2.0, cached: 2.0, output: 6.0 },
   "gemini-3-flash": { input: 0.5, cached: 0.05, output: 3.0 },
   "gemini-3-1-flash": { input: 0.5, cached: 0.05, output: 3.0 },
   "gemini-3-1-pro": { input: 2.0, cached: 0.2, output: 12.0 },
@@ -210,6 +218,8 @@ const AGENT_MODEL_ALIAS_BY_ID: Record<string, string> = {
   "gpt-5-codex": "gpt-5.4-mini",
   "gpt-5-mini": "gpt-5.4-mini",
   "gpt-5-nano": "gpt-5.4-nano",
+  "grok-4-5": "grok-4.5",
+  "grok-45": "grok-4.5",
   "gpt-5.5-thinking": "gpt-5.5",
   "deepseek-v4pro": "deepseek-v4-pro",
   "deepseek-v4flash": "deepseek-v4-flash",
@@ -455,6 +465,7 @@ function getProviderLabel(providerType: string): string {
   if (normalized === "anthropic") return "Anthropic";
   if (normalized === "google" || normalized === "gemini") return "Google";
   if (normalized === "openai") return "OpenAI";
+  if (normalized === "xai" || normalized === "grok") return "xAI";
   if (normalized === "deepseek") return "DeepSeek";
   if (normalized === "kimi" || normalized === "moonshot" || normalized === "cloudflare") return "Moonshot";
   if (normalized === "zai" || normalized === "z-ai" || normalized === "zhipu") return "ZAI";
@@ -479,6 +490,7 @@ function inferProviderTypeFromModelId(modelId: string): string {
   if (normalized.startsWith("claude-")) return "anthropic";
   if (normalized.startsWith("gemini-")) return "google";
   if (normalized.startsWith("gpt-")) return "openai";
+  if (normalized.startsWith("grok-") || normalized.includes("xai")) return "xai";
   if (normalized.startsWith("deepseek-")) return "deepseek";
   if (normalized.startsWith("kimi-")) return "kimi";
   if (normalized.startsWith("glm-") || normalized.includes("zai") || normalized.includes("zhipu")) return "zai";

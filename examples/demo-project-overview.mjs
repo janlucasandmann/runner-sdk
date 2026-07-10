@@ -5054,6 +5054,12 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         backdrop-filter: none;
       }
 
+      .playground-project-overview-strategy-card.is-notes.is-full-strategy-notes {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.075);
+      }
+
       .playground-project-overview-strategy-goal {
         width: 100%;
         display: flex;
@@ -5382,7 +5388,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         padding-top: 0;
       }
 
-      .playground-project-overview-strategy-notes.playground-tasks-detail-description {
+      .playground-project-overview-strategy-notes.playground-tasks-detail-description:not(.playground-agents-detail-instructions-section) {
         background: transparent;
         border: 0;
         padding: 0;
@@ -6531,6 +6537,36 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               ? "Mission Control has generated a strategy snapshot for the current project state."
               : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
           const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
+          const canUndoMissionControlDocument = Array.isArray(missionControlDocumentHistory?.past) && missionControlDocumentHistory.past.length > 0;
+          const canRedoMissionControlDocument = Array.isArray(missionControlDocumentHistory?.future) && missionControlDocumentHistory.future.length > 0;
+          const renderMissionControlDocumentToolbarButton = (action) =>
+            React.createElement("button", {
+              key: action.id,
+              type: "button",
+              className: "playground-tasks-detail-format-button",
+              title: action.label,
+              "aria-label": action.label,
+              disabled: Boolean(action.disabled),
+              onMouseDown: (event) => event.preventDefault(),
+              onClick: action.onClick,
+            }, React.createElement(action.icon, {
+              width: 14,
+              height: 14,
+              strokeWidth: action.strokeWidth || 1.8,
+            }));
+          const missionControlDocumentTextFormatActions = [
+            { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
+            { id: "italic", label: "Italic", icon: Italic },
+            { id: "underline", label: "Underline", icon: Underline },
+          ];
+          const missionControlDocumentListFormatActions = [
+            { id: "list", label: "List", icon: List },
+            { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
+          ];
+          const missionControlDocumentInsertFormatActions = [
+            { id: "code", label: "Code", icon: CodeXml },
+            { id: "link", label: "Link", icon: Link2 },
+          ];
           const normalizedProjectOverviewHomeTab = projectOverviewHomeTab === "rules" ? "strategy" : projectOverviewHomeTab;
           const projectOverviewSettingsMetadata = projectOverviewDraft?.metadata && typeof projectOverviewDraft.metadata === "object" && !Array.isArray(projectOverviewDraft.metadata)
             ? projectOverviewDraft.metadata
@@ -7454,6 +7490,46 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 : String(right?.updatedAt || right?.createdAt || "").localeCompare(String(left?.updatedAt || left?.createdAt || ""));
             });
           const visibleProjectThreads = projectOverviewFilteredThreads.slice(0, Math.max(5, Number(projectOverviewVisibleThreadCount) || 5));
+          const visibleProjectThreadIds = visibleProjectThreads
+            .map((thread) => {
+              const safeThread = typeof normalizeThreadItem === "function" ? normalizeThreadItem(thread) : thread;
+              return String(safeThread?.id || thread?.id || "").trim();
+            })
+            .filter(Boolean);
+          const selectedVisibleProjectThreadIds = visibleProjectThreadIds.filter((threadId) =>
+            selectedProjectOverviewThreadIds instanceof Set && selectedProjectOverviewThreadIds.has(threadId)
+          );
+          const allVisibleProjectThreadsSelected = visibleProjectThreadIds.length > 0 && selectedVisibleProjectThreadIds.length === visibleProjectThreadIds.length;
+          const hasPartialVisibleProjectThreadSelection = selectedVisibleProjectThreadIds.length > 0 && !allVisibleProjectThreadsSelected;
+          const toggleProjectOverviewThreadSelection = (threadId) => {
+            const normalizedThreadId = String(threadId || "").trim();
+            if (!normalizedThreadId || typeof setSelectedProjectOverviewThreadIds !== "function") {
+              return;
+            }
+            setSelectedProjectOverviewThreadIds((current) => {
+              const next = new Set(current || []);
+              if (next.has(normalizedThreadId)) {
+                next.delete(normalizedThreadId);
+              } else {
+                next.add(normalizedThreadId);
+              }
+              return next;
+            });
+          };
+          const toggleVisibleProjectOverviewThreadSelection = () => {
+            if (!visibleProjectThreadIds.length || typeof setSelectedProjectOverviewThreadIds !== "function") {
+              return;
+            }
+            setSelectedProjectOverviewThreadIds((current) => {
+              const next = new Set(current || []);
+              if (allVisibleProjectThreadsSelected) {
+                visibleProjectThreadIds.forEach((threadId) => next.delete(threadId));
+              } else {
+                visibleProjectThreadIds.forEach((threadId) => next.add(threadId));
+              }
+              return next;
+            });
+          };
           const hasMoreProjectThreads = projectOverviewFilteredThreads.length > visibleProjectThreads.length;
           const hasProjectOverviewThreadListFilters = Boolean(
             normalizedSearchQuery
@@ -9074,10 +9150,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
-          function renderProjectOverviewThreadsSection() {
-            return React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section" },
-              renderOverviewSectionHeader("Threads", null),
-              React.createElement("div", { className: "playground-plugins-search-row", ref: projectOverviewThreadsToolbarRef },
+          function renderProjectOverviewThreadsToolbar() {
+            return React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-project-overview-threads-sticky-table-header" },
+              React.createElement("div", { className: "playground-plugins-search-row playground-agents-overview-search-row playground-project-overview-threads-toolbar", ref: projectOverviewThreadsToolbarRef },
                 React.createElement("div", { className: "playground-plugins-search-shell" },
                   React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                   React.createElement("input", {
@@ -9151,11 +9226,27 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
                   React.createElement("span", null, "Show more")
                 )
-              ),
+              )
+            );
+          }
+
+          function renderProjectOverviewThreadsSection() {
+            return React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-agents-overview-table-section" },
+              renderOverviewSectionHeader("Threads", null),
               projectOverviewFilteredThreads.length > 0
                 ? renderPlaygroundThreadOverviewTable({
                     threads: visibleProjectThreads,
-                    rowOptions: projectOverviewThreadTableRowOptions,
+                    rowOptions: {
+                      ...projectOverviewThreadTableRowOptions,
+                      useAgentsOverviewTable: true,
+                      selectable: true,
+                      toolbarContent: renderProjectOverviewThreadsToolbar(),
+                      selectedIds: selectedProjectOverviewThreadIds,
+                      allVisibleSelected: allVisibleProjectThreadsSelected,
+                      partialSelection: hasPartialVisibleProjectThreadSelection,
+                      onToggleSelection: toggleProjectOverviewThreadSelection,
+                      onToggleVisibleSelection: toggleVisibleProjectOverviewThreadSelection,
+                    },
                   })
                 : React.createElement("div", { className: "playground-tasks-secondary-copy" },
                     hasProjectOverviewThreadListFilters ? "No matching project threads." : "No project threads yet."
@@ -13679,71 +13770,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               },
               React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-project-overview-strategy-scroll" },
                 React.createElement("div", { className: "playground-project-overview-strategy-brief" },
-                  React.createElement("div", { className: "playground-project-overview-strategy-card is-notes" },
-                    React.createElement("div", { className: "playground-tasks-detail-description playground-project-overview-strategy-notes" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Project Goal"),
-                        React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                          [
-                            { id: "bold", label: "Bold", icon: Bold },
-                            { id: "italic", label: "Italic", icon: Italic },
-                            { id: "underline", label: "Underline", icon: Underline },
-                            { id: "list", label: "List", icon: List },
-                          ].map((action) =>
-                            React.createElement("button", {
-                              key: action.id,
-                              type: "button",
-                              className: "playground-tasks-detail-format-button",
-                              title: action.label,
-                              "aria-label": action.label,
-                              onMouseDown: (event) => event.preventDefault(),
-                              onClick: () => handleProjectDescriptionFormat(action.id),
-                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                          )
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isProjectDescriptionEditing ? " is-editing" : " is-preview") },
-                        !isProjectDescriptionEditing
-                          ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                              String(projectOverviewGoal || "").trim()
-                                ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                    content: projectOverviewGoal,
-                                    className: "playground-tasks-detail-description-preview tb-message-markdown",
-                                  })
-                                : React.createElement("div", {
-                                    className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                  }, "No project goal set yet.")
-                            )
-                          : null,
-                        React.createElement("textarea", {
-                          ref: projectDescriptionTextareaRef,
-                          className: "playground-tasks-detail-description-input " + (isProjectDescriptionEditing ? "is-editing" : "is-preview"),
-                          rows: 1,
-                          placeholder: isProjectDescriptionEditing ? "Add project goal here" : "",
-                          value: projectOverviewGoal,
-                          onFocus: () => {
-                            setProjectDraft((current) => current?.id === normalizedSelectedProjectId
-                              ? current
-                              : normalizePlaygroundProjectRecord(projectOverviewDraft || selectedProject)
-                            );
-                            setProjectDescriptionEditing(true);
-                          },
-                          onChange: (event) => {
-                            const nextDescription = event.target.value;
-                            setProjectDraft((current) => ({
-                              ...(current && typeof current === "object" ? current : normalizePlaygroundProjectRecord(projectOverviewDraft || selectedProject)),
-                              description: nextDescription,
-                            }));
-                            resizeTaskDescriptionTextarea(event.currentTarget);
-                          },
-                          onBlur: (event) => {
-                            setProjectDescriptionEditing(false);
-                            void saveProjectOverviewDescription(event.currentTarget.value);
-                          },
-                        })
-                      )
-                    )
-                  ),
                   React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-project-overview-strategy-progress-card" },
                     React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
                       React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Outcomes"),
@@ -13783,26 +13809,57 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                           )
                     )
                   ),
-                  React.createElement("div", { className: "playground-project-overview-strategy-card is-notes" },
-                    React.createElement("div", { className: "playground-tasks-detail-description playground-project-overview-strategy-notes" },
+                  React.createElement("div", { className: "playground-project-overview-strategy-card is-notes is-full-strategy-notes" },
+                    React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-project-overview-strategy-notes playground-project-strategy-notes-section" },
                       React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Full Strategy Notes"),
+                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Strategy Notes"),
                         React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                          [
-                            { id: "bold", label: "Bold", icon: Bold },
-                            { id: "italic", label: "Italic", icon: Italic },
-                            { id: "underline", label: "Underline", icon: Underline },
-                            { id: "list", label: "List", icon: List },
-                          ].map((action) =>
-                            React.createElement("button", {
-                              key: action.id,
-                              type: "button",
-                              className: "playground-tasks-detail-format-button",
-                              title: action.label,
-                              "aria-label": action.label,
-                              onMouseDown: (event) => event.preventDefault(),
+                          renderMissionControlDocumentToolbarButton({
+                            id: "undo",
+                            label: "Undo",
+                            icon: Undo2,
+                            disabled: !canUndoMissionControlDocument,
+                            onClick: handleMissionControlDocumentUndo,
+                          }),
+                          renderMissionControlDocumentToolbarButton({
+                            id: "redo",
+                            label: "Redo",
+                            icon: Redo2,
+                            disabled: !canRedoMissionControlDocument,
+                            onClick: handleMissionControlDocumentRedo,
+                          }),
+                          React.createElement("span", {
+                            key: "history-divider",
+                            className: "playground-agents-detail-instructions-toolbar-divider",
+                            "aria-hidden": "true",
+                          }),
+                          missionControlDocumentTextFormatActions.map((action) =>
+                            renderMissionControlDocumentToolbarButton({
+                              ...action,
                               onClick: () => handleMissionControlDocumentFormat(action.id),
-                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                            })
+                          ),
+                          React.createElement("span", {
+                            key: "list-divider-start",
+                            className: "playground-agents-detail-instructions-toolbar-divider",
+                            "aria-hidden": "true",
+                          }),
+                          missionControlDocumentListFormatActions.map((action) =>
+                            renderMissionControlDocumentToolbarButton({
+                              ...action,
+                              onClick: () => handleMissionControlDocumentFormat(action.id),
+                            })
+                          ),
+                          React.createElement("span", {
+                            key: "list-divider-end",
+                            className: "playground-agents-detail-instructions-toolbar-divider",
+                            "aria-hidden": "true",
+                          }),
+                          missionControlDocumentInsertFormatActions.map((action) =>
+                            renderMissionControlDocumentToolbarButton({
+                              ...action,
+                              onClick: () => handleMissionControlDocumentFormat(action.id),
+                            })
                           )
                         )
                       ),
@@ -13829,7 +13886,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                             setIsMissionControlDocumentEditing(true);
                           },
                           onChange: (event) => {
-                            setMissionControlDocumentDraft(event.target.value);
+                            updateMissionControlDocumentDraftValue(event.target.value, {
+                              previousValue: missionControlDocumentDraft,
+                            });
                             resizeTaskDescriptionTextarea(event.currentTarget);
                           },
                           onBlur: () => {

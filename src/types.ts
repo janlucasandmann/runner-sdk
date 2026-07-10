@@ -571,11 +571,234 @@ export interface RunnerFineTuningJobCreateInput {
   metadata?: Record<string, unknown> | null;
 }
 
+export type RunnerMetronomeNodeKind =
+  | "trigger"
+  | "condition"
+  | "action"
+  | "ticket"
+  | "imagine"
+  | "function"
+  | "firecrawl"
+  | "table"
+  | "database"
+  | "metronome"
+  | "loop"
+  | "approval"
+  | "end"
+  | "note"
+  | string;
+
+export type RunnerMetronomeFunctionMode = "computer_agents_function" | "external_api";
+export type RunnerMetronomeHttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD";
+export type RunnerMetronomeTriggerType =
+  | "thread_event"
+  | "periodic"
+  | "email"
+  | "telegram"
+  | "function"
+  | "github"
+  | "project_ticket"
+  | "resource"
+  | "database_entry"
+  | "auth"
+  | string;
+export type RunnerMetronomePayloadFieldType = "string" | "number" | "boolean" | "array" | "object";
+
+export interface RunnerMetronomeFunctionTriggerPayloadField {
+  id?: string;
+  key: string;
+  name?: string;
+  type?: RunnerMetronomePayloadFieldType;
+  value?: unknown;
+  defaultValue?: unknown;
+  description?: string;
+  required?: boolean;
+  [key: string]: unknown;
+}
+
+export interface RunnerMetronomeTriggerNodeConfig {
+  triggerType?: RunnerMetronomeTriggerType;
+  threadCommand?: string;
+  promptExtension?: string;
+  /**
+   * Function trigger settings. When `triggerType` is `function`, publishing the workflow
+   * should deploy a Computer Agents cloud function that forwards requests to this workflow.
+   */
+  functionTriggerType?: "cloud_function" | string;
+  functionName?: string;
+  functionSlug?: string;
+  functionTriggerSlug?: string;
+  functionEndpointUrl?: string;
+  functionEndpointPath?: string;
+  endpointUrl?: string;
+  endpointPath?: string;
+  functionRequireApiKey?: boolean;
+  requireApiKey?: boolean;
+  requiresApiKey?: boolean;
+  authentication?: "api_key" | "public" | string;
+  payloadFields?: RunnerMetronomeFunctionTriggerPayloadField[];
+  payloadSchemaJson?: string;
+  samplePayloadJson?: string;
+  expectedPayload?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface RunnerMetronomeFunctionHeader {
+  id?: string;
+  name: string;
+  valueType?: "text" | "secret";
+  value?: string;
+  secretRef?: string;
+  secretVaultId?: string;
+  secretVaultName?: string;
+  secretId?: string;
+  secretName?: string;
+  [key: string]: unknown;
+}
+
+export interface RunnerMetronomeFunctionNodeConfig {
+  /**
+   * `computer_agents_function` invokes a deployed Computer Agents function resource.
+   * `external_api` invokes an arbitrary HTTP API from the Metronome executor.
+   */
+  functionMode?: RunnerMetronomeFunctionMode;
+  functionId?: string;
+  functionName?: string;
+  httpMethod?: RunnerMetronomeHttpMethod;
+  method?: RunnerMetronomeHttpMethod;
+  url?: string;
+  requestUrl?: string;
+  endpoint?: string;
+  /**
+   * JSON object or JSON string. Supports Metronome dynamic content tokens such as `{{ input }}`.
+   */
+  headers?: Record<string, string> | RunnerMetronomeFunctionHeader[] | string;
+  requestHeaders?: RunnerMetronomeFunctionHeader[];
+  headersJson?: string;
+  requestHeadersJson?: string;
+  /**
+   * JSON object or JSON string. Supports Metronome dynamic content tokens such as `{{ input }}`.
+   */
+  payload?: unknown;
+  payloadJson?: string;
+  outputKey?: string;
+  [key: string]: unknown;
+}
+
+export interface RunnerMetronomeNode<TConfig extends Record<string, unknown> = Record<string, unknown>> {
+  id: string;
+  kind: RunnerMetronomeNodeKind;
+  subtype?: string;
+  label?: string;
+  description?: string;
+  config?: TConfig;
+  position?: { x: number; y: number } | Record<string, unknown>;
+  style?: Record<string, unknown>;
+  parentId?: string;
+  extent?: string;
+  [key: string]: unknown;
+}
+
+export interface RunnerMetronomeFunctionNode extends RunnerMetronomeNode<RunnerMetronomeFunctionNodeConfig> {
+  kind: "function";
+  subtype?: "invoke_function" | string;
+}
+
+export interface RunnerMetronomeTriggerNode extends RunnerMetronomeNode<RunnerMetronomeTriggerNodeConfig> {
+  kind: "trigger";
+  subtype?: RunnerMetronomeTriggerType;
+}
+
+export type RunnerMetronomeWorkflowNode = RunnerMetronomeTriggerNode | RunnerMetronomeFunctionNode | RunnerMetronomeNode;
+
+export interface RunnerMetronomeEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+  [key: string]: unknown;
+}
+
+export interface RunnerMetronomeDefinition {
+  version?: number;
+  name?: string;
+  description?: string | null;
+  nodes: RunnerMetronomeWorkflowNode[];
+  edges: RunnerMetronomeEdge[];
+  metadata?: Record<string, unknown> | null;
+  dynamicContent?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface RunnerMetronomeWorkflow {
+  id: string;
+  name?: string;
+  description?: string | null;
+  status?: string;
+  triggerSummary?: string;
+  projectId?: string | null;
+  projectName?: string | null;
+  definition?: RunnerMetronomeDefinition | Record<string, unknown>;
+  metadata?: Record<string, unknown> | null;
+  createdAt?: string;
+  updatedAt?: string;
+  publishedAt?: string | null;
+  [key: string]: unknown;
+}
+
+export interface RunnerMetronomeWorkflowCreateInput {
+  name: string;
+  description?: string | null;
+  status?: string;
+  triggerSummary?: string;
+  projectId?: string | null;
+  projectName?: string | null;
+  definition: RunnerMetronomeDefinition | Record<string, unknown>;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export type RunnerMetronomeWorkflowUpdateInput = Partial<RunnerMetronomeWorkflowCreateInput>;
+
+export interface RunnerMetronomeRunCreateInput {
+  definition?: RunnerMetronomeDefinition | Record<string, unknown>;
+  inputs?: Record<string, unknown>;
+  prompt?: string;
+  dynamicContent?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface RunnerMetronomeFunctionTriggerInvokeInput {
+  metronomeId?: string;
+  trigger?: string;
+  endpointUrl?: string;
+  payload?: Record<string, unknown>;
+  apiKey?: string;
+  [key: string]: unknown;
+}
+
+export interface RunnerMetronomeRun {
+  id: string;
+  metronomeId?: string;
+  triggerType?: string;
+  status?: string;
+  input?: Record<string, unknown>;
+  output?: Record<string, unknown>;
+  error?: string | Record<string, unknown> | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: unknown;
+}
+
 export interface RunnerMetronomeVersionSnapshot extends RunnerResourceVersionSnapshot {
   name?: string;
   description?: string | null;
-  nodes?: unknown[];
-  connections?: unknown[];
+  nodes?: RunnerMetronomeWorkflowNode[];
+  edges?: RunnerMetronomeEdge[];
+  connections?: RunnerMetronomeEdge[] | unknown[];
   metadata?: Record<string, unknown> | null;
 }
 

@@ -2182,6 +2182,27 @@ export const METRONOME_PAGE_CSS = String.raw`
         background: #050505;
       }
 
+      .playground-metronome-code-loading {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        line-height: 1.2;
+        text-align: center;
+      }
+
+      .playground-metronome-code-loading-dot-loader {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 0;
+      }
+
       .playground-metronome-code-workspace {
         flex: 1 1 0;
         min-height: 0;
@@ -2414,7 +2435,9 @@ export const METRONOME_PAGE_CSS = String.raw`
 
       .playground-metronome-node.is-loop {
         width: 100%;
+        max-width: none;
         height: 100%;
+        max-height: none;
         min-width: 420px;
         min-height: 170px;
         border-radius: 24px;
@@ -3073,6 +3096,111 @@ export const METRONOME_PAGE_CSS = String.raw`
         flex-basis: 78px;
         min-width: 78px;
         white-space: nowrap;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-loop-input-binding-field:has(> .playground-metronome-input) > .playground-metronome-field-label,
+      .playground-metronome-node-inspector .playground-metronome-loop-item-limit-field:has(> .playground-metronome-input) > .playground-metronome-field-label {
+        flex-basis: 104px;
+        min-width: 104px;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-function-type-field:has(> .playground-metronome-select) > .playground-metronome-field-label,
+      .playground-metronome-node-inspector .playground-metronome-function-method-field:has(> .playground-metronome-select) > .playground-metronome-field-label,
+      .playground-metronome-node-inspector .playground-metronome-function-url-field:has(> .playground-metronome-input) > .playground-metronome-field-label {
+        flex-basis: 72px;
+        min-width: 72px;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-function-headers-field {
+        gap: 10px;
+      }
+
+      .playground-metronome-function-headers-field > .playground-metronome-field-title {
+        margin-top: 12px;
+      }
+
+      .playground-metronome-function-headers-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .playground-metronome-function-header-row {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) 24px;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .playground-metronome-function-header-row .playground-metronome-input,
+      .playground-metronome-function-header-row .playground-metronome-select,
+      .playground-metronome-function-header-row .playground-metronome-custom-select-trigger {
+        width: 100%;
+        min-width: 0;
+        height: 30px;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0 12px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        line-height: 30px;
+        text-align: left;
+      }
+
+      .playground-metronome-function-header-row .playground-metronome-custom-select-trigger {
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .playground-metronome-function-header-delete {
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.62);
+        padding: 0;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .playground-metronome-function-header-delete:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+
+      .playground-metronome-function-header-delete:not(:disabled):hover {
+        color: rgba(255, 255, 255, 0.92);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-metronome-function-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding-top: 6px;
+      }
+
+      .playground-metronome-function-header-link {
+        border: 0;
+        background: transparent;
+        color: #66a6ff;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 400;
+        padding: 0;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .playground-metronome-function-header-link:hover {
+        color: #8bbbff;
       }
 
       .playground-metronome-node-inspector .playground-metronome-field:has(> .playground-metronome-input) > .playground-metronome-input,
@@ -4772,6 +4900,123 @@ export const METRONOME_PAGE_CSS = String.raw`
         opacity: 0.45;
       }
 
+      .playground-metronome-function-trigger-endpoint-field .playground-metronome-input {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-size: 11px;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-field.playground-metronome-function-trigger-endpoint-field {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+
+      .playground-metronome-function-trigger-endpoint-control {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 30px;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+      }
+
+      .playground-metronome-function-trigger-endpoint-control .playground-metronome-input {
+        width: 100%;
+        height: 30px;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0 12px;
+        color: rgba(255, 255, 255, 0.92);
+        line-height: 30px;
+      }
+
+      .playground-metronome-function-trigger-endpoint-copy {
+        width: 30px;
+        height: 30px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.62);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .playground-metronome-function-trigger-endpoint-copy:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+
+      .playground-metronome-function-trigger-endpoint-copy:not(:disabled):hover,
+      .playground-metronome-function-trigger-endpoint-copy:not(:disabled):focus-visible {
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.92);
+        outline: none;
+      }
+
+      .playground-metronome-function-trigger-payload-field {
+        padding-top: 8px;
+      }
+
+      .playground-metronome-function-trigger-payload-builder {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .playground-metronome-function-trigger-payload-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .playground-metronome-function-trigger-payload-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(110px, 0.52fr) 24px;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .playground-metronome-function-trigger-payload-row .playground-metronome-input,
+      .playground-metronome-function-trigger-payload-row .playground-metronome-select,
+      .playground-metronome-function-trigger-payload-row .playground-metronome-custom-select-trigger {
+        width: 100%;
+        min-width: 0;
+        height: 30px;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0 10px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        line-height: 30px;
+      }
+
+      .playground-metronome-function-trigger-payload-row .playground-metronome-custom-select-trigger {
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .playground-metronome-function-trigger-payload-add {
+        align-self: flex-start;
+        border: 0;
+        background: transparent;
+        color: #66a6ff;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 400;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+      }
+
+      .playground-metronome-function-trigger-payload-add:hover {
+        color: #8bbbff;
+      }
+
       .playground-metronome-node-inspector .playground-metronome-inspector-note {
         margin-top: 14px;
         border-radius: 0;
@@ -6451,7 +6696,7 @@ export const METRONOME_PAGE_CSS = String.raw`
 
       .playground-metronome-runs-header {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 18px;
       }
@@ -6481,9 +6726,10 @@ export const METRONOME_PAGE_CSS = String.raw`
       }
 
       .playground-metronome-runs-layout {
-        flex: 1 1 0;
+        flex: 0 0 auto;
         min-height: 0;
         display: flex;
+        width: 100%;
       }
 
       .playground-metronome-runs-table-shell {
@@ -6491,6 +6737,134 @@ export const METRONOME_PAGE_CSS = String.raw`
         min-height: 0;
         width: 100%;
         overflow: auto;
+      }
+
+      .playground-metronome-runs-table-section.playground-team-grid-table-section {
+        flex: 0 0 auto;
+        min-height: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        width: 100%;
+        align-self: stretch;
+        background: #121212;
+      }
+
+      .playground-metronome-runs-table-section .playground-project-overview-threads-table,
+      .playground-metronome-runs-table-section .playground-project-overview-thread-list {
+        flex: 0 0 auto;
+        height: auto;
+        min-height: 0;
+        width: 100%;
+      }
+
+      .playground-metronome-runs-table-section .playground-agents-overview-sticky-table-header {
+        flex: 0 0 auto;
+      }
+
+      .playground-metronome-runs-table-section .playground-metronome-runs-sticky-table-header {
+        background: #121212;
+      }
+
+      .playground-metronome-runs-table-section .playground-project-overview-thread-list {
+        width: calc(100% + 24px);
+        margin-left: -12px;
+        margin-right: -12px;
+        overflow-y: visible !important;
+      }
+
+      .playground-metronome-runs-table-section .playground-project-overview-threads-table-header,
+      .playground-metronome-runs-table-section .playground-project-overview-threads-table-row {
+        grid-template-columns: 21px minmax(300px, 1.28fr) minmax(140px, 0.48fr) minmax(82px, 0.24fr) minmax(92px, 0.28fr) minmax(112px, 0.34fr) 28px !important;
+        gap: 12px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding-right: 0;
+      }
+
+      .playground-metronome-runs-table-section .playground-project-overview-threads-table-header *,
+      .playground-metronome-runs-table-section .playground-project-overview-threads-table-row * {
+        font-size: 12px;
+      }
+
+      .playground-metronome-runs-table-section .playground-project-overview-threads-table-header.playground-metronome-runs-column-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-metronome-runs-table-section .playground-project-overview-threads-table-header.playground-metronome-runs-column-header > div:first-child {
+        justify-self: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .playground-metronome-runs-table-section .playground-project-overview-threads-table-header.playground-metronome-runs-column-header > div:nth-child(2) {
+        justify-self: stretch;
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .playground-metronome-runs-table-section .playground-project-overview-thread-cell.is-select {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-metronome-runs-table-section .playground-project-overview-thread-cell,
+      .playground-metronome-runs-table-section .playground-metronome-table-title,
+      .playground-metronome-runs-table-section .playground-metronome-table-subtitle,
+      .playground-metronome-runs-table-section .playground-agents-overview-table-value {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-runs-table-section .playground-project-overview-thread-cell.is-actions,
+      .playground-metronome-runs-table-section .playground-project-overview-threads-table-header > div:last-child {
+        justify-self: end;
+      }
+
+      .playground-metronome-runs-table-section .playground-project-overview-thread-cell.is-actions {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      .playground-metronome-run-action-menu-shell {
+        position: relative;
+      }
+
+      .playground-metronome-run-action-menu-shell .playground-metronome-run-table-action-menu {
+        left: auto;
+        right: 0;
+        min-width: 168px;
+        z-index: 2147483003;
+        transform-origin: top right;
+      }
+
+      .playground-metronome-run-table-action-menu.is-context {
+        position: fixed;
+        right: auto;
+        z-index: 2147483003;
+        min-width: 168px;
+        transform-origin: top left;
+      }
+
+      .playground-metronome-run-table-action-menu.is-context.playground-tasks-toolbar-popup-menu-animate-down-in {
+        animation: playground-tasks-toolbar-popup-fade-down-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      .playground-metronome-runs-table-section .playground-metronome-runs-table-state {
+        min-height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px 18px;
+        color: rgba(255, 255, 255, 0.56);
+        text-align: center;
       }
 
       .playground-metronome-runs-table .playground-metronome-runs-col-main {
@@ -6594,7 +6968,7 @@ export const METRONOME_PAGE_CSS = String.raw`
         background: rgba(255, 255, 255, 0.08);
         color: rgba(255, 255, 255, 0.72);
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 400;
         text-transform: capitalize;
       }
 
@@ -8090,6 +8464,18 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           { id: "status", label: "Status", description: "Grouped by current workflow state." },
           { id: "creator", label: "Creator", description: "Alphabetical by creator." },
         ];
+        const METRONOME_RUN_FILTER_OPTIONS = [
+          { id: "all", label: "All runs", description: "Show all workflow runs." },
+          { id: "completed", label: "Completed", description: "Only runs that completed successfully." },
+          { id: "failed", label: "Failed", description: "Only runs that failed." },
+          { id: "running", label: "Running", description: "Only active or queued runs." },
+        ];
+        const METRONOME_RUN_SORT_OPTIONS = [
+          { id: "recent", label: "Started", description: "Newest runs first." },
+          { id: "run", label: "Run", description: "Alphabetical by run summary." },
+          { id: "status", label: "Status", description: "Grouped by run status." },
+          { id: "steps", label: "Steps", description: "Most executed steps first." },
+        ];
         const METRONOME_WORKFLOW_WALLPAPER_FALLBACK_OPTIONS = [
           { id: "mountains", name: "Mountains", url: "/img/bg/mountain.avif", thumbnail: "/img/bg/mountain.avif" },
           { id: "aurora", name: "Road", url: "/img/bg/road.avif", thumbnail: "/img/bg/road.avif?auto=compress&cs=tinysrgb&w=300" },
@@ -8507,6 +8893,291 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           };
         }
 
+        const METRONOME_FUNCTION_TRIGGER_PAYLOAD_TYPE_OPTIONS = [
+          { id: "string", label: "Text" },
+          { id: "number", label: "Number" },
+          { id: "boolean", label: "Boolean" },
+          { id: "array", label: "List" },
+          { id: "object", label: "Object" },
+        ];
+
+        function normalizeMetronomeFunctionTriggerSlug(value, fallback = "workflow-trigger") {
+          const normalized = String(value || "")
+            .trim()
+            .toLowerCase()
+            .normalize("NFKD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 54);
+          return normalized || String(fallback || "workflow-trigger").trim() || "workflow-trigger";
+        }
+
+        function deriveMetronomeFunctionTriggerSlug(workflow, node, overrides = {}) {
+          const explicitSlug = String(
+            overrides.functionSlug
+            || overrides.function_slug
+            || overrides.functionTriggerSlug
+            || overrides.function_trigger_slug
+            || overrides.endpointSlug
+            || overrides.endpoint_slug
+            || ""
+          ).trim();
+          if (explicitSlug) return normalizeMetronomeFunctionTriggerSlug(explicitSlug);
+          const workflowSlug = normalizeMetronomeFunctionTriggerSlug(workflow?.name || "workflow");
+          const workflowId = String(workflow?.id || node?.id || "").replace(/^met_/, "").replace(/^node_/, "").slice(0, 8);
+          const shortId = normalizeMetronomeFunctionTriggerSlug(workflowId, String(node?.id || "function").replace(/^node_/, "").slice(0, 8) || "function");
+          return normalizeMetronomeFunctionTriggerSlug(workflowSlug + "-" + shortId);
+        }
+
+        function normalizeMetronomeFunctionTriggerPayloadType(value) {
+          const normalized = String(value || "").trim().toLowerCase();
+          return METRONOME_FUNCTION_TRIGGER_PAYLOAD_TYPE_OPTIONS.some((option) => option.id === normalized)
+            ? normalized
+            : "string";
+        }
+
+        function readMetronomeFunctionTriggerPayloadDefaultText(source) {
+          const hasDefaultValue = source && Object.prototype.hasOwnProperty.call(source, "defaultValue");
+          const hasDefaultSnake = source && Object.prototype.hasOwnProperty.call(source, "default_value");
+          const hasValue = source && Object.prototype.hasOwnProperty.call(source, "value");
+          const rawValue = hasDefaultValue
+            ? source.defaultValue
+            : hasDefaultSnake
+              ? source.default_value
+              : hasValue
+                ? source.value
+                : "";
+          if (rawValue === undefined || rawValue === null) return "";
+          if (typeof rawValue === "object") {
+            try {
+              return JSON.stringify(rawValue);
+            } catch {
+              return "";
+            }
+          }
+          return String(rawValue);
+        }
+
+        function createMetronomeFunctionTriggerPayloadField(overrides = {}) {
+          const source = overrides && typeof overrides === "object" ? overrides : {};
+          const rawKey = String(source.key || source.name || source.path || "").trim();
+          const type = normalizeMetronomeFunctionTriggerPayloadType(source.type || source.valueType || source.value_type);
+          return {
+            id: String(source.id || "payload_" + Math.random().toString(36).slice(2, 10)),
+            key: rawKey,
+            name: rawKey,
+            type,
+            value: readMetronomeFunctionTriggerPayloadDefaultText(source),
+          };
+        }
+
+        function normalizeMetronomeFunctionTriggerPayloadFields(value) {
+          const rows = [];
+          const preserveBlankRows = Array.isArray(value);
+          const addRow = (row) => {
+            const normalizedRow = createMetronomeFunctionTriggerPayloadField(row);
+            if (!preserveBlankRows && !normalizedRow.key && !normalizedRow.value) return;
+            rows.push(normalizedRow);
+          };
+          if (Array.isArray(value)) {
+            value.forEach(addRow);
+          } else if (value && typeof value === "object") {
+            Object.entries(value).forEach(([key, rawValue]) => {
+              if (rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)) {
+                addRow({ key, ...rawValue });
+              } else {
+                addRow({ key, value: rawValue, type: inferMetronomeDynamicContentValueType(rawValue) });
+              }
+            });
+          } else {
+            const text = String(value || "").trim();
+            if (text) {
+              try {
+                const parsed = JSON.parse(text);
+                return normalizeMetronomeFunctionTriggerPayloadFields(parsed);
+              } catch {
+                rows.push(createMetronomeFunctionTriggerPayloadField());
+              }
+            }
+          }
+          return rows.length ? rows : [createMetronomeFunctionTriggerPayloadField({ key: "message", type: "string", value: "" })];
+        }
+
+        function parseMetronomeFunctionTriggerPayloadDefault(row) {
+          const type = normalizeMetronomeFunctionTriggerPayloadType(row?.type);
+          const rawValue = String(row?.value ?? "").trim();
+          if (!rawValue) {
+            if (type === "number") return 0;
+            if (type === "boolean") return false;
+            if (type === "array") return [];
+            if (type === "object") return {};
+            return "";
+          }
+          if (type === "number") {
+            const numericValue = Number(rawValue);
+            return Number.isFinite(numericValue) ? numericValue : 0;
+          }
+          if (type === "boolean") {
+            return rawValue === "true" || rawValue === "1" || rawValue.toLowerCase() === "yes";
+          }
+          if (type === "array" || type === "object") {
+            try {
+              const parsed = JSON.parse(rawValue);
+              if (type === "array") return Array.isArray(parsed) ? parsed : [];
+              return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+            } catch {
+              return type === "array" ? [] : {};
+            }
+          }
+          return rawValue;
+        }
+
+        function buildMetronomeFunctionTriggerSamplePayload(rows) {
+          const payload = {};
+          (Array.isArray(rows) ? rows : []).forEach((row) => {
+            const key = String(row?.key || row?.name || "").trim();
+            if (!key) return;
+            payload[key] = parseMetronomeFunctionTriggerPayloadDefault(row);
+          });
+          return payload;
+        }
+
+        function buildMetronomeFunctionTriggerPayloadSchema(rows) {
+          const properties = {};
+          (Array.isArray(rows) ? rows : []).forEach((row) => {
+            const key = String(row?.key || row?.name || "").trim();
+            if (!key) return;
+            const type = normalizeMetronomeFunctionTriggerPayloadType(row?.type);
+            properties[key] = {
+              type,
+              default: parseMetronomeFunctionTriggerPayloadDefault(row),
+            };
+          });
+          return {
+            type: "object",
+            properties,
+          };
+        }
+
+        function buildMetronomeFunctionTriggerEndpointPath(workflowId, slug) {
+          const normalizedWorkflowId = String(workflowId || "").trim();
+          const normalizedSlug = normalizeMetronomeFunctionTriggerSlug(slug);
+          if (!normalizedWorkflowId || !normalizedSlug) return "";
+          return "/metronomes/"
+            + encodeURIComponent(normalizedWorkflowId)
+            + "/triggers/function/"
+            + encodeURIComponent(normalizedSlug);
+        }
+
+        function buildDefaultMetronomeFunctionTriggerConfig(workflow, node, overrides = {}) {
+          const payloadFields = normalizeMetronomeFunctionTriggerPayloadFields(
+            overrides.payloadFields
+            || overrides.payload_fields
+            || overrides.expectedPayload
+            || overrides.expected_payload
+            || overrides.payloadSchemaJson
+            || overrides.payload_schema_json
+            || overrides.payloadSchema
+            || overrides.payload_schema
+            || overrides.samplePayloadJson
+            || overrides.sample_payload_json
+          );
+          const functionSlug = deriveMetronomeFunctionTriggerSlug(workflow, node, overrides);
+          const workflowId = String(workflow?.id || overrides.metronomeId || overrides.metronome_id || "").trim();
+          const explicitEndpointPath = String(
+            overrides.functionEndpointPath
+            || overrides.function_endpoint_path
+            || overrides.endpointPath
+            || overrides.endpoint_path
+          ).trim();
+          const endpointPath = explicitEndpointPath && !explicitEndpointPath.includes(":metronomeId")
+            ? explicitEndpointPath
+            : buildMetronomeFunctionTriggerEndpointPath(workflowId, functionSlug);
+          const endpointUrl = String(
+            overrides.functionEndpointUrl
+            || overrides.function_endpoint_url
+            || overrides.endpointUrl
+            || overrides.endpoint_url
+            || ""
+          ).trim();
+          const requireApiKey = overrides.functionRequireApiKey === undefined
+            && overrides.function_require_api_key === undefined
+            && overrides.requireApiKey === undefined
+            && overrides.require_api_key === undefined
+            && overrides.requiresApiKey === undefined
+            && overrides.requires_api_key === undefined
+              ? true
+              : Boolean(overrides.functionRequireApiKey ?? overrides.function_require_api_key ?? overrides.requireApiKey ?? overrides.require_api_key ?? overrides.requiresApiKey ?? overrides.requires_api_key);
+          return {
+            ...overrides,
+            triggerType: "function",
+            functionTriggerType: "cloud_function",
+            functionName: String(overrides.functionName || overrides.function_name || "metronome-" + functionSlug).trim(),
+            functionSlug,
+            functionTriggerSlug: functionSlug,
+            functionEndpointPath: endpointPath,
+            functionEndpointUrl: endpointUrl,
+            endpointPath,
+            endpointUrl,
+            functionRequireApiKey: requireApiKey,
+            requireApiKey,
+            authentication: requireApiKey ? "api_key" : "public",
+            payloadFields,
+            payloadSchemaJson: JSON.stringify(buildMetronomeFunctionTriggerPayloadSchema(payloadFields), null, 2),
+            samplePayloadJson: JSON.stringify(buildMetronomeFunctionTriggerSamplePayload(payloadFields), null, 2),
+            expectedPayload: buildMetronomeFunctionTriggerSamplePayload(payloadFields),
+            promptExtension: String(overrides.promptExtension || overrides.prompt_extension || ""),
+          };
+        }
+
+        function isMetronomeWorkflowPublished(workflow) {
+          const source = workflow && typeof workflow === "object" ? workflow : {};
+          const metadata = source.metadata && typeof source.metadata === "object" ? source.metadata : {};
+          if (String(source.status || "").trim().toLowerCase() === "active") return true;
+          if (String(source.publishedAt || source.published_at || metadata.publishedAt || metadata.published_at || "").trim()) return true;
+          return readMetronomeWorkflowDeployments(source).some((deployment) => (
+            String(deployment?.status || "").trim().toLowerCase() === "active"
+            || Boolean(String(deployment?.publishedAt || "").trim())
+          ));
+        }
+
+        function resolveMetronomePublicApiBaseUrl(backendUrl = "") {
+          const fallback = "https://api.computer-agents.com";
+          const rawValue = String(backendUrl || "").trim();
+          if (!rawValue || rawValue === "/api/real" || rawValue.endsWith("/api/real")) return fallback;
+          try {
+            const parsed = new URL(rawValue, typeof window !== "undefined" ? window.location.origin : fallback);
+            if (parsed.pathname === "/api/real" || parsed.pathname.startsWith("/api/real/")) return fallback;
+            return (parsed.origin + parsed.pathname).replace(new RegExp("/v1/?$"), "").replace(new RegExp("/+$"), "");
+          } catch {
+            return fallback;
+          }
+        }
+
+        function resolveMetronomeFunctionTriggerEndpointUrl(workflow, node, config, backendUrl = "") {
+          if (!isMetronomeWorkflowPublished(workflow)) return "";
+          const normalizedConfig = buildDefaultMetronomeFunctionTriggerConfig(workflow, node, config);
+          const explicitUrl = String(
+            normalizedConfig.functionEndpointUrl
+            || normalizedConfig.endpointUrl
+            || ""
+          ).trim();
+          if (/^https?:\/\//i.test(explicitUrl)) return explicitUrl;
+          const workflowId = String(workflow?.id || "").trim();
+          let endpointPath = String(
+            normalizedConfig.functionEndpointPath
+            || normalizedConfig.endpointPath
+            || ""
+          ).trim();
+          if (!workflowId || !endpointPath) return "";
+          endpointPath = endpointPath
+            .replace(/:metronomeId\b/g, encodeURIComponent(workflowId))
+            .replace(/\{metronomeId\}/g, encodeURIComponent(workflowId));
+          if (!endpointPath.startsWith("/")) endpointPath = "/" + endpointPath;
+          return resolveMetronomePublicApiBaseUrl(backendUrl) + endpointPath;
+        }
+
         const METRONOME_NODE_KIND_META = {
           trigger: {
             label: "Trigger",
@@ -8521,6 +9192,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               { id: "periodic", label: "Periodic schedule" },
               { id: "email", label: "Email received" },
               { id: "telegram", label: "Telegram message" },
+              { id: "function", label: "Function" },
               { id: "github", label: "GitHub event" },
               { id: "project_ticket", label: "Project ticket event" },
               { id: "resource", label: "Resource event" },
@@ -8582,7 +9254,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           },
           function: {
             label: "Function",
-            copy: "Call a deployed Computer Agents function and route its output through the workflow.",
+            copy: "Call a Computer Agents function or external API and route its output through the workflow.",
             color: "#0E90FF",
             gradient: "linear-gradient(180deg, #44A6FF 0%, #0E90FF 100%)",
             iconColor: "#fff",
@@ -8737,6 +9409,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             if (subtype === "periodic") return "Starts the workflow from a recurring schedule.";
             if (subtype === "email") return "Starts the workflow when a matching email arrives.";
             if (subtype === "telegram") return "Starts the workflow from an incoming Telegram message.";
+            if (subtype === "function") return "Deploys a callable Computer Agents cloud function endpoint for this workflow.";
             if (subtype === "github") return "Starts the workflow from a GitHub repository event.";
             if (subtype === "project_ticket") return "Starts the workflow from project ticket activity.";
             if (subtype === "database_entry") return "Starts the workflow when a database entry is added.";
@@ -8749,7 +9422,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           if (kind === "approval") return "Pauses execution until a human approves, rejects, or adjusts the run.";
           if (kind === "ticket") return "Creates or updates project tickets, comments, subtasks, and status transitions.";
           if (kind === "imagine") return "Starts an Imagine generation step using the selected template and prompt.";
-          if (kind === "function") return "Calls a deployed function and passes its result to downstream nodes.";
+          if (kind === "function") return "Calls a Computer Agents function or external API and passes its result to downstream nodes.";
           if (kind === "firecrawl") return "Searches, scrapes, parses, or extracts web data for later workflow steps.";
           if (kind === "table") return "Parses tabular input into records that can feed database, loop, and thread nodes.";
           if (kind === "database") return "Reads or writes documents in a selected database resource.";
@@ -8769,6 +9442,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               periodic: "Run automatically on a recurring schedule.",
               email: "Start when a matching email arrives.",
               telegram: "Start from a Telegram message or command.",
+              function: "Expose a callable cloud function endpoint.",
               github: "Start from repository webhook events.",
               project_ticket: "Start from project ticket activity.",
               resource: "Start from selected resource lifecycle events.",
@@ -9078,12 +9752,24 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const seen = new Set();
           const addField = (path, label, type, description) => addMetronomeDynamicContentField(fields, seen, path, label, type, description);
           if (kind === "trigger") {
+            const triggerType = String(config.triggerType || data.subtype || node?.subtype || "").trim();
             addField("input", "Trigger input", "object", "The payload that started this workflow.");
             addField("input.prompt", "Prompt", "text", "Prompt or message that started the run.");
             addField("input.files", "Files", "array", "Files included with the trigger.");
             addField("input.subject", "Subject", "text", "Subject from message or email triggers.");
             addField("input.from", "Sender", "text", "Sender from message or email triggers.");
             addField("input.body", "Body", "text", "Body text from message or email triggers.");
+            if (triggerType === "function") {
+              const payloadFields = normalizeMetronomeFunctionTriggerPayloadFields(config.payloadFields || config.payload_fields || config.payloadSchemaJson || config.payload_schema_json || config.expectedPayload || config.expected_payload);
+              addField("payload", "Function payload", "object", "Payload received by the callable function trigger.");
+              payloadFields.forEach((field) => {
+                const key = String(field?.key || field?.name || "").trim();
+                if (!key) return;
+                const type = normalizeMetronomeFunctionTriggerPayloadType(field?.type);
+                addField("payload." + key, titleCaseMetronomeDynamicContentPathPart(key), type, "Field from the function trigger payload.");
+                addField("input." + key, titleCaseMetronomeDynamicContentPathPart(key), type, "Top-level field from the function trigger payload.");
+              });
+            }
             return fields;
           }
           if (kind === "action") {
@@ -9186,6 +9872,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const isInsideLoop = Boolean(selectedNode?.parentId || selectedData.parentId);
           const items = [
             { scope: "global", path: "trigger.input", label: "Trigger input", type: "object", description: "The payload that started this workflow." },
+            { scope: "global", path: "trigger.payload", label: "Trigger payload", type: "object", description: "The request payload that started this workflow." },
             { scope: "global", path: "trigger.input.prompt", label: "Trigger prompt", type: "text", description: "The original user message or prompt." },
             { scope: "global", path: "trigger.input.files", label: "Trigger files", type: "array", description: "Files included with the trigger." },
             { scope: "global", path: "workflow.context", label: "Workflow context", type: "object", description: "Full accumulated workflow context." },
@@ -9599,15 +10286,19 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 
         function createMetronomeInitialReferenceContext(workflow, definition, inputs = {}) {
           const safeInputs = inputs && typeof inputs === "object" ? inputs : { value: inputs };
+          const triggerPayload = safeInputs.payload && typeof safeInputs.payload === "object"
+            ? safeInputs.payload
+            : safeInputs;
           const workflowContext = {
             workflowId: String(workflow?.id || definition?.id || "").trim(),
             workflowName: String(workflow?.name || definition?.name || "Metronome").trim(),
             input: safeInputs,
             trigger: safeInputs,
+            payload: triggerPayload,
           };
           return {
             input: safeInputs,
-            trigger: { input: safeInputs },
+            trigger: { input: safeInputs, payload: triggerPayload },
             workflow: { context: workflowContext },
             current: {},
             previous: {},
@@ -9668,6 +10359,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 
         function normalizeMetronomeDataBinding(value, fallback = "last.text") {
           const normalized = String(value || "").trim();
+          if (normalized === "trigger.input.csvContent") return "workflow.trigger.input.csvContent";
           if (normalized) return normalized;
           return String(fallback || "last.text");
         }
@@ -9684,6 +10376,124 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           return ["parse_csv", "parse_tsv"].includes(normalized)
             ? normalized
             : "parse_csv";
+        }
+
+        function normalizeMetronomeFunctionMode(value, fallback = "computer_agents_function") {
+          const normalized = String(value || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+          if (["external_api", "api", "http", "http_request", "webhook"].includes(normalized)) return "external_api";
+          if (["computer_agents_function", "computer_agent_function", "computer_agents", "function", "server_function"].includes(normalized)) {
+            return "computer_agents_function";
+          }
+          return fallback === "external_api" ? "external_api" : "computer_agents_function";
+        }
+
+        function normalizeMetronomeFunctionHttpMethod(value) {
+          const normalized = String(value || "").trim().toUpperCase();
+          return ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"].includes(normalized) ? normalized : "POST";
+        }
+
+        function createMetronomeHeaderRow(overrides = {}) {
+          const rawValue = String(overrides.value || "").trim();
+          const explicitValueType = String(overrides.valueType || overrides.value_type || overrides.type || "").trim();
+          const valueType = explicitValueType === "secret" || rawValue.startsWith("secrets:") ? "secret" : "text";
+          const secretRef = String(overrides.secretRef || overrides.secret_ref || rawValue || "").trim();
+          const parsedSecretRef = valueType === "secret" ? parseMetronomeSecretCredentialRef(secretRef) : { vaultId: "", secretId: "" };
+          return {
+            id: String(overrides.id || "header_" + Math.random().toString(36).slice(2, 10)),
+            name: String(overrides.name || overrides.key || ""),
+            valueType,
+            value: valueType === "secret" ? "" : String(overrides.value || ""),
+            secretRef: valueType === "secret" ? secretRef : "",
+            secretVaultId: String(overrides.secretVaultId || overrides.secret_vault_id || parsedSecretRef.vaultId || ""),
+            secretVaultName: String(overrides.secretVaultName || overrides.secret_vault_name || ""),
+            secretId: String(overrides.secretId || overrides.secret_id || parsedSecretRef.secretId || ""),
+            secretName: String(overrides.secretName || overrides.secret_name || ""),
+          };
+        }
+
+        function normalizeMetronomeFunctionHeaderRows(value) {
+          const rows = [];
+          const preserveBlankRows = Array.isArray(value);
+          const addRow = (row) => {
+            const normalizedRow = createMetronomeHeaderRow(row);
+            if (!preserveBlankRows && !normalizedRow.name && !normalizedRow.value && !normalizedRow.secretRef) return;
+            rows.push(normalizedRow);
+          };
+          if (Array.isArray(value)) {
+            value.forEach(addRow);
+          } else if (value && typeof value === "object") {
+            Object.entries(value).forEach(([name, rawValue]) => {
+              if (rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)) {
+                addRow({ name, ...rawValue });
+              } else {
+                addRow({ name, value: String(rawValue ?? "") });
+              }
+            });
+          } else {
+            const text = String(value || "").trim();
+            if (text) {
+              try {
+                const parsed = JSON.parse(text);
+                return normalizeMetronomeFunctionHeaderRows(parsed);
+              } catch {
+                rows.push(createMetronomeHeaderRow());
+              }
+            }
+          }
+          return rows.length ? rows : [createMetronomeHeaderRow()];
+        }
+
+        function serializeMetronomeFunctionHeaderRows(rows) {
+          const headers = {};
+          (Array.isArray(rows) ? rows : []).forEach((row) => {
+            const name = String(row?.name || "").trim();
+            if (!name) return;
+            if (String(row?.valueType || "") === "secret") {
+              const secretRef = String(row?.secretRef || "").trim();
+              if (secretRef) headers[name] = secretRef;
+              return;
+            }
+            const value = String(row?.value || "");
+            if (value) headers[name] = value;
+          });
+          return JSON.stringify(headers, null, 2);
+        }
+
+        function createDefaultMetronomeFunctionConfig(overrides = {}) {
+          const inferredFallbackMode = (overrides.url || overrides.requestUrl || overrides.endpoint)
+            ? "external_api"
+            : "computer_agents_function";
+          const functionMode = normalizeMetronomeFunctionMode(
+            overrides.functionMode || overrides.function_mode || overrides.mode || overrides.type,
+            inferredFallbackMode
+          );
+          const httpMethod = normalizeMetronomeFunctionHttpMethod(overrides.httpMethod || overrides.http_method || overrides.method);
+          const rawHeaders = overrides.requestHeaders || overrides.request_headers || overrides.headersRows || overrides.headers_rows || overrides.requestHeadersJson || overrides.request_headers_json || overrides.headersJson || overrides.headers_json || overrides.headers;
+          const rawPayload = overrides.payloadJson || overrides.payload_json || overrides.payload;
+          const requestHeaders = normalizeMetronomeFunctionHeaderRows(rawHeaders);
+          const requestHeadersJson = rawHeaders && typeof rawHeaders === "object"
+            ? serializeMetronomeFunctionHeaderRows(requestHeaders)
+            : String(rawHeaders || serializeMetronomeFunctionHeaderRows(requestHeaders));
+          const payloadJson = rawPayload && typeof rawPayload === "object"
+            ? JSON.stringify(rawPayload, null, 2)
+            : String(rawPayload || "{\n  \"input\": \"{{ input }}\"\n}");
+          const outputKey = String(overrides.outputKey || overrides.output_key || "function");
+          return {
+            functionMode,
+            functionId: String(overrides.functionId || overrides.function_id || ""),
+            functionName: String(overrides.functionName || overrides.function_name || ""),
+            httpMethod,
+            method: httpMethod,
+            url: String(overrides.url || overrides.requestUrl || overrides.request_url || overrides.endpoint || ""),
+            ...overrides,
+            functionMode,
+            httpMethod,
+            method: httpMethod,
+            requestHeaders,
+            requestHeadersJson,
+            payloadJson,
+            outputKey,
+          };
         }
 
         function createDefaultMetronomeThreadOutputConfig(overrides = {}) {
@@ -10549,6 +11359,15 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           return fallback;
         }
 
+        function normalizeMetronomeLoopNodeStyle(style) {
+          const source = style && typeof style === "object" ? style : {};
+          return {
+            ...source,
+            width: normalizeMetronomeNodeDimension(source.width, METRONOME_LOOP_NODE_DEFAULT_WIDTH),
+            height: normalizeMetronomeNodeDimension(source.height, METRONOME_LOOP_NODE_DEFAULT_HEIGHT),
+          };
+        }
+
         function normalizeMetronomeNoteNodeStyle(style) {
           const source = style && typeof style === "object" ? style : {};
           return {
@@ -10566,11 +11385,77 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           return String(node?.data?.kind || node?.kind || "").trim() === "note";
         }
 
-        function getMetronomeNodeParentId(node) {
-          return String(node?.parentId || node?.parentNode || "").trim();
-        }
+	        function getMetronomeNodeParentId(node) {
+	          return String(node?.parentId || node?.parentNode || "").trim();
+	        }
 
-        function getMetronomeNodeDimensions(node) {
+	        function getMetronomeNodeLoopParentId(node, nodeMap) {
+	          const parentId = getMetronomeNodeParentId(node);
+	          if (!parentId) return "";
+	          const parentNode = nodeMap?.get?.(parentId);
+	          return isMetronomeLoopNode(parentNode) ? parentId : "";
+	        }
+
+	        function isMetronomeLoopBoundaryConnectionAllowed(sourceNode, targetNode, nodeMap) {
+	          if (!sourceNode || !targetNode) return false;
+	          const sourceId = String(sourceNode?.id || "").trim();
+	          const targetId = String(targetNode?.id || "").trim();
+	          const sourceLoopParentId = getMetronomeNodeLoopParentId(sourceNode, nodeMap);
+	          const targetLoopParentId = getMetronomeNodeLoopParentId(targetNode, nodeMap);
+	          if (!sourceLoopParentId && !targetLoopParentId) return true;
+	          if (sourceLoopParentId && sourceLoopParentId === targetLoopParentId) return true;
+	          if (targetLoopParentId && sourceId === targetLoopParentId) return true;
+	          if (sourceLoopParentId && targetId === sourceLoopParentId) return true;
+	          return false;
+	        }
+
+	        function repairMetronomeLoopBoundaryEdge(edge, nodeMap, index = 0) {
+	          const sourceNode = nodeMap?.get?.(String(edge?.source || ""));
+	          const targetNode = nodeMap?.get?.(String(edge?.target || ""));
+	          if (!sourceNode || !targetNode) return [];
+	          if (isMetronomeLoopBoundaryConnectionAllowed(sourceNode, targetNode, nodeMap)) {
+	            return [edge];
+	          }
+	          const sourceLoopParentId = getMetronomeNodeLoopParentId(sourceNode, nodeMap);
+	          const targetLoopParentId = getMetronomeNodeLoopParentId(targetNode, nodeMap);
+	          const edgeId = String(edge?.id || "edge_loop_boundary_" + index).trim() || "edge_loop_boundary_" + index;
+	          if (sourceLoopParentId && !targetLoopParentId) {
+	            return [
+	              {
+	                ...edge,
+	                id: edgeId + "_to_loop_end",
+	                target: sourceLoopParentId,
+	                targetHandle: "loop-right",
+	              },
+	              {
+	                ...edge,
+	                id: edgeId + "_from_loop_end",
+	                source: sourceLoopParentId,
+	                sourceHandle: "loop-right",
+	              },
+	            ];
+	          }
+	          if (!sourceLoopParentId && targetLoopParentId) {
+	            return [
+	              {
+	                ...edge,
+	                id: edgeId + "_to_loop_start",
+	                target: targetLoopParentId,
+	                targetHandle: "loop-left",
+	              },
+	              {
+	                ...edge,
+	                id: edgeId + "_from_loop_start",
+	                source: targetLoopParentId,
+	                sourceHandle: "loop-left",
+	                targetHandle: "node-input",
+	              },
+	            ];
+	          }
+	          return [];
+	        }
+
+	        function getMetronomeNodeDimensions(node) {
           const style = node?.style && typeof node.style === "object" ? node.style : {};
           const measured = node?.measured && typeof node.measured === "object" ? node.measured : {};
           const defaultWidth = isMetronomeLoopNode(node)
@@ -10730,6 +11615,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           }
         }
 
+        function stopMetronomePointerPropagation(event) {
+          if (!event || typeof event.stopPropagation !== "function") return;
+          event.stopPropagation();
+        }
+
         function getMetronomeTextInputKeyHandlers(handleKeyDown) {
           return {
             onKeyDownCapture: stopMetronomeInputKeyPropagation,
@@ -10802,6 +11692,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           ? buildDefaultMetronomeEmailTriggerConfig(null, { id: nodeId }, overrideConfig)
                           : {}
                       ),
+                      ...(
+                        normalizedSubtype === "function"
+                          ? buildDefaultMetronomeFunctionTriggerConfig(null, { id: nodeId }, overrideConfig)
+                          : {}
+                      ),
                       ...overrideConfig,
 	                    }
 	                : kind === "metronome"
@@ -10867,6 +11762,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	                    }
 		                : kind === "loop"
 		                  ? createDefaultMetronomeLoopConfig(normalizedSubtype, overrideConfig)
+		                : kind === "function"
+		                  ? createDefaultMetronomeFunctionConfig(overrideConfig)
 		                : kind === "action"
 		                  ? {
 		                      message: "Review the current project and propose the next action.",
@@ -10898,11 +11795,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             },
           };
           if (kind === "loop") {
-            nextNode.style = {
-              width: METRONOME_LOOP_NODE_DEFAULT_WIDTH,
-              height: METRONOME_LOOP_NODE_DEFAULT_HEIGHT,
-              ...(overrides.style && typeof overrides.style === "object" ? overrides.style : {}),
-            };
+            nextNode.style = normalizeMetronomeLoopNodeStyle(overrides.style);
             nextNode.data.label = normalizeMetronomeNodeLabel(overrides.label || meta.label, kind, normalizedSubtype);
             nextNode.data.description = overrides.description || getMetronomeSubtypeLabel(kind, normalizedSubtype);
           } else if (kind === "note") {
@@ -11873,12 +12766,13 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           return {
             nodes: [trigger, loop, worker, verifier, handoff, done],
             edges: [
-              createMetronomeEdge("edge_loop_trigger_container", "trigger_loop_request", "loop_worker_verifier", { targetHandle: "loop-left" }),
-              createMetronomeEdge("edge_loop_container_worker", "loop_worker_verifier", "thread_loop_worker", { sourceHandle: "loop-left", targetHandle: "node-input" }),
-              createMetronomeEdge("edge_loop_worker_verifier", "thread_loop_worker", "thread_loop_verifier"),
-              createMetronomeEdge("edge_loop_verifier_handoff", "thread_loop_verifier", "thread_loop_handoff"),
-              createMetronomeEdge("edge_loop_handoff_end", "thread_loop_handoff", "end_loop_complete"),
-            ],
+	              createMetronomeEdge("edge_loop_trigger_container", "trigger_loop_request", "loop_worker_verifier", { targetHandle: "loop-left" }),
+	              createMetronomeEdge("edge_loop_container_worker", "loop_worker_verifier", "thread_loop_worker", { sourceHandle: "loop-left", targetHandle: "node-input" }),
+	              createMetronomeEdge("edge_loop_worker_verifier", "thread_loop_worker", "thread_loop_verifier"),
+	              createMetronomeEdge("edge_loop_verifier_end", "thread_loop_verifier", "loop_worker_verifier", { targetHandle: "loop-right" }),
+	              createMetronomeEdge("edge_loop_container_handoff", "loop_worker_verifier", "thread_loop_handoff", { sourceHandle: "loop-right", targetHandle: "node-input" }),
+	              createMetronomeEdge("edge_loop_handoff_end", "thread_loop_handoff", "end_loop_complete"),
+	            ],
           };
         }
 
@@ -13240,12 +14134,12 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 return {
                   ...node,
                   type: node.type || "metronome",
-                  style: normalizedKind === "note"
-                    ? normalizeMetronomeNoteNodeStyle(node.style)
+                  style: normalizedKind === "loop"
+                    ? normalizeMetronomeLoopNodeStyle(node.style)
+                    : normalizedKind === "note"
+                      ? normalizeMetronomeNoteNodeStyle(node.style)
                     : node.style && typeof node.style === "object"
                       ? node.style
-                      : normalizedKind === "loop"
-                      ? { width: METRONOME_LOOP_NODE_DEFAULT_WIDTH, height: METRONOME_LOOP_NODE_DEFAULT_HEIGHT }
                       : undefined,
                   position: node.position && typeof node.position === "object"
                     ? node.position
@@ -13274,8 +14168,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               });
             })
             .map((node) => {
-              if (node?.data?.kind === "loop" && (!node.style || typeof node.style !== "object")) {
-                return { ...node, style: { width: METRONOME_LOOP_NODE_DEFAULT_WIDTH, height: METRONOME_LOOP_NODE_DEFAULT_HEIGHT } };
+              if (node?.data?.kind === "loop") {
+                return { ...node, style: normalizeMetronomeLoopNodeStyle(node.style) };
               }
               if (node?.data?.kind === "note") {
                 return { ...node, style: normalizeMetronomeNoteNodeStyle(node.style) };
@@ -13443,13 +14337,15 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           return ["node-input"];
         }
 
-        function normalizeMetronomeEdgesForNodes(edges, nodes) {
-          const normalizedEdges = normalizeMetronomeEdges(edges);
-          const nodeById = new Map((Array.isArray(nodes) ? nodes : []).map((node) => [String(node?.id || ""), node]));
-          return normalizedEdges
-            .map((edge) => {
-              const sourceNode = nodeById.get(String(edge.source || ""));
-              const targetNode = nodeById.get(String(edge.target || ""));
+	        function normalizeMetronomeEdgesForNodes(edges, nodes) {
+	          const normalizedEdges = normalizeMetronomeEdges(edges);
+	          const nodeById = new Map((Array.isArray(nodes) ? nodes : []).map((node) => [String(node?.id || ""), node]));
+	          const seenEdges = new Set();
+	          return normalizedEdges
+	            .flatMap((edge, index) => repairMetronomeLoopBoundaryEdge(edge, nodeById, index))
+	            .map((edge) => {
+	              const sourceNode = nodeById.get(String(edge.source || ""));
+	              const targetNode = nodeById.get(String(edge.target || ""));
               if (!sourceNode || !targetNode) return null;
               const sourceHandles = getMetronomeSourceHandleIdsForNode(sourceNode);
               const targetHandles = getMetronomeTargetHandleIdsForNode(targetNode);
@@ -13466,11 +14362,17 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 ...edge,
                 sourceHandle,
                 targetHandle,
-                type: "metronomeOutput",
-              };
-            })
-            .filter(Boolean);
-        }
+	                type: "metronomeOutput",
+	              };
+	            })
+	            .filter((edge) => {
+	              if (!edge) return false;
+	              const key = [edge.source, edge.sourceHandle, edge.target, edge.targetHandle].map((value) => String(value || "")).join("::");
+	              if (seenEdges.has(key)) return false;
+	              seenEdges.add(key);
+	              return true;
+	            });
+	        }
 
         function sanitizeMetronomeNodeForPersistence(node) {
           if (!node || typeof node !== "object") return node;
@@ -13670,6 +14572,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           if (triggerType === "telegram") {
             const telegramConfig = buildDefaultMetronomeTelegramTriggerConfig(null, triggerNode, triggerConfig);
             return "Telegram: " + (triggerConfig.telegramCommand || telegramConfig.telegramCommand);
+          }
+          if (triggerType === "function") {
+            const functionConfig = buildDefaultMetronomeFunctionTriggerConfig(null, triggerNode, triggerConfig);
+            const endpoint = String(functionConfig.functionEndpointUrl || functionConfig.functionEndpointPath || functionConfig.endpointUrl || functionConfig.endpointPath || "").trim();
+            return "Function: " + (endpoint || functionConfig.functionSlug || "Callable endpoint");
           }
           if (triggerType === "github") {
             const githubConfig = buildDefaultMetronomeGitHubTriggerConfig(triggerConfig);
@@ -13950,16 +14857,53 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           return normalizeMetronomeWorkflow(data?.data || data);
         }
 
-        async function fetchMetronomeVersionsApi(workflowId) {
+        const metronomeVersionSnapshotCache = new Map();
+        const metronomeVersionHydrationRequests = new Map();
+
+        function emitMetronomeVersionsLoaded(workflowId, versions) {
+          const normalizedWorkflowId = String(workflowId || "").trim();
+          if (!normalizedWorkflowId || typeof window === "undefined" || typeof window.dispatchEvent !== "function") return;
+          window.dispatchEvent(new CustomEvent("playground:metronome-versions-loaded", {
+            detail: {
+              workflowId: normalizedWorkflowId,
+              versions: Array.isArray(versions) ? versions : [],
+            },
+          }));
+        }
+
+        async function fetchMetronomeVersionsApi(workflowId, options = {}) {
           const normalizedWorkflowId = String(workflowId || "").trim();
           if (!normalizedWorkflowId) return [];
-          const response = await fetch("/api/real/metronomes/" + encodeURIComponent(normalizedWorkflowId) + "/versions", {
+          const response = await fetch(getMetronomeApiBaseUrl(options) + "/metronomes/" + encodeURIComponent(normalizedWorkflowId) + "/versions", {
             method: "GET",
-            credentials: "same-origin",
+            credentials: "include",
+            cache: "no-store",
+            headers: buildMetronomeApiHeaders(options),
           });
           const data = await readMetronomeApiJson(response, "Failed to load workflow versions");
           const rawItems = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
-          return normalizeMetronomeDeployments(rawItems);
+          const versions = normalizeMetronomeDeployments(rawItems);
+          metronomeVersionSnapshotCache.set(normalizedWorkflowId, versions);
+          emitMetronomeVersionsLoaded(normalizedWorkflowId, versions);
+          return versions;
+        }
+
+        function hydrateMetronomeVersionsApi(workflowId, options = {}) {
+          const normalizedWorkflowId = String(workflowId || "").trim();
+          if (!normalizedWorkflowId) return Promise.resolve([]);
+          if (metronomeVersionSnapshotCache.has(normalizedWorkflowId)) {
+            return Promise.resolve(metronomeVersionSnapshotCache.get(normalizedWorkflowId) || []);
+          }
+          const existingRequest = metronomeVersionHydrationRequests.get(normalizedWorkflowId);
+          if (existingRequest) return existingRequest;
+          const request = fetchMetronomeVersionsApi(normalizedWorkflowId, options)
+            .finally(() => {
+              if (metronomeVersionHydrationRequests.get(normalizedWorkflowId) === request) {
+                metronomeVersionHydrationRequests.delete(normalizedWorkflowId);
+              }
+            });
+          metronomeVersionHydrationRequests.set(normalizedWorkflowId, request);
+          return request;
         }
 
         function createMetronomeVersionApiPayload(workflow, nodes, edges, details = {}, options = {}) {
@@ -14652,6 +15596,9 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               parentId: node?.parentId || node?.parentNode ? String(node.parentId || node.parentNode) : undefined,
               extent: node?.extent ? String(node.extent) : undefined,
             };
+            if (kind === "trigger" && String(definitionNode.config?.triggerType || subtype || "").trim() === "function") {
+              definitionNode.config = buildDefaultMetronomeFunctionTriggerConfig(workflow, node, definitionNode.config);
+            }
             return {
               ...definitionNode,
               config: { ...definitionNode.config },
@@ -14840,10 +15787,14 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             args.push(["aspect_ratio", configReader.take("aspectRatio", "aspect_ratio")]);
             configReader.remove("contextType", "resource", "outputKey", "output_key");
           } else if (className === "FunctionNode") {
+            args.push(["function_mode", configReader.take("functionMode", "function_mode", "mode", "type")]);
             args.push(["function_id", configReader.take("functionId", "function_id")]);
             args.push(["function_name", configReader.take("functionName", "function_name")]);
+            args.push(["method", configReader.take("httpMethod", "http_method", "method")]);
+            args.push(["url", configReader.take("url", "requestUrl", "request_url", "endpoint")]);
+            args.push(["headers", configReader.take("requestHeaders", "request_headers", "headersRows", "headers_rows", "requestHeadersJson", "request_headers_json", "headersJson", "headers_json", "headers")]);
             args.push(["payload", configReader.take("payload", "payloadJson", "payload_json")]);
-            configReader.remove("outputKey", "output_key");
+            args.push(["output_key", configReader.take("outputKey", "output_key")]);
           } else if (className === "FirecrawlNode") {
             configReader.remove("operation");
             args.push(["credential_ref", configReader.take("credentialRef", "credential_ref")]);
@@ -15404,12 +16355,29 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               if (aspectRatio !== undefined) config.aspectRatio = aspectRatio;
             }
             if (className === "FunctionNode") {
+              const functionMode = getMetronomePythonCallKeyword(nodeCall, "function_mode", getMetronomePythonCallKeyword(nodeCall, "mode", undefined));
               const functionId = getMetronomePythonCallKeyword(nodeCall, "function_id", undefined);
               const functionName = getMetronomePythonCallKeyword(nodeCall, "function_name", undefined);
+              const method = getMetronomePythonCallKeyword(nodeCall, "method", getMetronomePythonCallKeyword(nodeCall, "http_method", undefined));
+              const url = getMetronomePythonCallKeyword(nodeCall, "url", getMetronomePythonCallKeyword(nodeCall, "request_url", getMetronomePythonCallKeyword(nodeCall, "endpoint", undefined)));
+              const headers = getMetronomePythonCallKeyword(nodeCall, "headers", getMetronomePythonCallKeyword(nodeCall, "request_headers", undefined));
               const payload = getMetronomePythonCallKeyword(nodeCall, "payload", undefined);
+              const outputKey = getMetronomePythonCallKeyword(nodeCall, "output_key", undefined);
+              if (functionMode !== undefined) config.functionMode = normalizeMetronomeFunctionMode(functionMode);
               if (functionId !== undefined) config.functionId = functionId;
               if (functionName !== undefined) config.functionName = functionName;
-              if (payload !== undefined) config.payload = payload;
+              if (method !== undefined) {
+                config.httpMethod = normalizeMetronomeFunctionHttpMethod(method);
+                config.method = config.httpMethod;
+              }
+              if (url !== undefined) config.url = url;
+              if (headers !== undefined) {
+                config.requestHeaders = normalizeMetronomeFunctionHeaderRows(headers);
+                config.requestHeadersJson = serializeMetronomeFunctionHeaderRows(config.requestHeaders);
+              }
+              if (payload !== undefined) config.payloadJson = typeof payload === "string" ? payload : JSON.stringify(payload, null, 2);
+              if (outputKey !== undefined) config.outputKey = outputKey;
+              Object.assign(config, createDefaultMetronomeFunctionConfig(config));
             }
             if (className === "FirecrawlNode") {
               subtype = normalizeMetronomeFirecrawlOperation(subtype);
@@ -16102,6 +17070,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             minZoom: 0.35,
             maxZoom: 1.35,
             panOnDrag: isPanMode,
+            panActivationKeyCode: null,
             nodesDraggable: !readOnly,
             nodesConnectable: !readOnly,
             elementsSelectable: true,
@@ -16161,7 +17130,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             }
             void loadPlaygroundCodeEditorModule()
               .then((module) => {
-                if (cancelled || !module) return;
+                if (cancelled) return;
+                if (!module?.default) {
+                  setEditorModuleError("The code editor could not be loaded.");
+                  return;
+                }
                 setEditorModule(module);
                 void module.loader?.init?.()
                   .then((monaco) => {
@@ -16182,7 +17155,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           }, []);
 
           if (MonacoEditorComponent) {
-            return React.createElement("div", { className: "playground-metronome-code-editor-shell playground-code-preview-editor-shell playground-servers-code-editor-shell" },
+            return React.createElement("div", {
+              className: "playground-metronome-code-editor-shell playground-code-preview-editor-shell playground-servers-code-editor-shell",
+              onKeyDown: stopMetronomeInputKeyPropagation,
+              onKeyUp: stopMetronomeInputKeyPropagation,
+            },
               React.createElement("div", {
                 className: "playground-metronome-code-monaco" + (isMonacoReady ? " is-ready" : ""),
               },
@@ -16194,7 +17171,20 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   theme: typeof PLAYGROUND_CODE_EDITOR_THEME_NAME === "string" ? PLAYGROUND_CODE_EDITOR_THEME_NAME : "vs-dark",
                   value: String(value || ""),
                   beforeMount: ensurePlaygroundCodeEditorTheme,
-                  onMount: () => setIsMonacoReady(true),
+                  onMount: (editor) => {
+                    setIsMonacoReady(true);
+                    if (editor && typeof editor.onKeyDown === "function") {
+                      editor.onKeyDown((monacoEvent) => {
+                        const browserEvent = monacoEvent?.browserEvent;
+                        if (browserEvent && typeof browserEvent.stopPropagation === "function") {
+                          browserEvent.stopPropagation();
+                        }
+                        if (browserEvent && typeof browserEvent.stopImmediatePropagation === "function") {
+                          browserEvent.stopImmediatePropagation();
+                        }
+                      });
+                    }
+                  },
                   onChange: (nextValue) => {
                     if (readOnly) return;
                     if (typeof onChange === "function") {
@@ -16225,19 +17215,39 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           }
 
           if (!editorModuleError) {
-            return React.createElement("div", { className: "playground-metronome-code-editor-shell playground-servers-code-editor-shell" },
+            return React.createElement("div", {
+              className: "playground-metronome-code-editor-shell playground-servers-code-editor-shell",
+              onKeyDown: stopMetronomeInputKeyPropagation,
+              onKeyUp: stopMetronomeInputKeyPropagation,
+            },
               React.createElement("div", { className: "playground-metronome-code-loading" },
-                React.createElement(Loader2, { width: 16, height: 16, strokeWidth: 1.8 }),
+                React.createElement("span", {
+                    className: "playground-metronome-code-loading-dot-loader",
+                    "aria-hidden": "true",
+                  },
+                  React.createElement(PlaygroundDotLoader, {
+                    dotCount: 9,
+                    dotSize: 3,
+                    gap: 2,
+                    speed: 800,
+                  })
+                ),
                 React.createElement("span", null, "Loading editor...")
               )
             );
           }
 
-          return React.createElement("div", { className: "playground-metronome-code-editor-shell playground-servers-code-editor-shell" },
+          return React.createElement("div", {
+            className: "playground-metronome-code-editor-shell playground-servers-code-editor-shell",
+            onKeyDown: stopMetronomeInputKeyPropagation,
+            onKeyUp: stopMetronomeInputKeyPropagation,
+          },
             React.createElement("textarea", {
               className: "playground-metronome-code-textarea playground-code-preview-textarea playground-servers-source-editor-textarea",
               value: String(value || ""),
               readOnly: Boolean(readOnly),
+              onKeyDown: stopMetronomeInputKeyPropagation,
+              onKeyUp: stopMetronomeInputKeyPropagation,
               onChange: (event) => {
                 if (readOnly) return;
                 if (typeof onChange === "function") {
@@ -16437,9 +17447,18 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const [metronomeRuns, setMetronomeRuns] = useState([]);
           const [isLoadingMetronomeRuns, setIsLoadingMetronomeRuns] = useState(false);
           const [metronomeRunsError, setMetronomeRunsError] = useState("");
+          const [metronomeRunSearchQuery, setMetronomeRunSearchQuery] = useState("");
+          const [metronomeRunFilter, setMetronomeRunFilter] = useState("all");
+          const [metronomeRunSort, setMetronomeRunSort] = useState("recent");
+          const [metronomeRunToolbarPopover, setMetronomeRunToolbarPopover] = useState("");
+          const [selectedMetronomeRunIds, setSelectedMetronomeRunIds] = useState(() => new Set());
+          const [metronomeRunActionMenu, setMetronomeRunActionMenu] = useState(null);
           const [metronomeDeploymentEvents, setMetronomeDeploymentEvents] = useState([]);
           const [isLoadingMetronomeDeploymentEvents, setIsLoadingMetronomeDeploymentEvents] = useState(false);
           const [metronomeDeploymentEventsError, setMetronomeDeploymentEventsError] = useState("");
+          const [isLoadingMetronomeVersions, setIsLoadingMetronomeVersions] = useState(false);
+          const [metronomeVersionsError, setMetronomeVersionsError] = useState("");
+          const [metronomeVersionsByWorkflowId, setMetronomeVersionsByWorkflowId] = useState({});
           const [metronomeTriggerEvents, setMetronomeTriggerEvents] = useState([]);
           const [isLoadingMetronomeTriggerEvents, setIsLoadingMetronomeTriggerEvents] = useState(false);
           const [metronomeTriggerEventsError, setMetronomeTriggerEventsError] = useState("");
@@ -17033,6 +18052,36 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               setMetronomeSecretVaultSecretsLoadingId((current) => current === normalizedVaultId ? "" : current);
             }
           }, [metronomeSecretVaultSecretsByVaultId]);
+          const metronomeHeaderSecretOptions = useMemo(() => {
+            const options = [];
+            metronomeSecretVaultOptions.forEach((vault) => {
+              const vaultId = String(vault?.id || "").trim();
+              if (!vaultId) return;
+              const secrets = Array.isArray(metronomeSecretVaultSecretsByVaultId[vaultId])
+                ? metronomeSecretVaultSecretsByVaultId[vaultId]
+                : [];
+              secrets.forEach((secret) => {
+                const secretId = String(secret?.id || "").trim();
+                if (!secretId) return;
+                options.push({
+                  id: buildMetronomeSecretCredentialRef(vaultId, secretId),
+                  label: secret.name || secretId,
+                  description: (vault.name || vaultId) + (secret.description ? " · " + secret.description : ""),
+                  vaultId,
+                  vaultName: vault.name || vaultId,
+                  secretId,
+                  secretName: secret.name || secretId,
+                });
+              });
+            });
+            return options;
+          }, [metronomeSecretVaultOptions, metronomeSecretVaultSecretsByVaultId]);
+          const loadAllMetronomeHeaderSecrets = useCallback(() => {
+            if (!metronomeSecretVaultOptions.length) return Promise.resolve([]);
+            return Promise.all(
+              metronomeSecretVaultOptions.map((vault) => loadMetronomeSecretVaultSecrets(vault.id))
+            );
+          }, [metronomeSecretVaultOptions, loadMetronomeSecretVaultSecrets]);
           const defaultMetronomeAgentOption = useMemo(() => {
             return getMetronomePreferredOption(metronomeAgentOptions, ["assistant"], METRONOME_FALLBACK_AGENTS[0]);
           }, [metronomeAgentOptions]);
@@ -17230,6 +18279,26 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               document.removeEventListener("keydown", handleWorkflowToolbarKeyDown);
             };
           }, [metronomeWorkflowToolbarPopover]);
+
+          useEffect(() => {
+            if (!metronomeRunActionMenu || typeof document === "undefined") return () => {};
+            const handleRunActionMenuPointerDown = (event) => {
+              const target = event.target;
+              if (target?.closest?.(".playground-metronome-run-action-menu-shell, .playground-metronome-run-table-action-menu")) return;
+              setMetronomeRunActionMenu(null);
+            };
+            const handleRunActionMenuKeyDown = (event) => {
+              if (event.key === "Escape") {
+                setMetronomeRunActionMenu(null);
+              }
+            };
+            document.addEventListener("pointerdown", handleRunActionMenuPointerDown, true);
+            document.addEventListener("keydown", handleRunActionMenuKeyDown);
+            return () => {
+              document.removeEventListener("pointerdown", handleRunActionMenuPointerDown, true);
+              document.removeEventListener("keydown", handleRunActionMenuKeyDown);
+            };
+          }, [metronomeRunActionMenu]);
 
           useEffect(() => {
             if (!isMetronomeSchedulePopoverOpen || typeof document === "undefined") return () => {};
@@ -17690,6 +18759,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               }
               setMetronomeRuns((current) => current.filter((run) => run.id !== runId));
               setSelectedMetronomeRunId((current) => current === runId ? "" : current);
+              setSelectedMetronomeRunIds((current) => {
+                const next = new Set(current || []);
+                next.delete(runId);
+                return next;
+              });
               setMetronomeRunInlineDetailId((current) => current === runId ? "" : current);
             }
 
@@ -17730,58 +18804,75 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           }, [activeWorkflowId, isActiveWorkflowBuiltIn, isMetronomeApiAvailable]);
 
           useEffect(() => {
+            function handleMetronomeVersionsLoaded(event) {
+              const detail = event?.detail && typeof event.detail === "object" ? event.detail : {};
+              const workflowId = String(detail.workflowId || detail.metronomeId || "").trim();
+              if (!workflowId || !Array.isArray(detail.versions)) return;
+              setMetronomeVersionsByWorkflowId((current) => (
+                current[workflowId] === detail.versions
+                  ? current
+                  : { ...current, [workflowId]: detail.versions }
+              ));
+            }
+            window.addEventListener("playground:metronome-versions-loaded", handleMetronomeVersionsLoaded);
+            return () => window.removeEventListener("playground:metronome-versions-loaded", handleMetronomeVersionsLoaded);
+          }, []);
+
+          useEffect(() => {
             let cancelled = false;
-            const needsVersionSurface = isMetronomePublishMenuOpen
-              || isMetronomePublishActionsMenuOpen
-              || isMetronomeVersionSelectorMenuOpen
-              || isMetronomePublishSettingsMenuOpen
-              || isMetronomeVersionsHeaderMenuOpen
-              || Boolean(metronomeVersionChangesState)
-              || Boolean(workflowVersionModal)
-              || Boolean(openMetronomeVersionMenuId);
-            if (!needsVersionSurface || !activeWorkflowId || !activeWorkflow || isActiveWorkflowBuiltIn || !isMetronomeApiAvailable) {
+            if (!activeWorkflowId || isActiveWorkflowBuiltIn || !isMetronomeApiAvailable) {
+              setIsLoadingMetronomeVersions(false);
+              setMetronomeVersionsError("");
               return () => {
                 cancelled = true;
               };
             }
-            void fetchMetronomeVersionsApi(activeWorkflowId)
+            const cachedVersions = metronomeVersionSnapshotCache.get(activeWorkflowId);
+            if (cachedVersions) {
+              setMetronomeVersionsByWorkflowId((current) => (
+                current[activeWorkflowId] === cachedVersions
+                  ? current
+                  : { ...current, [activeWorkflowId]: cachedVersions }
+              ));
+              setIsLoadingMetronomeVersions(false);
+              return () => {
+                cancelled = true;
+              };
+            }
+            setIsLoadingMetronomeVersions(true);
+            setMetronomeVersionsError("");
+            void hydrateMetronomeVersionsApi(activeWorkflowId, { backendUrl, apiKey, requestHeaders })
               .then((versions) => {
-                if (cancelled || !versions.length) return;
-                const hydratedActiveWorkflow = createMetronomeWorkflowWithVersionList(activeWorkflow, versions);
-                replaceMetronomeWorkflowInEditableState(activeWorkflowId, hydratedActiveWorkflow);
-                const hydratedNodes = Array.isArray(hydratedActiveWorkflow?.nodes) ? hydratedActiveWorkflow.nodes : [];
-                const hydratedEdges = normalizeMetronomeEdgesForNodes(hydratedActiveWorkflow?.edges || [], hydratedNodes);
-                if (!edges.length && hydratedEdges.length) {
-                  setNodes(hydratedNodes);
-                  setEdges(hydratedEdges);
-                  setMetronomeFlowMountVersion((version) => version + 1);
+                if (cancelled) return;
+                if (!versions.length) {
+                  setMetronomeVersionsError("No saved versions were returned for this workflow.");
+                  return;
                 }
+                setMetronomeVersionsByWorkflowId((current) => (
+                  current[activeWorkflowId] === versions
+                    ? current
+                    : { ...current, [activeWorkflowId]: versions }
+                ));
               })
               .catch((error) => {
                 if (!cancelled) {
                   console.warn("[Metronome] Failed to load workflow versions", error);
+                  setMetronomeVersionsError(error instanceof Error ? error.message : "Failed to load workflow versions.");
                 }
+              })
+              .finally(() => {
+                if (!cancelled) setIsLoadingMetronomeVersions(false);
               });
             return () => {
               cancelled = true;
             };
           }, [
             activeWorkflowId,
-            activeWorkflow?.id,
-            edges.length,
+            apiKey,
+            backendUrl,
             isActiveWorkflowBuiltIn,
             isMetronomeApiAvailable,
-            isMetronomePublishActionsMenuOpen,
-            isMetronomePublishMenuOpen,
-            isMetronomePublishSettingsMenuOpen,
-            isMetronomeVersionSelectorMenuOpen,
-            isMetronomeVersionsHeaderMenuOpen,
-            metronomeVersionChangesState,
-            openMetronomeVersionMenuId,
-            replaceMetronomeWorkflowInEditableState,
-            setEdges,
-            setNodes,
-            workflowVersionModal,
+            metronomeRequestHeadersKey,
           ]);
 
           useEffect(() => {
@@ -17985,8 +19076,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	            return metronomeRuns.find((run) => run.id === selectedMetronomeRunId) || metronomeRuns[0] || null;
 	          }, [metronomeRuns, selectedMetronomeRunId]);
           const activeWorkflowDeployments = useMemo(() => {
+            const loadedVersions = metronomeVersionsByWorkflowId[activeWorkflowId];
+            if (Array.isArray(loadedVersions)) return normalizeMetronomeDeployments(loadedVersions);
             return readMetronomeWorkflowDeployments(activeWorkflow || {});
-          }, [activeWorkflow]);
+          }, [activeWorkflow, activeWorkflowId, metronomeVersionsByWorkflowId]);
           const activeWorkflowDeployment = useMemo(() => {
             const activeDeploymentId = String(activeWorkflow?.activeDeploymentId || activeWorkflow?.metadata?.activeDeploymentId || activeWorkflow?.metadata?.active_deployment_id || "").trim();
             return activeWorkflowDeployments.find((deployment) => deployment.id === activeDeploymentId)
@@ -18412,9 +19505,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               : metronomeRunHighlight.completedNodeIds.has(nodeId)
                 ? "completed"
                 : "";
-            const renderedStyle = isMetronomeNoteNode(node)
-              ? normalizeMetronomeNoteNodeStyle(node.style)
-              : node.style;
+            const renderedStyle = isMetronomeLoopNode(node)
+              ? normalizeMetronomeLoopNodeStyle(node.style)
+              : isMetronomeNoteNode(node)
+                ? normalizeMetronomeNoteNodeStyle(node.style)
+                : node.style;
             return {
               ...node,
               style: renderedStyle,
@@ -20572,15 +21667,25 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             if (targetIsInsideSourceLoop && sourceHandle === "loop-left") {
               nextParams.targetHandle = "node-input";
             }
-            if (sourceIsInsideTargetLoop && targetHandle === "loop-right") {
-              nextParams.sourceHandle = nextParams.sourceHandle || "node-output";
-            }
-            pushGraphHistory();
-            setEdges((current) => normalizeMetronomeEdgesForNodes(
-              addEdge({ ...nextParams, type: "metronomeOutput" }, current),
-              nodes
-            ));
-          }, [isActiveWorkflowBuiltIn, nodes, setEdges, pushGraphHistory]);
+	            if (sourceIsInsideTargetLoop && targetHandle === "loop-right") {
+	              nextParams.sourceHandle = nextParams.sourceHandle || "node-output";
+	            }
+	            const nodeById = new Map(nodes.map((node) => [String(node?.id || ""), node]));
+	            const nextEdges = repairMetronomeLoopBoundaryEdge({
+	              ...nextParams,
+	              id: "edge_" + sourceId + "_" + targetId + "_" + Date.now(),
+	            }, nodeById, 0);
+	            if (!nextEdges.length) {
+	              return;
+	            }
+	            pushGraphHistory();
+	            setEdges((current) => {
+	              const withNextEdges = nextEdges.reduce((acc, edge) => (
+	                addEdge({ ...edge, type: "metronomeOutput" }, acc)
+	              ), current);
+	              return normalizeMetronomeEdgesForNodes(withNextEdges, nodes);
+	            });
+	          }, [isActiveWorkflowBuiltIn, nodes, setEdges, pushGraphHistory]);
 
           const handleDragStart = useCallback((event, item) => {
             const paletteItem = item && typeof item === "object" ? item : { kind: String(item || "action") };
@@ -20670,7 +21775,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             const normalizedNodeId = String(selectedNodeId || "").trim();
             if (!normalizedNodeId || isActiveWorkflowBuiltIn) return;
             const nodeToDelete = nodes.find((node) => String(node?.id || "") === normalizedNodeId) || null;
-            if (String(nodeToDelete?.data?.kind || nodeToDelete?.kind || "").trim() === "trigger") return;
+            const isDeletingTrigger = String(nodeToDelete?.data?.kind || nodeToDelete?.kind || "").trim() === "trigger";
+            if (isDeletingTrigger) {
+              const triggerCount = nodes.filter((node) => String(node?.data?.kind || node?.kind || "").trim() === "trigger").length;
+              if (triggerCount <= 1) return;
+            }
             const nextNodes = normalizeMetronomeNodeOrder(
               nodes.filter((node) => String(node?.id || "") !== normalizedNodeId)
             );
@@ -20690,8 +21799,10 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const handleMetronomeFunctionTestInvoke = useCallback(() => {
             if (isActiveWorkflowBuiltIn || !selectedNode || selectedNode.data?.kind !== "function") return;
             const nodeId = String(selectedNode.id || "").trim();
-            const functionId = String(selectedNode.data?.config?.functionId || "").trim();
-            const payloadJson = selectedNode.data?.config?.payloadJson || "{\n  \"input\": \"{{ input }}\"\n}";
+            const functionConfig = createDefaultMetronomeFunctionConfig(selectedNode.data?.config || {});
+            if (functionConfig.functionMode !== "computer_agents_function") return;
+            const functionId = String(functionConfig.functionId || "").trim();
+            const payloadJson = functionConfig.payloadJson || "{\n  \"input\": \"{{ input }}\"\n}";
             setMetronomeFunctionInvokeState({
               nodeId,
               status: "loading",
@@ -21836,7 +22947,15 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               disabled = false,
             } = {}) => {
               const selectId = String(id || "").trim();
-              const normalizedOptions = (Array.isArray(options) ? options : []).map(normalizeMetronomeInspectorSelectOption);
+              const normalizedOptions = [];
+              const seenOptionKeys = new Set();
+              (Array.isArray(options) ? options : []).forEach((option) => {
+                const normalizedOption = normalizeMetronomeInspectorSelectOption(option);
+                const optionKey = normalizedOption.value || normalizedOption.label;
+                if (!optionKey || seenOptionKeys.has(optionKey)) return;
+                seenOptionKeys.add(optionKey);
+                normalizedOptions.push(normalizedOption);
+              });
               const selectedValue = String(value ?? "").trim();
               const selectedOption = normalizedOptions.find((option) => option.value === selectedValue) || null;
               const selectedLabel = selectedOption?.label || String(placeholder || "Select...");
@@ -23000,6 +24119,157 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 })
               );
             };
+            const renderMetronomeFunctionTriggerSettings = () => {
+              const defaultFunctionConfig = buildDefaultMetronomeFunctionTriggerConfig(activeWorkflow, selectedNode, config);
+              const payloadFields = normalizeMetronomeFunctionTriggerPayloadFields(defaultFunctionConfig.payloadFields);
+              const endpointUrl = resolveMetronomeFunctionTriggerEndpointUrl(activeWorkflow, selectedNode, defaultFunctionConfig, backendUrl);
+              const endpointDisplayValue = endpointUrl || "Publish to get URL";
+              const commitPayloadFields = (nextFields) => {
+                const normalizedFields = normalizeMetronomeFunctionTriggerPayloadFields(nextFields);
+                updateSelectedNodeConfigPatch({
+                  payloadFields: normalizedFields,
+                  payloadSchemaJson: JSON.stringify(buildMetronomeFunctionTriggerPayloadSchema(normalizedFields), null, 2),
+                  samplePayloadJson: JSON.stringify(buildMetronomeFunctionTriggerSamplePayload(normalizedFields), null, 2),
+                  expectedPayload: buildMetronomeFunctionTriggerSamplePayload(normalizedFields),
+                });
+              };
+              const copyFunctionEndpoint = () => {
+                if (!endpointUrl || typeof navigator === "undefined" || !navigator.clipboard || typeof navigator.clipboard.writeText !== "function") return;
+                void navigator.clipboard.writeText(endpointUrl);
+              };
+              const updatePayloadField = (rowId, patch) => {
+                commitPayloadFields(payloadFields.map((field) => field.id === rowId ? { ...field, ...patch } : field));
+              };
+              const removePayloadField = (rowId) => {
+                if (payloadFields.length <= 1) return;
+                commitPayloadFields(payloadFields.filter((field) => field.id !== rowId));
+              };
+              const addPayloadField = () => {
+                commitPayloadFields([...payloadFields, createMetronomeFunctionTriggerPayloadField()]);
+              };
+              return React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-metronome-field playground-metronome-function-trigger-endpoint-field" },
+                  renderMetronomeFieldTitle("Endpoint", "Publishing this workflow deploys a Computer Agents cloud function that forwards requests to this workflow."),
+                  React.createElement("div", { className: "playground-metronome-function-trigger-endpoint-control" },
+                    React.createElement("input", {
+                      type: "text",
+                      readOnly: true,
+                      className: "playground-metronome-input",
+                      value: endpointDisplayValue,
+                      onFocus: (event) => event.currentTarget.select(),
+                    }),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-metronome-function-trigger-endpoint-copy",
+                      disabled: !endpointUrl,
+                      onClick: copyFunctionEndpoint,
+                      title: endpointUrl ? "Copy endpoint" : "Publish to get URL",
+                      "aria-label": "Copy endpoint",
+                    }, React.createElement(Copy, { width: 13, height: 13, strokeWidth: 1.8 }))
+                  )
+                ),
+                React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
+                  React.createElement("div", { className: "playground-metronome-switch-copy" },
+                    React.createElement("span", { className: "playground-metronome-switch-title-with-tooltip" },
+                      React.createElement("span", null, "Require API key"),
+                      renderMetronomeFieldTooltip("When enabled, callers must include a valid Computer Agents API key to invoke this workflow function.")
+                    )
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-metronome-switch" + (defaultFunctionConfig.functionRequireApiKey ? " is-on" : ""),
+                    role: "switch",
+                    "aria-checked": defaultFunctionConfig.functionRequireApiKey ? "true" : "false",
+                    onClick: () => {
+                      const nextRequireApiKey = !defaultFunctionConfig.functionRequireApiKey;
+                      updateSelectedNodeConfigPatch({
+                        functionRequireApiKey: nextRequireApiKey,
+                        requireApiKey: nextRequireApiKey,
+                        authentication: nextRequireApiKey ? "api_key" : "public",
+                      });
+                    },
+                    "aria-label": "Require API key",
+                  })
+                ),
+                React.createElement("div", {
+                  className: "playground-metronome-field playground-metronome-function-trigger-payload-field",
+                  onMouseDown: stopMetronomePointerPropagation,
+                  onPointerDown: stopMetronomePointerPropagation,
+                  onClick: stopMetronomePointerPropagation,
+                },
+                  renderMetronomeFieldTitle("Payload", "Define the expected request payload. These keys become available as dynamic content for downstream nodes."),
+                  React.createElement("div", { className: "playground-metronome-function-trigger-payload-builder" },
+                    React.createElement("div", { className: "playground-metronome-function-trigger-payload-rows" },
+                      payloadFields.map((field, index) => {
+                        const rowId = field.id || "payload-" + index;
+                        return React.createElement("div", {
+                          key: rowId,
+                          className: "playground-metronome-function-trigger-payload-row",
+                          onMouseDown: stopMetronomePointerPropagation,
+                          onPointerDown: stopMetronomePointerPropagation,
+                          onClick: stopMetronomePointerPropagation,
+                        },
+                          React.createElement("input", {
+                            type: "text",
+                            className: "playground-metronome-input",
+                            value: field.key || "",
+                            placeholder: "key",
+                            onMouseDown: stopMetronomePointerPropagation,
+                            onPointerDown: stopMetronomePointerPropagation,
+                            onClick: stopMetronomePointerPropagation,
+                            onKeyDown: stopMetronomeInputKeyPropagation,
+                            onKeyUp: stopMetronomeInputKeyPropagation,
+                            onChange: (event) => updatePayloadField(rowId, { key: event.target.value, name: event.target.value }),
+                          }),
+                          renderMetronomeInspectorSelect({
+                            id: "function-trigger-payload-type-" + (selectedNodeId || "selected") + "-" + rowId,
+                            value: normalizeMetronomeFunctionTriggerPayloadType(field.type),
+                            options: METRONOME_FUNCTION_TRIGGER_PAYLOAD_TYPE_OPTIONS.map((option) => ({
+                              id: option.id,
+                              label: option.label,
+                              description: "Expected " + option.label.toLowerCase() + " value in the request payload.",
+                            })),
+                            searchPlaceholder: "Select type...",
+                            onChange: (nextType) => updatePayloadField(rowId, { type: normalizeMetronomeFunctionTriggerPayloadType(nextType) }),
+                          }),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-metronome-function-header-delete",
+                            disabled: payloadFields.length <= 1,
+                            "aria-label": "Delete payload field",
+                            onMouseDown: stopMetronomePointerPropagation,
+                            onPointerDown: stopMetronomePointerPropagation,
+                            onClick: (event) => {
+                              stopMetronomePointerPropagation(event);
+                              removePayloadField(rowId);
+                            },
+                          }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }))
+                        );
+                      })
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-metronome-function-trigger-payload-add",
+                      onMouseDown: stopMetronomePointerPropagation,
+                      onPointerDown: stopMetronomePointerPropagation,
+                      onClick: (event) => {
+                        stopMetronomePointerPropagation(event);
+                        addPayloadField();
+                      },
+                    },
+                      React.createElement(Plus, { width: 12, height: 12, strokeWidth: 1.9 }),
+                      React.createElement("span", null, "Add payload field")
+                    )
+                  )
+                ),
+                renderMetronomeRichTextField({
+                  fieldKey: "promptExtension",
+	                  title: "Instructions",
+                  placeholder: "Add instructions for handling function calls",
+                  tooltip: "Additional instructions appended to the function request payload before the workflow continues.",
+                })
+              );
+            };
             const renderMetronomeGitHubSettings = () => {
               const defaultGitHubConfig = buildDefaultMetronomeGitHubTriggerConfig(config);
               const webhookEndpoint = typeof window !== "undefined" && window.location
@@ -23373,6 +24643,8 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	                  ? renderMetronomeEmailSettings()
 	                : selectedTriggerType === "telegram"
 	                  ? renderMetronomeTelegramSettings()
+	                : selectedTriggerType === "function"
+	                  ? renderMetronomeFunctionTriggerSettings()
 	                : selectedTriggerType === "github"
 	                  ? renderMetronomeGitHubSettings()
 	                : selectedTriggerType === "project_ticket"
@@ -23629,7 +24901,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 { id: "done", label: "Done" },
                 { id: "canceled", label: "Canceled" },
               ];
-              const renderMaxIterationsField = (label = "Safety limit", description = "Maximum loop iterations before the workflow stops to prevent runaway automation.") => React.createElement("div", { className: "playground-metronome-field" },
+              const renderMaxIterationsField = (
+                label = "Safety limit",
+                description = "Maximum loop iterations before the workflow stops to prevent runaway automation.",
+                className = ""
+              ) => React.createElement("div", { className: ("playground-metronome-field " + className).trim() },
                 renderMetronomeFieldTitle(label, description),
                 React.createElement("input", {
                   type: "number",
@@ -23690,7 +24966,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   : null,
                 selectedLoopType === "input_items"
                   ? React.createElement(React.Fragment, null,
-                      React.createElement("div", { className: "playground-metronome-field" },
+                      React.createElement("div", { className: "playground-metronome-field playground-metronome-loop-input-binding-field" },
                         renderMetronomeFieldTitle("Input binding", "Use previous.batches for table batches, previous.records for rows, or loop.records inside nested loops."),
                         React.createElement("input", {
                           type: "text",
@@ -23702,7 +24978,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           onChange: (event) => updateSelectedNodeConfig("inputBinding", event.target.value),
                         })
                       ),
-                      renderMaxIterationsField("Item limit", "Maximum number of input items or batches to expose to enclosed steps.")
+                      renderMaxIterationsField(
+                        "Item limit",
+                        "Maximum number of input items or batches to expose to enclosed steps.",
+                        "playground-metronome-loop-item-limit-field"
+                      )
                     )
                   : null,
                 selectedLoopType === "project_tickets"
@@ -25192,12 +26472,28 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             };
             const renderTableSettings = () => {
               const operation = normalizeMetronomeTableOperation(config.operation || subtype);
+              const inlineTableContent = String(config.content || config.csvText || config.csv_text || config.tsvText || config.tsv_text || "").trim();
+              const inlineTableSourceName = String(config.sourceName || config.source_name || config.fixturePath || config.fixture_path || config.fixture || "").trim();
+              const inlineTableLineCount = inlineTableContent
+                ? inlineTableContent.split(/\r?\n/).filter((line) => line.trim()).length
+                : 0;
+              const inlineTableDataRowCount = inlineTableLineCount > 0 && config.hasHeader !== false && config.has_header !== false
+                ? Math.max(0, inlineTableLineCount - 1)
+                : inlineTableLineCount;
+              const inlineTableSummary = inlineTableContent
+                ? [
+                    inlineTableSourceName || (operation === "parse_tsv" ? "Embedded TSV" : "Embedded CSV"),
+                    inlineTableDataRowCount ? inlineTableDataRowCount + " row" + (inlineTableDataRowCount === 1 ? "" : "s") : "",
+                    inlineTableContent.length ? inlineTableContent.length.toLocaleString() + " chars" : "",
+                  ].filter(Boolean).join(" · ")
+                : "";
               return React.createElement(React.Fragment, null,
                 renderMetronomeDataBindingSelect({
                   title: "Source",
                   fieldKey: "inputBinding",
                   fallback: "trigger.input.files",
                   options: [
+                    { id: "workflow.trigger.input.csvContent", label: "Trigger CSV content", description: "CSV text sent with the workflow run." },
                     { id: "trigger.input.files", label: "Trigger files" },
                     { id: "trigger.input", label: "Trigger input" },
                     { id: "last.files", label: "Previous node files" },
@@ -25206,6 +26502,18 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                     { id: "workflow.context", label: "Full workflow context" },
                   ],
                 }),
+                inlineTableContent
+                  ? React.createElement("div", { className: "playground-metronome-field playground-metronome-table-inline-source-field" },
+                      renderMetronomeFieldTitle("Content", "Inline CSV/TSV content bundled with this node and used if the selected binding does not provide content."),
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-metronome-input",
+                        value: inlineTableSummary,
+                        disabled: true,
+                        readOnly: true,
+                      })
+                    )
+                  : null,
                 React.createElement("div", { className: "playground-metronome-field playground-metronome-table-fallback-field" },
                   renderMetronomeFieldTitle("Fallback File", "Used when the source binding does not contain inline CSV/TSV text or a file reference."),
                   React.createElement("input", {
@@ -25751,12 +27059,290 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 "User Approval routes to True when approved and False when rejected."
               )
             );
+            const renderFunctionSettings = () => {
+              const functionConfig = createDefaultMetronomeFunctionConfig(config);
+              const functionMode = normalizeMetronomeFunctionMode(functionConfig.functionMode);
+              const isExternalApi = functionMode === "external_api";
+              const resetFunctionInvokeState = () => setMetronomeFunctionInvokeState({
+                nodeId: selectedNodeId || "",
+                status: "idle",
+                error: "",
+                resultText: "",
+              });
+              const commitFunctionHeaderRows = (nextRows) => {
+                const normalizedRows = normalizeMetronomeFunctionHeaderRows(nextRows);
+                updateSelectedNodeConfigPatch({
+                  requestHeaders: normalizedRows,
+                  requestHeadersJson: serializeMetronomeFunctionHeaderRows(normalizedRows),
+                });
+              };
+              const functionHeaderRows = normalizeMetronomeFunctionHeaderRows(functionConfig.requestHeaders);
+              const updateFunctionHeaderRow = (rowId, patch) => {
+                commitFunctionHeaderRows(functionHeaderRows.map((row) => row.id === rowId ? { ...row, ...patch } : row));
+              };
+              const removeFunctionHeaderRow = (rowId) => {
+                if (functionHeaderRows.length <= 1) return;
+                commitFunctionHeaderRows(functionHeaderRows.filter((row) => row.id !== rowId));
+              };
+              const addFunctionHeaderRow = () => {
+                commitFunctionHeaderRows([...functionHeaderRows, createMetronomeHeaderRow()]);
+              };
+              const addFunctionSecretHeaderRow = () => {
+                void loadAllMetronomeHeaderSecrets();
+                commitFunctionHeaderRows([...functionHeaderRows, createMetronomeHeaderRow({ valueType: "secret" })]);
+              };
+              const httpMethodOptions = ["POST", "GET", "PUT", "DELETE", "PATCH", "HEAD"].map((method) => ({
+                id: method,
+                label: method,
+                description: "Send an HTTP " + method + " request.",
+              }));
+              const renderFunctionHeaders = () => React.createElement("div", {
+                className: "playground-metronome-field playground-metronome-function-headers-field",
+                onMouseDown: stopMetronomePointerPropagation,
+                onPointerDown: stopMetronomePointerPropagation,
+                onClick: stopMetronomePointerPropagation,
+              },
+                renderMetronomeFieldTitle("Headers (optional)"),
+                React.createElement("div", { className: "playground-metronome-function-headers-list" },
+                  functionHeaderRows.map((row, index) => {
+                    const rowId = row.id || "header-" + index;
+                    const secretOptions = metronomeHeaderSecretOptions.length
+                      ? metronomeHeaderSecretOptions
+                      : [{ id: "", label: metronomeSecretVaultSecretsLoadingId ? "Loading secrets..." : "No secrets available" }];
+                    return React.createElement("div", {
+                      key: rowId,
+                      className: "playground-metronome-function-header-row",
+                      onMouseDown: stopMetronomePointerPropagation,
+                      onPointerDown: stopMetronomePointerPropagation,
+                      onClick: stopMetronomePointerPropagation,
+                    },
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-metronome-input",
+                        value: row.name || "",
+                        placeholder: "Name",
+                        onMouseDown: stopMetronomePointerPropagation,
+                        onPointerDown: stopMetronomePointerPropagation,
+                        onClick: stopMetronomePointerPropagation,
+                        onKeyDown: stopMetronomeInputKeyPropagation,
+                        onKeyUp: stopMetronomeInputKeyPropagation,
+                        onChange: (event) => updateFunctionHeaderRow(rowId, { name: event.target.value }),
+                      }),
+                      row.valueType === "secret"
+                        ? renderMetronomeInspectorSelect({
+                            id: "function-header-secret-" + (selectedNodeId || "selected") + "-" + rowId,
+                            value: row.secretRef || "",
+                            options: secretOptions,
+                            disabled: !metronomeHeaderSecretOptions.length,
+                            placeholder: metronomeHeaderSecretOptions.length ? "Select secret" : "No secrets available",
+                            searchPlaceholder: "Select secret...",
+                            onChange: (nextSecretRef, option) => {
+                              updateFunctionHeaderRow(rowId, {
+                                valueType: "secret",
+                                value: "",
+                                secretRef: nextSecretRef,
+                                secretVaultId: option?.vaultId || "",
+                                secretVaultName: option?.vaultName || "",
+                                secretId: option?.secretId || "",
+                                secretName: option?.secretName || "",
+                              });
+                            },
+                          })
+                        : React.createElement("input", {
+                            type: "text",
+                            className: "playground-metronome-input",
+                            value: row.value || "",
+                            placeholder: "Value",
+                            onMouseDown: stopMetronomePointerPropagation,
+                            onPointerDown: stopMetronomePointerPropagation,
+                            onClick: stopMetronomePointerPropagation,
+                            onKeyDown: stopMetronomeInputKeyPropagation,
+                            onKeyUp: stopMetronomeInputKeyPropagation,
+                            onChange: (event) => updateFunctionHeaderRow(rowId, { valueType: "text", value: event.target.value }),
+                          }),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-metronome-function-header-delete",
+                        disabled: functionHeaderRows.length <= 1,
+                        "aria-label": "Delete header",
+                        onMouseDown: stopMetronomePointerPropagation,
+                        onPointerDown: stopMetronomePointerPropagation,
+                        onClick: (event) => {
+                          stopMetronomePointerPropagation(event);
+                          removeFunctionHeaderRow(rowId);
+                        },
+                      }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }))
+                    );
+                  }),
+                  React.createElement("div", { className: "playground-metronome-function-header-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-metronome-function-header-link",
+                      onMouseDown: stopMetronomePointerPropagation,
+                      onPointerDown: stopMetronomePointerPropagation,
+                      onClick: (event) => {
+                        stopMetronomePointerPropagation(event);
+                        addFunctionHeaderRow();
+                      },
+                    },
+                      React.createElement(Plus, { width: 12, height: 12, strokeWidth: 1.9 }),
+                      React.createElement("span", null, "Add header")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-metronome-function-header-link",
+                      onMouseDown: stopMetronomePointerPropagation,
+                      onPointerDown: stopMetronomePointerPropagation,
+                      onClick: (event) => {
+                        stopMetronomePointerPropagation(event);
+                        addFunctionSecretHeaderRow();
+                      },
+                    },
+                      React.createElement(Plus, { width: 12, height: 12, strokeWidth: 1.9 }),
+                      React.createElement("span", null, "Add secret")
+                    ),
+                    renderMetronomeFieldTooltip("Secrets are taken from the Secrets service in Develop mode.")
+                  )
+                )
+              );
+              return React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-metronome-field playground-metronome-function-type-field" },
+                  renderMetronomeFieldTitle("Type"),
+                  renderMetronomeInspectorSelect({
+                    id: "function-mode-" + (selectedNodeId || "selected"),
+                    value: functionMode,
+                    options: [
+                      {
+                        id: "computer_agents_function",
+                        label: "Computer Agents Function",
+                        description: "Invoke a deployed Computer Agents function resource.",
+                      },
+                      {
+                        id: "external_api",
+                        label: "External API",
+                        description: "Call an external HTTP endpoint from this workflow.",
+                      },
+                    ],
+                    searchPlaceholder: "Select function type...",
+                    onChange: (nextMode) => {
+                      updateSelectedNodeConfigPatch(createDefaultMetronomeFunctionConfig({
+                        ...functionConfig,
+                        functionMode: nextMode,
+                      }));
+                      resetFunctionInvokeState();
+                    },
+                  })
+                ),
+                isExternalApi
+                  ? React.createElement(React.Fragment, null,
+                      React.createElement("div", { className: "playground-metronome-field playground-metronome-function-url-field" },
+                        renderMetronomeFieldTitle("URL"),
+                        React.createElement("input", {
+                          type: "text",
+                          className: "playground-metronome-input",
+                          value: functionConfig.url || "",
+                          placeholder: "https://api.example.com/events",
+                          onKeyDown: stopMetronomeInputKeyPropagation,
+                          onKeyUp: stopMetronomeInputKeyPropagation,
+                          onChange: (event) => updateSelectedNodeConfig("url", event.target.value),
+                        })
+                      ),
+                      renderFunctionHeaders(),
+                      React.createElement("div", { className: "playground-metronome-field playground-metronome-function-method-field" },
+                        renderMetronomeFieldTitle("Method"),
+                        renderMetronomeInspectorSelect({
+                          id: "function-http-method-" + (selectedNodeId || "selected"),
+                          value: functionConfig.httpMethod || "POST",
+                          options: httpMethodOptions,
+                          searchPlaceholder: "Select method...",
+                          onChange: (nextMethod) => updateSelectedNodeConfigPatch({
+                            httpMethod: normalizeMetronomeFunctionHttpMethod(nextMethod),
+                            method: normalizeMetronomeFunctionHttpMethod(nextMethod),
+                          }),
+                        })
+                      ),
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        renderMetronomeFieldTitle("Payload"),
+                        React.createElement("div", { className: "playground-metronome-inline-code-editor" },
+                          React.createElement(MetronomeGeneratedCodeEditor, {
+                            file: { path: "payload.json", language: "json" },
+                            value: functionConfig.payloadJson || "{\n}",
+                            readOnly: isActiveWorkflowBuiltIn,
+                            onChange: (nextValue) => updateSelectedNodeConfig("payloadJson", String(nextValue || "")),
+                          })
+                        )
+                      )
+                    )
+                  : React.createElement(React.Fragment, null,
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        renderMetronomeFieldTitle("Function"),
+                        renderMetronomeInspectorSelect({
+                          id: "function-resource-" + (selectedNodeId || "selected"),
+                          value: functionConfig.functionId || "",
+                          options: [
+                            { id: "", label: metronomeFunctionOptions.length ? "Select function" : "No functions available" },
+                            ...metronomeFunctionOptions.map((option) => ({
+                              id: option.id,
+                              label: option.name,
+                              description: option.description || option.id || "",
+                            })),
+                          ],
+                          searchPlaceholder: "Select a function...",
+                          onChange: (nextFunctionId) => {
+                            const nextFunction = metronomeFunctionOptions.find((option) => option.id === nextFunctionId) || null;
+                            updateSelectedNodeConfigPatch({
+                              functionId: nextFunctionId,
+                              functionName: nextFunction?.name || "",
+                            });
+                            resetFunctionInvokeState();
+                          },
+                        })
+                      ),
+                      React.createElement("div", { className: "playground-metronome-field" },
+                        renderMetronomeFieldTitle("Request payload"),
+                        React.createElement("div", { className: "playground-metronome-inline-code-editor" },
+                          React.createElement(MetronomeGeneratedCodeEditor, {
+                            file: { path: "payload.json", language: "json" },
+                            value: functionConfig.payloadJson || "{\n  \"input\": \"{{ input }}\"\n}",
+                            readOnly: isActiveWorkflowBuiltIn,
+                            onChange: (nextValue) => {
+                              updateSelectedNodeConfig("payloadJson", String(nextValue || ""));
+                              resetFunctionInvokeState();
+                            },
+                          })
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-metronome-function-test-section" },
+                        React.createElement("div", { className: "playground-metronome-function-test-header" },
+                          renderMetronomeFieldTitle("Test invoke"),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-metronome-function-test-button" + (selectedFunctionInvokeState.status === "loading" ? " is-loading" : ""),
+                            disabled: selectedFunctionInvokeState.status === "loading" || !String(functionConfig.functionId || "").trim(),
+                            onClick: handleMetronomeFunctionTestInvoke,
+                          },
+                            React.createElement(selectedFunctionInvokeState.status === "loading" ? Loader2 : Play, { width: 13, height: 13, strokeWidth: 1.9 }),
+                            selectedFunctionInvokeState.status === "loading" ? "Invoking" : "Invoke"
+                          )
+                        ),
+                        selectedFunctionInvokeState.error
+                          ? React.createElement("div", { className: "playground-metronome-function-test-error" }, selectedFunctionInvokeState.error)
+                          : null,
+                        selectedFunctionInvokeState.resultText
+                          ? React.createElement("pre", { className: "playground-metronome-function-test-result" }, selectedFunctionInvokeState.resultText)
+                          : null
+                      )
+                    )
+              );
+            };
             const showTypeSelector = !["action", "approval", "end", "note", "ticket", "imagine", "function"].includes(kind);
             const isThreadNode = kind === "action" && subtype === "start_thread";
             const rawNodeLabel = String(selectedNode.data?.label || "");
             const defaultNodeLabel = getMetronomeDefaultNodeLabel(kind, subtype);
             const inspectorNodeLabel = getMetronomeNodeDisplayLabel(selectedNode);
             const inspectorNodeDescription = getMetronomeNodeTypeDescription(selectedNode);
+            const triggerNodeCount = nodes.filter((node) => String(node?.data?.kind || node?.kind || "").trim() === "trigger").length;
+            const canDeleteSelectedNode = !isActiveWorkflowBuiltIn && (kind !== "trigger" || triggerNodeCount > 1);
             return React.createElement("aside", {
               className: "playground-metronome-node-inspector" + (isActiveWorkflowBuiltIn ? " is-readonly" : ""),
             },
@@ -25779,11 +27365,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 		                    },
 		                      React.createElement(LibraryBig, { width: 15, height: 15, strokeWidth: 1.9 })
 		                    ),
-		                    kind === "trigger" ? null : React.createElement("button", {
+		                    !canDeleteSelectedNode ? null : React.createElement("button", {
 		                      type: "button",
 		                      className: "playground-files-header-icon-button is-plain playground-metronome-inspector-delete",
 		                      onClick: deleteSelectedNode,
-		                      disabled: isActiveWorkflowBuiltIn,
+		                      disabled: !canDeleteSelectedNode,
 		                      title: "Delete node",
 		                      "aria-label": "Delete node",
 		                    },
@@ -25868,6 +27454,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
 	                              : {}
 	                          ),
 	                          ...(
+	                            nextSubtype === "function"
+	                              ? buildDefaultMetronomeFunctionTriggerConfig(activeWorkflow, selectedNode, config)
+	                              : {}
+	                          ),
+	                          ...(
 	                            nextSubtype === "github"
 	                              ? buildDefaultMetronomeGitHubTriggerConfig(config)
 	                              : {}
@@ -25926,14 +27517,16 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                         updateSelectedNodeConfigPatch(createDefaultMetronomeFirecrawlConfig(nextSubtype, config));
                       } else if (kind === "table") {
                         updateSelectedNodeConfigPatch(createDefaultMetronomeTableConfig(nextSubtype, config));
-                      } else if (kind === "database") {
-                        updateSelectedNodeConfigPatch(createDefaultMetronomeDatabaseConfig(nextSubtype, config));
-                      } else if (kind === "loop") {
-                        const nextLoopType = normalizeMetronomeLoopType(nextSubtype);
-                        updateSelectedNodeConfigPatch(createDefaultMetronomeLoopConfig(nextLoopType, config));
-                      }
-                    },
-                  })
+                  } else if (kind === "database") {
+                    updateSelectedNodeConfigPatch(createDefaultMetronomeDatabaseConfig(nextSubtype, config));
+                  } else if (kind === "loop") {
+                    const nextLoopType = normalizeMetronomeLoopType(nextSubtype);
+                    updateSelectedNodeConfigPatch(createDefaultMetronomeLoopConfig(nextLoopType, config));
+                  } else if (kind === "function") {
+                    updateSelectedNodeConfigPatch(createDefaultMetronomeFunctionConfig(config));
+                  }
+                },
+              })
                 ) : null,
                 kind === "trigger"
                   ? renderTriggerSettings()
@@ -25950,76 +27543,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           : kind === "imagine"
                     ? renderImagineSettings()
 	                  : kind === "function"
-                    ? React.createElement(React.Fragment, null,
-                        React.createElement("div", { className: "playground-metronome-field" },
-                          renderMetronomeFieldTitle("Function"),
-                          renderMetronomeInspectorSelect({
-                            id: "function-resource-" + (selectedNodeId || "selected"),
-                            value: config.functionId || "",
-                            options: [
-                              { id: "", label: metronomeFunctionOptions.length ? "Select function" : "No functions available" },
-                              ...metronomeFunctionOptions.map((option) => ({
-                                id: option.id,
-                                label: option.name,
-                                description: option.description || option.id || "",
-                              })),
-                            ],
-                            searchPlaceholder: "Select a function...",
-                            onChange: (nextFunctionId) => {
-                              const nextFunction = metronomeFunctionOptions.find((option) => option.id === nextFunctionId) || null;
-                              updateSelectedNodeConfigPatch({
-                                functionId: nextFunctionId,
-                                functionName: nextFunction?.name || "",
-                              });
-                              setMetronomeFunctionInvokeState({
-                                nodeId: selectedNodeId || "",
-                                status: "idle",
-                                error: "",
-                                resultText: "",
-                              });
-                            },
-                          })
-                        ),
-                        React.createElement("div", { className: "playground-metronome-field" },
-                          renderMetronomeFieldTitle("Request payload"),
-                          React.createElement("div", { className: "playground-metronome-inline-code-editor" },
-                            React.createElement(MetronomeGeneratedCodeEditor, {
-                              file: { path: "payload.json", language: "json" },
-                              value: config.payloadJson || "{\n  \"input\": \"{{ input }}\"\n}",
-                              readOnly: isActiveWorkflowBuiltIn,
-                              onChange: (nextValue) => {
-                                updateSelectedNodeConfig("payloadJson", String(nextValue || ""));
-                                setMetronomeFunctionInvokeState({
-                                  nodeId: selectedNodeId || "",
-                                  status: "idle",
-                                  error: "",
-                                  resultText: "",
-                                });
-                              },
-                            })
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-metronome-function-test-section" },
-                          React.createElement("div", { className: "playground-metronome-function-test-header" },
-                            renderMetronomeFieldTitle("Test invoke"),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-metronome-function-test-button" + (selectedFunctionInvokeState.status === "loading" ? " is-loading" : ""),
-                              disabled: selectedFunctionInvokeState.status === "loading" || !String(config.functionId || "").trim(),
-                              onClick: handleMetronomeFunctionTestInvoke,
-                            },
-                              React.createElement(selectedFunctionInvokeState.status === "loading" ? Loader2 : Play, { width: 13, height: 13, strokeWidth: 1.9 }),
-                              selectedFunctionInvokeState.status === "loading" ? "Invoking" : "Invoke"
-                            )
-                          ),
-                          selectedFunctionInvokeState.error
-                            ? React.createElement("div", { className: "playground-metronome-function-test-error" }, selectedFunctionInvokeState.error)
-                            : null,
-                          selectedFunctionInvokeState.resultText
-                            ? React.createElement("pre", { className: "playground-metronome-function-test-result" }, selectedFunctionInvokeState.resultText)
-                            : null
-                        )
-	                      )
+                    ? renderFunctionSettings()
                   : kind === "database"
                     ? renderDatabaseSettings()
                   : kind === "table"
@@ -26241,7 +27765,11 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           )
                         );
                       })
-                    : React.createElement("div", { className: "playground-agents-detail-version-selector-empty" }, "No versions yet.")
+                    : React.createElement("div", { className: "playground-agents-detail-version-selector-empty" },
+                        isLoadingMetronomeVersions
+                          ? "Loading versions..."
+                          : metronomeVersionsError || "No versions yet."
+                      )
                 ),
                 React.createElement("div", { className: "playground-agents-detail-version-selector-footer playground-metronome-detail-version-selector-footer" },
                   React.createElement("button", {
@@ -26264,9 +27792,9 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                       type: "button",
                       className: "tb-popup-row playground-agents-detail-version-selector-new-button",
                       role: "menuitem",
-                      disabled: isBusy || !activeWorkflowDeployments.length,
+                      disabled: isBusy || isLoadingMetronomeVersions || !activeWorkflowDeployments.length,
                       onClick: () => {
-                        if (isBusy || !activeWorkflowDeployments.length) return;
+                        if (isBusy || isLoadingMetronomeVersions || !activeWorkflowDeployments.length) return;
                         setIsMetronomeVersionSelectorMenuOpen(false);
                         openMetronomeVersionChangesPage();
                       },
@@ -27359,6 +28887,399 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             if (metronomeRunInlineDetailId) {
               return renderMetronomeInlineRunDetail(inlineRun);
             }
+            const normalizedRunSearchQuery = String(metronomeRunSearchQuery || "").trim().toLowerCase();
+            const getRunStatusId = (run) => {
+              const status = String(run?.status || "completed").trim().toLowerCase();
+              if (!status) return "completed";
+              if (status === "queued" || status === "pending" || status === "running" || status === "in_progress") return "running";
+              if (status === "error" || status === "failed") return "failed";
+              if (status === "succeeded" || status === "success") return "completed";
+              return status;
+            };
+            const getRunStartedTimestamp = (run) => {
+              const parsed = Date.parse(run?.startedAt || run?.createdAt || run?.updatedAt || "");
+              return Number.isFinite(parsed) ? parsed : 0;
+            };
+            const getRunStepsCount = (run) => (run?.output?.steps || []).length || 0;
+            const getRunThreadsCount = (run) => (run?.output?.threads || []).length || 0;
+            const activeRunFilter = METRONOME_RUN_FILTER_OPTIONS.find((option) => option.id === metronomeRunFilter) || METRONOME_RUN_FILTER_OPTIONS[0];
+            const activeRunSort = METRONOME_RUN_SORT_OPTIONS.find((option) => option.id === metronomeRunSort) || METRONOME_RUN_SORT_OPTIONS[0];
+            const visibleMetronomeRunRows = metronomeRuns
+              .filter((run) => {
+                const statusId = getRunStatusId(run);
+                if (metronomeRunFilter !== "all" && statusId !== metronomeRunFilter) return false;
+                if (!normalizedRunSearchQuery) return true;
+                const haystack = [
+                  getMetronomeRunPrompt(run),
+                  run?.id,
+                  statusId,
+                  formatMetronomeRunTimestamp(run?.createdAt),
+                ].map((value) => String(value || "").toLowerCase()).join(" ");
+                return haystack.includes(normalizedRunSearchQuery);
+              })
+              .sort((left, right) => {
+                if (metronomeRunSort === "run") {
+                  return getMetronomeRunPrompt(left).localeCompare(getMetronomeRunPrompt(right), undefined, { sensitivity: "base" });
+                }
+                if (metronomeRunSort === "status") {
+                  const statusDelta = getRunStatusId(left).localeCompare(getRunStatusId(right), undefined, { sensitivity: "base" });
+                  if (statusDelta) return statusDelta;
+                }
+                if (metronomeRunSort === "steps") {
+                  const stepsDelta = getRunStepsCount(right) - getRunStepsCount(left);
+                  if (stepsDelta) return stepsDelta;
+                }
+                return getRunStartedTimestamp(right) - getRunStartedTimestamp(left);
+              });
+            const visibleMetronomeRunIds = visibleMetronomeRunRows
+              .map((run) => String(run?.id || "").trim())
+              .filter(Boolean);
+            const selectedVisibleMetronomeRunIds = visibleMetronomeRunIds
+              .filter((runId) => selectedMetronomeRunIds.has(runId));
+            const allVisibleMetronomeRunsSelected = visibleMetronomeRunIds.length > 0
+              && selectedVisibleMetronomeRunIds.length === visibleMetronomeRunIds.length;
+            const hasPartialVisibleMetronomeRunSelection = selectedVisibleMetronomeRunIds.length > 0
+              && !allVisibleMetronomeRunsSelected;
+            const toggleMetronomeRunSelection = (runId) => {
+              const normalizedRunId = String(runId || "").trim();
+              if (!normalizedRunId) return;
+              setSelectedMetronomeRunIds((current) => {
+                const next = new Set(current || []);
+                if (next.has(normalizedRunId)) {
+                  next.delete(normalizedRunId);
+                } else {
+                  next.add(normalizedRunId);
+                }
+                return next;
+              });
+            };
+            const toggleVisibleMetronomeRunSelection = () => {
+              if (!visibleMetronomeRunIds.length) return;
+              setSelectedMetronomeRunIds((current) => {
+                const next = new Set(current || []);
+                if (allVisibleMetronomeRunsSelected) {
+                  visibleMetronomeRunIds.forEach((runId) => next.delete(runId));
+                } else {
+                  visibleMetronomeRunIds.forEach((runId) => next.add(runId));
+                }
+                return next;
+              });
+            };
+            const openMetronomeRunFullScreen = (runId) => {
+              const normalizedRunId = String(runId || "").trim();
+              if (!normalizedRunId) return;
+              setSelectedNodeId("");
+              setIsMetronomePublishActionsMenuOpen(false);
+              setIsMetronomePublishMenuOpen(false);
+              setMetronomeRunToolbarPopover("");
+              setMetronomeRunActionMenu(null);
+              setIsMetronomeRunSidebarMenuOpen(false);
+              setIsMetronomeRunSidebarOpen(false);
+              setSelectedMetronomeRunId(normalizedRunId);
+              setMetronomeRunInlineDetailId(normalizedRunId);
+            };
+            const getMetronomeRunActionTargetIds = (runId) => {
+              const normalizedRunId = String(runId || "").trim();
+              const selectedIds = Array.from(selectedMetronomeRunIds || [])
+                .map((id) => String(id || "").trim())
+                .filter((id) => id && metronomeRuns.some((run) => String(run?.id || "").trim() === id));
+              if (normalizedRunId && selectedMetronomeRunIds.has(normalizedRunId) && selectedIds.length > 1) {
+                return selectedIds;
+              }
+              return normalizedRunId ? [normalizedRunId] : [];
+            };
+            const openMetronomeRunActionMenu = (event, run, options = {}) => {
+              event?.preventDefault?.();
+              event?.stopPropagation?.();
+              const runId = String(run?.id || "").trim();
+              if (!runId) return;
+              const targetIds = getMetronomeRunActionTargetIds(runId);
+              const rawContextX = Number(event?.clientX || 0) + 8;
+              const rawContextY = Number(event?.clientY || 0) + 2;
+              const viewportWidth = typeof window !== "undefined" ? Number(window.innerWidth || 0) : 0;
+              const viewportHeight = typeof window !== "undefined" ? Number(window.innerHeight || 0) : 0;
+              const contextX = options.context && viewportWidth
+                ? Math.min(Math.max(8, rawContextX), Math.max(8, viewportWidth - 188))
+                : rawContextX;
+              const contextY = options.context && viewportHeight
+                ? Math.min(Math.max(8, rawContextY), Math.max(8, viewportHeight - 86))
+                : rawContextY;
+              setMetronomeRunToolbarPopover("");
+              setMetronomeRunActionMenu({
+                anchorRunId: runId,
+                runIds: targetIds,
+                source: options.context ? "context" : "button",
+                x: options.context ? contextX : 0,
+                y: options.context ? contextY : 0,
+                key: Date.now() + "-" + runId + "-" + (options.context ? "context" : "button"),
+              });
+            };
+            const removeMetronomeRunsLocally = (runIds) => {
+              const deletedIdSet = new Set((Array.isArray(runIds) ? runIds : []).map((id) => String(id || "").trim()).filter(Boolean));
+              if (!deletedIdSet.size) return;
+              setMetronomeRuns((current) => current.filter((run) => !deletedIdSet.has(String(run?.id || "").trim())));
+              setSelectedMetronomeRunIds((current) => {
+                const next = new Set(current || []);
+                deletedIdSet.forEach((runId) => next.delete(runId));
+                return next;
+              });
+              setSelectedMetronomeRunId((current) => deletedIdSet.has(String(current || "").trim()) ? "" : current);
+              setMetronomeRunInlineDetailId((current) => deletedIdSet.has(String(current || "").trim()) ? "" : current);
+            };
+            const deleteMetronomeRunsByIds = (runIds) => {
+              const targetIds = Array.from(new Set((Array.isArray(runIds) ? runIds : [])
+                .map((id) => String(id || "").trim())
+                .filter(Boolean)));
+              if (!targetIds.length) return;
+              setMetronomeRunActionMenu(null);
+              const confirmed = window.confirm("Delete " + (targetIds.length > 1 ? targetIds.length + " Metronome runs" : "this Metronome run") + "?");
+              if (!confirmed) return;
+              setMetronomeRunState({ status: "loading", message: "Deleting run" + (targetIds.length > 1 ? "s" : "") + "..." });
+              void Promise.allSettled(targetIds.map(async (runId) => {
+                const run = metronomeRuns.find((item) => String(item?.id || "").trim() === runId) || null;
+                const workflowId = String(run?.metronomeId || activeWorkflow?.id || "").trim();
+                if (workflowId && runId) {
+                  try {
+                    await deleteMetronomeRunApi(workflowId, runId);
+                  } catch (error) {
+                    if (error?.status !== 404 && error?.status !== 405) {
+                      throw error;
+                    }
+                  }
+                }
+                return runId;
+              })).then((results) => {
+                const deletedIds = results
+                  .filter((result) => result.status === "fulfilled")
+                  .map((result) => result.value)
+                  .filter(Boolean);
+                if (deletedIds.length) {
+                  removeMetronomeRunsLocally(deletedIds);
+                }
+                const failed = results.find((result) => result.status === "rejected");
+                if (failed) {
+                  setMetronomeRunState({
+                    status: "error",
+                    message: failed.reason instanceof Error ? failed.reason.message : "Failed to delete one or more runs.",
+                  });
+                } else {
+                  setMetronomeRunState({ status: "idle", message: "" });
+                }
+              });
+            };
+            const renderMetronomeRunActionMenu = (runIds, options = {}) => {
+              const normalizedRunIds = Array.from(new Set((Array.isArray(runIds) ? runIds : [])
+                .map((id) => String(id || "").trim())
+                .filter(Boolean)));
+              if (!normalizedRunIds.length) return null;
+              const menuElement = React.createElement("div", {
+                key: options.menuKey || (options.context ? "context-" + Number(options.x || 0) + "-" + Number(options.y || 0) : "run-action-" + normalizedRunIds.join("-")),
+                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-metronome-top-nav-menu playground-metronome-table-row-menu playground-metronome-run-table-action-menu" + (options.context ? " is-context" : ""),
+                role: "menu",
+                style: options.context ? { left: Number(options.x || 0) + "px", top: Number(options.y || 0) + "px" } : undefined,
+                onClick: (event) => event.stopPropagation(),
+                onContextMenu: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                },
+              },
+                React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row",
+                  role: "menuitem",
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    deleteMetronomeRunsByIds(normalizedRunIds);
+                  },
+                },
+                  React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Delete")
+                )
+              );
+              return options.context && typeof document !== "undefined" && document.body && typeof createPortal === "function"
+                ? createPortal(menuElement, document.body)
+                : menuElement;
+            };
+            const renderMetronomeRunRowActions = (run) => {
+              const runId = String(run?.id || "").trim();
+              if (!runId) return null;
+              const isOpen = metronomeRunActionMenu?.source === "button" && metronomeRunActionMenu?.anchorRunId === runId;
+              const targetIds = isOpen ? metronomeRunActionMenu.runIds : getMetronomeRunActionTargetIds(runId);
+              return React.createElement("div", {
+                className: "playground-metronome-table-menu-shell playground-tasks-toolbar-popup-shell playground-metronome-overview-action-shell playground-metronome-run-action-menu-shell",
+                onClick: (event) => event.stopPropagation(),
+                onKeyDown: (event) => event.stopPropagation(),
+                onContextMenu: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                },
+              },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-overview-table-action-button" + (isOpen ? " is-open" : ""),
+                  title: "Run options",
+                  "aria-label": "Run options",
+                  "aria-expanded": isOpen ? "true" : "false",
+                  onClick: (event) => openMetronomeRunActionMenu(event, run),
+                }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })),
+                isOpen ? renderMetronomeRunActionMenu(targetIds) : null
+              );
+            };
+            const renderMetronomeRunToolbarMenu = (kind, options, value, onSelect) => (
+              metronomeRunToolbarPopover === kind
+                ? React.createElement("div", { className: "playground-tasks-toolbar-popup-menu" },
+                    options.map((option) => {
+                      const optionId = String(option.id || "").trim();
+                      const active = optionId === value;
+                      return React.createElement("button", {
+                        key: optionId,
+                        type: "button",
+                        className: "playground-tasks-toolbar-popup-item" + (active ? " is-active" : ""),
+                        onClick: (event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          onSelect(optionId);
+                          setMetronomeRunToolbarPopover("");
+                        },
+                      },
+                        React.createElement("span", { className: "tb-popup-check-slot" },
+                          active ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
+                        ),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, option.label),
+                          option.description ? React.createElement("span", null, option.description) : null
+                        )
+                      );
+                    })
+                  )
+                : null
+            );
+            const renderMetronomeRunSortIcon = (sortKey) => {
+              const isActive = metronomeRunSort === sortKey;
+              const isDescending = sortKey === "recent" || sortKey === "steps";
+              return React.createElement("span", {
+                  className: "playground-agents-overview-sort-icon"
+                    + (isActive ? " is-active" : "")
+                    + (isActive && !isDescending ? " is-ascending" : "")
+                    + (isActive && isDescending ? " is-descending" : ""),
+                  "aria-hidden": "true",
+                },
+                React.createElement(ChevronsUpDown, {
+                  className: "playground-agents-overview-sort-icon-layer is-top",
+                  width: 14,
+                  height: 14,
+                  strokeWidth: 1.8,
+                }),
+                React.createElement(ChevronsUpDown, {
+                  className: "playground-agents-overview-sort-icon-layer is-bottom",
+                  width: 14,
+                  height: 14,
+                  strokeWidth: 1.8,
+                })
+              );
+            };
+            const renderMetronomeRunSortableHeader = (label, sortKey) => {
+              const isActive = metronomeRunSort === sortKey;
+              return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
+                React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-overview-column-sort-button" + (isActive ? " is-active" : ""),
+                  title: "Sort " + label,
+                  "aria-label": "Sort " + label,
+                  "aria-pressed": isActive ? "true" : "false",
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setMetronomeRunSort(sortKey);
+                    setMetronomeRunToolbarPopover("");
+                  },
+                }, renderMetronomeRunSortIcon(sortKey))
+              );
+            };
+            const renderMetronomeRunColumnHeader = () => React.createElement("div", {
+                className: "playground-project-overview-threads-table-header playground-metronome-runs-column-header",
+              },
+              React.createElement("div", null,
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+                    + (allVisibleMetronomeRunsSelected ? " is-selected" : "")
+                    + (hasPartialVisibleMetronomeRunSelection ? " is-partial" : ""),
+                  role: "checkbox",
+                  "aria-checked": allVisibleMetronomeRunsSelected ? "true" : (hasPartialVisibleMetronomeRunSelection ? "mixed" : "false"),
+                  "aria-label": allVisibleMetronomeRunsSelected ? "Deselect all visible runs" : "Select all visible runs",
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleVisibleMetronomeRunSelection();
+                  },
+                })
+              ),
+              React.createElement("div", null, renderMetronomeRunSortableHeader("Run", "run")),
+              React.createElement("div", null, renderMetronomeRunSortableHeader("Started", "recent")),
+              React.createElement("div", null, renderMetronomeRunSortableHeader("Steps", "steps")),
+              React.createElement("div", null, "Threads"),
+              React.createElement("div", null, renderMetronomeRunSortableHeader("Status", "status")),
+              React.createElement("div", null)
+            );
+            const renderMetronomeRunListHeader = () => React.createElement("div", {
+                className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-metronome-runs-sticky-table-header",
+              },
+              React.createElement("div", {
+                  className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-metronome-runs-toolbar-row",
+                },
+                React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell playground-metronome-runs-search-shell" },
+                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("input", {
+                    type: "search",
+                    value: metronomeRunSearchQuery,
+                    onChange: (event) => setMetronomeRunSearchQuery(event.target.value),
+                    onFocus: () => setMetronomeRunToolbarPopover(""),
+                    className: "playground-plugins-search",
+                    placeholder: "Search runs",
+                    "aria-label": "Search runs",
+                  })
+                ),
+                React.createElement("div", { className: "playground-plugins-toolbar-controls playground-metronome-runs-controls" },
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell playground-metronome-list-filter-shell" + (metronomeRunToolbarPopover === "sort" ? " is-open" : "") },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button is-bare is-backlog-sort" + (metronomeRunToolbarPopover === "sort" || metronomeRunSort !== "recent" ? " is-active" : ""),
+                      onClick: (event) => {
+                        event.stopPropagation();
+                        setMetronomeRunToolbarPopover((current) => current === "sort" ? "" : "sort");
+                      },
+                      title: "Sort Runs: " + activeRunSort.label,
+                      "aria-label": "Sort Runs",
+                      "aria-expanded": metronomeRunToolbarPopover === "sort" ? "true" : "false",
+                    },
+                      React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Sort")
+                    ),
+                    renderMetronomeRunToolbarMenu("sort", METRONOME_RUN_SORT_OPTIONS, metronomeRunSort, setMetronomeRunSort)
+                  ),
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell playground-metronome-list-filter-shell" + (metronomeRunToolbarPopover === "filter" ? " is-open" : "") },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button is-bare is-backlog-filter" + (metronomeRunToolbarPopover === "filter" || metronomeRunFilter !== "all" ? " is-active" : ""),
+                      onClick: (event) => {
+                        event.stopPropagation();
+                        setMetronomeRunToolbarPopover((current) => current === "filter" ? "" : "filter");
+                      },
+                      title: "Filter Runs: " + activeRunFilter.label,
+                      "aria-label": "Filter Runs",
+                      "aria-expanded": metronomeRunToolbarPopover === "filter" ? "true" : "false",
+                    },
+                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Filter")
+                    ),
+                    renderMetronomeRunToolbarMenu("filter", METRONOME_RUN_FILTER_OPTIONS, metronomeRunFilter, setMetronomeRunFilter)
+                  )
+                )
+              )
+            );
             return React.createElement("div", { className: "playground-metronome-runs-view" },
               React.createElement("div", { className: "playground-metronome-runs-header" },
                 React.createElement("div", null,
@@ -27369,82 +29290,97 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 )
               ),
               React.createElement("div", { className: "playground-metronome-runs-layout" },
-                React.createElement("div", { className: "playground-auth-users-table-shell playground-metronome-runs-table-shell" },
-                  React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-metronome-runs-table" },
-                    React.createElement("thead", null,
-                      React.createElement("tr", null,
-                        React.createElement("th", { className: "playground-metronome-runs-col-main" }, "Run"),
-                        React.createElement("th", { className: "playground-metronome-runs-col-started" }, "Started"),
-                        React.createElement("th", { className: "playground-metronome-runs-col-steps" }, "Steps"),
-                        React.createElement("th", { className: "playground-metronome-runs-col-threads" }, "Threads"),
-                        React.createElement("th", { className: "playground-metronome-runs-col-status" }, "Status"),
-                        React.createElement("th", { className: "is-actions" }, "")
-                      )
-                    ),
-                    React.createElement("tbody", null,
+                React.createElement("section", {
+                    className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-metronome-runs-table-section",
+                  },
+                  renderMetronomeRunListHeader(),
+                  React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-metronome-runs-list-table" },
+                    React.createElement("div", { className: "playground-project-overview-thread-list" },
+                      renderMetronomeRunColumnHeader(),
                       isLoadingMetronomeRuns
-                        ? React.createElement("tr", null,
-                            React.createElement("td", { colSpan: 6 },
-                              React.createElement("span", { className: "playground-metronome-table-subtitle" }, "Loading runs...")
-                            )
+                        ? React.createElement("div", { className: "playground-metronome-runs-table-state" },
+                            React.createElement("span", { className: "playground-metronome-table-subtitle" }, "Loading runs...")
                           )
                         : metronomeRunsError
-                          ? React.createElement("tr", null,
-                              React.createElement("td", { colSpan: 6 },
-                                React.createElement("div", { className: "playground-metronome-table-main" },
-                                  React.createElement("div", { className: "playground-metronome-table-title" }, "Runs unavailable"),
-                                  React.createElement("div", { className: "playground-metronome-table-subtitle" }, metronomeRunsError)
-                                )
+                          ? React.createElement("div", { className: "playground-metronome-runs-table-state" },
+                              React.createElement("div", { className: "playground-metronome-table-main" },
+                                React.createElement("div", { className: "playground-metronome-table-title" }, "Runs unavailable"),
+                                React.createElement("div", { className: "playground-metronome-table-subtitle" }, metronomeRunsError)
                               )
                             )
-                        : metronomeRuns.length
-                          ? metronomeRuns.map((run) => React.createElement("tr", {
-                              key: run.id,
-                              className: "is-clickable",
-                              tabIndex: 0,
-                              role: "button",
-                              onClick: () => openMetronomeRunSidebar(run.id),
-                              onKeyDown: (event) => {
-                                if (event.key === "Enter" || event.key === " ") {
-                                  event.preventDefault();
-                                  openMetronomeRunSidebar(run.id);
-                                }
+                          : visibleMetronomeRunRows.length
+                            ? visibleMetronomeRunRows.map((run) => React.createElement("div", {
+                                key: run.id,
+                                className: "playground-project-overview-threads-table-row",
+                                tabIndex: 0,
+                                role: "button",
+                                onClick: () => openMetronomeRunFullScreen(run.id),
+                                onKeyDown: (event) => {
+                                  if (event.key === "Enter" || event.key === " ") {
+                                    event.preventDefault();
+                                    openMetronomeRunFullScreen(run.id);
+                                  }
+                                },
+                                onContextMenu: (event) => openMetronomeRunActionMenu(event, run, { context: true }),
                               },
-                            },
-                              React.createElement("td", null,
-                                React.createElement("div", { className: "playground-metronome-table-main" },
-                                  React.createElement("div", { className: "playground-metronome-table-title" }, getMetronomeRunPrompt(run)),
-                                  React.createElement("div", { className: "playground-metronome-table-subtitle" }, run.id || "Draft run")
+                                React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-agents-overview-select-checkbox"
+                                      + (selectedMetronomeRunIds.has(String(run?.id || "").trim()) ? " is-selected" : ""),
+                                    role: "checkbox",
+                                    "aria-checked": selectedMetronomeRunIds.has(String(run?.id || "").trim()) ? "true" : "false",
+                                    "aria-label": selectedMetronomeRunIds.has(String(run?.id || "").trim()) ? "Deselect run" : "Select run",
+                                    onClick: (event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      toggleMetronomeRunSelection(run.id);
+                                    },
+                                  })
+                                ),
+                                React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
+                                  React.createElement("div", { className: "playground-metronome-table-main" },
+                                    React.createElement("div", { className: "playground-metronome-table-title" }, getMetronomeRunPrompt(run)),
+                                    React.createElement("div", { className: "playground-metronome-table-subtitle" }, run.id || "Draft run")
+                                  )
+                                ),
+                                React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
+                                  React.createElement("span", { className: "playground-agents-overview-table-value" }, formatMetronomeRunTimestamp(run.createdAt))
+                                ),
+                                React.createElement("div", { className: "playground-project-overview-thread-cell is-count" },
+                                  React.createElement("span", { className: "playground-agents-overview-table-value" }, String(getRunStepsCount(run)))
+                                ),
+                                React.createElement("div", { className: "playground-project-overview-thread-cell is-count" },
+                                  React.createElement("span", { className: "playground-agents-overview-table-value" }, String(getRunThreadsCount(run)))
+                                ),
+                                React.createElement("div", { className: "playground-project-overview-thread-cell is-status" },
+                                  renderMetronomeRunStatusLabel(run)
+                                ),
+                                React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
+                                  renderMetronomeRunRowActions(run)
                                 )
-                              ),
-                              React.createElement("td", null,
-                                React.createElement("span", { className: "playground-metronome-table-subtitle" }, formatMetronomeRunTimestamp(run.createdAt))
-                              ),
-                              React.createElement("td", null,
-                                React.createElement("span", { className: "playground-metronome-table-status" }, String(((run.output?.steps || []).length || 0)))
-                              ),
-                              React.createElement("td", null,
-                                React.createElement("span", { className: "playground-metronome-table-status" }, String(((run.output?.threads || []).length || 0)))
-                              ),
-                              React.createElement("td", null,
-                                React.createElement("span", { className: "playground-metronome-table-status" }, String(run.status || "completed"))
-                              ),
-                              React.createElement("td", { className: "is-actions" },
-                                React.createElement("span", { className: "playground-metronome-table-action" },
-                                  React.createElement(ChevronRight, { width: 15, height: 15, strokeWidth: 1.9 })
+                              ))
+                            : React.createElement("div", { className: "playground-metronome-runs-table-state" },
+                                React.createElement("div", { className: "playground-metronome-table-main" },
+                                  React.createElement("div", { className: "playground-metronome-table-title" },
+                                    metronomeRuns.length ? "No matching runs" : "No runs yet"
+                                  ),
+                                  React.createElement("div", { className: "playground-metronome-table-subtitle" },
+                                    metronomeRuns.length ? "Try a different search term or filter." : "Start this workflow from the Run button."
+                                  )
                                 )
                               )
-                            ))
-                          : React.createElement("tr", null,
-                              React.createElement("td", { colSpan: 6 },
-                                React.createElement("div", { className: "playground-metronome-table-main" },
-                                  React.createElement("div", { className: "playground-metronome-table-title" }, "No runs yet"),
-                                  React.createElement("div", { className: "playground-metronome-table-subtitle" }, "Start this workflow from the Run button.")
-                                )
-                              )
-                            )
                     )
                   )
+                  ,
+                  metronomeRunActionMenu?.source === "context"
+                    ? renderMetronomeRunActionMenu(metronomeRunActionMenu.runIds, {
+                        context: true,
+                        x: metronomeRunActionMenu.x,
+                        y: metronomeRunActionMenu.y,
+                        menuKey: metronomeRunActionMenu.key,
+                      })
+                    : null
                 )
               )
             );

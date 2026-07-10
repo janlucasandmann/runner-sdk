@@ -45,10 +45,16 @@ import {
   RunnerGuardrailVersionCreateInput,
   RunnerGuardrailVersionUpdateInput,
   RunnerLog,
+  RunnerMetronomeFunctionTriggerInvokeInput,
+  RunnerMetronomeRun,
+  RunnerMetronomeRunCreateInput,
   RunnerMetronomeVersion,
   RunnerMetronomeVersionCompareResult,
   RunnerMetronomeVersionCreateInput,
   RunnerMetronomeVersionUpdateInput,
+  RunnerMetronomeWorkflow,
+  RunnerMetronomeWorkflowCreateInput,
+  RunnerMetronomeWorkflowUpdateInput,
   RunnerRunRequest,
   RunnerServerVersion,
   RunnerServerVersionCompareResult,
@@ -1874,6 +1880,204 @@ export class RunnerClient {
     },
   ): Promise<void> {
     const url = this.buildApiUrl(options.backendUrl, `/fine-tuning/jobs/${encodeURIComponent(options.jobId)}`);
+    await this.requestJsonOrEmpty<unknown>(url, {
+      method: "DELETE",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async listMetronomes(
+    options: RunnerApiRequestOptions & {
+      projectId?: string | null;
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<RunnerMetronomeWorkflow[]> {
+    const search = new URLSearchParams();
+    if (options.projectId) search.set("projectId", options.projectId);
+    if (options.limit !== undefined) search.set("limit", String(options.limit));
+    if (options.offset !== undefined) search.set("offset", String(options.offset));
+    const url = this.buildApiUrl(options.backendUrl, `/metronomes${search.size > 0 ? `?${search.toString()}` : ""}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerMetronomeWorkflow>(payload, ["metronomes", "workflows", "schedules"]);
+  }
+
+  async getMetronome(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+    },
+  ): Promise<RunnerMetronomeWorkflow> {
+    const url = this.buildApiUrl(options.backendUrl, `/metronomes/${encodeURIComponent(options.metronomeId)}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readObjectResponse<RunnerMetronomeWorkflow>(payload, ["metronome", "workflow"]);
+  }
+
+  async createMetronome(
+    options: RunnerApiRequestOptions & {
+      workflow: RunnerMetronomeWorkflowCreateInput;
+    },
+  ): Promise<RunnerMetronomeWorkflow> {
+    const url = this.buildApiUrl(options.backendUrl, "/metronomes");
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.workflow),
+    });
+    return this.readObjectResponse<RunnerMetronomeWorkflow>(payload, ["metronome", "workflow"]);
+  }
+
+  async updateMetronome(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      workflow: RunnerMetronomeWorkflowUpdateInput;
+    },
+  ): Promise<RunnerMetronomeWorkflow> {
+    const url = this.buildApiUrl(options.backendUrl, `/metronomes/${encodeURIComponent(options.metronomeId)}`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "PATCH",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.workflow),
+    });
+    return this.readObjectResponse<RunnerMetronomeWorkflow>(payload, ["metronome", "workflow"]);
+  }
+
+  async deleteMetronome(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+    },
+  ): Promise<void> {
+    const url = this.buildApiUrl(options.backendUrl, `/metronomes/${encodeURIComponent(options.metronomeId)}`);
+    await this.requestJsonOrEmpty<unknown>(url, {
+      method: "DELETE",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+  }
+
+  async listMetronomeRuns(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<RunnerMetronomeRun[]> {
+    const search = new URLSearchParams();
+    if (options.limit !== undefined) search.set("limit", String(options.limit));
+    if (options.offset !== undefined) search.set("offset", String(options.offset));
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/metronomes/${encodeURIComponent(options.metronomeId)}/runs${search.size > 0 ? `?${search.toString()}` : ""}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readListResponse<RunnerMetronomeRun>(payload, ["runs", "metronomeRuns", "metronome_runs"]);
+  }
+
+  async createMetronomeRun(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      run?: RunnerMetronomeRunCreateInput;
+    },
+  ): Promise<RunnerMetronomeRun> {
+    const url = this.buildApiUrl(options.backendUrl, `/metronomes/${encodeURIComponent(options.metronomeId)}/runs`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.run ?? {}),
+    });
+    return this.readObjectResponse<RunnerMetronomeRun>(payload, ["run", "metronomeRun", "metronome_run"]);
+  }
+
+  async triggerMetronomeFunction(
+    options: RunnerApiRequestOptions & RunnerMetronomeFunctionTriggerInvokeInput,
+  ): Promise<RunnerMetronomeRun> {
+    const trigger = String(options.trigger || "function").trim() || "function";
+    const endpointUrl = typeof options.endpointUrl === "string" && /^https?:\/\//i.test(options.endpointUrl)
+      ? options.endpointUrl
+      : "";
+    if (!endpointUrl && !options.metronomeId) {
+      throw new Error("triggerMetronomeFunction requires either endpointUrl or metronomeId.");
+    }
+    const url = endpointUrl || this.buildApiUrl(
+      options.backendUrl,
+      `/metronomes/${encodeURIComponent(String(options.metronomeId || ""))}/triggers/function/${encodeURIComponent(trigger)}`,
+    );
+    const headers = this.withJsonContentType(options.headers, options.organizationId);
+    if (options.apiKey) {
+      const normalizedHeaders = new Headers(headers);
+      if (!normalizedHeaders.has("X-API-Key")) normalizedHeaders.set("X-API-Key", options.apiKey);
+      if (!normalizedHeaders.has("Authorization")) normalizedHeaders.set("Authorization", `Bearer ${options.apiKey}`);
+      const payload = await this.requestJson<unknown>(url, {
+        method: "POST",
+        headers: normalizedHeaders,
+        credentials: options.credentials,
+        signal: options.signal,
+        body: JSON.stringify(options.payload ?? {}),
+      });
+      return this.readObjectResponse<RunnerMetronomeRun>(payload, ["run", "metronomeRun", "metronome_run"]);
+    }
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers,
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.payload ?? {}),
+    });
+    return this.readObjectResponse<RunnerMetronomeRun>(payload, ["run", "metronomeRun", "metronome_run"]);
+  }
+
+  async getMetronomeRun(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      runId: string;
+    },
+  ): Promise<RunnerMetronomeRun> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/metronomes/${encodeURIComponent(options.metronomeId)}/runs/${encodeURIComponent(options.runId)}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return this.readObjectResponse<RunnerMetronomeRun>(payload, ["run", "metronomeRun", "metronome_run"]);
+  }
+
+  async deleteMetronomeRun(
+    options: RunnerApiRequestOptions & {
+      metronomeId: string;
+      runId: string;
+    },
+  ): Promise<void> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/metronomes/${encodeURIComponent(options.metronomeId)}/runs/${encodeURIComponent(options.runId)}`,
+    );
     await this.requestJsonOrEmpty<unknown>(url, {
       method: "DELETE",
       headers: this.withOrganizationHeader(options.headers, options.organizationId),

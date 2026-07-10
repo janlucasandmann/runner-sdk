@@ -68,6 +68,7 @@ Triggers start a run.
 - Periodic: cron-like schedules, same underlying scheduler concept as Calendar.
 - Email: incoming email through the email plugin.
 - Telegram: incoming Telegram message through the Telegram connector.
+- Function: deployed Computer Agents cloud function endpoint with optional API-key protection and an explicit request payload contract.
 - GitHub: issue, pull request, push, release, or workflow event.
 - Thread: new thread started, thread completed, thread received a new user message.
 - Project ticket: ticket created, edited, finished, moved, or commented.
@@ -100,7 +101,7 @@ Initial actions:
 - Write comment on project ticket.
 - Run Mission Control on a project.
 - Deploy resource.
-- Invoke function/API resource.
+- Invoke a Computer Agents function resource or an external HTTP API with GET, POST, PUT, DELETE, PATCH, or HEAD plus optional headers and JSON payload.
 - Insert database entry.
 - Generate Imagine image/video from prompt and template.
 - Send email or Telegram message.
@@ -188,4 +189,3 @@ Before enabling production execution:
 5. Execution engine: topological run planning, condition branching, actions, loop handling.
 6. Approvals and observability: approval inbox, run timeline, retries, CT attribution.
 7. SDK/API surface: create, publish, invoke, inspect, and manage Metronomes programmatically.
-

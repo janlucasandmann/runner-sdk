@@ -98,6 +98,89 @@ const result = await client.execute({
 console.log(result.durationSeconds, result.usage);
 ```
 
+## Metronome workflows
+
+`RunnerClient` also exposes Metronome workflow CRUD, runs, and versioning. Function nodes can call either a deployed Computer Agents function or an external HTTP API.
+Function triggers can also deploy a callable Computer Agents cloud function endpoint for a workflow.
+
+```ts
+import {
+  RunnerClient,
+  type RunnerMetronomeWorkflowCreateInput,
+} from "@computer-agents/runner-web-sdk";
+
+const client = new RunnerClient();
+
+const workflow: RunnerMetronomeWorkflowCreateInput = {
+  name: "Send webhook",
+  definition: {
+    version: 1,
+    nodes: [
+      {
+        id: "trigger",
+        kind: "trigger",
+        label: "Trigger",
+        config: {
+          triggerType: "function",
+          functionName: "metronome-send-webhook",
+          functionRequireApiKey: true,
+          payloadFields: [
+            { key: "message", type: "string", value: "" },
+            { key: "customer_id", type: "string", value: "" },
+          ],
+          samplePayloadJson: "{\n  \"message\": \"hello\",\n  \"customer_id\": \"cus_123\"\n}",
+        },
+      },
+      {
+        id: "call_api",
+        kind: "function",
+        label: "Call API",
+        config: {
+          functionMode: "external_api",
+          httpMethod: "POST",
+          url: "https://api.example.com/events",
+          requestHeaders: [
+            { name: "Content-Type", value: "application/json" },
+            {
+              name: "Authorization",
+              valueType: "secret",
+              secretRef: "secrets:my-secrets-vault:api-token",
+            },
+          ],
+          payloadJson: "{\n  \"message\": \"{{ trigger.payload.message }}\",\n  \"customer_id\": \"{{ trigger.payload.customer_id }}\"\n}",
+          outputKey: "webhook",
+        },
+      },
+    ],
+    edges: [{ id: "edge_1", source: "trigger", target: "call_api" }],
+  },
+};
+
+const metronome = await client.createMetronome({
+  backendUrl: "https://api.computer-agents.com",
+  headers: { Authorization: "Bearer YOUR_API_KEY" },
+  workflow,
+});
+
+await client.createMetronomeRun({
+  backendUrl: "https://api.computer-agents.com",
+  headers: { Authorization: "Bearer YOUR_API_KEY" },
+  metronomeId: metronome.id,
+  run: { inputs: { prompt: "hello" } },
+});
+
+await client.triggerMetronomeFunction({
+  backendUrl: "https://api.computer-agents.com",
+  headers: { Authorization: "Bearer YOUR_API_KEY" },
+  metronomeId: metronome.id,
+  trigger: "metronome-send-webhook",
+  apiKey: "YOUR_COMPUTER_AGENTS_API_KEY",
+  payload: { message: "hello", customer_id: "cus_123" },
+});
+```
+
+For deployed Computer Agents functions, use `functionMode: "computer_agents_function"` with `functionId` and `payloadJson` instead of `url` and `requestHeadersJson`.
+
 ## React bindings
 
 Use the optional React exports when building an app UI:
