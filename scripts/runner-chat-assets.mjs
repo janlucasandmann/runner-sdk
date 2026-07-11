@@ -6,6 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const packageRoot = path.resolve(__dirname, "..");
 const cssPath = path.join(packageRoot, "src", "react", "runner-chat.css");
+const threadCssPath = path.join(packageRoot, "src", "react", "thread", "runner-thread.css");
 const generatedTsPath = path.join(packageRoot, "src", "react", "runner-chat-css.ts");
 const distCssPath = path.join(packageRoot, "dist", "react", "runner-chat.css");
 const assetsSourceDir = path.join(packageRoot, "src", "react", "assets");
@@ -14,15 +15,16 @@ const bundledDiffCssPath = path.join(packageRoot, "node_modules", "@git-diff-vie
 
 function serializeCssAsTs(cssText) {
   const escaped = cssText.replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
-  return `// This file is generated from runner-chat.css by scripts/runner-chat-assets.mjs.\n// Edit the CSS source instead of modifying this file directly.\n\nexport const runnerChatCss = String.raw\`${escaped}\`;\n`;
+  return `// This file is generated from runner-chat.css and thread/runner-thread.css by scripts/runner-chat-assets.mjs.\n// Edit the CSS sources instead of modifying this file directly.\n\nexport const runnerChatCss = String.raw\`${escaped}\`;\n`;
 }
 
 async function loadBundledCss() {
-  const [baseCssText, diffCssText] = await Promise.all([
+  const [baseCssText, threadCssText, diffCssText] = await Promise.all([
     fs.readFile(cssPath, "utf8"),
+    fs.readFile(threadCssPath, "utf8"),
     fs.readFile(bundledDiffCssPath, "utf8"),
   ]);
-  return `${diffCssText}\n\n${baseCssText}`;
+  return `${diffCssText}\n\n${baseCssText}\n\n${threadCssText}`;
 }
 
 async function prepare() {

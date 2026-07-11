@@ -30,6 +30,11 @@
     "clean": "rm -rf dist",
     "history-smoke": "npm run build && node ./examples/history-api-test.mjs",
     "metronome-runtime-test": "node ./examples/metronome-dynamic-content-runtime-test.mjs",
+    "thread-domain-test": "npm run build && node ./examples/thread-domain-test.mjs",
+    "thread-ui-test": "npm run build && node ./examples/thread-ui-test.mjs",
+    "thread-proxy-test": "node ./examples/demo-thread-v2-proxy-test.mjs",
+    "thread-preview": "npm run build && node ./examples/thread-ui-preview.mjs",
+    "realtime-metronome-test": "npm run build && node ./examples/realtime-metronome-adapters-test.mjs",
     "smoke": "npm run build && node ./examples/smoke-test.mjs",
     "demo": "npm run build && node ./examples/demo-server.mjs"
   },

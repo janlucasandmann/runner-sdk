@@ -1,6 +1,9 @@
 export { RunnerClient } from "./client.js";
 export { RunnerEventNormalizer } from "./normalize-event.js";
 export { iterateSseData } from "./sse.js";
+export * from "./thread/index.js";
+export * from "./thread/adapters/index.js";
+export * from "./realtime/index.js";
 
 export type {
   RunnerApiRequestOptions,

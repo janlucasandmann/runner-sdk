@@ -23,6 +23,7 @@ import { PLAYGROUND_EVALUATIONS_CSS, PLAYGROUND_EVALUATIONS_SCRIPT } from "./pla
 import { createPlaygroundEvaluationsRuntime } from "./playground-evaluations-runtime.mjs";
 import { PLAYGROUND_FINE_TUNING_CSS, PLAYGROUND_FINE_TUNING_SCRIPT } from "./playground-fine-tuning-page.mjs";
 import { createPlaygroundFineTuningRuntime } from "./playground-fine-tuning-runtime.mjs";
+import { matchDemoThreadV2ProxyRoute, wantsDemoThreadEventStream } from "./demo-thread-v2-proxy.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -2916,7 +2917,7 @@ const html = `<!doctype html>
         padding: 18px;
         border: 0;
         border-radius: 10px;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.075);
         color: rgba(255, 255, 255, 0.94);
         display: flex;
         flex-direction: column;
@@ -3072,6 +3073,32 @@ const html = `<!doctype html>
 
       .playground-develop-home .playground-agents-overview-tabs.playground-project-overview-tabs {
         margin-bottom: 0;
+      }
+
+      .playground-develop-home .playground-develop-home-hero.playground-environments-home-hero {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-develop-home .playground-develop-home-hero-header {
+        margin: 0 0 12px;
+        padding-bottom: 12px;
+      }
+
+      .playground-develop-home .playground-develop-home-tabs.playground-agents-overview-tabs.playground-project-overview-tabs {
+        margin: 0 0 24px;
+      }
+
+      .playground-develop-home .playground-develop-home-overview-metrics.playground-environments-home-metrics {
+        max-height: 364px;
+        margin-top: 12px;
+        margin-bottom: 0;
+        overflow: hidden;
+        position: relative;
+        z-index: 0;
       }
 
       .playground-develop-tab {
@@ -4296,7 +4323,7 @@ const html = `<!doctype html>
 
       .playground-develop-docs-concept-title {
         color: rgba(255, 255, 255, 0.96);
-        font-size: 18px;
+        font-size: 14px;
         line-height: 1.2;
         font-weight: 500;
         letter-spacing: -0.02em;
@@ -29537,6 +29564,7 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         width: min(100%, var(--playground-centered-page-max-width));
         max-width: var(--playground-centered-page-max-width);
         margin: 0 auto 12px;
+        align-items: center;
       }
 
       .playground-computer-detail-navbar .playground-environments-editor-title-input {
@@ -29545,7 +29573,7 @@ ${PLAYGROUND_EVALUATIONS_CSS}
       }
 
 	      .playground-server-detail-navbar .playground-environments-editor-title-input {
-	        font-size: 24px;
+	        font-size: 18px;
 	        line-height: 1.1;
 	      }
 
@@ -29562,7 +29590,26 @@ ${PLAYGROUND_EVALUATIONS_CSS}
 	      }
 
       .playground-server-detail-navbar .playground-database-title-input {
+        flex: 0 1 auto;
+        width: auto;
+        max-width: min(60vw, 680px);
+        field-sizing: content;
         margin-bottom: 6px;
+      }
+
+      .playground-server-detail-navbar .playground-database-navbar-back-button {
+        align-self: center;
+        margin-bottom: 6px;
+        font-size: 18px;
+        line-height: 1;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-server-detail-navbar .playground-database-navbar-copy {
+        flex: 0 1 auto;
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
       }
 
 	      .playground-server-detail-navbar .playground-auth-title-input {
@@ -43606,6 +43653,38 @@ ${METRONOME_PAGE_CSS}
         background: #9ff6ce;
       }
 
+      .playground-resource-type-overview-analytics-card .playground-resource-type-overview-chart-card.playground-settings-usage-chart-card {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .playground-resource-type-overview-analytics-card .playground-resource-type-overview-chart-card .playground-project-overview-chart-shell {
+        height: 270px;
+        border: 0;
+        background: transparent;
+      }
+
+      .playground-resource-type-overview-page .playground-develop-server-kind-header {
+        margin-bottom: 12px;
+      }
+
+      .playground-resource-type-overview-page .playground-resource-type-overview-metrics {
+        z-index: 0;
+      }
+
+      .playground-develop-home-overview-analytics-card .playground-project-overview-progress-combo-chart {
+        min-height: 288px;
+      }
+
+      .playground-develop-home-overview-analytics-card .playground-settings-usage-chart-frame,
+      .playground-develop-home-overview-analytics-card .playground-settings-usage-chart-loading-frame,
+      .playground-develop-home-overview-analytics-card .playground-settings-usage-chart-empty {
+        min-height: 288px;
+      }
+
       .playground-agents-overview-list-section.playground-project-overview-panel-plain.playground-plugins-section {
         margin-top: 0 !important;
         gap: 0 !important;
@@ -45996,6 +46075,233 @@ ${METRONOME_PAGE_CSS}
 		        overflow: visible !important;
 		      }
 
+	      .playground-configure-notifications-heading {
+	        display: flex;
+	        flex-direction: column;
+	        gap: 4px;
+	      }
+
+	      .playground-configure-notifications-title {
+	        margin: 0;
+	        font-size: 14px;
+	        font-weight: 400;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section.playground-agents-overview-table-section {
+	        position: relative;
+	        isolation: isolate;
+	        gap: 0;
+	        margin-top: 0 !important;
+	        margin-bottom: 24px;
+	        padding: 0 18px 6px;
+	        border: 1px solid rgba(255, 255, 255, 0.075);
+	        border-radius: 15px;
+	        overflow: visible !important;
+	        background: rgba(255, 255, 255, 0.075);
+	        -webkit-backdrop-filter: none;
+	        backdrop-filter: none;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section.playground-agents-overview-table-section::before {
+	        content: none;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section > * {
+	        position: relative;
+	        z-index: 1;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-sticky-table-header {
+	        position: sticky;
+	        top: 0;
+	        z-index: 240;
+	        margin: 0 -18px;
+	        padding: 12px 18px 0;
+	        border-radius: 15px 15px 0 0;
+	        background: #121212;
+	        -webkit-backdrop-filter: none;
+	        backdrop-filter: none;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-toolbar {
+	        position: relative;
+	        z-index: 1;
+	        display: flex;
+	        flex-direction: row;
+	        align-items: center;
+	        justify-content: flex-start;
+	        flex-wrap: nowrap;
+	        gap: 10px;
+	        width: 100%;
+	        margin: 0;
+	        padding: 0 0 12px;
+	        border-bottom: 0;
+	        background: transparent;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-toolbar .playground-develop-server-kind-table-controls {
+	        flex: 1 1 auto;
+	        width: auto;
+	        min-width: 0;
+	        margin-left: 0;
+	        display: flex;
+	        justify-content: flex-start;
+	        align-items: center;
+	        flex-wrap: nowrap;
+	        gap: 10px;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-toolbar .playground-develop-server-kind-search-shell {
+	        flex: 0 1 340px;
+	        width: min(340px, 100%);
+	        min-width: min(280px, 100%);
+	        max-width: 340px;
+	        background: rgba(255, 255, 255, 0.025) !important;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-toolbar .playground-plugins-toolbar-controls {
+	        display: inline-flex;
+	        flex: 0 0 auto;
+	        align-items: center;
+	        flex-wrap: nowrap;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-toolbar .playground-notifications-mark-read-button {
+	        flex: 0 0 auto;
+	        margin-left: auto;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-tasks-toolbar-popup-shell {
+	        z-index: 250;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-tasks-toolbar-popup-menu {
+	        z-index: 251;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-list-table {
+	        position: relative;
+	        z-index: 0;
+	        width: 100%;
+	        margin: 0;
+	        padding: 0;
+	        border: 0;
+	        border-radius: 0;
+	        overflow: visible !important;
+	        background: transparent;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-thread-list {
+	        width: calc(100% + 24px);
+	        margin-left: -12px;
+	        padding: 0 12px;
+	        border: 1px solid rgba(255, 255, 255, 0.1);
+	        border-radius: 10px;
+	        overflow: visible !important;
+	        background: #000;
+	        box-sizing: border-box;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-threads-table-header,
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-threads-table-row {
+	        grid-template-columns: minmax(260px, 1.45fr) minmax(120px, 0.52fr) minmax(90px, 0.38fr) minmax(110px, 0.48fr) minmax(32px, max-content) !important;
+	        gap: 12px;
+	        width: 100%;
+	        max-width: 100%;
+	        padding-right: 0;
+	        box-sizing: border-box;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-column-header {
+	        position: relative;
+	        z-index: 1;
+	        margin-top: 12px;
+	        padding-top: 0;
+	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	        background: transparent;
+	        -webkit-backdrop-filter: none;
+	        backdrop-filter: none;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-row {
+	        min-height: 58px;
+	        padding-top: 12px;
+	        padding-bottom: 12px;
+	        overflow: visible !important;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-row.is-clickable {
+	        cursor: pointer;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-row.is-clickable:hover {
+	        background: rgba(255, 255, 255, 0.025);
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-thread-list > .playground-notifications-overview-row:last-child {
+	        border-bottom: 0;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-thread-cell,
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-agents-overview-table-value {
+	        min-width: 0;
+	        overflow: hidden;
+	        text-overflow: ellipsis;
+	        white-space: nowrap;
+	        font-size: 12px;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-table-title,
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-table-meta {
+	        min-width: 0;
+	        max-width: 100%;
+	        overflow: hidden;
+	        text-overflow: ellipsis;
+	        white-space: nowrap;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-thread-cell.is-name {
+	        color: rgba(255, 255, 255, 0.9);
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-thread-cell.is-actions,
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-threads-table-header > div:last-child {
+	        justify-self: end;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-thread-cell.is-actions {
+	        width: 100%;
+	        display: flex;
+	        align-items: center;
+	        justify-content: flex-end;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-table-main {
+	        gap: 8px;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-table-icon-shell {
+	        width: 20px;
+	        height: 20px;
+	        flex: 0 0 20px;
+	        border-radius: 50%;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-table-icon {
+	        width: 12px;
+	        height: 12px;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-table-copy {
+	        gap: 0;
+	      }
+
+	      .playground-configure-home .playground-configure-notifications-table-section > .playground-notifications-empty {
+	        min-height: 0;
+	        margin: 0;
+	        padding: 28px 24px;
+	      }
+
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list {
 		        position: relative;
 		        isolation: isolate;
@@ -46294,6 +46600,68 @@ ${METRONOME_PAGE_CSS}
 		        display: flex;
 		        align-items: center;
 		        justify-content: flex-end;
+		      }
+
+		      .playground-develop-api-keys-page .playground-develop-api-keys-page-header {
+		        margin-bottom: 24px;
+		      }
+
+		      .playground-develop-api-keys-page .playground-develop-api-keys-created-notice,
+		      .playground-develop-api-keys-page .playground-settings-inline-status {
+		        margin-bottom: 16px;
+		      }
+
+		      .playground-develop-api-keys-page .playground-develop-api-keys-table-section .playground-project-overview-threads-table-header,
+		      .playground-develop-api-keys-page .playground-develop-api-keys-table-section .playground-project-overview-threads-table-row {
+		        grid-template-columns: minmax(180px, 1.1fr) minmax(120px, 0.68fr) minmax(100px, 0.5fr) minmax(100px, 0.5fr) minmax(140px, 0.78fr) minmax(104px, 0.52fr) 28px !important;
+		      }
+
+		      .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:first-child {
+		        justify-content: flex-start !important;
+		      }
+
+		      .playground-develop-api-keys-page .playground-develop-api-keys-table-row {
+		        cursor: default;
+		      }
+
+		      .playground-develop-api-keys-page .playground-develop-api-keys-secret {
+		        font-family: "SFMono-Regular", ui-monospace, Menlo, Monaco, Consolas, monospace;
+		      }
+
+		      .playground-develop-api-keys-page .playground-settings-api-keys-name-row {
+		        max-width: 100%;
+		      }
+
+		      .playground-develop-api-keys-page .playground-develop-api-keys-empty {
+		        min-height: 96px;
+		        margin: 0;
+		        padding: 28px 20px;
+		      }
+
+		      @media (max-width: 1180px) {
+		        .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(5),
+		        .playground-develop-api-keys-page .playground-develop-api-keys-table-row .is-created-by {
+		          display: none;
+		        }
+
+		        .playground-develop-api-keys-page .playground-develop-api-keys-table-section .playground-project-overview-threads-table-header,
+		        .playground-develop-api-keys-page .playground-develop-api-keys-table-section .playground-project-overview-threads-table-row {
+		          grid-template-columns: minmax(170px, 1fr) minmax(110px, 0.64fr) minmax(92px, 0.46fr) minmax(92px, 0.46fr) minmax(100px, 0.5fr) 28px !important;
+		        }
+		      }
+
+		      @media (max-width: 860px) {
+		        .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(2),
+		        .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(4),
+		        .playground-develop-api-keys-page .playground-develop-api-keys-table-row .is-secret,
+		        .playground-develop-api-keys-page .playground-develop-api-keys-table-row > .is-date:nth-child(4) {
+		          display: none;
+		        }
+
+		        .playground-develop-api-keys-page .playground-develop-api-keys-table-section .playground-project-overview-threads-table-header,
+		        .playground-develop-api-keys-page .playground-develop-api-keys-table-section .playground-project-overview-threads-table-row {
+		          grid-template-columns: minmax(160px, 1fr) minmax(92px, 0.48fr) minmax(100px, 0.52fr) 28px !important;
+		        }
 		      }
 
 		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-table-title,
@@ -64491,6 +64859,225 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         return items.map(normalizePlaygroundDatabaseRecord);
       }
 
+      const PLAYGROUND_DATABASE_LIST_CACHE_TTL_MS = 30_000;
+      const PLAYGROUND_DATABASE_LIST_STORAGE_PREFIX = "runner-playground:database-list:";
+      const playgroundDatabaseListCache = new Map();
+      const PLAYGROUND_DATABASE_ANALYTICS_CACHE_TTL_MS = 60_000;
+      const PLAYGROUND_DATABASE_DETAIL_CACHE_TTL_MS = 30_000;
+      const PLAYGROUND_DATABASE_COLLECTIONS_CACHE_TTL_MS = 300_000;
+      const PLAYGROUND_DATABASE_DOCUMENTS_CACHE_TTL_MS = 10_000;
+      const PLAYGROUND_DATABASE_RESOURCE_STORAGE_PREFIX = "runner-playground:database-resource:";
+      const playgroundDatabaseResourceRequestCache = new Map();
+
+      function getPlaygroundRequestHeaderValue(headers, names) {
+        const normalizedNames = (Array.isArray(names) ? names : [names]).map((name) => String(name || "").toLowerCase());
+        try {
+          const normalizedHeaders = new Headers(headers || {});
+          for (const name of normalizedNames) {
+            const value = String(normalizedHeaders.get(name) || "").trim();
+            if (value) return value;
+          }
+        } catch {}
+        return "";
+      }
+
+      function hashPlaygroundDatabaseListScope(value) {
+        let hash = 2166136261;
+        const source = String(value || "");
+        for (let index = 0; index < source.length; index += 1) {
+          hash ^= source.charCodeAt(index);
+          hash = Math.imul(hash, 16777619);
+        }
+        return (hash >>> 0).toString(36);
+      }
+
+      function buildPlaygroundDatabaseListScopeKey(backendUrl, headers, identity = "") {
+        const organizationId = getPlaygroundRequestHeaderValue(headers, [
+          "x-organization-id",
+          "x-organization",
+          "organization-id",
+        ]);
+        const authenticationIdentity = String(identity || "").trim()
+          || getPlaygroundRequestHeaderValue(headers, "x-api-key")
+          || "session";
+        return String(backendUrl || "").replace(new RegExp("/+$"), "")
+          + "|" + organizationId
+          + "|" + hashPlaygroundDatabaseListScope(authenticationIdentity);
+      }
+
+      async function fetchPlaygroundCachedDatabaseResourceJson(url, headers, options = {}) {
+        const normalizedUrl = String(url || "").trim();
+        if (!normalizedUrl) {
+          throw new Error("Database request URL is required.");
+        }
+        const scopeKey = String(options?.scopeKey || "database").trim();
+        const cacheKey = scopeKey + "|" + normalizedUrl;
+        const ttlMs = Math.max(0, Number(options?.ttlMs || 0));
+        const force = options?.force === true;
+        let cachedRecord = playgroundDatabaseResourceRequestCache.get(cacheKey);
+        if (!cachedRecord && options?.persist === true) {
+          try {
+            const storageKey = PLAYGROUND_DATABASE_RESOURCE_STORAGE_PREFIX + hashPlaygroundDatabaseListScope(cacheKey);
+            const storedRecord = JSON.parse(window.sessionStorage.getItem(storageKey) || "null");
+            if (storedRecord?.cacheKey === cacheKey && storedRecord?.data) {
+              cachedRecord = {
+                data: storedRecord.data,
+                loadedAt: Math.max(0, Number(storedRecord.loadedAt || 0)),
+                promise: null,
+              };
+              playgroundDatabaseResourceRequestCache.set(cacheKey, cachedRecord);
+            }
+          } catch {}
+        }
+        if (cachedRecord?.promise) {
+          if (!force) {
+            return cachedRecord.promise;
+          }
+          try {
+            await cachedRecord.promise;
+          } catch {}
+          cachedRecord = playgroundDatabaseResourceRequestCache.get(cacheKey);
+        }
+        const cacheAgeMs = cachedRecord ? Date.now() - Number(cachedRecord.loadedAt || 0) : Infinity;
+        if (!force && cachedRecord?.data && cacheAgeMs >= 0 && cacheAgeMs < ttlMs) {
+          return cachedRecord.data;
+        }
+
+        const request = (async () => {
+          const response = await fetch(normalizedUrl, {
+            method: "GET",
+            headers,
+            cache: "no-store",
+            signal: options?.signal,
+            priority: options?.priority || "auto",
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to load database data.");
+          }
+          playgroundDatabaseResourceRequestCache.set(cacheKey, {
+            data,
+            loadedAt: Date.now(),
+            promise: null,
+          });
+          if (options?.persist === true) {
+            try {
+              const storageKey = PLAYGROUND_DATABASE_RESOURCE_STORAGE_PREFIX + hashPlaygroundDatabaseListScope(cacheKey);
+              window.sessionStorage.setItem(storageKey, JSON.stringify({
+                cacheKey,
+                data,
+                loadedAt: Date.now(),
+              }));
+            } catch {}
+          }
+          return data;
+        })();
+        playgroundDatabaseResourceRequestCache.set(cacheKey, {
+          data: cachedRecord?.data || null,
+          loadedAt: Number(cachedRecord?.loadedAt || 0),
+          promise: request,
+        });
+        void request.finally(() => {
+          const currentRecord = playgroundDatabaseResourceRequestCache.get(cacheKey);
+          if (currentRecord?.promise === request) {
+            playgroundDatabaseResourceRequestCache.set(cacheKey, {
+              data: currentRecord.data || null,
+              loadedAt: Number(currentRecord.loadedAt || 0),
+              promise: null,
+            });
+          }
+        }).catch(() => {});
+        return request;
+      }
+
+      function readPlaygroundDatabaseListCache(scopeKey) {
+        const memoryRecord = playgroundDatabaseListCache.get(scopeKey);
+        if (memoryRecord && Array.isArray(memoryRecord.items)) {
+          return memoryRecord;
+        }
+        try {
+          const storageKey = PLAYGROUND_DATABASE_LIST_STORAGE_PREFIX + hashPlaygroundDatabaseListScope(scopeKey);
+          const parsed = JSON.parse(window.sessionStorage.getItem(storageKey) || "null");
+          if (parsed?.scopeKey !== scopeKey || !Array.isArray(parsed?.items)) {
+            return null;
+          }
+          const record = {
+            items: parsed.items.map(normalizePlaygroundDatabaseRecord),
+            loadedAt: Math.max(0, Number(parsed.loadedAt || 0)),
+            promise: null,
+          };
+          playgroundDatabaseListCache.set(scopeKey, record);
+          return record;
+        } catch {
+          return null;
+        }
+      }
+
+      function writePlaygroundDatabaseListCache(scopeKey, items, loadedAt = Date.now()) {
+        const normalizedItems = (Array.isArray(items) ? items : []).map(normalizePlaygroundDatabaseRecord);
+        const existingRecord = playgroundDatabaseListCache.get(scopeKey);
+        const record = {
+          items: normalizedItems,
+          loadedAt,
+          promise: existingRecord?.promise || null,
+        };
+        playgroundDatabaseListCache.set(scopeKey, record);
+        try {
+          const storageKey = PLAYGROUND_DATABASE_LIST_STORAGE_PREFIX + hashPlaygroundDatabaseListScope(scopeKey);
+          window.sessionStorage.setItem(storageKey, JSON.stringify({
+            scopeKey,
+            items: normalizedItems,
+            loadedAt,
+          }));
+        } catch {}
+        return record;
+      }
+
+      async function fetchPlaygroundDatabaseList(backendUrl, headers, options = {}) {
+        const scopeKey = buildPlaygroundDatabaseListScopeKey(backendUrl, headers, options?.identity);
+        const cachedRecord = readPlaygroundDatabaseListCache(scopeKey);
+        if (cachedRecord?.promise) {
+          return cachedRecord.promise;
+        }
+        const cacheAgeMs = cachedRecord ? Date.now() - Number(cachedRecord.loadedAt || 0) : Infinity;
+        if (options?.force !== true && cachedRecord && cacheAgeMs >= 0 && cacheAgeMs < PLAYGROUND_DATABASE_LIST_CACHE_TTL_MS) {
+          return cachedRecord.items;
+        }
+
+        const request = (async () => {
+          const response = await fetch(String(backendUrl || "").replace(new RegExp("/+$"), "") + "/databases", {
+            method: "GET",
+            headers,
+            cache: "no-store",
+            signal: options?.signal,
+            priority: options?.priority || "auto",
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to load databases.");
+          }
+          const items = parsePlaygroundDatabaseListResponse(data);
+          writePlaygroundDatabaseListCache(scopeKey, items);
+          return items;
+        })();
+
+        playgroundDatabaseListCache.set(scopeKey, {
+          items: cachedRecord?.items || [],
+          loadedAt: Number(cachedRecord?.loadedAt || 0),
+          promise: request,
+        });
+        void request.finally(() => {
+          const currentRecord = playgroundDatabaseListCache.get(scopeKey);
+          if (currentRecord?.promise === request) {
+            playgroundDatabaseListCache.set(scopeKey, {
+              ...currentRecord,
+              promise: null,
+            });
+          }
+        }).catch(() => {});
+        return request;
+      }
+
       function getPlaygroundDatabaseResponseRecord(data) {
         const source = data?.database || data?.data || data;
         return source && typeof source === "object" && typeof source.id === "string"
@@ -71303,6 +71890,13 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/rollback";
       }
 
+      function buildPlaygroundDatabaseBootstrapUrl(backendUrl, databaseId, documentsLimit = 25) {
+        if (!backendUrl || !databaseId) return "";
+        const params = new URLSearchParams();
+        params.set("documentsLimit", String(Math.max(1, Math.min(100, Number(documentsLimit) || 25))));
+        return backendUrl + "/databases/" + encodeURIComponent(databaseId) + "/bootstrap?" + params.toString();
+      }
+
       function buildPlaygroundDatabaseCollectionsUrl(backendUrl, databaseId) {
         if (!backendUrl || !databaseId) return "";
         return backendUrl + "/databases/" + encodeURIComponent(databaseId) + "/collections";
@@ -71351,7 +71945,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 	        const normalizedKind = canonicalizePlaygroundServerKind(kind);
 	        if (normalizedKind === "function") return "Function";
 	        if (normalizedKind === "database") return "Database";
-	        if (normalizedKind === "api") return "API";
+	        if (normalizedKind === "api") return "APIs";
 	        if (normalizedKind === "auth") return "Authentication";
 	        if (normalizedKind === "agent_runtime") return "Agent Runtime";
 	        if (normalizedKind === "voice_agent") return "Voice Agent";
@@ -71650,6 +72244,27 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         } catch {
           return "{}";
         }
+      }
+
+      function getPlaygroundDatabaseDocumentResponseRecord(payload, fallback = null) {
+        const candidates = [payload?.document, payload?.data, payload?.item, payload];
+        const record = candidates.find((candidate) => (
+          candidate
+          && typeof candidate === "object"
+          && !Array.isArray(candidate)
+          && (candidate.id != null || candidate.data != null)
+        )) || null;
+        if (!record) {
+          return fallback;
+        }
+        return {
+          ...(fallback && typeof fallback === "object" ? fallback : {}),
+          ...record,
+          id: String(record.id || fallback?.id || "").trim(),
+          data: record.data && typeof record.data === "object" && !Array.isArray(record.data)
+            ? record.data
+            : {},
+        };
       }
 
       function isPlaygroundDatabasePlainObject(value) {
@@ -86310,6 +86925,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         currentUserName = "",
         currentUserEmail = "",
         currentUserAvatarUrl = "",
+        databaseListIdentity = "",
         developServerOperationalMetrics = null,
         developServerOperationalMetricsLoading = false,
         developServerOperationalMetricsError = "",
@@ -86321,6 +86937,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         onOpenSettingsApi = null,
       }) {
         backendUrl = normalizePlaygroundRealApiBackendUrl(backendUrl);
+        const databaseListScopeKey = buildPlaygroundDatabaseListScopeKey(backendUrl, requestHeaders, databaseListIdentity);
+        const initialDatabaseListCacheRecord = readPlaygroundDatabaseListCache(databaseListScopeKey);
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
         const environmentDetailMainRef = useRef(null);
@@ -86379,6 +86997,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const serverEditorDirtyRef = useRef(false);
         const databaseDocumentAutosaveTimerRef = useRef(null);
         const databaseDocumentSaveInFlightRef = useRef(false);
+        const databaseListRequestRef = useRef({
+          promise: null,
+          requestId: 0,
+          retryCount: 0,
+          retryTimer: null,
+        });
+        const databaseListScopeKeyRef = useRef(databaseListScopeKey);
+        const databaseListInitialLoadScopeRef = useRef("");
+        const databaseRequestHeadersRef = useRef(requestHeaders);
+        databaseListScopeKeyRef.current = databaseListScopeKey;
+        databaseRequestHeadersRef.current = requestHeaders;
         const environmentAutosaveTimerRef = useRef(null);
         const environmentAutosaveQueuedRef = useRef(null);
         const environmentAutosaveInFlightRef = useRef(false);
@@ -86399,6 +87028,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const selectedDatabaseCollectionIdRef = useRef("");
         const selectedDatabaseDocumentIdRef = useRef("");
         const databaseAnalyticsByIdRef = useRef({});
+        const databaseCollectionsByIdRef = useRef({});
+        const databaseDocumentsByCollectionKeyRef = useRef({});
         const environmentSeededSelectionRef = useRef("");
         const serverSeededSelectionRef = useRef("");
         const serverDefaultSourceCreationRef = useRef(new Set());
@@ -86431,7 +87062,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [environmentHomeChartSummariesByPeriod, setEnvironmentHomeChartSummariesByPeriod] = useState({});
         const [environmentHomeChartBreakdownsByPeriod, setEnvironmentHomeChartBreakdownsByPeriod] = useState({});
         const [servers, setServers] = useState([]);
-        const [databases, setDatabases] = useState([]);
+        const [databases, setDatabases] = useState(() => initialDatabaseListCacheRecord?.items || []);
         const [serverDetailsById, setServerDetailsById] = useState({});
         const [serverBindingsById, setServerBindingsById] = useState({});
         const [databaseDetailsById, setDatabaseDetailsById] = useState({});
@@ -86773,7 +87404,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         });
         const [hasLoadedServers, setHasLoadedServers] = useState(false);
         const [hasLoadedVoiceAgents, setHasLoadedVoiceAgents] = useState(false);
-        const [hasLoadedDatabases, setHasLoadedDatabases] = useState(false);
+        const [hasLoadedDatabases, setHasLoadedDatabases] = useState(() => Number(initialDatabaseListCacheRecord?.loadedAt || 0) > 0);
         const [databaseCollectionsById, setDatabaseCollectionsById] = useState({});
         const [databaseDocumentsByCollectionKey, setDatabaseDocumentsByCollectionKey] = useState({});
         const [selectedDatabaseCollectionId, setSelectedDatabaseCollectionId] = useState("");
@@ -86785,6 +87416,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           error: "",
           saveError: "",
           saveMessage: "",
+          isLoading: false,
           isSaving: false,
         });
         const [databaseDocumentViewMode, setDatabaseDocumentViewMode] = useState("preview");
@@ -87782,6 +88414,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [databaseAnalyticsById]);
 
         useEffect(() => {
+          databaseCollectionsByIdRef.current = databaseCollectionsById;
+        }, [databaseCollectionsById]);
+
+        useEffect(() => {
+          databaseDocumentsByCollectionKeyRef.current = databaseDocumentsByCollectionKey;
+        }, [databaseDocumentsByCollectionKey]);
+
+        useEffect(() => {
           function handleServerEditorSaveShortcut(event) {
             if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey || String(event.key || "").toLowerCase() !== "s") {
               return;
@@ -88187,6 +88827,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             error: "",
             saveError: "",
             saveMessage: "",
+            isLoading: false,
             isSaving: false,
           });
           setDatabaseDocumentViewMode("preview");
@@ -89567,17 +90208,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
           setLoadingDatabaseAnalyticsId(normalizedDatabaseId);
           try {
-            const response = await fetch(
+            const data = await fetchPlaygroundCachedDatabaseResourceJson(
               buildPlaygroundDatabaseAnalyticsUrl(backendUrl, normalizedDatabaseId),
+              requestHeaders,
               {
-                method: "GET",
-                headers: requestHeaders,
+                scopeKey: databaseListScopeKey,
+                ttlMs: PLAYGROUND_DATABASE_ANALYTICS_CACHE_TTL_MS,
+                force,
               }
             );
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to load database analytics.");
-            }
 
             const normalizedRecord = data?.analytics && typeof data.analytics === "object"
               ? {
@@ -89605,7 +90244,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           } finally {
             setLoadingDatabaseAnalyticsId((current) => current === normalizedDatabaseId ? "" : current);
           }
-        }, [backendUrl, requestHeaders, resourceTemplatePreviewDatabaseCollectionsById, resourceTemplatePreviewDatabaseRecordById]);
+        }, [backendUrl, databaseListScopeKey, requestHeaders, resourceTemplatePreviewDatabaseCollectionsById, resourceTemplatePreviewDatabaseRecordById]);
 
         const loadServerLogs = useCallback(async (serverId, kind = "request", options = {}) => {
           const normalizedServerId = String(serverId || "").trim();
@@ -89884,55 +90523,104 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [backendUrl, requestHeaders, resourceTemplatePreviewServerRecordById, serverContextsById]);
 
         const loadDatabases = useCallback(async (options = {}) => {
-          setHasLoadedDatabases(true);
-          setDatabaseListLoading(true);
-          try {
-            const response = await fetch(backendUrl + "/databases", {
-              method: "GET",
-              headers: requestHeaders,
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to load databases.");
+          const force = options?.force === true;
+          const requestState = databaseListRequestRef.current;
+          const requestScopeKey = databaseListScopeKeyRef.current;
+          const cachedRecord = readPlaygroundDatabaseListCache(requestScopeKey);
+          if (cachedRecord && Number(cachedRecord.loadedAt || 0) > 0 && Array.isArray(cachedRecord.items)) {
+            setDatabases(cachedRecord.items);
+            setHasLoadedDatabases(true);
+            const cacheAgeMs = Date.now() - Number(cachedRecord.loadedAt || 0);
+            if (!force && cacheAgeMs >= 0 && cacheAgeMs < PLAYGROUND_DATABASE_LIST_CACHE_TTL_MS) {
+              return cachedRecord.items;
             }
-
-            const nextDatabases = parsePlaygroundDatabaseListResponse(data);
-            setDatabases(nextDatabases);
-            setDatabaseSaveState((current) => ({
-              ...current,
-              error: "",
-            }));
-            setDatabaseDetailsById((current) => {
-              const next = { ...current };
-              nextDatabases.forEach((database) => {
-                if (!database?.id) return;
-                next[database.id] = normalizePlaygroundDatabaseRecord({
-                  ...(next[database.id] || {}),
-                  ...database,
-                });
-              });
-              return next;
-            });
-
-            if (options?.selectId) {
-              setSelectedDatabaseId(options.selectId);
-            } else if (selectedDatabaseIdRef.current && !nextDatabases.some((database) => database.id === selectedDatabaseIdRef.current)) {
-              setSelectedDatabaseId("");
-            }
-
-            return nextDatabases;
-          } catch (error) {
-            setDatabaseSaveState((current) => ({
-              ...current,
-              error: error instanceof Error ? error.message : "Failed to load databases.",
-            }));
-            return [];
-          } finally {
-            setDatabaseListLoading(false);
           }
-        }, [backendUrl, requestHeaders]);
+          if (!force && requestState.promise) {
+            return requestState.promise;
+          }
+          const requestId = requestState.requestId + 1;
+          requestState.requestId = requestId;
+          setDatabaseListLoading(true);
+          const request = (async () => {
+            try {
+              const nextDatabases = await fetchPlaygroundDatabaseList(backendUrl, databaseRequestHeadersRef.current, {
+                force,
+                identity: databaseListIdentity,
+              });
+              if (databaseListScopeKeyRef.current !== requestScopeKey || databaseListRequestRef.current.requestId !== requestId) {
+                return nextDatabases;
+              }
+              setDatabases(nextDatabases);
+              setHasLoadedDatabases(true);
+              requestState.retryCount = 0;
+              if (requestState.retryTimer) {
+                window.clearTimeout(requestState.retryTimer);
+                requestState.retryTimer = null;
+              }
+              setDatabaseSaveState((current) => ({
+                ...current,
+                error: "",
+              }));
+              setDatabaseDetailsById((current) => {
+                const next = { ...current };
+                nextDatabases.forEach((database) => {
+                  if (!database?.id) return;
+                  next[database.id] = normalizePlaygroundDatabaseRecord({
+                    ...(next[database.id] || {}),
+                    ...database,
+                  });
+                });
+                return next;
+              });
 
-        const loadDatabaseDetails = useCallback(async (databaseId) => {
+              if (options?.selectId) {
+                setSelectedDatabaseId(options.selectId);
+              } else if (selectedDatabaseIdRef.current && !nextDatabases.some((database) => database.id === selectedDatabaseIdRef.current)) {
+                setSelectedDatabaseId("");
+              }
+
+              return nextDatabases;
+            } catch (error) {
+              if (databaseListScopeKeyRef.current !== requestScopeKey || databaseListRequestRef.current.requestId !== requestId) {
+                return [];
+              }
+              setDatabaseSaveState((current) => ({
+                ...current,
+                error: error instanceof Error ? error.message : "Failed to load databases.",
+              }));
+              const staleRecord = readPlaygroundDatabaseListCache(requestScopeKey);
+              const staleItems = Number(staleRecord?.loadedAt || 0) > 0 && Array.isArray(staleRecord?.items)
+                ? staleRecord.items
+                : null;
+              if (Array.isArray(staleItems)) {
+                setDatabases(staleItems);
+                setHasLoadedDatabases(true);
+              }
+              if (options?.retry !== false && !requestState.retryTimer) {
+                const retryDelayMs = Math.min(15000, 750 * Math.pow(2, Math.min(requestState.retryCount, 4)));
+                requestState.retryCount += 1;
+                requestState.retryTimer = window.setTimeout(() => {
+                  requestState.retryTimer = null;
+                  void loadDatabases({ retry: true, force: true });
+                }, retryDelayMs);
+              }
+              return Array.isArray(staleItems) ? staleItems : [];
+            } finally {
+              if (databaseListRequestRef.current.requestId === requestId) {
+                setDatabaseListLoading(false);
+              }
+            }
+          })();
+          requestState.promise = request;
+          void request.finally(() => {
+            if (requestState.promise === request) {
+              requestState.promise = null;
+            }
+          });
+          return request;
+        }, [backendUrl, databaseListIdentity, databaseListScopeKey]);
+
+        const loadDatabaseDetails = useCallback(async (databaseId, options = {}) => {
           if (!databaseId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
             return null;
           }
@@ -89955,14 +90643,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
           setLoadingDatabaseId(databaseId);
           try {
-            const response = await fetch(backendUrl + "/databases/" + encodeURIComponent(databaseId), {
-              method: "GET",
-              headers: requestHeaders,
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to load database.");
-            }
+            const data = await fetchPlaygroundCachedDatabaseResourceJson(
+              backendUrl + "/databases/" + encodeURIComponent(databaseId),
+              requestHeaders,
+              {
+                scopeKey: databaseListScopeKey,
+                ttlMs: PLAYGROUND_DATABASE_DETAIL_CACHE_TTL_MS,
+                force: options?.force === true,
+              }
+            );
 
             const normalized = getPlaygroundDatabaseResponseRecord(data);
             if (!normalized) {
@@ -89988,11 +90677,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           } finally {
             setLoadingDatabaseId((current) => current === databaseId ? "" : current);
           }
-        }, [backendUrl, requestHeaders, resourceTemplatePreviewDatabaseRecordById]);
+        }, [backendUrl, databaseListScopeKey, requestHeaders, resourceTemplatePreviewDatabaseRecordById]);
 
-        const loadDatabaseCollections = useCallback(async (databaseId) => {
+        const loadDatabaseCollections = useCallback(async (databaseId, options = {}) => {
           if (!databaseId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
             return [];
+          }
+
+          const existingCollections = databaseCollectionsByIdRef.current[databaseId];
+          if (options?.force !== true && Array.isArray(existingCollections)) {
+            return existingCollections;
           }
 
           const templatePreviewCollections = resourceTemplatePreviewDatabaseCollectionsById[databaseId];
@@ -90025,14 +90719,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
           setLoadingDatabaseCollectionsId(databaseId);
           try {
-            const response = await fetch(buildPlaygroundDatabaseCollectionsUrl(backendUrl, databaseId), {
-              method: "GET",
-              headers: requestHeaders,
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to load collections.");
-            }
+            const data = await fetchPlaygroundCachedDatabaseResourceJson(
+              buildPlaygroundDatabaseCollectionsUrl(backendUrl, databaseId),
+              requestHeaders,
+              {
+                scopeKey: databaseListScopeKey,
+                ttlMs: PLAYGROUND_DATABASE_COLLECTIONS_CACHE_TTL_MS,
+                force: options?.force === true,
+                persist: true,
+                priority: "high",
+              }
+            );
 
             const collections = Array.isArray(data?.collections) ? data.collections : [];
             setDatabaseCollectionsById((current) => ({
@@ -90068,80 +90765,261 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           } finally {
             setLoadingDatabaseCollectionsId((current) => current === databaseId ? "" : current);
           }
-        }, [backendUrl, requestHeaders, resourceTemplatePreviewDatabaseCollectionsById]);
+        }, [backendUrl, databaseListScopeKey, requestHeaders, resourceTemplatePreviewDatabaseCollectionsById]);
 
-        const loadDatabaseDocuments = useCallback(async (databaseId, collectionId) => {
+        const loadDatabaseDocumentContent = useCallback(async (databaseId, collectionId, documentId, options = {}) => {
+          if (!databaseId || !collectionId || !documentId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return null;
+          }
+
+          const listKey = databaseId + ":" + collectionId;
+          const summary = options?.documentSummary
+            || (databaseDocumentsByCollectionKeyRef.current[listKey] || []).find((entry) => entry?.id === documentId)
+            || { id: documentId };
+          const applyDocument = (document) => {
+            if (!document) return null;
+            setDatabaseDocumentsByCollectionKey((current) => ({
+              ...current,
+              [listKey]: (Array.isArray(current[listKey]) ? current[listKey] : []).map((entry) => (
+                entry?.id === document.id ? { ...entry, ...document } : entry
+              )),
+            }));
+            if (
+              selectedDatabaseIdRef.current === databaseId
+              && selectedDatabaseCollectionIdRef.current === collectionId
+              && selectedDatabaseDocumentIdRef.current === documentId
+            ) {
+              const value = formatPlaygroundDatabaseDocumentJson(document.data);
+              setDatabaseDocumentEditorState({
+                documentId,
+                value,
+                initialValue: value,
+                error: "",
+                saveError: "",
+                saveMessage: "",
+                isLoading: false,
+                isSaving: false,
+              });
+            }
+            return document;
+          };
+
+          if (options?.useSummaryData === true && summary?.data && typeof summary.data === "object") {
+            return applyDocument(getPlaygroundDatabaseDocumentResponseRecord(summary, summary));
+          }
+
+          if (
+            selectedDatabaseIdRef.current === databaseId
+            && selectedDatabaseCollectionIdRef.current === collectionId
+            && selectedDatabaseDocumentIdRef.current === documentId
+          ) {
+            setDatabaseDocumentEditorState({
+              documentId,
+              value: "{}",
+              initialValue: "{}",
+              error: "",
+              saveError: "",
+              saveMessage: "",
+              isLoading: true,
+              isSaving: false,
+            });
+          }
+
+          try {
+            const data = await fetchPlaygroundCachedDatabaseResourceJson(
+              buildPlaygroundDatabaseDocumentUrl(backendUrl, databaseId, collectionId, documentId),
+              requestHeaders,
+              {
+                scopeKey: databaseListScopeKey,
+                ttlMs: PLAYGROUND_DATABASE_DOCUMENTS_CACHE_TTL_MS,
+                force: options?.force === true,
+              }
+            );
+            const document = getPlaygroundDatabaseDocumentResponseRecord(data, summary);
+            if (!document) {
+              throw new Error("Document response was empty.");
+            }
+            return applyDocument(document);
+          } catch (error) {
+            if (
+              selectedDatabaseIdRef.current === databaseId
+              && selectedDatabaseCollectionIdRef.current === collectionId
+              && selectedDatabaseDocumentIdRef.current === documentId
+            ) {
+              setDatabaseDocumentEditorState((current) => ({
+                ...current,
+                isLoading: false,
+                error: error instanceof Error ? error.message : "Failed to load document.",
+              }));
+            }
+            return null;
+          }
+        }, [backendUrl, databaseListScopeKey, requestHeaders]);
+
+        const loadDatabaseDocuments = useCallback(async (databaseId, collectionId, options = {}) => {
           if (!databaseId || !collectionId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
             return [];
           }
 
           const loadingKey = databaseId + ":" + collectionId;
+          const applyDocumentList = (documents, useSummaryData = false) => {
+            const normalizedDocuments = (Array.isArray(documents) ? documents : []).map((document) => {
+              if (useSummaryData) return document;
+              const { data: _documentData, ...summary } = document && typeof document === "object" ? document : {};
+              return summary;
+            });
+            setDatabaseDocumentsByCollectionKey((current) => ({
+              ...current,
+              [loadingKey]: normalizedDocuments,
+            }));
+            if (selectedDatabaseIdRef.current === databaseId && selectedDatabaseCollectionIdRef.current === collectionId) {
+              const currentSelectedDocumentId = selectedDatabaseDocumentIdRef.current;
+              const nextDocument = normalizedDocuments.find((entry) => entry.id === currentSelectedDocumentId) || normalizedDocuments[0] || null;
+              const nextDocumentId = String(nextDocument?.id || "").trim();
+              selectedDatabaseDocumentIdRef.current = nextDocumentId;
+              setSelectedDatabaseDocumentId(nextDocumentId);
+              if (nextDocumentId) {
+                void loadDatabaseDocumentContent(databaseId, collectionId, nextDocumentId, {
+                  documentSummary: useSummaryData
+                    ? (Array.isArray(documents) ? documents : []).find((entry) => entry?.id === nextDocumentId) || nextDocument
+                    : nextDocument,
+                  useSummaryData,
+                });
+              } else {
+                setDatabaseDocumentEditorState({
+                  documentId: "",
+                  value: "{}",
+                  initialValue: "{}",
+                  error: "",
+                  saveError: "",
+                  saveMessage: "",
+                  isLoading: false,
+                  isSaving: false,
+                });
+              }
+            }
+            return normalizedDocuments;
+          };
+          const collectionRecord = (databaseCollectionsByIdRef.current[databaseId] || [])
+            .find((collection) => collection?.id === collectionId) || null;
+          const hasDeclaredDocumentCount = Boolean(
+            collectionRecord
+            && Object.prototype.hasOwnProperty.call(collectionRecord, "documentCount")
+            && Number.isFinite(Number(collectionRecord.documentCount))
+          );
+          if (hasDeclaredDocumentCount && Number(collectionRecord.documentCount) <= 0) {
+            return applyDocumentList([]);
+          }
+          const existingDocuments = databaseDocumentsByCollectionKeyRef.current[loadingKey];
+          if (options?.force !== true && Array.isArray(existingDocuments)) {
+            return applyDocumentList(existingDocuments, existingDocuments.some((entry) => entry?.data != null));
+          }
           const templatePreviewDocuments = resourceTemplatePreviewDatabaseDocumentsByCollectionKey[loadingKey];
           if (Array.isArray(templatePreviewDocuments)) {
-            setDatabaseDocumentsByCollectionKey((current) => ({
-              ...current,
-              [loadingKey]: templatePreviewDocuments,
-            }));
-            if (selectedDatabaseIdRef.current === databaseId && selectedDatabaseCollectionIdRef.current === collectionId) {
-              const currentSelectedDocumentId = selectedDatabaseDocumentIdRef.current;
-              const nextDocument = templatePreviewDocuments.find((entry) => entry.id === currentSelectedDocumentId) || templatePreviewDocuments[0] || null;
-              setSelectedDatabaseDocumentId(nextDocument?.id || "");
-              setDatabaseDocumentEditorState((current) => ({
-                ...current,
-                documentId: nextDocument?.id || "",
-                value: nextDocument ? formatPlaygroundDatabaseDocumentJson(nextDocument.data) : "{}",
-                initialValue: nextDocument ? formatPlaygroundDatabaseDocumentJson(nextDocument.data) : "{}",
-                error: "",
-                saveError: "",
-                saveMessage: "",
-                isSaving: false,
-              }));
-            }
-            return templatePreviewDocuments;
+            return applyDocumentList(templatePreviewDocuments, true);
           }
 
-          setLoadingDatabaseDocumentsKey(loadingKey);
+          if (options?.silent !== true) {
+            setLoadingDatabaseDocumentsKey(loadingKey);
+          }
           try {
-            const response = await fetch(buildPlaygroundDatabaseDocumentsUrl(backendUrl, databaseId, collectionId), {
-              method: "GET",
-              headers: requestHeaders,
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to load documents.");
-            }
+            const data = await fetchPlaygroundCachedDatabaseResourceJson(
+              buildPlaygroundDatabaseDocumentsUrl(backendUrl, databaseId, collectionId, options?.limit || 25),
+              requestHeaders,
+              {
+                scopeKey: databaseListScopeKey,
+                ttlMs: PLAYGROUND_DATABASE_DOCUMENTS_CACHE_TTL_MS,
+                force: options?.force === true,
+              }
+            );
 
-            const documents = Array.isArray(data?.documents) ? data.documents : [];
-            setDatabaseDocumentsByCollectionKey((current) => ({
-              ...current,
-              [loadingKey]: documents,
-            }));
-            if (selectedDatabaseIdRef.current === databaseId && selectedDatabaseCollectionIdRef.current === collectionId) {
-              const currentSelectedDocumentId = selectedDatabaseDocumentIdRef.current;
-              const nextDocument = documents.find((entry) => entry.id === currentSelectedDocumentId) || documents[0] || null;
-              setSelectedDatabaseDocumentId(nextDocument?.id || "");
+            return applyDocumentList(Array.isArray(data?.documents) ? data.documents : []);
+          } catch (error) {
+            if (options?.silent !== true) {
               setDatabaseDocumentEditorState((current) => ({
                 ...current,
-                documentId: nextDocument?.id || "",
-                value: nextDocument ? formatPlaygroundDatabaseDocumentJson(nextDocument.data) : "{}",
-                initialValue: nextDocument ? formatPlaygroundDatabaseDocumentJson(nextDocument.data) : "{}",
-                error: "",
-                saveError: "",
-                saveMessage: "",
-                isSaving: false,
+                error: error instanceof Error ? error.message : "Failed to load documents.",
               }));
             }
-            return documents;
-          } catch (error) {
-            setDatabaseDocumentEditorState((current) => ({
-              ...current,
-              error: error instanceof Error ? error.message : "Failed to load documents.",
-            }));
             return [];
           } finally {
-            setLoadingDatabaseDocumentsKey((current) => current === loadingKey ? "" : current);
+            if (options?.silent !== true) {
+              setLoadingDatabaseDocumentsKey((current) => current === loadingKey ? "" : current);
+            }
           }
-        }, [backendUrl, requestHeaders, resourceTemplatePreviewDatabaseDocumentsByCollectionKey]);
+        }, [backendUrl, databaseListScopeKey, loadDatabaseDocumentContent, requestHeaders, resourceTemplatePreviewDatabaseDocumentsByCollectionKey]);
+
+        const loadDatabaseBootstrap = useCallback(async (databaseId) => {
+          const normalizedDatabaseId = String(databaseId || "").trim();
+          if (!normalizedDatabaseId || normalizedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return false;
+          }
+          if (resourceTemplatePreviewDatabaseRecordById[normalizedDatabaseId]) {
+            return false;
+          }
+
+          setLoadingDatabaseCollectionsId(normalizedDatabaseId);
+          try {
+            const data = await fetchPlaygroundCachedDatabaseResourceJson(
+              buildPlaygroundDatabaseBootstrapUrl(backendUrl, normalizedDatabaseId, 1),
+              requestHeaders,
+              {
+                scopeKey: databaseListScopeKey,
+                ttlMs: PLAYGROUND_DATABASE_COLLECTIONS_CACHE_TTL_MS,
+                persist: true,
+                priority: "high",
+              }
+            );
+            const collections = Array.isArray(data?.collections) ? data.collections : [];
+            const preferredCollectionId = String(data?.selectedCollectionId || "").trim();
+            const selectedCollectionId = collections.some((collection) => collection?.id === preferredCollectionId)
+              ? preferredCollectionId
+              : String(collections[0]?.id || "").trim();
+            setDatabaseCollectionsById((current) => ({
+              ...current,
+              [normalizedDatabaseId]: collections,
+            }));
+            if (selectedDatabaseIdRef.current === normalizedDatabaseId) {
+              selectedDatabaseCollectionIdRef.current = selectedCollectionId;
+              setSelectedDatabaseCollectionId(selectedCollectionId);
+              selectedDatabaseDocumentIdRef.current = "";
+              setSelectedDatabaseDocumentId("");
+              setDatabaseDocumentEditorState({
+                documentId: "",
+                value: "{}",
+                initialValue: "{}",
+                error: "",
+                saveError: "",
+                saveMessage: "",
+                isLoading: false,
+                isSaving: false,
+              });
+            }
+            setDatabaseSaveState((current) => ({ ...current, error: "" }));
+            return true;
+          } catch {
+            return false;
+          } finally {
+            setLoadingDatabaseCollectionsId((current) => current === normalizedDatabaseId ? "" : current);
+          }
+        }, [backendUrl, databaseListScopeKey, requestHeaders, resourceTemplatePreviewDatabaseRecordById]);
+
+        const prefetchDatabaseBootstrap = useCallback((databaseId) => {
+          const normalizedDatabaseId = String(databaseId || "").trim();
+          if (!normalizedDatabaseId || normalizedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return;
+          }
+          void fetchPlaygroundCachedDatabaseResourceJson(
+            buildPlaygroundDatabaseBootstrapUrl(backendUrl, normalizedDatabaseId, 1),
+            requestHeaders,
+            {
+              scopeKey: databaseListScopeKey,
+              ttlMs: PLAYGROUND_DATABASE_COLLECTIONS_CACHE_TTL_MS,
+              persist: true,
+              priority: "high",
+            }
+          ).catch(() => {});
+        }, [backendUrl, databaseListScopeKey, requestHeaders]);
 
         const loadEnvironmentRuntimeStatus = useCallback(async (environmentId) => {
           const normalizedEnvironmentId = String(environmentId || "").trim();
@@ -90401,18 +91279,26 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [orderedEnvironments, selectedEnvironmentId]);
 
         useEffect(() => {
+          if (embeddedInResources && resourceMode === "servers" && normalizedEmbeddedServerKind === "database") {
+            return;
+          }
           if (hasLoadedServers || serverListLoading) {
             return;
           }
           void loadServers();
-        }, [hasLoadedServers, loadServers, serverListLoading]);
+        }, [embeddedInResources, hasLoadedServers, loadServers, normalizedEmbeddedServerKind, resourceMode, serverListLoading]);
 
         useEffect(() => {
-          if (resourceMode !== "servers" || serverAgentOptionsLoading || serverAgentOptions.length > 0) {
+          if (
+            resourceMode !== "servers"
+            || normalizedEmbeddedServerKind === "database"
+            || serverAgentOptionsLoading
+            || serverAgentOptions.length > 0
+          ) {
             return;
           }
           void loadServerAgentOptions();
-        }, [loadServerAgentOptions, resourceMode, serverAgentOptions.length, serverAgentOptionsLoading]);
+        }, [loadServerAgentOptions, normalizedEmbeddedServerKind, resourceMode, serverAgentOptions.length, serverAgentOptionsLoading]);
 
         useEffect(() => {
           if (!embeddedInResources || resourceMode !== "servers" || normalizedEmbeddedServerKind !== "voice_agent") {
@@ -90538,8 +91424,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [isHomeViewActive, resourceMode, selectedDatabaseId, selectedEnvironmentId, selectedServerId]);
 
         useEffect(() => {
+          if (resourceMode !== "computers") {
+            return;
+          }
           void loadAvailableRuntimeOptions();
-        }, [loadAvailableRuntimeOptions]);
+        }, [loadAvailableRuntimeOptions, resourceMode]);
 
         useEffect(() => {
           return () => {
@@ -90556,6 +91445,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [environmentGuiFrameUrl]);
 
         useEffect(() => {
+          if (resourceMode !== "computers") {
+            return;
+          }
           if (!selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
             replaceEnvironmentGuiFrameUrl("");
             setEnvironmentGuiOpen(false);
@@ -90584,7 +91476,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             lastLoadedAt: "",
           });
           void loadEnvironmentRuntimeStatus(selectedEnvironmentId);
-        }, [loadEnvironmentRuntimeStatus, selectedEnvironmentId]);
+        }, [loadEnvironmentRuntimeStatus, resourceMode, selectedEnvironmentId]);
 
         useEffect(() => {
           if (resourceMode !== "computers") {
@@ -90600,13 +91492,19 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [environmentAnalyticsById, loadEnvironmentAnalytics, resourceMode, selectedEnvironmentId]);
 
         useEffect(() => {
+          if (resourceMode !== "computers" || !isHomeViewActive) {
+            return;
+          }
           if (environmentHomeAnalytics || environmentHomeAnalyticsLoading) {
             return;
           }
           void loadEnvironmentHomeAnalytics();
-        }, [environmentHomeAnalytics, environmentHomeAnalyticsLoading, loadEnvironmentHomeAnalytics]);
+        }, [environmentHomeAnalytics, environmentHomeAnalyticsLoading, isHomeViewActive, loadEnvironmentHomeAnalytics, resourceMode]);
 
         useEffect(() => {
+          if (resourceMode !== "computers" || !isHomeViewActive) {
+            return;
+          }
           const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(environmentHomeChartTimescale);
           const currentSummary = environmentHomeCostSummaryByPeriod[normalizedPeriod];
           if (currentSummary || environmentHomeCostSummaryLoadingPeriod === normalizedPeriod) {
@@ -90617,10 +91515,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           environmentHomeChartTimescale,
           environmentHomeCostSummaryByPeriod,
           environmentHomeCostSummaryLoadingPeriod,
+          isHomeViewActive,
           loadEnvironmentHomeCostSummary,
+          resourceMode,
         ]);
 
         useEffect(() => {
+          if (resourceMode !== "computers" || !isHomeViewActive) {
+            return;
+          }
           const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(environmentHomeChartTimescale);
           const currentBreakdown = environmentHomeCostBreakdownByPeriod[normalizedPeriod];
           if (currentBreakdown || environmentHomeCostBreakdownLoadingPeriod === normalizedPeriod) {
@@ -90631,10 +91534,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           environmentHomeChartTimescale,
           environmentHomeCostBreakdownByPeriod,
           environmentHomeCostBreakdownLoadingPeriod,
+          isHomeViewActive,
           loadEnvironmentHomeCostBreakdown,
+          resourceMode,
         ]);
 
         useEffect(() => {
+          if (resourceMode !== "computers" || !isHomeViewActive) {
+            return;
+          }
           const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(environmentHomeChartTimescale);
           const currentSummaries = environmentHomeChartSummariesByPeriod[normalizedPeriod];
           if (Array.isArray(currentSummaries) || environmentHomeChartSummariesLoadingPeriod === normalizedPeriod) {
@@ -90645,10 +91553,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           environmentHomeChartSummariesByPeriod,
           environmentHomeChartSummariesLoadingPeriod,
           environmentHomeChartTimescale,
+          isHomeViewActive,
           loadEnvironmentHomeChartSummaries,
+          resourceMode,
         ]);
 
         useEffect(() => {
+          if (resourceMode !== "computers" || !isHomeViewActive) {
+            return;
+          }
           const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(environmentHomeChartTimescale);
           const currentBreakdowns = environmentHomeChartBreakdownsByPeriod[normalizedPeriod];
           if (Array.isArray(currentBreakdowns) || environmentHomeChartBreakdownsLoadingPeriod === normalizedPeriod) {
@@ -90659,10 +91572,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           environmentHomeChartBreakdownsByPeriod,
           environmentHomeChartBreakdownsLoadingPeriod,
           environmentHomeChartTimescale,
+          isHomeViewActive,
           loadEnvironmentHomeChartBreakdowns,
+          resourceMode,
         ]);
 
         useEffect(() => {
+          if (resourceMode !== "computers") {
+            return;
+          }
           if (!selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
             environmentSeededSelectionRef.current = selectedEnvironmentId;
             if (selectedEnvironmentId !== PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
@@ -90690,7 +91608,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
           setDraftEnvironment(normalizedSeedEnvironment);
           void loadEnvironmentDetails(selectedEnvironmentId);
-        }, [environmentDetailsById, loadEnvironmentDetails, orderedEnvironments, selectedEnvironmentId]);
+        }, [environmentDetailsById, loadEnvironmentDetails, orderedEnvironments, resourceMode, selectedEnvironmentId]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -90946,11 +91864,32 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [onRequestSidebarCollapse, resourceMode, serverFileEditorState.path]);
 
         useEffect(() => {
-          if (hasLoadedDatabases || databaseListLoading) {
-            return;
+          const shouldLoadDatabaseCatalog = !embeddedInResources
+            || (resourceMode === "servers" && (!normalizedEmbeddedServerKind || normalizedEmbeddedServerKind === "database"));
+          if (!shouldLoadDatabaseCatalog) return;
+          if (databaseListInitialLoadScopeRef.current === databaseListScopeKey) return;
+          const requestState = databaseListRequestRef.current;
+          requestState.requestId += 1;
+          requestState.promise = null;
+          requestState.retryCount = 0;
+          if (requestState.retryTimer) {
+            window.clearTimeout(requestState.retryTimer);
+            requestState.retryTimer = null;
           }
-          void loadDatabases();
-        }, [databaseListLoading, hasLoadedDatabases, loadDatabases]);
+          const cachedRecord = readPlaygroundDatabaseListCache(databaseListScopeKey);
+          setDatabases(cachedRecord?.items || []);
+          setHasLoadedDatabases(Number(cachedRecord?.loadedAt || 0) > 0);
+          databaseListInitialLoadScopeRef.current = databaseListScopeKey;
+          void loadDatabases({ retry: true });
+        }, [databaseListScopeKey, embeddedInResources, loadDatabases, normalizedEmbeddedServerKind, resourceMode]);
+
+        useEffect(() => () => {
+          const requestState = databaseListRequestRef.current;
+          if (requestState.retryTimer) {
+            window.clearTimeout(requestState.retryTimer);
+            requestState.retryTimer = null;
+          }
+        }, []);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -90961,13 +91900,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             return;
           }
           serverResourceModeRefreshRef.current = true;
-          if (!serverListLoading) {
+          if (normalizedEmbeddedServerKind !== "database" && !serverListLoading) {
             void loadServers();
           }
-          if (!databaseListLoading) {
+          if ((!normalizedEmbeddedServerKind || normalizedEmbeddedServerKind === "database") && !databaseListLoading) {
             void loadDatabases();
           }
-        }, [databaseListLoading, loadDatabases, loadServers, resourceMode, serverListLoading]);
+        }, [databaseListLoading, loadDatabases, loadServers, normalizedEmbeddedServerKind, resourceMode, serverListLoading]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -90991,10 +91930,30 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
           resetDatabaseEditorAuxiliaryState();
           setDraftDatabase(seedDatabase ? normalizePlaygroundDatabaseRecord(seedDatabase) : null);
-          void loadDatabaseDetails(selectedDatabaseId);
+          void (async () => {
+            if (!seedDatabase) {
+              void loadDatabaseDetails(selectedDatabaseId);
+            }
+            const didBootstrap = await loadDatabaseBootstrap(selectedDatabaseId);
+            if (selectedDatabaseIdRef.current !== selectedDatabaseId) {
+              return;
+            }
+            if (didBootstrap) return;
+            await loadDatabaseCollections(selectedDatabaseId);
+          })();
+        }, [databaseDetailsById, loadDatabaseBootstrap, loadDatabaseCollections, loadDatabaseDetails, orderedDatabases, resourceMode, selectedDatabaseId]);
+
+        useEffect(() => {
+          if (
+            resourceMode !== "servers"
+            || databaseDetailTab !== "general"
+            || !selectedDatabaseId
+            || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID
+          ) {
+            return;
+          }
           void loadDatabaseAnalytics(selectedDatabaseId);
-          void loadDatabaseCollections(selectedDatabaseId);
-        }, [databaseDetailsById, loadDatabaseAnalytics, loadDatabaseCollections, loadDatabaseDetails, orderedDatabases, resourceMode, selectedDatabaseId]);
+        }, [databaseDetailTab, loadDatabaseAnalytics, resourceMode, selectedDatabaseId]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -91254,9 +92213,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
 
           if (normalizedTargetType === "database") {
-            if (!orderedDatabases.some((database) => database.id === normalizedTargetId)) {
-              return;
-            }
             handleDatabaseSelect(normalizedTargetId);
           } else {
             if (!orderedServers.some((server) => server.id === normalizedTargetId)) {
@@ -94194,12 +95150,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setDatabases((current) => {
             const existingIndex = current.findIndex((database) => database.id === savedDatabase.id);
             if (existingIndex === -1) {
-              return [savedDatabase, ...current];
+              const next = [savedDatabase, ...current];
+              writePlaygroundDatabaseListCache(databaseListScopeKeyRef.current, next);
+              return next;
             }
             const next = [...current];
             next[existingIndex] = savedDatabase;
+            writePlaygroundDatabaseListCache(databaseListScopeKeyRef.current, next);
             return next;
           });
+          setHasLoadedDatabases(true);
           setDatabaseDetailsById((current) => ({
             ...current,
             [savedDatabase.id]: savedDatabase,
@@ -94529,7 +95489,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               error: "",
               message: "",
             });
-            void loadDatabaseCollections(savedDatabase.id);
+            void loadDatabaseCollections(savedDatabase.id, { force: true });
             void loadDatabaseAnalytics(savedDatabase.id, { force: true });
           } catch (error) {
             setDatabaseSaveState({
@@ -94860,6 +95820,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }
 
             const nextDatabases = databases.filter((database) => database.id !== databaseId);
+            writePlaygroundDatabaseListCache(databaseListScopeKeyRef.current, nextDatabases);
             setDatabases(nextDatabases);
             setDatabaseDetailsById((current) => {
               const next = { ...current };
@@ -95051,7 +96012,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to create collection.");
             }
-            const collections = await loadDatabaseCollections(draftDatabase.id);
+            const collections = await loadDatabaseCollections(draftDatabase.id, { force: true });
             void loadDatabaseAnalytics(draftDatabase.id, { force: true });
             const createdCollectionId = data?.collection?.id || collections[0]?.id || "";
             if (createdCollectionId) {
@@ -95097,7 +96058,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to delete collection.");
             }
-            await loadDatabaseCollections(draftDatabase.id);
+            await loadDatabaseCollections(draftDatabase.id, { force: true });
             void loadDatabaseAnalytics(draftDatabase.id, { force: true });
             setSelectedDatabaseCollectionId("");
             setSelectedDatabaseDocumentId("");
@@ -95172,8 +96133,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               throw new Error(data?.message || data?.error || "Failed to create document.");
             }
 
-            await loadDatabaseCollections(draftDatabase.id);
-            await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId);
+            await loadDatabaseCollections(draftDatabase.id, { force: true });
+            await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId, { force: true });
             void loadDatabaseAnalytics(draftDatabase.id, { force: true });
             closeDatabaseDocumentComposer();
             setSelectedDatabaseDocumentId(documentId);
@@ -95202,18 +96163,26 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }
 
         function handleSelectDatabaseDocument(document) {
-          setSelectedDatabaseDocumentId(document?.id || "");
+          const documentId = String(document?.id || "").trim();
+          selectedDatabaseDocumentIdRef.current = documentId;
+          setSelectedDatabaseDocumentId(documentId);
           setDatabaseDocumentEditorState({
-            documentId: document?.id || "",
-            value: formatPlaygroundDatabaseDocumentJson(document?.data || {}),
-            initialValue: formatPlaygroundDatabaseDocumentJson(document?.data || {}),
+            documentId,
+            value: "{}",
+            initialValue: "{}",
             error: "",
             saveError: "",
             saveMessage: "",
+            isLoading: Boolean(documentId),
             isSaving: false,
           });
           setDatabaseFieldExpansionState({});
           closeDatabaseFieldComposer();
+          if (draftDatabase?.id && selectedDatabaseCollectionId && documentId) {
+            void loadDatabaseDocumentContent(draftDatabase.id, selectedDatabaseCollectionId, documentId, {
+              documentSummary: document,
+            });
+          }
         }
 
         function handleDatabaseDocumentEditorChange(nextValue) {
@@ -95377,7 +96346,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }
 
         async function handleSaveDatabaseDocument(options = {}) {
-          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId || !databaseDocumentEditorState.documentId || databaseDocumentEditorState.isSaving || databaseDocumentSaveInFlightRef.current) {
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId || !databaseDocumentEditorState.documentId || databaseDocumentEditorState.isLoading || databaseDocumentEditorState.isSaving || databaseDocumentSaveInFlightRef.current) {
             return;
           }
           if (isSelectedDatabaseTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftDatabase)) {
@@ -95450,8 +96419,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               throw new Error(data?.message || data?.error || "Failed to save document.");
             }
 
-            await loadDatabaseCollections(draftDatabase.id);
-            await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId);
+            await loadDatabaseCollections(draftDatabase.id, { force: true });
+            await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId, { force: true });
             void loadDatabaseAnalytics(draftDatabase.id, { force: true });
             const nextValue = formatPlaygroundDatabaseDocumentJson(parsedData);
             setDatabaseDocumentEditorState((current) => ({
@@ -95547,8 +96516,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               throw new Error(data?.message || data?.error || "Failed to delete document.");
             }
 
-            await loadDatabaseCollections(draftDatabase.id);
-            await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId);
+            await loadDatabaseCollections(draftDatabase.id, { force: true });
+            await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId, { force: true });
             void loadDatabaseAnalytics(draftDatabase.id, { force: true });
             if (databaseDocumentEditorState.documentId === documentId) {
               setSelectedDatabaseDocumentId("");
@@ -108008,7 +108977,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseDocumentEditorState.saveError)
               : (databaseDocumentViewMode !== "json" && databaseDocumentEditorState.saveMessage)
                 ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, databaseDocumentEditorState.saveMessage)
-                : collectionLoading || documentsLoading
+                : collectionLoading || documentsLoading || databaseDocumentEditorState.isLoading
                   ? React.createElement("div", { className: "playground-files-state" },
                       React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
                     )
@@ -108169,7 +109138,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                               type: "button",
                               className: "playground-database-browser-pane-row" + (selectedDatabaseCollectionId === collection.id ? " is-active" : ""),
                               onClick: () => {
+                                selectedDatabaseCollectionIdRef.current = collection.id;
                                 setSelectedDatabaseCollectionId(collection.id);
+                                selectedDatabaseDocumentIdRef.current = "";
                                 setSelectedDatabaseDocumentId("");
                                 setDatabaseDocumentViewMode("preview");
                                 setDatabaseDocumentEditorState({
@@ -108179,6 +109150,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                                   error: "",
                                   saveError: "",
                                   saveMessage: "",
+                                  isLoading: false,
                                   isSaving: false,
                                 });
                               },
@@ -108578,7 +109550,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	          const databaseEditorTabContent = normalizedDatabaseDetailTab === "data"
 	            ? databaseDataTabContent
 	            : databaseGeneralTabContent;
-	          const databaseDocumentationUrl = ${JSON.stringify(aiosOrigin)} + "/developers/libraries/databases";
 	          const databaseEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main" + (
 	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
 	          );
@@ -108596,7 +109567,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            React.createElement("div", { className: databaseEditorMainClassName },
 	              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar is-database-detail-navbar" },
 	                React.createElement("div", { className: "playground-environments-editor-navbar-title" },
-	                  React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+	                  React.createElement("div", { className: "playground-environments-editor-navbar-copy playground-database-navbar-copy" },
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-resource-detail-back-button playground-database-navbar-back-button",
+	                      onClick: showEnvironmentsHome,
+	                      title: "Back to Databases",
+	                      "aria-label": "Back to Databases",
+	                    }, "\u2190"),
 	                    React.createElement("input", {
 	                      type: "text",
 	                      className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-database-title-input",
@@ -108621,14 +109599,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 ),
                 React.createElement("div", { className: "playground-content-nav-center" }),
                 React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button",
-                    onClick: () => window.open(databaseDocumentationUrl, "_blank", "noopener,noreferrer"),
-                  },
-                    React.createElement(BookOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Docs")
-                  ),
                   React.createElement("button", {
                     type: "button",
                     className: "playground-environments-action-button",
@@ -112009,7 +112979,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	          const activeEnvironmentHomeTimescaleId = environmentHomeTimescaleOptions.some((option) => option.id === normalizedEnvironmentHomeChartTimescale)
 	            ? normalizedEnvironmentHomeChartTimescale
 	            : "month";
-	          const environmentHomeTimescaleControl = React.createElement("div", { className: "playground-project-overview-progress-combo-ranges", role: "group", "aria-label": "Computer analytics time frame" },
+	          const environmentHomeTimescaleControl = React.createElement("div", {
+	              className: "playground-project-overview-progress-combo-ranges",
+	              role: "group",
+	              "aria-label": (isDevelopServerKindHome ? developServerKindSingularTitle : "Computer") + " analytics time frame",
+	            },
 	            environmentHomeTimescaleOptions.map((option) =>
 	              React.createElement("button", {
 	                key: option.id,
@@ -112020,7 +112994,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              }, option.label)
 	            )
 	          );
-	          const environmentHomeAnalyticsOptions = isDevelopConfigureHome && !isDevelopServerKindHome
+	          const environmentHomeAnalyticsOptions = isDevelopConfigureHome
 	            ? React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
 	                React.createElement("button", {
 	                  type: "button",
@@ -112047,6 +113021,124 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                  : null
 	              )
 	            : null;
+	          const developResourceOverviewActivityMetricTabs = developServerKindOperationalMetricTabs.filter((tab) => (
+	            !["compute-tokens", "resources", "errors"].includes(tab.id)
+	          ));
+	          const developResourceOverviewCountTab = developServerKindOperationalMetricTabs.find((tab) => tab.id === "resources")
+	            || developServerKindOperationalMetricTabs[0];
+	          const developResourceOverviewErrorTab = developServerKindOperationalMetricTabs.find((tab) => tab.id === "errors")
+	            || { id: "errors", key: "errors", label: "Errors" };
+	          const developResourceOverviewCostTab = developServerKindOperationalMetricTabs.find((tab) => tab.id === "compute-tokens")
+	            || { id: "compute-tokens", key: "computeTokens", label: "Usage cost" };
+	          const developResourceOverviewPublishedCount = normalizedEmbeddedServerKind === "voice_agent"
+	            ? filteredVoiceAgentRecords.filter((record) => (
+	                normalizePlaygroundVoiceAgentMode(record?.voice?.mode || record?.agent?.voiceMode) !== "off"
+	                || Boolean(record?.phoneNumber?.phoneNumber)
+	              )).length
+	            : filteredOverviewServerResources.filter((resource) => (
+	                resource?.resourceType === "database"
+	                  ? String(resource?.status || "").trim().toLowerCase() === "active"
+	                  : (
+	                      String(resource?.status || "").trim().toLowerCase() === "deployed"
+	                      || Boolean(String(resource?.serviceUrl || resource?.customDomain || resource?.cloudRunServiceName || "").trim())
+	                    )
+	              )).length;
+	          const developResourceOverviewCount = Math.max(0, Math.round(Number(
+	            developServerOperationalMetrics?.resourceCounts?.[developResourceOverviewCountTab?.resourceCountKey]
+	            ?? developConfigureCount
+	            ?? 0
+	          ) || 0));
+	          const developResourceOverviewKpiColors = [
+	            "#7effff",
+	            "rgb(143, 196, 255)",
+	            "rgb(103, 80, 255)",
+	            "#f53b3a",
+	            "#9ff6ce",
+	          ];
+	          const developResourceOverviewPrimaryKpis = developResourceOverviewActivityMetricTabs.slice(0, 2).map((tab, index) => ({
+	            id: tab.id,
+	            label: tab.label,
+	            color: developResourceOverviewKpiColors[index + 1],
+	            value: formatDevelopResourceOperationalMetricValue(developServerOperationalMetrics?.totals?.[tab.key] || 0),
+	          }));
+	          if (developResourceOverviewPrimaryKpis.length < 2) {
+	            developResourceOverviewPrimaryKpis.push({
+	              id: normalizedEmbeddedServerKind + "-published",
+	              label: normalizedEmbeddedServerKind === "voice_agent" ? "Enabled" : "Published",
+	              color: developResourceOverviewKpiColors[2],
+	              value: formatDevelopResourceOperationalMetricValue(developResourceOverviewPublishedCount),
+	            });
+	          }
+	          const developResourceOverviewKpis = [
+	            {
+	              id: normalizedEmbeddedServerKind + "-resources",
+	              label: developServerKindTitle,
+	              color: developResourceOverviewKpiColors[0],
+	              value: formatDevelopResourceOperationalMetricValue(developResourceOverviewCount),
+	            },
+	            ...developResourceOverviewPrimaryKpis,
+	            {
+	              id: normalizedEmbeddedServerKind + "-errors",
+	              label: developResourceOverviewErrorTab.label,
+	              color: developResourceOverviewKpiColors[3],
+	              value: formatDevelopResourceOperationalMetricValue(developServerOperationalMetrics?.totals?.[developResourceOverviewErrorTab.key] || 0),
+	            },
+	            {
+	              id: normalizedEmbeddedServerKind + "-cost",
+	              label: developResourceOverviewCostTab.label,
+	              color: developResourceOverviewKpiColors[4],
+	              value: formatDevelopResourceOperationalMetricValue(developServerOperationalMetrics?.totals?.[developResourceOverviewCostTab.key] || 0),
+	            },
+	          ];
+	          const developResourceOverviewChartTabs = [
+	            ...developResourceOverviewActivityMetricTabs.slice(0, 2),
+	            ...(developResourceOverviewActivityMetricTabs.length < 2 ? [developResourceOverviewErrorTab] : []),
+	          ].slice(0, 2);
+	          const renderDevelopResourceOverviewAnalyticsSection = () =>
+	            React.createElement("div", {
+	              className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-resource-type-overview-metrics",
+	            },
+	              React.createElement("section", {
+	                className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-agents-overview-analytics-card playground-resource-type-overview-analytics-card",
+	              },
+	                React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
+	                  developResourceOverviewKpis.map((item) =>
+	                    React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+	                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+	                        React.createElement("span", {
+	                          className: "playground-project-overview-progress-combo-metric-dot is-" + item.id,
+	                          style: { background: item.color },
+	                          "aria-hidden": "true",
+	                        }),
+	                        React.createElement("span", null, item.label)
+	                      ),
+	                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
+	                    )
+	                  )
+	                ),
+	                React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
+	                  renderHomeStackedUsageChart({
+	                    ariaLabel: developServerKindSingularTitle + " activity over time",
+	                    labels: developResourceOperationalLabels,
+	                    series: developResourceOverviewChartTabs.map((tab, index) => ({
+	                      id: tab.id,
+	                      label: tab.label,
+	                      color: index === 0 ? "rgb(143, 196, 255)" : "rgb(103, 80, 255)",
+	                      values: getDevelopResourceOperationalSeries(tab.key),
+	                    })),
+	                    emptyText: developServerOperationalMetricsLoading
+	                      ? "Loading " + developServerKindSingularTitle.toLowerCase() + " activity..."
+	                      : (developServerOperationalMetricsError || "No " + developServerKindSingularTitle.toLowerCase() + " activity yet"),
+	                    title: developServerKindSingularTitle + " activity",
+	                    isLoading: developServerOperationalMetricsLoading,
+	                    tickFormatter: formatDevelopResourceOperationalMetricValue,
+	                    showLegend: false,
+	                    hideHeader: true,
+	                    chartCardClassName: "playground-resource-type-overview-chart-card",
+	                  })
+	                )
+	              )
+	            );
 	          const renderComputerOverviewAnalyticsSection = () =>
 	            React.createElement("div", {
 	              className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-computers-overview-metrics",
@@ -112086,7 +113178,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            );
 	          const environmentOverviewMetricsSection = activeResourcesOverviewHomeTab === "general"
 	            ? isDevelopServerKindHome
-	              ? renderDevelopServerKindOperationalMetrics()
+	              ? renderDevelopResourceOverviewAnalyticsSection()
 	              : isDevelopConfigureHome && !isDevelopServerKindHome
 	                ? renderComputerOverviewAnalyticsSection()
 	                : React.createElement("div", {
@@ -112147,42 +113239,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              onClick: isDevelopServerKindHome ? () => handleCreateServer(normalizedEmbeddedServerKind) : handleCreateEnvironment,
 	            }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), isDevelopServerKindHome ? "Add Resource" : "Add Computer") : null
 	          );
-	          const shouldShowDevelopFunctionsEmptyLanding = isDevelopServerKindHome
-	            && normalizedEmbeddedServerKind === "function"
-	            && developConfigureCount === 0
-	            && !normalizedResourcesSearchQuery;
-	          const shouldShowDevelopWebAppsEmptyLanding = isDevelopServerKindHome
-	            && normalizedEmbeddedServerKind === "web_app"
-	            && developConfigureCount === 0
-	            && !normalizedResourcesSearchQuery;
-	          const shouldShowDevelopDatabasesEmptyLanding = isDevelopServerKindHome
-	            && normalizedEmbeddedServerKind === "database"
-	            && developConfigureCount === 0
-	            && !normalizedResourcesSearchQuery;
-	          const shouldShowDevelopAuthEmptyLanding = isDevelopServerKindHome
-	            && normalizedEmbeddedServerKind === "auth"
-	            && developConfigureCount === 0
-	            && !normalizedResourcesSearchQuery;
-	          const shouldShowDevelopAgentRuntimesEmptyLanding = isDevelopServerKindHome
-	            && normalizedEmbeddedServerKind === "agent_runtime"
-	            && developConfigureCount === 0
-	            && !normalizedResourcesSearchQuery;
-	          const shouldShowDevelopSecretsEmptyLanding = isDevelopServerKindHome
-	            && normalizedEmbeddedServerKind === "secrets"
-	            && developConfigureCount === 0
-	            && !normalizedResourcesSearchQuery;
-	          const shouldShowDevelopPaymentsEmptyLanding = isDevelopServerKindHome
-	            && normalizedEmbeddedServerKind === "payments"
-	            && developConfigureCount === 0
-	            && !normalizedResourcesSearchQuery;
-	          const shouldShowDevelopServerKindEmptyLanding =
-	            shouldShowDevelopFunctionsEmptyLanding
-	            || shouldShowDevelopWebAppsEmptyLanding
-	            || shouldShowDevelopDatabasesEmptyLanding
-	            || shouldShowDevelopAuthEmptyLanding
-	            || shouldShowDevelopAgentRuntimesEmptyLanding
-	            || shouldShowDevelopSecretsEmptyLanding
-	            || shouldShowDevelopPaymentsEmptyLanding;
 	          const functionEmptyFeatures = [
 	            {
 	              title: "Fully managed",
@@ -112285,28 +113341,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              href: "https://github.com/computer-agents/webapps-examples/tree/main/secrets-integration-console",
 	              background: "/img/bg/forest.avif",
 	              Icon: Key,
-	            },
-	          ];
-	          const databaseEmptyFeatures = [
-	            {
-	              title: "Structured storage",
-	              description: "Create databases, collections, and documents for product state, records, queues, and app data.",
-	              Icon: Database,
-	            },
-	            {
-	              title: "Document lifecycle",
-	              description: "Insert, list, read, update, and delete JSON documents from SDK scripts, apps, functions, or agents.",
-	              Icon: FileText,
-	            },
-	            {
-	              title: "Connected resources",
-	              description: "Bind databases to web apps, functions, auth modules, secrets, and agent runtimes in one workspace.",
-	              Icon: Link2,
-	            },
-	            {
-	              title: "Operational control",
-	              description: "Inspect analytics, collections, documents, and bindings so data stays visible as products evolve.",
-	              Icon: Shield,
 	            },
 	          ];
 	          const authEmptyFeatures = [
@@ -112570,51 +113604,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                nextLabel: "Next web app example",
 	              })
 	            );
-	          const renderDevelopDatabasesEmptyLanding = () =>
-	            React.createElement("section", { className: "playground-functions-empty-landing playground-databases-empty-landing" },
-	              React.createElement("div", { className: "playground-functions-empty-hero" },
-	                React.createElement("div", { className: "playground-functions-empty-copy-block" },
-	                  React.createElement("h2", { className: "playground-functions-empty-title" }, "Store product data inside agent workspaces."),
-	                  React.createElement("p", { className: "playground-functions-empty-copy" },
-	                    "Let humans or agents create, seed, bind, and manage databases for web apps, functions, auth flows, agent runtimes, and operational product data."
-	                  ),
-	                  React.createElement("div", { className: "playground-functions-empty-actions" },
-	                    React.createElement("button", {
-	                      type: "button",
-	                      className: "playground-functions-empty-button is-primary",
-	                      onClick: () => handleCreateServer("database"),
-	                    }, React.createElement("span", null, "Start now")),
-	                    React.createElement("button", {
-	                      type: "button",
-	                      className: "playground-functions-empty-button is-secondary",
-	                      onClick: () => window.open(developServerKindDocumentationUrl, "_blank", "noopener,noreferrer"),
-	                    },
-	                      React.createElement("span", null, "View Docs"),
-	                      React.createElement(ArrowUpRight, { width: 13, height: 13, strokeWidth: 1.8 })
-	                    )
-	                  )
-	                ),
-	                React.createElement("div", { className: "playground-functions-empty-art", "aria-hidden": "true" },
-	                  React.createElement("img", {
-	                    className: "playground-functions-empty-image",
-	                    src: "/dist/react/assets/server-db.webp",
-	                    alt: "",
-	                    draggable: "false",
-	                  })
-	                )
-	              ),
-	              React.createElement("div", { className: "playground-functions-empty-features" },
-	                databaseEmptyFeatures.map((feature) =>
-	                  React.createElement("div", { key: feature.title, className: "playground-functions-empty-feature" },
-	                    React.createElement("div", { className: "playground-functions-empty-icon-box" },
-	                      React.createElement(getPlaygroundSafeIconComponent(feature.Icon, Circle), { width: 18, height: 18, strokeWidth: 1.8 })
-	                    ),
-	                    React.createElement("div", { className: "playground-functions-empty-feature-title" }, feature.title),
-	                    React.createElement("div", { className: "playground-functions-empty-feature-copy" }, feature.description)
-	                  )
-	                )
-	              )
-	            );
 	          const renderDevelopBasicResourceEmptyLanding = ({ className, title, copy, imageSrc, features, resourceKind }) =>
 	            React.createElement("section", { className: "playground-functions-empty-landing " + String(className || "").trim() },
 	              React.createElement("div", { className: "playground-functions-empty-hero" },
@@ -112700,59 +113689,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	          const environmentsHomeHero = isDevelopConfigureHome
 	            ? React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero" },
 	                React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header" },
-	                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, isDevelopServerKindHome ? developConfigureTitle : "Configure your Computers"),
+	                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, isDevelopServerKindHome ? "Configure your " + developServerKindTitle : "Configure your Computers"),
 	                  React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
-	                    isDevelopServerKindHome
-	                      ? React.createElement("button", {
-	                          type: "button",
-	                          className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
-	                          onClick: () => window.open(${JSON.stringify(aiosOrigin + "/pricing")}, "_blank", "noopener,noreferrer"),
-	                        }, "Pricing", React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 }))
-	                      : null,
-	                    isDevelopServerKindHome ? null : environmentHomeTimescaleControl,
-	                    isDevelopServerKindHome ? null : environmentHomeAnalyticsOptions
+	                    environmentHomeTimescaleControl,
+	                    environmentHomeAnalyticsOptions
 	                  )
 	                ),
-	                isDevelopServerKindHome
-	                  ? React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs playground-develop-tabs playground-develop-server-kind-tabs" },
-	                      React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-	                        React.createElement("button", {
-	                          type: "button",
-	                          className: "playground-project-overview-chart-tab playground-develop-tab is-active",
-	                          "aria-pressed": "true",
-	                        }, "Overview"),
-	                        React.createElement("button", {
-	                          type: "button",
-	                          className: "playground-project-overview-chart-tab playground-develop-tab",
-	                          onClick: () => window.open(developServerKindDocumentationUrl, "_blank", "noopener,noreferrer"),
-	                        }, "Documentation")
-	                      )
-	                    )
-	                  : renderResourcesOverviewHomeTabs(),
-	                shouldShowDevelopServerKindEmptyLanding || !isDevelopServerKindHome ? null : developServerKindToolbar,
-	                shouldShowDevelopFunctionsEmptyLanding
-	                  ? renderDevelopFunctionsEmptyLanding()
-	                  : shouldShowDevelopWebAppsEmptyLanding
-	                    ? renderDevelopWebAppsEmptyLanding()
-	                    : shouldShowDevelopDatabasesEmptyLanding
-	                      ? renderDevelopDatabasesEmptyLanding()
-	                      : shouldShowDevelopAuthEmptyLanding
-	                        ? renderDevelopAuthEmptyLanding()
-	                        : shouldShowDevelopAgentRuntimesEmptyLanding
-	                          ? renderDevelopAgentRuntimesEmptyLanding()
-	                          : shouldShowDevelopSecretsEmptyLanding
-	                            ? renderDevelopSecretsEmptyLanding()
-	                            : shouldShowDevelopPaymentsEmptyLanding
-	                              ? renderDevelopPaymentsEmptyLanding()
-	                  : normalizedEmbeddedServerKind === "voice_agent"
-	                    ? React.createElement(React.Fragment, null,
-	                        environmentOverviewMetricsSection,
-	                        overviewListContent
-	                      )
-	                    : React.createElement(React.Fragment, null,
-	                        environmentOverviewMetricsSection,
-	                        overviewListContent
-	                      )
+	                isDevelopServerKindHome ? null : renderResourcesOverviewHomeTabs(),
+	                React.createElement(React.Fragment, null,
+	                  environmentOverviewMetricsSection,
+	                  overviewListContent
+	                )
 	              )
 	            : React.createElement("section", { className: "playground-environments-home-hero" },
 	                React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your full AI app stack."),
@@ -112892,10 +113839,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 title: "Database actions",
                 "aria-label": "Database actions",
                 disabled: true,
-              }, React.createElement(Settings2, { width: 16, height: 16, strokeWidth: 1.8 }));
+              }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 }));
             }
             return React.createElement("div", {
-                className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
+                className: "playground-files-toolbar-anchor playground-thread-nav-popup-shell playground-tasks-toolbar-popup-shell",
                 ref: databaseActionsPopoverRef,
               },
               React.createElement("button", {
@@ -112903,17 +113850,45 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 className: normalizedButtonClassName + (databaseActionsPopoverOpen ? " is-active" : ""),
                 title: "Database actions",
                 "aria-label": "Database actions",
+                "aria-haspopup": "menu",
                 "aria-expanded": databaseActionsPopoverOpen ? "true" : "false",
                 onClick: () => setDatabaseActionsPopoverOpen((current) => !current),
                 disabled: databaseSaveState.isSaving,
-              }, React.createElement(Settings2, { width: 16, height: 16, strokeWidth: 1.8 })),
+              }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
               databaseActionsPopoverOpen
                 ? React.createElement("div", {
-                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-thread-nav-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                    role: "menu",
                     onClick: (event) => event.stopPropagation(),
                   },
+                    React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
+                      React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "Database ID"),
+                        React.createElement("span", {
+                          className: "playground-thread-nav-popup-thread-id",
+                          title: normalizedDatabaseId,
+                        }, normalizedDatabaseId)
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-thread-nav-popup-divider", "aria-hidden": "true" }),
                     React.createElement("button", {
                       type: "button",
+                      role: "menuitem",
+                      className: "tb-popup-row",
+                      onClick: () => {
+                        setDatabaseActionsPopoverOpen(false);
+                        window.open(${JSON.stringify(aiosOrigin + "/developers/libraries/databases")}, "_blank", "noopener,noreferrer");
+                      },
+                    },
+                      React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "Documentation")
+                      )
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      role: "menuitem",
                       className: "tb-popup-row",
                       onClick: () => openDatabaseRenameDialog(activeDatabase),
                     },
@@ -112924,7 +113899,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     ),
                     React.createElement("button", {
                       type: "button",
-                      className: "tb-popup-row",
+                      role: "menuitem",
+                      className: "tb-popup-row playground-tasks-detail-menu-item-danger",
                       onClick: () => {
                         setDatabaseActionsPopoverOpen(false);
                         void handleDeleteDatabase(normalizedDatabaseId);
@@ -113320,13 +114296,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const hasVoiceAgentRows = filteredVoiceAgentRecords.length > 0;
             const shouldShowVoiceLoading = voiceAgentsLoading && !hasVoiceAgentRows;
             return React.createElement("section", {
-                className: "playground-plugins-section playground-resources-overview-section is-servers-overview is-develop-server-kind-list",
+                className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-resources-overview-section playground-develop-resource-overview-table-section is-servers-overview is-develop-server-kind-list",
               },
               React.createElement("div", {
-                  className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar",
+                  className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar playground-develop-resource-overview-toolbar-row",
                   ref: resourcesOverviewToolbarRef,
                 },
-                React.createElement("h2", { className: "playground-develop-server-metrics-title playground-develop-server-kind-table-title" }, "All Voice Agents"),
                 React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
                   React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
                     React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
@@ -113712,6 +114687,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 role: "button",
                 "aria-label": "Open " + itemName,
                 onClick: () => openOverviewResourceItem(item),
+                onPointerEnter: () => {
+                  if (item?.resourceType === "database") {
+                    prefetchDatabaseBootstrap(item.id);
+                  }
+                },
+                onFocus: () => {
+                  if (item?.resourceType === "database") {
+                    prefetchDatabaseBootstrap(item.id);
+                  }
+                },
                 onKeyDown: (event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
@@ -114574,9 +115559,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            && embeddedActiveServerKind === "secrets"
 	            && secretsDetailTab === "secrets"
 	          );
+	          const isEmbeddedResourceTypeOverview = Boolean(
+	            isServersMode
+	            && normalizedEmbeddedServerKind
+	            && !selectedServerId
+	            && !selectedDatabaseId
+	          );
 	          const embeddedResourcesPageClassName = "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page "
 	            + (isServersMode ? "is-servers-view" : "is-computers-view")
 	            + (isServersMode && normalizedEmbeddedServerKind ? " is-develop-server-kind-page" : "")
+	            + (isEmbeddedResourceTypeOverview ? " playground-agents-overview-page playground-resource-type-overview-page" : "")
 	            + (!isServersMode ? " is-develop-configure-page" : "")
 	            + (isEmbeddedDatabaseDataTab ? " is-database-data-tab" : "")
 	            + (isEmbeddedServerCodeTab ? " is-code-tab" : "")
@@ -168381,13 +169373,21 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [configureUsageChartTab, setConfigureUsageChartTab] = useState("agents");
         const [configureAnalyticsMenuOpen, setConfigureAnalyticsMenuOpen] = useState(false);
         const [developHomeSection, setDevelopHomeSection] = useState("overview");
+        const [developHomeChartTimescale, setDevelopHomeChartTimescale] = useState("day");
         const [developServerMetricsChartTab, setDevelopServerMetricsChartTab] = useState("hosting-requests");
         const [developAnalyticsMenuOpen, setDevelopAnalyticsMenuOpen] = useState(false);
         const [developApiKeysMenuOpen, setDevelopApiKeysMenuOpen] = useState(false);
+        const [developApiKeysSearchQuery, setDevelopApiKeysSearchQuery] = useState("");
+        const [developApiKeysSort, setDevelopApiKeysSort] = useState("name");
+        const [developApiKeysSortDirection, setDevelopApiKeysSortDirection] = useState("asc");
+        const [developApiKeysFilter, setDevelopApiKeysFilter] = useState("all");
+        const [developApiKeysToolbarPopover, setDevelopApiKeysToolbarPopover] = useState("");
         const [developQuickstartLanguage, setDevelopQuickstartLanguage] = useState("javascript");
         const [developServerOperationalMetrics, setDevelopServerOperationalMetrics] = useState(null);
         const [developServerOperationalMetricsLoading, setDevelopServerOperationalMetricsLoading] = useState(false);
         const [developServerOperationalMetricsError, setDevelopServerOperationalMetricsError] = useState("");
+        const developServerOperationalMetricsLoadSequenceRef = useRef(0);
+        const developServerOperationalMetricsAbortRef = useRef(null);
         const teamPageRef = useRef(null);
         const teamPageLoadAbortControllerRef = useRef(null);
         const teamPageLoadSequenceRef = useRef(0);
@@ -168597,12 +169597,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
 		          setTeamPageMemberBulkActionMenuClosing(false);
 		          setTeamPageMemberToolbarPopover("");
 		        }, [teamPageSelectedTeamId]);
-			        useEffect(() => () => {
-			          clearTeamPageMemberActionMenuCloseTimer();
-			          clearTeamPageMemberBulkActionMenuCloseTimer();
-			          clearTeamPageResourceActionMenuCloseTimer();
-			          clearTeamPageResourceBulkActionMenuCloseTimer();
-			        }, []);
+		        useEffect(() => () => {
+		          [
+		            teamPageMemberActionMenuCloseTimerRef,
+		            teamPageMemberBulkActionMenuCloseTimerRef,
+		            teamPageResourceActionMenuCloseTimerRef,
+		            teamPageResourceBulkActionMenuCloseTimerRef,
+		          ].forEach((timerRef) => {
+		            if (timerRef.current !== null && typeof window !== "undefined") {
+		              window.clearTimeout(timerRef.current);
+		              timerRef.current = null;
+		            }
+		          });
+		        }, []);
 	        useEffect(() => {
 	          if ((!teamOverviewToolbarPopover && !teamOverviewMenuId) || typeof document === "undefined") {
 	            return undefined;
@@ -169359,6 +170366,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }, [authRequestHeaders, proxyBackendBase]);
         const hasRealAccess = !isDemoMode && hasSessionAuth;
         const hasShellAccess = hasRealAccess || hasDemoAccess;
+        const databaseListIdentity = hasSessionAuth
+          ? String(sessionState.userId || "").trim()
+          : String(effectiveApiKey || "").trim();
+        useEffect(() => {
+          if (!hasRealAccess) return undefined;
+          const preloadTimer = window.setTimeout(() => {
+            void fetchPlaygroundDatabaseList(proxyBackendBase, authRequestHeaders, {
+              identity: databaseListIdentity,
+            }).catch(() => {});
+          }, 0);
+          return () => window.clearTimeout(preloadTimer);
+        }, [authRequestHeaders, databaseListIdentity, hasRealAccess, proxyBackendBase]);
         useEffect(() => {
           if (activePage !== "settings" || settingsSection !== "inference") {
             return undefined;
@@ -179391,12 +180410,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
         ]);
 
         useEffect(() => {
-          if (activePage !== "develop" || !hasSessionAuth) {
+          if ((activePage !== "develop" && activePage !== "develop-api-keys") || !hasSessionAuth) {
             return;
           }
 
           void loadSettingsApiKeys();
-          if (developHomeSection === "webhooks") {
+          if (activePage === "develop" && developHomeSection === "webhooks") {
             void loadSettingsTriggers();
           }
         }, [
@@ -181798,6 +182817,22 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           const rawTargetKind = String(options?.resourceKind || "").trim();
           const targetKind = rawTargetKind ? canonicalizePlaygroundServerKind(rawTargetKind) : "";
+          const loadSequence = developServerOperationalMetricsLoadSequenceRef.current + 1;
+          developServerOperationalMetricsLoadSequenceRef.current = loadSequence;
+          if (developServerOperationalMetricsAbortRef.current) {
+            developServerOperationalMetricsAbortRef.current.abort();
+          }
+          const requestController = new AbortController();
+          developServerOperationalMetricsAbortRef.current = requestController;
+          const isCurrentLoad = () => (
+            !requestController.signal.aborted
+            && developServerOperationalMetricsLoadSequenceRef.current === loadSequence
+          );
+          const databaseResourceScopeKey = buildPlaygroundDatabaseListScopeKey(
+            proxyBackendBase,
+            authRequestHeaders,
+            databaseListIdentity
+          );
 
           const buildHourlyBuckets = () => {
             const formatter = new Intl.DateTimeFormat("en-US", { hour: "numeric" });
@@ -181833,6 +182868,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             const response = await fetch(proxyBackendBase + path, {
               method: "GET",
               headers: authRequestHeaders,
+              signal: requestController.signal,
+              priority: "low",
             });
             const data = await response.json().catch(() => ({}));
             if (isUnauthorizedStatus(response.status)) {
@@ -181845,9 +182882,27 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return parser(data);
           };
           const readAnalyticsResponse = async (path) => {
+            if (String(path || "").startsWith("/databases/")) {
+              try {
+                return await fetchPlaygroundCachedDatabaseResourceJson(
+                  proxyBackendBase + path,
+                  authRequestHeaders,
+                  {
+                    scopeKey: databaseResourceScopeKey,
+                    ttlMs: PLAYGROUND_DATABASE_ANALYTICS_CACHE_TTL_MS,
+                    signal: requestController.signal,
+                    priority: "low",
+                  }
+                );
+              } catch {
+                return null;
+              }
+            }
             const response = await fetch(proxyBackendBase + path, {
               method: "GET",
               headers: authRequestHeaders,
+              signal: requestController.signal,
+              priority: "low",
             });
             const data = await response.json().catch(() => ({}));
             if (isUnauthorizedStatus(response.status)) {
@@ -181863,10 +182918,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setDevelopServerOperationalMetricsLoading(true);
           setDevelopServerOperationalMetricsError("");
           try {
+            const shouldLoadServerCatalog = targetKind !== "database";
+            const shouldLoadDatabaseCatalog = !targetKind || targetKind === "database";
             const [{ buckets, bucketByKey, bucketIndexByKey }, servers, databases] = await Promise.all([
               Promise.resolve(buildHourlyBuckets()),
-              readListResponse("/servers", parsePlaygroundServerListResponse),
-              readListResponse("/databases", parsePlaygroundDatabaseListResponse),
+              shouldLoadServerCatalog
+                ? readListResponse("/servers", parsePlaygroundServerListResponse)
+                : Promise.resolve([]),
+              shouldLoadDatabaseCatalog
+                  ? fetchPlaygroundDatabaseList(proxyBackendBase, authRequestHeaders, {
+                    identity: databaseListIdentity,
+                    signal: requestController.signal,
+                    priority: "low",
+                  })
+                : Promise.resolve([]),
             ]);
             const activeServerRecords = servers.filter((server) => (
               server?.id
@@ -182024,11 +183089,89 @@ ${PROJECT_OVERVIEW_SCRIPT}
               pushResourceMetricSeries("computeTokens", server, computeTokenValues, "Resource");
             });
 
-            const databaseAnalyticsResults = await Promise.all(analyticsDatabases.map(async (database) => ({
-              database,
-              analytics: await readAnalyticsResponse("/databases/" + encodeURIComponent(database.id) + "/analytics"),
-            })));
-            databaseAnalyticsResults.forEach(({ database, analytics }) => {
+            const publishOperationalMetricsSnapshot = () => {
+              if (!isCurrentLoad()) {
+                return;
+              }
+              const labels = buckets.map((bucket) => bucket.label);
+              const buildSeries = (field) => buckets.map((bucket) => Math.max(0, Number(bucket[field] || 0)));
+              const activeScopedResources = targetKind === "database"
+                ? activeDatabases
+                : targetKind
+                  ? activeServerRecords.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === targetKind)
+                  : [...activeServerRecords, ...activeDatabases];
+              const resourceCountSeries = buckets.map((bucket) => {
+                const bucketEndMs = Math.max(0, Number(bucket.startMs || 0)) + (60 * 60 * 1000);
+                return activeScopedResources.reduce((count, resource) => {
+                  const createdAtMs = Date.parse(String(resource?.createdAt || ""));
+                  return count + (!Number.isFinite(createdAtMs) || createdAtMs <= bucketEndMs ? 1 : 0);
+                }, 0);
+              });
+              const sortResourceSeries = (items) => (Array.isArray(items) ? [...items] : [])
+                .sort((left, right) => {
+                  const leftTotal = Math.max(0, Number(left?.total || 0));
+                  const rightTotal = Math.max(0, Number(right?.total || 0));
+                  if (leftTotal !== rightTotal) {
+                    return rightTotal - leftTotal;
+                  }
+                  return String(left?.label || "").localeCompare(String(right?.label || ""));
+                })
+                .slice(0, 4);
+              const topResourceSeries = Object.fromEntries(
+                Object.entries(metricResourceSeries).map(([key, items]) => [key, sortResourceSeries(items)])
+              );
+              const scopedResourceCount = targetKind === "database"
+                ? activeDatabases.length
+                : targetKind
+                  ? activeServerKindCounts[targetKind] || 0
+                  : activeServerRecords.length + activeDatabases.length;
+              setDevelopServerOperationalMetrics({
+                labels,
+                loadedAt: new Date().toISOString(),
+                scopeKind: targetKind || "",
+                resourceCount: scopedResourceCount,
+                resourceCounts: {
+                  webApps: activeServerKindCounts.web_app || 0,
+                  apis: activeServerKindCounts.api || 0,
+                  functions: activeServerKindCounts.function || 0,
+                  databases: activeDatabases.length,
+                  agentRuntimes: activeServerKindCounts.agent_runtime || 0,
+                  secrets: activeServerKindCounts.secrets || 0,
+                  auth: activeServerKindCounts.auth || 0,
+                  payments: activeServerKindCounts.payments || 0,
+                },
+                series: {
+                  hostingRequests: buildSeries("hostingRequests"),
+                  apiRequests: buildSeries("apiRequests"),
+                  functionCalls: buildSeries("functionCalls"),
+                  databaseReads: buildSeries("databaseReads"),
+                  databaseWrites: buildSeries("databaseWrites"),
+                  agentRuntimeRuns: buildSeries("agentRuntimeRuns"),
+                  secretReads: buildSeries("secretReads"),
+                  authEvents: buildSeries("authEvents"),
+                  paymentCheckoutSessions: buildSeries("paymentCheckoutSessions"),
+                  computeTokens: buildSeries("computeTokens"),
+                  resources: resourceCountSeries,
+                  errors: buildSeries("errors"),
+                },
+                topResourceSeries,
+                totals: {
+                  hostingRequests: buckets.reduce((sum, bucket) => sum + bucket.hostingRequests, 0),
+                  apiRequests: buckets.reduce((sum, bucket) => sum + bucket.apiRequests, 0),
+                  functionCalls: buckets.reduce((sum, bucket) => sum + bucket.functionCalls, 0),
+                  databaseReads: buckets.reduce((sum, bucket) => sum + bucket.databaseReads, 0),
+                  databaseWrites: buckets.reduce((sum, bucket) => sum + bucket.databaseWrites, 0),
+                  agentRuntimeRuns: buckets.reduce((sum, bucket) => sum + bucket.agentRuntimeRuns, 0),
+                  secretReads: buckets.reduce((sum, bucket) => sum + bucket.secretReads, 0),
+                  authEvents: buckets.reduce((sum, bucket) => sum + bucket.authEvents, 0),
+                  paymentCheckoutSessions: buckets.reduce((sum, bucket) => sum + bucket.paymentCheckoutSessions, 0),
+                  computeTokens: buckets.reduce((sum, bucket) => sum + bucket.computeTokens, 0),
+                  resources: scopedResourceCount,
+                  errors: buckets.reduce((sum, bucket) => sum + bucket.errors, 0),
+                },
+              });
+            };
+            const ingestDatabaseAnalytics = (database, analytics) => {
               const operationBuckets = Array.isArray(analytics?.analytics?.charts?.operations24h)
                 ? analytics.analytics.charts.operations24h
                 : Array.isArray(analytics?.charts?.operations24h)
@@ -182062,93 +183205,45 @@ ${PROJECT_OVERVIEW_SCRIPT}
               pushResourceMetricSeries("databaseWrites", database, writeValues, "Database");
               pushResourceMetricSeries("errors", database, errorValues, "Database");
               pushResourceMetricSeries("computeTokens", database, computeTokenValues, "Database");
-            });
-
-            const labels = buckets.map((bucket) => bucket.label);
-            const buildSeries = (field) => buckets.map((bucket) => Math.max(0, Number(bucket[field] || 0)));
-            const activeScopedResources = targetKind === "database"
-              ? activeDatabases
-              : targetKind
-                ? activeServerRecords.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === targetKind)
-                : [...activeServerRecords, ...activeDatabases];
-            const resourceCountSeries = buckets.map((bucket) => {
-              const bucketEndMs = Math.max(0, Number(bucket.startMs || 0)) + (60 * 60 * 1000);
-              return activeScopedResources.reduce((count, resource) => {
-                const createdAtMs = Date.parse(String(resource?.createdAt || ""));
-                return count + (!Number.isFinite(createdAtMs) || createdAtMs <= bucketEndMs ? 1 : 0);
-              }, 0);
-            });
-            const sortResourceSeries = (items) => (Array.isArray(items) ? [...items] : [])
-              .sort((left, right) => {
-                const leftTotal = Math.max(0, Number(left?.total || 0));
-                const rightTotal = Math.max(0, Number(right?.total || 0));
-                if (leftTotal !== rightTotal) {
-                  return rightTotal - leftTotal;
-                }
-                return String(left?.label || "").localeCompare(String(right?.label || ""));
-              })
-              .slice(0, 4);
-            const topResourceSeries = Object.fromEntries(
-              Object.entries(metricResourceSeries).map(([key, items]) => [key, sortResourceSeries(items)])
-            );
-            const scopedResourceCount = targetKind === "database"
-              ? activeDatabases.length
-              : targetKind
-                ? activeServerKindCounts[targetKind] || 0
-                : activeServerRecords.length + activeDatabases.length;
-            const nextMetrics = {
-              labels,
-              loadedAt: new Date().toISOString(),
-              scopeKind: targetKind || "",
-              resourceCount: scopedResourceCount,
-              resourceCounts: {
-                webApps: activeServerKindCounts.web_app || 0,
-                apis: activeServerKindCounts.api || 0,
-                functions: activeServerKindCounts.function || 0,
-                databases: activeDatabases.length,
-                agentRuntimes: activeServerKindCounts.agent_runtime || 0,
-                secrets: activeServerKindCounts.secrets || 0,
-                auth: activeServerKindCounts.auth || 0,
-                payments: activeServerKindCounts.payments || 0,
-              },
-              series: {
-                hostingRequests: buildSeries("hostingRequests"),
-                apiRequests: buildSeries("apiRequests"),
-                functionCalls: buildSeries("functionCalls"),
-                databaseReads: buildSeries("databaseReads"),
-                databaseWrites: buildSeries("databaseWrites"),
-                agentRuntimeRuns: buildSeries("agentRuntimeRuns"),
-                secretReads: buildSeries("secretReads"),
-                authEvents: buildSeries("authEvents"),
-                paymentCheckoutSessions: buildSeries("paymentCheckoutSessions"),
-                computeTokens: buildSeries("computeTokens"),
-                resources: resourceCountSeries,
-                errors: buildSeries("errors"),
-              },
-              topResourceSeries,
-              totals: {
-                hostingRequests: buckets.reduce((sum, bucket) => sum + bucket.hostingRequests, 0),
-                apiRequests: buckets.reduce((sum, bucket) => sum + bucket.apiRequests, 0),
-                functionCalls: buckets.reduce((sum, bucket) => sum + bucket.functionCalls, 0),
-                databaseReads: buckets.reduce((sum, bucket) => sum + bucket.databaseReads, 0),
-                databaseWrites: buckets.reduce((sum, bucket) => sum + bucket.databaseWrites, 0),
-                agentRuntimeRuns: buckets.reduce((sum, bucket) => sum + bucket.agentRuntimeRuns, 0),
-                secretReads: buckets.reduce((sum, bucket) => sum + bucket.secretReads, 0),
-                authEvents: buckets.reduce((sum, bucket) => sum + bucket.authEvents, 0),
-                paymentCheckoutSessions: buckets.reduce((sum, bucket) => sum + bucket.paymentCheckoutSessions, 0),
-                computeTokens: buckets.reduce((sum, bucket) => sum + bucket.computeTokens, 0),
-                resources: scopedResourceCount,
-                errors: buckets.reduce((sum, bucket) => sum + bucket.errors, 0),
-              },
             };
-            setDevelopServerOperationalMetrics(nextMetrics);
+            if (targetKind === "database") {
+              publishOperationalMetricsSnapshot();
+              if (isCurrentLoad() && analyticsDatabases.length === 0) {
+                setDevelopServerOperationalMetricsLoading(false);
+              }
+            }
+            let nextDatabaseAnalyticsIndex = 0;
+            const databaseAnalyticsWorkerCount = Math.min(4, analyticsDatabases.length);
+            await Promise.allSettled(Array.from({ length: databaseAnalyticsWorkerCount }, async () => {
+              while (isCurrentLoad() && nextDatabaseAnalyticsIndex < analyticsDatabases.length) {
+                const database = analyticsDatabases[nextDatabaseAnalyticsIndex];
+                nextDatabaseAnalyticsIndex += 1;
+                const analytics = await readAnalyticsResponse("/databases/" + encodeURIComponent(database.id) + "/analytics");
+                if (!isCurrentLoad()) {
+                  return;
+                }
+                ingestDatabaseAnalytics(database, analytics);
+                if (targetKind === "database") {
+                  publishOperationalMetricsSnapshot();
+                  setDevelopServerOperationalMetricsLoading(false);
+                }
+              }
+            }));
+            publishOperationalMetricsSnapshot();
           } catch (error) {
-            setDevelopServerOperationalMetricsError(error instanceof Error ? error.message : "Failed to load server activity.");
-            setDevelopServerOperationalMetrics(null);
+            if (isCurrentLoad() && error?.name !== "AbortError") {
+              setDevelopServerOperationalMetricsError(error instanceof Error ? error.message : "Failed to load server activity.");
+              setDevelopServerOperationalMetrics(null);
+            }
           } finally {
-            setDevelopServerOperationalMetricsLoading(false);
+            if (isCurrentLoad()) {
+              setDevelopServerOperationalMetricsLoading(false);
+            }
+            if (developServerOperationalMetricsAbortRef.current === requestController) {
+              developServerOperationalMetricsAbortRef.current = null;
+            }
           }
-        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
+        }, [authRequestHeaders, databaseListIdentity, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
 
         useEffect(() => {
           if (activePage !== "develop" || !hasSessionAuth || developHomeSection !== "overview") {
@@ -183160,7 +184255,29 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setActivePage("resource-templates");
         }
 
+        function openDevelopApiKeysPage(options = {}) {
+          setAccountMenuOpen(false);
+          setProfileEditorOpen(false);
+          if (!options.preserveSidebarMode) {
+            setSidebarWorkspaceMode("develop");
+          }
+          setDevelopApiKeysMenuOpen(false);
+          setDevelopApiKeysToolbarPopover("");
+          setResourcesHeaderState({
+            mode: "overview",
+            title: "",
+          });
+          setActivePage("develop-api-keys");
+          if (options.openCreateDialog) {
+            setSettingsApiKeyDialogOpen(true);
+          }
+        }
+
         function openDevelopHome(options = {}) {
+          if (String(options.section || "").trim() === "api-keys") {
+            openDevelopApiKeysPage(options);
+            return;
+          }
           setAccountMenuOpen(false);
           setProfileEditorOpen(false);
           if (!options.preserveSidebarMode) {
@@ -183198,6 +184315,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               || (activePage === "tools" && (toolsView === "plugins" || toolsView === "tags" || toolsView === "skills"));
           }
           return activePage === "develop"
+            || activePage === "develop-api-keys"
             || (isResourcesPage && activeResourcesView === "servers")
             || (activePage === "tools" && toolsView === "actions");
         }
@@ -192148,7 +193266,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   renderSettingsSummaryCard("Runner Surface", [
                     { label: "Input Mode", value: "Computer Agents" },
                     { label: "Sidebar", value: sidebarOpen ? "Expanded" : "Collapsed" },
-                    { label: "Content Mode", value: contentMode === "trace" ? "Trace" : (contentMode === "changes" ? "Changes" : "Chat") },
+                    { label: "Content Mode", value: contentMode === "changes" ? "Changes" : "Thread" },
                     { label: "Welcome State", value: showInitialThreadWelcome ? "Visible" : "Hidden" },
                   ]),
                   React.createElement("div", { className: "playground-environments-summary-card" },
@@ -197718,35 +198836,50 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setRealEnvironments([]);
             return;
           }
-          void refreshEnvironments();
-        }, [hasRealAccess, refreshEnvironments]);
+          const delayMs = activePage === "resources" && resourcesView === "servers" && resourcesServerKind === "database"
+            ? 5000
+            : 0;
+          const timer = window.setTimeout(() => void refreshEnvironments(), delayMs);
+          return () => window.clearTimeout(timer);
+        }, [activePage, hasRealAccess, refreshEnvironments, resourcesServerKind, resourcesView]);
 
         useEffect(() => {
           if (!hasRealAccess) {
             setRealAgents([]);
             return;
           }
-          void refreshAgents();
-        }, [hasRealAccess, refreshAgents]);
+          const delayMs = activePage === "resources" && resourcesView === "servers" && resourcesServerKind === "database"
+            ? 5000
+            : 0;
+          const timer = window.setTimeout(() => void refreshAgents(), delayMs);
+          return () => window.clearTimeout(timer);
+        }, [activePage, hasRealAccess, refreshAgents, resourcesServerKind, resourcesView]);
 
         useEffect(() => {
           if (!hasRealAccess) {
             setRealServers([]);
             return;
           }
+          if (activePage === "resources" && resourcesView === "servers" && resourcesServerKind === "database") {
+            return;
+          }
           if (activePage !== "develop" && !(activePage === "resources" && String(resourcesServerKind || "").trim())) {
             return;
           }
           void refreshServers();
-        }, [activePage, hasRealAccess, refreshServers, resourcesServerKind]);
+        }, [activePage, hasRealAccess, refreshServers, resourcesServerKind, resourcesView]);
 
         useEffect(() => {
           if (!hasRealAccess) {
             setRealProjects([]);
             return;
           }
-          void refreshProjects();
-        }, [hasRealAccess, refreshProjects]);
+          const delayMs = activePage === "resources" && resourcesView === "servers" && resourcesServerKind === "database"
+            ? 5000
+            : 0;
+          const timer = window.setTimeout(() => void refreshProjects(), delayMs);
+          return () => window.clearTimeout(timer);
+        }, [activePage, hasRealAccess, refreshProjects, resourcesServerKind, resourcesView]);
 
         useEffect(() => {
           if (!hasRealAccess) {
@@ -199347,6 +200480,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return;
           }
 
+          if (entry.page === "develop-api-keys") {
+            openDevelopApiKeysPage();
+            return;
+          }
+
           if (entry.page === "develop") {
             openDevelopHome({
               section: entry.developSection || "overview",
@@ -199437,11 +200575,37 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (activePage !== "resources" || activeResourcesView !== "servers" || !hasSessionAuth) {
             return;
           }
+          if (activeResourcesServerKind === "database") {
+            return;
+          }
           void loadSettingsPlatformConfig();
-        }, [activePage, activeResourcesView, hasSessionAuth, loadSettingsPlatformConfig]);
+        }, [activePage, activeResourcesServerKind, activeResourcesView, hasSessionAuth, loadSettingsPlatformConfig]);
 
         useEffect(() => {
-          if (activePage !== "resources" || activeResourcesView !== "servers" || !activeResourcesServerKind || !hasSessionAuth) {
+          if (
+            activePage === "resources"
+            && activeResourcesView === "servers"
+            && activeResourcesServerKind === "database"
+            && resourcesHeaderState.mode === "detail"
+            && resourcesHeaderState.resourceType === "database"
+          ) {
+            developServerOperationalMetricsLoadSequenceRef.current += 1;
+            if (developServerOperationalMetricsAbortRef.current) {
+              developServerOperationalMetricsAbortRef.current.abort();
+              developServerOperationalMetricsAbortRef.current = null;
+            }
+            setDevelopServerOperationalMetricsLoading(false);
+          }
+        }, [activePage, activeResourcesServerKind, activeResourcesView, resourcesHeaderState.mode, resourcesHeaderState.resourceId, resourcesHeaderState.resourceType]);
+
+        useEffect(() => {
+          if (
+            activePage !== "resources"
+            || activeResourcesView !== "servers"
+            || resourcesHeaderState.mode !== "overview"
+            || !activeResourcesServerKind
+            || !hasSessionAuth
+          ) {
             return;
           }
           if (developServerOperationalMetricsLoading) {
@@ -199466,6 +200630,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           developServerOperationalMetricsLoading,
           hasSessionAuth,
           loadDevelopServerOperationalMetrics,
+          resourcesHeaderState.mode,
         ]);
 
         const selectedThreadTitle = useMemo(() => {
@@ -199492,6 +200657,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
           if (activePage === "develop") {
             return "Developers";
+          }
+          if (activePage === "develop-api-keys") {
+            return "API Keys";
           }
           if (isResourcesPage) {
             return "Resources";
@@ -201319,7 +202487,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           };
         }, [displayedSidebarThreadEntries, metronomeRunActionMenuState]);
         useEffect(() => {
-          if (!hasRealAccess) {
+          if (!hasRealAccess || activePage !== "thread") {
             return undefined;
           }
           const candidates = displayedSidebarThreadEntries
@@ -201345,13 +202513,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           let cancelled = false;
           let refreshTimer = null;
+          const requestController = new AbortController();
           const loadStatuses = async () => {
             let hasActiveRun = false;
             await Promise.all(candidates.map(async (entry) => {
               try {
                 const { response, data } = await fetchJsonWithTimeout(
                   proxyBackendBase + "/metronomes/" + encodeURIComponent(entry.metronomeId) + "/runs/" + encodeURIComponent(entry.runId),
-                  { method: "GET", headers: authRequestHeaders },
+                  { method: "GET", headers: authRequestHeaders, signal: requestController.signal },
                   10000
                 );
                 if (cancelled || !response.ok) {
@@ -201435,11 +202604,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
           void loadStatuses();
           return () => {
             cancelled = true;
+            requestController.abort();
             if (refreshTimer) {
               window.clearTimeout(refreshTimer);
             }
           };
-        }, [authRequestHeaders, displayedSidebarThreadEntries, hasRealAccess, metronomeRunStatusRefreshTick, proxyBackendBase]);
+        }, [activePage, authRequestHeaders, displayedSidebarThreadEntries, hasRealAccess, metronomeRunStatusRefreshTick, proxyBackendBase]);
         const hasMoreThreadItems =
           displayedThreadItems.length < visibleThreadItems.length || realThreadsHasMore;
         const sidebarEmptyStateCopy = isThreadsLoading
@@ -204428,14 +205598,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const options = kind === "sort" ? sortOptions : filterOptions;
           const currentValue = kind === "sort" ? notificationsPageSort : notificationsPageFilter;
           return React.createElement("div", {
-              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-notifications-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-notifications-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
               onClick: (event) => event.stopPropagation(),
             },
             options.map((option) =>
               React.createElement("button", {
                   key: option.id,
                   type: "button",
-                  className: "tb-popup-row" + (currentValue === option.id ? " is-active" : ""),
+                  className: "tb-popup-row tb-popup-row-select" + (currentValue === option.id ? " selected" : ""),
                   onClick: () => {
                     if (kind === "sort") {
                       setNotificationsPageSort(option.id);
@@ -204460,117 +205630,132 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : "No notifications match your filters.";
 
           return React.createElement("section", { className: "playground-configure-notifications-section playground-notifications-scroll" },
-              React.createElement("div", { className: "playground-files-library-header playground-notifications-library-header" },
-                React.createElement("div", { className: "playground-files-library-title-row" },
-                  React.createElement("h1", { className: "playground-files-library-title" }, "Notifications"),
-                  React.createElement("div", { className: "playground-files-library-actions" },
-                    React.createElement("div", { className: "playground-files-library-search-anchor playground-notifications-search-anchor" },
-                      React.createElement("label", { className: "playground-files-library-search playground-notifications-search" },
-                        React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
-                        React.createElement("input", {
-                          className: "playground-files-library-search-input",
-                          value: notificationsPageSearchQuery,
-                          onChange: (event) => setNotificationsPageSearchQuery(event.target.value),
-                          placeholder: "Search notifications",
-                        })
+            React.createElement("div", { className: "playground-configure-notifications-heading" },
+              React.createElement("h2", { className: "playground-develop-server-metrics-title playground-configure-notifications-title" }, "Notifications"),
+              React.createElement("div", { className: "playground-notifications-subtitle" }, "Review product updates, human tasks, team invitations, and permission requests.")
+            ),
+            React.createElement("section", {
+                className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-configure-notifications-table-section",
+              },
+              React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-notifications-sticky-table-header" },
+                React.createElement("div", { className: "playground-plugins-search-row playground-agents-overview-search-row playground-develop-server-kind-table-toolbar playground-notifications-overview-toolbar" },
+                  React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
+                    React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
+                      React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("input", {
+                        type: "search",
+                        className: "playground-plugins-search",
+                        value: notificationsPageSearchQuery,
+                        onChange: (event) => setNotificationsPageSearchQuery(event.target.value),
+                        placeholder: "Search notifications",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                      React.createElement("div", { className: "playground-files-toolbar-anchor playground-notifications-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-control-button is-bare is-backlog-sort" + (notificationsPageToolbarPopover === "sort" || notificationsPageSort !== "newest" ? " is-active" : ""),
+                          onClick: () => setNotificationsPageToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                          "aria-expanded": notificationsPageToolbarPopover === "sort" ? "true" : "false",
+                        },
+                          React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", null, "Sort")
+                        ),
+                        renderNotificationsPageToolbarMenu("sort")
+                      ),
+                      React.createElement("div", { className: "playground-files-toolbar-anchor playground-notifications-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-control-button is-bare is-backlog-filter" + (notificationsPageToolbarPopover === "filter" || notificationsPageFilter !== "all" ? " is-active" : ""),
+                          onClick: () => setNotificationsPageToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                          "aria-expanded": notificationsPageToolbarPopover === "filter" ? "true" : "false",
+                        },
+                          React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", null, "Filter")
+                        ),
+                        renderNotificationsPageToolbarMenu("filter")
                       )
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-library-new-button playground-notifications-mark-read-button",
-                      onClick: handleMarkAllNotificationsRead,
-                      disabled: notificationItems.length === 0,
-                    },
-                      React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Mark all read")
                     )
-                  )
-                ),
-                React.createElement("div", { className: "playground-files-library-nav-row playground-notifications-nav-row" },
-                  React.createElement("div", { className: "playground-files-library-path-row playground-notifications-context-row" },
-                    React.createElement("div", { className: "playground-notifications-subtitle" }, "Review product updates, human tasks, team invitations, and permission requests.")
                   ),
-                  React.createElement("div", { className: "playground-files-library-controls playground-notifications-toolbar" },
-                    React.createElement("div", { className: "playground-files-library-control-anchor playground-notifications-toolbar-anchor playground-tasks-toolbar-popup-shell" + (notificationsPageToolbarPopover === "sort" ? " is-open" : "") },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-library-icon-button" + (notificationsPageToolbarPopover === "sort" || notificationsPageSort !== "newest" ? " is-active" : ""),
-                        onClick: () => setNotificationsPageToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                        title: "Sort notifications",
-                        "aria-label": "Sort notifications",
-                        "aria-expanded": notificationsPageToolbarPopover === "sort" ? "true" : "false",
-                      }, React.createElement(ArrowUpDown, { width: 19, height: 19, strokeWidth: 1.8 })),
-                      renderNotificationsPageToolbarMenu("sort")
-                    ),
-                    React.createElement("div", { className: "playground-files-library-control-anchor playground-notifications-toolbar-anchor playground-tasks-toolbar-popup-shell" + (notificationsPageToolbarPopover === "filter" ? " is-open" : "") },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-library-icon-button" + (notificationsPageToolbarPopover === "filter" || notificationsPageFilter !== "all" ? " is-active" : ""),
-                        onClick: () => setNotificationsPageToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                        title: "Filter notifications",
-                        "aria-label": "Filter notifications",
-                        "aria-expanded": notificationsPageToolbarPopover === "filter" ? "true" : "false",
-                      }, React.createElement(SlidersHorizontal, { width: 19, height: 19, strokeWidth: 1.8 })),
-                      renderNotificationsPageToolbarMenu("filter")
-                    )
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button playground-notifications-mark-read-button",
+                    onClick: handleMarkAllNotificationsRead,
+                    disabled: notificationItems.length === 0,
+                  },
+                    React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Mark all read")
                   )
                 )
               ),
               visibleNotificationPageItems.length === 0
-                ? React.createElement("div", { className: "playground-team-empty playground-notifications-empty" }, emptyCopy)
-                : React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell playground-notifications-table-shell" },
-                    React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table playground-notifications-table" },
-                      React.createElement("colgroup", null,
-                        React.createElement("col", { className: "playground-notifications-table-col-notification" }),
-                        React.createElement("col", { className: "playground-notifications-table-col-type" }),
-                        React.createElement("col", { className: "playground-notifications-table-col-status" }),
-                        React.createElement("col", { className: "playground-notifications-table-col-time" }),
-                        React.createElement("col", { className: "playground-notifications-table-col-actions" })
+                ? React.createElement("div", { className: "playground-plugins-empty playground-notifications-empty" }, emptyCopy)
+                : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-notifications-overview-list-table" },
+                    React.createElement("div", { className: "playground-project-overview-thread-list" },
+                      React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-notifications-overview-column-header" },
+                        React.createElement("div", null, "Notification"),
+                        React.createElement("div", null, "Type"),
+                        React.createElement("div", null, "Status"),
+                        React.createElement("div", null, "Time"),
+                        React.createElement("div", null)
                       ),
-                      React.createElement("thead", null,
-                        React.createElement("tr", null,
-                          React.createElement("th", null, "Notification"),
-                          React.createElement("th", null, "Type"),
-                          React.createElement("th", null, "Status"),
-                          React.createElement("th", null, "Time"),
-                          React.createElement("th", { className: "is-actions" }, "")
-                        )
-                      ),
-                      React.createElement("tbody", null,
-                        visibleNotificationPageItems.map((item) => {
-                          const Icon = getNotificationPageIcon(item);
-                          const canOpen = item.kind === "permission" || item.kind === "human_task" || item.kind === "team_invitation" || item.kind === "organization_invitation" || item.kind === "email_verification";
-                          const timeLabel = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "—";
-                          return React.createElement("tr", {
-                              key: item.kind + ":" + item.id,
-                              className: canOpen ? "is-clickable" : "",
-                              tabIndex: canOpen ? 0 : undefined,
-                              onClick: canOpen ? () => handleOpenNotificationPageItem(item) : undefined,
-                              onKeyDown: canOpen ? (event) => {
-                                if (event.key === "Enter" || event.key === " ") {
-                                  event.preventDefault();
-                                  handleOpenNotificationPageItem(item);
-                                }
-                              } : undefined,
-                            },
-                            React.createElement("td", null,
-                              React.createElement("div", { className: "playground-notifications-table-main" },
-                                React.createElement("span", { className: "playground-notifications-table-icon-shell" },
-                                  React.createElement(Icon, { className: "playground-notifications-table-icon", strokeWidth: 1.8 })
-                                ),
-                                React.createElement("span", { className: "playground-notifications-table-copy" },
-                                  React.createElement("span", { className: "playground-team-table-title playground-notifications-table-title" }, item.label || item.kindLabel || "Notification"),
-                                  React.createElement("span", { className: "playground-team-table-meta playground-notifications-table-meta" }, item.text || item.meta || "Open notification")
-                                )
+                      visibleNotificationPageItems.map((item) => {
+                        const Icon = getNotificationPageIcon(item);
+                        const canOpen = item.kind === "permission" || item.kind === "human_task" || item.kind === "team_invitation" || item.kind === "organization_invitation" || item.kind === "email_verification";
+                        const timeLabel = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "—";
+                        return React.createElement("div", {
+                            key: item.kind + ":" + item.id,
+                            className: "playground-project-overview-threads-table-row playground-notifications-overview-row" + (canOpen ? " is-clickable" : ""),
+                            role: canOpen ? "button" : undefined,
+                            tabIndex: canOpen ? 0 : undefined,
+                            onClick: canOpen ? () => handleOpenNotificationPageItem(item) : undefined,
+                            onKeyDown: canOpen ? (event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                handleOpenNotificationPageItem(item);
+                              }
+                            } : undefined,
+                          },
+                          React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
+                            React.createElement("div", { className: "playground-notifications-table-main" },
+                              React.createElement("span", { className: "playground-notifications-table-icon-shell", "aria-hidden": "true" },
+                                React.createElement(Icon, { className: "playground-notifications-table-icon", strokeWidth: 1.8 })
+                              ),
+                              React.createElement("span", { className: "playground-notifications-table-copy" },
+                                React.createElement("span", { className: "playground-agents-overview-name-title playground-notifications-table-title" }, item.label || item.kindLabel || "Notification"),
+                                React.createElement("span", { className: "playground-agents-overview-name-description playground-notifications-table-meta" }, item.text || item.meta || "Open notification")
                               )
-                            ),
-                            React.createElement("td", { className: "playground-auth-users-cell" }, item.kindLabel || "Notification"),
-                            React.createElement("td", { className: "playground-auth-users-cell" },
-                              React.createElement("span", { className: "playground-notifications-status-pill" + (item.unread ? " is-unread" : "") }, item.statusLabel || (item.unread ? "Unread" : "Read"))
-                            ),
-                            React.createElement("td", { className: "playground-auth-users-cell" }, timeLabel),
-                            React.createElement("td", { className: "is-actions" },
-                              item.kind === "team_invitation"
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-thread-cell is-type" },
+                            React.createElement("div", { className: "playground-agents-overview-table-value" }, item.kindLabel || "Notification")
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-thread-cell is-status" },
+                            React.createElement("span", { className: "playground-notifications-status-pill" + (item.unread ? " is-unread" : "") }, item.statusLabel || (item.unread ? "Unread" : "Read"))
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
+                            React.createElement("div", { className: "playground-agents-overview-table-value" }, timeLabel)
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
+                            item.kind === "team_invitation"
+                              ? React.createElement("div", {
+                                  className: "playground-notifications-row-actions",
+                                  onClick: (event) => event.stopPropagation(),
+                                },
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "notification-menu-action-button is-primary",
+                                    onClick: () => handleTeamInvitationDecision(item, "accept"),
+                                    disabled: Boolean(teamPageActionId),
+                                  }, "Accept"),
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "notification-menu-action-button",
+                                    onClick: () => handleTeamInvitationDecision(item, "decline"),
+                                    disabled: Boolean(teamPageActionId),
+                                  }, "Decline")
+                                )
+                              : item.kind === "organization_invitation"
                                 ? React.createElement("div", {
                                     className: "playground-notifications-row-actions",
                                     onClick: (event) => event.stopPropagation(),
@@ -204578,43 +205763,34 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     React.createElement("button", {
                                       type: "button",
                                       className: "notification-menu-action-button is-primary",
-                                      onClick: () => handleTeamInvitationDecision(item, "accept"),
-                                      disabled: Boolean(teamPageActionId),
+                                      onClick: () => handleOrganizationInvitationDecision(item, "accept"),
+                                      disabled: Boolean(organizationPageActionId),
                                     }, "Accept"),
                                     React.createElement("button", {
                                       type: "button",
                                       className: "notification-menu-action-button",
-                                      onClick: () => handleTeamInvitationDecision(item, "decline"),
-                                      disabled: Boolean(teamPageActionId),
+                                      onClick: () => handleOrganizationInvitationDecision(item, "decline"),
+                                      disabled: Boolean(organizationPageActionId),
                                     }, "Decline")
                                   )
-                                : item.kind === "organization_invitation"
-                                  ? React.createElement("div", {
-                                      className: "playground-notifications-row-actions",
-                                      onClick: (event) => event.stopPropagation(),
+                              : canOpen
+                                ? React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-overview-table-action-button",
+                                    title: "Open notification",
+                                    "aria-label": "Open notification",
+                                    onClick: (event) => {
+                                      event.stopPropagation();
+                                      handleOpenNotificationPageItem(item);
                                     },
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "notification-menu-action-button is-primary",
-                                        onClick: () => handleOrganizationInvitationDecision(item, "accept"),
-                                        disabled: Boolean(organizationPageActionId),
-                                      }, "Accept"),
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "notification-menu-action-button",
-                                        onClick: () => handleOrganizationInvitationDecision(item, "decline"),
-                                        disabled: Boolean(organizationPageActionId),
-                                      }, "Decline")
-                                    )
-                                : canOpen
-                                  ? React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 })
-                                  : null
-                            )
-                          );
-                        })
-                      )
+                                  }, React.createElement(ChevronRight, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 }))
+                                : null
+                          )
+                        );
+                      })
                     )
                   )
+            )
           );
         }
 
@@ -204826,6 +206002,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
           });
         }
 
+        function renderDevelopApiKeysNav() {
+          return renderUnifiedTopNav({
+            className: "playground-develop-navbar playground-develop-api-keys-navbar",
+            pathItems: [{ label: "Develop", onClick: () => openDevelopHome() }, { label: "API Keys" }],
+          });
+        }
+
         function renderResourcesPageNav() {
           const isResourcesDetailView = resourcesHeaderState.mode === "detail";
           const activeDevelopServerPageItem = activeResourcesView === "servers"
@@ -204869,7 +206052,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return renderUnifiedTopNav({
             className: "playground-resources-page",
             pathItems: resourcesPathItems,
-            includeSearchDivider: activeResourcesView === "agents" || activeResourcesView === "computers",
+            includeSearchDivider: activeResourcesView === "agents"
+              || activeResourcesView === "computers"
+              || (activeResourcesView === "servers" && activeResourcesServerKind === "database"),
             hideCommonActions: isResourcesVersionsDrawerOpen,
             extraActions: React.createElement("div", {
               id: "playground-resources-nav-actions",
@@ -206230,11 +207415,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     if (options?.threadRecord?.id) {
                       upsertRealThreadRecord(options.threadRecord);
                     }
-                    const requestedContentMode = options?.contentMode === "trace"
-                      ? "trace"
-                      : options?.contentMode === "changes"
-                        ? "changes"
-                        : "chat";
+                    const requestedContentMode = options?.contentMode === "changes" ? "changes" : "chat";
                     setThreadAgentSelectionOverride(null);
                     setPendingThreadRunRequest(null);
                     setActivePage("thread");
@@ -206324,6 +207505,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 currentUserName: hasSessionAuth ? accountName : "Me",
                 currentUserEmail: hasSessionAuth ? accountEmail : "",
                 currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+                databaseListIdentity,
                 preferredEnvironmentId: resolvedEnvironmentId || "",
                 preferredAgentId: resolvedPreferredAgentId || "",
                 navigationToken: environmentsOpenToken,
@@ -209141,69 +210323,120 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         function renderApiKeysManagementPanel() {
-          const visibleApiKeys = settingsApiKeys.filter((apiKeyRecord) => apiKeyRecord?.isActive !== false);
-          const apiKeysListContent = settingsApiKeysLoading
-            ? React.createElement("div", { className: "playground-settings-loading-state" },
-                React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-              )
-            : visibleApiKeys.length === 0
-              ? renderSettingsEmptyState(Code, "No API keys yet", "Create an API key to start using the computer-agents API")
-              : React.createElement("div", { className: "playground-settings-api-keys-table" },
-                  React.createElement("div", { className: "playground-settings-api-keys-table-header" },
-                    React.createElement("div", null, "Name"),
-                    React.createElement("div", null, "Secret key"),
-                    React.createElement("div", null, "Created"),
-                    React.createElement("div", null, "Last used"),
-                    React.createElement("div", null, "Created by"),
-                    React.createElement("div", null, "Permissions"),
-                    React.createElement("div", null)
+          const normalizedApiKeySearchQuery = String(developApiKeysSearchQuery || "").trim().toLowerCase();
+          const activeApiKeys = settingsApiKeys.filter((apiKeyRecord) => apiKeyRecord?.isActive !== false);
+          const getApiKeyCreatedByLabel = (apiKeyRecord) => (
+            typeof apiKeyRecord?.createdByLabel === "string" && apiKeyRecord.createdByLabel
+              ? apiKeyRecord.createdByLabel
+              : typeof apiKeyRecord?.metadata?.userEmail === "string" && apiKeyRecord.metadata.userEmail
+                ? apiKeyRecord.metadata.userEmail
+                : typeof apiKeyRecord?.metadata?.createdBy === "string" && apiKeyRecord.metadata.createdBy
+                  ? apiKeyRecord.metadata.createdBy
+                  : "—"
+          );
+          const isStandardApiKey = (apiKeyRecord) => Boolean(
+            apiKeyRecord?.isCurrentDefault || isSettingsSystemManagedKey(apiKeyRecord)
+          );
+          const visibleApiKeys = activeApiKeys
+            .filter((apiKeyRecord) => {
+              if (developApiKeysFilter === "standard" && !isStandardApiKey(apiKeyRecord)) {
+                return false;
+              }
+              if (developApiKeysFilter === "scoped" && isStandardApiKey(apiKeyRecord)) {
+                return false;
+              }
+              if (!normalizedApiKeySearchQuery) {
+                return true;
+              }
+              return [
+                apiKeyRecord?.name,
+                apiKeyRecord?.keyPrefix,
+                getApiKeyCreatedByLabel(apiKeyRecord),
+                getSettingsApiKeyScopeLabel(apiKeyRecord?.permissions),
+              ].some((value) => String(value || "").toLowerCase().includes(normalizedApiKeySearchQuery));
+            })
+            .sort((left, right) => {
+              let comparison = 0;
+              if (developApiKeysSort === "created") {
+                comparison = Date.parse(String(left?.createdAt || "")) - Date.parse(String(right?.createdAt || ""));
+              } else if (developApiKeysSort === "last-used") {
+                comparison = Date.parse(String(left?.lastUsedAt || "")) - Date.parse(String(right?.lastUsedAt || ""));
+              } else {
+                comparison = String(left?.name || "API Key").localeCompare(String(right?.name || "API Key"), undefined, {
+                  numeric: true,
+                  sensitivity: "base",
+                });
+              }
+              const normalizedComparison = Number.isFinite(comparison) ? comparison : 0;
+              return developApiKeysSortDirection === "desc" ? -normalizedComparison : normalizedComparison;
+            });
+          const apiKeySortOptions = [
+            { id: "name-asc", label: "Name (A-Z)", sort: "name", direction: "asc" },
+            { id: "created-desc", label: "Newest First", sort: "created", direction: "desc" },
+            { id: "created-asc", label: "Oldest First", sort: "created", direction: "asc" },
+            { id: "last-used-desc", label: "Recently Used", sort: "last-used", direction: "desc" },
+          ];
+          const apiKeyFilterOptions = [
+            { id: "all", label: "All API Keys", description: "Show every active API key" },
+            { id: "standard", label: "Standard", description: "Show system-managed and default keys" },
+            { id: "scoped", label: "Scoped", description: "Show keys created with custom access" },
+          ];
+          const renderApiKeyRow = (apiKeyRecord) => {
+            const canRevoke = apiKeyRecord?.canRevoke !== false && apiKeyRecord?.isActive;
+            const keyPreview = String(apiKeyRecord?.keyPrefix || "key") + "••••";
+            const createdByLabel = getApiKeyCreatedByLabel(apiKeyRecord);
+            return React.createElement("div", {
+                key: apiKeyRecord.id,
+                className: "playground-project-overview-threads-table-row playground-develop-api-keys-table-row",
+              },
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
+                React.createElement("div", { className: "playground-resources-overview-name-cell" },
+                  React.createElement("span", { className: "playground-resources-overview-table-icon", "aria-hidden": "true" },
+                    React.createElement(Key, { width: 16, height: 16, strokeWidth: 1.8 })
                   ),
-                  visibleApiKeys.map((apiKeyRecord) => {
-                    const canRevoke = apiKeyRecord?.canRevoke !== false && apiKeyRecord?.isActive;
-                    const keyPreview = String(apiKeyRecord?.keyPrefix || "key") + "••••";
-                    const createdByLabel = typeof apiKeyRecord?.createdByLabel === "string" && apiKeyRecord.createdByLabel
-                      ? apiKeyRecord.createdByLabel
-                      : typeof apiKeyRecord?.metadata?.userEmail === "string" && apiKeyRecord.metadata.userEmail
-                        ? apiKeyRecord.metadata.userEmail
-                        : typeof apiKeyRecord?.metadata?.createdBy === "string" && apiKeyRecord.metadata.createdBy
-                          ? apiKeyRecord.metadata.createdBy
-                          : "—";
-
-                    return React.createElement("div", {
-                        key: apiKeyRecord.id,
-                        className: "playground-settings-api-keys-table-row",
+                  React.createElement("div", { className: "playground-resources-overview-name-copy" },
+                    React.createElement("div", { className: "playground-settings-api-keys-name-row" },
+                      React.createElement("span", { className: "playground-resources-overview-name-title" }, apiKeyRecord.name || "API Key"),
+                      isStandardApiKey(apiKeyRecord)
+                        ? React.createElement("span", { className: "playground-settings-api-keys-pill" }, "standard")
+                        : null
+                    )
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-secret" },
+                React.createElement("div", { className: "playground-agents-overview-table-value playground-develop-api-keys-secret" }, keyPreview)
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
+                React.createElement("div", { className: "playground-agents-overview-table-value" }, formatSettingsDate(apiKeyRecord.createdAt))
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
+                React.createElement("div", { className: "playground-agents-overview-table-value" }, apiKeyRecord?.lastUsedAt ? formatSettingsDate(apiKeyRecord.lastUsedAt) : "Never")
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-created-by" },
+                React.createElement("div", { className: "playground-agents-overview-table-value", title: createdByLabel }, createdByLabel)
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-permissions" },
+                React.createElement("div", { className: "playground-agents-overview-table-value" }, getSettingsApiKeyScopeLabel(apiKeyRecord.permissions))
+              ),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
+                canRevoke
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-api-keys-action-button",
+                      disabled: settingsRevokingKeyId === apiKeyRecord.id,
+                      title: "Revoke key",
+                      "aria-label": "Revoke " + (apiKeyRecord.name || "API key"),
+                      onClick: () => {
+                        void handleSettingsRevokeApiKey(apiKeyRecord.id);
                       },
-                      React.createElement("div", { className: "playground-settings-api-keys-cell is-name" },
-                        React.createElement("div", { className: "playground-settings-api-keys-name-row" },
-                          React.createElement("span", { className: "playground-settings-api-keys-name" }, apiKeyRecord.name || "API Key"),
-                          apiKeyRecord?.isCurrentDefault
-                            ? React.createElement("span", { className: "playground-settings-api-keys-pill" }, "standard")
-                            : null
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-settings-api-keys-cell is-secret" }, keyPreview),
-                      React.createElement("div", { className: "playground-settings-api-keys-cell is-date" }, formatSettingsDate(apiKeyRecord.createdAt)),
-                      React.createElement("div", { className: "playground-settings-api-keys-cell is-date" }, apiKeyRecord?.lastUsedAt ? formatSettingsDate(apiKeyRecord.lastUsedAt) : "Never"),
-                      React.createElement("div", { className: "playground-settings-api-keys-cell is-created-by" }, createdByLabel),
-                      React.createElement("div", { className: "playground-settings-api-keys-cell is-permissions" }, getSettingsApiKeyScopeLabel(apiKeyRecord.permissions)),
-                      React.createElement("div", { className: "playground-settings-api-keys-actions" },
-                        canRevoke
-                          ? React.createElement("button", {
-                              type: "button",
-                              className: "playground-settings-api-keys-action-button",
-                              disabled: settingsRevokingKeyId === apiKeyRecord.id,
-                              title: "Revoke key",
-                              onClick: () => {
-                                void handleSettingsRevokeApiKey(apiKeyRecord.id);
-                              },
-                            }, settingsRevokingKeyId === apiKeyRecord.id
-                              ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
-                              : React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
-                          : React.createElement("span", { className: "playground-settings-api-keys-cell", style: { color: "rgba(255,255,255,0.35)" } }, "—")
-                      )
-                    );
-                  })
-                );
+                    }, settingsRevokingKeyId === apiKeyRecord.id
+                      ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
+                      : React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  : React.createElement("span", { className: "playground-agents-overview-table-value" }, "—")
+              )
+            );
+          };
 
           const apiKeyDialogContent = settingsApiKeyDialogOpen
             ? React.createElement("div", {
@@ -209303,86 +210536,215 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 : apiKeyDialogContent)
             : null;
 
-          const apiKeyCountLabel = visibleApiKeys.length === 1 ? "API Key" : "API Keys";
-
-          return React.createElement("div", { className: "playground-develop-api-keys-panel" },
-            React.createElement("div", { className: "playground-develop-server-metrics-toolbar playground-develop-api-keys-toolbar" },
-              React.createElement("div", { className: "playground-develop-server-metrics-resource-pill" },
-                React.createElement("span", { className: "playground-develop-server-metrics-resource-count" }, String(visibleApiKeys.length)),
-                React.createElement("span", { className: "playground-develop-server-metrics-resource-label" }, apiKeyCountLabel)
+          const apiKeysToolbar = React.createElement("div", {
+              className: "playground-agents-overview-sticky-table-header playground-develop-resource-overview-sticky-table-header playground-develop-api-keys-sticky-table-header",
+            },
+            React.createElement("div", {
+                className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar playground-develop-resource-overview-toolbar-row playground-develop-api-keys-table-toolbar",
+              },
+              React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
+                React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
+                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("input", {
+                    type: "search",
+                    value: developApiKeysSearchQuery,
+                    onChange: (event) => setDevelopApiKeysSearchQuery(event.target.value),
+                    className: "playground-plugins-search",
+                    placeholder: "Search API keys",
+                  })
+                ),
+                React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button is-bare is-backlog-sort" + (developApiKeysToolbarPopover === "sort" || developApiKeysSort !== "name" || developApiKeysSortDirection !== "asc" ? " is-active" : ""),
+                      onClick: () => setDevelopApiKeysToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                    },
+                      React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Sort")
+                    ),
+                    developApiKeysToolbarPopover === "sort"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                          apiKeySortOptions.map((option) => {
+                            const isSelected = developApiKeysSort === option.sort && developApiKeysSortDirection === option.direction;
+                            return React.createElement("button", {
+                                key: option.id,
+                                type: "button",
+                                className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
+                                onClick: () => {
+                                  setDevelopApiKeysSort(option.sort);
+                                  setDevelopApiKeysSortDirection(option.direction);
+                                  setDevelopApiKeysToolbarPopover("");
+                                },
+                              },
+                              React.createElement("span", { className: "tb-popup-check-slot" },
+                                isSelected ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
+                              ),
+                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                React.createElement("span", null, option.label)
+                              )
+                            );
+                          })
+                        )
+                      : null
+                  ),
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button is-bare is-backlog-filter" + (developApiKeysToolbarPopover === "filter" || developApiKeysFilter !== "all" ? " is-active" : ""),
+                      onClick: () => setDevelopApiKeysToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                    },
+                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Filter")
+                    ),
+                    developApiKeysToolbarPopover === "filter"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                          apiKeyFilterOptions.map((option) =>
+                            React.createElement("button", {
+                                key: option.id,
+                                type: "button",
+                                className: "tb-popup-row tb-popup-row-select" + (developApiKeysFilter === option.id ? " selected" : ""),
+                                onClick: () => {
+                                  setDevelopApiKeysFilter(option.id);
+                                  setDevelopApiKeysToolbarPopover("");
+                                },
+                              },
+                              React.createElement("span", { className: "tb-popup-check-slot" },
+                                developApiKeysFilter === option.id
+                                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                  : null
+                              ),
+                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                React.createElement("span", null, option.label),
+                                React.createElement("span", null, option.description)
+                              )
+                            )
+                          )
+                        )
+                      : null
+                  )
+                )
               ),
               React.createElement("button", {
                 type: "button",
-                className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button",
+                className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button playground-resources-overview-create-button",
                 onClick: () => setSettingsApiKeyDialogOpen(true),
-              }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), "Add API Key")
-            ),
-            React.createElement("div", { className: "playground-develop-server-metrics-title-row playground-develop-api-keys-title-row" },
-              React.createElement("h2", { className: "playground-develop-server-metrics-title" }, "API Keys"),
-              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-content-menu-button",
-                  "aria-label": "API key options",
-                  "aria-expanded": developApiKeysMenuOpen ? "true" : "false",
-                  onClick: () => setDevelopApiKeysMenuOpen((current) => !current),
-                }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-                developApiKeysMenuOpen
-                  ? React.createElement("div", {
-                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                    },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "tb-popup-row",
-                        onClick: () => {
-                          setDevelopApiKeysMenuOpen(false);
-                          openSettingsPage("costs-overview");
-                        },
-                      },
-                        React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "View Usage")
-                        )
-                      )
-                    )
-                  : null
-              )
-            ),
-            React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll playground-develop-api-keys-scroll" },
-              React.createElement("div", { className: "playground-settings-account-shell is-wide" },
-                settingsNewlyCreatedKey
-                  ? React.createElement("div", { className: "playground-settings-created-key-notice" },
-                      React.createElement("div", { className: "playground-settings-created-key-row" },
-                        React.createElement("div", { style: { minWidth: 0, flex: "1 1 auto" } },
-                          React.createElement("p", { className: "playground-settings-created-key-title" }, "API Key Created Successfully"),
-                          React.createElement("p", { className: "playground-settings-created-key-copy" }, "Copy this key now. You won't be able to see it again!"),
-                          React.createElement("div", { className: "playground-settings-code-row" },
-                            React.createElement("code", { className: "playground-settings-code" }, settingsNewlyCreatedKey),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-settings-icon-button",
-                              onClick: () => {
-                                void handleSettingsCopyField(settingsNewlyCreatedKey, "new-key");
-                              },
-                              title: "Copy to clipboard",
-                            }, settingsCopiedField === "new-key"
-                              ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
-                              : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }))
-                          )
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-icon-button",
-                          onClick: () => setSettingsNewlyCreatedKey(""),
-                        }, React.createElement(X, { width: 14, height: 14, strokeWidth: 1.8 }))
-                      )
-                    )
-                  : null,
-                renderSettingsInlineStatus("error", settingsApiKeysError),
-                apiKeysListContent,
-                apiKeyDialog
+              },
+                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "New API Key")
               )
             )
+          );
+
+          const apiKeysTable = React.createElement("div", {
+              className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-develop-resource-overview-list-table playground-develop-api-keys-list-table",
+            },
+            React.createElement("div", { className: "playground-project-overview-thread-list" },
+              React.createElement("div", { className: "playground-project-overview-threads-table-header playground-develop-resource-overview-column-header playground-develop-api-keys-column-header" },
+                React.createElement("div", null, "Name"),
+                React.createElement("div", null, "Secret key"),
+                React.createElement("div", null, "Created"),
+                React.createElement("div", null, "Last used"),
+                React.createElement("div", null, "Created by"),
+                React.createElement("div", null, "Permissions"),
+                React.createElement("div", null)
+              ),
+              settingsApiKeysLoading
+                ? React.createElement("div", { className: "playground-plugins-empty playground-develop-api-keys-empty" },
+                    React.createElement(Loader2, { className: "playground-files-state-loader", width: 16, height: 16, strokeWidth: 1.75 }),
+                    React.createElement("span", null, "Loading API keys")
+                  )
+                : visibleApiKeys.length > 0
+                  ? visibleApiKeys.map(renderApiKeyRow)
+                  : React.createElement("div", { className: "playground-plugins-empty playground-develop-api-keys-empty" },
+                      normalizedApiKeySearchQuery || developApiKeysFilter !== "all"
+                        ? "No matching API keys found."
+                        : "No API keys available."
+                    )
+            )
+          );
+
+          const newlyCreatedKeyNotice = settingsNewlyCreatedKey
+            ? React.createElement("div", { className: "playground-settings-created-key-notice playground-develop-api-keys-created-notice" },
+                React.createElement("div", { className: "playground-settings-created-key-row" },
+                  React.createElement("div", { style: { minWidth: 0, flex: "1 1 auto" } },
+                    React.createElement("p", { className: "playground-settings-created-key-title" }, "API Key Created Successfully"),
+                    React.createElement("p", { className: "playground-settings-created-key-copy" }, "Copy this key now. You won't be able to see it again!"),
+                    React.createElement("div", { className: "playground-settings-code-row" },
+                      React.createElement("code", { className: "playground-settings-code" }, settingsNewlyCreatedKey),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-settings-icon-button",
+                        onClick: () => {
+                          void handleSettingsCopyField(settingsNewlyCreatedKey, "new-key");
+                        },
+                        title: "Copy to clipboard",
+                      }, settingsCopiedField === "new-key"
+                        ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
+                        : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }))
+                    )
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button",
+                    onClick: () => setSettingsNewlyCreatedKey(""),
+                    "aria-label": "Dismiss created API key",
+                  }, React.createElement(X, { width: 14, height: 14, strokeWidth: 1.8 }))
+                )
+              )
+            : null;
+
+          return React.createElement(React.Fragment, null,
+            React.createElement("section", {
+                className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page is-develop-server-kind-page playground-agents-overview-page playground-resource-type-overview-page playground-develop-api-keys-page",
+              },
+              React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-home-scroll" },
+                React.createElement("div", { className: "playground-environments-home-content" },
+                  React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero playground-develop-api-keys-hero" },
+                    React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-develop-api-keys-page-header" },
+                      React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, "Configure your API Keys"),
+                      React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
+                        React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-content-menu-button",
+                            "aria-label": "API key options",
+                            "aria-expanded": developApiKeysMenuOpen ? "true" : "false",
+                            onClick: () => setDevelopApiKeysMenuOpen((current) => !current),
+                          }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                          developApiKeysMenuOpen
+                            ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "tb-popup-row",
+                                  onClick: () => {
+                                    setDevelopApiKeysMenuOpen(false);
+                                    openSettingsPage("costs-overview");
+                                  },
+                                },
+                                  React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                    React.createElement("span", null, "View Usage")
+                                  )
+                                )
+                              )
+                            : null
+                        )
+                      )
+                    ),
+                    newlyCreatedKeyNotice,
+                    renderSettingsInlineStatus("error", settingsApiKeysError),
+                    React.createElement("section", {
+                        className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-resources-overview-section playground-develop-resource-overview-table-section playground-develop-api-keys-table-section is-servers-overview is-develop-server-kind-list",
+                      },
+                      apiKeysToolbar,
+                      apiKeysTable
+                    )
+                  )
+                )
+              )
+            ),
+            apiKeyDialog
           );
         }
 
@@ -209485,17 +210847,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
             },
           ];
           const openDevelopApiKeysSection = (options = {}) => {
-            setDevelopHomeSection("api-keys");
-            if (options.openCreateDialog) {
-              setSettingsApiKeyDialogOpen(true);
-            }
+            openDevelopApiKeysPage(options);
           };
           const openDevelopWebhooksSection = () => {
             setDevelopHomeSection("webhooks");
           };
           const tabs = [
             { id: "overview", label: "Overview", onClick: () => setDevelopHomeSection("overview") },
-            { id: "api-keys", label: "API Keys", onClick: () => openDevelopApiKeysSection() },
             { id: "webhooks", label: "Webhooks", onClick: openDevelopWebhooksSection },
           ];
           const quickLinks = [
@@ -209753,43 +211111,230 @@ ${PROJECT_OVERVIEW_SCRIPT}
             );
           };
 
-          return React.createElement("div", { className: "playground-develop-home" },
-            React.createElement("div", { className: "playground-develop-home-inner" },
-              React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header" },
-                React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, "Developers"),
-                React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
+          const developHomeTimescaleOptions = [
+            { id: "day", label: "1D" },
+            { id: "week", label: "1W" },
+            { id: "month", label: "1M" },
+          ];
+          const activeDevelopHomeTimescaleId = developHomeTimescaleOptions.some((option) => option.id === developHomeChartTimescale)
+            ? developHomeChartTimescale
+            : "day";
+          const developHomeTimescaleControl = React.createElement("div", {
+              className: "playground-project-overview-progress-combo-ranges",
+              role: "group",
+              "aria-label": "Develop analytics time frame",
+            },
+            developHomeTimescaleOptions.map((option) =>
+              React.createElement("button", {
+                key: option.id,
+                type: "button",
+                className: "playground-project-overview-progress-combo-range" + (activeDevelopHomeTimescaleId === option.id ? " is-active" : ""),
+                onClick: () => setDevelopHomeChartTimescale(option.id),
+                "aria-pressed": activeDevelopHomeTimescaleId === option.id ? "true" : "false",
+              }, option.label)
+            )
+          );
+          const developHomeAnalyticsOptions = React.createElement("div", {
+              className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell",
+            },
+            React.createElement("button", {
+              type: "button",
+              className: "playground-content-menu-button",
+              "aria-label": "Develop options",
+              "aria-expanded": developAnalyticsMenuOpen ? "true" : "false",
+              onClick: () => setDevelopAnalyticsMenuOpen((current) => !current),
+            }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+            developAnalyticsMenuOpen
+              ? React.createElement("div", {
+                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                },
+                  developHomeSection === "overview"
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row",
+                        onClick: () => {
+                          setDevelopAnalyticsMenuOpen(false);
+                          openSettingsPage("costs-overview");
+                        },
+                      },
+                        React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, "Show Usage")
+                        )
+                      )
+                    : null,
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
-                    onClick: () => window.open(${JSON.stringify(aiosOrigin + "/pricing")}, "_blank", "noopener,noreferrer"),
-                  }, "API Pricing", React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 })),
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      setDevelopAnalyticsMenuOpen(false);
+                      window.open(${JSON.stringify(aiosOrigin + "/pricing")}, "_blank", "noopener,noreferrer");
+                    },
+                  },
+                    React.createElement(Coins, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                      React.createElement("span", null, "API Pricing")
+                    )
+                  ),
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
-                    onClick: openDocsPage,
-                  }, "Documentation", React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 }))
-                )
-              ),
-              React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs playground-develop-tabs" },
-                React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-                  tabs.map((tab) =>
-                    React.createElement("button", {
-                      key: tab.id,
-                      type: "button",
-                      className: "playground-project-overview-chart-tab playground-develop-tab" + (tab.id === developHomeSection ? " is-active" : ""),
-                      onClick: tab.onClick || undefined,
-                    }, tab.label)
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      setDevelopAnalyticsMenuOpen(false);
+                      openDocsPage();
+                    },
+                  },
+                    React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                      React.createElement("span", null, "Documentation")
+                    )
                   )
                 )
+              : null
+          );
+          const developHomeServerActivityKeys = [
+            "hostingRequests",
+            "apiRequests",
+            "functionCalls",
+            "agentRuntimeRuns",
+            "secretReads",
+            "authEvents",
+            "paymentCheckoutSessions",
+          ];
+          const developHomeDatabaseActivityKeys = ["databaseReads", "databaseWrites"];
+          const sumDevelopOperationalTotals = (keys) => keys.reduce((sum, key) => (
+            sum + Math.max(0, Number(developServerOperationalMetrics?.totals?.[key] || 0))
+          ), 0);
+          const sumDevelopOperationalSeries = (keys) => developOperationalLabels.map((_, index) => (
+            keys.reduce((sum, key) => sum + Math.max(0, Number(getDevelopOperationalSeries(key)?.[index] || 0)), 0)
+          ));
+          const developHomeServerActivityValues = sumDevelopOperationalSeries(developHomeServerActivityKeys);
+          const developHomeDatabaseActivityValues = sumDevelopOperationalSeries(developHomeDatabaseActivityKeys);
+          const developHomeResourceCount = Math.max(0, Math.round(Number(
+            developServerOperationalMetrics?.resourceCount
+            ?? (activeServerCount + activeDevelopDatabaseCount)
+            ?? 0
+          ) || 0));
+          const developHomeOverviewKpis = [
+            {
+              id: "develop-resources",
+              label: "Resources",
+              color: "#7effff",
+              value: formatDevelopOperationalMetricValue(developHomeResourceCount),
+            },
+            {
+              id: "develop-server-operations",
+              label: "Server Operations",
+              color: "rgb(143, 196, 255)",
+              value: formatDevelopOperationalMetricValue(sumDevelopOperationalTotals(developHomeServerActivityKeys)),
+            },
+            {
+              id: "develop-database-operations",
+              label: "Database Operations",
+              color: "rgb(103, 80, 255)",
+              value: formatDevelopOperationalMetricValue(sumDevelopOperationalTotals(developHomeDatabaseActivityKeys)),
+            },
+            {
+              id: "develop-errors",
+              label: "Errors",
+              color: "#f53b3a",
+              value: formatDevelopOperationalMetricValue(developServerOperationalMetrics?.totals?.errors || 0),
+            },
+            {
+              id: "develop-cost",
+              label: "Usage cost",
+              color: "#9ff6ce",
+              value: formatDevelopOperationalMetricValue(developServerOperationalMetrics?.totals?.computeTokens || 0),
+            },
+          ];
+          const developHomeOverviewChartSeries = [
+            {
+              id: "server-operations",
+              label: "Server Operations",
+              color: "rgb(143, 196, 255)",
+              values: developHomeServerActivityValues,
+            },
+            {
+              id: "database-operations",
+              label: "Database Operations",
+              color: "rgb(103, 80, 255)",
+              values: developHomeDatabaseActivityValues,
+            },
+          ];
+          const hasDevelopHomeOverviewActivity = developHomeOverviewChartSeries.some((series) => (
+            series.values.some((value) => Math.max(0, Number(value || 0)) > 0)
+          ));
+          const renderDevelopHomeOverviewAnalyticsSection = () =>
+            React.createElement("div", {
+              className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-develop-home-overview-metrics",
+            },
+              React.createElement("section", {
+                className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-agents-overview-analytics-card playground-resource-type-overview-analytics-card playground-develop-home-overview-analytics-card",
+              },
+                React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
+                  developHomeOverviewKpis.map((item) =>
+                    React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+                        React.createElement("span", {
+                          className: "playground-project-overview-progress-combo-metric-dot is-" + item.id,
+                          style: { background: item.color },
+                          "aria-hidden": "true",
+                        }),
+                        React.createElement("span", null, item.label)
+                      ),
+                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
+                    )
+                  )
+                ),
+                React.createElement("div", { className: "playground-project-overview-progress-combo-chart playground-develop-home-overview-chart" },
+                  developServerOperationalMetricsLoading
+                    ? React.createElement("div", { className: "playground-settings-loading-state playground-settings-usage-chart-loading-frame" },
+                        React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                      )
+                    : developServerOperationalMetricsError
+                      ? React.createElement("div", { className: "playground-settings-usage-chart-empty" }, developServerOperationalMetricsError)
+                      : hasDevelopHomeOverviewActivity
+                        ? renderSettingsUsageMultiStackedChart({
+                            labels: developOperationalLabels,
+                            series: developHomeOverviewChartSeries,
+                            tickFormatter: formatDevelopOperationalMetricValue,
+                            tall: true,
+                            ariaLabel: "Develop resource activity over time",
+                          })
+                        : React.createElement("div", { className: "playground-settings-usage-chart-empty is-tall" }, "No resource activity yet")
+                )
+              )
+            );
+
+          return React.createElement("div", { className: "playground-develop-home" },
+            React.createElement("div", { className: "playground-develop-home-inner" },
+              React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero playground-develop-home-hero" },
+                React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-develop-home-hero-header" },
+                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, "Develop your Workspace"),
+                  React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
+                    developHomeSection === "overview" ? developHomeTimescaleControl : null,
+                    developHomeAnalyticsOptions
+                  )
+                ),
+                React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs playground-develop-tabs playground-develop-home-tabs" },
+                  React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+                    tabs.map((tab) =>
+                      React.createElement("button", {
+                        key: tab.id,
+                        type: "button",
+                        className: "playground-project-overview-chart-tab playground-develop-tab" + (tab.id === developHomeSection ? " is-active" : ""),
+                        onClick: tab.onClick || undefined,
+                      }, tab.label)
+                    )
+                  )
+                ),
+                developHomeSection === "overview" ? renderDevelopHomeOverviewAnalyticsSection() : null
               ),
-              developHomeSection === "api-keys"
-                ? renderApiKeysManagementPanel()
-                : developHomeSection === "webhooks"
+              developHomeSection === "webhooks"
                   ? React.createElement("div", { className: "playground-plugins-page playground-develop-webhooks-page" },
                       renderWebhookActionsPanel({ embedded: true, searchQuery: "", showEmbeddedListActions: false })
                     )
                 : React.createElement(React.Fragment, null,
-              renderDevelopOperationalMetricsChart(),
               React.createElement("section", { className: "playground-develop-docs-quickstart-card" },
                 React.createElement("div", { className: "playground-develop-docs-quickstart-inner" },
                   React.createElement("div", null,
@@ -210380,6 +211925,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 onClick: () => openDevelopHome(),
               },
               {
+                id: "develop-api-keys",
+                label: "API Keys",
+                Icon: Key,
+                active: activePage === "develop-api-keys",
+                onClick: () => openDevelopApiKeysPage(),
+              },
+              {
                 id: "develop-resources-label",
                 type: "subtitle",
                 label: "Resources",
@@ -210930,6 +212482,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      ? renderInferencePageNav()
 	                    : activePage === "develop"
 	                      ? renderDevelopHomeNav()
+	                    : activePage === "develop-api-keys"
+	                      ? renderDevelopApiKeysNav()
 	                    : isResourcesPage
 	                      ? renderResourcesPageNav()
 	                    : activePage === "settings"
@@ -210992,16 +212546,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                   type: "button",
                                   className: "content-mode-button" + (contentMode === "chat" ? " is-active" : ""),
                                   onClick: () => setContentMode("chat")
-                                }, "Chat"),
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "content-mode-button" + (contentMode === "trace" ? " is-active" : ""),
-                                  onClick: () => {
-                                    if (!currentThreadId) return;
-                                    setContentMode("trace");
-                                  },
-                                  disabled: !currentThreadId
-                                }, "Trace"),
+                                }, "Thread"),
                                 React.createElement("button", {
                                   type: "button",
                                   className: "content-mode-button" + (contentMode === "changes" ? " is-active" : ""),
@@ -211311,6 +212856,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                          : hasDemoAccess
 	                            ? renderDemoFeaturePage("resources")
 	                            : renderAuthGate()
+	                      : activePage === "develop-api-keys"
+	                        ? hasRealAccess
+	                          ? renderApiKeysManagementPanel()
+	                          : hasDemoAccess
+	                            ? renderDemoFeaturePage("resources")
+	                            : renderAuthGate()
 	                      : activePage === "tools"
                         ? hasRealAccess
                           ? renderPluginsPage()
@@ -211585,11 +213136,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 if (options?.threadRecord?.id) {
                                   upsertRealThreadRecord(options.threadRecord);
                                 }
-                                const requestedContentMode = options?.contentMode === "trace"
-                                  ? "trace"
-                                  : options?.contentMode === "changes"
-                                    ? "changes"
-                                    : "chat";
+                                const requestedContentMode = options?.contentMode === "changes" ? "changes" : "chat";
                                 setThreadAgentSelectionOverride(null);
                                 setPendingThreadRunRequest(null);
                                 setThreadTaskOpenRequest(null);
@@ -212137,6 +213684,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                       });
 	                                      setContentMode("changes");
 	                                    },
+                                    onOpenChanges: () => {
+                                      setChangesNavigationTarget(null);
+                                      setContentMode("changes");
+                                    },
                                     renderUserPromptContent: renderEvaluatorThreadUserPromptContent,
                                     renderRunSummaryJsonSegment: renderEvaluatorRunSummaryJsonSegment,
 	                                    subagentDetailPortalTarget: threadSubagentDetailHost,
@@ -212163,30 +213714,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     navigationTarget: changesNavigationTarget,
                                     onNavigationTargetHandled: (token) => {
                                       setChangesNavigationTarget((current) => (current && current.token === token ? null : current));
-                                    },
-                                  })
-                                : hasDemoAccess
-                                  ? renderDemoThreadChangesSurface()
-                                  : renderAuthGate()
-                              : null
-                          ),
-                          React.createElement("div", { className: "playground-view-pane" + (contentMode === "trace" ? "" : " is-hidden") },
-                            contentMode === "trace"
-                              ? hasRealAccess
-                                ? React.createElement(ThreadObservabilityView, {
-                                    threadId: activeRunnerThreadId,
-                                    threadTitle: selectedThreadTitle,
-                                    backendUrl: proxyBackendBase,
-                                    requestHeaders: authRequestHeaders,
-                                    hasRealAccess,
-                                    onOpenChat: () => setContentMode("chat"),
-                                    onForkCreated: (threadRecord) => {
-                                      const normalizedForkThreadId = String(threadRecord?.id || "").trim();
-                                      if (!normalizedForkThreadId) return;
-                                      upsertRealThreadRecord(threadRecord);
-                                      setContentMode("chat");
-                                      handleThreadSelect(normalizedForkThreadId);
-                                      void refreshThreads(undefined, normalizedForkThreadId);
                                     },
                                   })
                                 : hasDemoAccess
@@ -212541,7 +214068,7 @@ async function readRawRequestBuffer(req) {
   });
 }
 
-function sendJson(res, status, payload) {
+function sendJson(res, status, payload, extraHeaders = {}) {
   if (!res || res.destroyed || res.writableEnded || res.headersSent) {
     return false;
   }
@@ -212551,6 +214078,7 @@ function sendJson(res, status, payload) {
       "Content-Type": "application/json; charset=utf-8",
       "Content-Length": Buffer.byteLength(body),
       "Cache-Control": "no-store",
+      ...(extraHeaders && typeof extraHeaders === "object" ? extraHeaders : {}),
     });
     res.end(body);
     return true;
@@ -214071,6 +215599,52 @@ async function fetchUpstreamOverviewJson(req, upstreamPath) {
       message: "Sign in with Computer Agents or provide an API key.",
     },
   };
+}
+
+async function sendDatabaseBootstrap(req, res, databaseId, documentsLimit = 25) {
+  const startedAt = performance.now();
+  const timings = {};
+  const timedFetch = async (name, path) => {
+    const requestStartedAt = performance.now();
+    const response = await fetchUpstreamOverviewJson(req, path);
+    timings[name] = performance.now() - requestStartedAt;
+    return response;
+  };
+
+  try {
+    const encodedDatabaseId = encodeURIComponent(databaseId);
+    const collectionsResponse = await timedFetch("collections", `/databases/${encodedDatabaseId}/collections`);
+    timings.database = 0;
+    timings.analytics = 0;
+    if (collectionsResponse.status >= 400) {
+      return sendJson(res, collectionsResponse.status, collectionsResponse.data);
+    }
+
+    const collections = extractPlaygroundOverviewItems(collectionsResponse.data, ["collections", "data"]);
+    const selectedCollectionId = String(collections[0]?.id || "").trim();
+    timings.documents = 0;
+    timings.total = performance.now() - startedAt;
+    const serverTiming = ["database", "analytics", "collections", "documents", "total"]
+      .map((name) => `${name};dur=${Math.max(0, Number(timings[name] || 0)).toFixed(1)}`)
+      .join(", ");
+
+    return sendJson(res, 200, {
+      database: null,
+      analytics: null,
+      collections,
+      selectedCollectionId,
+      documents: [],
+      documentsLimit,
+      hasMoreDocuments: false,
+    }, {
+      "Server-Timing": serverTiming,
+    });
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to bootstrap database",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
 }
 
 async function sendEnvironmentOverviewAnalytics(req, res) {
@@ -216911,6 +218485,14 @@ async function proxyUpstreamRawRequest(req, res, upstreamPath, method) {
 }
 
 async function proxyUpstreamStreamRequest(req, res, upstreamPath, method) {
+  const controller = new AbortController();
+  let reader = null;
+  const abortUpstreamIfClientClosed = () => {
+    if (!controller.signal.aborted) {
+      controller.abort(new Error("Client request closed before the upstream stream completed."));
+    }
+  };
+  res.once("close", abortUpstreamIfClientClosed);
   try {
     const upstreamUrl = parseUpstreamUrl(req, {});
     const body = method === "GET" ? undefined : await readRequestBody(req);
@@ -216925,8 +218507,11 @@ async function proxyUpstreamStreamRequest(req, res, upstreamPath, method) {
         method,
         headers: withProxyOrganizationHeader(req, body, {
           "Content-Type": "application/json",
+          Accept: req.headers.accept || "text/event-stream",
+          ...(req.headers["last-event-id"] ? { "Last-Event-ID": req.headers["last-event-id"] } : {}),
           "X-API-Key": apiKey,
         }),
+        signal: controller.signal,
         body: body === undefined ? undefined : JSON.stringify(body),
       });
     } else if (hasAiosSession(req)) {
@@ -216934,7 +218519,10 @@ async function proxyUpstreamStreamRequest(req, res, upstreamPath, method) {
         method,
         headers: {
           "content-type": "application/json",
+          accept: req.headers.accept || "text/event-stream",
+          ...(req.headers["last-event-id"] ? { "last-event-id": req.headers["last-event-id"] } : {}),
         },
+        signal: controller.signal,
         body: body === undefined ? undefined : JSON.stringify(body),
       });
     } else {
@@ -216977,8 +218565,8 @@ async function proxyUpstreamStreamRequest(req, res, upstreamPath, method) {
       res.socket.setNoDelay(true);
     }
 
-    const reader = upstream.body.getReader();
-    while (true) {
+    reader = upstream.body.getReader();
+    while (!res.destroyed && !res.writableEnded) {
       const { done, value } = await reader.read();
       if (done) break;
       if (value) {
@@ -216990,12 +218578,20 @@ async function proxyUpstreamStreamRequest(req, res, upstreamPath, method) {
         }
       }
     }
-    res.end();
+    if (!res.destroyed && !res.writableEnded) res.end();
   } catch (error) {
+    if (controller.signal.aborted || res.destroyed || res.writableEnded) return false;
     return sendJson(res, 502, {
       error: `Failed to proxy upstream ${method} stream request`,
       message: error instanceof Error ? error.message : String(error),
     });
+  } finally {
+    res.off("close", abortUpstreamIfClientClosed);
+    if (reader && controller.signal.aborted) {
+      try {
+        await reader.cancel();
+      } catch {}
+    }
   }
 }
 
@@ -221873,6 +223469,18 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const threadV2ProxyRoute = matchDemoThreadV2ProxyRoute(req.method, url.pathname);
+  if (threadV2ProxyRoute) {
+    if (threadV2ProxyRoute.transport === "event-stream-or-json" && wantsDemoThreadEventStream(req, url)) {
+      void proxyUpstreamStreamRequest(req, res, threadV2ProxyRoute.upstreamPath, threadV2ProxyRoute.method);
+    } else if (threadV2ProxyRoute.method === "GET") {
+      void proxyUpstreamGet(req, res, threadV2ProxyRoute.upstreamPath);
+    } else {
+      void proxyUpstreamJsonRequest(req, res, threadV2ProxyRoute.upstreamPath, threadV2ProxyRoute.method);
+    }
+    return;
+  }
+
   const threadStepsMatch = url.pathname.match(/^\/api\/real\/threads\/([^/]+)\/steps$/);
   if (req.method === "GET" && threadStepsMatch) {
     void proxyUpstreamGet(req, res, `/threads/${encodeURIComponent(decodeURIComponent(threadStepsMatch[1]))}/steps`);
@@ -222337,6 +223945,18 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const databaseBootstrapMatch = url.pathname.match(/^\/api\/real\/databases\/([^/]+)\/bootstrap$/);
+  if (req.method === "GET" && databaseBootstrapMatch) {
+    const documentsLimit = Math.max(1, Math.min(100, Number(url.searchParams.get("documentsLimit")) || 25));
+    void sendDatabaseBootstrap(
+      req,
+      res,
+      decodeURIComponent(databaseBootstrapMatch[1]),
+      documentsLimit,
+    );
+    return;
+  }
+
   const serverDetailMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)$/);
   if (req.method === "GET" && serverDetailMatch) {
     void proxyUpstreamGet(req, res, `/servers/${encodeURIComponent(decodeURIComponent(serverDetailMatch[1]))}`);
@@ -222765,7 +224385,7 @@ const server = http.createServer((req, res) => {
     void proxyUpstreamGet(
       req,
       res,
-      `/databases/${encodeURIComponent(decodeURIComponent(databaseDocumentsMatch[1]))}/collections/${encodeURIComponent(decodeURIComponent(databaseDocumentsMatch[2]))}/documents`,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseDocumentsMatch[1]))}/collections/${encodeURIComponent(decodeURIComponent(databaseDocumentsMatch[2]))}/documents${url.search || ""}`,
     );
     return;
   }

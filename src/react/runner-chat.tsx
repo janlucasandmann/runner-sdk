@@ -69,9 +69,14 @@ import {
 } from "lucide-react";
 import { RunnerDeepResearchSession, RunnerExecuteResult, RunnerLog, RunnerThreadStep, RunnerThreadStepDiffResult } from "../types.js";
 import { iterateSseData } from "../sse.js";
+import { adaptLegacyThreadToProjection } from "../thread/legacy-adapter.js";
+import type { RunnerThreadAction, RunnerThreadMessage, RunnerThreadPermissionRequest, RunnerThreadProjection, RunnerThreadRoutedMessageResult, RunnerThreadRunStatus } from "../thread/types.js";
 import { useRunnerExecution } from "./use-runner-execution.js";
 import { RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS, getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
+import { RunnerThreadRunActivityCard } from "./thread/run-activity-card.js";
+import { RunnerThreadTimeline } from "./thread/thread-timeline.js";
+import { useRunnerThreadProjection } from "./thread/use-runner-thread-projection.js";
 import { RunnerDocumentPreviewDrawer } from "./runner-document-preview-drawer.js";
 import {
   buildRunnerPreviewHeaders,
@@ -114,7 +119,10 @@ const RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH = 15;
 const RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH = 10;
 const RUNNER_THREAD_HISTORY_SMALL_LINE_WIDTH = 5;
 const RUNNER_WORK_LOG_PAGE_SIZE = 10;
-const RUNNER_LIVE_WORK_LOG_PREVIEW_COUNT = 2;
+// Live runs stay intentionally quiet at the conversation altitude. The header
+// carries the current semantic summary; concrete actions are mounted only when
+// the user expands the run.
+const RUNNER_LIVE_WORK_LOG_PREVIEW_COUNT = 0;
 const RUNNER_COMPOSER_POPUP_OPEN_EVENT = "tb-runner-composer-popup-open";
 
 function emitRunnerComposerPopupOpen(sourceId: string) {
@@ -3158,6 +3166,13 @@ export interface RunnerChatProps {
   threadId?: string;
   title?: string;
   threadMetadata?: Record<string, unknown> | null;
+  /**
+   * Selects the thread renderer. `auto` promotes a thread to the canonical
+   * event timeline only when Thread v2 data exists and no rich legacy-only
+   * affordance would be hidden. Otherwise it keeps the legacy turn renderer as
+   * a deployment-safe compatibility fallback.
+   */
+  threadViewMode?: "auto" | "canonical" | "legacy";
   placeholder?: string;
   privateMode?: boolean;
   initialTask?: string;
@@ -3200,6 +3215,7 @@ export interface RunnerChatProps {
   onSkillsChange?: (skillIds: string[]) => void;
   onContextIndicatorClick?: (context: RunnerChatThreadContext | null) => void;
   onActionSummaryClick?: (summary: RunnerChatActionSummaryClickPayload) => void;
+  onOpenChanges?: (threadId: string, runId?: string) => void;
   onSubagentDetailOpenChange?: (isOpen: boolean) => void;
   onDocumentPreviewOpenChange?: (isOpen: boolean) => void;
   onDeepResearchDetailOpenChange?: (isOpen: boolean) => void;
@@ -10818,6 +10834,7 @@ export function RunnerChat({
   threadId,
   title,
   threadMetadata = null,
+  threadViewMode = "auto",
   placeholder = "What would you like me to do?",
   privateMode = false,
   initialTask = "",
@@ -10860,6 +10877,7 @@ export function RunnerChat({
   onSkillsChange,
   onContextIndicatorClick,
   onActionSummaryClick,
+  onOpenChanges,
   onSubagentDetailOpenChange,
   onDocumentPreviewOpenChange,
   onDeepResearchDetailOpenChange,
@@ -10930,7 +10948,7 @@ export function RunnerChat({
   const [selectedComputerUseDetail, setSelectedComputerUseDetail] = useState<RunnerSelectedComputerUseDetail | null>(null);
   const [documentPreviewDrawerWidth, setDocumentPreviewDrawerWidth] = useState<number | null>(null);
   const [isThreadHistoryLoading, setIsThreadHistoryLoading] = useState(false);
-  const [, setInlineError] = useState<string | null>(null);
+  const [inlineError, setInlineError] = useState<string | null>(null);
   const [isPreparingRun, setIsPreparingRun] = useState(false);
   const [turns, setTurns] = useState<RunnerTurn[]>([]);
   const [deepResearchSessions, setDeepResearchSessions] = useState<RunnerDeepResearchSession[]>([]);
@@ -11210,6 +11228,12 @@ export function RunnerChat({
   const voiceModePlaybackTimeRef = useRef(0);
   const voiceModeSessionIdRef = useRef<string | null>(null);
   const voiceModePendingUserTranscriptRef = useRef("");
+  const voiceModePendingUserCanonicalPersistedRef = useRef(false);
+  const voiceModeLegacyTranscriptFallbackRef = useRef(false);
+  const voiceModeTranscriptWriteTailRef = useRef<Promise<void>>(Promise.resolve());
+  const voiceModeSessionGenerationRef = useRef(0);
+  const voiceModeThreadIdRef = useRef("");
+  const currentThreadIdForVoiceRef = useRef("");
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
@@ -11247,7 +11271,96 @@ export function RunnerChat({
   const githubItems = githubConfig?.fetchItems ? remoteGithubItems : [];
   const notionItems = notionDatabasesToFileItems(notionDatabases);
   const currentThreadId = threadId ?? localThreadId;
+  currentThreadIdForVoiceRef.current = String(currentThreadId || "").trim();
   const hasCurrentThread = Boolean(currentThreadId);
+  useEffect(() => {
+    setInlineError(null);
+    const sessionId = String(voiceModeSessionIdRef.current || "").trim();
+    const sessionThreadId = voiceModeThreadIdRef.current;
+    const selectedThreadId = String(currentThreadId || "").trim();
+    if (sessionId && sessionThreadId && selectedThreadId !== sessionThreadId) {
+      void stopVoiceModeSession();
+    }
+  }, [currentThreadId]);
+  const legacyTurnProjectionCacheRef = useRef(new Map<string, {
+    projection: RunnerThreadProjection;
+    logCount: number;
+    status: RunnerTurnStatus;
+  }>());
+  const legacyTurnProjectionsById = useMemo(() => {
+    const projections = new Map<string, ReturnType<typeof adaptLegacyThreadToProjection>>();
+    const liveTurnIds = new Set(turns.map((turn) => turn.id));
+    for (const cachedTurnId of legacyTurnProjectionCacheRef.current.keys()) {
+      if (!liveTurnIds.has(cachedTurnId)) legacyTurnProjectionCacheRef.current.delete(cachedTurnId);
+    }
+    for (const turn of turns) {
+      const cached = legacyTurnProjectionCacheRef.current.get(turn.id);
+      const newLogs = cached ? turn.logs.slice(cached.logCount) : turn.logs;
+      const hasPriorityProjectionChange = newLogs.some((log) =>
+        log.type === "error" ||
+        log.eventType === "permission_request" ||
+        log.eventType === "action_summary" ||
+        log.eventType === "turn_completed" ||
+        log.eventType === "planning"
+      );
+      const canReuseCachedProjection = Boolean(
+        cached &&
+        cached.status === turn.status &&
+        turn.logs.length >= cached.logCount &&
+        turn.logs.length - cached.logCount < 8 &&
+        !hasPriorityProjectionChange
+      );
+      if (cached && canReuseCachedProjection) {
+        projections.set(turn.id, cached.projection);
+        continue;
+      }
+      const projectionThreadId = String(currentThreadId || `local:${turn.id}`).trim();
+      const logRunId = turn.logs.find((log) => typeof log.metadata?.runId === "string" && log.metadata.runId.trim())?.metadata?.runId;
+      const runId = String(logRunId || `legacy:${projectionThreadId}:${turn.id}`).trim();
+      const runStatus: RunnerThreadRunStatus = turn.status === "permission_asked" ? "requires_action" : turn.status;
+      const finalAssistantLog = [...turn.logs].reverse().find((log) => (
+        (log.eventType === "agent_message" || log.eventType === "llm_response") && log.message.trim()
+      ));
+      const finalAssistantMessageId = typeof (finalAssistantLog?.metadata as Record<string, unknown> | undefined)?.messageId === "string"
+        ? String((finalAssistantLog?.metadata as Record<string, unknown>).messageId)
+        : `${turn.id}:assistant`;
+      const projection = adaptLegacyThreadToProjection({
+        threadId: projectionThreadId,
+        runId,
+        runStatus,
+        runTitle: turn.prompt,
+        runMetadata: turn.status === "queued"
+          ? { pageResidentQueue: true, coordinatorDurable: false }
+          : null,
+        logs: turn.logs,
+        messages: [
+          ...(turn.prompt.trim() ? [{
+            id: turn.sourceMessageId || `${turn.id}:prompt`,
+            role: "user" as const,
+            content: turn.prompt,
+            createdAt: new Date(turn.startedAtMs).toISOString(),
+            metadata: turn.messageMetadata || null,
+          }] : []),
+          ...(finalAssistantLog ? [{
+            id: finalAssistantMessageId,
+            role: "assistant" as const,
+            content: finalAssistantLog.message,
+            createdAt: finalAssistantLog.createdAt || finalAssistantLog.time || new Date(turn.completedAtMs || Date.now()).toISOString(),
+            metadata: finalAssistantLog.metadata || null,
+          }] : []),
+        ],
+        startedAt: new Date(turn.startedAtMs).toISOString(),
+        completedAt: turn.completedAtMs ? new Date(turn.completedAtMs).toISOString() : null,
+      });
+      legacyTurnProjectionCacheRef.current.set(turn.id, {
+        projection,
+        logCount: turn.logs.length,
+        status: turn.status,
+      });
+      projections.set(turn.id, projection);
+    }
+    return projections;
+  }, [currentThreadId, turns]);
   const scopedActiveThreadEnvironmentId = hasCurrentThread ? activeThreadEnvironmentId : null;
   const scopedActiveThreadEnvironmentName = hasCurrentThread ? activeThreadEnvironmentName : null;
   const currentThreadHasMessages = useMemo(
@@ -11284,7 +11397,12 @@ export function RunnerChat({
 	  }, [currentThreadId, onTaskListChange, turns]);
   useEffect(() => {
     return () => {
+      const sessionId = String(voiceModeSessionIdRef.current || "").trim();
+      voiceModeSessionGenerationRef.current += 1;
       cleanupVoiceModeResources();
+      voiceModeSessionIdRef.current = null;
+      voiceModeThreadIdRef.current = "";
+      if (sessionId) void endBackendVoiceSession(sessionId);
     };
   }, []);
 	  const currentThreadHasWorkspaceChanges = useMemo(
@@ -11537,6 +11655,168 @@ export function RunnerChat({
     () => buildRunnerHeaders(requestHeaders, apiKey.trim()),
     [apiKey, requestHeaders]
   );
+  const canonicalThreadId = String(currentThreadId || "").trim();
+  const canonicalThreadEnabled = Boolean(
+    threadViewMode !== "legacy" && canonicalThreadId && normalizedBackendUrl && hasApiKey
+  );
+  const canonicalThread = useRunnerThreadProjection({
+    threadId: canonicalThreadId,
+    backendUrl: normalizedBackendUrl,
+    headers: authenticatedAttachmentFetchHeaders,
+    enabled: canonicalThreadEnabled,
+    initialLimit: 120,
+    includeLegacy: false,
+  });
+  const canonicalProjectionMatchesThread = canonicalThread.projection.threadId === canonicalThreadId;
+  const isVoiceModeNoticeTurn = (turn: RunnerTurn) => (
+    turn.presentation === "context-action-notice"
+    && turn.logs.length > 0
+    && turn.logs.every((log) => log.metadata?.actionType === "voice")
+  );
+  const canonicalConversationMessages = Object.values(canonicalThread.projection.messagesById);
+  const isCanonicalRepresentedVoiceTurn = (turn: RunnerTurn) => {
+    if (turn.messageMetadata?.source !== "voice") return false;
+    const prompt = turn.prompt.trim();
+    const assistantContent = [...turn.logs].reverse().find((log) => (
+      (log.eventType === "agent_message" || log.eventType === "llm_response") && log.message.trim()
+    ))?.message.trim() || "";
+    const hasNearbyMessage = (content: string, participantKind: string) => !content || canonicalConversationMessages.some((message) => {
+      if (message.content.trim() !== content) return false;
+      if (canonicalThread.projection.participantsById[message.authorParticipantId]?.kind !== participantKind) return false;
+      const timestamp = Date.parse(message.createdAt);
+      return !Number.isFinite(timestamp) || Math.abs(timestamp - turn.startedAtMs) <= 60_000;
+    });
+    return hasNearbyMessage(prompt, "human") && hasNearbyMessage(assistantContent, "communicator");
+  };
+  const substantiveLegacyTurnCount = turns.reduce(
+    (count, turn) => count + (
+      isVoiceModeNoticeTurn(turn)
+      || (turn.presentation === "btw" && turn.messageMetadata?.source === "thread_v2_communicator")
+      || isCanonicalRepresentedVoiceTurn(turn)
+        ? 0
+        : 1
+    ),
+    0,
+  );
+  const hasCanonicalTimelineContent = useMemo(
+    () => {
+      if (!canonicalProjectionMatchesThread) return false;
+      const hasCanonicalRun = Object.values(canonicalThread.projection.runsById).some((run) => (
+        run.metadata?.legacyInferred !== true && !run.id.startsWith("legacy_run:")
+      ));
+      const hasCanonicalMessage = canonicalThread.projection.timeline.some((reference) => reference.kind === "message");
+      // A run is the authority boundary for migrating a legacy worker thread.
+      // Message-only canonical threads are valid for voice/group chat, but only
+      // when no hydrated legacy transcript would be hidden by the hand-off.
+      return hasCanonicalRun || (substantiveLegacyTurnCount === 0 && hasCanonicalMessage);
+    },
+    [canonicalProjectionMatchesThread, canonicalThread.projection.timeline, substantiveLegacyTurnCount]
+  );
+  const hasLegacyOnlyThreadAffordances = useMemo(() => (
+    Boolean(
+      threadTaskPreview
+      || threadMissionControlPreview
+      || renderUserPromptContent
+      || renderRunSummaryJsonSegment
+      || followUpActions.length > 0
+      || followUpError
+    )
+    || turns.some((turn) => (
+      (turn.presentation === "btw" && turn.messageMetadata?.source !== "thread_v2_communicator")
+      || (turn.presentation === "context-action-notice" && !isVoiceModeNoticeTurn(turn))
+      || Boolean(turn.quotedSelection)
+      || Boolean(turn.attachments?.length)
+      || Boolean(turn.slideCreationCommand || turn.researchCreationCommand || turn.scrapeCreationCommand || turn.parseCreationCommand || turn.adCreationCommand)
+      || isRunnerEmailMetadata(turn.messageMetadata)
+      || turn.messageMetadata?.canonicalPersistenceFailed === true
+    ))
+  ), [
+    followUpActions.length,
+    followUpError,
+    renderRunSummaryJsonSegment,
+    renderUserPromptContent,
+    threadMissionControlPreview,
+    threadTaskPreview,
+    turns,
+  ]);
+  const shouldUseCanonicalThreadSurface = canonicalThreadEnabled && canonicalProjectionMatchesThread && (
+    threadViewMode === "canonical"
+    || (threadViewMode === "auto" && hasCanonicalTimelineContent && !hasLegacyOnlyThreadAffordances)
+  );
+  voiceModeLegacyTranscriptFallbackRef.current = threadViewMode === "legacy"
+    || (substantiveLegacyTurnCount > 0 && !shouldUseCanonicalThreadSurface);
+  const activeCanonicalRun = canonicalProjectionMatchesThread
+    ? Object.values(canonicalThread.projection.runsById)
+      .filter((run) => ["queued", "pending", "running", "parked", "waiting", "waiting_permission", "requires_action"].includes(run.status))
+      .sort((left, right) => (right.updatedAt || right.createdAt).localeCompare(left.updatedAt || left.createdAt))[0] || null
+    : null;
+  const hasRoutableActiveRun = hasRunningTurn || Boolean(activeCanonicalRun);
+  const legacyCompatibilityEntries = useMemo(() => {
+    if (!canonicalProjectionMatchesThread) return [];
+    const canonicalMessageIds = new Set(Object.keys(canonicalThread.projection.messagesById));
+    const canonicalUserMessages = Object.values(canonicalThread.projection.messagesById)
+      .filter((message) => canonicalThread.projection.participantsById[message.authorParticipantId]?.kind === "human");
+    const matchedMessageIds = new Set<string>();
+    const compatibility: Array<{ turn: RunnerTurn; projection: RunnerThreadProjection }> = [];
+    for (const turn of turns) {
+      if (turn.presentation === "btw" || turn.presentation === "context-action-notice") continue;
+      const workflowMetadata = turn.logs
+        .map((log) => getRecordObject(log.metadata as Record<string, unknown> | null | undefined, ["metronomeWorkflow", "metronome_workflow"]))
+        .find(Boolean) || getRecordObject(turn.messageMetadata, ["metronomeWorkflow", "metronome_workflow"]);
+      const workflowRunId = getRecordString(workflowMetadata, ["runId", "run_id", "workflowRunId", "workflow_run_id"]);
+      const workflowNodeId = getRecordString(workflowMetadata, ["nodeId", "node_id", "activeNodeId", "active_node_id"]);
+      if (workflowRunId && Object.values(canonicalThread.projection.runsById).some((run) => (
+        String(run.metadata?.workflowRunId || run.metadata?.runId || "") === workflowRunId
+        && (!workflowNodeId || String(run.metadata?.workflowNodeId || run.metadata?.nodeId || "") === workflowNodeId)
+      ))) continue;
+      const prompt = turn.prompt.trim();
+      if (!prompt) continue;
+      const projection = legacyTurnProjectionsById.get(turn.id);
+      if (!projection) continue;
+      if (Object.keys(projection.runsById).some((runId) => Boolean(canonicalThread.projection.runsById[runId]))) continue;
+      const exactSourceId = String(turn.sourceMessageId || "").trim();
+      if (exactSourceId && canonicalMessageIds.has(exactSourceId)) {
+        matchedMessageIds.add(exactSourceId);
+        continue;
+      }
+      const matchedMessage = canonicalUserMessages.find((message) => {
+        if (matchedMessageIds.has(message.id)) return false;
+        if (exactSourceId && message.id === exactSourceId) return true;
+        if (message.content.trim() !== prompt) return false;
+        const messageTime = Date.parse(message.createdAt);
+        return Number.isFinite(messageTime) && Math.abs(messageTime - turn.startedAtMs) <= 30_000;
+      });
+      if (matchedMessage) matchedMessageIds.add(matchedMessage.id);
+      else compatibility.push({ turn, projection });
+    }
+    return compatibility;
+  }, [
+    canonicalProjectionMatchesThread,
+    canonicalThread.projection.messagesById,
+    canonicalThread.projection.participantsById,
+    canonicalThread.projection.runsById,
+    legacyTurnProjectionsById,
+    turns,
+  ]);
+  const [legacyCompatibilityHistoryEntries, legacyCompatibilityTailEntries] = useMemo(() => {
+    const canonicalAnchorTimes = canonicalThread.projection.timeline
+      .filter((reference) => reference.kind === "message" || reference.kind === "run")
+      .map((reference) => Date.parse(reference.createdAt))
+      .filter(Number.isFinite);
+    const earliestCanonicalTime = canonicalAnchorTimes.length > 0 ? Math.min(...canonicalAnchorTimes) : Number.POSITIVE_INFINITY;
+    const history: typeof legacyCompatibilityEntries = [];
+    const tail: typeof legacyCompatibilityEntries = [];
+    for (const entry of legacyCompatibilityEntries) {
+      if (
+        entry.turn.status === "queued"
+        || entry.turn.status === "running"
+        || entry.turn.startedAtMs >= earliestCanonicalTime
+      ) tail.push(entry);
+      else history.push(entry);
+    }
+    return [history, tail];
+  }, [canonicalThread.projection.timeline, legacyCompatibilityEntries]);
+  const hasCanonicalSurfaceContent = canonicalThread.projection.timeline.length > 0 || legacyCompatibilityEntries.length > 0;
   useEffect(() => {
     let cancelled = false;
     const normalizedThreadId = String(currentThreadId || "").trim();
@@ -11745,7 +12025,7 @@ export function RunnerChat({
     const cancelledAtMs = Date.now();
     setTurns((previousTurns) =>
       previousTurns.map((turn) =>
-        isRunningTurnStatus(turn.status)
+        (isRunningTurnStatus(turn.status) || turn.status === "queued")
           ? {
               ...turn,
               status: "cancelled",
@@ -11906,7 +12186,10 @@ export function RunnerChat({
     promptText: string,
     responseText: string,
     detailLabel: string,
-    options?: { presentation?: RunnerTurn["presentation"] }
+    options?: {
+      presentation?: RunnerTurn["presentation"];
+      messageMetadata?: Record<string, unknown> | null;
+    }
   ) {
     const turnId = generateId("turn");
     const now = Date.now();
@@ -11916,6 +12199,7 @@ export function RunnerChat({
       {
         id: turnId,
         prompt: promptText,
+        messageMetadata: options?.messageMetadata || null,
         logs: [
           {
             time: timestamp,
@@ -11942,6 +12226,162 @@ export function RunnerChat({
       },
     ]);
     setExpandedTurns((prev) => ({ ...prev, [turnId]: true }));
+  }
+
+  async function tryHandleThreadCommunicatorMessage(content: string): Promise<boolean> {
+    const normalizedContent = content.trim();
+    const resolvedThreadId = String(currentThreadId || "").trim();
+    if (!normalizedContent || !resolvedThreadId || !normalizedBackendUrl || !hasApiKey) return false;
+
+    const deterministicControl = normalizedContent.match(
+      /^(stop|pause|cancel|resume|park)(?:\s+(?:(?:this|the current|the|current)\s+)?(?:run|task|worker|job|deployment|deploy))?(?:\s+now)?[.!]?$/i,
+    )?.[1]?.toLowerCase() || null;
+    if (deterministicControl) {
+      if (deterministicControl === "stop" || deterministicControl === "cancel") {
+        if (!hasRoutableActiveRun) {
+          setInlineError("There is no active run to stop.");
+          return true;
+        }
+        await handleStopActiveRun();
+        return true;
+      }
+      if (!activeCanonicalRun) {
+        setInlineError(`The current runtime cannot ${deterministicControl} at a safe checkpoint yet. The command was not sent as a worker task.`);
+        return true;
+      }
+      try {
+        const command = await canonicalThread.controlRun(activeCanonicalRun.id, {
+          action: deterministicControl as "pause" | "resume" | "park",
+          reason: "Explicit deterministic control from the thread composer.",
+          idempotencyKey: `runner-chat-control:${resolvedThreadId}:${activeCanonicalRun.id}:${deterministicControl}:${Date.now()}`,
+        });
+        if (command.effectApplied === false) {
+          setInlineError(command.limitation || "The control request was recorded and is waiting for the run coordinator.");
+        }
+      } catch (error) {
+        setInlineError(error instanceof Error ? error.message : String(error));
+      }
+      return true;
+    }
+
+    const fallbackLooksLikeStatusQuestion = /(^|\s)@communicator\b/i.test(normalizedContent) || (
+      /\b(status|progress|summary|update|happening|doing|working on|where are we|how(?:'s| is) it going|still running|what changed|why did)\b/i.test(normalizedContent)
+      && (normalizedContent.includes("?") || /^(what|where|why|how|is|are|can you tell|give me)/i.test(normalizedContent))
+    ) || (
+      normalizedContent.includes("?")
+      && /\b(tests?|files?|changes?|decisions?|assumptions?|errors?|build|branch|deploy(?:ment)?|worker|run)\b/i.test(normalizedContent)
+      && /^(did|does|has|have|which|what|when|where|why|how|is|are|can|could|would)/i.test(normalizedContent)
+    );
+    const fallbackLooksLikeWorkerInstruction = /^(?:please\s+|can you\s+|could you\s+|would you\s+)?(?:add|analy[sz]e|build|change|configure|continue|copy|create|debug|deploy|design|document|edit|execute|find|fix|implement|improve|inspect|install|integrate|investigate|make|migrate|move|optimi[sz]e|publish|refactor|remove|rename|review|revert|retry|run|search|set\s+up|ship|test|update|upgrade|use|write)\b/i.test(normalizedContent)
+      || /^(?:do not|don't|instead|also)\b/i.test(normalizedContent);
+
+    try {
+      const headers = buildVoiceModeHeaders();
+      let shouldUseCommunicator = fallbackLooksLikeStatusQuestion
+        || (hasRoutableActiveRun && !fallbackLooksLikeWorkerInstruction);
+      let targetRunId = activeCanonicalRun?.id || null;
+      let controlAction: string | null = null;
+      try {
+        const classificationResponse = await fetch(
+          `${normalizedBackendUrl}/threads/${encodeURIComponent(resolvedThreadId)}/activity/classify`,
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              content: normalizedContent,
+            }),
+          },
+        );
+        if (classificationResponse.ok) {
+          const classification = await classificationResponse.json() as Record<string, unknown>;
+          const decision = classification.decision && typeof classification.decision === "object"
+            ? classification.decision as Record<string, unknown>
+            : {};
+          const rawRoute = String(decision.route || "").trim().toLowerCase();
+          shouldUseCommunicator = classification.suggestedTransport === "activity_message" && rawRoute === "communicator";
+          const explicitlyAddressedCommunicator = /(^|\s)@communicator\b/i.test(normalizedContent);
+          const targetRunActive = classification.targetRunActive === true;
+          // The shipped responder is grounded in thread state, not a general
+          // conversational model. On an idle thread, preserve normal worker
+          // execution unless the user clearly asks about the thread or names
+          // the communicator. Ambiguous-to-communicator remains safe while a
+          // worker is active.
+          if (shouldUseCommunicator && !targetRunActive && !hasRoutableActiveRun && !fallbackLooksLikeStatusQuestion && !explicitlyAddressedCommunicator) {
+            return false;
+          }
+          targetRunId = typeof classification.targetRunId === "string" ? classification.targetRunId : targetRunId;
+          controlAction = typeof decision.controlAction === "string" ? decision.controlAction : null;
+          if (rawRoute === "control") {
+            if (controlAction === "stop" || controlAction === "cancel") {
+              await handleStopActiveRun();
+              return true;
+            }
+            if (targetRunId && ["pause", "resume", "park"].includes(controlAction || "")) {
+              const command = await canonicalThread.controlRun(targetRunId, {
+                action: controlAction as "pause" | "resume" | "park",
+                reason: "Explicit control message from the thread composer.",
+                idempotencyKey: `runner-chat-control:${resolvedThreadId}:${targetRunId}:${controlAction}:${Date.now()}`,
+              });
+              if (command.effectApplied === false) {
+                setInlineError(command.limitation || "The control request was recorded and is waiting for the run coordinator.");
+              }
+              return true;
+            }
+            setInlineError(controlAction
+              ? `There is no controllable run to ${controlAction}. The command was not sent as a worker task.`
+              : "The message was classified as run control, but no supported control action was found. It was not sent as a worker task.");
+            return true;
+          }
+          if (!shouldUseCommunicator) return false;
+        }
+      } catch {
+        // Older backends do not expose the non-persisting classifier. The
+        // conservative local status-question fallback preserves compatibility.
+      }
+      if (!shouldUseCommunicator) return false;
+
+      const clientMessageId = generateId("activity-message");
+      let routed: RunnerThreadRoutedMessageResult;
+      try {
+        routed = await canonicalThread.postMessage({
+          clientMessageId,
+          content: normalizedContent,
+          intendedRoute: "communicator",
+          deliveryMode: "fyi",
+          metadata: { source: "runner_chat_communicator_preflight" },
+        });
+      } catch (error) {
+        const normalizedError = error instanceof Error ? error : new Error(String(error));
+        setInlineError(`${normalizedError.message || "Could not confirm the communicator response."} The message was not rerouted to the worker.`);
+        setInput(normalizedContent);
+        currentInputRef.current = normalizedContent;
+        focusComposerSoon({ preventScroll: true });
+        return true;
+      }
+      const responseText = routed.communicator?.message.content.trim() || "";
+      if (!responseText) {
+        setInlineError("The communicator accepted the message but did not return a response. It was not rerouted to the worker.");
+        setInput(normalizedContent);
+        currentInputRef.current = normalizedContent;
+        focusComposerSoon({ preventScroll: true });
+        return true;
+      }
+      if (!shouldUseCanonicalThreadSurface) {
+        appendSyntheticActionTurn(normalizedContent, responseText, "Communicator answered", {
+          presentation: "btw",
+          messageMetadata: {
+            source: "thread_v2_communicator",
+            routingReceiptLabel: "Answered by Communicator",
+            routingReceiptStatus: String(routed.routingReceipt?.status || "answered"),
+            routingReceiptId: String(routed.routingReceipt?.id || ""),
+          },
+        });
+      }
+      return true;
+    } catch {
+      // The legacy queue remains the safe fallback while Thread v2 rolls out.
+      return false;
+    }
   }
 
   function buildVoiceModeHeaders(): Headers {
@@ -12056,37 +12496,113 @@ export function RunnerChat({
     }).catch(() => undefined);
   }
 
-  async function appendVoiceTranscriptMessage(role: "user" | "assistant", content: string, event: Record<string, unknown>) {
-    const normalizedSessionId = String(voiceModeSessionIdRef.current || "").trim();
+  async function appendVoiceTranscriptMessage(
+    role: "user" | "assistant",
+    content: string,
+    event: Record<string, unknown>,
+    sessionId: string,
+    sessionGeneration: number,
+  ) {
+    const normalizedSessionId = String(sessionId || "").trim();
     const normalizedContent = String(content || "").trim();
     if (!normalizedSessionId || !normalizedContent || !normalizedBackendUrl || !hasApiKey) {
       return;
     }
 
-    if (role === "user") {
+    const isCurrentVoiceSession = () => (
+      voiceModeSessionGenerationRef.current === sessionGeneration
+      && voiceModeSessionIdRef.current === normalizedSessionId
+      && Boolean(voiceModeThreadIdRef.current)
+      && currentThreadIdForVoiceRef.current === voiceModeThreadIdRef.current
+    );
+
+    if (role === "user" && isCurrentVoiceSession()) {
       voiceModePendingUserTranscriptRef.current = normalizedContent;
-    } else {
-      const promptText = String(voiceModePendingUserTranscriptRef.current || "Voice input").trim() || "Voice input";
-      voiceModePendingUserTranscriptRef.current = "";
-      appendSyntheticActionTurn(promptText, normalizedContent, "Voice mode");
+      voiceModePendingUserCanonicalPersistedRef.current = false;
     }
 
-    setVoiceModeState((current) => ({
-      ...current,
-      lastUserTranscript: role === "user" ? normalizedContent : current.lastUserTranscript,
-      lastAssistantTranscript: role === "assistant" ? normalizedContent : current.lastAssistantTranscript,
-    }));
+    if (isCurrentVoiceSession()) {
+      setVoiceModeState((current) => ({
+        ...current,
+        lastUserTranscript: role === "user" ? normalizedContent : current.lastUserTranscript,
+        lastAssistantTranscript: role === "assistant" ? normalizedContent : current.lastAssistantTranscript,
+      }));
+    }
 
-    await fetch(`${normalizedBackendUrl}/voice-agents/sessions/${encodeURIComponent(normalizedSessionId)}/messages`, {
-      method: "POST",
-      credentials: "include",
-      headers: buildVoiceModeHeaders(),
-      body: JSON.stringify({
-        role,
-        content: normalizedContent,
-        event,
-      }),
-    }).catch(() => undefined);
+    let canonicalPersisted = false;
+    let persistenceError = "";
+    const transcriptEvent = {
+      ...event,
+      client_transcript_id: String(event.client_transcript_id || event.clientTranscriptId || generateId("voice-transcript")),
+    };
+    for (let attempt = 0; attempt < 2 && !canonicalPersisted; attempt += 1) {
+      try {
+        const response = await fetch(`${normalizedBackendUrl}/voice-agents/sessions/${encodeURIComponent(normalizedSessionId)}/messages`, {
+          method: "POST",
+          credentials: "include",
+          headers: buildVoiceModeHeaders(),
+          body: JSON.stringify({
+            role,
+            content: normalizedContent,
+            event: transcriptEvent,
+          }),
+        });
+        const payload = await response.json().catch(() => null) as {
+          event?: { id?: string };
+          message?: { id?: string } | string;
+          error?: string;
+        } | null;
+        const persistedMessageId = payload?.message && typeof payload.message === "object"
+          ? payload.message.id
+          : null;
+        canonicalPersisted = response.ok && Boolean(payload?.event?.id && persistedMessageId);
+        if (!canonicalPersisted) {
+          persistenceError = typeof payload?.message === "string"
+            ? payload.message
+            : payload?.error
+              ? payload.error
+            : `Voice transcript persistence failed (${response.status}).`;
+        }
+      } catch (error) {
+        persistenceError = error instanceof Error ? error.message : String(error);
+      }
+    }
+    if (!isCurrentVoiceSession()) return;
+    if (role === "user") {
+      voiceModePendingUserCanonicalPersistedRef.current = canonicalPersisted;
+    }
+
+    if (role === "assistant") {
+      const promptText = String(voiceModePendingUserTranscriptRef.current || "Voice input").trim() || "Voice input";
+      const hadPendingUserTranscript = Boolean(voiceModePendingUserTranscriptRef.current.trim());
+      const userCanonicalPersisted = !hadPendingUserTranscript || voiceModePendingUserCanonicalPersistedRef.current;
+      voiceModePendingUserTranscriptRef.current = "";
+      voiceModePendingUserCanonicalPersistedRef.current = false;
+      // New or already-canonical threads receive the transcript through the
+      // ordered Thread v2 event above. Keep a synthetic pair only while a
+      // hydrated legacy transcript is still the selected compatibility view.
+      if (voiceModeLegacyTranscriptFallbackRef.current || !canonicalPersisted || !userCanonicalPersisted) {
+        appendSyntheticActionTurn(promptText, normalizedContent, "Voice mode", {
+          messageMetadata: {
+            source: "voice",
+            channel: "web_voice",
+            canonicalPersistenceFailed: !canonicalPersisted || !userCanonicalPersisted,
+          },
+        });
+      }
+    }
+    if (!canonicalPersisted && persistenceError) {
+      setInlineError(`${persistenceError} The transcript remains visible locally; retrying the voice turn is safe.`);
+    }
+  }
+
+  function enqueueVoiceTranscriptMessage(role: "user" | "assistant", content: string, event: Record<string, unknown>) {
+    const sessionId = String(voiceModeSessionIdRef.current || "").trim();
+    const sessionGeneration = voiceModeSessionGenerationRef.current;
+    const nextWrite = voiceModeTranscriptWriteTailRef.current
+      .catch(() => undefined)
+      .then(() => appendVoiceTranscriptMessage(role, content, event, sessionId, sessionGeneration));
+    voiceModeTranscriptWriteTailRef.current = nextWrite.catch(() => undefined);
   }
 
   function playVoiceAudioDelta(base64Audio: string) {
@@ -12119,12 +12635,12 @@ export function RunnerChat({
     }
     if (type === "conversation.item.input_audio_transcription.completed") {
       const transcript = String(event.transcript || "");
-      void appendVoiceTranscriptMessage("user", transcript, event);
+      enqueueVoiceTranscriptMessage("user", transcript, event);
       return;
     }
     if (type === "response.output_audio_transcript.done") {
       const transcript = String(event.transcript || "");
-      void appendVoiceTranscriptMessage("assistant", transcript, event);
+      enqueueVoiceTranscriptMessage("assistant", transcript, event);
       return;
     }
     if (type === "error") {
@@ -12151,8 +12667,11 @@ export function RunnerChat({
       }));
     }
     cleanupVoiceModeResources();
+    voiceModeSessionGenerationRef.current += 1;
     voiceModeSessionIdRef.current = null;
+    voiceModeThreadIdRef.current = "";
     voiceModePendingUserTranscriptRef.current = "";
+    voiceModePendingUserCanonicalPersistedRef.current = false;
     if (sessionId) {
       await endBackendVoiceSession(sessionId);
     }
@@ -12198,6 +12717,35 @@ export function RunnerChat({
       return;
     }
 
+    voiceModeSessionGenerationRef.current += 1;
+    const startGeneration = voiceModeSessionGenerationRef.current;
+    let expectedThreadId = String(currentThreadId || "").trim();
+    const isVoiceStartCurrent = () => (
+      voiceModeSessionGenerationRef.current === startGeneration
+      && currentThreadIdForVoiceRef.current === expectedThreadId
+    );
+    const abandonVoiceStart = async (sessionId = "") => {
+      if (voiceModeSessionGenerationRef.current === startGeneration) {
+        voiceModeSessionGenerationRef.current += 1;
+        cleanupVoiceModeResources();
+        voiceModeSessionIdRef.current = null;
+        voiceModeThreadIdRef.current = "";
+        voiceModePendingUserTranscriptRef.current = "";
+        voiceModePendingUserCanonicalPersistedRef.current = false;
+        setVoiceModeState({
+          status: "idle",
+          error: "",
+          sessionId: "",
+          threadId: "",
+          agentId: "",
+          agentName: "",
+          lastUserTranscript: "",
+          lastAssistantTranscript: "",
+        });
+      }
+      if (sessionId) await endBackendVoiceSession(sessionId);
+    };
+
     setVoiceModeState({
       status: "starting",
       error: "",
@@ -12213,6 +12761,10 @@ export function RunnerChat({
     try {
       if (isListening) {
         await stopSpeechToText();
+      }
+      if (!isVoiceStartCurrent()) {
+        await abandonVoiceStart();
+        return;
       }
       cleanupVoiceModeResources();
 
@@ -12238,9 +12790,17 @@ export function RunnerChat({
       if (!sessionId || !realtimeUrl || !websocketProtocol) {
         throw new Error("Voice session was created without realtime credentials.");
       }
+      if (!isVoiceStartCurrent()) {
+        await abandonVoiceStart(sessionId);
+        return;
+      }
+      expectedThreadId = sessionThreadId;
       voiceModePendingUserTranscriptRef.current = "";
+      voiceModePendingUserCanonicalPersistedRef.current = false;
+      voiceModeThreadIdRef.current = sessionThreadId;
 
       if (sessionThreadId && sessionThreadId !== currentThreadId) {
+        currentThreadIdForVoiceRef.current = sessionThreadId;
         setLocalThreadId(sessionThreadId);
         try {
           onThreadIdChange?.(sessionThreadId);
@@ -12248,6 +12808,11 @@ export function RunnerChat({
           reportRunnerLifecycleCallbackError("onThreadIdChange", callbackError);
         }
       }
+      setVoiceModeState((current) => ({
+        ...current,
+        sessionId,
+        threadId: sessionThreadId,
+      }));
 
       const AudioContextCtor = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!AudioContextCtor) {
@@ -12258,6 +12823,10 @@ export function RunnerChat({
       if (audioContext.state === "suspended") {
         await audioContext.resume();
       }
+      if (!isVoiceStartCurrent()) {
+        await abandonVoiceStart(sessionId);
+        return;
+      }
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -12267,6 +12836,11 @@ export function RunnerChat({
           autoGainControl: true,
         },
       });
+      if (!isVoiceStartCurrent()) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        await abandonVoiceStart(sessionId);
+        return;
+      }
       voiceModeMediaStreamRef.current = mediaStream;
 
       const websocket = new WebSocket(realtimeUrl, [websocketProtocol]);
@@ -12274,7 +12848,9 @@ export function RunnerChat({
       voiceModeSessionIdRef.current = sessionId;
 
       websocket.addEventListener("open", () => {
-        if (voiceModeWebSocketRef.current !== websocket) {
+        if (voiceModeWebSocketRef.current !== websocket || !isVoiceStartCurrent()) {
+          try { websocket.close(); } catch {}
+          void endBackendVoiceSession(sessionId);
           return;
         }
         const sessionUpdate = buildVoiceModeSessionUpdate(payload?.xai?.sessionUpdate, selectedAgentOption);
@@ -12313,12 +12889,12 @@ export function RunnerChat({
           lastUserTranscript: "",
           lastAssistantTranscript: "",
         });
-        appendVoiceModeNotice(
-          "Voice mode is active for " + (selectedAgentOption?.name || "this agent") + ". Speak naturally; transcripts will be saved to this thread."
-        );
       });
 
       websocket.addEventListener("message", (messageEvent) => {
+        if (voiceModeWebSocketRef.current !== websocket) {
+          return;
+        }
         if (typeof messageEvent.data !== "string") {
           return;
         }
@@ -12366,39 +12942,6 @@ export function RunnerChat({
       }));
       setInlineError(normalizedError.message || "Failed to start voice mode.");
     }
-  }
-
-  function appendVoiceModeNotice(message: string) {
-    const turnId = generateId("turn");
-    const now = Date.now();
-    const timestamp = new Date(now).toISOString();
-    setTurns((prev) => [
-      ...prev,
-      {
-        id: turnId,
-        prompt: "",
-        logs: [
-          {
-            time: timestamp,
-            message,
-            type: "info",
-            eventType: "action_summary",
-            metadata: {
-              actionType: "voice",
-            },
-          },
-        ],
-        startedAtMs: now,
-        completedAtMs: now,
-        durationSeconds: 0,
-        status: "completed",
-        animateOnRender: true,
-        isInitialTurn: prev.length === 0,
-        agentName: selectedAgent?.name || displayedAgentLabel,
-        environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
-        presentation: "context-action-notice",
-      },
-    ]);
   }
 
   function appendThreadContextActionNotice(action: RunnerChatThreadContextAction, message: string) {
@@ -16252,7 +16795,14 @@ export function RunnerChat({
     const nextScrollHeight = scrollElement.scrollHeight;
     previousLogsScrollHeightRef.current = nextScrollHeight;
     scheduleLogsAutoScrollToBottom();
-  }, [hasCustomEmptyStateActive, logs, scheduleLogsAutoScrollToBottom, turns]);
+  }, [
+    canonicalThread.projection.latestSequence,
+    hasCustomEmptyStateActive,
+    logs,
+    scheduleLogsAutoScrollToBottom,
+    shouldUseCanonicalThreadSurface,
+    turns,
+  ]);
 
   useLayoutEffect(() => {
     const contentElement = contentWidthRef.current;
@@ -18590,7 +19140,14 @@ export function RunnerChat({
         focusComposerSoon();
       }
       await stopSpeechToText();
-      if (hasRunningTurn) {
+      if (
+        executionAttachmentEntries.length === 0 &&
+        !quotedSelection &&
+        await tryHandleThreadCommunicatorMessage(taskText)
+      ) {
+        return;
+      }
+      if (hasRoutableActiveRun) {
         const queuedTurnId = generateId("turn");
         setTurns((prev) => [
           ...prev,
@@ -18671,7 +19228,7 @@ export function RunnerChat({
   }
 
   useEffect(() => {
-    if (isPreparingRun || hasRunningTurn || pendingQueuedMessages.length === 0 || isDrainingQueuedRunsRef.current) {
+    if (isPreparingRun || hasRoutableActiveRun || pendingQueuedMessages.length === 0 || isDrainingQueuedRunsRef.current) {
       return;
     }
     const nextQueuedMessage = pendingQueuedMessages[0];
@@ -18716,7 +19273,7 @@ export function RunnerChat({
         isDrainingQueuedRunsRef.current = false;
       }
     })();
-  }, [currentThreadId, hasRunningTurn, isPreparingRun, onRunError, pendingQueuedMessages]);
+  }, [currentThreadId, hasRoutableActiveRun, isPreparingRun, onRunError, pendingQueuedMessages]);
 
   function applyComposerInputValue(nextValue: string, selectionStart: number) {
     setInputSelectionStart(selectionStart);
@@ -19558,6 +20115,42 @@ export function RunnerChat({
     };
   }
 
+  function getTurnLiveWorkSummary(turn: RunnerTurn): string | null {
+    const cleanSummary = (value: unknown): string | null => {
+      const normalized = typeof value === "string"
+        ? value.replace(/\s+/g, " ").replace(/^(?:status|progress|working)\s*:\s*/i, "").trim()
+        : "";
+      if (!normalized) return null;
+      const sentence = normalized.length > 132 ? `${normalized.slice(0, 129).trimEnd()}…` : normalized;
+      return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+    };
+
+    for (const log of [...turn.logs].reverse()) {
+      const metadata = (log.metadata || {}) as Record<string, unknown>;
+      const explicitSummary =
+        cleanSummary(metadata.liveSummary) ||
+        cleanSummary(metadata.observerSummary) ||
+        cleanSummary(metadata.thinkingSummary) ||
+        cleanSummary((metadata.deepResearch as { thinkingSummary?: unknown } | undefined)?.thinkingSummary);
+      if (explicitSummary) return explicitSummary;
+    }
+
+    const actionSummary = [...turn.logs]
+      .reverse()
+      .find((log) => log.isActionSummary || log.eventType === "action_summary");
+    const actionSummaryText = cleanSummary(actionSummary?.message);
+    if (actionSummaryText) return actionSummaryText;
+
+    const latestUsefulLog = [...turn.logs].reverse().find((log) => {
+      if (!log.message?.trim()) return false;
+      if (log.eventType === "agent_message" || log.eventType === "llm_response" || log.eventType === "user_message") return false;
+      if (log.eventType === "permission_request") return false;
+      if (log.isReasoning && log.message.length > 180) return false;
+      return true;
+    });
+    return cleanSummary(latestUsefulLog?.message);
+  }
+
   function clearThinkingStatusTimers(turnId: string) {
     const timers = thinkingStatusTimersRef.current[turnId];
     if (timers?.hideTimer) {
@@ -19755,7 +20348,7 @@ export function RunnerChat({
   async function handlePermissionDecision(log: RunnerLog, decision: "allow" | "deny") {
     const requestId = String(log.metadata?.permissionRequestId || "").trim();
     if (!currentThreadId || !requestId || !normalizedBackendUrl || !apiKey.trim()) {
-      return;
+      throw new Error("This permission request is missing the thread or request identity required to submit a decision.");
     }
     const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
     headers.set("Content-Type", "application/json");
@@ -19771,9 +20364,19 @@ export function RunnerChat({
       const bodyText = await response.text().catch(() => "");
       throw new Error(bodyText || `Failed to ${decision === "allow" ? "approve" : "deny"} permission request (${response.status})`);
     }
-    const decisionResult = await response.json().catch(() => null) as { active?: boolean } | null;
+    const decisionResult = await response.json().catch(() => null) as {
+      active?: boolean;
+      canonicalMirrored?: boolean;
+      message?: string;
+    } | null;
+    if (decisionResult?.canonicalMirrored === false) {
+      setInlineError("The permission ruling was applied, but the live Thread view could not confirm its durable update. Refresh to reconcile the run state.");
+    }
+    if (decisionResult?.active === false && decisionResult.message) {
+      setInlineError(decisionResult.message);
+    }
     const nextTurnStatus: RunnerTurnStatus = decisionResult?.active === false
-      ? (decision === "allow" ? "completed" : "cancelled")
+      ? "cancelled"
       : "running";
     const completedAtMs = decisionResult?.active === false ? Date.now() : undefined;
     setTurns((previousTurns) =>
@@ -20358,7 +20961,7 @@ export function RunnerChat({
     [threadHistoryItems]
   );
   const shouldRenderThreadHistoryRail = threadHistoryUserMessageCount > 1 && threadHistoryItems.length > 0;
-  const shouldDisplayThreadHistoryRail = shouldRenderThreadHistoryRail && isThreadHistoryAtMaxWidth;
+  const shouldDisplayThreadHistoryRail = !shouldUseCanonicalThreadSurface && shouldRenderThreadHistoryRail && isThreadHistoryAtMaxWidth;
   const activeThreadHistoryIndex = threadHistoryItems.findIndex((item) => item.id === activeThreadHistoryItemId);
   const hoveredThreadHistoryIndex = threadHistoryItems.findIndex((item) => item.id === hoveredThreadHistoryItemId);
   const previousThreadHistoryItem =
@@ -22508,14 +23111,152 @@ export function RunnerChat({
             ref={contentWidthRef}
             className={`tb-content-width ${hasCustomEmptyState ? "is-custom-empty-state" : ""}`.trim()}
           >
-            {turns.length === 0
+            {!shouldUseCanonicalThreadSurface && turns.length === 0
               ? hasCustomEmptyState
                 ? emptyState
                 : (isPreparingRun || hasRunningTurn || pendingQueuedMessages.length > 0 || isThreadHistoryLoading)
                   ? null
                   : <div className="runner-log-empty">No logs yet. Run a task to start streaming.</div>
               : null}
-            {turns.map((turn, turnIndex) => {
+            {canonicalThreadEnabled && canonicalThread.error && !shouldUseCanonicalThreadSurface ? (
+              <div className="tb-canonical-thread-error is-compatibility" role="alert">
+                <span>Live observer activity is unavailable: {canonicalThread.error}</span>
+                <button type="button" onClick={() => void canonicalThread.refresh().catch(() => undefined)}>Retry</button>
+              </div>
+            ) : null}
+            {shouldUseCanonicalThreadSurface ? (
+              <div className="tb-canonical-thread-surface" data-connected={canonicalThread.connected ? "true" : "false"}>
+                {canonicalThread.reconnecting && hasCanonicalSurfaceContent ? (
+                  <div className="tb-canonical-thread-connection" role="status">
+                    <LucideLoaderCircle className="tb-context-action-notice-icon-spinner" strokeWidth={1.6} />
+                    Reconnecting live activity…
+                  </div>
+                ) : null}
+                {canonicalThread.loading && !hasCanonicalSurfaceContent ? (
+                  <div className="runner-log-empty">Loading conversation…</div>
+                ) : null}
+                {canonicalThread.error && !hasCanonicalSurfaceContent ? (
+                  <div className="tb-canonical-thread-error" role="alert">
+                    <span>{canonicalThread.error}</span>
+                    <button type="button" onClick={() => void canonicalThread.refresh().catch(() => undefined)}>Retry</button>
+                  </div>
+                ) : null}
+                {!canonicalThread.loading && !canonicalThread.error && !hasCanonicalSurfaceContent ? (
+                  <div className="runner-log-empty">No activity yet. Send a message to start this thread.</div>
+                ) : null}
+                {legacyCompatibilityHistoryEntries.length > 0 ? (
+                  <div className="tb-canonical-compatibility is-history" aria-label="Earlier compatible thread activity">
+                    {legacyCompatibilityHistoryEntries.map(({ turn, projection }) => (
+                      <RunnerThreadTimeline
+                        key={`legacy-compatibility:${turn.id}`}
+                        projection={projection}
+                        fallbackRunAgentName={displayedAgentLabel}
+                        fallbackRunWorkspaceName={displayedWorkspaceLabel}
+                        maxMountedItems={12}
+                        renderMessageContent={(message) => (
+                          <RunnerMarkdown
+                            content={stripSystemTags(message.content)}
+                            className="tb-thread-message-markdown"
+                            softBreaks
+                          />
+                        )}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+                <RunnerThreadTimeline
+                  projection={canonicalThread.projection}
+                  fallbackRunAgentName={displayedAgentLabel}
+                  fallbackRunWorkspaceName={displayedWorkspaceLabel}
+                  maxMountedItems={200}
+                  runDetailStates={canonicalThread.runDetailStates}
+                  activityGroupActionStates={canonicalThread.activityGroupActionStates}
+                  onLoadRunDetails={(run) => canonicalThread.loadRunDetails(run.id)}
+                  onLoadActivityGroupActions={canonicalThread.loadActivityGroupActions}
+                  renderMessageContent={(message) => (
+                    <RunnerMarkdown
+                      content={stripSystemTags(message.content)}
+                      className="tb-thread-message-markdown"
+                      softBreaks
+                    />
+                  )}
+                  onLoadEarlier={async () => {
+                    const scrollElement = logsRef.current;
+                    const previousScrollHeight = scrollElement?.scrollHeight || 0;
+                    const previousScrollTop = scrollElement?.scrollTop || 0;
+                    try {
+                      const loaded = await canonicalThread.loadMore();
+                      if (loaded && scrollElement && typeof window !== "undefined") {
+                        window.requestAnimationFrame(() => {
+                          const heightDelta = scrollElement.scrollHeight - previousScrollHeight;
+                          scrollElement.scrollTop = Math.max(0, previousScrollTop + heightDelta);
+                        });
+                      }
+                      return loaded;
+                    } catch (error) {
+                      const normalizedError = error instanceof Error ? error : new Error(String(error));
+                      setInlineError(normalizedError.message || "Failed to load earlier thread activity.");
+                      throw normalizedError;
+                    }
+                  }}
+                  onControlRun={async (run, action) => {
+                    try {
+                      const command = await canonicalThread.controlRun(run.id, {
+                        action,
+                        idempotencyKey: `runner-chat:${run.id}:${action}:${Date.now()}`,
+                      });
+                      if (command.effectApplied === false) {
+                        setInlineError(command.limitation || "The control request was recorded and is waiting for the run coordinator.");
+                      }
+                    } catch (error) {
+                      const normalizedError = error instanceof Error ? error : new Error(String(error));
+                      setInlineError(normalizedError.message || `Failed to ${action} the run.`);
+                    }
+                  }}
+                  onOpenChanges={onOpenChanges ? (run) => onOpenChanges(canonicalThreadId, run.id) : undefined}
+                  onPermissionDecision={(request, decision) => handlePermissionDecision({
+                    createdAt: request.createdAt,
+                    time: "",
+                    message: `Permission requested: ${request.toolName || request.actionLabel || "tool"}`,
+                    type: "warning",
+                    eventType: "permission_request",
+                    metadata: {
+                      permissionRequestId: request.id,
+                      permissionRing: request.permissionRing || undefined,
+                      permissionRingLabel: request.ringLabel || undefined,
+                      permissionRingDescription: request.ringDescription || undefined,
+                      permissionActionLabel: request.actionLabel || undefined,
+                      permissionActionDescription: request.actionDescription || undefined,
+                      toolName: request.toolName || undefined,
+                      input: typeof request.input === "string" ? request.input : JSON.stringify(request.input ?? {}),
+                      reason: request.reason || undefined,
+                      status: "pending",
+                      decision: "pending",
+                    },
+                  }, decision)}
+                />
+                {legacyCompatibilityTailEntries.length > 0 ? (
+                  <div className="tb-canonical-compatibility is-tail" aria-label="Locally queued thread activity">
+                    {legacyCompatibilityTailEntries.map(({ turn, projection }) => (
+                      <RunnerThreadTimeline
+                        key={`legacy-compatibility-tail:${turn.id}`}
+                        projection={projection}
+                        fallbackRunAgentName={displayedAgentLabel}
+                        fallbackRunWorkspaceName={displayedWorkspaceLabel}
+                        maxMountedItems={12}
+                        renderMessageContent={(message) => (
+                          <RunnerMarkdown
+                            content={stripSystemTags(message.content)}
+                            className="tb-thread-message-markdown"
+                            softBreaks
+                          />
+                        )}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : turns.map((turn, turnIndex) => {
               const isTurnRunning = isRunningTurnStatus(turn.status);
               const isTurnPermissionAsked = turn.status === "permission_asked";
               const isQueuedTurn = turn.status === "queued";
@@ -22601,7 +23342,7 @@ export function RunnerChat({
               const firstDisplayedTimelineItemIndex = Math.max(0, revealedTimelineItems.length - visibleWorkLogItemCount);
               const displayedTimelineItems = revealedTimelineItems.slice(firstDisplayedTimelineItemIndex);
               const hasMoreWorkingLogs = isExpanded && firstDisplayedTimelineItemIndex > 0;
-              const shouldShowCollapsedLivePreview = !isExpanded && isLiveWorkLogPreviewTurn && displayedTimelineItems.length > 0;
+              const shouldShowCollapsedLivePreview = false;
               const thinkingStatusPhase =
                 thinkingStatusPhaseByTurn[turn.id] ??
                 (isTurnRunning && visibleTimelineSourceItems.length > 0 && !agentMessage?.message ? "visible" : "hidden");
@@ -22630,12 +23371,15 @@ export function RunnerChat({
               const turnAgentPhotoUrl = resolveTurnAgentPhotoUrl(turnAgentLabel);
               const turnEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
               const turnComputerLabel = getRunnerComputerDisplayLabel(turnEnvironmentLabel);
+              const liveWorkSummary = isTurnRunning ? getTurnLiveWorkSummary(turn) : null;
               const workLabel = isWorkLogsLoading
                 ? `${turnAgentLabel} loading working logs...`
                 : turn.status === "permission_asked"
                   ? `${turnAgentLabel} needs permission`
                   : isTurnRunning
-                  ? `${turnAgentLabel} working...`
+                  ? liveWorkSummary
+                    ? `${liveWorkSummary} · ${formatElapsedDurationLabel(turnSeconds)}`
+                    : `${turnAgentLabel} working · ${formatElapsedDurationLabel(turnSeconds)}`
                   : `${turnAgentLabel} worked for ${formatElapsedDurationLabel(turnSeconds)}`;
               const workComputerLabel = (
                 <span className="tb-work-computer-label" title={turnComputerLabel}>
@@ -22646,6 +23390,19 @@ export function RunnerChat({
                 </span>
               );
               const shouldRenderWorkSection = isTurnRunning || isTurnPermissionAsked || revealedTimelineItems.length > 0 || isWorkLogsLoading;
+              const legacyTurnProjection = legacyTurnProjectionsById.get(turn.id) || null;
+              const legacyTurnRun = legacyTurnProjection
+                ? Object.values(legacyTurnProjection.runsById)[0] || null
+                : null;
+              const effectiveLegacyTurnProjection = legacyTurnProjection && legacyTurnRun && liveWorkSummary
+                ? {
+                    ...legacyTurnProjection,
+                    runsById: {
+                      ...legacyTurnProjection.runsById,
+                      [legacyTurnRun.id]: { ...legacyTurnRun, currentSummary: liveWorkSummary },
+                    },
+                  }
+                : legacyTurnProjection;
               const userThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "user");
               const assistantThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "assistant");
               const visibleFollowUpActions = Array.isArray(followUpActions)
@@ -22824,9 +23581,19 @@ export function RunnerChat({
               }
 
               if (isBtwTurn) {
+                const isCommunicatorBtwTurn = turn.messageMetadata?.source === "thread_v2_communicator";
+                const routingReceiptLabel = typeof turn.messageMetadata?.routingReceiptLabel === "string"
+                  ? turn.messageMetadata.routingReceiptLabel.trim()
+                  : "";
                 return (
-                  <div key={turn.id} className="tb-turn tb-turn-btw">
-                    <div className="tb-btw-turn-card" style={promptStyle}>
+                  <div key={turn.id} className={`tb-turn tb-turn-btw ${isCommunicatorBtwTurn ? "is-communicator" : ""}`.trim()}>
+                    <div className={`tb-btw-turn-card ${isCommunicatorBtwTurn ? "is-communicator" : ""}`.trim()} style={promptStyle}>
+                      {isCommunicatorBtwTurn ? (
+                        <div className="tb-btw-communicator-header">
+                          <span className="tb-btw-communicator-avatar" aria-hidden="true"><LucideMessageCircle strokeWidth={1.7} /></span>
+                          <span>Communicator</span>
+                        </div>
+                      ) : null}
                       <div
                         ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
                         className="tb-btw-turn-prompt tb-thread-history-anchor"
@@ -22852,6 +23619,12 @@ export function RunnerChat({
                             softBreaks: true,
                             canPreviewSummaryWorkspacePaths,
                           })}
+                          {routingReceiptLabel ? (
+                            <div className="tb-thread-routing-receipt is-success" role="status">
+                              <LucideCheck className="tb-thread-routing-receipt-icon" strokeWidth={1.7} />
+                              <span>{routingReceiptLabel}</span>
+                            </div>
+                          ) : null}
                           {emailDeliveryDisplay ? (
                             <div className={`tb-email-delivery-status ${emailDeliveryDisplay.className}`}>
                               <LucideMail className="tb-email-delivery-status-icon" strokeWidth={1.7} />
@@ -23121,73 +23894,47 @@ export function RunnerChat({
                     </div>
                   ) : null}
 
-                    {shouldRenderWorkSection ? (
-                      <>
-                        <button
-                          type="button"
-                          className="tb-work-header"
-                          style={workHeaderStyle}
-                          aria-expanded={isExpanded}
-                          onClick={() => toggleWorkingLogs(turn.id, isExpanded)}
-                        >
-                          <span className="tb-work-label">
-                            <span>{workLabel}</span>
-                            {isExpanded ? <IconChevronUp className="tb-chevron" /> : <IconChevronDown className="tb-chevron" />}
-                          </span>
-                          {workComputerLabel}
-                        </button>
-
-                      <div className={`tb-work-collapse ${isExpanded ? "is-expanded" : ""} ${isExpanded || shouldShowCollapsedLivePreview ? "" : "collapsed"}`.trim()}>
-                        {isExpanded || shouldShowCollapsedLivePreview ? (
-                          <div className="tb-work-collapse-inner">
-                            <div className="agent-steps-container">
-                              {hasMoreWorkingLogs ? (
-                                <div className="agent-step-item tb-work-load-more-item">
-                                  <div className="agent-step-content">
-                                    <button
-                                      type="button"
-                                      className="tb-work-load-more-button"
-                                      onClick={() => loadMoreWorkingLogs(turn.id, revealedTimelineItems.length)}
-                                    >
-                                      <LucidePlus className="tb-work-load-more-icon" strokeWidth={1.8} />
-                                      Load more...
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : null}
-                              {displayedTimelineItems.map((item, index) => {
-                                const timelineIndex = firstDisplayedTimelineItemIndex + index;
-                                const content = renderTimelineItem(turn, item, timelineIndex);
-                                if (!content) return null;
-                                return (
-                                  <div
-                                    key={timelineItemKey(turn.id, timelineIndex, item)}
-                                    className="agent-step-item"
-                                    style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
-                                  >
-                                    <div className="agent-step-content">{content}</div>
-                                  </div>
-                                );
-                              })}
-                              {shouldRenderThinkingStatus ? (
-                                <div
-                                  className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
-                                  style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
-                                >
-                                  <div className="agent-step-content">
-                                    <InlineStatusLogBox
-                                      label="Thinking..."
-                                      icon={<LucideTerminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
-                                      pending
-                                    />
-                                  </div>
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-                        ) : null}
-                      </div>
-                    </>
+                  {shouldRenderWorkSection && effectiveLegacyTurnProjection && legacyTurnRun ? (
+                    <div className="tb-turn-run-activity" style={workHeaderStyle}>
+                      <RunnerThreadRunActivityCard
+                        run={effectiveLegacyTurnProjection.runsById[legacyTurnRun.id] || legacyTurnRun}
+                        projection={effectiveLegacyTurnProjection}
+                        fallbackAgentName={turnAgentLabel}
+                        fallbackWorkspaceName={effectiveWorkspaceSelectorMode === "projects" ? displayedWorkspaceLabel : turnEnvironmentLabel}
+                        renderAction={(action: RunnerThreadAction) => {
+                          const metadata = (action.metadata || {}) as RunnerLog["metadata"];
+                          const legacyLog: RunnerLog = {
+                            createdAt: action.createdAt,
+                            time: "",
+                            message: action.summary || action.title,
+                            type: action.status === "failed" || action.status === "blocked" ? "error" : "info",
+                            eventType: action.type as RunnerLog["eventType"],
+                            metadata,
+                          };
+                          return renderTimelineItem(turn, { kind: "log", log: legacyLog }, action.sequence);
+                        }}
+                        onPermissionDecision={(request: RunnerThreadPermissionRequest, decision) => handlePermissionDecision({
+                          createdAt: request.createdAt,
+                          time: "",
+                          message: `Permission requested: ${request.toolName || request.actionLabel || "tool"}`,
+                          type: "warning",
+                          eventType: "permission_request",
+                          metadata: {
+                            permissionRequestId: request.id,
+                            permissionRing: request.permissionRing || undefined,
+                            permissionRingLabel: request.ringLabel || undefined,
+                            permissionRingDescription: request.ringDescription || undefined,
+                            permissionActionLabel: request.actionLabel || undefined,
+                            permissionActionDescription: request.actionDescription || undefined,
+                            toolName: request.toolName || undefined,
+                            input: typeof request.input === "string" ? request.input : JSON.stringify(request.input ?? {}),
+                            reason: request.reason || undefined,
+                            status: "pending",
+                            decision: "pending",
+                          },
+                        }, decision)}
+                      />
+                    </div>
                   ) : null}
 
                   {agentMessage?.message ? (
@@ -24134,6 +24881,14 @@ export function RunnerChat({
                   <div className="tb-composer-connectors-right">
                     {renderComposerOrganizationSelector()}
                   </div>
+                </div>
+              ) : null}
+              {inlineError ? (
+                <div className="runner-inline-error" role="alert">
+                  <span>{inlineError}</span>
+                  <button type="button" onClick={() => setInlineError(null)} aria-label="Dismiss message">
+                    <LucideX strokeWidth={1.8} />
+                  </button>
                 </div>
               ) : null}
           </div>

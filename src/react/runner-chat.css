@@ -228,6 +228,79 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   padding: 4px 2px;
 }
 
+.tb-runner-chat .tb-canonical-thread-surface {
+  width: 100%;
+  min-width: 0;
+  padding: 18px 0 12px;
+  container: runner-thread / inline-size;
+}
+
+.tb-runner-chat .tb-canonical-thread-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(244, 114, 122, 0.22);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(244, 63, 94, 0.07);
+  color: rgba(255, 206, 211, 0.86);
+  font-size: 12px;
+}
+
+.tb-runner-chat .tb-canonical-thread-error button {
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 5px 9px;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-canonical-thread-error.is-compatibility {
+  margin: 18px 0 0;
+}
+
+.tb-runner-chat .tb-canonical-thread-connection {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 6px;
+  margin: 0 auto 12px;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 11px;
+}
+
+.tb-runner-chat .tb-canonical-thread-connection svg {
+  width: 12px;
+  height: 12px;
+}
+
+.tb-runner-chat .tb-thread-message-markdown {
+  white-space: normal;
+}
+
+.tb-runner-chat .tb-canonical-compatibility {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.tb-runner-chat .tb-canonical-compatibility.is-history {
+  margin-bottom: 22px;
+}
+
+.tb-runner-chat .tb-canonical-compatibility.is-tail {
+  margin-top: 22px;
+}
+
+.tb-runner-chat .tb-canonical-compatibility:empty {
+  display: none;
+}
+
 .tb-runner-chat .tb-log-scroll {
   width: 100%;
   flex: 1 1 auto;
@@ -1120,6 +1193,47 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   border-bottom-right-radius: 3px;
   border: 1px solid rgba(255, 166, 72, 0.42);
   background: rgba(255, 166, 72, 0.1);
+}
+
+.tb-runner-chat .tb-btw-turn-card.is-communicator {
+  width: min(100%, 720px);
+  max-width: 100%;
+  margin-left: 0;
+  border-color: rgba(120, 164, 255, 0.28);
+  border-bottom-right-radius: var(--tb-runner-radius-md);
+  border-bottom-left-radius: 3px;
+  background: rgba(91, 132, 220, 0.09);
+}
+
+.tb-runner-chat .tb-btw-communicator-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  color: rgba(220, 232, 255, 0.92);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.tb-runner-chat .tb-btw-communicator-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(132, 172, 255, 0.34);
+  border-radius: 50%;
+  background: rgba(94, 137, 228, 0.18);
+}
+
+.tb-runner-chat .tb-btw-communicator-avatar svg {
+  width: 12px;
+  height: 12px;
+}
+
+.tb-runner-chat .tb-btw-turn-card.is-communicator .tb-btw-turn-prompt {
+  color: rgba(180, 202, 245, 0.72);
+  font-weight: 450;
 }
 
 .tb-runner-chat .tb-btw-turn-prompt {
@@ -4693,6 +4807,74 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-log-permission-button-secondary {
   background: var(--tb-control-bg, rgba(255, 255, 255, 0.08));
   color: var(--tb-primary-text, rgba(255, 255, 255, 0.9));
+}
+
+.tb-runner-chat .tb-log-card-permission.is-resolved .tb-log-card-panel {
+  padding-block: 9px;
+}
+
+.tb-runner-chat .tb-log-permission-resolution {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.tb-runner-chat .tb-log-permission-resolution-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-log-card-permission.is-approved .tb-log-permission-resolution-icon {
+  color: #5ecf96;
+}
+
+.tb-runner-chat .tb-log-card-permission.is-denied .tb-log-permission-resolution-icon {
+  color: #ef8b8b;
+}
+
+.tb-runner-chat .tb-log-permission-resolution-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tb-runner-chat .tb-log-permission-resolution-title {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tb-runner-chat .tb-log-permission-resolution-detail {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 11px;
+}
+
+.tb-runner-chat .tb-log-permission-resolution-detail span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .tb-runner-chat .tb-log-permission-resolution-copy {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .tb-runner-chat .tb-log-permission-resolution-detail {
+    justify-content: flex-start;
+  }
 }
 
 .tb-runner-chat .tb-browser-carousel {
@@ -8283,6 +8465,16 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   font-weight: 600;
 }
 
+.tb-runner-chat .tb-turn-summary .tb-message-markdown-summary h2.tb-message-markdown-heading {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.tb-runner-chat .tb-turn-summary .tb-message-markdown-summary h3.tb-message-markdown-heading {
+  font-size: 16px;
+  font-weight: 500;
+}
+
 .tb-runner-chat .tb-message-markdown-link {
   color: #60a5fa;
   text-decoration: none;
@@ -8356,7 +8548,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-message-markdown-rule {
   margin: 12px 0;
   border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .tb-runner-chat .tb-message-markdown-image {
@@ -13787,9 +13978,38 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .runner-inline-error {
   margin-top: 8px;
-  padding: 0 4px;
+  padding: 8px 10px;
   color: #ff8898;
   font-size: 12px;
+  line-height: 1.4;
+  border: 1px solid color-mix(in srgb, #ff8898 30%, transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, #ff8898 7%, transparent);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tb-runner-chat .runner-inline-error button {
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .runner-inline-error button:hover {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.tb-runner-chat .runner-inline-error button svg {
+  width: 14px;
+  height: 14px;
 }
 
 .tb-runner-chat .runner-spinner {

@@ -10469,14 +10469,20 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           );
           const httpMethod = normalizeMetronomeFunctionHttpMethod(overrides.httpMethod || overrides.http_method || overrides.method);
           const rawHeaders = overrides.requestHeaders || overrides.request_headers || overrides.headersRows || overrides.headers_rows || overrides.requestHeadersJson || overrides.request_headers_json || overrides.headersJson || overrides.headers_json || overrides.headers;
-          const rawPayload = overrides.payloadJson || overrides.payload_json || overrides.payload;
+          const rawPayload = overrides.payloadJson !== undefined
+            ? overrides.payloadJson
+            : overrides.payload_json !== undefined
+              ? overrides.payload_json
+              : overrides.payload;
           const requestHeaders = normalizeMetronomeFunctionHeaderRows(rawHeaders);
           const requestHeadersJson = rawHeaders && typeof rawHeaders === "object"
             ? serializeMetronomeFunctionHeaderRows(requestHeaders)
             : String(rawHeaders || serializeMetronomeFunctionHeaderRows(requestHeaders));
-          const payloadJson = rawPayload && typeof rawPayload === "object"
+          const payloadJson = rawPayload !== null && typeof rawPayload === "object"
             ? JSON.stringify(rawPayload, null, 2)
-            : String(rawPayload || "{\n  \"input\": \"{{ input }}\"\n}");
+            : rawPayload === undefined || rawPayload === null
+              ? ""
+              : String(rawPayload);
           const outputKey = String(overrides.outputKey || overrides.output_key || "function");
           return {
             functionMode,
@@ -11728,7 +11734,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   ? {
                       functionId: "",
                       functionName: "",
-                      payloadJson: "{\n  \"input\": \"{{ input }}\"\n}",
+                      payloadJson: "",
                       ...overrideConfig,
                     }
                 : kind === "firecrawl"
@@ -21802,7 +21808,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             const functionConfig = createDefaultMetronomeFunctionConfig(selectedNode.data?.config || {});
             if (functionConfig.functionMode !== "computer_agents_function") return;
             const functionId = String(functionConfig.functionId || "").trim();
-            const payloadJson = functionConfig.payloadJson || "{\n  \"input\": \"{{ input }}\"\n}";
+            const payloadJson = functionConfig.payloadJson || "";
             setMetronomeFunctionInvokeState({
               nodeId,
               status: "loading",
@@ -27063,6 +27069,35 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               const functionConfig = createDefaultMetronomeFunctionConfig(config);
               const functionMode = normalizeMetronomeFunctionMode(functionConfig.functionMode);
               const isExternalApi = functionMode === "external_api";
+              const functionInputBinding = normalizeMetronomeDataBinding(
+                functionConfig.inputBinding || functionConfig.input_binding,
+                "last.json"
+              );
+              const functionInputBindingOptions = (() => {
+                const options = [
+                  { id: "workflow.trigger.input.payload", label: "Trigger payload" },
+                  ...METRONOME_WORKFLOW_DATA_BINDING_OPTIONS,
+                  ...nodes
+                    .filter((node) => String(node?.id || "").trim() && String(node?.id || "").trim() !== String(selectedNodeId || "").trim())
+                    .map((node) => ({
+                      id: "node." + String(node.id).trim() + ".data",
+                      label: String(node?.data?.label || node?.label || node.id).trim() + " output",
+                    })),
+                ];
+                if (!options.some((option) => option.id === functionInputBinding)) {
+                  options.unshift({ id: functionInputBinding, label: functionInputBinding });
+                }
+                const seen = new Set();
+                return options.filter((option) => {
+                  const id = String(option?.id || "").trim();
+                  if (!id || seen.has(id)) return false;
+                  seen.add(id);
+                  return true;
+                });
+              })();
+              const functionSendsRequestBody = !["GET", "HEAD"].includes(
+                normalizeMetronomeFunctionHttpMethod(functionConfig.httpMethod || functionConfig.method)
+              );
               const resetFunctionInvokeState = () => setMetronomeFunctionInvokeState({
                 nodeId: selectedNodeId || "",
                 status: "idle",
@@ -27247,6 +27282,14 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           onChange: (event) => updateSelectedNodeConfig("url", event.target.value),
                         })
                       ),
+                      renderMetronomeDataBindingSelect({
+                        title: "Input source",
+                        tooltip: "The selected data is available as input when resolving URL, header, and request-body templates.",
+                        fieldKey: "inputBinding",
+                        fallback: "last.json",
+                        options: functionInputBindingOptions,
+                        className: "playground-metronome-function-input-source-field",
+                      }),
                       renderFunctionHeaders(),
                       React.createElement("div", { className: "playground-metronome-field playground-metronome-function-method-field" },
                         renderMetronomeFieldTitle("Method"),
@@ -27261,17 +27304,19 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           }),
                         })
                       ),
-                      React.createElement("div", { className: "playground-metronome-field" },
-                        renderMetronomeFieldTitle("Payload"),
-                        React.createElement("div", { className: "playground-metronome-inline-code-editor" },
-                          React.createElement(MetronomeGeneratedCodeEditor, {
-                            file: { path: "payload.json", language: "json" },
-                            value: functionConfig.payloadJson || "{\n}",
-                            readOnly: isActiveWorkflowBuiltIn,
-                            onChange: (nextValue) => updateSelectedNodeConfig("payloadJson", String(nextValue || "")),
-                          })
-                        )
-                      )
+                      functionSendsRequestBody
+                        ? React.createElement("div", { className: "playground-metronome-field" },
+                            renderMetronomeFieldTitle("Request body", "When empty, the selected input source is sent directly."),
+                            React.createElement("div", { className: "playground-metronome-inline-code-editor" },
+                              React.createElement(MetronomeGeneratedCodeEditor, {
+                                file: { path: "payload.json", language: "json" },
+                                value: functionConfig.payloadJson,
+                                readOnly: isActiveWorkflowBuiltIn,
+                                onChange: (nextValue) => updateSelectedNodeConfig("payloadJson", String(nextValue || "")),
+                              })
+                            )
+                          )
+                        : null
                     )
                   : React.createElement(React.Fragment, null,
                       React.createElement("div", { className: "playground-metronome-field" },
@@ -27298,12 +27343,20 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                           },
                         })
                       ),
+                      renderMetronomeDataBindingSelect({
+                        title: "Input source",
+                        tooltip: "When the request payload is empty, the selected input is sent directly to the function.",
+                        fieldKey: "inputBinding",
+                        fallback: "last.json",
+                        options: functionInputBindingOptions,
+                        className: "playground-metronome-function-input-source-field",
+                      }),
                       React.createElement("div", { className: "playground-metronome-field" },
                         renderMetronomeFieldTitle("Request payload"),
                         React.createElement("div", { className: "playground-metronome-inline-code-editor" },
                           React.createElement(MetronomeGeneratedCodeEditor, {
                             file: { path: "payload.json", language: "json" },
-                            value: functionConfig.payloadJson || "{\n  \"input\": \"{{ input }}\"\n}",
+                            value: functionConfig.payloadJson,
                             readOnly: isActiveWorkflowBuiltIn,
                             onChange: (nextValue) => {
                               updateSelectedNodeConfig("payloadJson", String(nextValue || ""));

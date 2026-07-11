@@ -1,6 +1,34 @@
 import { RunnerEventNormalizer } from "./normalize-event.js";
 import { iterateSseData } from "./sse.js";
 import {
+  normalizeRunnerThreadAction,
+  normalizeRunnerThreadActivityGroup,
+  normalizeRunnerThreadEvent,
+  normalizeRunnerThreadEventPage,
+  normalizeRunnerThreadMessage,
+  normalizeRunnerThreadRoutingReceipt,
+  normalizeRunnerThreadRun,
+  normalizeRunnerThreadTimelinePage,
+  unwrapRunnerThreadList,
+  unwrapRunnerThreadObject,
+} from "./thread/normalize.js";
+import {
+  RunnerThreadAction,
+  RunnerThreadActivityClassificationResult,
+  RunnerThreadActivityGroup,
+  RunnerThreadControlInput,
+  RunnerThreadDeliveryMode,
+  RunnerThreadEvent,
+  RunnerThreadEventPage,
+  RunnerThreadRoutedMessageInput,
+  RunnerThreadRoutedMessageResult,
+  RunnerThreadRun,
+  RunnerThreadRunCommandResult,
+  RunnerThreadSteeringInput,
+  RunnerThreadTimelinePage,
+  RunnerThreadTimelineQuery,
+} from "./thread/types.js";
+import {
   RawRunnerEvent,
   RunnerAgentCreateInput,
   RunnerAgentRecord,
@@ -207,6 +235,520 @@ export class RunnerClient {
       signal: options.signal,
     });
     return Array.isArray(payload.logs) ? payload.logs : Array.isArray(payload.data) ? payload.data : [];
+  }
+
+  /** Returns the canonical mixed thread timeline after an optional sequence/cursor. */
+  async listThreadTimeline(
+    options: RunnerApiRequestOptions & RunnerThreadTimelineQuery & {
+      threadId: string;
+    },
+  ): Promise<RunnerThreadTimelinePage> {
+    const search = new URLSearchParams();
+    if (options.after !== undefined) search.set("after", String(options.after));
+    if (options.before !== undefined) search.set("before", String(options.before));
+    if (options.cursor) search.set("cursor", options.cursor);
+    if (options.limit !== undefined) search.set("limit", String(options.limit));
+    if (options.includeLegacy === false) search.set("includeLegacy", "0");
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/threads/${encodeURIComponent(options.threadId)}/timeline${search.size > 0 ? `?${search.toString()}` : ""}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return normalizeRunnerThreadTimelinePage(payload, { threadId: options.threadId, sequence: options.after });
+  }
+
+  /** Alias for consumers that use resource-style `get` naming. */
+  async getThreadTimeline(
+    options: RunnerApiRequestOptions & RunnerThreadTimelineQuery & {
+      threadId: string;
+    },
+  ): Promise<RunnerThreadTimelinePage> {
+    return this.listThreadTimeline(options);
+  }
+
+  /** Lists durable thread events without opening a streaming connection. */
+  async listThreadEvents(
+    options: RunnerApiRequestOptions & RunnerThreadTimelineQuery & {
+      threadId: string;
+    },
+  ): Promise<RunnerThreadEventPage> {
+    const search = new URLSearchParams();
+    if (options.after !== undefined) search.set("after", String(options.after));
+    if (options.before !== undefined) search.set("before", String(options.before));
+    if (options.cursor) search.set("cursor", options.cursor);
+    if (options.limit !== undefined) search.set("limit", String(options.limit));
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/threads/${encodeURIComponent(options.threadId)}/events${search.size > 0 ? `?${search.toString()}` : ""}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return normalizeRunnerThreadEventPage(payload, { threadId: options.threadId, sequence: options.after });
+  }
+
+  /**
+   * Replays and tails the durable thread event stream. Persist the latest
+   * yielded `sequence` and pass it back as `after` when reconnecting.
+   */
+  async *streamThreadEvents(
+    options: RunnerApiRequestOptions & RunnerThreadTimelineQuery & {
+      threadId: string;
+      onOpen?: () => void;
+      onEvent?: (event: RunnerThreadEvent) => void;
+      onCursor?: (sequence: number) => void;
+    },
+  ): AsyncGenerator<RunnerThreadEvent> {
+    const search = new URLSearchParams({ stream: "1" });
+    if (options.after !== undefined) search.set("after", String(options.after));
+    if (options.cursor) {
+      if (options.after === undefined && /^\d+$/.test(options.cursor)) search.set("after", options.cursor);
+      else if (!/^\d+$/.test(options.cursor)) search.set("cursor", options.cursor);
+    }
+    if (options.limit !== undefined) search.set("limit", String(options.limit));
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/threads/${encodeURIComponent(options.threadId)}/events?${search.toString()}`,
+    );
+    const headers = this.withOrganizationHeader(options.headers, options.organizationId);
+    if (!headers.has("Accept")) headers.set("Accept", "text/event-stream");
+    const resumeSequence = options.after !== undefined
+      ? String(options.after)
+      : options.cursor && /^\d+$/.test(options.cursor)
+        ? options.cursor
+        : "";
+    if (resumeSequence && !headers.has("Last-Event-ID")) headers.set("Last-Event-ID", resumeSequence);
+    const response = await this.fetchImpl(url, {
+      method: "GET",
+      headers,
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    if (!response.ok) {
+      throw new Error(await this.readResponseErrorMessage(response, "Thread event stream failed"));
+    }
+    if (!response.body) throw new Error("Thread event stream response has no body");
+    options.onOpen?.();
+
+    for await (const data of iterateSseData(response.body)) {
+      const trimmed = data.trim();
+      if (!trimmed || trimmed === "[DONE]") continue;
+      let raw: unknown;
+      try {
+        raw = JSON.parse(trimmed) as unknown;
+      } catch {
+        continue;
+      }
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+      const record = raw as Record<string, unknown>;
+      if (
+        typeof record.type !== "string" &&
+        record.after !== undefined &&
+        typeof record.threadId === "string"
+      ) {
+        // Backend replay streams begin with a `stream.ready` data frame. The
+        // lightweight SSE iterator intentionally exposes data only, so detect
+        // this cursor handshake by shape instead of projecting a fake event.
+        continue;
+      }
+      if (typeof record.type !== "string" && typeof record.error === "string") {
+        throw new Error(record.error);
+      }
+      const envelopeType = typeof record.type === "string" ? record.type.toLowerCase() : "";
+      if (envelopeType === "stream.keepalive" || envelopeType === "thread.keepalive") continue;
+      if (envelopeType === "stream.completed" || envelopeType === "thread.stream.completed") break;
+      const candidate = record.event && typeof record.event === "object" && !Array.isArray(record.event)
+        ? record.event
+        : record.data && typeof record.data === "object" && !Array.isArray(record.data)
+          ? record.data
+          : record;
+      const event = normalizeRunnerThreadEvent(candidate, { threadId: options.threadId });
+      options.onEvent?.(event);
+      options.onCursor?.(event.sequence);
+      yield event;
+    }
+  }
+
+  /** Classifies a message without persisting it, allowing compatibility clients to choose the safe transport. */
+  async classifyThreadActivityMessage(
+    options: RunnerApiRequestOptions & {
+      threadId: string;
+      message: Pick<RunnerThreadRoutedMessageInput, "content" | "deliveryMode" | "intendedRoute" | "replyToRunId">;
+    },
+  ): Promise<RunnerThreadActivityClassificationResult> {
+    const url = this.buildApiUrl(options.backendUrl, `/threads/${encodeURIComponent(options.threadId)}/activity/classify`);
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({
+        content: options.message.content,
+        ...(options.message.deliveryMode ? { mode: options.message.deliveryMode } : {}),
+        ...(options.message.intendedRoute ? { targetType: options.message.intendedRoute } : {}),
+        ...(options.message.replyToRunId ? { replyToRunId: options.message.replyToRunId } : {}),
+      }),
+    });
+    const record = unwrapRunnerThreadObject(payload, ["result"]);
+    const rawDecision = record.decision && typeof record.decision === "object" && !Array.isArray(record.decision)
+      ? record.decision as Record<string, unknown>
+      : {};
+    const rawRoute = String(rawDecision.route || "").trim().toLowerCase();
+    const route = rawRoute === "worker_checkpoint" || rawRoute === "worker_interrupt"
+      ? "worker"
+      : rawRoute === "human_fyi"
+        ? "human"
+        : rawRoute === "conversation_fyi"
+          ? "broadcast"
+          : rawRoute === "control"
+            ? "system"
+            : rawRoute || "none";
+    const deliveryMode: RunnerThreadDeliveryMode = rawRoute === "worker_interrupt" || rawRoute === "control"
+      ? "interrupt"
+      : rawRoute === "worker_checkpoint"
+        ? "checkpoint"
+        : "fyi";
+    return {
+      threadId: String(record.threadId || record.thread_id || options.threadId),
+      decision: {
+        route,
+        deliveryMode,
+        runId: typeof record.targetRunId === "string" ? record.targetRunId : null,
+        purpose: typeof rawDecision.intent === "string" ? rawDecision.intent : null,
+        reason: typeof rawDecision.reason === "string" ? rawDecision.reason : null,
+        confidence: typeof rawDecision.confidence === "number" ? rawDecision.confidence : null,
+        deterministic: true,
+        metadata: {
+          raw: rawDecision,
+          rawRoute,
+          controlAction: rawDecision.controlAction || rawDecision.control_action || null,
+        },
+      },
+      targetRunId: typeof record.targetRunId === "string" ? record.targetRunId : null,
+      targetRunStatus: typeof record.targetRunStatus === "string" ? record.targetRunStatus : null,
+      targetRunActive: record.targetRunActive === true,
+      suggestedTransport: String(record.suggestedTransport || "legacy_follow_up"),
+      shouldPersistWithActivityEndpoint: record.shouldPersistWithActivityEndpoint === true,
+      persisted: false,
+    };
+  }
+
+  /** Stores a participant message and its requested routing semantics without using the legacy worker-execution endpoint. */
+  async postThreadRoutedMessage(
+    options: RunnerApiRequestOptions & {
+      threadId: string;
+      message: RunnerThreadRoutedMessageInput;
+    },
+  ): Promise<RunnerThreadRoutedMessageResult> {
+    const url = this.buildApiUrl(options.backendUrl, `/threads/${encodeURIComponent(options.threadId)}/activity/messages`);
+    const requestBody = {
+      ...options.message,
+      ...(options.message.intendedRoute ? { targetType: options.message.intendedRoute } : {}),
+      ...(options.message.intendedRecipientId ? { targetId: options.message.intendedRecipientId } : {}),
+      ...(options.message.deliveryMode ? { mode: options.message.deliveryMode } : {}),
+    };
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(requestBody),
+    });
+    const record = unwrapRunnerThreadObject(payload, ["result"]);
+    const rawMessage = record.message && typeof record.message === "object" && !Array.isArray(record.message)
+      ? record.message as Record<string, unknown>
+      : record;
+    const rawReceipt = record.routingReceipt && typeof record.routingReceipt === "object" && !Array.isArray(record.routingReceipt)
+      ? record.routingReceipt
+      : record.receipt && typeof record.receipt === "object" && !Array.isArray(record.receipt)
+        ? record.receipt
+        : record.delivery && typeof record.delivery === "object" && !Array.isArray(record.delivery)
+          ? record.delivery
+          : null;
+    const rawRun = record.run && typeof record.run === "object" && !Array.isArray(record.run) ? record.run : null;
+    const rawMainEvent = record.event && typeof record.event === "object" && !Array.isArray(record.event)
+      ? record.event as Record<string, unknown>
+      : null;
+    const participantIdentity = (roleOrType: unknown, authorityId: unknown) => {
+      const rawRole = String(roleOrType || "human").trim().toLowerCase();
+      const kind = rawRole === "user" || rawRole === "human"
+        ? "human"
+        : rawRole === "communicator" || rawRole === "observer"
+          ? rawRole
+          : rawRole === "assistant" || rawRole === "agent" || rawRole === "worker"
+            ? "worker"
+            : rawRole || "human";
+      const id = String(authorityId || "").trim();
+      return id
+        ? `${options.threadId}:participant:${kind}:${id}`
+        : `${options.threadId}:participant:${kind}`;
+    };
+    const normalizeActivityEvent = (rawEvent: Record<string, unknown> | null): RunnerThreadEvent | null => {
+      if (!rawEvent) return null;
+      const producer = rawEvent.producer && typeof rawEvent.producer === "object" && !Array.isArray(rawEvent.producer)
+        ? rawEvent.producer as Record<string, unknown>
+        : {};
+      const producerType = String(producer.type || rawEvent.producerType || rawEvent.producer_type || "system");
+      const producerId = String(producer.id || rawEvent.producerId || rawEvent.producer_id || "");
+      return normalizeRunnerThreadEvent({
+        ...rawEvent,
+        producer: {
+          ...producer,
+          type: producerType,
+          id: producerId || null,
+          participantId: participantIdentity(producerType, producerId),
+        },
+        actorParticipantId: rawEvent.actorParticipantId || rawEvent.actor_participant_id || participantIdentity(producerType, producerId),
+      }, { threadId: options.threadId });
+    };
+    const mainEvent = normalizeActivityEvent(rawMainEvent);
+    const mainProducerType = mainEvent?.producer.type || rawMessage.role || "human";
+    const mainProducerId = mainEvent?.producer.id || rawMessage.userId || rawMessage.user_id || rawMessage.authorId || rawMessage.author_id || "";
+    const message = normalizeRunnerThreadMessage({
+      ...rawMessage,
+      threadId: options.threadId,
+      sequence: rawMessage.sequence ?? mainEvent?.sequence ?? 0,
+      authorParticipantId: rawMessage.authorParticipantId || rawMessage.author_participant_id || participantIdentity(mainProducerType, mainProducerId),
+      content: rawMessage.content || rawMessage.message || rawMessage.text || options.message.content,
+    }, { threadId: options.threadId, sequence: mainEvent?.sequence ?? 0 });
+    const routeDecisionRecord = record.routeDecision && typeof record.routeDecision === "object" && !Array.isArray(record.routeDecision)
+      ? record.routeDecision as Record<string, unknown>
+      : null;
+    const deliveryRecord = rawReceipt as Record<string, unknown> | null;
+    const rawDecisionRoute = String(routeDecisionRecord?.route || "").trim().toLowerCase();
+    const decisionRouteDefaults = rawDecisionRoute === "worker_interrupt"
+      ? { targetType: "worker", mode: "interrupt" }
+      : rawDecisionRoute === "worker_checkpoint"
+        ? { targetType: "worker", mode: "checkpoint" }
+        : rawDecisionRoute === "communicator"
+          ? { targetType: "communicator", mode: "fyi" }
+          : rawDecisionRoute === "human_fyi"
+            ? { targetType: "human", mode: "fyi" }
+            : rawDecisionRoute === "conversation_fyi"
+              ? { targetType: "broadcast", mode: "fyi" }
+              : rawDecisionRoute === "control"
+                ? { targetType: "system", mode: "interrupt" }
+                : { targetType: "none", mode: "fyi" };
+    const targetType = String(
+      routeDecisionRecord?.targetType
+      || routeDecisionRecord?.target_type
+      || deliveryRecord?.targetType
+      || deliveryRecord?.target_type
+      || decisionRouteDefaults.targetType,
+    );
+    const targetId = String(
+      routeDecisionRecord?.targetId
+      || routeDecisionRecord?.target_id
+      || deliveryRecord?.targetId
+      || deliveryRecord?.target_id
+      || "",
+    );
+    const delivery = rawReceipt ? normalizeRunnerThreadRoutingReceipt({
+      ...(rawReceipt as Record<string, unknown>),
+      threadId: options.threadId,
+      messageId: (rawReceipt as Record<string, unknown>).messageId || (rawReceipt as Record<string, unknown>).message_id || message.id,
+      route: targetType,
+      deliveryMode: (rawReceipt as Record<string, unknown>).mode || (rawReceipt as Record<string, unknown>).deliveryMode || options.message.deliveryMode,
+      recipientParticipantId: targetType !== "none" ? participantIdentity(targetType, targetId) : null,
+      sequence: (rawReceipt as Record<string, unknown>).deliveredAtSequence || (rawReceipt as Record<string, unknown>).delivered_at_sequence || mainEvent?.sequence || message.sequence,
+    }, { threadId: options.threadId, sequence: mainEvent?.sequence ?? message.sequence }) : null;
+    const communicatorRecord = record.communicator && typeof record.communicator === "object" && !Array.isArray(record.communicator)
+      ? record.communicator as Record<string, unknown>
+      : null;
+    const rawCommunicatorEvent = communicatorRecord?.event && typeof communicatorRecord.event === "object" && !Array.isArray(communicatorRecord.event)
+      ? communicatorRecord.event as Record<string, unknown>
+      : null;
+    const communicatorEvent = normalizeActivityEvent(rawCommunicatorEvent);
+    const rawCommunicatorMessage = communicatorRecord?.message && typeof communicatorRecord.message === "object" && !Array.isArray(communicatorRecord.message)
+      ? communicatorRecord.message as Record<string, unknown>
+      : null;
+    const communicatorMessage = rawCommunicatorMessage ? normalizeRunnerThreadMessage({
+      ...rawCommunicatorMessage,
+      threadId: options.threadId,
+      sequence: rawCommunicatorMessage.sequence ?? communicatorEvent?.sequence ?? mainEvent?.sequence ?? 0,
+      authorParticipantId: rawCommunicatorMessage.authorParticipantId
+        || rawCommunicatorMessage.author_participant_id
+        || participantIdentity(communicatorEvent?.producer.type || "communicator", communicatorEvent?.producer.id || ""),
+      content: rawCommunicatorMessage.content || rawCommunicatorMessage.message || rawCommunicatorMessage.text || "",
+    }, { threadId: options.threadId, sequence: communicatorEvent?.sequence ?? mainEvent?.sequence ?? 0 }) : null;
+    const normalizedEvents = [
+      mainEvent,
+      ...((Array.isArray(record.events) ? record.events : []).map((event) => (
+        event && typeof event === "object" && !Array.isArray(event) ? normalizeActivityEvent(event as Record<string, unknown>) : null
+      ))),
+      communicatorEvent,
+    ].filter((event): event is RunnerThreadEvent => Boolean(event));
+    const events = Array.from(new Map(normalizedEvents.map((event) => [event.id, event])).values());
+    return {
+      message,
+      routingReceipt: delivery,
+      delivery,
+      routeDecision: routeDecisionRecord ? {
+        route: targetType,
+        deliveryMode: String(routeDecisionRecord.mode || routeDecisionRecord.deliveryMode || routeDecisionRecord.delivery_mode || delivery?.deliveryMode || decisionRouteDefaults.mode) as RunnerThreadDeliveryMode,
+        recipientParticipantId: targetType !== "none" ? participantIdentity(targetType, targetId) : null,
+        runId: String(routeDecisionRecord.runId || routeDecisionRecord.run_id || delivery?.runId || "") || null,
+        purpose: String(routeDecisionRecord.intent || routeDecisionRecord.purpose || "") || null,
+        reason: String(routeDecisionRecord.reason || "") || null,
+        confidence: typeof routeDecisionRecord.confidence === "number" ? routeDecisionRecord.confidence : null,
+        deterministic: typeof routeDecisionRecord.deterministic === "boolean"
+          ? routeDecisionRecord.deterministic
+          : routeDecisionRecord.confidence === 1,
+        metadata: {
+          raw: routeDecisionRecord,
+          rawRoute: rawDecisionRoute || null,
+          controlAction: routeDecisionRecord.controlAction || routeDecisionRecord.control_action || null,
+        },
+      } : null,
+      communicator: communicatorMessage ? {
+        message: communicatorMessage,
+        event: communicatorEvent,
+        evidence: communicatorRecord?.evidence,
+      } : null,
+      control: record.control,
+      run: rawRun ? normalizeRunnerThreadRun(rawRun, { threadId: options.threadId }) : null,
+      events,
+      accepted: typeof record.accepted === "boolean" ? record.accepted : undefined,
+      delivered: typeof record.delivered === "boolean" ? record.delivered : undefined,
+      effectApplied: typeof record.effectApplied === "boolean" ? record.effectApplied : undefined,
+      executionStarted: typeof record.executionStarted === "boolean" ? record.executionStarted : undefined,
+      coordinatorRequired: typeof record.coordinatorRequired === "boolean" ? record.coordinatorRequired : undefined,
+      limitation: typeof record.limitation === "string" ? record.limitation : null,
+    };
+  }
+
+  async listThreadRuns(
+    options: RunnerApiRequestOptions & {
+      threadId: string;
+      status?: string;
+      parentRunId?: string | null;
+      limit?: number;
+    },
+  ): Promise<RunnerThreadRun[]> {
+    const search = new URLSearchParams();
+    if (options.status) search.set("status", options.status);
+    if (options.parentRunId) search.set("parentRunId", options.parentRunId);
+    if (options.limit !== undefined) search.set("limit", String(options.limit));
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/threads/${encodeURIComponent(options.threadId)}/runs${search.size > 0 ? `?${search.toString()}` : ""}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return unwrapRunnerThreadList(payload, ["runs"]).map((run) => normalizeRunnerThreadRun(run, { threadId: options.threadId }));
+  }
+
+  async listThreadActivityGroups(
+    options: RunnerApiRequestOptions & {
+      threadId: string;
+      runId?: string;
+      status?: string;
+      after?: number;
+      limit?: number;
+    },
+  ): Promise<RunnerThreadActivityGroup[]> {
+    const search = new URLSearchParams();
+    if (options.runId) search.set("runId", options.runId);
+    if (options.status) search.set("status", options.status);
+    if (options.after !== undefined) search.set("after", String(options.after));
+    if (options.limit !== undefined) search.set("limit", String(options.limit));
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/threads/${encodeURIComponent(options.threadId)}/activity-groups${search.size > 0 ? `?${search.toString()}` : ""}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return unwrapRunnerThreadList(payload, ["activityGroups", "activity_groups", "groups"])
+      .map((group) => normalizeRunnerThreadActivityGroup(group, { threadId: options.threadId, runId: options.runId }));
+  }
+
+  async listThreadActions(
+    options: RunnerApiRequestOptions & {
+      threadId: string;
+      runId?: string;
+      groupId?: string;
+      after?: number;
+      limit?: number;
+    },
+  ): Promise<RunnerThreadAction[]> {
+    const search = new URLSearchParams();
+    if (options.runId) search.set("runId", options.runId);
+    if (options.groupId) search.set("groupId", options.groupId);
+    if (options.after !== undefined) search.set("after", String(options.after));
+    if (options.limit !== undefined) search.set("limit", String(options.limit));
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/threads/${encodeURIComponent(options.threadId)}/actions${search.size > 0 ? `?${search.toString()}` : ""}`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "GET",
+      headers: this.withOrganizationHeader(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+    });
+    return unwrapRunnerThreadList(payload, ["actions", "events"])
+      .map((action) => this.normalizeThreadActionListItem(action, options.threadId, options.runId));
+  }
+
+  async steerThreadRun(
+    options: RunnerApiRequestOptions & {
+      threadId: string;
+      runId: string;
+      steering: RunnerThreadSteeringInput;
+    },
+  ): Promise<RunnerThreadRunCommandResult> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/threads/${encodeURIComponent(options.threadId)}/runs/${encodeURIComponent(options.runId)}/steering`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({
+        ...options.steering,
+        ...(options.steering.deliveryMode ? { mode: options.steering.deliveryMode } : {}),
+      }),
+    });
+    return this.normalizeThreadRunCommandResult(payload, options.threadId, options.runId);
+  }
+
+  async controlThreadRun(
+    options: RunnerApiRequestOptions & {
+      threadId: string;
+      runId: string;
+      control: RunnerThreadControlInput;
+    },
+  ): Promise<RunnerThreadRunCommandResult> {
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/threads/${encodeURIComponent(options.threadId)}/runs/${encodeURIComponent(options.runId)}/control`,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify(options.control),
+    });
+    return this.normalizeThreadRunCommandResult(payload, options.threadId, options.runId);
   }
 
   async getThreadStepDiff(
@@ -2400,6 +2942,98 @@ export class RunnerClient {
     const backendBody = (payload as Record<string, unknown>).backendBody;
     if (backendBody === undefined) return currentRunRequest;
     return { ...currentRunRequest, body: backendBody };
+  }
+
+  private normalizeThreadRunCommandResult(
+    payload: unknown,
+    threadId: string,
+    runId: string,
+  ): RunnerThreadRunCommandResult {
+    const record = unwrapRunnerThreadObject(payload, ["result"]);
+    const rawRun = record.run && typeof record.run === "object" && !Array.isArray(record.run)
+      ? record.run
+      : record.control && typeof record.control === "object" && !Array.isArray(record.control)
+        && (record.control as Record<string, unknown>).run
+        && typeof (record.control as Record<string, unknown>).run === "object"
+        && !Array.isArray((record.control as Record<string, unknown>).run)
+          ? (record.control as Record<string, unknown>).run
+          : null;
+    const rawEvent = record.event && typeof record.event === "object" && !Array.isArray(record.event)
+      ? record.event
+      : record.control && typeof record.control === "object" && !Array.isArray(record.control)
+        && (record.control as Record<string, unknown>).event
+        && typeof (record.control as Record<string, unknown>).event === "object"
+        && !Array.isArray((record.control as Record<string, unknown>).event)
+          ? (record.control as Record<string, unknown>).event
+          : null;
+    const rawReceipt = record.routingReceipt && typeof record.routingReceipt === "object" && !Array.isArray(record.routingReceipt)
+      ? record.routingReceipt
+      : record.receipt && typeof record.receipt === "object" && !Array.isArray(record.receipt)
+        ? record.receipt
+        : record.delivery && typeof record.delivery === "object" && !Array.isArray(record.delivery)
+          ? record.delivery
+          : null;
+    return {
+      run: rawRun ? normalizeRunnerThreadRun(rawRun, { threadId, runId }) : null,
+      event: rawEvent ? normalizeRunnerThreadEvent(rawEvent, { threadId, runId }) : null,
+      routingReceipt: rawReceipt ? normalizeRunnerThreadRoutingReceipt(rawReceipt, { threadId, runId }) : null,
+      accepted: typeof record.accepted === "boolean" ? record.accepted : undefined,
+      delivered: typeof record.delivered === "boolean" ? record.delivered : undefined,
+      effectApplied: typeof record.effectApplied === "boolean" ? record.effectApplied : undefined,
+      executionStarted: typeof record.executionStarted === "boolean" ? record.executionStarted : undefined,
+      coordinatorRequired: typeof record.coordinatorRequired === "boolean" ? record.coordinatorRequired : undefined,
+      limitation: typeof record.limitation === "string" ? record.limitation : null,
+    };
+  }
+
+  private normalizeThreadActionListItem(
+    raw: unknown,
+    threadId: string,
+    runId?: string,
+  ): RunnerThreadAction {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return normalizeRunnerThreadAction(raw, { threadId, runId });
+    }
+    const record = raw as Record<string, unknown>;
+    const payload = record.payload && typeof record.payload === "object" && !Array.isArray(record.payload)
+      ? record.payload as Record<string, unknown>
+      : {};
+    const embeddedAction = payload.action && typeof payload.action === "object" && !Array.isArray(payload.action)
+      ? payload.action as Record<string, unknown>
+      : null;
+    if (embeddedAction) {
+      return normalizeRunnerThreadAction({
+        ...embeddedAction,
+        sourceEventId: embeddedAction.sourceEventId || embeddedAction.source_event_id || record.id,
+        sequence: embeddedAction.sequence ?? record.sequence,
+        createdAt: embeddedAction.createdAt || embeddedAction.created_at || record.occurredAt || record.occurred_at || record.createdAt || record.created_at,
+      }, { threadId, runId: runId || (typeof record.runId === "string" ? record.runId : null) });
+    }
+    const kind = typeof record.kind === "string" ? record.kind : "";
+    const isEvent = kind === "event" || (record.payload !== undefined && typeof record.type === "string");
+    if (!isEvent) return normalizeRunnerThreadAction(record, { threadId, runId });
+    return normalizeRunnerThreadAction({
+      id: payload.actionId || payload.action_id || record.id,
+      threadId: record.threadId || record.thread_id || threadId,
+      runId: record.runId || record.run_id || runId,
+      sequence: record.sequence,
+      sourceEventId: record.id,
+      activityGroupId: payload.activityGroupId || payload.activity_group_id || payload.groupId || payload.group_id,
+      type: payload.actionType || payload.action_type || record.type,
+      title: payload.title || record.title || payload.toolName || payload.tool_name || record.type || "Action",
+      summary: payload.summary || payload.message || record.summary,
+      status: payload.status || "completed",
+      toolName: payload.toolName || payload.tool_name || payload.tool,
+      input: payload.input || payload.args,
+      output: payload.output || payload.result,
+      permissionRing: record.permissionRing || record.permission_ring || payload.permissionRing || payload.permission_ring,
+      policyDecision: record.policyDecision || record.policy_decision || payload.policyDecision || payload.policy_decision,
+      touchedResources: payload.touchedResources || payload.touched_resources || payload.resources,
+      snapshotBeforeId: record.snapshotBeforeId || record.snapshot_before_id || payload.snapshotBeforeId || payload.snapshot_before_id,
+      snapshotAfterId: record.snapshotAfterId || record.snapshot_after_id || payload.snapshotAfterId || payload.snapshot_after_id,
+      createdAt: record.occurredAt || record.occurred_at || record.createdAt || record.created_at,
+      metadata: { source: "thread_event_projection", event: record },
+    }, { threadId, runId });
   }
 
   private parseEvent(data: string): RawRunnerEvent | null {

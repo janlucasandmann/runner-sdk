@@ -12501,9 +12501,25 @@ function PermissionRequestLogBox({
   };
 
   if (!isPending) {
-    void isApproved;
-    void timeLabel;
-    return null;
+    const terminalLabel = isApproved ? "Permission approved" : "Permission denied";
+    const TerminalIcon = isApproved ? CheckCircle2 : X;
+    return (
+      <div className={`tb-log-card tb-log-card-permission is-resolved ${isApproved ? "is-approved" : "is-denied"}`}>
+        <div className="tb-log-card-panel tb-log-permission-panel">
+          <div className="tb-log-permission-resolution">
+            <TerminalIcon className="tb-log-permission-resolution-icon" strokeWidth={1.7} aria-hidden="true" />
+            <div className="tb-log-permission-resolution-copy">
+              <div className="tb-log-permission-resolution-title">{terminalLabel}</div>
+              <div className="tb-log-permission-resolution-detail">
+                <span>{permissionActionLabel || toolName}</span>
+                {permissionRingLabel ? <span>{permissionRingLabel}</span> : null}
+                {timeLabel ? <span>{timeLabel}</span> : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

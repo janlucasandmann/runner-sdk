@@ -327,8 +327,63 @@ prepare: {
 - For production-grade attachment storage, provide `uploadFiles`.
 - The core `RunnerClient` remains available for fully custom UIs.
 
-## Roadmap
+## Thread v2: concurrent conversation and work
 
-- Rich log renderers (tool-call cards, file diff cards, deep research cards).
-- Optional thread tabs/history component package.
-- Stable backend adapter contracts for custom auth/proxy setups.
+The additive Thread v2 API models messages, worker runs, observer activity
+groups, permission requests, and routing receipts independently. This allows a
+communicator to keep responding while workers remain active and gives long runs
+a collapsed semantic summary with lazy, hierarchical detail.
+
+```tsx
+import {
+  RunnerThread,
+  useRunnerThreadProjection,
+} from "@computer-agents/runner-web-sdk/react";
+
+function LiveThread({ threadId }: { threadId: string }) {
+  const thread = useRunnerThreadProjection({
+    threadId,
+    backendUrl: "https://api.computer-agents.com",
+    headers: { Authorization: "Bearer YOUR_REAL_API_KEY" },
+    includeLegacy: false,
+  });
+
+  return (
+    <RunnerThread
+      projection={thread.projection}
+      loading={thread.loading}
+      error={thread.error}
+      onLoadEarlier={thread.loadMore}
+      runDetailStates={thread.runDetailStates}
+      activityGroupActionStates={thread.activityGroupActionStates}
+      onLoadRunDetails={(run) => thread.loadRunDetails(run.id)}
+      onLoadActivityGroupActions={thread.loadActivityGroupActions}
+      onControlRun={(run, action) => thread.controlRun(run.id, { action })}
+    />
+  );
+}
+```
+
+For existing data, `adaptLegacyThreadToProjection()` converts messages, logs,
+steps, and trace clusters into the same projection. This supports incremental
+migration while the legacy execution stream remains available. `RunnerChat`
+uses `threadViewMode="auto"` by default: it promotes a thread with durable
+Thread v2 activity only when the existing turn data does not contain rich
+legacy-only affordances such as attachments, task previews, or custom action
+renderers. This parity gate prevents an automatic cutover from hiding existing
+content. Use `threadViewMode="canonical"` to opt into the unified surface
+explicitly or `"legacy"` as a temporary rollout override.
+
+See [Thread v2 architecture](./docs/thread-v2-architecture.md) for invariants,
+delivery semantics, and the migration contract.
+
+## Next runtime milestones
+
+- Run the model observer that publishes evidence-linked activity revisions into
+  the implemented group/projection contracts.
+- Connect the distributed run coordinator to durable checkpoint, interrupt, and
+  control deliveries. Until that coordinator is active, `RunnerChat` executes
+  worker follow-ups through its page-resident legacy queue and never reports a
+  queued canonical command as applied.
+- Publish the transactional event outbox through the production pub/sub layer;
+  resumable SSE currently provides the client transport.

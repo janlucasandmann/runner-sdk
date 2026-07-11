@@ -574,29 +574,6 @@ export const MODELS_PAGE_CSS = String.raw`
         margin: 0 0 24px;
       }
 
-      .playground-models-featured-header {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 12px;
-      }
-
-      .playground-models-featured-title {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.94);
-        font-size: 14px;
-        font-weight: 500;
-        line-height: 1.35;
-      }
-
-      .playground-models-featured-caption {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.42);
-        font-size: 11px;
-        line-height: 1.35;
-      }
-
       .playground-models-featured-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -838,12 +815,6 @@ export const MODELS_PAGE_CSS = String.raw`
       @media (max-width: 720px) {
         .playground-models-page {
           padding: 0 18px 42px;
-        }
-
-        .playground-models-featured-header {
-          align-items: flex-start;
-          flex-direction: column;
-          gap: 4px;
         }
 
         .playground-models-featured-grid {
@@ -1644,12 +1615,8 @@ export const MODELS_PAGE_SCRIPT = String.raw`
           if (!isAgentTab || featuredModels.length === 0) return null;
           return React.createElement("section", {
               className: "playground-models-featured-section",
-              "aria-labelledby": "playground-models-featured-title",
+              "aria-label": "Featured Models",
             },
-            React.createElement("div", { className: "playground-models-featured-header" },
-              React.createElement("h2", { id: "playground-models-featured-title", className: "playground-models-featured-title" }, "Featured Models"),
-              React.createElement("p", { className: "playground-models-featured-caption" }, "Recommended for production agents")
-            ),
             React.createElement("div", { className: "playground-models-featured-grid" },
               featuredModels.map((entry) => {
                 const providerLabel = getPlaygroundManagedModelProviderLabel("agent", entry.model);

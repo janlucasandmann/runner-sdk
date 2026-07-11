@@ -4882,6 +4882,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         border-bottom: 0 !important;
       }
 
+      .playground-project-overview-general-grid .playground-project-overview-threads-section > .playground-plugins-section-header {
+        margin-bottom: 12px;
+      }
+
       .playground-project-overview-plugin-row {
         padding-left: 0;
         padding-right: 0;
