@@ -139,6 +139,21 @@ function PermissionRingIcon({ ring }: { ring: RunnerThreadPermissionRing }) {
   );
 }
 
+function formatActivityGroupDuration(group: RunnerThreadActivityGroup): string {
+  const reportedDurationMs = Number(group.metrics?.durationMs || 0);
+  const startMs = Date.parse(group.createdAt);
+  const endMs = Date.parse(group.sealedAt || group.updatedAt || group.createdAt);
+  const fallbackDurationMs = Number.isFinite(startMs) && Number.isFinite(endMs)
+    ? Math.max(0, endMs - startMs)
+    : 0;
+  const durationMs = reportedDurationMs > 0 ? reportedDurationMs : fallbackDurationMs;
+  const seconds = Math.max(0, Math.round(durationMs / 1_000));
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return remainingSeconds > 0 ? `${minutes} min ${remainingSeconds}s` : `${minutes} min`;
+}
+
 function GroupRow({
   group,
   groupsByParent,
@@ -166,7 +181,7 @@ function GroupRow({
   depth: number;
   ancestorIds: Set<string>;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const actionLoadState = actionLoadStates?.[group.id];
   useEffect(() => {
     if (!expanded || !onLoadActions || (actionLoadState && actionLoadState.status !== "idle")) return;
@@ -186,7 +201,6 @@ function GroupRow({
   const hasVisibleContent = groupActions.length > 0 || visiblePermissions.length > 0 || childMayMatch || filter === "all";
   if (!hasVisibleContent) return null;
 
-  const actionCount = group.metrics?.actionCount ?? groupActions.length;
   const permissionRings = [
     group.highestPermissionRing,
     ...allGroupActions.map((action) => action.permissionRing),
@@ -195,11 +209,15 @@ function GroupRow({
   const groupPermissionRing = permissionRings.length > 0
     ? Math.max(...permissionRings) as RunnerThreadPermissionRing
     : inferLegacyPermissionRing(group, allGroupActions);
+  const duration = formatActivityGroupDuration(group);
+  const summary = String(group.liveSummary || group.title || "Work completed")
+    .replace(/\s+/g, " ")
+    .trim();
   const isNested = depth > 0;
   const clampedDepth = Math.min(depth, 3);
 
   return (
-    <div className={`tb-thread-activity-group ${isNested ? "is-nested" : ""}`} style={{ "--tb-thread-group-depth": clampedDepth } as CSSProperties}>
+    <div className={`tb-thread-activity-group${isNested ? " is-nested" : ""}${expanded ? " is-expanded" : ""}`} style={{ "--tb-thread-group-depth": clampedDepth } as CSSProperties}>
       <button
         type="button"
         className="tb-thread-activity-group-header"
@@ -211,20 +229,13 @@ function GroupRow({
         </span>
         <span className="tb-thread-activity-group-label">
           <span className="tb-thread-activity-group-copy">
-            <span className="tb-thread-activity-group-title">{group.title}</span>
+            <span className="tb-thread-activity-group-duration">Worked for {duration}</span>
           </span>
           <span className="tb-thread-activity-group-chevron" aria-hidden="true">
             {expanded ? <ChevronDown strokeWidth={1.7} /> : <ChevronRight strokeWidth={1.7} />}
           </span>
         </span>
-        <span className="tb-thread-activity-group-meta">
-          <span>{actionCount} {actionCount === 1 ? "action" : "actions"}</span>
-          {group.highestPermissionRing ? (
-            <span className={`tb-thread-ring is-ring-${group.highestPermissionRing}`}>R{group.highestPermissionRing}</span>
-          ) : null}
-        </span>
       </button>
-
       {expanded ? (
         <div className="tb-thread-activity-group-body">
           {group.rationale ? <p className="tb-thread-activity-group-rationale">{group.rationale}</p> : null}
@@ -275,6 +286,7 @@ function GroupRow({
           ) : null}
         </div>
       ) : null}
+      <p className="tb-thread-activity-group-summary">{summary}</p>
     </div>
   );
 }

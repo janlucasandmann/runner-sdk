@@ -9896,9 +9896,28 @@ const html = `<!doctype html>
       .playground-notifications-empty {
         min-height: 220px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 6px;
         border-top: 0;
+        text-align: center;
+      }
+
+      .playground-notifications-empty-title {
+        color: #fff;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.35;
+      }
+
+      .playground-notifications-empty-description {
+        max-width: none;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+        white-space: nowrap;
       }
 
       @media (max-width: 760px) {
@@ -29612,6 +29631,39 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         gap: 6px;
       }
 
+      .playground-database-export-split-shell.playground-tasks-toolbar-popup-shell {
+        z-index: 74;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .playground-database-export-split-button.playground-agents-detail-publish-split-control {
+        border: 0;
+        background: linear-gradient(to top, #082673, #1D59BE);
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .playground-database-export-split-button.playground-agents-detail-publish-split-control:hover,
+      .playground-database-export-split-button.playground-agents-detail-publish-split-control:focus-visible,
+      .playground-database-export-split-button.playground-agents-detail-publish-split-control.is-active {
+        background: linear-gradient(to top, #082673, #1D59BE);
+      }
+
+      .playground-database-export-split-button .playground-agents-detail-publish-main,
+      .playground-database-export-split-button .playground-agents-detail-publish-chevron {
+        pointer-events: none;
+      }
+
+      .playground-database-export-split-shell .playground-database-export-menu {
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        width: 220px;
+        min-width: 220px;
+        transform-origin: top right;
+      }
+
 	      .playground-server-detail-navbar .playground-auth-title-input {
 	        margin-bottom: 6px;
 	      }
@@ -37929,8 +37981,202 @@ ${PLAYGROUND_EVALUATIONS_CSS}
 	        overflow: hidden;
 	      }
 
-	      .playground-database-detail-tab-panel.is-general {
+	      .playground-database-detail-tab-panel.is-usage,
+	      .playground-database-detail-tab-panel.is-settings {
 	        flex: 0 0 auto;
+	      }
+
+	      .playground-database-settings-root {
+	        gap: 24px;
+	      }
+
+	      .playground-database-description-section.playground-agents-detail-instructions-section {
+	        margin-bottom: 0;
+	        padding-bottom: 6px !important;
+	        border: 1px solid rgba(255, 255, 255, 0.075) !important;
+	        border-radius: 15px !important;
+	        background: rgba(255, 255, 255, 0.075) !important;
+	        box-sizing: border-box;
+	      }
+
+	      .playground-database-description-section .playground-tasks-detail-section-title {
+	        font-size: 14px;
+	      }
+
+	      .playground-database-settings-root .playground-database-danger-section {
+	        margin-top: 0;
+	      }
+
+	      .playground-database-api-quickstart-card {
+	        margin-top: 24px;
+	      }
+
+	      .playground-database-api-quickstart-editor-shell {
+	        width: 100%;
+	        height: 220px;
+	        min-height: 220px;
+	        overflow: hidden;
+	        border-radius: 8px;
+	      }
+
+	      .playground-database-api-quickstart-editor-loading {
+	        width: 100%;
+	        height: 220px;
+	        display: flex;
+	        align-items: center;
+	        justify-content: center;
+	        color: rgba(255, 255, 255, 0.52);
+	        font-size: 12px;
+	      }
+
+	      .playground-database-detail-usage-header-actions {
+	        width: 100%;
+	        display: flex;
+	        align-items: center;
+	        justify-content: flex-end;
+	      }
+
+	      .playground-database-detail-usage-metrics.playground-environments-home-metrics {
+	        width: 100%;
+	        margin-bottom: 0;
+	      }
+
+	      .playground-database-detail-usage-analytics-card .playground-settings-usage-chart-card {
+	        padding: 0;
+	        border: 0;
+	        border-radius: 0;
+	        background: transparent;
+	        box-shadow: none;
+	      }
+
+	      .playground-database-detail-usage-analytics-card .playground-project-overview-chart-shell {
+	        height: 270px;
+	        border: 0;
+	        background: transparent;
+	      }
+
+	      .playground-database-detail-usage-fact-rows {
+	        width: 100%;
+	        margin-top: 12px;
+	      }
+
+	      .playground-database-access-table-section,
+	      .playground-database-access-table,
+	      .playground-database-access-table .playground-project-overview-thread-list,
+	      .playground-database-access-table .playground-project-overview-threads-table-row,
+	      .playground-database-access-table .playground-project-overview-thread-cell.is-actions {
+	        overflow: visible !important;
+	      }
+
+	      .playground-database-access-table-section.playground-agents-overview-list-section {
+	        position: relative;
+	        isolation: isolate;
+	        width: 100%;
+	        margin: 0 !important;
+	        padding: 0 18px 6px;
+	        border: 1px solid rgba(255, 255, 255, 0.075);
+	        border-radius: 15px;
+	        background: rgba(255, 255, 255, 0.075);
+	        box-sizing: border-box;
+	      }
+
+	      .playground-database-access-table-section.playground-agents-overview-list-section::before {
+	        content: none;
+	      }
+
+	      .playground-database-access-sticky-table-header {
+	        position: relative;
+	        z-index: 240;
+	        margin: 0 -18px;
+	        padding: 12px 18px 0;
+	        border-radius: 15px 15px 0 0;
+	        background: #121212;
+	      }
+
+	      .playground-database-access-table-toolbar.playground-develop-server-kind-table-toolbar {
+	        display: flex;
+	        align-items: center;
+	        justify-content: space-between;
+	        gap: 16px;
+	        width: 100%;
+	        margin: 0;
+	        padding: 0 0 12px;
+	        border: 0;
+	      }
+
+	      .playground-database-access-table.playground-agents-overview-list-table {
+	        width: 100%;
+	        margin: 0;
+	        padding: 0;
+	        border: 0;
+	        border-radius: 0;
+	        background: transparent;
+	      }
+
+	      .playground-database-access-table .playground-project-overview-thread-list {
+	        width: calc(100% + 24px);
+	        margin: 0 0 0 -12px;
+	        padding: 0 12px;
+	        border: 1px solid rgba(255, 255, 255, 0.1);
+	        border-radius: 10px;
+	        background: #000;
+	        box-sizing: border-box;
+	      }
+
+	      .playground-database-access-table .playground-project-overview-threads-table-header,
+	      .playground-database-access-table .playground-project-overview-threads-table-row {
+	        grid-template-columns: 21px minmax(220px, 1.35fr) minmax(180px, 0.9fr) minmax(100px, 0.42fr) 28px !important;
+	        gap: 12px;
+	        width: 100%;
+	        max-width: 100%;
+	        padding-right: 0;
+	        box-sizing: border-box;
+	      }
+
+	      .playground-database-access-table .playground-project-overview-threads-table-header {
+	        padding-top: 12px;
+	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	        font-size: 12px;
+	        font-weight: 400;
+	      }
+
+	      .playground-database-access-column-header > div {
+	        justify-content: flex-start;
+	        text-align: left;
+	      }
+
+	      .playground-database-access-column-header > div:first-child {
+	        justify-content: center;
+	      }
+
+	      .playground-database-access-table .playground-project-overview-threads-table-row {
+	        min-height: 58px;
+	        padding-top: 12px;
+	        padding-bottom: 12px;
+	        font-size: 12px;
+	      }
+
+	      .playground-database-access-table .playground-project-overview-threads-table-row:last-child {
+	        border-bottom: 0;
+	      }
+
+	      .playground-database-access-table .playground-project-overview-thread-cell,
+	      .playground-database-access-table .playground-agents-overview-name-title,
+	      .playground-database-access-table .playground-agents-overview-table-value {
+	        min-width: 0;
+	        overflow: hidden;
+	        text-overflow: ellipsis;
+	        white-space: nowrap;
+	      }
+
+	      .playground-database-access-table .playground-project-team-action-shell.is-open {
+	        z-index: 360;
+	      }
+
+	      .playground-database-access-table .playground-project-overview-threads-table-row.is-menu-open,
+	      .playground-database-access-table .playground-project-overview-threads-table-row.is-menu-open .playground-project-overview-thread-cell {
+	        position: relative;
+	        z-index: 320;
 	      }
 
 	      .playground-server-detail-content.is-auth-users-tab {
@@ -55031,7 +55277,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
 	      import { RunnerClient } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
 	      import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -61741,6 +61987,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           location: "eur3",
           status: "active",
           firestoreNamespace: "",
+          permissionSet: createPlaygroundDefaultPermissionSet("database"),
           metadata: null,
           createdAt: now,
           updatedAt: now,
@@ -62161,6 +62408,69 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           subjectTypes: ["project", "project_team_role"],
         },
         {
+          id: "database_schema_read",
+          ringId: "ring_1",
+          label: "View schema",
+          description: "View collections, fields, indexes, and database metadata.",
+          subjectTypes: ["database"],
+        },
+        {
+          id: "database_data_read",
+          ringId: "ring_1",
+          label: "Read data",
+          description: "Read documents and values stored in this database.",
+          subjectTypes: ["database"],
+        },
+        {
+          id: "database_query",
+          ringId: "ring_1",
+          label: "Run queries",
+          description: "Filter, sort, aggregate, and search database records.",
+          subjectTypes: ["database"],
+        },
+        {
+          id: "database_export",
+          ringId: "ring_2",
+          label: "Export data",
+          description: "Download or transmit database records outside the database.",
+          subjectTypes: ["database"],
+        },
+        {
+          id: "database_document_create",
+          ringId: "ring_2",
+          label: "Create documents",
+          description: "Add new documents and values to existing collections.",
+          subjectTypes: ["database"],
+        },
+        {
+          id: "database_document_update",
+          ringId: "ring_2",
+          label: "Update documents",
+          description: "Change existing documents, fields, and values.",
+          subjectTypes: ["database"],
+        },
+        {
+          id: "database_document_delete",
+          ringId: "ring_3",
+          label: "Delete documents",
+          description: "Permanently delete documents or fields from the database.",
+          subjectTypes: ["database"],
+        },
+        {
+          id: "database_schema_manage",
+          ringId: "ring_3",
+          label: "Manage schema",
+          description: "Create, rename, or delete collections and change database structure.",
+          subjectTypes: ["database"],
+        },
+        {
+          id: "database_access_manage",
+          ringId: "ring_3",
+          label: "Manage access",
+          description: "Share the database and change permissions for teams and collaborators.",
+          subjectTypes: ["database"],
+        },
+        {
           id: "managed_resource_mutation",
           ringId: "ring_2",
           label: "Change managed resources",
@@ -62362,6 +62672,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           || normalized === "project_team_role"
           || normalized === "team"
           || normalized === "team_role"
+          || normalized === "database"
           || normalized === "human_user"
           ? normalized
           : fallback;
@@ -62557,6 +62868,60 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         applyActionAccess("project_rules_view", "ring_1", "read_only");
         applyActionAccess("project_rules_edit", "ring_2", "no_access");
         applyActionAccess("project_access_manage", "ring_3", "no_access");
+        return permissionSet;
+      }
+
+      function createPlaygroundDatabaseTeamRolePermissionSet(roleId) {
+        const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+        if (normalizedRoleId === "owner") {
+          return createPlaygroundFullAccessPermissionSet("database");
+        }
+        const permissionSet = createPlaygroundDefaultPermissionSet("database");
+        const applyRingAccess = (ringId, access) => {
+          permissionSet.rings[ringId] = {
+            ...(permissionSet.rings[ringId] || {}),
+            defaultAccess: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
+          };
+        };
+        const applyActionAccess = (actionId, access) => {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          permissionSet.actions[actionId] = {
+            ...(permissionSet.actions[actionId] || {}),
+            ringId: actionDefinition?.ringId || "ring_1",
+            access: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
+          };
+        };
+
+        if (normalizedRoleId === "admin") {
+          PLAYGROUND_PERMISSION_RING_IDS.forEach((ringId) => applyRingAccess(ringId, "full_access"));
+          PLAYGROUND_PERMISSION_ACTION_DEFINITIONS
+            .filter((action) => action.subjectTypes?.includes("database"))
+            .forEach((action) => applyActionAccess(action.id, "full_access"));
+          return permissionSet;
+        }
+
+        if (normalizedRoleId === "contributor") {
+          applyRingAccess("ring_1", "full_access");
+          applyRingAccess("ring_2", "full_access");
+          applyRingAccess("ring_3", "ask_for_permission");
+          ["database_schema_read", "database_data_read", "database_query", "database_export", "database_document_create", "database_document_update"]
+            .forEach((actionId) => applyActionAccess(actionId, "full_access"));
+          applyActionAccess("database_document_delete", "ask_for_permission");
+          applyActionAccess("database_schema_manage", "ask_for_permission");
+          applyActionAccess("database_access_manage", "no_access");
+          return permissionSet;
+        }
+
+        applyRingAccess("ring_1", "read_only");
+        applyRingAccess("ring_2", "ask_for_permission");
+        applyRingAccess("ring_3", "no_access");
+        ["database_schema_read", "database_data_read", "database_query"]
+          .forEach((actionId) => applyActionAccess(actionId, "read_only"));
+        applyActionAccess("database_export", "ask_for_permission");
+        ["database_document_create", "database_document_update"]
+          .forEach((actionId) => applyActionAccess(actionId, "ask_for_permission"));
+        ["database_document_delete", "database_schema_manage", "database_access_manage"]
+          .forEach((actionId) => applyActionAccess(actionId, "no_access"));
         return permissionSet;
       }
 
@@ -63270,7 +63635,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           ? handlers.onActionAccessChange
           : null;
         const visiblePermissionActions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter((action) => {
-          if (subjectType === "team" || subjectType === "team_role") {
+          if (subjectType === "team" || subjectType === "team_role" || subjectType === "database") {
             return Array.isArray(action.subjectTypes) && action.subjectTypes.includes(subjectType);
           }
           return !Array.isArray(action.subjectTypes) || action.subjectTypes.includes(subjectType);
@@ -64830,6 +65195,13 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         const metadata = database?.metadata && typeof database.metadata === "object" && !Array.isArray(database.metadata)
           ? database.metadata
           : null;
+        const permissionSetSource = database?.permissionSet && typeof database.permissionSet === "object" && !Array.isArray(database.permissionSet)
+          ? database.permissionSet
+          : metadata?.permissionSet && typeof metadata.permissionSet === "object" && !Array.isArray(metadata.permissionSet)
+            ? metadata.permissionSet
+            : metadata?.permission_set && typeof metadata.permission_set === "object" && !Array.isArray(metadata.permission_set)
+              ? metadata.permission_set
+              : null;
 
         return {
           ...draft,
@@ -64842,6 +65214,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           location: typeof database.location === "string" && database.location.trim() ? database.location.trim() : draft.location,
           status: ["active", "provisioning", "error"].includes(database.status) ? database.status : draft.status,
           firestoreNamespace: typeof database.firestoreNamespace === "string" ? database.firestoreNamespace : draft.firestoreNamespace,
+          permissionSet: normalizePlaygroundPermissionSet(permissionSetSource, "database"),
           metadata,
           createdAt: typeof database.createdAt === "string" && database.createdAt ? database.createdAt : draft.createdAt,
           updatedAt: typeof database.updatedAt === "string" && database.updatedAt ? database.updatedAt : draft.updatedAt,
@@ -86919,6 +87292,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         workspaceTeamsLoading = false,
         workspaceTeamsRequiresPlan = false,
         onWorkspaceTeamsRequest,
+        onOpenTeamPage,
         versionsDrawerPortalId = "",
         onVersionsSidebarOpenChange,
         currentUserId = "",
@@ -86929,6 +87303,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         developServerOperationalMetrics = null,
         developServerOperationalMetricsLoading = false,
         developServerOperationalMetricsError = "",
+        developServerOperationalMetricsPeriod = "month",
+        onDevelopServerOperationalMetricsPeriodChange = null,
         developServerMetricsChartTab = "hosting-requests",
         onDevelopServerMetricsChartTabChange = null,
         developAnalyticsMenuOpen = false,
@@ -86989,6 +87365,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const environmentRenameInputRef = useRef(null);
         const environmentDescriptionTextareaRef = useRef(null);
         const databaseActionsPopoverRef = useRef(null);
+        const databaseExportMenuRef = useRef(null);
         const databaseRenameInputRef = useRef(null);
         const agentRuntimeSkillsActionsRef = useRef(null);
         const serverAutosaveTimerRef = useRef(null);
@@ -86997,6 +87374,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const serverEditorDirtyRef = useRef(false);
         const databaseDocumentAutosaveTimerRef = useRef(null);
         const databaseDocumentSaveInFlightRef = useRef(false);
+        const databasePermissionSaveTimerRef = useRef(null);
+        const databasePermissionSaveQueuedRef = useRef(null);
+        const databasePermissionSaveInFlightRef = useRef(false);
+        const databaseWorkspaceTeamsRequestedRef = useRef(false);
         const databaseListRequestRef = useRef({
           promise: null,
           requestId: 0,
@@ -87160,19 +87541,43 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           message: "",
         });
         const [databaseExporting, setDatabaseExporting] = useState(false);
+        const [databaseExportMenuOpen, setDatabaseExportMenuOpen] = useState(false);
         const [isServerDescriptionEditing, setIsServerDescriptionEditing] = useState(false);
         const [isDatabaseDescriptionEditing, setIsDatabaseDescriptionEditing] = useState(false);
+        const [databaseDescriptionHistory, setDatabaseDescriptionHistory] = useState({ past: [], future: [] });
         const [environmentDetailsCollapsed, setEnvironmentDetailsCollapsed] = useState(false);
         const [serverDetailsCollapsed, setServerDetailsCollapsed] = useState(false);
         const [environmentRuntimePopover, setEnvironmentRuntimePopover] = useState("");
         const [environmentsHomeResourceCommandRequest, setEnvironmentsHomeResourceCommandRequest] = useState(null);
         const [environmentsHomeActiveResourceCommand, setEnvironmentsHomeActiveResourceCommand] = useState("");
-        const [environmentHomeChartTimescale, setEnvironmentHomeChartTimescale] = useState("month");
+        const [environmentHomeChartTimescale, setEnvironmentHomeChartTimescale] = useState(() => (
+          normalizePlaygroundEnvironmentHomeChartPeriod(developServerOperationalMetricsPeriod)
+        ));
+        const updateEnvironmentHomeChartTimescale = useCallback((value) => {
+          const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(value);
+          setEnvironmentHomeChartTimescale(normalizedPeriod);
+          if (typeof onDevelopServerOperationalMetricsPeriodChange === "function") {
+            onDevelopServerOperationalMetricsPeriodChange(normalizedPeriod);
+          }
+        }, [onDevelopServerOperationalMetricsPeriodChange]);
         const [environmentDetailChartTimescale, setEnvironmentDetailChartTimescale] = useState("day");
         const [environmentDetailTab, setEnvironmentDetailTab] = useState("general");
         const [serverDetailChartTimescale, setServerDetailChartTimescale] = useState("day");
 	        const [databaseDetailChartTimescale, setDatabaseDetailChartTimescale] = useState("day");
+	        const [databaseQuickstartLanguage, setDatabaseQuickstartLanguage] = useState("javascript");
 	        const [databaseDetailTab, setDatabaseDetailTab] = useState("data");
+	        const [databasePermissionChartAnimationKey, setDatabasePermissionChartAnimationKey] = useState(0);
+	        const [databasePermissionTeamId, setDatabasePermissionTeamId] = useState("");
+	        const [databasePermissionRoleId, setDatabasePermissionRoleId] = useState("member");
+	        const [databaseTeamMenuId, setDatabaseTeamMenuId] = useState("");
+	        const [databaseAccessSort, setDatabaseAccessSort] = useState("name");
+	        const [databaseAccessSortDirection, setDatabaseAccessSortDirection] = useState("asc");
+	        const [selectedDatabaseAccessTeamIds, setSelectedDatabaseAccessTeamIds] = useState(() => new Set());
+	        const [databaseTeamAccessState, setDatabaseTeamAccessState] = useState({
+	          teamId: "",
+	          action: "",
+	          error: "",
+	        });
 	        const [authDetailTab, setAuthDetailTab] = useState("users");
 	        const [secretsDetailTab, setSecretsDetailTab] = useState("secrets");
 	        const [agentRuntimeDetailTab, setAgentRuntimeDetailTab] = useState("general");
@@ -87422,6 +87827,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [databaseDocumentViewMode, setDatabaseDocumentViewMode] = useState("preview");
         const [databaseJsonEditorModule, setDatabaseJsonEditorModule] = useState(null);
         const [databaseJsonEditorModuleError, setDatabaseJsonEditorModuleError] = useState("");
+        const [databaseQuickstartEditorModule, setDatabaseQuickstartEditorModule] = useState(null);
+        const [databaseQuickstartEditorModuleError, setDatabaseQuickstartEditorModuleError] = useState("");
         const [serverPreviewEditorModule, setServerPreviewEditorModule] = useState(null);
         const [serverPreviewEditorModuleError, setServerPreviewEditorModuleError] = useState("");
         const [databaseCollectionComposerState, setDatabaseCollectionComposerState] = useState({
@@ -88810,6 +89217,183 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return React.createElement(PlaygroundEnvironmentTelemetryTimeseriesChart, config);
         }
 
+        function PlaygroundResourceOperationsChart({
+          labels,
+          series,
+          isLoading = false,
+          emptyText = "No resource activity yet",
+          loadingLabel = "Loading resource activity",
+          ariaLabel = "Resource activity over time",
+        }) {
+          const canvasRef = useRef(null);
+          const chartRef = useRef(null);
+          const normalizedLabels = Array.isArray(labels) ? labels.map((label) => String(label || "")) : [];
+          const fallbackColors = ["rgb(143, 196, 255)", "rgb(103, 80, 255)", "rgb(126, 255, 255)", "rgb(245, 59, 58)"];
+          const normalizedSeries = (Array.isArray(series) ? series : [])
+            .filter(Boolean)
+            .map((entry, seriesIndex) => ({
+              id: String(entry?.id || "resource-series-" + seriesIndex),
+              label: String(entry?.label || "Activity"),
+              color: String(entry?.color || fallbackColors[seriesIndex % fallbackColors.length]),
+              values: normalizedLabels.map((_, index) => Math.max(0, Number(entry?.values?.[index] || 0))),
+            }));
+          const maxValue = Math.max(0, ...normalizedSeries.flatMap((entry) => entry.values));
+          const hasData = normalizedLabels.length > 0 && maxValue > 0;
+          const chartSignature = JSON.stringify({
+            labels: normalizedLabels,
+            series: normalizedSeries,
+          });
+
+          useEffect(() => () => {
+            if (chartRef.current) {
+              chartRef.current.destroy();
+              chartRef.current = null;
+            }
+          }, []);
+
+          useEffect(() => {
+            const canvas = canvasRef.current;
+            if (!canvas || typeof Chart !== "function" || !hasData) {
+              if (chartRef.current) {
+                chartRef.current.destroy();
+                chartRef.current = null;
+              }
+              return undefined;
+            }
+
+            const maxReferencePlugin = {
+              id: "resourceMaximumReference",
+              afterDatasetsDraw(chart, _args, pluginOptions) {
+                const value = Number(pluginOptions?.value || 0);
+                const yScale = chart.scales?.y;
+                const chartArea = chart.chartArea;
+                if (!Number.isFinite(value) || value <= 0 || !yScale || !chartArea) return;
+                const y = yScale.getPixelForValue(value);
+                const context = chart.ctx;
+                context.save();
+                context.beginPath();
+                context.setLineDash([4, 5]);
+                context.lineWidth = 1;
+                context.strokeStyle = "rgba(255, 255, 255, 0.42)";
+                context.moveTo(chartArea.left, y);
+                context.lineTo(chartArea.right, y);
+                context.stroke();
+                context.restore();
+              },
+            };
+            const maxVisibleLabels = 7;
+            const labelStep = Math.max(1, Math.ceil(normalizedLabels.length / maxVisibleLabels));
+            const visibleLabelIndexes = new Set();
+            for (let index = 0; index < normalizedLabels.length; index += labelStep) visibleLabelIndexes.add(index);
+            visibleLabelIndexes.add(Math.max(0, normalizedLabels.length - 1));
+            const fontFamily = "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+            const chartData = {
+              labels: normalizedLabels,
+              datasets: normalizedSeries.map((entry) => ({
+                id: entry.id,
+                label: entry.label,
+                data: entry.values,
+                borderColor: entry.color,
+                backgroundColor: entry.color,
+                borderWidth: 1.6,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                pointHitRadius: 12,
+                tension: 0.35,
+                cubicInterpolationMode: "monotone",
+                fill: false,
+              })),
+            };
+            const chartOptions = {
+              animation: false,
+              responsive: true,
+              maintainAspectRatio: false,
+              normalized: true,
+              interaction: { intersect: false, mode: "index" },
+              layout: { padding: { top: 12, right: 14, bottom: 0, left: 0 } },
+              plugins: {
+                legend: { display: false },
+                resourceMaximumReference: { value: maxValue },
+                tooltip: {
+                  enabled: true,
+                  backgroundColor: "rgba(8, 8, 8, 0.96)",
+                  borderColor: "rgba(255, 255, 255, 0.14)",
+                  borderWidth: 1,
+                  cornerRadius: 8,
+                  displayColors: true,
+                  titleColor: "rgba(255, 255, 255, 0.94)",
+                  bodyColor: "rgba(255, 255, 255, 0.78)",
+                  padding: 10,
+                  callbacks: {
+                    label: (context) => String(context.dataset?.label || "Operations") + ": "
+                      + Math.round(Number(context.parsed?.y || 0)).toLocaleString("en-US"),
+                  },
+                },
+              },
+              scales: {
+                x: {
+                  grid: { display: false, drawBorder: false },
+                  border: { display: false },
+                  ticks: {
+                    color: "rgba(255, 255, 255, 0.4)",
+                    font: { size: 10, weight: "400", family: fontFamily },
+                    maxRotation: 0,
+                    minRotation: 0,
+                    padding: 10,
+                    callback: (_value, index) => visibleLabelIndexes.has(index) ? normalizedLabels[index] : "",
+                  },
+                },
+                y: {
+                  beginAtZero: true,
+                  suggestedMax: Math.max(1, Math.ceil(maxValue * 1.25)),
+                  grid: { color: "rgba(255, 255, 255, 0.08)", drawTicks: false },
+                  border: { display: false },
+                  ticks: {
+                    color: "rgba(255, 255, 255, 0.34)",
+                    padding: 8,
+                    maxTicksLimit: 5,
+                    font: { size: 10, weight: "400", family: fontFamily },
+                    callback: (value) => Math.round(Number(value || 0)).toLocaleString("en-US"),
+                  },
+                },
+              },
+            };
+
+            if (chartRef.current) {
+              chartRef.current.data = chartData;
+              chartRef.current.options = chartOptions;
+              chartRef.current.update("none");
+              return undefined;
+            }
+            chartRef.current = new Chart(canvas, {
+              type: "line",
+              data: chartData,
+              options: chartOptions,
+              plugins: [maxReferencePlugin],
+            });
+            return undefined;
+          }, [chartSignature, hasData, maxValue]);
+
+          return React.createElement("div", {
+              className: "playground-project-overview-progress-combo-chart-frame playground-agents-home-chartjs-frame playground-resource-operations-chartjs-frame",
+            },
+            isLoading
+              ? React.createElement("div", {
+                  className: "playground-overview-chart-loading",
+                  style: { position: "static", inset: "auto", height: "100%" },
+                  "aria-label": loadingLabel,
+                }, React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 }))
+              : !hasData
+                ? React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText)
+                : React.createElement("canvas", {
+                    ref: canvasRef,
+                    className: "playground-project-overview-progress-combo-canvas playground-agents-home-chartjs-canvas playground-resource-operations-chartjs-canvas",
+                    role: "img",
+                    "aria-label": ariaLabel,
+                  })
+          );
+        }
+
         function resetDatabaseEditorAuxiliaryState() {
           if (databaseDocumentAutosaveTimerRef.current) {
             window.clearTimeout(databaseDocumentAutosaveTimerRef.current);
@@ -88832,6 +89416,18 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           });
           setDatabaseDocumentViewMode("preview");
           setDatabaseDetailTab("data");
+          setDatabaseDescriptionHistory({ past: [], future: [] });
+          setDatabasePermissionTeamId("");
+	      setDatabasePermissionRoleId("member");
+          setDatabaseTeamMenuId("");
+	      setDatabaseAccessSort("name");
+	      setDatabaseAccessSortDirection("asc");
+	      setSelectedDatabaseAccessTeamIds(new Set());
+          setDatabaseTeamAccessState({
+            teamId: "",
+            action: "",
+            error: "",
+          });
           setSelectedDatabaseCollectionId("");
           setSelectedDatabaseDocumentId("");
         }
@@ -88979,6 +89575,58 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             value: nextValue,
             selectionStart: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart,
             selectionEnd: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart + nextBlock.length,
+          };
+        }
+
+        function buildEnvironmentDescriptionOrderedListEdit(value, selectionStart, selectionEnd) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const lineStart = value.lastIndexOf("\\n", Math.max(0, safeStart - 1)) + 1;
+          let lineEnd = value.indexOf("\\n", safeEnd);
+          if (lineEnd === -1) lineEnd = value.length;
+          const lines = value.slice(lineStart, lineEnd).split("\\n");
+          const orderedPattern = /^(\\s*)\\d+\\.\\s+/;
+          const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+          const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => orderedPattern.test(line));
+          let orderedIndex = 1;
+          const nextLines = lines.map((line) => {
+            if (!line.trim()) return shouldRemoveList ? line : String(orderedIndex++) + ". ";
+            if (shouldRemoveList) return line.replace(orderedPattern, "$1");
+            const cleanLine = line.replace(/^(\\s*)(?:-\\s+|\\d+\\.\\s+)/, "$1");
+            return cleanLine.replace(/^(\\s*)/, (_match, indent) => String(indent || "") + String(orderedIndex++) + ". ");
+          });
+          const nextBlock = nextLines.join("\\n");
+          const collapsedSelection = safeStart === safeEnd;
+          const nextCaretOffset = shouldRemoveList
+            ? Math.max(0, safeStart - lineStart - 3)
+            : safeStart - lineStart + 3;
+          return {
+            value: value.slice(0, lineStart) + nextBlock + value.slice(lineEnd),
+            selectionStart: collapsedSelection ? lineStart + nextCaretOffset : lineStart,
+            selectionEnd: collapsedSelection ? lineStart + nextCaretOffset : lineStart + nextBlock.length,
+          };
+        }
+
+        function buildEnvironmentDescriptionLinkEdit(value, selectionStart, selectionEnd) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          const existingLinkMatch = selectedText.match(/^\\[([^\\]]+)\\]\\(([^)]*)\\)$/);
+          if (existingLinkMatch) {
+            const unwrappedText = existingLinkMatch[1];
+            return {
+              value: value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd),
+              selectionStart: safeStart,
+              selectionEnd: safeStart + unwrappedText.length,
+            };
+          }
+          const label = selectedText || "link text";
+          const url = "url";
+          const markdownLink = "[" + label + "](" + url + ")";
+          return {
+            value: value.slice(0, safeStart) + markdownLink + value.slice(safeEnd),
+            selectionStart: safeStart + label.length + 3,
+            selectionEnd: safeStart + label.length + 3 + url.length,
           };
         }
 
@@ -90218,20 +90866,59 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               }
             );
 
-            const normalizedRecord = data?.analytics && typeof data.analytics === "object"
-              ? {
-                  ...data.analytics,
-                  loadedAt: new Date().toISOString(),
-                }
-              : null;
-            if (!normalizedRecord) {
-              throw new Error("Database analytics response was empty.");
-            }
+            const analyticsSource = [
+              data?.analytics,
+              data?.data?.analytics,
+              data?.data,
+              data,
+            ].find((candidate) =>
+              candidate
+              && typeof candidate === "object"
+              && !Array.isArray(candidate)
+              && (
+                candidate.summary && typeof candidate.summary === "object"
+                || candidate.charts && typeof candidate.charts === "object"
+              )
+            ) || {};
+            const existingCollections = Array.isArray(databaseCollectionsByIdRef.current[normalizedDatabaseId])
+              ? databaseCollectionsByIdRef.current[normalizedDatabaseId]
+              : [];
+            const fallbackTotalDocuments = existingCollections.reduce((sum, collection) =>
+              sum + Math.max(0, Number(collection?.documentCount || 0) || 0),
+              0
+            );
+            const summary = analyticsSource.summary && typeof analyticsSource.summary === "object" && !Array.isArray(analyticsSource.summary)
+              ? analyticsSource.summary
+              : {};
+            const charts = analyticsSource.charts && typeof analyticsSource.charts === "object" && !Array.isArray(analyticsSource.charts)
+              ? analyticsSource.charts
+              : {};
+            const normalizedRecord = {
+              ...analyticsSource,
+              summary: {
+                ...summary,
+                totalCollections: Math.max(0, Number(summary.totalCollections ?? existingCollections.length) || 0),
+                totalDocuments: Math.max(0, Number(summary.totalDocuments ?? fallbackTotalDocuments) || 0),
+                reads24h: Math.max(0, Number(summary.reads24h || 0) || 0),
+                writes24h: Math.max(0, Number(summary.writes24h || 0) || 0),
+                deletes24h: Math.max(0, Number(summary.deletes24h || 0) || 0),
+              },
+              charts: {
+                ...charts,
+                operations24h: Array.isArray(charts.operations24h) ? charts.operations24h : [],
+                volume24h: Array.isArray(charts.volume24h) ? charts.volume24h : [],
+              },
+              loadedAt: new Date().toISOString(),
+            };
 
             setDatabaseAnalyticsById((current) => ({
               ...current,
               [normalizedDatabaseId]: normalizedRecord,
             }));
+            setDatabaseSaveState((current) => current.error === "Database analytics response was empty."
+              ? { ...current, error: "" }
+              : current
+            );
             return normalizedRecord;
           } catch (error) {
             if (selectedDatabaseIdRef.current === normalizedDatabaseId) {
@@ -91946,7 +92633,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         useEffect(() => {
           if (
             resourceMode !== "servers"
-            || databaseDetailTab !== "general"
+            || databaseDetailTab !== "usage"
             || !selectedDatabaseId
             || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID
           ) {
@@ -91954,6 +92641,75 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
           void loadDatabaseAnalytics(selectedDatabaseId);
         }, [databaseDetailTab, loadDatabaseAnalytics, resourceMode, selectedDatabaseId]);
+
+        useEffect(() => {
+          if (
+            databaseDetailTab !== "settings"
+            || !selectedDatabaseId
+            || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID
+          ) {
+            return undefined;
+          }
+          const frameId = window.requestAnimationFrame(() => {
+            const scrollNode = resourcesDetailScrollRef.current;
+            if (scrollNode && typeof scrollNode.scrollTop === "number") {
+              scrollNode.scrollTop = 0;
+            }
+            setDatabasePermissionChartAnimationKey((current) => current + 1);
+          });
+          return () => window.cancelAnimationFrame(frameId);
+        }, [databaseDetailTab, databasePermissionTeamId, selectedDatabaseId]);
+
+        useEffect(() => {
+          databaseWorkspaceTeamsRequestedRef.current = false;
+        }, [databaseListScopeKey]);
+
+        useEffect(() => {
+          if (
+            databaseDetailTab !== "settings"
+            || workspaceTeamsLoading
+            || workspaceTeamsRequiresPlan
+            || (Array.isArray(workspaceTeams) && workspaceTeams.length > 0)
+            || databaseWorkspaceTeamsRequestedRef.current
+            || typeof onWorkspaceTeamsRequest !== "function"
+          ) {
+            return;
+          }
+          databaseWorkspaceTeamsRequestedRef.current = true;
+          onWorkspaceTeamsRequest({});
+        }, [
+          databaseDetailTab,
+          onWorkspaceTeamsRequest,
+          workspaceTeams,
+          workspaceTeamsLoading,
+          workspaceTeamsRequiresPlan,
+        ]);
+
+        useEffect(() => {
+          if (!databaseTeamMenuId) {
+            return undefined;
+          }
+
+          function handleDatabaseTeamMenuPointerDown(event) {
+            const target = event?.target instanceof Element ? event.target : null;
+            if (!target?.closest(".playground-database-team-menu-scope")) {
+              setDatabaseTeamMenuId("");
+            }
+          }
+
+          function handleDatabaseTeamMenuEscape(event) {
+            if (event.key === "Escape") {
+              setDatabaseTeamMenuId("");
+            }
+          }
+
+          document.addEventListener("mousedown", handleDatabaseTeamMenuPointerDown);
+          window.addEventListener("keydown", handleDatabaseTeamMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleDatabaseTeamMenuPointerDown);
+            window.removeEventListener("keydown", handleDatabaseTeamMenuEscape);
+          };
+        }, [databaseTeamMenuId]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -92630,6 +93386,31 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [databaseActionsPopoverOpen]);
 
         useEffect(() => {
+          if (!databaseExportMenuOpen) return undefined;
+
+          function handleDatabaseExportMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !databaseExportMenuRef.current || databaseExportMenuRef.current.contains(target)) {
+              return;
+            }
+            setDatabaseExportMenuOpen(false);
+          }
+
+          function handleDatabaseExportMenuEscape(event) {
+            if (event.key === "Escape") {
+              setDatabaseExportMenuOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleDatabaseExportMenuPointerDown);
+          window.addEventListener("keydown", handleDatabaseExportMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleDatabaseExportMenuPointerDown);
+            window.removeEventListener("keydown", handleDatabaseExportMenuEscape);
+          };
+        }, [databaseExportMenuOpen]);
+
+        useEffect(() => {
           if (!environmentRenameState || !environmentRenameInputRef.current) {
             return undefined;
           }
@@ -92714,7 +93495,38 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             window.clearTimeout(databaseDocumentAutosaveTimerRef.current);
             databaseDocumentAutosaveTimerRef.current = null;
           }
+          if (databasePermissionSaveTimerRef.current) {
+            window.clearTimeout(databasePermissionSaveTimerRef.current);
+            databasePermissionSaveTimerRef.current = null;
+          }
         }, []);
+
+        useEffect(() => {
+          if (databaseDetailTab !== "usage" || databaseQuickstartEditorModule || databaseQuickstartEditorModuleError) {
+            return undefined;
+          }
+
+          let cancelled = false;
+          void loadPlaygroundCodeEditorModule()
+            .then((module) => {
+              if (cancelled || !module) return;
+              setDatabaseQuickstartEditorModule(module);
+              setDatabaseQuickstartEditorModuleError("");
+              void module.loader?.init?.()
+                .then((monaco) => {
+                  if (!cancelled) ensurePlaygroundCodeEditorTheme(monaco);
+                })
+                .catch(() => {});
+            })
+            .catch((error) => {
+              if (cancelled) return;
+              setDatabaseQuickstartEditorModuleError(error instanceof Error ? error.message : "Failed to load editor.");
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [databaseDetailTab, databaseQuickstartEditorModule, databaseQuickstartEditorModuleError]);
 
         useEffect(() => {
           if (databaseDocumentViewMode !== "json" || databaseJsonEditorModule || databaseJsonEditorModuleError) {
@@ -93497,8 +94309,681 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }));
         }
 
-        function applyDatabaseDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-          updateDatabaseField("description", nextValue);
+        function getDatabaseMetadataRecord(database) {
+          return database?.metadata && typeof database.metadata === "object" && !Array.isArray(database.metadata)
+            ? database.metadata
+            : {};
+        }
+
+        function getDatabaseSharedTeamIds(database) {
+          const metadata = getDatabaseMetadataRecord(database);
+          const configuredTeamIds = [
+            ...(Array.isArray(metadata.sharedTeamIds) ? metadata.sharedTeamIds : []),
+            ...(Array.isArray(metadata.teamAccessIds) ? metadata.teamAccessIds : []),
+          ];
+          const teamPermissionSets = metadata.teamPermissionSets && typeof metadata.teamPermissionSets === "object" && !Array.isArray(metadata.teamPermissionSets)
+            ? metadata.teamPermissionSets
+            : {};
+          const teamRolePermissionSets = metadata.teamRolePermissionSets && typeof metadata.teamRolePermissionSets === "object" && !Array.isArray(metadata.teamRolePermissionSets)
+            ? metadata.teamRolePermissionSets
+            : {};
+          return Array.from(new Set([
+            ...configuredTeamIds,
+            ...Object.keys(teamPermissionSets),
+            ...Object.keys(teamRolePermissionSets),
+          ].map((teamId) => String(teamId || "").trim()).filter(Boolean)));
+        }
+
+        function getDatabaseTeamPermissionSets(database) {
+          const metadata = getDatabaseMetadataRecord(database);
+          return metadata.teamPermissionSets && typeof metadata.teamPermissionSets === "object" && !Array.isArray(metadata.teamPermissionSets)
+            ? metadata.teamPermissionSets
+            : {};
+        }
+
+        function getDatabaseTeamPermissionSet(database, teamId) {
+          const normalizedTeamId = String(teamId || "").trim();
+          const permissionSets = getDatabaseTeamPermissionSets(database);
+          return normalizePlaygroundPermissionSet(permissionSets[normalizedTeamId], "database");
+        }
+
+        function getDatabaseTeamRolePermissionSetsMap(database) {
+          const metadata = getDatabaseMetadataRecord(database);
+          return metadata.teamRolePermissionSets && typeof metadata.teamRolePermissionSets === "object" && !Array.isArray(metadata.teamRolePermissionSets)
+            ? metadata.teamRolePermissionSets
+            : {};
+        }
+
+        function getDatabaseTeamRolePermissionSets(database, teamId) {
+          const normalizedTeamId = String(teamId || "").trim();
+          const configuredSets = getDatabaseTeamRolePermissionSetsMap(database)[normalizedTeamId];
+          const legacyPermissionSet = getDatabaseTeamPermissionSets(database)[normalizedTeamId];
+          const source = configuredSets && typeof configuredSets === "object" && !Array.isArray(configuredSets)
+            ? configuredSets
+            : {};
+          return PLAYGROUND_TEAM_ROLE_DEFINITIONS.reduce((result, role) => {
+            result[role.id] = role.id === "owner"
+              ? createPlaygroundDatabaseTeamRolePermissionSet(role.id)
+              : normalizePlaygroundPermissionSet(
+                  source[role.id] || legacyPermissionSet || createPlaygroundDatabaseTeamRolePermissionSet(role.id),
+                  "database"
+                );
+            return result;
+          }, {});
+        }
+
+        function getDatabaseTeamRolePermissionSet(database, teamId, roleId) {
+          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+          return getDatabaseTeamRolePermissionSets(database, teamId)[normalizedRoleId];
+        }
+
+        async function flushQueuedDatabasePermissionSave() {
+          if (databasePermissionSaveInFlightRef.current) {
+            return;
+          }
+
+          databasePermissionSaveInFlightRef.current = true;
+          try {
+            while (databasePermissionSaveQueuedRef.current) {
+              const databaseToSave = normalizePlaygroundDatabaseRecord(databasePermissionSaveQueuedRef.current);
+              databasePermissionSaveQueuedRef.current = null;
+              setDatabaseSaveState({
+                isSaving: true,
+                error: "",
+                message: "",
+              });
+
+              try {
+                const savedDatabase = await persistDatabaseRecord(databaseToSave);
+                if (!savedDatabase) {
+                  throw new Error("Database permissions save failed.");
+                }
+                upsertLocalDatabaseRecord(savedDatabase);
+                if (selectedDatabaseIdRef.current === savedDatabase.id) {
+                  setDraftDatabase((current) => {
+                    if (current?.id !== savedDatabase.id) {
+                      return current;
+                    }
+                    const currentMetadata = getDatabaseMetadataRecord(current);
+                    const savedMetadata = getDatabaseMetadataRecord(savedDatabase);
+                    return normalizePlaygroundDatabaseRecord({
+                      ...savedDatabase,
+                      permissionSet: current.permissionSet,
+                      metadata: {
+                        ...savedMetadata,
+                        sharedTeamIds: currentMetadata.sharedTeamIds || [],
+                        teamAccessIds: currentMetadata.teamAccessIds || [],
+                        teamPermissionSets: currentMetadata.teamPermissionSets || {},
+                        teamRolePermissionSets: currentMetadata.teamRolePermissionSets || {},
+                      },
+                    });
+                  });
+                }
+              } catch (error) {
+                setDatabaseSaveState({
+                  isSaving: false,
+                  error: error instanceof Error ? error.message : "Failed to save database permissions.",
+                  message: "",
+                });
+                return;
+              }
+            }
+
+            setDatabaseSaveState({
+              isSaving: false,
+              error: "",
+              message: "",
+            });
+          } finally {
+            databasePermissionSaveInFlightRef.current = false;
+            if (databasePermissionSaveQueuedRef.current && !databasePermissionSaveTimerRef.current) {
+              databasePermissionSaveTimerRef.current = window.setTimeout(() => {
+                databasePermissionSaveTimerRef.current = null;
+                void flushQueuedDatabasePermissionSave();
+              }, 0);
+            }
+          }
+        }
+
+        function queueDatabasePermissionSave(database) {
+          if (
+            !database?.id
+            || database.id === PLAYGROUND_DATABASE_DRAFT_ID
+            || isSelectedDatabaseTemplatePreview
+            || isPlaygroundResourceTemplatePreviewRecord(database)
+          ) {
+            return;
+          }
+          databasePermissionSaveQueuedRef.current = normalizePlaygroundDatabaseRecord(database);
+          if (databasePermissionSaveTimerRef.current) {
+            window.clearTimeout(databasePermissionSaveTimerRef.current);
+          }
+          databasePermissionSaveTimerRef.current = window.setTimeout(() => {
+            databasePermissionSaveTimerRef.current = null;
+            void flushQueuedDatabasePermissionSave();
+          }, 500);
+        }
+
+        function updateDatabasePermissionSet(updater) {
+          if (isSelectedDatabaseTemplatePreview) {
+            return;
+          }
+          const currentDatabase = normalizePlaygroundDatabaseRecord(
+            draftDatabase || selectedDatabaseSnapshot || buildPlaygroundDefaultDatabaseDraft()
+          );
+          const currentPermissionSet = normalizePlaygroundPermissionSet(currentDatabase.permissionSet, "database");
+          const nextPermissionSet = normalizePlaygroundPermissionSet(
+            typeof updater === "function" ? updater(currentPermissionSet) : updater,
+            "database"
+          );
+          const nextDatabase = {
+            ...currentDatabase,
+            permissionSet: nextPermissionSet,
+          };
+          updateDraftDatabase(nextDatabase);
+          queueDatabasePermissionSave(nextDatabase);
+        }
+
+        function updateDatabasePermissionRingAccess(ringId, access) {
+          const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "");
+          if (!normalizedRingId) {
+            return;
+          }
+          const nextAccess = normalizePlaygroundPermissionAccess(access);
+          updateDatabasePermissionSet((currentPermissionSet) => {
+            const currentRings = currentPermissionSet.rings || createPlaygroundDefaultPermissionRings();
+            const currentRingPolicy = currentRings[normalizedRingId] || {
+              defaultAccess: getPlaygroundPermissionRingDefinition(normalizedRingId).defaultAccess,
+            };
+            return {
+              ...currentPermissionSet,
+              version: 1,
+              subjectType: "database",
+              rings: {
+                ...currentRings,
+                [normalizedRingId]: {
+                  ...currentRingPolicy,
+                  defaultAccess: nextAccess,
+                },
+              },
+            };
+          });
+        }
+
+        function updateDatabasePermissionActionRing(actionId, ringId) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition || !actionDefinition.subjectTypes?.includes("database")) {
+            return;
+          }
+          const nextRingId = normalizePlaygroundPermissionRingId(ringId, actionDefinition.ringId);
+          updateDatabasePermissionSet((currentPermissionSet) => {
+            const currentActions = currentPermissionSet.actions || createPlaygroundDefaultPermissionActions();
+            const currentActionPolicy = currentActions[actionDefinition.id] || {
+              ringId: actionDefinition.ringId,
+            };
+            const explicitAccess = getPlaygroundPermissionActionExplicitAccess(currentPermissionSet, actionDefinition);
+            return {
+              ...currentPermissionSet,
+              version: 1,
+              subjectType: "database",
+              actions: {
+                ...currentActions,
+                [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
+                  currentPermissionSet,
+                  actionDefinition,
+                  currentActionPolicy,
+                  explicitAccess,
+                  nextRingId
+                ),
+              },
+            };
+          });
+        }
+
+        function updateDatabasePermissionActionAccess(actionId, access) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition || !actionDefinition.subjectTypes?.includes("database")) {
+            return;
+          }
+          const shouldInherit = !String(access || "").trim();
+          const nextAccess = shouldInherit ? "" : normalizePlaygroundPermissionAccess(access);
+          updateDatabasePermissionSet((currentPermissionSet) => {
+            const currentActions = currentPermissionSet.actions || createPlaygroundDefaultPermissionActions();
+            const currentActionPolicy = currentActions[actionDefinition.id] || {
+              ringId: actionDefinition.ringId,
+            };
+            return {
+              ...currentPermissionSet,
+              version: 1,
+              subjectType: "database",
+              actions: {
+                ...currentActions,
+                [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
+                  currentPermissionSet,
+                  actionDefinition,
+                  currentActionPolicy,
+                  shouldInherit ? "" : nextAccess
+                ),
+              },
+            };
+          });
+        }
+
+        function updateDatabaseTeamPermissionSet(teamId, updater) {
+          const normalizedTeamId = String(teamId || "").trim();
+          if (!normalizedTeamId || isSelectedDatabaseTemplatePreview) {
+            return;
+          }
+          const currentDatabase = normalizePlaygroundDatabaseRecord(
+            draftDatabase || selectedDatabaseSnapshot || buildPlaygroundDefaultDatabaseDraft()
+          );
+          const currentPermissionSets = getDatabaseTeamPermissionSets(currentDatabase);
+          const currentPermissionSet = getDatabaseTeamPermissionSet(currentDatabase, normalizedTeamId);
+          const nextPermissionSet = normalizePlaygroundPermissionSet(
+            typeof updater === "function" ? updater(currentPermissionSet) : updater,
+            "database"
+          );
+          const metadata = {
+            ...getDatabaseMetadataRecord(currentDatabase),
+            teamPermissionSets: {
+              ...currentPermissionSets,
+              [normalizedTeamId]: nextPermissionSet,
+            },
+          };
+          const nextDatabase = normalizePlaygroundDatabaseRecord({
+            ...currentDatabase,
+            metadata,
+          });
+          updateDraftDatabase(nextDatabase);
+          queueDatabasePermissionSave(nextDatabase);
+        }
+
+        function updateDatabaseTeamPermissionRingAccess(teamId, ringId, access) {
+          const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "");
+          if (!normalizedRingId) {
+            return;
+          }
+          const nextAccess = normalizePlaygroundPermissionAccess(access);
+          updateDatabaseTeamPermissionSet(teamId, (currentPermissionSet) => {
+            const currentRings = currentPermissionSet.rings || createPlaygroundDefaultPermissionRings();
+            const currentRingPolicy = currentRings[normalizedRingId] || {
+              defaultAccess: getPlaygroundPermissionRingDefinition(normalizedRingId).defaultAccess,
+            };
+            return {
+              ...currentPermissionSet,
+              version: 1,
+              subjectType: "database",
+              rings: {
+                ...currentRings,
+                [normalizedRingId]: {
+                  ...currentRingPolicy,
+                  defaultAccess: nextAccess,
+                },
+              },
+            };
+          });
+        }
+
+        function updateDatabaseTeamPermissionActionRing(teamId, actionId, ringId) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition || !actionDefinition.subjectTypes?.includes("database")) {
+            return;
+          }
+          const nextRingId = normalizePlaygroundPermissionRingId(ringId, actionDefinition.ringId);
+          updateDatabaseTeamPermissionSet(teamId, (currentPermissionSet) => {
+            const currentActions = currentPermissionSet.actions || createPlaygroundDefaultPermissionActions();
+            const currentActionPolicy = currentActions[actionDefinition.id] || {
+              ringId: actionDefinition.ringId,
+            };
+            const explicitAccess = getPlaygroundPermissionActionExplicitAccess(currentPermissionSet, actionDefinition);
+            return {
+              ...currentPermissionSet,
+              version: 1,
+              subjectType: "database",
+              actions: {
+                ...currentActions,
+                [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
+                  currentPermissionSet,
+                  actionDefinition,
+                  currentActionPolicy,
+                  explicitAccess,
+                  nextRingId
+                ),
+              },
+            };
+          });
+        }
+
+        function updateDatabaseTeamPermissionActionAccess(teamId, actionId, access) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition || !actionDefinition.subjectTypes?.includes("database")) {
+            return;
+          }
+          const shouldInherit = !String(access || "").trim();
+          const nextAccess = shouldInherit ? "" : normalizePlaygroundPermissionAccess(access);
+          updateDatabaseTeamPermissionSet(teamId, (currentPermissionSet) => {
+            const currentActions = currentPermissionSet.actions || createPlaygroundDefaultPermissionActions();
+            const currentActionPolicy = currentActions[actionDefinition.id] || {
+              ringId: actionDefinition.ringId,
+            };
+            return {
+              ...currentPermissionSet,
+              version: 1,
+              subjectType: "database",
+              actions: {
+                ...currentActions,
+                [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
+                  currentPermissionSet,
+                  actionDefinition,
+                  currentActionPolicy,
+                  shouldInherit ? "" : nextAccess
+                ),
+              },
+            };
+          });
+        }
+
+        function updateDatabaseTeamRolePermissionSet(teamId, roleId, updater) {
+          const normalizedTeamId = String(teamId || "").trim();
+          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+          if (!normalizedTeamId || normalizedRoleId === "owner" || isSelectedDatabaseTemplatePreview) return;
+          const currentDatabase = normalizePlaygroundDatabaseRecord(
+            draftDatabase || selectedDatabaseSnapshot || buildPlaygroundDefaultDatabaseDraft()
+          );
+          const currentRoleSetsMap = getDatabaseTeamRolePermissionSetsMap(currentDatabase);
+          const currentTeamRoleSets = getDatabaseTeamRolePermissionSets(currentDatabase, normalizedTeamId);
+          const currentPermissionSet = getDatabaseTeamRolePermissionSet(currentDatabase, normalizedTeamId, normalizedRoleId);
+          const nextPermissionSet = normalizePlaygroundPermissionSet(
+            typeof updater === "function" ? updater(currentPermissionSet) : updater,
+            "database"
+          );
+          const nextDatabase = normalizePlaygroundDatabaseRecord({
+            ...currentDatabase,
+            metadata: {
+              ...getDatabaseMetadataRecord(currentDatabase),
+              teamRolePermissionSets: {
+                ...currentRoleSetsMap,
+                [normalizedTeamId]: {
+                  ...currentTeamRoleSets,
+                  [normalizedRoleId]: nextPermissionSet,
+                },
+              },
+            },
+          });
+          updateDraftDatabase(nextDatabase);
+          queueDatabasePermissionSave(nextDatabase);
+        }
+
+        function updateDatabaseTeamRolePermissionRingAccess(teamId, roleId, ringId, access) {
+          const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "");
+          if (!normalizedRingId) return;
+          updateDatabaseTeamRolePermissionSet(teamId, roleId, (currentPermissionSet) => ({
+            ...currentPermissionSet,
+            version: 1,
+            subjectType: "database",
+            rings: {
+              ...(currentPermissionSet.rings || createPlaygroundDefaultPermissionRings()),
+              [normalizedRingId]: {
+                ...(currentPermissionSet.rings?.[normalizedRingId] || {}),
+                defaultAccess: normalizePlaygroundPermissionAccess(access),
+              },
+            },
+          }));
+        }
+
+        function updateDatabaseTeamRolePermissionActionRing(teamId, roleId, actionId, ringId) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition?.subjectTypes?.includes("database")) return;
+          updateDatabaseTeamRolePermissionSet(teamId, roleId, (currentPermissionSet) => {
+            const currentActions = currentPermissionSet.actions || createPlaygroundDefaultPermissionActions();
+            const currentActionPolicy = currentActions[actionDefinition.id] || { ringId: actionDefinition.ringId };
+            return {
+              ...currentPermissionSet,
+              version: 1,
+              subjectType: "database",
+              actions: {
+                ...currentActions,
+                [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
+                  currentPermissionSet,
+                  actionDefinition,
+                  currentActionPolicy,
+                  getPlaygroundPermissionActionExplicitAccess(currentPermissionSet, actionDefinition),
+                  normalizePlaygroundPermissionRingId(ringId, actionDefinition.ringId)
+                ),
+              },
+            };
+          });
+        }
+
+        function updateDatabaseTeamRolePermissionActionAccess(teamId, roleId, actionId, access) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition?.subjectTypes?.includes("database")) return;
+          updateDatabaseTeamRolePermissionSet(teamId, roleId, (currentPermissionSet) => {
+            const currentActions = currentPermissionSet.actions || createPlaygroundDefaultPermissionActions();
+            const currentActionPolicy = currentActions[actionDefinition.id] || { ringId: actionDefinition.ringId };
+            return {
+              ...currentPermissionSet,
+              version: 1,
+              subjectType: "database",
+              actions: {
+                ...currentActions,
+                [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
+                  currentPermissionSet,
+                  actionDefinition,
+                  currentActionPolicy,
+                  access
+                ),
+              },
+            };
+          });
+        }
+
+        function buildDatabaseTeamAccessRecord(database, teamId, shouldInclude) {
+          const normalizedDatabase = normalizePlaygroundDatabaseRecord(database);
+          const normalizedTeamId = String(teamId || "").trim();
+          const metadata = getDatabaseMetadataRecord(normalizedDatabase);
+          const currentPermissionSets = getDatabaseTeamPermissionSets(normalizedDatabase);
+          const currentRolePermissionSets = getDatabaseTeamRolePermissionSetsMap(normalizedDatabase);
+          const nextTeamIds = getDatabaseSharedTeamIds(normalizedDatabase)
+            .filter((currentTeamId) => currentTeamId !== normalizedTeamId);
+          const nextPermissionSets = { ...currentPermissionSets };
+          const nextRolePermissionSets = { ...currentRolePermissionSets };
+          if (shouldInclude) {
+            nextTeamIds.push(normalizedTeamId);
+            nextPermissionSets[normalizedTeamId] = getDatabaseTeamPermissionSet(normalizedDatabase, normalizedTeamId);
+            nextRolePermissionSets[normalizedTeamId] = getDatabaseTeamRolePermissionSets(normalizedDatabase, normalizedTeamId);
+          } else {
+            delete nextPermissionSets[normalizedTeamId];
+            delete nextRolePermissionSets[normalizedTeamId];
+          }
+          const uniqueTeamIds = Array.from(new Set(nextTeamIds.filter(Boolean)));
+          return normalizePlaygroundDatabaseRecord({
+            ...normalizedDatabase,
+            metadata: {
+              ...metadata,
+              sharedTeamIds: uniqueTeamIds,
+              teamAccessIds: uniqueTeamIds,
+              teamPermissionSets: nextPermissionSets,
+              teamRolePermissionSets: nextRolePermissionSets,
+            },
+          });
+        }
+
+        async function persistDatabaseTeamAccessRecord(database) {
+          const savedDatabase = await persistDatabaseRecord(database);
+          if (!savedDatabase) {
+            throw new Error("Failed to save database team access.");
+          }
+          upsertLocalDatabaseRecord(savedDatabase);
+          if (selectedDatabaseIdRef.current === savedDatabase.id) {
+            setDraftDatabase(savedDatabase);
+          }
+          return savedDatabase;
+        }
+
+        async function findDatabaseTeamResourceShare(teamId, databaseId) {
+          const { response, data } = await fetchJsonWithTimeout(
+            backendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares",
+            {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders,
+            },
+            8000
+          );
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to load database team access.");
+          }
+          const shares = Array.isArray(data?.data) ? data.data : Array.isArray(data?.shares) ? data.shares : [];
+          return shares.find((share) =>
+            String(share?.resourceType || share?.resource_type || "").trim() === "database"
+            && String(share?.resourceId || share?.resource_id || "").trim() === String(databaseId || "").trim()
+          ) || null;
+        }
+
+        async function upsertDatabaseTeamResourceShare(team, database, databaseIdOverride = "") {
+          const normalizedTeamId = String(team?.id || "").trim();
+          const normalizedDatabase = normalizePlaygroundDatabaseRecord(database);
+          const normalizedDatabaseId = String(databaseIdOverride || normalizedDatabase.id || "").trim();
+          if (!normalizedTeamId || !normalizedDatabaseId || normalizedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            throw new Error("A saved database and team are required to add access.");
+          }
+          const permissionSet = getDatabaseTeamPermissionSet(normalizedDatabase, normalizedTeamId);
+          const rolePermissionSets = getDatabaseTeamRolePermissionSets(normalizedDatabase, normalizedTeamId);
+          const { response, data } = await fetchJsonWithTimeout(
+            backendUrl + "/teams/" + encodeURIComponent(normalizedTeamId) + "/resource-shares",
+            {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                resourceType: "database",
+                resourceId: normalizedDatabaseId,
+                accessLevel: "manage",
+                metadata: {
+                  resourceType: "database",
+                  resourceKind: "database",
+                  resourceName: normalizedDatabase.name || "Database",
+                  sharedTeamId: normalizedTeamId,
+                  sharedTeamName: String(team?.name || "").trim(),
+                  permissionSet,
+                  rolePermissionSets,
+                },
+              }),
+            },
+            8000
+          );
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to share database with team.");
+          }
+          return data?.data || data?.share || null;
+        }
+
+        async function handleAddDatabaseTeamAccess(team) {
+          const normalizedTeamId = String(team?.id || "").trim();
+          const currentDatabase = normalizePlaygroundDatabaseRecord(draftDatabase);
+          if (!normalizedTeamId || !currentDatabase.id || currentDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return;
+          }
+          if (databasePermissionSaveTimerRef.current) {
+            window.clearTimeout(databasePermissionSaveTimerRef.current);
+            databasePermissionSaveTimerRef.current = null;
+          }
+          databasePermissionSaveQueuedRef.current = null;
+          const nextDatabase = buildDatabaseTeamAccessRecord(currentDatabase, normalizedTeamId, true);
+          setDatabaseTeamMenuId("");
+          setDatabaseTeamAccessState({ teamId: normalizedTeamId, action: "add", error: "" });
+          setDatabaseSaveState({ isSaving: true, error: "", message: "" });
+          try {
+            const savedDatabase = await persistDatabaseTeamAccessRecord(nextDatabase);
+            await upsertDatabaseTeamResourceShare(team, savedDatabase, currentDatabase.id);
+            setDatabaseTeamAccessState({ teamId: "", action: "", error: "" });
+            setDatabaseSaveState({ isSaving: false, error: "", message: "" });
+          } catch (error) {
+            try {
+              await persistDatabaseTeamAccessRecord(currentDatabase);
+            } catch {}
+            const message = error instanceof Error ? error.message : "Failed to add database team access.";
+            setDatabaseTeamAccessState({ teamId: normalizedTeamId, action: "", error: message });
+            setDatabaseSaveState({ isSaving: false, error: "", message: "" });
+          }
+        }
+
+        async function handleRemoveDatabaseTeamAccess(team) {
+          const normalizedTeamId = String(team?.id || "").trim();
+          const currentDatabase = normalizePlaygroundDatabaseRecord(draftDatabase);
+          if (!normalizedTeamId || !currentDatabase.id || currentDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return;
+          }
+          if (databasePermissionSaveTimerRef.current) {
+            window.clearTimeout(databasePermissionSaveTimerRef.current);
+            databasePermissionSaveTimerRef.current = null;
+          }
+          databasePermissionSaveQueuedRef.current = null;
+          const nextDatabase = buildDatabaseTeamAccessRecord(currentDatabase, normalizedTeamId, false);
+          setDatabaseTeamMenuId("");
+          setDatabaseTeamAccessState({ teamId: normalizedTeamId, action: "remove", error: "" });
+          setDatabaseSaveState({ isSaving: true, error: "", message: "" });
+          try {
+            const share = await findDatabaseTeamResourceShare(normalizedTeamId, currentDatabase.id);
+            const savedDatabase = await persistDatabaseTeamAccessRecord(nextDatabase);
+            if (share?.id) {
+              const { response, data } = await fetchJsonWithTimeout(
+                backendUrl + "/teams/" + encodeURIComponent(normalizedTeamId) + "/resource-shares/" + encodeURIComponent(share.id),
+                {
+                  method: "DELETE",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: requestHeaders,
+                },
+                8000
+              );
+              if (!response.ok && response.status !== 404) {
+                throw new Error(data?.message || data?.error || "Failed to remove database from team.");
+              }
+            }
+            if (String(databasePermissionTeamId || "") === normalizedTeamId) {
+              setDatabasePermissionTeamId("");
+            }
+	        setSelectedDatabaseAccessTeamIds((current) => {
+	          const next = new Set(current || []);
+	          next.delete(normalizedTeamId);
+	          return next;
+	        });
+            setDraftDatabase(savedDatabase);
+            setDatabaseTeamAccessState({ teamId: "", action: "", error: "" });
+            setDatabaseSaveState({ isSaving: false, error: "", message: "" });
+          } catch (error) {
+            try {
+              const restoredDatabase = await persistDatabaseTeamAccessRecord(currentDatabase);
+              await upsertDatabaseTeamResourceShare(team, restoredDatabase, currentDatabase.id);
+            } catch {}
+            const message = error instanceof Error ? error.message : "Failed to remove database team access.";
+            setDatabaseTeamAccessState({ teamId: normalizedTeamId, action: "", error: message });
+            setDatabaseSaveState({ isSaving: false, error: "", message: "" });
+          }
+        }
+
+        function updateDatabaseDescriptionValue(nextValue, { recordHistory = true } = {}) {
+          const normalizedNextValue = String(nextValue ?? "");
+          const previousValue = String(draftDatabase?.description || "");
+          if (normalizedNextValue === previousValue) return;
+          if (recordHistory) {
+            setDatabaseDescriptionHistory((current) => ({
+              past: [...(Array.isArray(current.past) ? current.past : []), previousValue].slice(-80),
+              future: [],
+            }));
+          }
+          updateDatabaseField("description", normalizedNextValue);
+        }
+
+        function applyDatabaseDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart, options = {}) {
+          updateDatabaseDescriptionValue(nextValue, options);
           window.requestAnimationFrame(() => {
             const textarea = databaseDescriptionTextareaRef.current;
             if (!textarea) {
@@ -93511,6 +94996,30 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
             resizeEnvironmentDescriptionTextarea(textarea);
           });
+        }
+
+        function handleDatabaseDescriptionUndo() {
+          const historyPast = Array.isArray(databaseDescriptionHistory.past) ? databaseDescriptionHistory.past : [];
+          if (!historyPast.length || isDatabaseTemplatePreview) return;
+          const currentValue = String(draftDatabase?.description || "");
+          const previousValue = historyPast[historyPast.length - 1];
+          setDatabaseDescriptionHistory((current) => ({
+            past: (Array.isArray(current.past) ? current.past : []).slice(0, -1),
+            future: [currentValue, ...(Array.isArray(current.future) ? current.future : [])].slice(0, 80),
+          }));
+          applyDatabaseDescriptionSelection(previousValue, previousValue.length, previousValue.length, { recordHistory: false });
+        }
+
+        function handleDatabaseDescriptionRedo() {
+          const historyFuture = Array.isArray(databaseDescriptionHistory.future) ? databaseDescriptionHistory.future : [];
+          if (!historyFuture.length || isDatabaseTemplatePreview) return;
+          const currentValue = String(draftDatabase?.description || "");
+          const nextValue = historyFuture[0];
+          setDatabaseDescriptionHistory((current) => ({
+            past: [...(Array.isArray(current.past) ? current.past : []), currentValue].slice(-80),
+            future: (Array.isArray(current.future) ? current.future : []).slice(1),
+          }));
+          applyDatabaseDescriptionSelection(nextValue, nextValue.length, nextValue.length, { recordHistory: false });
         }
 
         function handleDatabaseDescriptionFormat(formatType) {
@@ -93531,6 +95040,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
           } else if (formatType === "list") {
             edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
+          } else if (formatType === "ordered-list") {
+            edit = buildEnvironmentDescriptionOrderedListEdit(value, selectionStart, selectionEnd);
+          } else if (formatType === "code") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, String.fromCharCode(96));
+          } else if (formatType === "link") {
+            edit = buildEnvironmentDescriptionLinkEdit(value, selectionStart, selectionEnd);
           }
 
           if (!edit) {
@@ -93712,6 +95227,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setServerActionsPopoverOpen(false);
           setServerFileActionsPopoverOpen(false);
           setDatabaseActionsPopoverOpen(false);
+          setDatabaseExportMenuOpen(false);
           setSelectedEnvironmentId("");
           setSelectedServerId("");
           setSelectedDatabaseId("");
@@ -94862,13 +96378,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }
 
         function buildSanitizedDatabasePayload(database) {
+          const metadata = database?.metadata && typeof database.metadata === "object" && !Array.isArray(database.metadata)
+            ? JSON.parse(JSON.stringify(database.metadata))
+            : {};
+          metadata.permissionSet = normalizePlaygroundPermissionSet(database?.permissionSet, "database");
           return {
             name: String(database?.name || "").trim() || "Untitled Database",
             description: typeof database?.description === "string" ? database.description : "",
             projectId: typeof database?.projectId === "string" && database.projectId.trim() ? database.projectId.trim() : null,
             location: typeof database?.location === "string" && database.location.trim() ? database.location.trim() : "eur3",
             status: ["active", "provisioning", "error"].includes(database?.status) ? database.status : "active",
-            metadata: database?.metadata && typeof database.metadata === "object" && !Array.isArray(database.metadata) ? database.metadata : null,
+            metadata,
           };
         }
 
@@ -95858,12 +97378,123 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
         }
 
-        async function handleExportDatabase() {
+        function escapeDatabaseExportCsvCell(value) {
+          const normalizedValue = value == null
+            ? ""
+            : typeof value === "object"
+              ? JSON.stringify(value)
+              : String(value);
+          return /[",\\r\\n]/.test(normalizedValue)
+            ? '"' + normalizedValue.replace(/"/g, '""') + '"'
+            : normalizedValue;
+        }
+
+        function buildDatabaseCsvExport(exportPayload) {
+          const fieldNames = new Set();
+          const documents = [];
+          (Array.isArray(exportPayload?.collections) ? exportPayload.collections : []).forEach((collection) => {
+            (Array.isArray(collection?.documents) ? collection.documents : []).forEach((document) => {
+              const data = document?.data && typeof document.data === "object" && !Array.isArray(document.data)
+                ? document.data
+                : {};
+              Object.keys(data).forEach((fieldName) => fieldNames.add(fieldName));
+              documents.push({
+                collectionId: String(collection?.id || ""),
+                collectionName: String(collection?.name || collection?.id || ""),
+                documentId: String(document?.id || ""),
+                data,
+              });
+            });
+          });
+          const sortedFieldNames = Array.from(fieldNames).sort((left, right) => left.localeCompare(right));
+          const rows = [
+            ["collection_id", "collection_name", "document_id", ...sortedFieldNames],
+            ...documents.map((document) => [
+              document.collectionId,
+              document.collectionName,
+              document.documentId,
+              ...sortedFieldNames.map((fieldName) => document.data[fieldName]),
+            ]),
+          ];
+          return rows.map((row) => row.map(escapeDatabaseExportCsvCell).join(",")).join("\\r\\n") + "\\r\\n";
+        }
+
+        function escapeDatabaseExportXml(value) {
+          return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&apos;");
+        }
+
+        function serializeDatabaseExportXmlValue(value) {
+          if (value === null || typeof value === "undefined") {
+            return '<value type="null"></value>';
+          }
+          if (Array.isArray(value)) {
+            return '<value type="array">'
+              + value.map((item) => "<item>" + serializeDatabaseExportXmlValue(item) + "</item>").join("")
+              + "</value>";
+          }
+          if (typeof value === "object") {
+            return '<value type="object">'
+              + Object.entries(value).map(([fieldName, fieldValue]) => (
+                '<field name="' + escapeDatabaseExportXml(fieldName) + '">'
+                + serializeDatabaseExportXmlValue(fieldValue)
+                + "</field>"
+              )).join("")
+              + "</value>";
+          }
+          return '<value type="' + escapeDatabaseExportXml(typeof value) + '">'
+            + escapeDatabaseExportXml(value)
+            + "</value>";
+        }
+
+        function buildDatabaseXmlExport(exportPayload) {
+          const database = exportPayload?.database && typeof exportPayload.database === "object" ? exportPayload.database : {};
+          const collections = Array.isArray(exportPayload?.collections) ? exportPayload.collections : [];
+          const collectionXml = collections.map((collection) => {
+            const documents = Array.isArray(collection?.documents) ? collection.documents : [];
+            const documentXml = documents.map((document) => {
+              const data = document?.data && typeof document.data === "object" && !Array.isArray(document.data)
+                ? document.data
+                : {};
+              const fields = Object.entries(data).map(([fieldName, fieldValue]) => (
+                '<field name="' + escapeDatabaseExportXml(fieldName) + '">'
+                + serializeDatabaseExportXmlValue(fieldValue)
+                + "</field>"
+              )).join("");
+              return '<document id="' + escapeDatabaseExportXml(document?.id || "") + '"><data>' + fields + "</data></document>";
+            }).join("");
+            return '<collection id="' + escapeDatabaseExportXml(collection?.id || "")
+              + '" name="' + escapeDatabaseExportXml(collection?.name || collection?.id || "")
+              + '" documentCount="' + escapeDatabaseExportXml(collection?.documentCount || 0)
+              + '" truncated="' + (collection?.truncated ? "true" : "false")
+              + '"><documents>' + documentXml + "</documents></collection>";
+          }).join("");
+          return '<?xml version="1.0" encoding="UTF-8"?>\\n'
+            + '<databaseExport exportedAt="' + escapeDatabaseExportXml(exportPayload?.exportedAt || "") + '">'
+            + '<database id="' + escapeDatabaseExportXml(database.id || "") + '">'
+            + "<name>" + escapeDatabaseExportXml(database.name || "") + "</name>"
+            + "<description>" + escapeDatabaseExportXml(database.description || "") + "</description>"
+            + "<location>" + escapeDatabaseExportXml(database.location || "") + "</location>"
+            + "<status>" + escapeDatabaseExportXml(database.status || "") + "</status>"
+            + "<createdAt>" + escapeDatabaseExportXml(database.createdAt || "") + "</createdAt>"
+            + "<updatedAt>" + escapeDatabaseExportXml(database.updatedAt || "") + "</updatedAt>"
+            + "</database><collections>" + collectionXml + "</collections></databaseExport>\\n";
+        }
+
+        async function handleExportDatabase(format = "json") {
           if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || databaseExporting) {
             return;
           }
 
           const databaseId = draftDatabase.id;
+          const normalizedFormat = ["json", "csv", "xml"].includes(String(format || "").toLowerCase())
+            ? String(format).toLowerCase()
+            : "json";
+          setDatabaseExportMenuOpen(false);
           setDatabaseExporting(true);
           setDatabaseSaveState((current) => ({
             ...current,
@@ -95937,15 +97568,23 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               },
               collections: exportCollections,
             };
-            const exportBlob = new Blob([JSON.stringify(exportPayload, null, 2) + "\\n"], {
-              type: "application/json;charset=utf-8",
-            });
+            const exportContent = normalizedFormat === "csv"
+              ? buildDatabaseCsvExport(exportPayload)
+              : normalizedFormat === "xml"
+                ? buildDatabaseXmlExport(exportPayload)
+                : JSON.stringify(exportPayload, null, 2) + "\\n";
+            const exportContentType = normalizedFormat === "csv"
+              ? "text/csv;charset=utf-8"
+              : normalizedFormat === "xml"
+                ? "application/xml;charset=utf-8"
+                : "application/json;charset=utf-8";
+            const exportBlob = new Blob([exportContent], { type: exportContentType });
             const filenameBase = slugifyPlaygroundAgentEmailLocalPart(draftDatabase.name || draftDatabase.id || "database");
-            triggerPlaygroundBlobDownload(exportBlob, filenameBase + "-database-export.json");
+            triggerPlaygroundBlobDownload(exportBlob, filenameBase + "-database-export." + normalizedFormat);
             setDatabaseSaveState((current) => ({
               ...current,
               error: "",
-              message: "Exported",
+              message: "Exported " + normalizedFormat.toUpperCase(),
             }));
           } catch (error) {
             setDatabaseSaveState((current) => ({
@@ -108659,83 +110298,123 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
             React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
           );
-          const renderDatabaseDetailTimescaleControl = () => React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
-            React.createElement("select", {
-              className: "playground-environments-home-comparison-timescale-select",
-              value: normalizedDatabaseDetailChartTimescale,
-              onChange: (event) => setDatabaseDetailChartTimescale(String(event.target.value || "day")),
-              "aria-label": "Database detail chart timescale",
+          const databaseDetailTimescaleControl = React.createElement("div", {
+              className: "playground-project-overview-progress-combo-ranges playground-database-detail-usage-ranges",
+              role: "group",
+              "aria-label": "Database analytics time frame",
             },
-              React.createElement("option", { value: "day" }, "Daily"),
-              React.createElement("option", { value: "week" }, "Weekly"),
-              React.createElement("option", { value: "month" }, "Monthly")
+            [
+              { id: "day", label: "1D" },
+              { id: "week", label: "1W" },
+              { id: "month", label: "1M" },
+            ].map((option) =>
+              React.createElement("button", {
+                key: option.id,
+                type: "button",
+                className: "playground-project-overview-progress-combo-range"
+                  + (normalizedDatabaseDetailChartTimescale === option.id ? " is-active" : ""),
+                onClick: () => setDatabaseDetailChartTimescale(option.id),
+                "aria-pressed": normalizedDatabaseDetailChartTimescale === option.id ? "true" : "false",
+              }, option.label)
             )
           );
-          const renderDatabaseDetailOperationChart = () => renderHomeStackedUsageChartShared({
-            ariaLabel: "Database operations",
+          const renderDatabaseDetailOperationChart = () => React.createElement(PlaygroundResourceOperationsChart, {
+            ariaLabel: "Database reads and writes over time",
             labels: resolvedDatabaseDetailOperationBuckets.map((bucket) => bucket?.label || ""),
             series: [
               {
-                id: "database-operations",
-                label: "Operations",
-                color: "rgb(143,196,255)",
-                values: resolvedDatabaseDetailOperationBuckets.map((bucket) => Number(bucket?.total || 0)),
+                id: "database-reads",
+                label: "Reads",
+                color: "rgb(143, 196, 255)",
+                values: resolvedDatabaseDetailOperationBuckets.map((bucket) => Number(bucket?.reads || 0)),
+              },
+              {
+                id: "database-writes",
+                label: "Writes",
+                color: "rgb(103, 80, 255)",
+                values: resolvedDatabaseDetailOperationBuckets.map((bucket) => Number(bucket?.writes || 0) + Number(bucket?.deletes || 0)),
               },
             ],
             emptyText: isDatabaseAnalyticsLoading ? "Loading database activity..." : "No operation data yet",
-            title: "Database Operations",
-            tickFormatter: (value) => String(Math.round(Number(value) || 0)),
+            loadingLabel: "Loading database activity",
             isLoading: isDatabaseAnalyticsLoading && !activeDatabaseAnalytics,
-            showLegend: false,
-            timescaleControl: renderDatabaseDetailTimescaleControl(),
           });
+          const databaseDetailKpiColors = ["#7effff", "rgb(143,196,255)", "rgb(103,80,255)", "#f53b3a"];
           const renderDatabaseDetailChartKpis = (items) => React.createElement("div", {
-              className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-server-detail-chart-kpis",
+              className: "playground-project-overview-progress-combo-metrics",
             },
-            (Array.isArray(items) ? items : []).map((item) =>
-              React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
-                React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                  React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+            (Array.isArray(items) ? items : []).map((item, index) =>
+              React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+                React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+                  React.createElement("span", {
+                    className: "playground-project-overview-progress-combo-metric-dot is-" + item.id,
+                    style: { background: databaseDetailKpiColors[index % databaseDetailKpiColors.length] },
+                    "aria-hidden": "true",
+                  }),
+                  React.createElement("span", null, item.label)
                 ),
-                React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+                React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
               )
             )
           );
 
+          const canUndoDatabaseDescription = Array.isArray(databaseDescriptionHistory.past) && databaseDescriptionHistory.past.length > 0;
+          const canRedoDatabaseDescription = Array.isArray(databaseDescriptionHistory.future) && databaseDescriptionHistory.future.length > 0;
+          const renderDatabaseDescriptionToolbarButton = (action) =>
+            React.createElement("button", {
+              key: action.id,
+              type: "button",
+              className: "playground-tasks-detail-format-button",
+              title: action.label,
+              "aria-label": action.label,
+              disabled: isDatabaseTemplatePreview || Boolean(action.disabled),
+              onMouseDown: (event) => event.preventDefault(),
+              onClick: action.onClick || (() => handleDatabaseDescriptionFormat(action.id)),
+            }, React.createElement(action.icon, {
+              width: 14,
+              height: 14,
+              strokeWidth: action.strokeWidth || 1.8,
+            }));
           const databaseDescriptionFormatActions = React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+            renderDatabaseDescriptionToolbarButton({
+              id: "undo",
+              label: "Undo",
+              icon: Undo2,
+              disabled: !canUndoDatabaseDescription,
+              onClick: handleDatabaseDescriptionUndo,
+            }),
+            renderDatabaseDescriptionToolbarButton({
+              id: "redo",
+              label: "Redo",
+              icon: Redo2,
+              disabled: !canRedoDatabaseDescription,
+              onClick: handleDatabaseDescriptionRedo,
+            }),
+            React.createElement("span", {
+              className: "playground-agents-detail-instructions-toolbar-divider",
+              "aria-hidden": "true",
+            }),
             [
-              {
-                id: "bold",
-                label: "Bold",
-                icon: Bold,
-              },
-              {
-                id: "italic",
-                label: "Italic",
-                icon: Italic,
-              },
-              {
-                id: "underline",
-                label: "Underline",
-                icon: Underline,
-              },
-              {
-                id: "list",
-                label: "List",
-                icon: List,
-              },
-            ].map((action) =>
-              React.createElement("button", {
-                key: action.id,
-                type: "button",
-                className: "playground-tasks-detail-format-button",
-                title: action.label,
-                "aria-label": action.label,
-                disabled: isDatabaseTemplatePreview,
-                onMouseDown: (event) => event.preventDefault(),
-                onClick: () => handleDatabaseDescriptionFormat(action.id),
-              }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-            )
+              { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
+              { id: "italic", label: "Italic", icon: Italic },
+              { id: "underline", label: "Underline", icon: Underline },
+            ].map(renderDatabaseDescriptionToolbarButton),
+            React.createElement("span", {
+              className: "playground-agents-detail-instructions-toolbar-divider",
+              "aria-hidden": "true",
+            }),
+            [
+              { id: "list", label: "List", icon: List },
+              { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
+            ].map(renderDatabaseDescriptionToolbarButton),
+            React.createElement("span", {
+              className: "playground-agents-detail-instructions-toolbar-divider",
+              "aria-hidden": "true",
+            }),
+            [
+              { id: "code", label: "Code", icon: CodeXml },
+              { id: "link", label: "Link", icon: Link2 },
+            ].map(renderDatabaseDescriptionToolbarButton)
           );
           const databaseDescriptionEditor = React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isDatabaseDescriptionEditing ? " is-editing" : " is-preview") },
             !isDatabaseDescriptionEditing
@@ -108767,7 +110446,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 if (isDatabaseTemplatePreview) {
                   return;
                 }
-                updateDatabaseField("description", event.target.value);
+                updateDatabaseDescriptionValue(event.target.value);
                 resizeEnvironmentDescriptionTextarea(event.currentTarget);
               },
               onBlur: () => {
@@ -108778,48 +110457,50 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               },
             })
           );
-          const databaseDescriptionSection = React.createElement("section", {
-              className: "playground-environments-section playground-server-description-section is-titleless",
+          const databaseDescriptionSection = React.createElement("div", {
+              className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-database-description-section",
               key: "database-description",
             },
-            React.createElement("div", { className: "playground-environments-section-body" },
-              React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-                React.createElement("div", { className: "playground-server-description-inline-row" },
-                  databaseDescriptionEditor,
-                  databaseDescriptionFormatActions
-                )
-              )
-            )
+            React.createElement("div", { className: "playground-tasks-detail-section-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+              databaseDescriptionFormatActions
+            ),
+            databaseDescriptionEditor
           );
 
           const databaseDetailsSection = React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-environments-home-metrics playground-server-detail-metrics" },
-              React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card" },
-                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                  React.createElement("div", { className: "playground-database-overview" },
-                    React.createElement("div", { className: "playground-database-overview-chart-block playground-server-detail-chart-block" },
-                      renderDatabaseDetailChartKpis(databaseDetailKpis),
-                      renderDatabaseDetailOperationChart(),
-                      React.createElement("div", { className: "playground-server-detail-fact-rows" },
-                        renderDatabaseFactRow("ID",
-                          React.createElement("span", {
-                            className: "playground-environments-editor-fact-value is-id",
-                            title: draftDatabase.id || "Unsaved database",
-                          }, draftDatabase.id || "Unsaved database")
-                        ),
-                        renderDatabaseFactRow("Provider",
-                          React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftDatabase.provider || "firestore")
-                        ),
-                        renderDatabaseFactRow("Location",
-                          React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftDatabase.location || "eur3")
-                        ),
-                        renderDatabaseFactRow("Updated",
-                          React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftDatabase.updatedAt))
-                        )
-                      )
-                    )
+            React.createElement("div", { className: "playground-database-detail-usage-header-actions" },
+              databaseDetailTimescaleControl
+            ),
+            React.createElement("div", {
+                className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-resource-type-overview-metrics playground-database-detail-usage-metrics",
+              },
+              React.createElement("section", {
+                  className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-agents-overview-analytics-card playground-resource-type-overview-analytics-card playground-database-detail-usage-analytics-card",
+                },
+                renderDatabaseDetailChartKpis(databaseDetailKpis),
+                React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
+                  React.createElement("div", { className: "playground-resource-type-overview-chart-card" },
+                    renderDatabaseDetailOperationChart()
                   )
                 )
+              )
+            ),
+            React.createElement("div", { className: "playground-server-detail-fact-rows playground-database-detail-usage-fact-rows" },
+              renderDatabaseFactRow("ID",
+                React.createElement("span", {
+                  className: "playground-environments-editor-fact-value is-id",
+                  title: draftDatabase.id || "Unsaved database",
+                }, draftDatabase.id || "Unsaved database")
+              ),
+              renderDatabaseFactRow("Provider",
+                React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftDatabase.provider || "firestore")
+              ),
+              renderDatabaseFactRow("Location",
+                React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftDatabase.location || "eur3")
+              ),
+              renderDatabaseFactRow("Updated",
+                React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftDatabase.updatedAt))
               )
             )
           );
@@ -109512,14 +111193,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
 	            }, "Delete database")
 	          );
-	          const normalizedDatabaseDetailTab = ["data", "general"].includes(databaseDetailTab) ? databaseDetailTab : "data";
+	          const normalizedDatabaseDetailTab = ["data", "usage", "settings"].includes(databaseDetailTab) ? databaseDetailTab : "data";
 	          const databaseDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
 	            React.createElement("div", { className: "playground-project-overview-chart-tabs" },
 	              [
-	                { id: "data", label: "Data" },
-	                { id: "general", label: "General" },
-	              ].map((tab) =>
-	                React.createElement("button", {
+	                { id: "data", label: "Data", Icon: Database },
+	                { id: "usage", label: "Usage", Icon: ChartColumnIncreasing },
+	                { id: "settings", label: "Settings", Icon: Settings },
+	              ].map((tab) => {
+	                const TabIcon = tab.Icon;
+	                return React.createElement("button", {
 	                    key: tab.id,
 	                    type: "button",
 	                    className: "playground-project-overview-chart-tab" + (normalizedDatabaseDetailTab === tab.id ? " is-active" : ""),
@@ -109527,15 +111210,131 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                    "aria-pressed": normalizedDatabaseDetailTab === tab.id ? "true" : "false",
 	                    "aria-label": tab.label,
 	                  },
-	                  tab.label
+	                  TabIcon ? React.createElement(TabIcon, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.7 }) : null,
+	                  React.createElement("span", null, tab.label)
+	                );
+	              })
+	            )
+	          );
+	          const databaseApiBaseUrl = ${JSON.stringify(defaultUpstreamOrigin)};
+	          const databaseApiResourceUrl = databaseApiBaseUrl + "/databases/" + encodeURIComponent(draftDatabase.id || "database_id") + "/collections";
+	          const databaseQuickstartSnippets = {
+	            javascript: [
+	              "const response = await fetch('" + databaseApiResourceUrl + "', {",
+	              "  headers: { 'X-API-Key': process.env.COMPUTER_AGENTS_API_KEY },",
+	              "});",
+	              "",
+	              "const { data: collections } = await response.json();",
+	              "console.log(collections);",
+	            ],
+	            python: [
+	              "import os",
+	              "import requests",
+	              "",
+	              "response = requests.get(",
+	              "    '" + databaseApiResourceUrl + "',",
+	              "    headers={'X-API-Key': os.environ['COMPUTER_AGENTS_API_KEY']},",
+	              ")",
+	              "",
+	              "collections = response.json()['data']",
+	              "print(collections)",
+	            ],
+	          };
+	          const activeDatabaseQuickstartLanguage = databaseQuickstartSnippets[databaseQuickstartLanguage]
+	            ? databaseQuickstartLanguage
+	            : "javascript";
+	          const databaseQuickstartLines = databaseQuickstartSnippets[activeDatabaseQuickstartLanguage];
+	          const databaseQuickstartCode = databaseQuickstartLines.join("\\n");
+	          const DatabaseQuickstartEditorComponent = databaseQuickstartEditorModule?.default || null;
+	          const databaseApiQuickstartSection = React.createElement("section", {
+	              className: "playground-develop-docs-quickstart-card playground-database-api-quickstart-card",
+	            },
+	            React.createElement("div", { className: "playground-develop-docs-quickstart-inner" },
+	              React.createElement("div", null,
+	                React.createElement("h2", { className: "playground-develop-docs-quickstart-title" }, "Database API"),
+	                React.createElement("p", { className: "playground-develop-docs-quickstart-text" },
+	                  "Read collections and documents from this database with the Computer Agents API."
+	                ),
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-develop-docs-quickstart-button",
+	                  onClick: () => window.open(${JSON.stringify(aiosOrigin + "/developers")}, "_blank", "noopener,noreferrer"),
+	                }, "API reference")
+	              ),
+	              React.createElement("div", { className: "playground-develop-docs-code-card" },
+	                React.createElement("div", { className: "playground-develop-docs-code-toolbar" },
+	                  React.createElement("div", { className: "playground-develop-docs-code-tabs" },
+	                    Object.entries({ javascript: "javascript", python: "python" }).map(([language, label]) =>
+	                      React.createElement("button", {
+	                        key: language,
+	                        type: "button",
+	                        className: "playground-develop-docs-code-tab" + (activeDatabaseQuickstartLanguage === language ? " is-active" : ""),
+	                        onClick: () => setDatabaseQuickstartLanguage(language),
+	                      }, label)
+	                    )
+	                  ),
+	                  React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-develop-docs-code-copy",
+	                    "aria-label": "Copy database API code",
+	                    title: "Copy database API code",
+	                    onClick: () => {
+	                      try {
+	                        void navigator.clipboard?.writeText(databaseQuickstartLines.join("\\n"));
+	                      } catch {}
+	                    },
+	                  }, React.createElement(Copy, { width: 16, height: 16, strokeWidth: 1.9 }))
+	                ),
+	                React.createElement("div", {
+	                    className: "playground-database-api-quickstart-editor-shell playground-code-preview-editor-shell",
+	                  },
+	                  DatabaseQuickstartEditorComponent
+	                    ? React.createElement(DatabaseQuickstartEditorComponent, {
+	                        path: "database-api-quickstart-" + String(draftDatabase.id || "database") + "."
+	                          + (activeDatabaseQuickstartLanguage === "python" ? "py" : "js"),
+	                        height: "220px",
+	                        language: activeDatabaseQuickstartLanguage === "python" ? "python" : "javascript",
+	                        theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+	                        value: databaseQuickstartCode,
+	                        beforeMount: ensurePlaygroundCodeEditorTheme,
+	                        options: {
+	                          automaticLayout: true,
+	                          minimap: { enabled: false },
+	                          scrollBeyondLastLine: false,
+	                          readOnly: true,
+	                          domReadOnly: true,
+	                          fontSize: 12,
+	                          lineHeight: 18,
+	                          lineNumbersMinChars: 2,
+	                          renderLineHighlight: "none",
+	                          overviewRulerBorder: false,
+	                          hideCursorInOverviewRuler: true,
+	                          folding: false,
+	                          glyphMargin: false,
+	                          wordWrap: "off",
+	                          padding: { top: 10, bottom: 10 },
+	                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+	                        },
+	                      })
+	                    : React.createElement("div", {
+	                        className: "playground-database-api-quickstart-editor-loading",
+	                      },
+	                      databaseQuickstartEditorModuleError
+	                        ? React.createElement("span", null, databaseQuickstartEditorModuleError)
+	                        : React.createElement(PlaygroundDotLoader, {
+	                            count: 9,
+	                            dotSize: 2,
+	                            color: "rgba(255,255,255,0.72)",
+	                            ariaLabel: "Loading code editor",
+	                          })
+	                    )
 	                )
 	              )
 	            )
 	          );
-	          const databaseGeneralTabContent = React.createElement(React.Fragment, null,
-	            databaseDescriptionSection,
+	          const databaseUsageTabContent = React.createElement(React.Fragment, null,
 	            databaseDetailsSection,
-	            databaseDangerSection
+	            databaseApiQuickstartSection
 	          );
 	          const databaseStorageLocation = String(draftDatabase.location || "eur3").trim() || "eur3";
 	          const databaseDataTabContent = React.createElement("div", { className: "playground-database-browser-tab-body" },
@@ -109547,9 +111346,490 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              "."
 	            )
 	          );
+	          const databaseSharedTeamIds = getDatabaseSharedTeamIds(draftDatabase);
+	          const databaseSharedTeamIdSet = new Set(databaseSharedTeamIds);
+	          const databaseWorkspaceTeamById = new Map(
+	            normalizedEnvironmentWorkspaceTeams.map((team) => [team.id, team])
+	          );
+	          const databasePermissionTeams = [
+	            {
+	              id: "all_agents",
+	              name: "All Agents",
+	              meta: "Always included",
+	              permission: "Database default",
+	              createdAt: "",
+	              locked: true,
+	            },
+	            ...databaseSharedTeamIds.map((teamId) => {
+	              const team = databaseWorkspaceTeamById.get(teamId) || { id: teamId, name: "Team" };
+	              return {
+	                ...team,
+	                id: teamId,
+	                name: team.name || "Untitled team",
+	                meta: team.memberCount ? String(team.memberCount) + " members" : "Team workspace",
+	                permission: "Database permissions",
+	                createdAt: team.createdAt || "",
+	                locked: false,
+	              };
+	            }),
+	          ];
+	          const normalizedDatabaseAccessSortDirection = databaseAccessSortDirection === "desc" ? "desc" : "asc";
+	          const getDatabaseAccessSortValue = (team, sortKey) => {
+	            if (sortKey === "policy") return String(team?.permission || "");
+	            if (sortKey === "created") {
+	              const timestamp = Date.parse(String(team?.createdAt || ""));
+	              return Number.isFinite(timestamp) ? timestamp : 0;
+	            }
+	            return String(team?.name || "");
+	          };
+	          const visibleDatabasePermissionTeams = databasePermissionTeams.slice().sort((left, right) => {
+	            const leftValue = getDatabaseAccessSortValue(left, databaseAccessSort);
+	            const rightValue = getDatabaseAccessSortValue(right, databaseAccessSort);
+	            let comparison = 0;
+	            if (typeof leftValue === "number" || typeof rightValue === "number") {
+	              comparison = Number(leftValue || 0) - Number(rightValue || 0);
+	            } else {
+	              comparison = String(leftValue || "").localeCompare(String(rightValue || ""), undefined, {
+	                numeric: true,
+	                sensitivity: "base",
+	              });
+	            }
+	            if (!comparison) {
+	              comparison = String(left?.name || "").localeCompare(String(right?.name || ""), undefined, {
+	                numeric: true,
+	                sensitivity: "base",
+	              });
+	            }
+	            return normalizedDatabaseAccessSortDirection === "desc" ? -comparison : comparison;
+	          });
+	          const visibleDatabasePermissionTeamIds = visibleDatabasePermissionTeams
+	            .map((team) => String(team?.id || "").trim())
+	            .filter(Boolean);
+	          const selectedVisibleDatabasePermissionTeamIds = visibleDatabasePermissionTeamIds
+	            .filter((teamId) => selectedDatabaseAccessTeamIds.has(teamId));
+	          const allVisibleDatabasePermissionTeamsSelected = visibleDatabasePermissionTeamIds.length > 0
+	            && selectedVisibleDatabasePermissionTeamIds.length === visibleDatabasePermissionTeamIds.length;
+	          const hasPartialVisibleDatabasePermissionTeamSelection = selectedVisibleDatabasePermissionTeamIds.length > 0
+	            && !allVisibleDatabasePermissionTeamsSelected;
+	          const toggleDatabaseAccessTeamSelection = (teamId) => {
+	            const normalizedTeamId = String(teamId || "").trim();
+	            if (!normalizedTeamId) return;
+	            setSelectedDatabaseAccessTeamIds((current) => {
+	              const next = new Set(current || []);
+	              if (next.has(normalizedTeamId)) next.delete(normalizedTeamId);
+	              else next.add(normalizedTeamId);
+	              return next;
+	            });
+	          };
+	          const toggleVisibleDatabaseAccessTeamSelection = () => {
+	            setSelectedDatabaseAccessTeamIds((current) => {
+	              const next = new Set(current || []);
+	              visibleDatabasePermissionTeamIds.forEach((teamId) => {
+	                if (allVisibleDatabasePermissionTeamsSelected) next.delete(teamId);
+	                else next.add(teamId);
+	              });
+	              return next;
+	            });
+	          };
+	          const handleDatabaseAccessColumnSort = (sortKey) => {
+	            const normalizedSortKey = ["name", "policy", "created"].includes(sortKey) ? sortKey : "name";
+	            setDatabaseAccessSortDirection((currentDirection) => {
+	              if (databaseAccessSort !== normalizedSortKey) return "asc";
+	              return currentDirection === "asc" ? "desc" : "asc";
+	            });
+	            setDatabaseAccessSort(normalizedSortKey);
+	          };
+	          const renderDatabaseAccessSortIcon = (sortKey) => {
+	            const isActive = databaseAccessSort === sortKey;
+	            const isAscending = isActive && normalizedDatabaseAccessSortDirection === "asc";
+	            const isDescending = isActive && normalizedDatabaseAccessSortDirection === "desc";
+	            return React.createElement("span", {
+	                className: "playground-agents-overview-sort-icon"
+	                  + (isActive ? " is-active" : "")
+	                  + (isAscending ? " is-ascending" : "")
+	                  + (isDescending ? " is-descending" : ""),
+	                "aria-hidden": "true",
+	              },
+	              React.createElement(ChevronsUpDown, {
+	                className: "playground-agents-overview-sort-icon-layer is-top",
+	                width: 14,
+	                height: 14,
+	                strokeWidth: 1.8,
+	              }),
+	              React.createElement(ChevronsUpDown, {
+	                className: "playground-agents-overview-sort-icon-layer is-bottom",
+	                width: 14,
+	                height: 14,
+	                strokeWidth: 1.8,
+	              })
+	            );
+	          };
+	          const renderDatabaseAccessSortableHeader = (label, sortKey) => {
+	            const isActive = databaseAccessSort === sortKey;
+	            const nextDirection = isActive && normalizedDatabaseAccessSortDirection === "asc" ? "descending" : "ascending";
+	            return React.createElement("div", {
+	                className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : ""),
+	              },
+	              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+	              React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-agents-overview-column-sort-button"
+	                    + (isActive ? " is-active" : "")
+	                    + (isActive && normalizedDatabaseAccessSortDirection === "asc" ? " is-ascending" : "")
+	                    + (isActive && normalizedDatabaseAccessSortDirection === "desc" ? " is-descending" : ""),
+	                  title: "Sort " + label + " " + nextDirection,
+	                  "aria-label": "Sort " + label + " " + nextDirection,
+	                  "aria-pressed": isActive ? "true" : "false",
+	                  onClick: (event) => {
+	                    event.preventDefault();
+	                    event.stopPropagation();
+	                    handleDatabaseAccessColumnSort(sortKey);
+	                  },
+	                },
+	                renderDatabaseAccessSortIcon(sortKey)
+	              )
+	            );
+	          };
+	          const databaseAddableTeams = availableEnvironmentShareTeams.filter((team) => !databaseSharedTeamIdSet.has(team.id));
+	          const selectedDatabasePermissionTeam = databasePermissionTeams.find((team) =>
+	            String(team.id) === String(databasePermissionTeamId || "")
+	          ) || null;
+	          const canManageDatabaseTeamAccess = Boolean(
+	            !isDatabaseTemplatePreview
+	            && draftDatabase.id
+	            && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID
+	          );
+	          const formatDatabaseTeamCreatedDate = (value) => {
+	            if (!value) return "";
+	            try {
+	              return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value));
+	            } catch {
+	              return String(value || "");
+	            }
+	          };
+	          const renderDatabaseTeamMenu = (team) => {
+	            const menuId = "team:" + String(team.id || "");
+	            if (databaseTeamMenuId !== menuId) {
+	              return null;
+	            }
+	            return React.createElement("div", {
+	                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-team-action-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	                onClick: (event) => event.stopPropagation(),
+	              },
+	              team.locked
+	                ? React.createElement("button", {
+	                    type: "button",
+	                    className: "tb-popup-row playground-project-team-menu-item",
+	                    disabled: true,
+	                  }, "Default agent access")
+	                : React.createElement(React.Fragment, null,
+	                    typeof onOpenTeamPage === "function"
+	                      ? React.createElement("button", {
+	                          type: "button",
+	                          className: "tb-popup-row playground-project-team-menu-item",
+	                          onClick: () => {
+	                            setDatabaseTeamMenuId("");
+	                            onOpenTeamPage(team.id);
+	                          },
+	                        },
+	                          React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                          React.createElement("span", null, "View team")
+	                        )
+	                      : null,
+	                    canManageDatabaseTeamAccess && availableEnvironmentShareTeams.some((availableTeam) => availableTeam.id === team.id)
+	                      ? React.createElement("button", {
+	                          type: "button",
+	                          className: "tb-popup-row playground-project-team-menu-item is-danger",
+	                          disabled: databaseSaveState.isSaving || (databaseTeamAccessState.action === "remove" && databaseTeamAccessState.teamId === team.id),
+	                          onClick: () => void handleRemoveDatabaseTeamAccess(team),
+	                        },
+	                          React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                          React.createElement("span", null, "Remove from database")
+	                        )
+	                      : null
+	                  )
+	            );
+	          };
+	          const renderAddDatabaseTeamsMenu = () => {
+	            if (databaseTeamMenuId !== "add-teams") {
+	              return null;
+	            }
+	            return React.createElement("div", {
+	                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-teams-add-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	                onClick: (event) => event.stopPropagation(),
+	              },
+	              databaseAddableTeams.length
+	                ? databaseAddableTeams.map((team) =>
+	                    React.createElement("button", {
+	                      key: team.id,
+	                      type: "button",
+	                      className: "tb-popup-row playground-project-team-menu-item",
+	                      disabled: databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
+	                      onClick: () => void handleAddDatabaseTeamAccess(team),
+	                    },
+	                      React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                      React.createElement("span", null, team.name || "Untitled team")
+	                    )
+	                  )
+	                : React.createElement("button", {
+	                    type: "button",
+	                    className: "tb-popup-row playground-project-team-menu-item",
+	                    disabled: true,
+	                  }, workspaceTeamsLoading
+	                    ? "Loading teams..."
+	                    : workspaceTeamsRequiresPlan
+	                      ? "Teams require a team plan"
+	                      : "All teams already have access")
+	            );
+	          };
+	          const databaseTeamAccessSection = React.createElement("section", {
+	              className: "playground-project-settings-access-section playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-database-access-table-section",
+	            },
+	            React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-database-access-sticky-table-header" },
+	              React.createElement("div", { className: "playground-project-teams-table-heading playground-develop-server-kind-table-toolbar playground-database-access-table-toolbar" },
+	              React.createElement("h2", { className: "playground-project-teams-table-title" }, "Manage Database Access"),
+	              canManageDatabaseTeamAccess
+	                ? React.createElement("div", {
+	                    className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell playground-database-team-menu-scope" + (databaseTeamMenuId === "add-teams" ? " is-open" : ""),
+	                  },
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-files-control-button playground-project-teams-add-button",
+	                      disabled: workspaceTeamsLoading || databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
+	                      onClick: (event) => {
+	                        event.stopPropagation();
+	                        if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
+	                          onWorkspaceTeamsRequest({});
+	                        }
+	                        setDatabaseTeamMenuId((current) => current === "add-teams" ? "" : "add-teams");
+	                      },
+	                    },
+	                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                      React.createElement("span", null, "Add Teams")
+	                    ),
+	                    renderAddDatabaseTeamsMenu()
+	                  )
+	                : null
+	              )
+	            ),
+	            React.createElement("div", {
+	                  className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-database-access-table",
+	                },
+	                React.createElement("div", { className: "playground-project-overview-thread-list" },
+	                  React.createElement("div", {
+	                      className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-database-access-column-header",
+	                    },
+	                    React.createElement("div", null,
+	                      React.createElement("button", {
+	                        type: "button",
+	                        className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+	                          + (allVisibleDatabasePermissionTeamsSelected ? " is-selected" : "")
+	                          + (hasPartialVisibleDatabasePermissionTeamSelection ? " is-partial" : ""),
+	                        role: "checkbox",
+	                        "aria-checked": allVisibleDatabasePermissionTeamsSelected
+	                          ? "true"
+	                          : (hasPartialVisibleDatabasePermissionTeamSelection ? "mixed" : "false"),
+	                        "aria-label": allVisibleDatabasePermissionTeamsSelected ? "Deselect all teams" : "Select all teams",
+	                        onClick: (event) => {
+	                          event.preventDefault();
+	                          event.stopPropagation();
+	                          toggleVisibleDatabaseAccessTeamSelection();
+	                        },
+	                      })
+	                    ),
+	                    React.createElement("div", null, renderDatabaseAccessSortableHeader("Team", "name")),
+	                    React.createElement("div", null, renderDatabaseAccessSortableHeader("Policy", "policy")),
+	                    React.createElement("div", null, renderDatabaseAccessSortableHeader("Created", "created")),
+	                    React.createElement("div", null)
+	                  ),
+	                  visibleDatabasePermissionTeams.map((team) => {
+	                    const menuId = "team:" + String(team.id || "");
+	                    const menuOpen = databaseTeamMenuId === menuId;
+	                    const isSelected = selectedDatabaseAccessTeamIds.has(String(team.id || ""));
+	                    return React.createElement("div", {
+	                        key: team.id,
+	                        tabIndex: 0,
+	                        role: "button",
+	                        className: "playground-project-overview-threads-table-row"
+	                          + (menuOpen ? " is-menu-open" : "")
+	                          + (isSelected ? " is-selected" : ""),
+	                        "aria-label": "Open " + team.name + " database permissions",
+	                        onClick: () => {
+	                          setDatabaseTeamMenuId("");
+	                          setDatabasePermissionRoleId("member");
+	                          setDatabasePermissionTeamId(team.id);
+	                        },
+	                        onKeyDown: (event) => {
+	                          if (event.key === "Enter" || event.key === " ") {
+	                            event.preventDefault();
+	                            setDatabasePermissionRoleId("member");
+	                            setDatabasePermissionTeamId(team.id);
+	                          }
+	                        },
+	                      },
+	                      React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+	                        React.createElement("button", {
+	                          type: "button",
+	                          className: "playground-agents-overview-select-checkbox" + (isSelected ? " is-selected" : ""),
+	                          role: "checkbox",
+	                          "aria-checked": isSelected ? "true" : "false",
+	                          "aria-label": "Select " + team.name,
+	                          onClick: (event) => {
+	                            event.preventDefault();
+	                            event.stopPropagation();
+	                            toggleDatabaseAccessTeamSelection(team.id);
+	                          },
+	                          onKeyDown: (event) => event.stopPropagation(),
+	                        })
+	                      ),
+	                      React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
+	                        React.createElement("div", { className: "playground-agents-overview-name-cell" },
+	                          React.createElement("div", { className: "playground-agents-overview-name-copy" },
+	                            React.createElement("div", { className: "playground-agents-overview-name-title" }, team.name)
+	                          )
+	                        )
+	                      ),
+	                      React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
+	                        React.createElement("div", { className: "playground-agents-overview-table-value" }, team.permission)
+	                      ),
+	                      React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
+	                        React.createElement("div", { className: "playground-agents-overview-table-value" }, team.locked ? "Default" : (formatDatabaseTeamCreatedDate(team.createdAt) || "—"))
+	                      ),
+	                      React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
+	                        React.createElement("div", {
+	                            className: "playground-tasks-toolbar-popup-shell playground-project-team-action-shell playground-database-team-menu-scope" + (menuOpen ? " is-open" : ""),
+	                          },
+	                          React.createElement("button", {
+	                            type: "button",
+	                            className: "playground-overview-table-action-button" + (menuOpen ? " is-open" : ""),
+	                            onClick: (event) => {
+	                              event.preventDefault();
+	                              event.stopPropagation();
+	                              setDatabaseTeamMenuId((current) => current === menuId ? "" : menuId);
+	                            },
+	                            onKeyDown: (event) => event.stopPropagation(),
+	                            "aria-label": "Team actions for " + team.name,
+	                            "aria-expanded": menuOpen ? "true" : "false",
+	                          }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })),
+	                          renderDatabaseTeamMenu(team)
+	                        )
+	                      )
+	                    );
+	                  })
+	                )
+	            ),
+	            databaseTeamAccessState.error
+	              ? React.createElement("div", { className: "playground-environments-error" }, databaseTeamAccessState.error)
+	              : null
+	          );
+	          const databaseSettingsOverviewContent = React.createElement("section", {
+	              className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root playground-database-settings-root",
+	            },
+	            databaseDescriptionSection,
+	            databaseTeamAccessSection,
+	            databaseDangerSection
+	          );
+	          const selectedDatabaseRoleDefinition = getPlaygroundTeamRoleDefinition(databasePermissionRoleId);
+	          const selectedDatabaseRolePermissionSet = selectedDatabasePermissionTeam && selectedDatabasePermissionTeam.id !== "all_agents"
+	            ? getDatabaseTeamRolePermissionSet(draftDatabase, selectedDatabasePermissionTeam.id, selectedDatabaseRoleDefinition.id)
+	            : null;
+	          const databaseTeamRolePages = selectedDatabasePermissionTeam && selectedDatabasePermissionTeam.id !== "all_agents"
+	            ? React.createElement("div", { className: "playground-team-role-pages playground-project-team-role-pages playground-database-team-role-pages" },
+	                React.createElement("div", { className: "playground-team-role-list playground-project-team-role-list", role: "tablist", "aria-label": "Database team roles" },
+	                  PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) =>
+	                    React.createElement("button", {
+	                      key: role.id,
+	                      type: "button",
+	                      role: "tab",
+	                      className: "playground-team-role-card" + (selectedDatabaseRoleDefinition.id === role.id ? " is-active" : ""),
+	                      "aria-selected": selectedDatabaseRoleDefinition.id === role.id ? "true" : "false",
+	                      onClick: () => setDatabasePermissionRoleId(role.id),
+	                    },
+	                      React.createElement("span", { className: "playground-team-role-card-title" }, role.label),
+	                      React.createElement("span", { className: "playground-team-role-card-description" }, role.description),
+	                      React.createElement("span", { className: "playground-team-role-card-meta" }, "Database access")
+	                    )
+	                  )
+	                ),
+	                React.createElement("div", {
+	                    className: "playground-team-role-permission-page playground-project-team-role-permission-page"
+	                      + (selectedDatabaseRoleDefinition.id === "owner" ? " is-read-only" : ""),
+	                  },
+	                  React.createElement("div", { className: "playground-team-role-permission-header playground-project-team-role-permission-header" },
+	                    React.createElement("div", null,
+	                      React.createElement("div", { className: "playground-team-role-permission-kicker" }, "Database role"),
+	                      React.createElement("h2", { className: "playground-team-role-permission-title" }, selectedDatabaseRoleDefinition.label),
+	                      React.createElement("p", { className: "playground-team-role-permission-copy" },
+	                        "Database-scoped permissions for " + selectedDatabaseRoleDefinition.label.toLowerCase() + "s in "
+	                          + (selectedDatabasePermissionTeam.name || "this team") + "."
+	                      )
+	                    )
+	                  ),
+	                  renderPlaygroundPermissionPanel(selectedDatabaseRolePermissionSet, {
+	                    subjectType: "database",
+	                    animationKey: databasePermissionChartAnimationKey,
+	                    disabled: isDatabaseTemplatePreview || selectedDatabaseRoleDefinition.id === "owner",
+	                    onRingAccessChange: (ringId, nextAccess) => updateDatabaseTeamRolePermissionRingAccess(
+	                      selectedDatabasePermissionTeam.id,
+	                      selectedDatabaseRoleDefinition.id,
+	                      ringId,
+	                      nextAccess
+	                    ),
+	                    onActionRingChange: (actionId, nextRingId) => updateDatabaseTeamRolePermissionActionRing(
+	                      selectedDatabasePermissionTeam.id,
+	                      selectedDatabaseRoleDefinition.id,
+	                      actionId,
+	                      nextRingId
+	                    ),
+	                    onActionAccessChange: (actionId, nextAccess) => updateDatabaseTeamRolePermissionActionAccess(
+	                      selectedDatabasePermissionTeam.id,
+	                      selectedDatabaseRoleDefinition.id,
+	                      actionId,
+	                      nextAccess
+	                    ),
+	                  })
+	                )
+	              )
+	            : null;
+	          const databaseSettingsPermissionContent = selectedDatabasePermissionTeam
+	            ? React.createElement("section", {
+	                className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-permissions-section playground-project-teams-section playground-database-permissions-section",
+	              },
+	              React.createElement("div", { className: "playground-project-team-permissions-header" },
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-project-team-permissions-back",
+	                  onClick: () => setDatabasePermissionTeamId(""),
+	                },
+	                  React.createElement(ArrowLeft, { width: 13, height: 13, strokeWidth: 1.9 }),
+	                  React.createElement("span", null, "Settings")
+	                ),
+	                React.createElement("div", { className: "playground-project-team-permissions-title" },
+	                  selectedDatabasePermissionTeam.id === "all_agents"
+	                    ? "All Agents Permissions"
+	                    : (selectedDatabasePermissionTeam.name || "Team") + " Database Access"
+	                )
+	              ),
+	              selectedDatabasePermissionTeam.id === "all_agents"
+	                ? renderPlaygroundPermissionPanel(draftDatabase.permissionSet, {
+	                  subjectType: "database",
+	                  animationKey: databasePermissionChartAnimationKey,
+	                  disabled: isDatabaseTemplatePreview,
+	                  onRingAccessChange: updateDatabasePermissionRingAccess,
+	                  onActionRingChange: updateDatabasePermissionActionRing,
+	                  onActionAccessChange: updateDatabasePermissionActionAccess,
+	                })
+	                : databaseTeamRolePages
+	            )
+	            : null;
+	          const databaseSettingsTabContent = selectedDatabasePermissionTeam
+	            ? databaseSettingsPermissionContent
+	            : databaseSettingsOverviewContent;
 	          const databaseEditorTabContent = normalizedDatabaseDetailTab === "data"
 	            ? databaseDataTabContent
-	            : databaseGeneralTabContent;
+	            : normalizedDatabaseDetailTab === "settings"
+	              ? databaseSettingsTabContent
+	              : databaseUsageTabContent;
 	          const databaseEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main" + (
 	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
 	          );
@@ -109560,7 +111840,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
 	          );
 	          const databaseDetailTabPanelClassName = "playground-database-detail-tab-panel " + (
-	            normalizedDatabaseDetailTab === "data" ? "is-data" : "is-general"
+	            normalizedDatabaseDetailTab === "data" ? "is-data" : normalizedDatabaseDetailTab === "settings" ? "is-settings" : "is-usage"
 	          );
 
 	          return React.createElement(React.Fragment, null,
@@ -109599,18 +111879,54 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 ),
                 React.createElement("div", { className: "playground-content-nav-center" }),
                 React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button",
-                    onClick: () => void handleExportDatabase(),
-                    disabled: isDatabaseTemplatePreview || databaseExporting || !draftDatabase.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
-                    title: "Export database as JSON",
-                  },
-                    databaseExporting
-                      ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                      : React.createElement(Download, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, databaseExporting ? "Exporting..." : "Export")
-                  )
+                  renderPlaygroundPlatformPopup({
+                    open: databaseExportMenuOpen,
+                    shellRef: databaseExportMenuRef,
+                    shellClassName: "playground-agents-detail-publish-split-shell playground-database-export-split-shell",
+                    menuClassName: "playground-agents-detail-publish-menu playground-database-export-menu",
+                    trigger: React.createElement("button", {
+                        type: "button",
+                        className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control playground-metronome-detail-header-publish-button playground-database-export-split-button"
+                          + (databaseExportMenuOpen ? " is-active" : ""),
+                        onClick: () => setDatabaseExportMenuOpen((current) => !current),
+                        disabled: isDatabaseTemplatePreview || databaseExporting || !draftDatabase.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
+                        title: "Export database",
+                        "aria-label": "Export database",
+                        "aria-haspopup": "menu",
+                        "aria-expanded": databaseExportMenuOpen ? "true" : "false",
+                      },
+                      React.createElement("span", { className: "playground-agents-detail-publish-main" },
+                        databaseExporting
+                          ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                          : React.createElement(Download, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, databaseExporting ? "Exporting..." : "Export")
+                      ),
+                      React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
+                      React.createElement("span", { className: "playground-agents-detail-publish-chevron", "aria-hidden": "true" },
+                        React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                      )
+                    ),
+                    menuProps: {
+                      role: "menu",
+                      onClick: (event) => event.stopPropagation(),
+                    },
+                    children: [
+                      { id: "json", label: "Export as JSON", Icon: Braces },
+                      { id: "csv", label: "Export as CSV", Icon: FileText },
+                      { id: "xml", label: "Export as XML", Icon: CodeXml },
+                    ].map((option) => React.createElement("button", {
+                        key: option.id,
+                        type: "button",
+                        role: "menuitem",
+                        className: "tb-popup-row",
+                        onClick: () => void handleExportDatabase(option.id),
+                      },
+                      React.createElement(option.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, option.label)
+                      )
+                    )),
+                  })
                 )
               ),
               React.createElement("div", { className: databaseEditorScrollClassName },
@@ -112419,7 +114735,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   className: "playground-environments-home-comparison-timescale-select",
                   value: environmentHomeChartTimescale,
                   "aria-label": "Environment chart timescale",
-                  onChange: (event) => setEnvironmentHomeChartTimescale(String(event.target.value || "month")),
+                  onChange: (event) => updateEnvironmentHomeChartTimescale(String(event.target.value || "month")),
                 },
                   React.createElement("option", { value: "day" }, "Daily"),
                   React.createElement("option", { value: "week" }, "Weekly"),
@@ -112989,7 +115305,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                key: option.id,
 	                type: "button",
 	                className: "playground-project-overview-progress-combo-range" + (activeEnvironmentHomeTimescaleId === option.id ? " is-active" : ""),
-	                onClick: () => setEnvironmentHomeChartTimescale(option.id),
+                onClick: () => updateEnvironmentHomeChartTimescale(option.id),
 	                "aria-pressed": activeEnvironmentHomeTimescaleId === option.id ? "true" : "false",
 	              }, option.label)
 	            )
@@ -113117,7 +115433,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                  )
 	                ),
 	                React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
-	                  renderHomeStackedUsageChart({
+	                  React.createElement(PlaygroundResourceOperationsChart, {
 	                    ariaLabel: developServerKindSingularTitle + " activity over time",
 	                    labels: developResourceOperationalLabels,
 	                    series: developResourceOverviewChartTabs.map((tab, index) => ({
@@ -113126,15 +115442,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                      color: index === 0 ? "rgb(143, 196, 255)" : "rgb(103, 80, 255)",
 	                      values: getDevelopResourceOperationalSeries(tab.key),
 	                    })),
-	                    emptyText: developServerOperationalMetricsLoading
-	                      ? "Loading " + developServerKindSingularTitle.toLowerCase() + " activity..."
-	                      : (developServerOperationalMetricsError || "No " + developServerKindSingularTitle.toLowerCase() + " activity yet"),
-	                    title: developServerKindSingularTitle + " activity",
+	                    emptyText: developServerOperationalMetricsError
+	                      || "No " + developServerKindSingularTitle.toLowerCase() + " activity yet",
+	                    loadingLabel: "Loading " + developServerKindSingularTitle.toLowerCase() + " activity",
 	                    isLoading: developServerOperationalMetricsLoading,
-	                    tickFormatter: formatDevelopResourceOperationalMetricValue,
-	                    showLegend: false,
-	                    hideHeader: true,
-	                    chartCardClassName: "playground-resource-type-overview-chart-card",
 	                  })
 	                )
 	              )
@@ -113210,7 +115521,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                                  className: "playground-environments-home-comparison-timescale-select",
 	                                  value: normalizedEnvironmentHomeChartTimescale,
 	                                  "aria-label": "Environment chart timescale",
-	                                  onChange: (event) => setEnvironmentHomeChartTimescale(String(event.target.value || "month")),
+                                  onChange: (event) => updateEnvironmentHomeChartTimescale(String(event.target.value || "month")),
 	                                },
 	                                  React.createElement("option", { value: "day" }, "Daily"),
 	                                  React.createElement("option", { value: "week" }, "Weekly"),
@@ -115534,7 +117845,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	        if (embeddedInResources) {
 	          const shouldShowEnvironmentCreationSetup = !isServersMode && environmentComposerOpen;
 	          const shouldShowServerCreationSetup = isServersMode && serverComposerOpen && normalizedEmbeddedServerKind && normalizedEmbeddedServerKind !== "voice_agent";
-	          const normalizedEmbeddedDatabaseDetailTab = ["data", "general"].includes(databaseDetailTab) ? databaseDetailTab : "data";
+	          const normalizedEmbeddedDatabaseDetailTab = ["data", "usage", "settings"].includes(databaseDetailTab) ? databaseDetailTab : "data";
 	          const isEmbeddedDatabaseDataTab = Boolean(isServersMode && selectedDatabaseId && !selectedServerId && normalizedEmbeddedDatabaseDetailTab === "data");
 	          const embeddedActiveServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
 	          const embeddedActiveServerKind = canonicalizePlaygroundServerKind(embeddedActiveServer?.kind);
@@ -169386,6 +171697,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [developServerOperationalMetrics, setDevelopServerOperationalMetrics] = useState(null);
         const [developServerOperationalMetricsLoading, setDevelopServerOperationalMetricsLoading] = useState(false);
         const [developServerOperationalMetricsError, setDevelopServerOperationalMetricsError] = useState("");
+        const [developServerOperationalMetricsPeriod, setDevelopServerOperationalMetricsPeriod] = useState("month");
         const developServerOperationalMetricsLoadSequenceRef = useRef(0);
         const developServerOperationalMetricsAbortRef = useRef(null);
         const teamPageRef = useRef(null);
@@ -182817,6 +185129,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           const rawTargetKind = String(options?.resourceKind || "").trim();
           const targetKind = rawTargetKind ? canonicalizePlaygroundServerKind(rawTargetKind) : "";
+          const requestedPeriod = targetKind
+            ? normalizePlaygroundEnvironmentHomeChartPeriod(options?.period)
+            : "day";
           const loadSequence = developServerOperationalMetricsLoadSequenceRef.current + 1;
           developServerOperationalMetricsLoadSequenceRef.current = loadSequence;
           if (developServerOperationalMetricsAbortRef.current) {
@@ -182834,15 +185149,32 @@ ${PROJECT_OVERVIEW_SCRIPT}
             databaseListIdentity
           );
 
-          const buildHourlyBuckets = () => {
-            const formatter = new Intl.DateTimeFormat("en-US", { hour: "numeric" });
+          const buildOperationalBuckets = () => {
+            const isHourly = requestedPeriod === "day";
+            const bucketCount = isHourly ? 24 : requestedPeriod === "week" ? 7 : 30;
+            const bucketDurationMs = isHourly ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+            const formatter = new Intl.DateTimeFormat("en-US", isHourly
+              ? { hour: "numeric" }
+              : requestedPeriod === "week"
+                ? { weekday: "short" }
+                : { month: "short", day: "numeric" });
             const anchor = new Date();
-            anchor.setMinutes(0, 0, 0);
-            const buckets = Array.from({ length: 24 }, (_, index) => {
-              const date = new Date(anchor);
-              date.setHours(anchor.getHours() - (23 - index));
+            if (isHourly) {
+              anchor.setUTCMinutes(0, 0, 0);
+            } else {
+              anchor.setUTCHours(0, 0, 0, 0);
+            }
+            const getBucketKey = (value) => {
+              const date = new Date(value);
+              if (!Number.isFinite(date.getTime())) {
+                return "";
+              }
+              return date.toISOString().slice(0, isHourly ? 13 : 10);
+            };
+            const buckets = Array.from({ length: bucketCount }, (_, index) => {
+              const date = new Date(anchor.getTime() - ((bucketCount - 1 - index) * bucketDurationMs));
               return {
-                key: date.toISOString().slice(0, 13),
+                key: getBucketKey(date),
                 label: formatter.format(date),
                 startMs: date.getTime(),
                 hostingRequests: 0,
@@ -182862,6 +185194,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               buckets,
               bucketByKey: new Map(buckets.map((bucket) => [bucket.key, bucket])),
               bucketIndexByKey: new Map(buckets.map((bucket, index) => [bucket.key, index])),
+              bucketDurationMs,
+              getBucketKey,
             };
           };
           const readListResponse = async (path, parser) => {
@@ -182920,8 +185254,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           try {
             const shouldLoadServerCatalog = targetKind !== "database";
             const shouldLoadDatabaseCatalog = !targetKind || targetKind === "database";
-            const [{ buckets, bucketByKey, bucketIndexByKey }, servers, databases] = await Promise.all([
-              Promise.resolve(buildHourlyBuckets()),
+            const [{ buckets, bucketByKey, bucketIndexByKey, bucketDurationMs, getBucketKey }, servers, databases] = await Promise.all([
+              Promise.resolve(buildOperationalBuckets()),
               shouldLoadServerCatalog
                 ? readListResponse("/servers", parsePlaygroundServerListResponse)
                 : Promise.resolve([]),
@@ -182980,8 +185314,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return id || fallback;
             };
             const addToMetricValues = (entry, values, value) => {
-              const hourKey = String(entry?.bucketStart || entry?.timestamp || "").slice(0, 13);
-              const bucketIndex = bucketIndexByKey.get(hourKey);
+              const bucketKey = getBucketKey(entry?.bucketStart || entry?.timestamp || "");
+              const bucketIndex = bucketIndexByKey.get(bucketKey);
               if (typeof bucketIndex !== "number") {
                 return;
               }
@@ -183003,8 +185337,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             };
 
             const addToBucket = (entry, field, value) => {
-              const hourKey = String(entry?.bucketStart || entry?.timestamp || "").slice(0, 13);
-              const bucket = bucketByKey.get(hourKey);
+              const bucketKey = getBucketKey(entry?.bucketStart || entry?.timestamp || "");
+              const bucket = bucketByKey.get(bucketKey);
               if (!bucket) {
                 return;
               }
@@ -183013,7 +185347,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
             const serverAnalyticsResults = await Promise.all(analyticsServers.map(async (server) => ({
               server,
-              analytics: await readAnalyticsResponse("/servers/" + encodeURIComponent(server.id) + "/analytics"),
+              analytics: await readAnalyticsResponse(
+                "/servers/" + encodeURIComponent(server.id) + "/analytics?period=" + encodeURIComponent(requestedPeriod)
+              ),
             })));
             const activeServerKindCounts = activeServerRecords.reduce((counts, server) => {
               const kind = canonicalizePlaygroundServerKind(server?.kind);
@@ -183022,11 +185358,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }, {});
             serverAnalyticsResults.forEach(({ server, analytics }) => {
               const kind = canonicalizePlaygroundServerKind(server?.kind);
-              const trafficBuckets = Array.isArray(analytics?.charts?.traffic24h)
-                ? analytics.charts.traffic24h
-                : Array.isArray(analytics?.analytics?.charts?.traffic24h)
-                  ? analytics.analytics.charts.traffic24h
-                  : [];
+              const trafficBuckets = Array.isArray(analytics?.charts?.traffic)
+                ? analytics.charts.traffic
+                : Array.isArray(analytics?.analytics?.charts?.traffic)
+                  ? analytics.analytics.charts.traffic
+                  : Array.isArray(analytics?.charts?.traffic24h)
+                    ? analytics.charts.traffic24h
+                    : Array.isArray(analytics?.analytics?.charts?.traffic24h)
+                      ? analytics.analytics.charts.traffic24h
+                      : [];
               const requestValues = createMetricValues();
               const errorValues = createMetricValues();
               const computeTokenValues = createMetricValues();
@@ -183101,7 +185441,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   ? activeServerRecords.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === targetKind)
                   : [...activeServerRecords, ...activeDatabases];
               const resourceCountSeries = buckets.map((bucket) => {
-                const bucketEndMs = Math.max(0, Number(bucket.startMs || 0)) + (60 * 60 * 1000);
+                const bucketEndMs = Math.max(0, Number(bucket.startMs || 0)) + bucketDurationMs;
                 return activeScopedResources.reduce((count, resource) => {
                   const createdAtMs = Date.parse(String(resource?.createdAt || ""));
                   return count + (!Number.isFinite(createdAtMs) || createdAtMs <= bucketEndMs ? 1 : 0);
@@ -183129,6 +185469,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 labels,
                 loadedAt: new Date().toISOString(),
                 scopeKind: targetKind || "",
+                period: requestedPeriod,
                 resourceCount: scopedResourceCount,
                 resourceCounts: {
                   webApps: activeServerKindCounts.web_app || 0,
@@ -183172,11 +185513,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
               });
             };
             const ingestDatabaseAnalytics = (database, analytics) => {
-              const operationBuckets = Array.isArray(analytics?.analytics?.charts?.operations24h)
-                ? analytics.analytics.charts.operations24h
-                : Array.isArray(analytics?.charts?.operations24h)
-                  ? analytics.charts.operations24h
-                  : [];
+              const operationBuckets = Array.isArray(analytics?.analytics?.charts?.operations)
+                ? analytics.analytics.charts.operations
+                : Array.isArray(analytics?.charts?.operations)
+                  ? analytics.charts.operations
+                  : Array.isArray(analytics?.analytics?.charts?.operations24h)
+                    ? analytics.analytics.charts.operations24h
+                    : Array.isArray(analytics?.charts?.operations24h)
+                      ? analytics.charts.operations24h
+                      : [];
               const readValues = createMetricValues();
               const writeValues = createMetricValues();
               const errorValues = createMetricValues();
@@ -183218,7 +185563,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
               while (isCurrentLoad() && nextDatabaseAnalyticsIndex < analyticsDatabases.length) {
                 const database = analyticsDatabases[nextDatabaseAnalyticsIndex];
                 nextDatabaseAnalyticsIndex += 1;
-                const analytics = await readAnalyticsResponse("/databases/" + encodeURIComponent(database.id) + "/analytics");
+                const analytics = await readAnalyticsResponse(
+                  "/databases/" + encodeURIComponent(database.id) + "/analytics?period=" + encodeURIComponent(requestedPeriod)
+                );
                 if (!isCurrentLoad()) {
                   return;
                 }
@@ -195221,6 +197568,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
               || workflow.metronomeName
               || template.title
               || template.name
+              || metadata.resourceName
+              || metadata.resource_name
               || ""
             ).trim();
           };
@@ -200613,21 +202962,29 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
           const rawMetricsScopeKind = String(developServerOperationalMetrics?.scopeKind || "").trim();
           const metricsScopeKind = rawMetricsScopeKind ? canonicalizePlaygroundServerKind(rawMetricsScopeKind) : "";
+          const requestedMetricsPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(developServerOperationalMetricsPeriod);
+          const loadedMetricsPeriod = String(developServerOperationalMetrics?.period || "day").trim();
           const loadedAt = Date.parse(String(developServerOperationalMetrics?.loadedAt || ""));
           const shouldRefresh = metricsScopeKind !== activeResourcesServerKind
+            || loadedMetricsPeriod !== requestedMetricsPeriod
             || !Number.isFinite(loadedAt)
             || Date.now() - loadedAt > 60000;
           if (!shouldRefresh) {
             return;
           }
-          void loadDevelopServerOperationalMetrics({ resourceKind: activeResourcesServerKind });
+          void loadDevelopServerOperationalMetrics({
+            resourceKind: activeResourcesServerKind,
+            period: requestedMetricsPeriod,
+          });
         }, [
           activePage,
           activeResourcesServerKind,
           activeResourcesView,
           developServerOperationalMetrics?.loadedAt,
+          developServerOperationalMetrics?.period,
           developServerOperationalMetrics?.scopeKind,
           developServerOperationalMetricsLoading,
+          developServerOperationalMetricsPeriod,
           hasSessionAuth,
           loadDevelopServerOperationalMetrics,
           resourcesHeaderState.mode,
@@ -205625,9 +207982,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         function renderConfigureNotificationsSection() {
-          const emptyCopy = allNotificationPageItems.length === 0
-            ? "No notifications yet."
-            : "No notifications match your filters.";
+          const hasNoNotifications = allNotificationPageItems.length === 0;
+          const emptyTitle = hasNoNotifications ? "No notifications yet" : "No matching notifications";
+          const emptyDescription = hasNoNotifications
+            ? "Notifications come from agent activity, permission requests, team invitations, and product updates."
+            : "Try adjusting your search or filter settings.";
 
           return React.createElement("section", { className: "playground-configure-notifications-section playground-notifications-scroll" },
             React.createElement("div", { className: "playground-configure-notifications-heading" },
@@ -205689,7 +208048,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 )
               ),
               visibleNotificationPageItems.length === 0
-                ? React.createElement("div", { className: "playground-plugins-empty playground-notifications-empty" }, emptyCopy)
+                ? React.createElement("div", { className: "playground-plugins-empty playground-notifications-empty" },
+                    React.createElement("div", { className: "playground-notifications-empty-title" }, emptyTitle),
+                    React.createElement("div", { className: "playground-notifications-empty-description" }, emptyDescription)
+                  )
                 : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-notifications-overview-list-table" },
                     React.createElement("div", { className: "playground-project-overview-thread-list" },
                       React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-notifications-overview-column-header" },
@@ -207594,6 +209956,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   const requestedTeamId = String(options?.selectedTeamId || options?.teamId || "").trim();
                   void loadTeamPageData({ selectedTeamId: requestedTeamId });
                 },
+                onOpenTeamPage: (teamId) => {
+                  const normalizedTeamId = String(teamId || "").trim();
+                  setTeamPageSelectedTeamId(normalizedTeamId);
+                  setTeamPageActiveTab("members");
+                  openTeamPage();
+                  void loadTeamPageData({ selectedTeamId: normalizedTeamId });
+                },
                 embeddedInResources: true,
                 embeddedResourcesView: activeResourcesView === "servers" ? "servers" : "computers",
                 embeddedServerKind: activeResourcesView === "servers" ? activeResourcesServerKind : "",
@@ -207615,6 +209984,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 developServerOperationalMetrics,
                 developServerOperationalMetricsLoading,
                 developServerOperationalMetricsError,
+                developServerOperationalMetricsPeriod,
+                onDevelopServerOperationalMetricsPeriodChange: setDevelopServerOperationalMetricsPeriod,
                 developServerMetricsChartTab,
                 onDevelopServerMetricsChartTabChange: setDevelopServerMetricsChartTab,
                 developAnalyticsMenuOpen,
@@ -211614,8 +213985,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (normalizedLabel === "metronome") return Metronome;
           if (normalizedLabel === "calendar") return CalendarIcon;
           if (normalizedLabel === "configure") return SlidersHorizontal;
+          if (normalizedLabel === "develop") return Code2;
           if (normalizedLabel === "overview") return LayoutGrid;
           if (normalizedLabel === "usage") return Coins;
+          if (normalizedLabel === "api keys") return Key;
+          if (normalizedLabel === "actions") return Webhook;
+          if (normalizedLabel === "web apps") return Globe;
+          if (normalizedLabel === "apis") return Code2;
+          if (normalizedLabel === "functions") return FunctionSquare;
+          if (normalizedLabel === "databases") return Database;
+          if (normalizedLabel === "authentication") return UsersRound;
+          if (normalizedLabel === "agent runtime") return Bot;
+          if (normalizedLabel === "voice agents") return AudioLines;
+          if (normalizedLabel === "secrets") return Shield;
+          if (normalizedLabel === "payments") return ReceiptText;
           if (normalizedLabel === "agents") return Bot;
           if (normalizedLabel === "computers") return Monitor;
           if (normalizedLabel === "tags") return Tag;
@@ -224138,7 +226521,7 @@ const server = http.createServer((req, res) => {
     void proxyUpstreamGet(
       req,
       res,
-      `/databases/${encodeURIComponent(decodeURIComponent(databaseAnalyticsMatch[1]))}/analytics`,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseAnalyticsMatch[1]))}/analytics${url.search || ""}`,
     );
     return;
   }
@@ -224160,7 +226543,7 @@ const server = http.createServer((req, res) => {
       try {
         const response = await fetchUpstreamOverviewJson(
           req,
-          `/servers/${encodeURIComponent(decodeURIComponent(serverAnalyticsMatch[1]))}/analytics`,
+          `/servers/${encodeURIComponent(decodeURIComponent(serverAnalyticsMatch[1]))}/analytics${url.search || ""}`,
         );
         if (response.status === 401 || response.status === 403) {
           sendJson(res, response.status, response.data);

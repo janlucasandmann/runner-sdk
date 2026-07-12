@@ -94,6 +94,7 @@ const items = [
     startSequence: 4,
     endSequence: null,
     highestPermissionRing: 1,
+    metrics: { actionCount: 1, durationMs: 3_000 },
     createdAt,
   },
   {
@@ -137,6 +138,12 @@ const projection = reduceRunnerThreadEvents(
 );
 
 const collapsedMarkup = renderToStaticMarkup(React.createElement(RunnerThread, { projection }));
+assert.match(collapsedMarkup, /class="tb-thread-user-message-time"/);
+assert.match(collapsedMarkup, /dateTime="2026-07-10T08:00:00.000Z"/);
+assert.ok(
+  collapsedMarkup.indexOf("tb-thread-user-message-time") < collapsedMarkup.indexOf("Fix authentication without changing the public API"),
+  "the centered user timestamp must render above its message",
+);
 assert.match(collapsedMarkup, /Validate backward compatibility/);
 assert.doesNotMatch(
   collapsedMarkup,
@@ -187,23 +194,21 @@ const expandedMarkup = renderToStaticMarkup(React.createElement(RunnerThreadRunA
   defaultExpanded: true,
 }));
 assert.match(expandedMarkup, /Code Agent<\/span><span class="tb-thread-run-context-workspace"> on Authentication Project/);
-assert.doesNotMatch(
-  expandedMarkup,
-  /Running integration tests against the existing API/,
-  "activity groups render one observer title line without a second live-summary line",
-);
+assert.match(expandedMarkup, /Running integration tests against the existing API/);
 assert.doesNotMatch(expandedMarkup, />Working</);
 assert.doesNotMatch(expandedMarkup, />1 group</);
-assert.match(expandedMarkup, /tb-thread-run-headline[^>]*>Validate backward compatibility<\/span>/);
+assert.match(expandedMarkup, /tb-thread-run-headline-copy">Validate backward compatibility\.\.\.<\/span>/);
+assert.match(expandedMarkup, /tb-thread-run-dot-loader/);
 assert.match(expandedMarkup, /tb-thread-permission-ring-icon is-ring-1/);
 assert.match(expandedMarkup, /aria-label="Ring 1"/);
 assert.match(
   expandedMarkup,
-  /tb-thread-activity-group-title">Validate backward compatibility<\/span><\/span><span class="tb-thread-activity-group-chevron"/,
-  "the activity-group chevron sits immediately after its title, matching the run label",
+  /tb-thread-activity-group-duration">Worked for 3s<\/span><\/span><span class="tb-thread-activity-group-chevron"/,
+  "the activity-group chevron sits immediately after its duration label",
 );
-assert.match(expandedMarkup, /Run integration tests/);
-assert.match(expandedMarkup, /Details/);
+assert.match(expandedMarkup, /tb-thread-activity-group-header" aria-expanded="false"/);
+assert.doesNotMatch(expandedMarkup, /Run integration tests/);
+assert.doesNotMatch(expandedMarkup, /Details/);
 
 const completedGroupProjection = {
   ...projection,
@@ -216,8 +221,8 @@ const completedGroupMarkup = renderToStaticMarkup(React.createElement(RunnerThre
   projection: completedGroupProjection,
   defaultExpanded: true,
 }));
-assert.match(completedGroupMarkup, /tb-thread-activity-group-header" aria-expanded="true"/);
-assert.match(completedGroupMarkup, /Run integration tests/, "completed activity groups are expanded initially");
+assert.match(completedGroupMarkup, /tb-thread-activity-group-header" aria-expanded="false"/);
+assert.doesNotMatch(completedGroupMarkup, /Run integration tests/, "completed activity groups are collapsed initially");
 
 function renderLegacyGroupWithoutRing(title) {
   const legacyGroup = {
@@ -369,7 +374,7 @@ const loadingDetailsMarkup = renderToStaticMarkup(React.createElement(RunnerThre
   activityGroupActionStates: { "group-1": { status: "loading", error: null } },
 }));
 assert.match(loadingDetailsMarkup, /Loading detailed activity/);
-assert.match(loadingDetailsMarkup, /Loading group actions/);
+assert.doesNotMatch(loadingDetailsMarkup, /Loading group actions/, "collapsed groups defer their action-level loading state");
 
 const failedDetailsMarkup = renderToStaticMarkup(React.createElement(RunnerThreadRunActivityCard, {
   run: projection.runsById["run-1"],
@@ -555,7 +560,8 @@ const deepMarkup = renderToStaticMarkup(React.createElement(RunnerThreadRunActiv
   projection: deepProjection,
   defaultExpanded: true,
 }));
-assert.match(deepMarkup, /Deeply nested worker action/, "deep activity must remain reachable beyond three visual indentation levels");
+assert.match(deepMarkup, /Nested phase 1/, "the root summary of deep activity remains visible while collapsed");
+assert.doesNotMatch(deepMarkup, /Deeply nested worker action/, "deep action evidence stays collapsed initially");
 
 const longProjection = reduceRunnerThreadEvents(
   createInitialRunnerThreadProjection({ threadId: "long-thread", participants: [participants[0]] }),

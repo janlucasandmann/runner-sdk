@@ -33,6 +33,52 @@ function RunnerThreadMessageTime({ value }: { value: string }) {
   return <time dateTime={value}>{label}</time>;
 }
 
+function formatUserMessageTimeUtc(value: string): string {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+    timeZoneName: "short",
+  }).format(date);
+}
+
+function formatUserMessageTime(value: string): string {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+
+  const now = new Date();
+  const messageDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  const time = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+
+  if (messageDay.getTime() === today.getTime()) return `Today ${time}`;
+  if (messageDay.getTime() === yesterday.getTime()) return `Yesterday ${time}`;
+
+  const dateLabel = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(date.getFullYear() === now.getFullYear() ? {} : { year: "numeric" as const }),
+  }).format(date);
+  return `${dateLabel}, ${time}`;
+}
+
+export function RunnerThreadUserMessageTime({ value }: { value: string }) {
+  const [label, setLabel] = useState(() => formatUserMessageTimeUtc(value));
+  useEffect(() => setLabel(formatUserMessageTime(value)), [value]);
+  return <time className="tb-thread-user-message-time" dateTime={value}>{label}</time>;
+}
+
 export function RunnerThreadMessageView({
   message,
   participant,
@@ -46,6 +92,7 @@ export function RunnerThreadMessageView({
 
   return (
     <article className={`tb-thread-message is-${participantKind} ${isHuman ? "is-human" : "is-agent"}`}>
+      {isHuman ? <RunnerThreadUserMessageTime value={message.createdAt} /> : null}
       {!isHuman ? <RunnerThreadParticipantAvatar participant={participant} /> : null}
       <div className="tb-thread-message-main">
         {!isHuman ? (

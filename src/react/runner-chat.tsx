@@ -75,6 +75,7 @@ import { useRunnerExecution } from "./use-runner-execution.js";
 import { RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS, getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
 import { RunnerThreadRunActivityCard } from "./thread/run-activity-card.js";
+import { RunnerThreadUserMessageTime } from "./thread/thread-message.js";
 import { RunnerThreadTimeline } from "./thread/thread-timeline.js";
 import { useRunnerThreadProjection } from "./thread/use-runner-thread-projection.js";
 import { RunnerDocumentPreviewDrawer } from "./runner-document-preview-drawer.js";
@@ -23364,6 +23365,9 @@ export function RunnerChat({
               const responseStyle = turn.animateOnRender
                 ? getRunnerChatEnterAnimationStyle(baseDelay + 150 + displayedTimelineItems.length * 45)
                 : undefined;
+              const userMessageTime = normalizedPrompt ? (
+                <RunnerThreadUserMessageTime value={new Date(turn.startedAtMs).toISOString()} />
+              ) : null;
               const shouldAnimateTimelineRows = turn.animateOnRender;
               const turnAgentLabel = isMissionControlThreadTurn
                 ? getRunnerMissionControlAgentName(threadMissionControlPreview)
@@ -23556,6 +23560,7 @@ export function RunnerChat({
                 );
                 return (
                   <div key={turn.id} className="tb-turn tb-turn-context-action-notice">
+                    {userMessageTime}
                     {turn.prompt.trim() ? (
                       <>
                         <div
@@ -23587,6 +23592,7 @@ export function RunnerChat({
                   : "";
                 return (
                   <div key={turn.id} className={`tb-turn tb-turn-btw ${isCommunicatorBtwTurn ? "is-communicator" : ""}`.trim()}>
+                    {userMessageTime}
                     <div className={`tb-btw-turn-card ${isCommunicatorBtwTurn ? "is-communicator" : ""}`.trim()} style={promptStyle}>
                       {isCommunicatorBtwTurn ? (
                         <div className="tb-btw-communicator-header">
@@ -23642,6 +23648,7 @@ export function RunnerChat({
               if (hasSpecialPromptPreview && !isEditingTurn) {
                 return (
                   <div key={turn.id} className="tb-turn tb-turn-user tb-turn-user-task-preview">
+                    {userMessageTime}
                     <div
                       ref={(node) => {
                         if (!shouldRenderSpecialPreviewPrompt) {
@@ -23794,6 +23801,7 @@ export function RunnerChat({
 
               return (
                 <div key={turn.id} className="tb-turn tb-turn-user">
+                  {userMessageTime}
                   {metronomeWorkflowPromptContent && !isEditingTurn && !taskPreviewForTurn && !missionControlPreviewForTurn ? (
                     <div
                       ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}

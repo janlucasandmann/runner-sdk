@@ -18,6 +18,7 @@ import type {
   RunnerThreadControlAction,
 } from "../../thread/types.js";
 import { selectRunnerThreadRunWorkingLabel } from "../../thread/selectors.js";
+import { DotLoader } from "../dot-loader.js";
 import {
   RunnerThreadActivityGroupTree,
   type RunnerThreadActivityFilter,
@@ -78,6 +79,11 @@ function progressEventSummary(event: RunnerThreadEvent): string {
   return String(event.summary || payloadSummary || payloadPhase || event.title || "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+export function formatRunnerThreadActiveWorkingLabel(value?: string | null): string {
+  const normalized = String(value || "Working").replace(/\s+/g, " ").trim() || "Working";
+  return `${normalized.replace(/(?:\.{1,}|…)+$/u, "")}...`;
 }
 
 function metadataText(metadata: Record<string, unknown> | null | undefined, keys: string[]): string {
@@ -191,7 +197,9 @@ export function RunnerThreadRunActivityCard({
     () => selectRunnerThreadRunWorkingLabel(projection, run.id),
     [projection, run.id],
   );
-  const headerLine = active ? observerWorkingLabel || "Working..." : `Worked for ${duration}`;
+  const headerLine = active
+    ? formatRunnerThreadActiveWorkingLabel(observerWorkingLabel)
+    : `Worked for ${duration}`;
 
   return (
     <div className="tb-thread-run-shell">
@@ -208,7 +216,18 @@ export function RunnerThreadRunActivityCard({
         onClick={() => setExpanded((value) => !value)}
         aria-expanded={expanded}
       >
-        <span className="tb-thread-run-headline" aria-live={active ? "polite" : "off"}>{headerLine}</span>
+        <span className="tb-thread-run-headline" aria-live={active ? "polite" : "off"}>
+          <span className="tb-thread-run-headline-copy">{headerLine}</span>
+          {active ? (
+            <DotLoader
+              dotCount={9}
+              dotSize={2}
+              gap={2}
+              color="currentColor"
+              className="tb-thread-run-dot-loader"
+            />
+          ) : null}
+        </span>
         {expanded ? <ChevronUp className="tb-thread-run-chevron" strokeWidth={1.7} /> : <ChevronDown className="tb-thread-run-chevron" strokeWidth={1.7} />}
       </button>
 

@@ -518,6 +518,10 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   margin-bottom: 0;
 }
 
+.tb-runner-chat .tb-turn > .tb-thread-user-message-time {
+  margin-bottom: 24px;
+}
+
 .tb-runner-chat .tb-turn-user:first-child {
   padding-top: 12px;
 }
